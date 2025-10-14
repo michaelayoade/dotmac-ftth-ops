@@ -176,8 +176,12 @@ def run_migrations_online() -> None:
             compare_server_default=True,
         )
 
+        # Run migrations - the connection already has a transaction started
         with context.begin_transaction():
             context.run_migrations()
+
+        # Explicitly commit the transaction to ensure changes persist
+        connection.commit()
 
         # Optionally apply RLS after successful migrations
         try:
