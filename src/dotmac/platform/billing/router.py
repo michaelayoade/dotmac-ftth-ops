@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from .bank_accounts.router import router as bank_accounts_router
 from .catalog.router import router as catalog_router
 from .credit_notes.router import router as credit_note_router
+from .dunning.router import router as dunning_router
 from .invoicing.money_router import router as money_invoice_router
 from .invoicing.router import router as invoice_router
 from .payments.router import router as payments_router
@@ -29,6 +30,7 @@ router.include_router(
     subscriptions_router, prefix="/subscriptions", tags=["Billing - Subscriptions"]
 )
 router.include_router(payments_router, prefix="", tags=["Billing - Payments"])
+router.include_router(dunning_router, prefix="/dunning", tags=["Billing - Dunning"])
 
 # Additional billing endpoints can be added here
 

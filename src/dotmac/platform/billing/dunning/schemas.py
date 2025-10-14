@@ -175,6 +175,38 @@ class DunningActionLogResponse(BaseModel):
     external_id: str | None
 
 
+class DunningExecutionStart(BaseModel):
+    """Request to start a new dunning execution."""
+
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    campaign_id: UUID
+    subscription_id: str = Field(min_length=1, max_length=50)
+    customer_id: UUID
+    invoice_id: str | None = Field(None, max_length=50)
+    outstanding_amount: int = Field(gt=0, description="Amount owed in cents")
+    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+
+
+class DunningCampaignStats(BaseModel):
+    """Statistics for a specific campaign."""
+
+    model_config = ConfigDict()
+
+    campaign_id: UUID
+    campaign_name: str
+    total_executions: int
+    active_executions: int
+    completed_executions: int
+    failed_executions: int
+    canceled_executions: int
+    total_recovered_amount: int  # in cents
+    total_outstanding_amount: int  # in cents
+    success_rate: float  # percentage
+    recovery_rate: float  # percentage
+    average_completion_time_hours: float
+
+
 class DunningStats(BaseModel):
     """Dunning campaign statistics."""
 
@@ -198,9 +230,11 @@ __all__ = [
     "DunningCampaignCreate",
     "DunningCampaignUpdate",
     "DunningCampaignResponse",
+    "DunningExecutionStart",
     "DunningExecutionResponse",
     "DunningExecutionListResponse",
     "DunningCancelRequest",
     "DunningActionLogResponse",
+    "DunningCampaignStats",
     "DunningStats",
 ]
