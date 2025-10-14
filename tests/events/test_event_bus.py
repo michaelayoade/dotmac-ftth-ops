@@ -26,6 +26,85 @@ class TestEventBus:
         reset_event_bus()
 
     @pytest.mark.asyncio
+    async def test_publish_gracefully_handles_redis_failures(self):
+        """Publishing to Redis should not raise if the client fails."""
+
+        class BrokenRedis:
+            def publish(self, channel: str, message: str) -> None:  # pragma: no cover - exercised
+                raise RuntimeError("redis down")
+
+        storage = EventStorage(use_redis=False)
+        bus = EventBus(storage=storage, redis_client=BrokenRedis(), enable_persistence=False)
+
+        event = await bus.publish(event_type="redis.test", payload={"foo": "bar"})
+
+        # Publish should still succeed
+        assert event.event_type == "redis.test"
+        assert event.payload == {"foo": "bar"}
+
+    @pytest.mark.asyncio
+    async def test_storage_falls_back_to_memory_when_redis_set_fails(self):
+        """Errors from the Redis client should fall back to in-memory storage."""
+
+        class BrokenRedis:
+            def setex(self, *args, **kwargs):  # pragma: no cover - exercised
+                raise RuntimeError("cannot set")
+
+            def publish(self, *args, **kwargs):  # pragma: no cover - compatibility
+                raise RuntimeError("cannot publish")
+
+        storage = EventStorage(use_redis=True)
+        storage._redis = BrokenRedis()  # type: ignore[attr-defined]
+
+        event = Event(event_type="fallback", payload={"value": 1})
+
+        await storage.save_event(event)
+
+        assert event.event_id in storage._memory_store  # type: ignore[attr-defined]
+        stored = await storage.get_event(event.event_id)
+        assert stored is event
+
+    @pytest.mark.asyncio
+    async def test_query_memory_filters(self):
+        """Querying without Redis should respect filters."""
+
+        storage = EventStorage(use_redis=False)
+
+        # Populate memory store manually
+        event_a = Event(event_type="type.a", payload={}, metadata={"tenant_id": "tenant-1"})
+        event_b = Event(event_type="type.b", payload={}, metadata={"tenant_id": "tenant-2"})
+        event_c = Event(event_type="type.a", payload={}, metadata={})
+        event_c.status = EventStatus.COMPLETED
+
+        storage._memory_store[event_a.event_id] = event_a  # type: ignore[attr-defined]
+        storage._memory_store[event_b.event_id] = event_b  # type: ignore[attr-defined]
+        storage._memory_store[event_c.event_id] = event_c  # type: ignore[attr-defined]
+
+        by_type = await storage.query_events(event_type="type.a")
+        assert {e.event_id for e in by_type} == {event_a.event_id, event_c.event_id}
+
+        by_status = await storage.query_events(status=EventStatus.COMPLETED)
+        assert [e.event_id for e in by_status] == [event_c.event_id]
+
+        by_tenant = await storage.query_events(tenant_id="tenant-2")
+        assert [e.event_id for e in by_tenant] == [event_b.event_id]
+
+    def test_get_event_bus_falls_back_without_redis(self, monkeypatch):
+        """Global event bus should initialise even when Redis is unavailable."""
+
+        reset_event_bus()
+
+        def raise_on_get():  # pragma: no cover - exercised
+            raise RuntimeError("redis unavailable")
+
+        monkeypatch.setattr("dotmac.platform.core.caching.get_redis", raise_on_get)
+
+        bus = get_event_bus(storage=EventStorage(use_redis=False), redis_client=None, enable_persistence=False)
+
+        assert isinstance(bus, EventBus)
+        assert bus._redis is None  # type: ignore[attr-defined]
+
+    @pytest.mark.asyncio
     async def test_publish_event_basic(self, event_bus):
         """Test basic event publishing."""
         event = await event_bus.publish(
