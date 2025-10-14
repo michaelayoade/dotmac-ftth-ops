@@ -21,6 +21,7 @@ celery_app = Celery(
     include=[
         "dotmac.platform.tasks",
         "dotmac.platform.communications.task_service",
+        "dotmac.platform.billing.dunning.tasks",
     ],  # Auto-discover task modules
 )
 
@@ -92,12 +93,22 @@ def setup_periodic_tasks(sender: Any, **kwargs: Any) -> None:
             name="currency-refresh-rates",
         )
 
+    # Dunning & Collections - Process pending actions every 5 minutes
+    from dotmac.platform.tasks import process_pending_dunning_actions_task
+
+    sender.add_periodic_task(
+        300.0,  # 5 minutes
+        process_pending_dunning_actions_task.s(),
+        name="dunning-process-pending-actions",
+    )
+
     logger = structlog.get_logger(__name__)
     logger.info(
         "celery.worker.configured",
         broker=settings.celery.broker_url,
         backend=settings.celery.result_backend,
         queues=["default", "high_priority", "low_priority"],
+        periodic_tasks=["currency-refresh-rates", "dunning-process-pending-actions"],
     )
 
 

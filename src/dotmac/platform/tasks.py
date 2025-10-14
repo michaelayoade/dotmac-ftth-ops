@@ -8,6 +8,10 @@ with the main Celery application instance.
 from typing import Any
 
 from dotmac.platform.billing.currency.service import sync_refresh_currency_rates
+from dotmac.platform.billing.dunning.tasks import (  # noqa: F401
+    execute_dunning_action_task,
+    process_pending_dunning_actions_task,
+)
 from dotmac.platform.celery_app import celery_app
 from dotmac.platform.communications.task_service import (  # noqa: F401
     send_bulk_email_task,
@@ -43,4 +47,6 @@ __all__ = [
     "refresh_currency_rates_task",
     "send_bulk_email_task",
     "send_single_email_task",
+    "process_pending_dunning_actions_task",
+    "execute_dunning_action_task",
 ]
