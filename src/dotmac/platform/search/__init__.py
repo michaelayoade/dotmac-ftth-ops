@@ -8,6 +8,15 @@ from .service import (
     SearchService,
 )
 
+# Elasticsearch backend (optional, imported if available)
+try:
+    from .elasticsearch_backend import ElasticsearchBackend
+
+    _HAS_ELASTICSEARCH = True
+except ImportError:
+    ElasticsearchBackend = None
+    _HAS_ELASTICSEARCH = False
+
 __all__ = [
     "SearchService",
     "SearchQuery",
@@ -18,3 +27,6 @@ __all__ = [
     "MeilisearchBackend",
     "create_search_backend_from_env",
 ]
+
+if _HAS_ELASTICSEARCH:
+    __all__.append("ElasticsearchBackend")

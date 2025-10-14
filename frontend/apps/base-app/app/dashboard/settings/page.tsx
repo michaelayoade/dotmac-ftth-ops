@@ -203,15 +203,15 @@ function SettingsHubPageContent() {
     try {
       setLoading(true);
       // Fetch user data
-      const userResponse = await apiClient.get('/api/v1/auth/me').catch(() => ({ success: false }));
+      const userResponse = await apiClient.get('/api/v1/auth/me').catch(() => ({ data: null }));
 
       // Organization endpoint not yet implemented - will be added later
-      const orgResponse = { success: false, data: null };
+      const orgResponse = { data: null };
 
-      if (userResponse.success && 'data' in userResponse) {
+      if (userResponse.data) {
         setUser((userResponse.data || {}) as Record<string, unknown>);
       }
-      if (orgResponse.success && 'data' in orgResponse) {
+      if (orgResponse.data) {
         setOrganization((orgResponse.data || {}) as Record<string, unknown>);
       }
     } catch (err) {

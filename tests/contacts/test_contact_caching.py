@@ -19,7 +19,9 @@ pytestmark = pytest.mark.asyncio
 class TestContactCaching:
     """Test contact caching behavior."""
 
-    @pytest.mark.skip(reason="Caching disabled due to JSON serialization issues - see service.py line 179")
+    @pytest.mark.skip(
+        reason="Caching disabled due to JSON serialization issues - see service.py line 179"
+    )
     @pytest.mark.asyncio
     async def test_cache_set_on_get(self, tenant_id, sample_contact):
         """Test that cache is set when getting contact."""

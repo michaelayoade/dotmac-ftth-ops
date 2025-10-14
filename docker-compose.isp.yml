@@ -4,7 +4,7 @@
 services:
   # FreeRADIUS - AAA Server
   freeradius:
-    image: freeradius/freeradius-server:latest
+    image: freeradius-postgresql:latest
     container_name: isp-freeradius
     environment:
       - RADIUS_DB_TYPE=postgresql
@@ -16,11 +16,15 @@ services:
     ports:
       - "1812:1812/udp"   # RADIUS Auth
       - "1813:1813/udp"   # RADIUS Accounting
+      - "3799:3799/udp"   # CoA/DM (Change of Authorization / Disconnect Messages)
       - "18120:18120"     # Status server
     volumes:
       - ./config/radius/clients.conf:/etc/raddb/clients.conf:ro
       - ./config/radius/sql.conf:/etc/raddb/mods-available/sql:ro
+      - ./config/radius/sql.conf:/etc/raddb/mods-enabled/sql:ro
       - ./config/radius/radiusd.conf:/etc/raddb/radiusd.conf:ro
+      - ./config/radius/default:/etc/raddb/sites-available/default:ro
+      - ./config/freeradius/coa-config.conf:/etc/raddb/sites-available/coa:ro
       - radius_logs:/var/log/radius
     networks:
       - dotmac-network

@@ -32,7 +32,7 @@ from dotmac.platform.contacts.schemas import (
     ContactMethodUpdate,
     ContactUpdate,
 )
-from dotmac.platform.core.caching import cache_delete, cache_get, cache_set
+from dotmac.platform.core.caching import cache_delete, cache_get
 
 logger = structlog.get_logger(__name__)
 

@@ -13,9 +13,8 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, cast
 
-from defusedxml import minidom as defused_minidom
-
 import pandas as pd
+from defusedxml import minidom as defused_minidom
 
 from .core import (
     BaseExporter,
@@ -224,9 +223,7 @@ class XMLExporter(BaseExporter):
 
             # Write to file
             if self.options.xml_pretty_print:
-                xml_str = defused_minidom.parseString(ET.tostring(root)).toprettyxml(
-                    indent="  "
-                )
+                xml_str = defused_minidom.parseString(ET.tostring(root)).toprettyxml(indent="  ")
                 with open(file_path, "w", encoding=self.options.encoding) as f:
                     f.write(xml_str)
             else:

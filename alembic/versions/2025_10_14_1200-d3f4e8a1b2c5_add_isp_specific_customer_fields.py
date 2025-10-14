@@ -24,8 +24,12 @@ def upgrade() -> None:
     # Service Address fields
     op.add_column(
         "customers",
-        sa.Column("service_address_line1", sa.String(200), nullable=True,
-                 comment="Installation/service address"),
+        sa.Column(
+            "service_address_line1",
+            sa.String(200),
+            nullable=True,
+            comment="Installation/service address",
+        ),
     )
     op.add_column(
         "customers",
@@ -45,36 +49,55 @@ def upgrade() -> None:
     )
     op.add_column(
         "customers",
-        sa.Column("service_country", sa.String(2), nullable=True,
-                 comment="ISO 3166-1 alpha-2"),
+        sa.Column("service_country", sa.String(2), nullable=True, comment="ISO 3166-1 alpha-2"),
     )
     op.add_column(
         "customers",
-        sa.Column("service_coordinates", postgresql.JSON, nullable=False,
-                 server_default='{}',
-                 comment="GPS coordinates: {lat: float, lon: float}"),
+        sa.Column(
+            "service_coordinates",
+            postgresql.JSON,
+            nullable=False,
+            server_default="{}",
+            comment="GPS coordinates: {lat: float, lon: float}",
+        ),
     )
 
     # Installation Tracking fields
     op.add_column(
         "customers",
-        sa.Column("installation_status", sa.String(20), nullable=True,
-                 comment="pending, scheduled, in_progress, completed, failed, canceled"),
+        sa.Column(
+            "installation_status",
+            sa.String(20),
+            nullable=True,
+            comment="pending, scheduled, in_progress, completed, failed, canceled",
+        ),
     )
     op.add_column(
         "customers",
-        sa.Column("installation_date", sa.DateTime(timezone=True), nullable=True,
-                 comment="Actual installation date"),
+        sa.Column(
+            "installation_date",
+            sa.DateTime(timezone=True),
+            nullable=True,
+            comment="Actual installation date",
+        ),
     )
     op.add_column(
         "customers",
-        sa.Column("scheduled_installation_date", sa.DateTime(timezone=True), nullable=True,
-                 comment="Scheduled installation date"),
+        sa.Column(
+            "scheduled_installation_date",
+            sa.DateTime(timezone=True),
+            nullable=True,
+            comment="Scheduled installation date",
+        ),
     )
     op.add_column(
         "customers",
-        sa.Column("installation_technician_id", postgresql.UUID(as_uuid=True), nullable=True,
-                 comment="Assigned field technician"),
+        sa.Column(
+            "installation_technician_id",
+            postgresql.UUID(as_uuid=True),
+            nullable=True,
+            comment="Assigned field technician",
+        ),
     )
     op.add_column(
         "customers",
@@ -84,67 +107,103 @@ def upgrade() -> None:
     # Service Details fields
     op.add_column(
         "customers",
-        sa.Column("connection_type", sa.String(20), nullable=True,
-                 comment="ftth, wireless, dsl, cable, fiber, hybrid"),
+        sa.Column(
+            "connection_type",
+            sa.String(20),
+            nullable=True,
+            comment="ftth, wireless, dsl, cable, fiber, hybrid",
+        ),
     )
     op.add_column(
         "customers",
-        sa.Column("last_mile_technology", sa.String(50), nullable=True,
-                 comment="gpon, xgs-pon, docsis3.1, lte, 5g, etc"),
+        sa.Column(
+            "last_mile_technology",
+            sa.String(50),
+            nullable=True,
+            comment="gpon, xgs-pon, docsis3.1, lte, 5g, etc",
+        ),
     )
     op.add_column(
         "customers",
-        sa.Column("service_plan_speed", sa.String(50), nullable=True,
-                 comment="e.g., 100/100 Mbps, 1 Gbps"),
+        sa.Column(
+            "service_plan_speed", sa.String(50), nullable=True, comment="e.g., 100/100 Mbps, 1 Gbps"
+        ),
     )
 
     # Network Device Links
     op.add_column(
         "customers",
-        sa.Column("assigned_devices", postgresql.JSON, nullable=False,
-                 server_default='{}',
-                 comment="Device assignments: {onu_serial, cpe_mac, router_id, etc}"),
+        sa.Column(
+            "assigned_devices",
+            postgresql.JSON,
+            nullable=False,
+            server_default="{}",
+            comment="Device assignments: {onu_serial, cpe_mac, router_id, etc}",
+        ),
     )
 
     # Bandwidth Management
     op.add_column(
         "customers",
-        sa.Column("current_bandwidth_profile", sa.String(50), nullable=True,
-                 comment="Current speed/QoS profile"),
+        sa.Column(
+            "current_bandwidth_profile",
+            sa.String(50),
+            nullable=True,
+            comment="Current speed/QoS profile",
+        ),
     )
     op.add_column(
         "customers",
-        sa.Column("static_ip_assigned", sa.String(45), nullable=True,
-                 comment="Static IPv4 address if assigned"),
+        sa.Column(
+            "static_ip_assigned",
+            sa.String(45),
+            nullable=True,
+            comment="Static IPv4 address if assigned",
+        ),
     )
     op.add_column(
         "customers",
-        sa.Column("ipv6_prefix", sa.String(50), nullable=True,
-                 comment="IPv6 prefix if assigned"),
+        sa.Column("ipv6_prefix", sa.String(50), nullable=True, comment="IPv6 prefix if assigned"),
     )
 
     # Service Quality Metrics
     op.add_column(
         "customers",
-        sa.Column("avg_uptime_percent", sa.Numeric(5, 2), nullable=True,
-                 comment="Average uptime percentage"),
+        sa.Column(
+            "avg_uptime_percent",
+            sa.Numeric(5, 2),
+            nullable=True,
+            comment="Average uptime percentage",
+        ),
     )
     op.add_column(
         "customers",
-        sa.Column("last_outage_date", sa.DateTime(timezone=True), nullable=True,
-                 comment="Last service outage"),
+        sa.Column(
+            "last_outage_date",
+            sa.DateTime(timezone=True),
+            nullable=True,
+            comment="Last service outage",
+        ),
     )
     op.add_column(
         "customers",
-        sa.Column("total_outages", sa.Integer, nullable=False,
-                 server_default='0',
-                 comment="Total number of outages"),
+        sa.Column(
+            "total_outages",
+            sa.Integer,
+            nullable=False,
+            server_default="0",
+            comment="Total number of outages",
+        ),
     )
     op.add_column(
         "customers",
-        sa.Column("total_downtime_minutes", sa.Integer, nullable=False,
-                 server_default='0',
-                 comment="Total downtime in minutes"),
+        sa.Column(
+            "total_downtime_minutes",
+            sa.Integer,
+            nullable=False,
+            server_default="0",
+            comment="Total downtime in minutes",
+        ),
     )
 
     # Add foreign key for installation_technician_id

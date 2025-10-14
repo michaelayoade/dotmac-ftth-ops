@@ -472,9 +472,7 @@ async def sync_flags_from_redis(
 
         synced_count = await sync_from_redis()
 
-        logger.info(
-            "Feature flags synced from Redis", count=synced_count, user=user.user_id
-        )
+        logger.info("Feature flags synced from Redis", count=synced_count, user=user.user_id)
         return {
             "message": f"Synced {synced_count} flags from Redis to cache",
             "synced_count": synced_count,

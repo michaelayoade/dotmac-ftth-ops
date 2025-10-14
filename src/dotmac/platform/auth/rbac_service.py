@@ -9,7 +9,7 @@ from uuid import UUID
 
 from fastapi import Depends
 from sqlalchemy import and_, or_, select
-from sqlalchemy.engine import CursorResult, Result
+from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -290,7 +290,7 @@ class RBACService:
         )
 
         # Result.rowcount is available after execute() for DML statements
-        if getattr(result, 'rowcount', 0) == 0:
+        if getattr(result, "rowcount", 0) == 0:
             logger.warning(f"Role {role_name} was not assigned to user {user_id}")
             return
 
@@ -439,7 +439,7 @@ class RBACService:
         )
 
         # Result.rowcount is available after execute() for DML statements
-        if getattr(result, 'rowcount', 0) == 0:
+        if getattr(result, "rowcount", 0) == 0:
             logger.warning(f"Permission {permission_name} was not granted to user {user_id}")
             return
 

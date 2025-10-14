@@ -6,7 +6,6 @@ for Week 4 (Polish) improvements.
 """
 
 from datetime import UTC
-from unittest.mock import patch
 
 import pytest
 

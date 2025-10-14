@@ -2,7 +2,7 @@
 Simple tests for Platform Admin Router to improve coverage.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -153,11 +153,7 @@ async def test_get_platform_permissions(platform_admin_app: FastAPI):
 @pytest.mark.asyncio
 async def test_cross_tenant_search(platform_admin_app: FastAPI):
     """Test cross-tenant search functionality."""
-    search_payload = {
-        "query": "test user",
-        "entity_type": "user",
-        "limit": 10
-    }
+    search_payload = {"query": "test user", "entity_type": "user", "limit": 10}
 
     transport = ASGITransport(app=platform_admin_app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
@@ -218,8 +214,7 @@ async def test_tenant_impersonation(platform_admin_app: FastAPI):
     transport = ASGITransport(app=platform_admin_app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         response = await client.post(
-            f"/platform-admin/tenants/{tenant_id}/impersonate",
-            json={"user_id": str(uuid4())}
+            f"/platform-admin/tenants/{tenant_id}/impersonate", json={"user_id": str(uuid4())}
         )
 
     # Will return 404 or 400 since tenant/user doesn't exist

@@ -17,6 +17,12 @@ from dotmac.platform.communications.task_service import (  # noqa: F401
     send_bulk_email_task,
     send_single_email_task,
 )
+from dotmac.platform.services.lifecycle.tasks import (  # noqa: F401
+    execute_provisioning_workflow_task,
+    perform_health_checks_task,
+    process_auto_resume_task,
+    process_scheduled_terminations_task,
+)
 from dotmac.platform.settings import settings
 
 
@@ -49,4 +55,8 @@ __all__ = [
     "send_single_email_task",
     "process_pending_dunning_actions_task",
     "execute_dunning_action_task",
+    "execute_provisioning_workflow_task",
+    "process_scheduled_terminations_task",
+    "process_auto_resume_task",
+    "perform_health_checks_task",
 ]

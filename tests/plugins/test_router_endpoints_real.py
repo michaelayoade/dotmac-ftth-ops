@@ -9,9 +9,8 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
-
 from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.plugins.interfaces import NotificationProvider

@@ -47,7 +47,7 @@ export default function DashboardPage() {
 
     const loadHealth = async () => {
       try {
-        const baseUrl = platformConfig.apiBaseUrl || '';
+        const baseUrl = platformConfig.api.baseUrl || '';
         const healthPath = `${baseUrl}/health`;
         const response = await fetch(healthPath);
         if (!isMounted) return;

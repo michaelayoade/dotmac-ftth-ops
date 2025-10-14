@@ -199,7 +199,6 @@ class TestPricingRule:
         assert rule.metadata == {}
 
 
-
 class TestPriceCalculationContext:
     """Test PriceCalculationContext model."""
 
@@ -245,7 +244,6 @@ class TestPriceCalculationContext:
         assert context.metadata == {}
 
 
-
 class TestPriceAdjustment:
     """Test PriceAdjustment model."""
 
@@ -266,7 +264,6 @@ class TestPriceAdjustment:
         assert adjustment.original_price == Decimal("100.00")
         assert adjustment.discount_amount == Decimal("10.00")
         assert adjustment.adjusted_price == Decimal("90.00")
-
 
 
 class TestPriceCalculationResult:
@@ -346,7 +343,6 @@ class TestPriceCalculationResult:
 
         assert result.applied_adjustments == []
         assert isinstance(result.calculation_timestamp, datetime)
-
 
 
 class TestPricingRuleCreateRequest:
@@ -545,4 +541,3 @@ class TestPricingRuleResponse:
         assert response.discount_type == DiscountType.PERCENTAGE
         assert response.current_uses == 5
         assert response.max_uses == 100
-

@@ -4,7 +4,7 @@ Dunning & Collections API router.
 Provides REST endpoints for managing dunning campaigns and executions.
 """
 
-from typing import Any, cast
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -65,7 +65,7 @@ async def create_campaign(
         )
         # Convert SQLAlchemy model to Pydantic schema
         response = DunningCampaignResponse.model_validate(campaign)
-        return cast(dict[str, Any], response.model_dump(mode="json"))
+        return response.model_dump(mode="json")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -99,7 +99,7 @@ async def list_campaigns(
         limit=limit,
     )
     return [
-        cast(dict[str, Any], DunningCampaignResponse.model_validate(c).model_dump(mode="json"))
+        DunningCampaignResponse.model_validate(c).model_dump(mode="json")
         for c in campaigns
     ]
 
@@ -124,7 +124,7 @@ async def get_campaign(
         )
 
     response = DunningCampaignResponse.model_validate(campaign)
-    return cast(dict[str, Any], response.model_dump(mode="json"))
+    return response.model_dump(mode="json")
 
 
 @router.patch("/campaigns/{campaign_id}", response_model=DunningCampaignResponse)
@@ -159,7 +159,7 @@ async def update_campaign(
             )
 
         response = DunningCampaignResponse.model_validate(campaign)
-        return cast(dict[str, Any], response.model_dump(mode="json"))
+        return response.model_dump(mode="json")
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -223,7 +223,7 @@ async def get_campaign_stats(
         )
 
     stats = await service.get_campaign_stats(campaign_id=campaign_id, tenant_id=tenant_id)
-    return cast(dict[str, Any], stats.model_dump(mode="json"))
+    return stats.model_dump(mode="json")  # type: ignore[no-any-return]
 
 
 # Execution Management
@@ -262,7 +262,7 @@ async def start_execution(
             metadata=execution_data.metadata,
         )
         response = DunningExecutionResponse.model_validate(execution)
-        return cast(dict[str, Any], response.model_dump(mode="json"))
+        return response.model_dump(mode="json")
     except ValueError as e:
         # Check if it's an "already exists" error
         if "already has an active execution" in str(e):
@@ -318,7 +318,7 @@ async def list_executions(
     )
 
     return [
-        cast(dict[str, Any], DunningExecutionResponse.model_validate(e).model_dump(mode="json"))
+        DunningExecutionResponse.model_validate(e).model_dump(mode="json")
         for e in executions
     ]
 
@@ -343,7 +343,7 @@ async def get_execution(
         )
 
     response = DunningExecutionResponse.model_validate(execution)
-    return cast(dict[str, Any], response.model_dump(mode="json"))
+    return response.model_dump(mode="json")
 
 
 @router.post("/executions/{execution_id}/cancel", status_code=status.HTTP_200_OK)
@@ -423,7 +423,7 @@ async def get_execution_logs(
 
     logs = await service.get_execution_logs(execution_id=execution_id, tenant_id=tenant_id)
     return [
-        cast(dict[str, Any], DunningActionLogResponse.model_validate(log).model_dump(mode="json"))
+        DunningActionLogResponse.model_validate(log).model_dump(mode="json")
         for log in logs
     ]
 
@@ -447,7 +447,7 @@ async def get_tenant_stats(
     """
     service = DunningService(db_session)
     stats = await service.get_tenant_stats(tenant_id=tenant_id)
-    return cast(dict[str, Any], stats.model_dump(mode="json"))
+    return stats.model_dump(mode="json")  # type: ignore[no-any-return]
 
 
 # Background Processing (for Celery integration)
@@ -473,6 +473,6 @@ async def get_pending_actions(
     service = DunningService(db_session)
     executions = await service.get_pending_actions(tenant_id=tenant_id, limit=limit)
     return [
-        cast(dict[str, Any], DunningExecutionResponse.model_validate(e).model_dump(mode="json"))
+        DunningExecutionResponse.model_validate(e).model_dump(mode="json")
         for e in executions
     ]

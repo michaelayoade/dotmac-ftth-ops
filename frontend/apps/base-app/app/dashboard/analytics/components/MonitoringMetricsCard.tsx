@@ -7,7 +7,7 @@ import { Activity, AlertTriangle, Clock, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function MonitoringMetricsCard({ period = '24h' }: { period?: string }) {
-  const { data, isLoading, error } = useMonitoringMetrics(period);
+  const { data, isLoading, error } = useMonitoringMetrics();
 
   if (isLoading) {
     return (
@@ -38,11 +38,11 @@ export function MonitoringMetricsCard({ period = '24h' }: { period?: string }) {
     );
   }
 
-  const metrics = data?.monitoringMetrics;
-
-  if (!metrics) {
+  if (!data) {
     return null;
   }
+
+  const metrics = data;
 
   const formatPercent = (value: number) => {
     return `${(value * 100).toFixed(2)}%`;

@@ -42,11 +42,11 @@ export function BillingMetricsCard({ period = '30d' }: { period?: string }) {
     );
   }
 
-  const metrics = data?.billingMetrics;
-
-  if (!metrics) {
+  if (!data) {
     return null;
   }
+
+  const metrics = data;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {

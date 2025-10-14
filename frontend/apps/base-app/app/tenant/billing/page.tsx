@@ -61,7 +61,7 @@ export default function TenantBillingPage() {
           apiClient.get<{ payments?: Payment[] }>("/api/v1/billing/payments?limit=50"),
         ]);
 
-        if (invoicesResponse.success && invoicesResponse.data?.invoices) {
+        if (invoicesResponse.data?.invoices) {
           const invoices = invoicesResponse.data.invoices;
           const now = Date.now();
           const open = invoices.filter((invoice) => invoice.amount_due > 0 && invoice.status !== "paid").length;
@@ -78,7 +78,7 @@ export default function TenantBillingPage() {
           setInvoiceSummary({ open, overdue, upcoming });
         }
 
-        if (paymentsResponse.success && paymentsResponse.data?.payments) {
+        if (paymentsResponse.data?.payments) {
           const payments = paymentsResponse.data.payments;
           const pending = payments.filter((payment) => payment.status === 'pending' || payment.status === 'processing').length;
           const failed = payments.filter((payment) => payment.status === 'failed').length;

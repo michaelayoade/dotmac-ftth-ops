@@ -62,7 +62,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Quick Overview Cards (from GraphQL single query) */}
-      {data?.dashboardOverview && (
+      {data && (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -71,10 +71,10 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${data.dashboardOverview.billing.mrr.toLocaleString()}
+                ${data.billing?.mrr?.toLocaleString() || '0'}
               </div>
               <p className="text-xs text-muted-foreground">
-                {data.dashboardOverview.billing.activeSubscriptions} subscriptions
+                {data.billing?.activeSubscriptions || 0} subscriptions
               </p>
             </CardContent>
           </Card>
@@ -86,10 +86,10 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {data.dashboardOverview.customers.totalCustomers.toLocaleString()}
+                {data.customer?.totalCustomers?.toLocaleString() || '0'}
               </div>
               <p className="text-xs text-muted-foreground">
-                {data.dashboardOverview.customers.newCustomers} new this period
+                {data.customer?.newCustomers || 0} new this period
               </p>
             </CardContent>
           </Card>
@@ -101,10 +101,10 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {data.dashboardOverview.monitoring.totalRequests.toLocaleString()}
+                {data.monitoring?.totalRequests?.toLocaleString() || '0'}
               </div>
               <p className="text-xs text-muted-foreground">
-                {(data.dashboardOverview.monitoring.errorRate * 100).toFixed(2)}% error rate
+                {((data.monitoring?.errorRate || 0) * 100).toFixed(2)}% error rate
               </p>
             </CardContent>
           </Card>
@@ -116,10 +116,10 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {data.dashboardOverview.monitoring.avgResponseTimeMs.toFixed(0)}ms
+                {data.monitoring?.avgResponseTimeMs?.toFixed(0) || '0'}ms
               </div>
               <p className="text-xs text-muted-foreground">
-                P95: {data.dashboardOverview.monitoring.p95ResponseTimeMs.toFixed(0)}ms
+                P95: {data.monitoring?.p95ResponseTimeMs?.toFixed(0) || '0'}ms
               </p>
             </CardContent>
           </Card>

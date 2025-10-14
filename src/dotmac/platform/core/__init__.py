@@ -80,7 +80,8 @@ def ensure_pydantic_v2() -> None:
     """
     try:
         from pydantic import VERSION
-        major_version = int(VERSION.split('.')[0])
+
+        major_version = int(VERSION.split(".")[0])
         if major_version < 2:
             raise ImportError(
                 f"Pydantic v2 is required, but v{VERSION} is installed. "

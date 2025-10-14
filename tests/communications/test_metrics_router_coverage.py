@@ -6,7 +6,7 @@ and error handling paths in the endpoint.
 """
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest

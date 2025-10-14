@@ -1,6 +1,6 @@
-# ISP Operations Platform - Infrastructure Quick Start
+# DotMac ISP Operations Platform - Infrastructure Quick Start
 
-This guide will help you quickly deploy the complete ISP infrastructure stack.
+This guide will help you quickly deploy the complete ISP Operations infrastructure stack including RADIUS, NetBox, GenieACS, WireGuard, LibreNMS, and monitoring services.
 
 ## 📋 Prerequisites
 
@@ -25,8 +25,8 @@ docker compose version
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/dotmac-ftth-ops.git
-cd dotmac-ftth-ops
+git clone https://github.com/your-org/dotmac-isp-ops.git
+cd dotmac-isp-ops
 
 # Copy environment template
 cp .env.example .env
@@ -307,11 +307,11 @@ All data is persisted in Docker volumes:
 docker volume ls | grep dotmac
 
 # Backup a volume
-docker run --rm -v dotmac-ftth-ops_postgres_data:/data -v $(pwd):/backup \
+docker run --rm -v dotmac-isp-ops_postgres_data:/data -v $(pwd):/backup \
   alpine tar czf /backup/postgres_backup.tar.gz /data
 
 # Restore a volume
-docker run --rm -v dotmac-ftth-ops_postgres_data:/data -v $(pwd):/backup \
+docker run --rm -v dotmac-isp-ops_postgres_data:/data -v $(pwd):/backup \
   alpine tar xzf /backup/postgres_backup.tar.gz -C /
 ```
 

@@ -6,7 +6,6 @@ Direct SQL test to avoid model loading issues.
 """
 
 import sys
-from pathlib import Path
 from uuid import uuid4
 
 from sqlalchemy import create_engine, text
@@ -41,7 +40,8 @@ def main():
             customer_number = f"CUST-{uuid4().hex[:8].upper()}"
             email = f"test.{uuid4().hex[:6]}@example.com"
 
-            insert_sql = text("""
+            insert_sql = text(
+                """
                 INSERT INTO customers (
                     id, tenant_id, customer_number, first_name, last_name, email,
                     phone, mobile, status, customer_type, tier,
@@ -71,47 +71,51 @@ def main():
                     :avg_uptime_percent, :total_outages, :total_downtime_minutes,
                     NOW(), NOW()
                 )
-            """)
+            """
+            )
 
-            conn.execute(insert_sql, {
-                "id": customer_id,
-                "tenant_id": TEST_TENANT_ID,
-                "customer_number": customer_number,
-                "first_name": "Jane",
-                "last_name": "Smith",
-                "email": email,
-                "phone": "+1-555-1000",
-                "mobile": "+1-555-1001",
-                "status": "active",
-                "customer_type": "individual",
-                "tier": "premium",
-                "address_line1": "789 Billing Blvd",
-                "city": "Chicago",
-                "state_province": "IL",
-                "postal_code": "60601",
-                "country": "US",
-                # ISP fields
-                "service_address_line1": "123 Fiber Lane",
-                "service_address_line2": "Suite 100",
-                "service_city": "Chicago",
-                "service_state_province": "IL",
-                "service_postal_code": "60602",
-                "service_country": "US",
-                "service_coordinates": '{"lat": 41.8781, "lon": -87.6298}',
-                "installation_status": "pending",
-                "scheduled_installation_date": "2025-10-25 14:00:00+00",
-                "installation_notes": "Commercial installation. Contact building manager first.",
-                "connection_type": "ftth",
-                "last_mile_technology": "xgs-pon",
-                "service_plan_speed": "1 Gbps",
-                "assigned_devices": '{"onu_serial": "HUAW999888777", "cpe_model": "Router-X1000"}',
-                "current_bandwidth_profile": "business_1gbps",
-                "static_ip_assigned": "203.0.113.100",
-                "ipv6_prefix": "2001:db8:abcd::/48",
-                "avg_uptime_percent": 100.00,
-                "total_outages": 0,
-                "total_downtime_minutes": 0,
-            })
+            conn.execute(
+                insert_sql,
+                {
+                    "id": customer_id,
+                    "tenant_id": TEST_TENANT_ID,
+                    "customer_number": customer_number,
+                    "first_name": "Jane",
+                    "last_name": "Smith",
+                    "email": email,
+                    "phone": "+1-555-1000",
+                    "mobile": "+1-555-1001",
+                    "status": "active",
+                    "customer_type": "individual",
+                    "tier": "premium",
+                    "address_line1": "789 Billing Blvd",
+                    "city": "Chicago",
+                    "state_province": "IL",
+                    "postal_code": "60601",
+                    "country": "US",
+                    # ISP fields
+                    "service_address_line1": "123 Fiber Lane",
+                    "service_address_line2": "Suite 100",
+                    "service_city": "Chicago",
+                    "service_state_province": "IL",
+                    "service_postal_code": "60602",
+                    "service_country": "US",
+                    "service_coordinates": '{"lat": 41.8781, "lon": -87.6298}',
+                    "installation_status": "pending",
+                    "scheduled_installation_date": "2025-10-25 14:00:00+00",
+                    "installation_notes": "Commercial installation. Contact building manager first.",
+                    "connection_type": "ftth",
+                    "last_mile_technology": "xgs-pon",
+                    "service_plan_speed": "1 Gbps",
+                    "assigned_devices": '{"onu_serial": "HUAW999888777", "cpe_model": "Router-X1000"}',
+                    "current_bandwidth_profile": "business_1gbps",
+                    "static_ip_assigned": "203.0.113.100",
+                    "ipv6_prefix": "2001:db8:abcd::/48",
+                    "avg_uptime_percent": 100.00,
+                    "total_outages": 0,
+                    "total_downtime_minutes": 0,
+                },
+            )
 
             print(f"✅ Inserted customer: {customer_number}")
             print(f"   ID: {customer_id}")
@@ -119,7 +123,8 @@ def main():
             # Test 2: Read Customer
             print_section("Test 2: Read Customer")
 
-            select_sql = text("""
+            select_sql = text(
+                """
                 SELECT
                     customer_number, first_name, last_name, email,
                     service_address_line1, service_city, service_coordinates,
@@ -129,13 +134,14 @@ def main():
                     avg_uptime_percent, total_outages, total_downtime_minutes
                 FROM customers
                 WHERE id = :id
-            """)
+            """
+            )
 
             result = conn.execute(select_sql, {"id": customer_id})
             row = result.fetchone()
 
             if row:
-                print(f"✅ Retrieved customer successfully")
+                print("✅ Retrieved customer successfully")
                 print(f"   Customer: {row.first_name} {row.last_name} ({row.customer_number})")
                 print(f"   Email: {row.email}")
                 print(f"   Service Address: {row.service_address_line1}, {row.service_city}")
@@ -153,7 +159,8 @@ def main():
             # Test 3: Update Installation Status
             print_section("Test 3: Update Installation Status")
 
-            update_sql = text("""
+            update_sql = text(
+                """
                 UPDATE customers
                 SET
                     installation_status = 'completed',
@@ -161,7 +168,8 @@ def main():
                     installation_notes = installation_notes || E'\n\n✅ Installation completed. Speed test: 950 Mbps'
                 WHERE id = :id
                 RETURNING installation_status, installation_date
-            """)
+            """
+            )
 
             result = conn.execute(update_sql, {"id": customer_id})
             row = result.fetchone()
@@ -172,7 +180,8 @@ def main():
             # Test 4: Update Service Quality
             print_section("Test 4: Update Service Quality Metrics")
 
-            update_quality_sql = text("""
+            update_quality_sql = text(
+                """
                 UPDATE customers
                 SET
                     total_outages = 2,
@@ -181,12 +190,13 @@ def main():
                     avg_uptime_percent = 99.90
                 WHERE id = :id
                 RETURNING total_outages, last_outage_date, total_downtime_minutes, avg_uptime_percent
-            """)
+            """
+            )
 
             result = conn.execute(update_quality_sql, {"id": customer_id})
             row = result.fetchone()
 
-            print(f"✅ Updated service quality:")
+            print("✅ Updated service quality:")
             print(f"   Outages: {row.total_outages}")
             print(f"   Last Outage: {row.last_outage_date}")
             print(f"   Downtime: {row.total_downtime_minutes} minutes")
@@ -195,43 +205,52 @@ def main():
             # Test 5: Search by Installation Status
             print_section("Test 5: Search by Installation Status")
 
-            search_sql = text("""
+            search_sql = text(
+                """
                 SELECT customer_number, first_name, last_name, installation_status, service_city
                 FROM customers
                 WHERE tenant_id = :tenant_id
                 AND installation_status = 'completed'
                 ORDER BY customer_number
-            """)
+            """
+            )
 
             result = conn.execute(search_sql, {"tenant_id": TEST_TENANT_ID})
             rows = result.fetchall()
 
             print(f"✅ Found {len(rows)} completed installations")
             for row in rows:
-                print(f"   - {row.customer_number}: {row.first_name} {row.last_name} ({row.service_city})")
+                print(
+                    f"   - {row.customer_number}: {row.first_name} {row.last_name} ({row.service_city})"
+                )
 
             # Test 6: Search by Connection Type
             print_section("Test 6: Search by Connection Type")
 
-            search_connection_sql = text("""
+            search_connection_sql = text(
+                """
                 SELECT customer_number, connection_type, last_mile_technology, service_plan_speed
                 FROM customers
                 WHERE tenant_id = :tenant_id
                 AND connection_type = 'ftth'
                 ORDER BY customer_number
-            """)
+            """
+            )
 
             result = conn.execute(search_connection_sql, {"tenant_id": TEST_TENANT_ID})
             rows = result.fetchall()
 
             print(f"✅ Found {len(rows)} FTTH customers")
             for row in rows:
-                print(f"   - {row.customer_number}: {row.connection_type}/{row.last_mile_technology} @ {row.service_plan_speed}")
+                print(
+                    f"   - {row.customer_number}: {row.connection_type}/{row.last_mile_technology} @ {row.service_plan_speed}"
+                )
 
             # Test 7: Verify Indexes
             print_section("Test 7: Verify ISP Indexes")
 
-            index_sql = text("""
+            index_sql = text(
+                """
                 SELECT indexname, indexdef
                 FROM pg_indexes
                 WHERE tablename = 'customers'
@@ -241,7 +260,8 @@ def main():
                     indexname LIKE '%connection%'
                 )
                 ORDER BY indexname
-            """)
+            """
+            )
 
             result = conn.execute(index_sql)
             indexes = result.fetchall()
@@ -253,7 +273,8 @@ def main():
             # Test 8: Verify Foreign Key
             print_section("Test 8: Verify Foreign Key Constraint")
 
-            fk_sql = text("""
+            fk_sql = text(
+                """
                 SELECT
                     conname AS constraint_name,
                     conrelid::regclass AS table_name,
@@ -263,13 +284,14 @@ def main():
                 JOIN pg_attribute AS a ON a.attnum = ANY(c.conkey) AND a.attrelid = c.conrelid
                 WHERE c.contype = 'f'
                 AND c.conname = 'fk_customers_installation_technician'
-            """)
+            """
+            )
 
             result = conn.execute(fk_sql)
             fk = result.fetchone()
 
             if fk:
-                print(f"✅ Foreign key verified:")
+                print("✅ Foreign key verified:")
                 print(f"   {fk.constraint_name}: {fk.column_name} -> {fk.foreign_table_name}")
 
             # Test 9: Cleanup
@@ -278,7 +300,7 @@ def main():
             delete_sql = text("DELETE FROM customers WHERE id = :id")
             result = conn.execute(delete_sql, {"id": customer_id})
 
-            print(f"✅ Deleted test customer")
+            print("✅ Deleted test customer")
 
             # Commit transaction
             trans.commit()
@@ -290,6 +312,7 @@ def main():
             trans.rollback()
             print(f"\n❌ Error: {e}")
             import traceback
+
             traceback.print_exc()
             return 1
 

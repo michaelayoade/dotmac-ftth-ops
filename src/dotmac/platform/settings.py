@@ -6,6 +6,7 @@ This is the single source of truth for all platform configuration.
 
 from __future__ import annotations
 
+import os
 from enum import Enum
 from typing import Any
 
@@ -20,6 +21,64 @@ class Environment(str, Enum):
     STAGING = "staging"
     PRODUCTION = "production"
     TEST = "test"
+
+
+class ServiceEndpointSettings(BaseModel):
+    """External OSS/automation service endpoint configuration."""
+
+    model_config = ConfigDict()
+
+    url: str | None = Field(None, description="Base URL for the service endpoint")
+    username: str | None = Field(None, description="Optional username for basic auth")
+    password: str | None = Field(None, description="Optional password for basic auth")
+    api_token: str | None = Field(None, description="Optional API token")
+    verify_ssl: bool = Field(True, description="Verify SSL certificates")
+    timeout_seconds: float = Field(30.0, ge=1.0, description="HTTP timeout in seconds")
+    max_retries: int = Field(2, ge=0, description="Number of automatic retries for requests")
+
+
+class OSSSettings(BaseModel):
+    """Operational support system integrations per service."""
+
+    model_config = ConfigDict()
+
+    voltha: ServiceEndpointSettings = Field(
+        default_factory=lambda: ServiceEndpointSettings(
+            url=os.getenv("VOLTHA_URL", "http://localhost:8881"),
+            username=os.getenv("VOLTHA_USERNAME"),
+            password=os.getenv("VOLTHA_PASSWORD"),
+            api_token=os.getenv("VOLTHA_TOKEN"),
+            verify_ssl=os.getenv("VOLTHA_VERIFY_SSL", "true").lower() not in {"false", "0"},
+        ),
+        description="VOLTHA PON controller configuration",
+    )
+    genieacs: ServiceEndpointSettings = Field(
+        default_factory=lambda: ServiceEndpointSettings(
+            url=os.getenv("GENIEACS_URL", "http://localhost:7557"),
+            username=os.getenv("GENIEACS_USERNAME"),
+            password=os.getenv("GENIEACS_PASSWORD"),
+            verify_ssl=os.getenv("GENIEACS_VERIFY_SSL", "true").lower() not in {"false", "0"},
+        ),
+        description="GenieACS TR-069 controller configuration",
+    )
+    netbox: ServiceEndpointSettings = Field(
+        default_factory=lambda: ServiceEndpointSettings(
+            url=os.getenv("NETBOX_URL", "http://localhost:8080"),
+            api_token=os.getenv("NETBOX_API_TOKEN"),
+            verify_ssl=os.getenv("NETBOX_VERIFY_SSL", "true").lower() not in {"false", "0"},
+        ),
+        description="NetBox IPAM/DCIM configuration",
+    )
+    ansible: ServiceEndpointSettings = Field(
+        default_factory=lambda: ServiceEndpointSettings(
+            url=os.getenv("AWX_URL", "http://localhost:80"),
+            username=os.getenv("AWX_USERNAME"),
+            password=os.getenv("AWX_PASSWORD"),
+            api_token=os.getenv("AWX_TOKEN"),
+            verify_ssl=os.getenv("AWX_VERIFY_SSL", "true").lower() not in {"false", "0"},
+        ),
+        description="Ansible AWX automation configuration",
+    )
 
 
 class LogLevel(str, Enum):
@@ -406,6 +465,12 @@ class Settings(BaseSettings):
     observability: ObservabilitySettings = ObservabilitySettings()  # type: ignore[call-arg]
 
     # ============================================================
+    # OSS / External Integrations
+    # ============================================================
+
+    oss: OSSSettings = Field(default_factory=OSSSettings)  # type: ignore[call-arg]
+
+    # ============================================================
     # Billing Configuration
     # ============================================================
 
@@ -689,3 +754,6 @@ def reset_settings() -> None:
 
 # Convenience export
 settings = get_settings()
+
+# Resolve forward references introduced by nested OSS settings
+Settings.model_rebuild()

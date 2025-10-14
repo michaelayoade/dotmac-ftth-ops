@@ -9,7 +9,7 @@ import { platformConfig } from '@/lib/config';
 // - sonner: toast.error('msg') -> useToast: toast({ title: 'Error', description: 'msg', variant: 'destructive' })
 // - For complex options, refer to useToast documentation
 
-const API_BASE_URL = platformConfig.apiBaseUrl;
+const API_BASE_URL = platformConfig.api.baseUrl;
 
 export interface SpanData {
   span_id: string;

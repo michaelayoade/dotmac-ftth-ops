@@ -973,6 +973,32 @@ if HAS_FASTAPI:
         except ImportError:
             pass
 
+        # BSS Phase 1 - CRM
+        try:
+            from dotmac.platform.crm.router import router as crm_router
+
+            app.include_router(crm_router, prefix="/api/v1/crm", tags=["CRM"])
+        except ImportError:
+            pass
+
+        # BSS Phase 1 - Jobs
+        try:
+            from dotmac.platform.jobs.router import router as jobs_router
+
+            app.include_router(jobs_router, prefix="", tags=["Jobs"])
+        except ImportError:
+            pass
+
+        # BSS Phase 1 - Dunning
+        try:
+            from dotmac.platform.billing.dunning.router import router as dunning_router
+
+            app.include_router(
+                dunning_router, prefix="/api/v1/billing/dunning", tags=["Billing - Dunning"]
+            )
+        except ImportError:
+            pass
+
         return app
 
     @pytest.fixture
@@ -1196,7 +1222,9 @@ def disable_rate_limiting_globally(request):
     # Skip disabling for tests that explicitly test rate limiting
     test_module = request.node.fspath.basename if hasattr(request.node, "fspath") else ""
     test_name = request.node.name if hasattr(request.node, "name") else ""
-    test_class = request.node.cls.__name__ if hasattr(request.node, "cls") and request.node.cls else ""
+    test_class = (
+        request.node.cls.__name__ if hasattr(request.node, "cls") and request.node.cls else ""
+    )
     # Get full node ID which includes class name even in parallel execution
     node_id = request.node.nodeid if hasattr(request.node, "nodeid") else ""
 

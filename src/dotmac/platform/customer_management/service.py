@@ -62,6 +62,11 @@ class CustomerService:
     """Core customer management service using standard library patterns."""
 
     def __init__(self, session: AsyncSession) -> None:
+        """Initialize customer service.
+
+        Args:
+            session: Async SQLAlchemy session for database operations
+        """
         self.session = session
         # Initialize collections for efficient analytics
         self._customer_stats_cache: collections.defaultdict[str, int] = collections.defaultdict(int)

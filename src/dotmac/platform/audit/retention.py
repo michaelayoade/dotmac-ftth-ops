@@ -15,7 +15,6 @@ from typing import Any
 
 import structlog
 from sqlalchemy import and_, delete, func, select
-from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import get_async_db
@@ -211,7 +210,7 @@ class AuditRetentionService:
 
                         result = await session.execute(delete_query)
                         # Result.rowcount is available after execute() for DML statements
-                        deleted_count = int(getattr(result, 'rowcount', 0) or 0)
+                        deleted_count = int(getattr(result, "rowcount", 0) or 0)
                         await session.commit()
 
                         results.total_deleted += deleted_count

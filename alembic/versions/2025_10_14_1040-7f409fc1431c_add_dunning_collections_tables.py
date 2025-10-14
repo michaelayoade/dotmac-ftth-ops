@@ -6,9 +6,10 @@ Create Date: 2025-10-14 10:40:59.073601
 
 """
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "7f409fc1431c"
@@ -20,7 +21,7 @@ depends_on = None
 def upgrade() -> None:
     """Add dunning & collections tables for automated payment recovery workflows."""
 
-    # Create enums
+    # Create enums (with checkfirst to avoid duplicate errors)
     dunning_action_type = sa.Enum(
         "email",
         "sms",
@@ -30,7 +31,7 @@ def upgrade() -> None:
         "custom",
         name="dunningactiontype",
     )
-    dunning_action_type.create(op.get_bind())
+    dunning_action_type.create(op.get_bind(), checkfirst=True)
 
     dunning_execution_status = sa.Enum(
         "pending",
@@ -40,7 +41,7 @@ def upgrade() -> None:
         "canceled",
         name="dunningexecutionstatus",
     )
-    dunning_execution_status.create(op.get_bind())
+    dunning_execution_status.create(op.get_bind(), checkfirst=True)
 
     # Create dunning_campaigns table
     op.create_table(
@@ -100,8 +101,12 @@ def upgrade() -> None:
     )
 
     # Indexes for campaigns
-    op.create_index("ix_dunning_campaigns_tenant_active", "dunning_campaigns", ["tenant_id", "is_active"])
-    op.create_index("ix_dunning_campaigns_tenant_priority", "dunning_campaigns", ["tenant_id", "priority"])
+    op.create_index(
+        "ix_dunning_campaigns_tenant_active", "dunning_campaigns", ["tenant_id", "is_active"]
+    )
+    op.create_index(
+        "ix_dunning_campaigns_tenant_priority", "dunning_campaigns", ["tenant_id", "priority"]
+    )
 
     # Create dunning_executions table
     op.create_table(
@@ -115,7 +120,7 @@ def upgrade() -> None:
         # Status tracking
         sa.Column(
             "status",
-            dunning_execution_status,
+            postgresql.ENUM(name="dunningexecutionstatus", create_type=False),
             nullable=False,
             server_default="pending",
         ),
@@ -127,7 +132,9 @@ def upgrade() -> None:
         sa.Column("next_action_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("completed_at", sa.DateTime(timezone=True), nullable=True),
         # Amounts (in cents)
-        sa.Column("outstanding_amount", sa.Integer(), nullable=False, comment="Amount owed in cents"),
+        sa.Column(
+            "outstanding_amount", sa.Integer(), nullable=False, comment="Amount owed in cents"
+        ),
         sa.Column("recovered_amount", sa.Integer(), nullable=False, server_default="0"),
         # Execution log (JSON array)
         sa.Column(
@@ -157,16 +164,22 @@ def upgrade() -> None:
     )
 
     # Indexes for executions
-    op.create_index("ix_dunning_executions_tenant_status", "dunning_executions", ["tenant_id", "status"])
+    op.create_index(
+        "ix_dunning_executions_tenant_status", "dunning_executions", ["tenant_id", "status"]
+    )
     op.create_index("ix_dunning_executions_next_action", "dunning_executions", ["next_action_at"])
-    op.create_index("ix_dunning_executions_subscription_status", "dunning_executions", ["subscription_id", "status"])
+    op.create_index(
+        "ix_dunning_executions_subscription_status",
+        "dunning_executions",
+        ["subscription_id", "status"],
+    )
 
     # Create dunning_action_logs table
     op.create_table(
         "dunning_action_logs",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("execution_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("action_type", dunning_action_type, nullable=False),
+        sa.Column("action_type", postgresql.ENUM(name="dunningactiontype", create_type=False), nullable=False),
         sa.Column(
             "action_config",
             postgresql.JSON(astext_type=sa.Text()),
@@ -175,7 +188,9 @@ def upgrade() -> None:
         ),
         sa.Column("step_number", sa.Integer(), nullable=False),
         sa.Column("executed_at", sa.DateTime(timezone=True), nullable=False),
-        sa.Column("status", sa.String(length=20), nullable=False, comment="success, failed, skipped"),
+        sa.Column(
+            "status", sa.String(length=20), nullable=False, comment="success, failed, skipped"
+        ),
         sa.Column(
             "result",
             postgresql.JSON(astext_type=sa.Text()),
@@ -184,14 +199,25 @@ def upgrade() -> None:
             comment="Execution result details",
         ),
         sa.Column("error_message", sa.Text(), nullable=True),
-        sa.Column("external_id", sa.String(length=100), nullable=True, comment="External system reference ID"),
+        sa.Column(
+            "external_id",
+            sa.String(length=100),
+            nullable=True,
+            comment="External system reference ID",
+        ),
         sa.ForeignKeyConstraint(["execution_id"], ["dunning_executions.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
 
     # Indexes for action logs
-    op.create_index("ix_dunning_action_logs_execution_step", "dunning_action_logs", ["execution_id", "step_number"])
-    op.create_index("ix_dunning_action_logs_action_status", "dunning_action_logs", ["action_type", "status"])
+    op.create_index(
+        "ix_dunning_action_logs_execution_step",
+        "dunning_action_logs",
+        ["execution_id", "step_number"],
+    )
+    op.create_index(
+        "ix_dunning_action_logs_action_status", "dunning_action_logs", ["action_type", "status"]
+    )
 
 
 def downgrade() -> None:

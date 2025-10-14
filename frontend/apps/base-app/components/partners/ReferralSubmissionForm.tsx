@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { platformConfig } from "@/lib/config";
 
-const API_BASE = platformConfig.apiBaseUrl;
+const API_BASE = platformConfig.api.baseUrl;
 
 interface ReferralSubmissionFormProps {
   partnerId: string;

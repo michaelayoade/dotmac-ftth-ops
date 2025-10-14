@@ -14,6 +14,7 @@ from sqlalchemy import create_engine, inspect, text
 # Database URL from alembic.ini
 DATABASE_URL = "postgresql://dotmac_user:change-me-in-production@localhost:5432/dotmac"
 
+
 def main():
     print(f"Connecting to: {DATABASE_URL}")
     engine = create_engine(DATABASE_URL)
@@ -23,14 +24,16 @@ def main():
         with engine.connect() as conn:
             result = conn.execute(text("SELECT version();"))
             version = result.fetchone()[0]
-            print(f"✅ Connected successfully!")
+            print("✅ Connected successfully!")
             print(f"PostgreSQL version: {version}\n")
 
             # Check for alembic_version
-            result = conn.execute(text(
-                "SELECT EXISTS (SELECT 1 FROM information_schema.tables "
-                "WHERE table_schema = 'public' AND table_name = 'alembic_version');"
-            ))
+            result = conn.execute(
+                text(
+                    "SELECT EXISTS (SELECT 1 FROM information_schema.tables "
+                    "WHERE table_schema = 'public' AND table_name = 'alembic_version');"
+                )
+            )
             has_alembic = result.fetchone()[0]
             print(f"Has alembic_version table: {has_alembic}")
 
@@ -42,7 +45,7 @@ def main():
 
             # List all tables
             inspector = inspect(engine)
-            tables = inspector.get_table_names(schema='public')
+            tables = inspector.get_table_names(schema="public")
             print(f"Total tables in public schema: {len(tables)}")
             if tables:
                 print("Tables:")
@@ -52,10 +55,14 @@ def main():
                 print("  (no tables found)")
 
             # Check specifically for customers table
-            if 'customers' in tables:
+            if "customers" in tables:
                 print("\n✅ Customers table exists!")
-                columns = inspector.get_columns('customers', schema='public')
-                isp_columns = [c['name'] for c in columns if 'service_' in c['name'] or 'installation_' in c['name']]
+                columns = inspector.get_columns("customers", schema="public")
+                isp_columns = [
+                    c["name"]
+                    for c in columns
+                    if "service_" in c["name"] or "installation_" in c["name"]
+                ]
                 print(f"ISP-specific columns found: {len(isp_columns)}")
                 if isp_columns:
                     for col in isp_columns[:5]:
@@ -68,6 +75,7 @@ def main():
         return 1
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

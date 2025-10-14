@@ -109,6 +109,10 @@ class PermissionCategory(str, Enum):
     ANALYTICS = "analytics"
     COMMUNICATION = "communication"
     WORKFLOW = "workflow"
+    NETWORK = "network"
+    IPAM = "ipam"
+    AUTOMATION = "automation"
+    CPE = "cpe"
 
 
 class Permission(Base):

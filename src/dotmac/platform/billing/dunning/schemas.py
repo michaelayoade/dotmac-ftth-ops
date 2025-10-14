@@ -31,9 +31,13 @@ class DunningExclusionRules(BaseModel):
 
     model_config = ConfigDict()
 
-    min_lifetime_value: float | None = Field(None, ge=0, description="Exclude customers above this LTV")
+    min_lifetime_value: float | None = Field(
+        default=None, ge=0, description="Exclude customers above this LTV"
+    )
     customer_tiers: list[str] = Field(default_factory=list, description="Exclude these tiers")
-    customer_tags: list[str] = Field(default_factory=list, description="Exclude customers with these tags")
+    customer_tags: list[str] = Field(
+        default_factory=list, description="Exclude customers with these tags"
+    )
 
 
 class DunningCampaignCreate(BaseModel):
@@ -47,7 +51,7 @@ class DunningCampaignCreate(BaseModel):
     max_retries: int = Field(default=3, ge=0, le=10)
     retry_interval_days: int = Field(default=3, ge=1, le=30)
     actions: list[DunningActionConfig] = Field(min_length=1, description="Action sequence")
-    exclusion_rules: DunningExclusionRules = Field(default_factory=DunningExclusionRules)
+    exclusion_rules: DunningExclusionRules = Field(default=DunningExclusionRules())
     priority: int = Field(default=0, ge=0, le=100)
     is_active: bool = Field(default=True)
 

@@ -60,7 +60,7 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
   const fetchRoleAssignments = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get(`/api/v1/rbac/roles/${role.name}/users`);
+      const response = await apiClient.get(`/api/v1/auth/rbac/roles/${role.name}/users`);
       if (response.success && response.data) {
         setAssignedUsers(response.data as (User & UserRoleAssignment)[]);
       }
@@ -91,7 +91,7 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
           expires_at: expiresAt ? new Date(expiresAt).toISOString() : undefined,
         };
 
-        return apiClient.post('/api/v1/rbac/users/assign-role', assignData);
+        return apiClient.post('/api/v1/auth/rbac/users/assign-role', assignData);
       });
 
       const results = await Promise.all(assignments);
@@ -120,7 +120,7 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
     }
 
     try {
-      const response = await apiClient.post('/api/v1/rbac/users/revoke-role', {
+      const response = await apiClient.post('/api/v1/auth/rbac/users/revoke-role', {
         user_id: userId,
         role_name: role.name,
       });

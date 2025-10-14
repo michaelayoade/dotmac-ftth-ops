@@ -337,7 +337,7 @@ class DunningActionLog(Base, TimestampMixin, TenantMixin):
     action_type: Mapped[DunningActionType] = mapped_column(
         SQLEnum(DunningActionType),
         nullable=False,
-        index=True,
+        # Note: Index removed here - composite index defined in __table_args__ instead
     )
     action_config: Mapped[dict[str, Any]] = mapped_column(
         JSON,

@@ -300,7 +300,7 @@ export default function DashboardLayout({
       logger.debug('Dashboard: Fetching current user');
       const response = await apiClient.get('/api/v1/auth/me');
 
-      if (response.success && response.data) {
+      if (response.data) {
         const userData = response.data as Record<string, unknown> & { id?: string };
         logger.info('Dashboard: User fetched successfully', { userId: userData.id });
         setUser(userData);
@@ -318,8 +318,8 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     try {
-      await apiClient.logout();
-      // apiClient.logout() already redirects to login
+      await apiClient.post('/api/v1/auth/logout');
+      window.location.href = '/login';
     } catch (error) {
       logger.error('Logout error', error instanceof Error ? error : new Error(String(error)));
       // Still redirect even if logout fails

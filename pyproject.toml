@@ -4,9 +4,9 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "dotmac-platform-services"
+name = "dotmac-isp-ops"
 version = "1.0.0"
-description = "DotMac Platform Services - Unified auth, secrets, and observability"
+description = "DotMac ISP Operations Platform - Complete ISP/FTTH/WISP management with BSS and OSS"
 authors = ["DotMac Team <dev@dotmac.com>"]
 
 readme = "README.md"
@@ -111,6 +111,9 @@ pandas = "^2.2.0"
 # python-rule-engine = "^1.0.0"  # Moved to [rules-engine] extra (currently unused)
 # casbin = "^1.43.0"  # Moved to [casbin] extra (currently unused, RBAC uses custom SQL)
 # casbin-sqlalchemy-adapter = "^1.4.0"  # Moved to [casbin] extra
+sse-starlette = "^3.0.2"
+croniter = "^6.0.0"
+elasticsearch = "^9.1.1"
 
 [tool.poetry.extras]
 # Media processing (for video/audio file handling - currently unused)
@@ -194,7 +197,18 @@ addopts = [
     "--strict-config",
     # Coverage disabled by default - enable with --cov flag
     # Use: pytest --cov for coverage
+    # Parallel execution: Use -n auto to enable pytest-xdist
+    # Example: pytest -n auto (auto-detect CPUs)
+    #          pytest -n 4 (use 4 workers)
 ]
+
+# pytest-xdist configuration for parallel test execution
+# Note: Some tests may need to be marked with @pytest.mark.xdist_group("group_name")
+# to ensure they run serially within that group (e.g., database migrations)
+[tool.pytest_xdist]
+# Load balancing algorithm: "load", "loadscope", "loadfile", "loadgroup"
+# "loadscope" groups tests by class/module for better isolation
+looponfail = false
 
 [tool.coverage.run]
 source = ["src/dotmac"]

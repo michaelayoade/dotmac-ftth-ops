@@ -126,7 +126,7 @@ All external services are deployed as Docker containers:
 ### Directory Structure
 
 ```
-dotmac-ftth-ops/
+dotmac-isp-ops/
 ├── docker-compose.yml                    # Core services (Postgres, Redis, etc.)
 ├── docker-compose.isp.yml                # ISP-specific services
 ├── docker-compose.monitoring.yml         # Monitoring stack
@@ -1100,3 +1100,52 @@ docker compose exec redis redis-cli --stat
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2025-10-14 | DevOps Team | Initial infrastructure guide with Docker images |
+
+### Tenant OSS Configuration
+
+Each ISP tenant may require different VOLTHA, GenieACS, NetBox, and AWX endpoints.
+Store these overrides in the `tenant_settings` table via the helper script:
+
+```bash
+./scripts/seed_tenant_oss.py --tenant-slug core-isp --config-file tenant_oss.json
+```
+
+Example JSON (`tenant_oss.json`):
+
+```json
+{
+  "voltha": {
+    "url": "https://voltha.core-isp.net",
+    "api_token": "VOLTHA_TOKEN"
+  },
+  "genieacs": {
+    "url": "https://acs.core-isp.net",
+    "username": "acs_user",
+    "password": "super-secret"
+  },
+  "netbox": {
+    "url": "https://netbox.core-isp.net",
+    "api_token": "NETBOX_TOKEN"
+  },
+  "ansible": {
+    "url": "https://awx.core-isp.net",
+    "token": "AWX_BEARER_TOKEN"
+  }
+}
+```
+
+To update a single value without a file:
+
+```bash
+./scripts/seed_tenant_oss.py --tenant-slug core-isp --service netbox \
+    --set url=https://netbox.core-isp.net --set api_token=NEW_TOKEN
+```
+
+To clear overrides (fall back to global defaults):
+
+```bash
+./scripts/seed_tenant_oss.py --tenant-slug core-isp --service voltha --clear
+```
+
+Global defaults live under `settings.oss`; any option (`url`, `username`, `password`, `api_token`,
+`verify_ssl`, `timeout_seconds`, `max_retries`) can be overridden per tenant.

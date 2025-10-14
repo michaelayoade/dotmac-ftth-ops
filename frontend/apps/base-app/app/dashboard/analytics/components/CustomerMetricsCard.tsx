@@ -39,11 +39,11 @@ export function CustomerMetricsCard({ period = '30d' }: { period?: string }) {
     );
   }
 
-  const metrics = data?.customerMetrics;
-
-  if (!metrics) {
+  if (!data) {
     return null;
   }
+
+  const metrics = data;
 
   const formatPercent = (value: number) => {
     return `${(value * 100).toFixed(1)}%`;

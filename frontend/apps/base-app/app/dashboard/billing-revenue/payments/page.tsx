@@ -130,7 +130,7 @@ export default function PaymentsPage() {
         timestamp: string;
       }>(`/api/v1/billing/payments?${params.toString()}`);
 
-      if (!response.success || !response.data?.payments) {
+      if (!response.data?.payments) {
         throw new Error('Failed to fetch payments');
       }
 

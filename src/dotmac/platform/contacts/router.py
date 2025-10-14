@@ -365,7 +365,9 @@ async def bulk_update_contacts(
         except Exception as exc:
             # Catch any other unexpected errors
             errors.append({"contact_id": str(contact_id), "error": str(exc)})
-            logger.error("Unexpected error updating contact", contact_id=str(contact_id), error=str(exc))
+            logger.error(
+                "Unexpected error updating contact", contact_id=str(contact_id), error=str(exc)
+            )
 
     return {"updated": updated_count, "errors": errors}
 
@@ -400,6 +402,8 @@ async def bulk_delete_contacts(
         except Exception as exc:
             # Catch any other unexpected errors
             errors.append({"contact_id": str(contact_id), "error": str(exc)})
-            logger.error("Unexpected error deleting contact", contact_id=str(contact_id), error=str(exc))
+            logger.error(
+                "Unexpected error deleting contact", contact_id=str(contact_id), error=str(exc)
+            )
 
     return {"deleted": deleted_count, "errors": errors}

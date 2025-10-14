@@ -6,7 +6,6 @@ Focus: Test CRUD operations, validation, tenant isolation in isolation
 """
 
 from datetime import UTC, datetime
-from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID, uuid4
 

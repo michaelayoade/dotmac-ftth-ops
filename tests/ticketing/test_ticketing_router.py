@@ -69,11 +69,14 @@ def ticketing_app(async_db_session):
 @pytest.mark.asyncio
 @patch("dotmac.platform.ticketing.events.get_event_bus")
 @patch("dotmac.platform.ticketing.router.get_current_tenant_id")
-async def test_customer_creates_ticket_for_tenant(mock_get_tenant_id, mock_event_bus, async_db_session, ticketing_app):
+async def test_customer_creates_ticket_for_tenant(
+    mock_get_tenant_id, mock_event_bus, async_db_session, ticketing_app
+):
     """Customers should be able to open tickets targeting their tenant support team."""
     mock_get_tenant_id.return_value = "test-tenant"
     # Mock event bus to avoid event publishing errors in tests
     from unittest.mock import AsyncMock
+
     mock_bus_instance = AsyncMock()
     mock_event_bus.return_value = mock_bus_instance
 
@@ -145,10 +148,13 @@ async def test_customer_creates_ticket_for_tenant(mock_get_tenant_id, mock_event
 @pytest.mark.asyncio
 @patch("dotmac.platform.ticketing.events.get_event_bus")
 @patch("dotmac.platform.ticketing.router.get_current_tenant_id")
-async def test_tenant_escalates_ticket_to_partner(mock_get_tenant_id, mock_event_bus, async_db_session, ticketing_app):
+async def test_tenant_escalates_ticket_to_partner(
+    mock_get_tenant_id, mock_event_bus, async_db_session, ticketing_app
+):
     """Tenant administrators should be able to escalate tickets to an active partner."""
     mock_get_tenant_id.return_value = "test-tenant"
     from unittest.mock import AsyncMock
+
     mock_bus_instance = AsyncMock()
     mock_event_bus.return_value = mock_bus_instance
 
@@ -199,10 +205,13 @@ async def test_tenant_escalates_ticket_to_partner(mock_get_tenant_id, mock_event
 @pytest.mark.asyncio
 @patch("dotmac.platform.ticketing.events.get_event_bus")
 @patch("dotmac.platform.ticketing.router.get_current_tenant_id")
-async def test_partner_appends_message_with_status_transition(mock_get_tenant_id, mock_event_bus, async_db_session, ticketing_app):
+async def test_partner_appends_message_with_status_transition(
+    mock_get_tenant_id, mock_event_bus, async_db_session, ticketing_app
+):
     """Partners should respond to tickets and transition status."""
     mock_get_tenant_id.return_value = "test-tenant"
     from unittest.mock import AsyncMock
+
     mock_bus_instance = AsyncMock()
     mock_event_bus.return_value = mock_bus_instance
 

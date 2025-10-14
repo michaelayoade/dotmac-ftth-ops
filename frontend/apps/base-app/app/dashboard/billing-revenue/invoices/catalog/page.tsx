@@ -51,11 +51,11 @@ export default function ProductCatalogPage() {
         apiClient.get<{ categories: ProductCategory[] }>('/api/v1/billing/catalog/categories')
       ]);
 
-      if (productsResponse.success && productsResponse.data) {
+      if (productsResponse.data) {
         setProducts(productsResponse.data.products || []);
       }
 
-      if (categoriesResponse.success && categoriesResponse.data) {
+      if (categoriesResponse.data) {
         setCategories(categoriesResponse.data.categories || []);
       }
     } catch (error) {

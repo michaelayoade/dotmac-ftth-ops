@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Puzzle,
   Plus,
@@ -77,21 +77,21 @@ export default function PluginsPage() {
   const refreshPlugins = useRefreshPlugins();
 
   // Load health checks whenever instances change
-  const loadHealthChecks = async () => {
+  const loadHealthChecks = useCallback(async () => {
     try {
       const result = await bulkHealthCheck.mutateAsync(undefined);
       setHealthChecks(result);
     } catch (error) {
       console.error('Failed to load health checks:', error);
     }
-  };
+  }, [bulkHealthCheck]);
 
   // Refresh health checks when instances load
   useEffect(() => {
     if (pluginInstances.length > 0) {
       loadHealthChecks();
     }
-  }, [pluginInstances.length]);
+  }, [pluginInstances.length, loadHealthChecks]);
 
   const handleCreateInstance = async (data: CreatePluginInstanceRequest) => {
     await createInstance.mutateAsync(data);

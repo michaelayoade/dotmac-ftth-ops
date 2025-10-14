@@ -22,10 +22,11 @@ Verifies that:
 5. handle_record_offline_payment calls PaymentService.record_offline_payment
 """
 
-import pytest
 from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from dotmac.platform.billing.commands.handlers import (
     InvoiceCommandHandler,

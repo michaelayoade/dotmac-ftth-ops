@@ -11,7 +11,6 @@ from fastapi import status
 from fastapi.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo, create_access_token
-from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.data_import.models import (
     ImportFailure,
     ImportJob,
@@ -20,7 +19,6 @@ from dotmac.platform.data_import.models import (
 )
 from dotmac.platform.data_import.service import ImportResult
 from dotmac.platform.main import app
-from dotmac.platform.tenant import set_current_tenant_id
 
 
 @pytest.fixture
@@ -97,7 +95,9 @@ class TestUploadEndpoints:
     """Test file upload endpoints."""
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_upload_csv_customers(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_upload_csv_customers(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test uploading customer CSV file."""
         csv_content = b"name,email\nJohn Doe,john@example.com\n"
         job_id = str(uuid4())
@@ -123,7 +123,9 @@ class TestUploadEndpoints:
         assert data["file_format"] == "csv"
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_upload_json_customers(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_upload_json_customers(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test uploading customer JSON file."""
         json_data = [{"name": "John", "email": "john@example.com"}]
         json_content = json.dumps(json_data).encode()
@@ -144,7 +146,9 @@ class TestUploadEndpoints:
         assert response.status_code == status.HTTP_200_OK
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_upload_csv_invoices(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_upload_csv_invoices(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test uploading invoice CSV file."""
         csv_content = b"invoice_number,amount\nINV-001,100.00\n"
         job_id = str(uuid4())
@@ -217,7 +221,9 @@ class TestJobManagement:
     """Test job retrieval and management endpoints."""
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_get_job_success(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_get_job_success(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test getting import job."""
         job_id = str(uuid4())
         mock_service_class.return_value = mock_import_service
@@ -230,7 +236,9 @@ class TestJobManagement:
         assert str(data["id"]) == job_id
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_get_job_not_found(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_get_job_not_found(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test getting non-existent job."""
         job_id = str(uuid4())
         mock_service_class.return_value = mock_import_service
@@ -254,7 +262,9 @@ class TestJobManagement:
         assert len(data["jobs"]) == 3
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_list_jobs_with_filters(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_list_jobs_with_filters(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test listing jobs with status filter."""
         mock_service_class.return_value = mock_import_service
         mock_import_service.list_import_jobs.return_value = []
@@ -270,7 +280,9 @@ class TestJobManagement:
         mock_import_service.list_import_jobs.assert_called_once()
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_get_job_status(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_get_job_status(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test getting job status."""
         job_id = str(uuid4())
         mock_service_class.return_value = mock_import_service
@@ -278,7 +290,9 @@ class TestJobManagement:
             job_id, ImportJobStatus.IN_PROGRESS
         )
 
-        response = test_client.get(f"/api/v1/data-import/jobs/{job_id}/status", headers=auth_headers)
+        response = test_client.get(
+            f"/api/v1/data-import/jobs/{job_id}/status", headers=auth_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -286,13 +300,17 @@ class TestJobManagement:
         assert "progress_percentage" in data
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_get_job_status_not_found(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_get_job_status_not_found(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test getting status of non-existent job."""
         job_id = str(uuid4())
         mock_service_class.return_value = mock_import_service
         mock_import_service.get_import_job.return_value = None
 
-        response = test_client.get(f"/api/v1/data-import/jobs/{job_id}/status", headers=auth_headers)
+        response = test_client.get(
+            f"/api/v1/data-import/jobs/{job_id}/status", headers=auth_headers
+        )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -314,7 +332,9 @@ class TestJobManagement:
         mock_task.state = "PROGRESS"
         mock_async_result.return_value = mock_task
 
-        response = test_client.get(f"/api/v1/data-import/jobs/{job_id}/status", headers=auth_headers)
+        response = test_client.get(
+            f"/api/v1/data-import/jobs/{job_id}/status", headers=auth_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -339,7 +359,9 @@ class TestFailureManagement:
 
         mock_import_service.get_import_failures.return_value = [mock_failure]
 
-        response = test_client.get(f"/api/v1/data-import/jobs/{job_id}/failures", headers=auth_headers)
+        response = test_client.get(
+            f"/api/v1/data-import/jobs/{job_id}/failures", headers=auth_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -348,7 +370,9 @@ class TestFailureManagement:
         assert data[0]["row_number"] == 5
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_export_failures_csv(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_export_failures_csv(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test exporting failures as CSV."""
         job_id = str(uuid4())
         mock_service_class.return_value = mock_import_service
@@ -370,7 +394,9 @@ class TestFailureManagement:
         assert "text/csv" in response.headers["content-type"]
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_export_failures_json(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_export_failures_json(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test exporting failures as JSON."""
         job_id = str(uuid4())
         mock_service_class.return_value = mock_import_service
@@ -392,7 +418,9 @@ class TestFailureManagement:
         assert "application/json" in response.headers["content-type"]
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_export_failures_not_found(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_export_failures_not_found(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test exporting when no failures exist."""
         job_id = str(uuid4())
         mock_service_class.return_value = mock_import_service
@@ -411,7 +439,9 @@ class TestJobCancellation:
     """Test job cancellation endpoint."""
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_cancel_job_success(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_cancel_job_success(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test canceling an import job."""
         job_id = str(uuid4())
         mock_service_class.return_value = mock_import_service
@@ -425,7 +455,9 @@ class TestJobCancellation:
         assert data["status"] == "cancelled"
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_cancel_nonexistent_job(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_cancel_nonexistent_job(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test canceling non-existent job."""
         job_id = str(uuid4())
         mock_service_class.return_value = mock_import_service
@@ -436,7 +468,9 @@ class TestJobCancellation:
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     @patch("dotmac.platform.data_import.router.DataImportService")
-    def test_cancel_completed_job(self, mock_service_class, test_client, auth_headers, mock_import_service):
+    def test_cancel_completed_job(
+        self, mock_service_class, test_client, auth_headers, mock_import_service
+    ):
         """Test canceling already completed job."""
         job_id = str(uuid4())
         mock_service_class.return_value = mock_import_service

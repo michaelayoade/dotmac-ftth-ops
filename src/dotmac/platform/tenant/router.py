@@ -39,6 +39,7 @@ from .service import (
     TenantNotFoundError,
     TenantService,
 )
+from dotmac.platform.tenant.oss_config import OSSService, update_service_config
 
 logger = structlog.get_logger(__name__)
 
@@ -57,6 +58,7 @@ async def create_tenant(
     tenant_data: TenantCreate,
     current_user: UserInfo = Depends(get_current_user),
     service: TenantService = Depends(get_tenant_service),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TenantResponse:
     """
     Create a new tenant organization.
@@ -64,7 +66,18 @@ async def create_tenant(
     Creates a new tenant with initial configuration, trial period, and default features.
     """
     try:
-        tenant = await service.create_tenant(tenant_data, created_by=current_user.user_id)
+        # Extract OSS overrides before persisting tenant
+        oss_overrides = tenant_data.oss_config or {}
+        tenant_payload = tenant_data.model_dump(exclude={"oss_config"})
+
+        tenant = await service.create_tenant(
+            TenantCreate(**tenant_payload), created_by=current_user.user_id
+        )
+
+        if oss_overrides:
+            for service_name, overrides in oss_overrides.items():
+                service_enum = OSSService(service_name)
+                await update_service_config(session, tenant.id, service_enum, overrides)
 
         # Convert to response model
         response = TenantResponse.model_validate(tenant)

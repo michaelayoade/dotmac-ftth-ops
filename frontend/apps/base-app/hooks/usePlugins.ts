@@ -176,7 +176,7 @@ export function useAvailablePlugins(
   return useQuery<PluginConfig[], Error, PluginConfig[], ['plugins', 'available']>({
     queryKey: ['plugins', 'available'],
     queryFn: async () => {
-      const response = await apiClient.get<PluginConfig[]>('/plugins');
+      const response = await apiClient.get<PluginConfig[]>('/api/v1/plugins');
       return extractDataOrThrow(response, 'Failed to load available plugins');
     },
     ...options,
@@ -192,7 +192,7 @@ export function usePluginInstances(
   return useQuery<PluginListResponse, Error, PluginListResponse, ['plugins', 'instances']>({
     queryKey: ['plugins', 'instances'],
     queryFn: async () => {
-      const response = await apiClient.get<PluginListResponse>('/plugins/instances');
+      const response = await apiClient.get<PluginListResponse>('/api/v1/plugins/instances');
       return extractDataOrThrow(response, 'Failed to load plugin instances');
     },
     ...options,
@@ -215,7 +215,7 @@ export function usePluginSchema(
     queryKey: ['plugins', 'schema', pluginName],
     queryFn: async () => {
       const response = await apiClient.get<{ schema: PluginConfig; instance_id: string | null }>(
-        `/plugins/${pluginName}/schema`
+        `/api/v1/plugins/${pluginName}/schema`
       );
       return extractDataOrThrow(response, 'Failed to load plugin schema');
     },
@@ -234,7 +234,7 @@ export function usePluginInstance(
   return useQuery<PluginInstance, Error, PluginInstance, ['plugins', 'instances', string]>({
     queryKey: ['plugins', 'instances', instanceId],
     queryFn: async () => {
-      const response = await apiClient.get<PluginInstance>(`/plugins/instances/${instanceId}`);
+      const response = await apiClient.get<PluginInstance>(`/api/v1/plugins/instances/${instanceId}`);
       return extractDataOrThrow(response, 'Failed to load plugin instance');
     },
     enabled: !!instanceId,
@@ -258,7 +258,7 @@ export function usePluginConfiguration(
     queryKey: ['plugins', 'instances', instanceId, 'configuration'],
     queryFn: async () => {
       const response = await apiClient.get<PluginConfigurationResponse>(
-        `/plugins/instances/${instanceId}/configuration`
+        `/api/v1/plugins/instances/${instanceId}/configuration`
       );
       return extractDataOrThrow(response, 'Failed to load plugin configuration');
     },
@@ -280,7 +280,7 @@ export function useCreatePluginInstance() {
 
   return useMutation({
     mutationFn: async (data: CreatePluginInstanceRequest) => {
-      const response = await apiClient.post<PluginInstance>('/plugins/instances', data);
+      const response = await apiClient.post<PluginInstance>('/api/v1/plugins/instances', data);
       return extractDataOrThrow(response, 'Failed to create plugin instance');
     },
     onSuccess: (data) => {
@@ -317,7 +317,7 @@ export function useUpdatePluginConfiguration() {
       data: UpdatePluginConfigurationRequest;
     }) => {
       const response = await apiClient.put<{ message: string }>(
-        `/plugins/instances/${instanceId}/configuration`,
+        `/api/v1/plugins/instances/${instanceId}/configuration`,
         data
       );
       return extractDataOrThrow(response, 'Failed to update plugin configuration');
@@ -353,7 +353,7 @@ export function useDeletePluginInstance() {
 
   return useMutation({
     mutationFn: async (instanceId: string) => {
-      const response = await apiClient.delete(`/plugins/instances/${instanceId}`);
+      const response = await apiClient.delete(`/api/v1/plugins/instances/${instanceId}`);
       // Allow success=false for 204 No Content (DELETE operations)
       if (!response.success && response.error?.status !== 204) {
         throw new Error(response.error?.message || 'Failed to delete plugin instance');
@@ -390,7 +390,7 @@ export function useTestPluginConnection() {
       configuration?: Record<string, any> | null;
     }) => {
       const response = await apiClient.post<PluginTestResult>(
-        `/plugins/instances/${instanceId}/test`,
+        `/api/v1/plugins/instances/${instanceId}/test`,
         { configuration: configuration || null }
       );
       return extractDataOrThrow(response, 'Failed to test plugin connection');
@@ -409,7 +409,7 @@ export function usePluginHealthCheck(
     queryKey: ['plugins', 'instances', instanceId, 'health'],
     queryFn: async () => {
       const response = await apiClient.get<PluginHealthCheck>(
-        `/plugins/instances/${instanceId}/health`
+        `/api/v1/plugins/instances/${instanceId}/health`
       );
       return extractDataOrThrow(response, 'Failed to load plugin health');
     },
@@ -425,7 +425,7 @@ export function usePluginHealthCheck(
 export function useBulkHealthCheck() {
   return useMutation({
     mutationFn: async (instanceIds?: string[] | null) => {
-      const response = await apiClient.post<PluginHealthCheck[]>('/plugins/instances/health-check', {
+      const response = await apiClient.post<PluginHealthCheck[]>('/api/v1/plugins/instances/health-check', {
         instance_ids: instanceIds || null,
       });
       return extractDataOrThrow(response, 'Failed to run plugin health check');
@@ -443,7 +443,7 @@ export function useRefreshPlugins() {
   return useMutation({
     mutationFn: async () => {
       const response = await apiClient.post<{ message: string; available_plugins: number }>(
-        '/plugins/refresh'
+        '/api/v1/plugins/refresh'
       );
       return extractDataOrThrow(response, 'Failed to refresh plugins');
     },

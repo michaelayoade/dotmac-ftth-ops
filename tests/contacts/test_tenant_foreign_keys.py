@@ -287,7 +287,9 @@ class TestTenantIsolation:
         # Query for tenant1 contacts
         from sqlalchemy import select
 
-        result = await async_db_session.execute(select(Contact).where(Contact.tenant_id == tenant1.id))
+        result = await async_db_session.execute(
+            select(Contact).where(Contact.tenant_id == tenant1.id)
+        )
         tenant1_contacts = result.scalars().all()
 
         # Should only get tenant1's contact
@@ -295,7 +297,9 @@ class TestTenantIsolation:
         assert tenant1_contacts[0].display_name == "Tenant 1 Contact"
 
         # Query for tenant2 contacts
-        result = await async_db_session.execute(select(Contact).where(Contact.tenant_id == tenant2.id))
+        result = await async_db_session.execute(
+            select(Contact).where(Contact.tenant_id == tenant2.id)
+        )
         tenant2_contacts = result.scalars().all()
 
         # Should only get tenant2's contact

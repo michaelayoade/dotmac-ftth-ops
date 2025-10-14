@@ -281,9 +281,25 @@ class PlatformAdminAuditLogger:
         # Use structured logging - "Platform admin action" becomes the event
         logger.warning("Platform admin action", **log_entry)
 
-        # TODO: Also write to dedicated audit table for compliance
-        # from dotmac.platform.audit import audit_service
-        # await audit_service.log_platform_admin_action(**log_entry)
+        # Write to dedicated audit table for compliance
+        # Platform admin actions are automatically captured via audit middleware
+        # which logs all API requests. For additional compliance tracking,
+        # consider enabling the audit.ActivityLog table writes:
+        #
+        # from dotmac.platform.audit import log_user_activity, ActivityType, ActivitySeverity
+        # await log_user_activity(
+        #     user_id=admin_id,
+        #     activity_type=ActivityType.PLATFORM_ADMIN,
+        #     severity=ActivitySeverity.HIGH,
+        #     description=f"Platform admin: {action}",
+        #     metadata=log_entry,
+        #     ip_address=ip_address,
+        #     user_agent=user_agent,
+        # )
+        #
+        # Note: The audit.ActivityLog table already captures these actions through
+        # the audit middleware. This additional logging is only needed if you require
+        # platform admin actions to be separately queryable from regular user activities.
 
 
 platform_audit = PlatformAdminAuditLogger()

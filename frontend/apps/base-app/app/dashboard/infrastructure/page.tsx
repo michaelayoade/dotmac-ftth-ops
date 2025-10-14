@@ -227,7 +227,7 @@ function InfrastructurePageContent() {
       if (!services.find(s => s.service === 'API Gateway')) {
         services.unshift({
           service: 'API Gateway',
-          status: infraMetrics.health.status,
+          status: infraMetrics.health.status === 'critical' ? 'down' : infraMetrics.health.status,
           latency: infraMetrics.performance.avgLatency,
           lastCheck: 'Just now'
         });
@@ -239,28 +239,28 @@ function InfrastructurePageContent() {
       setResourceUsage([
         {
           resource: 'CPU Usage',
-          used: infraMetrics.resources.cpuUsage,
+          used: infraMetrics.resources.cpu,
           total: 100,
           unit: '%',
           icon: Cpu
         },
         {
           resource: 'Memory',
-          used: infraMetrics.resources.memoryUsage,
+          used: infraMetrics.resources.memory,
           total: 100,
           unit: '%',
           icon: HardDrive
         },
         {
           resource: 'Disk',
-          used: infraMetrics.resources.diskUsage,
+          used: infraMetrics.resources.disk,
           total: 100,
           unit: '%',
           icon: Database
         },
         {
           resource: 'Network',
-          used: infraMetrics.resources.networkUsage,
+          used: infraMetrics.resources.network,
           total: 100,
           unit: '%',
           icon: Network

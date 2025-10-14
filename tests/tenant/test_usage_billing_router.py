@@ -41,6 +41,7 @@ def setup_test_database():
     This fixture ensures all tables exist before tests run.
     """
     from sqlalchemy import create_engine
+
     from dotmac.platform.db import Base
 
     # Create in-memory SQLite database
@@ -98,7 +99,9 @@ def mock_usage_billing_integration():
 
 
 @pytest.fixture
-async def test_client_with_auth(test_app, async_db_session, mock_usage_billing_integration, setup_test_database):
+async def test_client_with_auth(
+    test_app, async_db_session, mock_usage_billing_integration, setup_test_database
+):
     """Create async test client with mocked authentication and default headers."""
     from dotmac.platform.auth.core import get_current_user
     from dotmac.platform.db import get_async_db

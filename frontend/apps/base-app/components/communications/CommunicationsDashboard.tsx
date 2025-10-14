@@ -80,14 +80,8 @@ export function CommunicationsDashboard() {
         "/api/v1/communications/stats",
       );
 
-      if (statsResponse.success && statsResponse.data) {
+      if (statsResponse.data) {
         setStats(statsResponse.data);
-      } else {
-        logger.error(
-          "Failed to fetch stats",
-          new Error(statsResponse.error?.message || "Failed to fetch stats"),
-          { error: statsResponse.error },
-        );
       }
 
       // Fetch recent activity from API
@@ -95,16 +89,8 @@ export function CommunicationsDashboard() {
         "/api/v1/communications/activity?limit=20",
       );
 
-      if (activityResponse.success && activityResponse.data) {
+      if (activityResponse.data) {
         setRecentActivity(activityResponse.data);
-      } else {
-        logger.error(
-          "Failed to fetch activity",
-          new Error(
-            activityResponse.error?.message || "Failed to fetch activity",
-          ),
-          { error: activityResponse.error },
-        );
       }
     } catch (err) {
       logger.error(

@@ -78,11 +78,11 @@ export default function SubscriptionManagementPage() {
         apiClient.get<Subscription[]>('/api/v1/billing/subscriptions')
       ]);
 
-      if (plansResponse.success && plansResponse.data) {
+      if (plansResponse.data) {
         setPlans(plansResponse.data || []);
       }
 
-      if (subscriptionsResponse.success && subscriptionsResponse.data) {
+      if (subscriptionsResponse.data) {
         setSubscriptions(subscriptionsResponse.data || []);
       }
     } catch (error) {

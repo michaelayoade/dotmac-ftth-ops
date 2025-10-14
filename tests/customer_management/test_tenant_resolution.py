@@ -131,7 +131,9 @@ class TestTenantResolution:
             mock_result = MagicMock()
             mock_result.scalars.return_value.all.return_value = []
             mock_count_result = MagicMock()
-            mock_count_result.scalar_one = MagicMock(return_value=0)  # Fix: use scalar_one instead of scalar
+            mock_count_result.scalar_one = MagicMock(
+                return_value=0
+            )  # Fix: use scalar_one instead of scalar
 
             # Return different results for count and data queries
             mock_session.execute.side_effect = [mock_count_result, mock_result]

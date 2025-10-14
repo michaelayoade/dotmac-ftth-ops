@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Handshake, Mail, Lock, AlertCircle } from "lucide-react";
 import { platformConfig } from "@/lib/config";
 
-const API_BASE = platformConfig.apiBaseUrl;
+const API_BASE = platformConfig.api.baseUrl;
 
 export default function PartnerPortalLogin() {
   const router = useRouter();

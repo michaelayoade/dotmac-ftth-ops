@@ -75,6 +75,15 @@ def _register_optional_backends() -> None:
             # Dependencies not available - will be caught when trying to use
             pass
 
+    # Elasticsearch Backend
+    try:
+        from .elasticsearch_backend import ElasticsearchBackend
+
+        _registry.register_backend("elasticsearch", ElasticsearchBackend)
+    except ImportError:
+        # Elasticsearch client not installed
+        pass
+
 
 # Register optional backends on module import
 _register_optional_backends()

@@ -136,7 +136,7 @@ export default function FilesPage() {
 
   const handleDownload = (fileId: string, fileName: string) => {
     window.open(`${API_BASE_URL}/api/v1/files/storage/${fileId}/download`, '_blank');
-    logger.userAction('File downloaded', { fileId, fileName });
+    logger.info('File downloaded', { fileId, fileName });
   };
 
   const getFileIcon = (contentType: string) => {

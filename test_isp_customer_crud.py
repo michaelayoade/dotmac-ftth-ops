@@ -6,7 +6,7 @@ Tests creating, reading, updating, and deleting customers with ISP-specific fiel
 """
 
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -18,8 +18,12 @@ sys.path.insert(0, str(src_root))
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
-from dotmac.platform.customer_management.models import Customer, CustomerStatus, CustomerTier, CustomerType
-from dotmac.platform.db import Base
+from dotmac.platform.customer_management.models import (
+    Customer,
+    CustomerStatus,
+    CustomerTier,
+    CustomerType,
+)
 
 # Database URL
 DATABASE_URL = "postgresql://dotmac_user:change-me-in-production@localhost:5432/dotmac"
@@ -79,7 +83,7 @@ def main():
             service_coordinates={"lat": 39.7817, "lon": -89.6501},
             # Installation tracking
             installation_status="scheduled",
-            scheduled_installation_date=datetime(2025, 10, 20, 10, 0, tzinfo=timezone.utc),
+            scheduled_installation_date=datetime(2025, 10, 20, 10, 0, tzinfo=UTC),
             installation_notes="Customer prefers morning installation. Gate code: #1234",
             # Service details
             connection_type="ftth",
@@ -89,7 +93,7 @@ def main():
             assigned_devices={
                 "onu_serial": "ZTEG12345678",
                 "cpe_mac": "AA:BB:CC:DD:EE:FF",
-                "router_ip": "192.168.1.1"
+                "router_ip": "192.168.1.1",
             },
             current_bandwidth_profile="residential_100mbps",
             static_ip_assigned="203.0.113.45",
@@ -122,8 +126,10 @@ def main():
         retrieved_customer = session.execute(stmt).scalar_one()
 
         print(f"✅ Retrieved customer: {retrieved_customer.customer_number}")
-        print(f"   Service Location: ({retrieved_customer.service_coordinates.get('lat')}, "
-              f"{retrieved_customer.service_coordinates.get('lon')})")
+        print(
+            f"   Service Location: ({retrieved_customer.service_coordinates.get('lat')}, "
+            f"{retrieved_customer.service_coordinates.get('lon')})"
+        )
         print(f"   Static IP: {retrieved_customer.static_ip_assigned}")
         print(f"   IPv6: {retrieved_customer.ipv6_prefix}")
         print(f"   Bandwidth Profile: {retrieved_customer.current_bandwidth_profile}")
@@ -134,8 +140,10 @@ def main():
         print_section("Test 3: Update Installation Status")
 
         retrieved_customer.installation_status = "completed"
-        retrieved_customer.installation_date = datetime.now(timezone.utc)
-        retrieved_customer.installation_notes += "\n\nInstallation completed successfully. Signal strength: -23dBm"
+        retrieved_customer.installation_date = datetime.now(UTC)
+        retrieved_customer.installation_notes += (
+            "\n\nInstallation completed successfully. Signal strength: -23dBm"
+        )
 
         session.commit()
 
@@ -146,13 +154,13 @@ def main():
         print_section("Test 4: Update Service Quality Metrics")
 
         retrieved_customer.total_outages = 1
-        retrieved_customer.last_outage_date = datetime(2025, 10, 15, 14, 30, tzinfo=timezone.utc)
+        retrieved_customer.last_outage_date = datetime(2025, 10, 15, 14, 30, tzinfo=UTC)
         retrieved_customer.total_downtime_minutes = 15
         retrieved_customer.avg_uptime_percent = 99.92  # Recalculated
 
         session.commit()
 
-        print(f"✅ Updated service quality metrics:")
+        print("✅ Updated service quality metrics:")
         print(f"   Total Outages: {retrieved_customer.total_outages}")
         print(f"   Last Outage: {retrieved_customer.last_outage_date}")
         print(f"   Total Downtime: {retrieved_customer.total_downtime_minutes} minutes")
@@ -169,9 +177,11 @@ def main():
 
         session.commit()
 
-        print(f"✅ Bandwidth upgrade completed:")
+        print("✅ Bandwidth upgrade completed:")
         print(f"   Old: {old_profile} ({old_speed})")
-        print(f"   New: {retrieved_customer.current_bandwidth_profile} ({retrieved_customer.service_plan_speed})")
+        print(
+            f"   New: {retrieved_customer.current_bandwidth_profile} ({retrieved_customer.service_plan_speed})"
+        )
 
         # Test 6: Update Device Assignment
         print_section("Test 6: Update Device Assignment")
@@ -180,12 +190,12 @@ def main():
             **retrieved_customer.assigned_devices,
             "onu_serial": "ZTEG87654321",  # Replaced ONU
             "replacement_date": "2025-10-16",
-            "replacement_reason": "Signal degradation"
+            "replacement_reason": "Signal degradation",
         }
 
         session.commit()
 
-        print(f"✅ Updated device assignment:")
+        print("✅ Updated device assignment:")
         for key, value in retrieved_customer.assigned_devices.items():
             print(f"   {key}: {value}")
 
@@ -193,8 +203,7 @@ def main():
         print_section("Test 7: Search by Installation Status")
 
         stmt = select(Customer).where(
-            Customer.tenant_id == TEST_TENANT_ID,
-            Customer.installation_status == "completed"
+            Customer.tenant_id == TEST_TENANT_ID, Customer.installation_status == "completed"
         )
         completed_installs = session.execute(stmt).scalars().all()
 
@@ -206,14 +215,15 @@ def main():
         print_section("Test 8: Search by Connection Type")
 
         stmt = select(Customer).where(
-            Customer.tenant_id == TEST_TENANT_ID,
-            Customer.connection_type == "ftth"
+            Customer.tenant_id == TEST_TENANT_ID, Customer.connection_type == "ftth"
         )
         ftth_customers = session.execute(stmt).scalars().all()
 
         print(f"✅ Found {len(ftth_customers)} FTTH customers")
         for cust in ftth_customers:
-            print(f"   - {cust.customer_number}: {cust.connection_type} / {cust.last_mile_technology}")
+            print(
+                f"   - {cust.customer_number}: {cust.connection_type} / {cust.last_mile_technology}"
+            )
 
         # Test 9: Search by Service Location
         print_section("Test 9: Search by Service Location")
@@ -221,7 +231,7 @@ def main():
         stmt = select(Customer).where(
             Customer.tenant_id == TEST_TENANT_ID,
             Customer.service_city == "Springfield",
-            Customer.service_state_province == "IL"
+            Customer.service_state_province == "IL",
         )
         location_customers = session.execute(stmt).scalars().all()
 
@@ -233,14 +243,29 @@ def main():
         print_section("Test 10: Verify All ISP Fields Present")
 
         isp_fields = [
-            "service_address_line1", "service_address_line2", "service_city",
-            "service_state_province", "service_postal_code", "service_country",
-            "service_coordinates", "installation_status", "installation_date",
-            "scheduled_installation_date", "installation_technician_id",
-            "installation_notes", "connection_type", "last_mile_technology",
-            "service_plan_speed", "assigned_devices", "current_bandwidth_profile",
-            "static_ip_assigned", "ipv6_prefix", "avg_uptime_percent",
-            "last_outage_date", "total_outages", "total_downtime_minutes"
+            "service_address_line1",
+            "service_address_line2",
+            "service_city",
+            "service_state_province",
+            "service_postal_code",
+            "service_country",
+            "service_coordinates",
+            "installation_status",
+            "installation_date",
+            "scheduled_installation_date",
+            "installation_technician_id",
+            "installation_notes",
+            "connection_type",
+            "last_mile_technology",
+            "service_plan_speed",
+            "assigned_devices",
+            "current_bandwidth_profile",
+            "static_ip_assigned",
+            "ipv6_prefix",
+            "avg_uptime_percent",
+            "last_outage_date",
+            "total_outages",
+            "total_downtime_minutes",
         ]
 
         print("✅ All ISP fields verified:")
@@ -265,7 +290,9 @@ def main():
         if deleted_customer is None:
             print("✅ Customer deleted successfully (hard delete)")
         else:
-            print(f"✅ Customer soft-deleted (deleted_at: {getattr(deleted_customer, 'deleted_at', 'N/A')})")
+            print(
+                f"✅ Customer soft-deleted (deleted_at: {getattr(deleted_customer, 'deleted_at', 'N/A')})"
+            )
 
         print_section("All Tests Completed Successfully! 🎉")
 
@@ -274,6 +301,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         session.rollback()
         return 1

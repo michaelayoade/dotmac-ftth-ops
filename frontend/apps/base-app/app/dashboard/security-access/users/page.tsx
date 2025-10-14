@@ -51,7 +51,7 @@ function UsersPageContent() {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const response = await fetch(`${platformConfig.apiBaseUrl}/api/v1/users`, {
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/users`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json'
@@ -112,7 +112,7 @@ function UsersPageContent() {
 
   const handleCreateUser = async () => {
     try {
-      const response = await fetch(`${platformConfig.apiBaseUrl}/api/v1/users`, {
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/users`, {
         method: 'POST',
         credentials: 'include',
         headers: {

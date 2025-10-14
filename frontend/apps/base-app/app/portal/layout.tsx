@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { platformConfig } from "@/lib/config";
 
-const API_BASE = platformConfig.apiBaseUrl;
+const API_BASE = platformConfig.api.baseUrl;
 
 interface NavItem {
   name: string;

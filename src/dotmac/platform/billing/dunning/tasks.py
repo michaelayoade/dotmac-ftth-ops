@@ -5,12 +5,14 @@ Provides background workers for executing scheduled dunning actions.
 """
 
 import asyncio
+from collections.abc import Coroutine
 from concurrent.futures import Future
 from datetime import UTC, datetime
-from typing import Any, Coroutine
+from typing import Any
 from uuid import UUID
 
 import structlog
+from celery import Task
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.celery_app import celery_app
@@ -59,7 +61,7 @@ def _run_async[T](coro: Coroutine[Any, Any, T]) -> T:
     max_retries=3,
     default_retry_delay=60,
 )
-def process_pending_dunning_actions_task(self) -> dict[str, Any]:
+def process_pending_dunning_actions_task(self: Task) -> dict[str, Any]:
     """
     Periodic task to process pending dunning actions.
 
@@ -97,7 +99,7 @@ def process_pending_dunning_actions_task(self) -> dict[str, Any]:
     default_retry_delay=300,  # 5 minutes
 )
 def execute_dunning_action_task(
-    self,
+    self: Task,
     execution_id: str,
     action_config: dict[str, Any],
     step_number: int,
@@ -361,7 +363,7 @@ async def _send_dunning_email(
     """
     Send dunning email notification.
 
-    TODO: Integrate with communications module
+    Integrates with communications module to send templated emails.
     """
     logger.info(
         "dunning.email.sending",
@@ -370,24 +372,67 @@ async def _send_dunning_email(
         template=action_config.get("template"),
     )
 
-    # Placeholder - integrate with communications.task_service
-    # from dotmac.platform.communications.task_service import send_single_email_task
-    # email_message = EmailMessage(
-    #     to=[customer.email],
-    #     subject="Payment Reminder",
-    #     body=render_template(action_config["template"], execution),
-    # )
-    # result = send_single_email_task.delay(email_message.model_dump())
+    try:
+        # Import communications service
+        from dotmac.platform.communications.task_service import send_single_email_task
 
-    return {
-        "status": "success",
-        "action_type": "email",
-        "details": {
-            "template": action_config.get("template"),
-            "customer_id": str(execution.customer_id),
-        },
-        "external_id": f"email_{execution.id}",
-    }
+        # Get customer email - would need to query customer service
+        async with _async_session_maker() as session:
+            from dotmac.platform.customer_management.service import CustomerService
+
+            customer_service = CustomerService(session)
+            customer = await customer_service.get_customer(
+                customer_id=execution.customer_id, tenant_id=execution.tenant_id
+            )
+
+            if not customer or not customer.email:
+                return {
+                    "status": "failed",
+                    "action_type": "email",
+                    "error": "Customer email not found",
+                    "details": {"customer_id": str(execution.customer_id)},
+                }
+
+            # Prepare email data
+            template_name = action_config.get("template", "dunning_reminder")
+            subject = action_config.get("subject", "Payment Reminder")
+
+            # Send email asynchronously via Celery
+            task = send_single_email_task.delay(
+                to_email=customer.email,
+                subject=subject,
+                template_name=template_name,
+                context={
+                    "customer_name": customer.name,
+                    "outstanding_amount": str(execution.outstanding_amount),
+                    "subscription_id": execution.subscription_id,
+                    "due_date": execution.created_at.isoformat(),
+                },
+                tenant_id=execution.tenant_id,
+            )
+
+            return {
+                "status": "success",
+                "action_type": "email",
+                "details": {
+                    "template": template_name,
+                    "customer_id": str(execution.customer_id),
+                    "customer_email": customer.email,
+                    "subject": subject,
+                },
+                "external_id": task.id,
+            }
+
+    except Exception as e:
+        logger.error(
+            "dunning.email.failed", execution_id=execution.id, error=str(e), error_type=type(e).__name__
+        )
+        return {
+            "status": "failed",
+            "action_type": "email",
+            "error": str(e),
+            "details": {"customer_id": str(execution.customer_id)},
+        }
 
 
 async def _send_dunning_sms(
@@ -397,7 +442,7 @@ async def _send_dunning_sms(
     """
     Send dunning SMS notification.
 
-    TODO: Integrate with SMS provider
+    Integrates with SMS provider (Twilio) via integrations module.
     """
     logger.info(
         "dunning.sms.sending",
@@ -405,15 +450,67 @@ async def _send_dunning_sms(
         customer_id=execution.customer_id,
     )
 
-    return {
-        "status": "success",
-        "action_type": "sms",
-        "details": {
-            "template": action_config.get("template"),
-            "customer_id": str(execution.customer_id),
-        },
-        "external_id": f"sms_{execution.id}",
-    }
+    try:
+        # Get customer phone number
+        async with _async_session_maker() as session:
+            from dotmac.platform.customer_management.service import CustomerService
+
+            customer_service = CustomerService(session)
+            customer = await customer_service.get_customer(
+                customer_id=execution.customer_id, tenant_id=execution.tenant_id
+            )
+
+            if not customer or not customer.phone:
+                return {
+                    "status": "failed",
+                    "action_type": "sms",
+                    "error": "Customer phone not found",
+                    "details": {"customer_id": str(execution.customer_id)},
+                }
+
+            # Get SMS integration
+            from dotmac.platform.integrations import get_integration_async
+
+            sms_integration = await get_integration_async("sms")
+
+            if not sms_integration:
+                return {
+                    "status": "failed",
+                    "action_type": "sms",
+                    "error": "SMS integration not configured",
+                    "details": {"customer_id": str(execution.customer_id)},
+                }
+
+            # Send SMS
+            message_text = action_config.get(
+                "message",
+                f"Payment reminder: ${execution.outstanding_amount} outstanding. "
+                f"Please update your payment method.",
+            )
+
+            result = await sms_integration.send_sms(to=customer.phone, message=message_text)
+
+            return {
+                "status": result.get("status", "success"),
+                "action_type": "sms",
+                "details": {
+                    "customer_id": str(execution.customer_id),
+                    "phone": customer.phone,
+                    "message_length": len(message_text),
+                },
+                "external_id": result.get("message_id", f"sms_{execution.id}"),
+            }
+
+    except Exception as e:
+        logger.error(
+            "dunning.sms.failed", execution_id=execution.id, error=str(e), error_type=type(e).__name__
+        )
+        return {
+            "status": "failed",
+            "action_type": "sms",
+            "error": str(e),
+            "details": {"customer_id": str(execution.customer_id)},
+        }
 
 
 async def _suspend_service(
@@ -423,7 +520,7 @@ async def _suspend_service(
     """
     Suspend customer service.
 
-    TODO: Integrate with service lifecycle management
+    Integrates with service lifecycle management to suspend services.
     """
     logger.info(
         "dunning.service.suspending",
@@ -431,18 +528,82 @@ async def _suspend_service(
         subscription_id=execution.subscription_id,
     )
 
-    # Placeholder - integrate with subscription service
-    # from dotmac.platform.billing.subscriptions.service import SubscriptionService
-    # await subscription_service.suspend(execution.subscription_id)
+    try:
+        if not execution.subscription_id:
+            return {
+                "status": "failed",
+                "action_type": "suspend_service",
+                "error": "No subscription ID provided",
+                "details": {"execution_id": str(execution.id)},
+            }
 
-    return {
-        "status": "success",
-        "action_type": "suspend_service",
-        "details": {
-            "subscription_id": execution.subscription_id,
-            "suspended_at": datetime.now(UTC).isoformat(),
-        },
-    }
+        # Check if service lifecycle integration exists
+        try:
+            from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
+
+            async with _async_session_maker() as session:
+                lifecycle_service = LifecycleOrchestrationService(session)
+
+                # Suspend the service via lifecycle orchestration
+                await lifecycle_service.suspend_service(
+                    subscription_id=execution.subscription_id,
+                    tenant_id=execution.tenant_id,
+                    reason="dunning_non_payment",
+                    metadata={
+                        "execution_id": str(execution.id),
+                        "outstanding_amount": str(execution.outstanding_amount),
+                    },
+                )
+
+                await session.commit()
+
+                return {
+                    "status": "success",
+                    "action_type": "suspend_service",
+                    "details": {
+                        "subscription_id": execution.subscription_id,
+                        "suspended_at": datetime.now(UTC).isoformat(),
+                        "reason": "dunning_non_payment",
+                    },
+                }
+
+        except ImportError:
+            # Fallback if service lifecycle not available - use subscription service directly
+            from dotmac.platform.billing.subscriptions.service import SubscriptionService
+
+            async with _async_session_maker() as session:
+                subscription_service = SubscriptionService(session)
+
+                # Suspend subscription (simplified fallback)
+                await subscription_service.suspend_subscription(
+                    subscription_id=execution.subscription_id, tenant_id=execution.tenant_id
+                )
+
+                await session.commit()
+
+                return {
+                    "status": "success",
+                    "action_type": "suspend_service",
+                    "details": {
+                        "subscription_id": execution.subscription_id,
+                        "suspended_at": datetime.now(UTC).isoformat(),
+                        "method": "subscription_service_fallback",
+                    },
+                }
+
+    except Exception as e:
+        logger.error(
+            "dunning.suspend.failed",
+            execution_id=execution.id,
+            error=str(e),
+            error_type=type(e).__name__,
+        )
+        return {
+            "status": "failed",
+            "action_type": "suspend_service",
+            "error": str(e),
+            "details": {"subscription_id": execution.subscription_id},
+        }
 
 
 async def _terminate_service(
@@ -452,7 +613,7 @@ async def _terminate_service(
     """
     Terminate customer service.
 
-    TODO: Integrate with service lifecycle management
+    Integrates with service lifecycle management to terminate services.
     """
     logger.info(
         "dunning.service.terminating",
@@ -460,18 +621,85 @@ async def _terminate_service(
         subscription_id=execution.subscription_id,
     )
 
-    # Placeholder - integrate with subscription service
-    # from dotmac.platform.billing.subscriptions.service import SubscriptionService
-    # await subscription_service.terminate(execution.subscription_id)
+    try:
+        if not execution.subscription_id:
+            return {
+                "status": "failed",
+                "action_type": "terminate_service",
+                "error": "No subscription ID provided",
+                "details": {"execution_id": str(execution.id)},
+            }
 
-    return {
-        "status": "success",
-        "action_type": "terminate_service",
-        "details": {
-            "subscription_id": execution.subscription_id,
-            "terminated_at": datetime.now(UTC).isoformat(),
-        },
-    }
+        # Check if service lifecycle integration exists
+        try:
+            from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
+
+            async with _async_session_maker() as session:
+                lifecycle_service = LifecycleOrchestrationService(session)
+
+                # Terminate the service via lifecycle orchestration
+                await lifecycle_service.terminate_service(
+                    subscription_id=execution.subscription_id,
+                    tenant_id=execution.tenant_id,
+                    reason="dunning_final_action",
+                    metadata={
+                        "execution_id": str(execution.id),
+                        "outstanding_amount": str(execution.outstanding_amount),
+                        "final_notice": True,
+                    },
+                )
+
+                await session.commit()
+
+                return {
+                    "status": "success",
+                    "action_type": "terminate_service",
+                    "details": {
+                        "subscription_id": execution.subscription_id,
+                        "terminated_at": datetime.now(UTC).isoformat(),
+                        "reason": "dunning_final_action",
+                    },
+                }
+
+        except ImportError:
+            # Fallback if service lifecycle not available - use subscription service directly
+            from dotmac.platform.billing.subscriptions.service import SubscriptionService
+
+            async with _async_session_maker() as session:
+                subscription_service = SubscriptionService(session)
+
+                # Cancel subscription (simplified fallback)
+                await subscription_service.cancel_subscription(
+                    subscription_id=execution.subscription_id,
+                    tenant_id=execution.tenant_id,
+                    reason="dunning_non_payment",
+                )
+
+                await session.commit()
+
+                return {
+                    "status": "success",
+                    "action_type": "terminate_service",
+                    "details": {
+                        "subscription_id": execution.subscription_id,
+                        "terminated_at": datetime.now(UTC).isoformat(),
+                        "method": "subscription_cancellation_fallback",
+                    },
+                }
+
+    except Exception as e:
+        logger.error(
+            "dunning.terminate.failed",
+            execution_id=execution.id,
+            error=str(e),
+            error_type=type(e).__name__,
+        )
+        return {
+            "status": "failed",
+            "action_type": "terminate_service",
+            "error": str(e),
+            "details": {"subscription_id": execution.subscription_id},
+        }
 
 
 async def _trigger_webhook(
@@ -481,9 +709,17 @@ async def _trigger_webhook(
     """
     Trigger webhook for external system integration.
 
-    TODO: Implement HTTP webhook delivery
+    Sends HTTP POST request to configured webhook URL with dunning event data.
     """
     webhook_url = action_config.get("webhook_url")
+
+    if not webhook_url:
+        return {
+            "status": "failed",
+            "action_type": "webhook",
+            "error": "No webhook URL configured",
+            "details": {"execution_id": str(execution.id)},
+        }
 
     logger.info(
         "dunning.webhook.triggering",
@@ -491,27 +727,120 @@ async def _trigger_webhook(
         webhook_url=webhook_url,
     )
 
-    # Placeholder - implement HTTP POST to webhook_url
-    # import httpx
-    # async with httpx.AsyncClient() as client:
-    #     response = await client.post(
-    #         webhook_url,
-    #         json={
-    #             "event": "dunning.action",
-    #             "execution_id": str(execution.id),
-    #             "subscription_id": execution.subscription_id,
-    #             "outstanding_amount": execution.outstanding_amount,
-    #         }
-    #     )
+    try:
+        import httpx
 
-    return {
-        "status": "success",
-        "action_type": "webhook",
-        "details": {
-            "webhook_url": webhook_url,
-            "triggered_at": datetime.now(UTC).isoformat(),
-        },
-    }
+        # Prepare webhook payload
+        payload = {
+            "event": "dunning.action",
+            "event_type": "dunning_notification",
+            "timestamp": datetime.now(UTC).isoformat(),
+            "data": {
+                "execution_id": str(execution.id),
+                "customer_id": str(execution.customer_id),
+                "subscription_id": execution.subscription_id,
+                "outstanding_amount": str(execution.outstanding_amount),
+                "recovered_amount": str(execution.recovered_amount),
+                "current_step": execution.current_step,
+                "status": execution.status.value if hasattr(execution.status, "value") else str(execution.status),
+                "tenant_id": execution.tenant_id,
+            },
+            "metadata": action_config.get("metadata", {}),
+        }
+
+        # Add custom headers if configured
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "DotMac-Dunning/1.0",
+        }
+
+        # Add authentication if configured
+        webhook_secret = action_config.get("webhook_secret")
+        if webhook_secret:
+            import hashlib
+            import hmac
+            import json
+
+            payload_bytes = json.dumps(payload).encode("utf-8")
+            signature = hmac.new(webhook_secret.encode("utf-8"), payload_bytes, hashlib.sha256).hexdigest()
+            headers["X-Webhook-Signature"] = signature
+
+        # Send webhook with timeout and retry
+        timeout = httpx.Timeout(10.0, connect=5.0)
+
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post(
+                webhook_url,
+                json=payload,
+                headers=headers,
+            )
+
+            response.raise_for_status()
+
+            logger.info(
+                "dunning.webhook.success",
+                execution_id=execution.id,
+                webhook_url=webhook_url,
+                status_code=response.status_code,
+            )
+
+            return {
+                "status": "success",
+                "action_type": "webhook",
+                "details": {
+                    "webhook_url": webhook_url,
+                    "status_code": response.status_code,
+                    "triggered_at": datetime.now(UTC).isoformat(),
+                    "response_time_ms": response.elapsed.total_seconds() * 1000,
+                },
+                "external_id": f"webhook_{execution.id}",
+            }
+
+    except httpx.HTTPStatusError as e:
+        logger.error(
+            "dunning.webhook.http_error",
+            execution_id=execution.id,
+            webhook_url=webhook_url,
+            status_code=e.response.status_code,
+            error=str(e),
+        )
+        return {
+            "status": "failed",
+            "action_type": "webhook",
+            "error": f"HTTP {e.response.status_code}: {str(e)}",
+            "details": {
+                "webhook_url": webhook_url,
+                "status_code": e.response.status_code,
+            },
+        }
+
+    except httpx.TimeoutException:
+        logger.error(
+            "dunning.webhook.timeout",
+            execution_id=execution.id,
+            webhook_url=webhook_url,
+        )
+        return {
+            "status": "failed",
+            "action_type": "webhook",
+            "error": "Webhook request timed out",
+            "details": {"webhook_url": webhook_url},
+        }
+
+    except Exception as e:
+        logger.error(
+            "dunning.webhook.failed",
+            execution_id=execution.id,
+            webhook_url=webhook_url,
+            error=str(e),
+            error_type=type(e).__name__,
+        )
+        return {
+            "status": "failed",
+            "action_type": "webhook",
+            "error": str(e),
+            "details": {"webhook_url": webhook_url},
+        }
 
 
 async def _execute_custom_action(
@@ -521,7 +850,15 @@ async def _execute_custom_action(
     """
     Execute custom dunning action.
 
-    TODO: Implement plugin system for custom actions
+    Supports plugin-based custom actions through dynamic import.
+    Configure via action_config:
+    {
+        "type": "custom",
+        "handler": "module.path.to.custom_handler",  # Python import path
+        "config": {...}  # Custom configuration passed to handler
+    }
+
+    Handler signature: async def handler(execution: DunningExecution, config: dict) -> dict
     """
     logger.info(
         "dunning.custom.executing",
@@ -529,11 +866,82 @@ async def _execute_custom_action(
         custom_config=action_config.get("custom_config"),
     )
 
-    return {
-        "status": "success",
-        "action_type": "custom",
-        "details": action_config.get("custom_config", {}),
-    }
+    try:
+        handler_path = action_config.get("handler")
+
+        if not handler_path:
+            # No custom handler specified, just log the action
+            logger.info(
+                "dunning.custom.no_handler",
+                execution_id=execution.id,
+                config=action_config.get("config", {}),
+            )
+            return {
+                "status": "success",
+                "action_type": "custom",
+                "details": action_config.get("custom_config", {}),
+                "note": "No custom handler specified, action logged only",
+            }
+
+        # Dynamic import of custom handler
+        import importlib
+
+        module_path, function_name = handler_path.rsplit(".", 1)
+        module = importlib.import_module(module_path)
+        handler_func = getattr(module, function_name)
+
+        # Execute custom handler
+        result = await handler_func(execution, action_config.get("config", {}))
+
+        logger.info(
+            "dunning.custom.success",
+            execution_id=execution.id,
+            handler=handler_path,
+            result=result,
+        )
+
+        return {
+            "status": "success",
+            "action_type": "custom",
+            "details": {
+                "handler": handler_path,
+                "result": result,
+                "custom_config": action_config.get("custom_config", {}),
+            },
+            "external_id": result.get("external_id") if isinstance(result, dict) else None,
+        }
+
+    except ImportError as e:
+        logger.error(
+            "dunning.custom.import_error",
+            execution_id=execution.id,
+            handler=action_config.get("handler"),
+            error=str(e),
+        )
+        return {
+            "status": "failed",
+            "action_type": "custom",
+            "error": f"Failed to import custom handler: {str(e)}",
+            "details": {"handler": action_config.get("handler")},
+        }
+
+    except Exception as e:
+        logger.error(
+            "dunning.custom.failed",
+            execution_id=execution.id,
+            handler=action_config.get("handler"),
+            error=str(e),
+            error_type=type(e).__name__,
+        )
+        return {
+            "status": "failed",
+            "action_type": "custom",
+            "error": str(e),
+            "details": {
+                "handler": action_config.get("handler"),
+                "custom_config": action_config.get("custom_config", {}),
+            },
+        }
 
 
 async def _complete_execution(

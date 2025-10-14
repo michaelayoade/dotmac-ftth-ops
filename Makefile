@@ -56,6 +56,16 @@ install:
 test-fast:
 	poetry run pytest tests/ -m "not integration and not slow" -x --tb=short -q
 
+# Fast tests with parallel execution (recommended for development)
+test-fast-parallel:
+	@echo "🚀 Running fast tests in parallel..."
+	poetry run pytest tests/ -m "not integration and not slow" -n auto -x --tb=short -q
+
+# Parallel test execution using all CPU cores
+test-parallel:
+	@echo "🚀 Running tests in parallel with auto CPU detection..."
+	poetry run pytest tests/ -n auto -x --tb=short -v
+
 # Unit tests with coverage (aligned with CI - base threshold)
 # Note: Full coverage is VERY slow locally due to large codebase (33k+ LOC)
 # Use test-module-cov for specific modules instead
@@ -99,6 +109,22 @@ test-module-cov:
 # Full test suite with coverage + module checks (aligned with CI)
 test:
 	poetry run pytest \
+		--cov=src/dotmac \
+		--cov-branch \
+		--cov-report=term-missing \
+		--cov-report=xml \
+		--cov-report=html \
+		--cov-fail-under=75 \
+		-v
+	@echo ""
+	@echo "Checking module-specific thresholds..."
+	poetry run python scripts/check_coverage.py coverage.xml
+
+# Run tests with coverage in parallel (faster than 'make test')
+test-cov-parallel:
+	@echo "🚀 Running tests with coverage in parallel..."
+	poetry run pytest \
+		-n auto \
 		--cov=src/dotmac \
 		--cov-branch \
 		--cov-report=term-missing \

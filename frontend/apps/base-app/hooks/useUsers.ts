@@ -2,12 +2,13 @@
  * React Query hooks for user management
  *
  * Connects to backend user management API:
- * - GET /api/v1/user-management/users - List all users
- * - GET /api/v1/user-management/users/{id} - Get user details
- * - PUT /api/v1/user-management/users/{id} - Update user
- * - DELETE /api/v1/user-management/users/{id} - Delete user
- * - POST /api/v1/user-management/users/{id}/disable - Disable user
- * - POST /api/v1/user-management/users/{id}/enable - Enable user
+ * - GET /api/v1/users - List all users
+ * - GET /api/v1/users/{id} - Get user details
+ * - GET /api/v1/users/me - Current user
+ * - PUT /api/v1/users/{id} - Update user
+ * - DELETE /api/v1/users/{id} - Delete user
+ * - POST /api/v1/users/{id}/disable - Disable user
+ * - POST /api/v1/users/{id}/enable - Enable user
  */
 
 import {
@@ -80,7 +81,7 @@ export function useUsers(
   return useQuery<User[], Error, User[], ['users']>({
     queryKey: ['users'],
     queryFn: async () => {
-      const response = await apiClient.get<UserListResponse>('/user-management/users');
+      const response = await apiClient.get<UserListResponse>('/api/v1/users');
       const payload = extractDataOrThrow(response, 'Failed to load users');
       return payload.users;
     },
@@ -98,7 +99,7 @@ export function useUser(
   return useQuery<User, Error, User, ['users', string]>({
     queryKey: ['users', userId],
     queryFn: async () => {
-      const response = await apiClient.get<User>(`/user-management/users/${userId}`);
+      const response = await apiClient.get<User>(`/api/v1/users/${userId}`);
       return extractDataOrThrow(response, 'Failed to load user');
     },
     enabled: !!userId,
@@ -115,7 +116,7 @@ export function useCurrentUser(
   return useQuery<User, Error, User, ['users', 'me']>({
     queryKey: ['users', 'me'],
     queryFn: async () => {
-      const response = await apiClient.get<User>('/user-management/me');
+      const response = await apiClient.get<User>('/api/v1/users/me');
       return extractDataOrThrow(response, 'Failed to load current user');
     },
     ...options,
@@ -135,7 +136,7 @@ export function useUpdateUser() {
 
   return useMutation({
     mutationFn: async ({ userId, data }: { userId: string; data: UserUpdateRequest }) => {
-      const response = await apiClient.put<User>(`/user-management/users/${userId}`, data);
+      const response = await apiClient.put<User>(`/api/v1/users/${userId}`, data);
       return extractDataOrThrow(response, 'Failed to update user');
     },
     onSuccess: (data) => {
@@ -167,7 +168,7 @@ export function useDeleteUser() {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiClient.delete(`/user-management/users/${userId}`);
+      const response = await apiClient.delete(`/api/v1/users/${userId}`);
       // Allow success=false for 204 No Content (DELETE operations)
       if (!response.success && response.error?.status !== 204) {
         throw new Error(response.error?.message || 'Failed to delete user');
@@ -200,7 +201,7 @@ export function useDisableUser() {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiClient.post(`/user-management/users/${userId}/disable`);
+      const response = await apiClient.post(`/api/v1/users/${userId}/disable`);
       if (!response.success) {
         throw new Error(response.error?.message || 'Failed to disable user');
       }
@@ -232,7 +233,7 @@ export function useEnableUser() {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiClient.post(`/user-management/users/${userId}/enable`);
+      const response = await apiClient.post(`/api/v1/users/${userId}/enable`);
       if (!response.success) {
         throw new Error(response.error?.message || 'Failed to enable user');
       }

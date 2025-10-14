@@ -412,23 +412,23 @@ def ensure_infrastructure_running() -> None:
 
     This doesn't start services but provides helpful instructions.
     """
-    print("\n" + "=" * 60)
-    print("Starting DotMac Platform Services")
-    print("=" * 60)
-    print("\nRequired Infrastructure Services:")
-    print("  • PostgreSQL (database)")
-    print("  • Redis (cache & sessions)")
-    print("  • Vault/OpenBao (secrets) - optional in dev, required in prod")
-    print("  • Celery (background tasks) - optional")
-    print("  • OTLP Collector (observability) - optional")
+    import structlog
 
-    print("\nTo start all services with Docker Compose:")
-    print("  $ docker-compose up -d")
-    print("\nTo start individual services:")
-    print("  $ docker run -d -p 5432:5432 postgres:15")
-    print("  $ docker run -d -p 6379:6379 redis:7")
-    print("  $ docker run -d -p 8200:8200 hashicorp/vault:latest")
+    structured_logger = structlog.get_logger(__name__)
 
-    print("\nFor development with minimal dependencies:")
-    print("  $ docker-compose up -d postgres redis")
-    print("=" * 60 + "\n")
+    # Log structured infrastructure requirements
+    structured_logger.info(
+        "infrastructure.startup_guide",
+        required_services=["PostgreSQL", "Redis"],
+        optional_services=["Vault/OpenBao", "Celery", "OTLP Collector"],
+        docker_compose_command="docker-compose up -d",
+        minimal_startup="docker-compose up -d postgres redis",
+    )
+
+    # Also log individual service commands for reference
+    structured_logger.debug(
+        "infrastructure.individual_services",
+        postgres="docker run -d -p 5432:5432 postgres:15",
+        redis="docker run -d -p 6379:6379 redis:7",
+        vault="docker run -d -p 8200:8200 hashicorp/vault:latest",
+    )

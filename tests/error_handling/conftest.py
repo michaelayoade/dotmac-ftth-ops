@@ -12,12 +12,12 @@ os.environ["RATE_LIMIT__ENABLED"] = "false"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 os.environ["TESTING"] = "1"
 
+from unittest.mock import patch
+
 import pytest
-import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from unittest.mock import AsyncMock, MagicMock, patch
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
 # Import all models at module level to register them with Base.metadata
@@ -38,13 +38,14 @@ except ImportError:
 @pytest.fixture(scope="function")
 def async_db_engine():
     """Create test database engine with tables."""
-    import tempfile
     import asyncio
-    from dotmac.platform.db import Base
+    import tempfile
     from pathlib import Path
 
+    from dotmac.platform.db import Base
+
     # Create a temporary database file
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix='.db')
+    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
     db_path = temp_db.name
 
@@ -88,12 +89,10 @@ def async_db_engine():
 @pytest.fixture
 def test_app(async_db_engine):
     """Create FastAPI app with auth routers for error handling tests."""
-    from dotmac.platform.auth.core import UserInfo
-    from dotmac.platform.auth.dependencies import get_current_user
-    from dotmac.platform.tenant import get_current_tenant_id
-    from dotmac.platform.db import get_session_dependency
+
     from dotmac.platform.database import get_async_session
-    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+    from dotmac.platform.db import get_session_dependency
+    from dotmac.platform.tenant import get_current_tenant_id
 
     app = FastAPI(title="Error Handling Test App")
 

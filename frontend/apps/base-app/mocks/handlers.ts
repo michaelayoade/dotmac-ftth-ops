@@ -84,7 +84,7 @@ function validateJobContract(job: any): asserts job is Job {
  */
 export const handlers = [
   // User Management - List Users
-  http.get(`${API_BASE}/user-management/users`, async ({ request }) => {
+http.get(`${API_BASE}/users`, async ({ request }) => {
     try {
       // Forward to real backend
       const response = await fetch(new URL(request.url, BACKEND_URL), {

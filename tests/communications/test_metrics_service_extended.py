@@ -2,7 +2,7 @@
 Extended tests for communication metrics service to improve coverage.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 

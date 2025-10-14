@@ -3,8 +3,6 @@
 Tests for domain verification service.
 """
 
-import asyncio
-from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import dns.resolver
@@ -15,7 +13,6 @@ from dotmac.platform.audit.service import AuditService
 from dotmac.platform.tenant.domain_verification import (
     DomainVerificationService,
     VerificationMethod,
-    VerificationStatus,
 )
 from dotmac.platform.tenant.models import Tenant
 

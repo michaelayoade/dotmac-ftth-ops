@@ -147,12 +147,12 @@ async def async_client(db_engine, tenant_id, user_id):
                 await session.close()
 
     # Import additional dependencies that need overriding
-    from dotmac.platform.db import get_session_dependency
-
     # Patch get_current_tenant_id function to always return e2e tenant_id
     # This is necessary because some code calls get_current_tenant_id() as a function
     # rather than using it as a FastAPI dependency
     from unittest.mock import patch
+
+    from dotmac.platform.db import get_session_dependency
 
     # Override app dependencies
     app.dependency_overrides[get_async_session] = override_get_async_session
@@ -163,9 +163,7 @@ async def async_client(db_engine, tenant_id, user_id):
     app.dependency_overrides[get_current_user] = mock_get_current_user
 
     # Patch the function itself for direct calls (file storage router uses this)
-    tenant_patch = patch(
-        "dotmac.platform.tenant.get_current_tenant_id", return_value=tenant_id
-    )
+    tenant_patch = patch("dotmac.platform.tenant.get_current_tenant_id", return_value=tenant_id)
     # Also patch where it's imported in file_storage.router
     router_tenant_patch = patch(
         "dotmac.platform.file_storage.router.get_current_tenant_id", return_value=tenant_id

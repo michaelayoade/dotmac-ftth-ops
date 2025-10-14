@@ -119,7 +119,9 @@ class TestListTeams:
         """Test listing teams successfully."""
         from dotmac.platform.user_management.team_router import list_teams
 
-        mock_response = TeamListResponse(items=[sample_team], total=1, page=1, page_size=50, pages=1)
+        mock_response = TeamListResponse(
+            items=[sample_team], total=1, page=1, page_size=50, pages=1
+        )
         mock_team_service.list_teams.return_value = mock_response
 
         response = await list_teams(current_user, mock_team_service, page=1, page_size=50)
@@ -504,6 +506,7 @@ class TestGetMyTeams:
     async def test_get_my_teams_success(self, sample_team, current_user, mock_team_service):
         """Test getting current user's teams."""
         from unittest.mock import ANY
+
         from dotmac.platform.user_management.team_router import get_my_teams
 
         mock_team_service.get_user_teams.return_value = [sample_team]

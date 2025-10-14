@@ -442,8 +442,8 @@ The following documents are referenced but not yet created:
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/your-org/dotmac-ftth-ops.git
-cd dotmac-ftth-ops
+git clone https://github.com/your-org/dotmac-isp-ops.git
+cd dotmac-isp-ops
 ```
 
 ### 2. Setup Environment

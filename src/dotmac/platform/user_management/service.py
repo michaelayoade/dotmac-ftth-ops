@@ -92,11 +92,11 @@ class UserService:
     ) -> User:
         """Create a new user."""
         # Check if user exists
-        existing = await self.get_user_by_username(username)
+        existing = await self.get_user_by_username(username, tenant_id=tenant_id)
         if existing:
             raise ValueError(f"Username {username} already exists")
 
-        existing = await self.get_user_by_email(email)
+        existing = await self.get_user_by_email(email, tenant_id=tenant_id)
         if existing:
             raise ValueError(f"Email {email} already exists")
 
@@ -128,7 +128,7 @@ class UserService:
 
     async def _update_email(self, user: User, email: str) -> None:
         """Update user email with uniqueness check."""
-        existing = await self.get_user_by_email(email)
+        existing = await self.get_user_by_email(email, tenant_id=user.tenant_id)
         if existing and existing.id != user.id:
             raise ValueError(f"Email {email} is already in use")
         user.email = email.lower()

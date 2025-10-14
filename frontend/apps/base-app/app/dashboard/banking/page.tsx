@@ -153,7 +153,7 @@ export default function BankingPage() {
   const loadBankAccounts = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${platformConfig.apiBaseUrl}/api/v1/billing/bank-accounts`, {
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts`, {
         credentials: 'include'
       });
 
@@ -172,7 +172,7 @@ export default function BankingPage() {
 
   const loadAccountSummary = async (accountId: number) => {
     try {
-      const response = await fetch(`${platformConfig.apiBaseUrl}/api/v1/billing/bank-accounts/${accountId}/summary`, {
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts/${accountId}/summary`, {
         credentials: 'include'
       });
 
@@ -190,7 +190,7 @@ export default function BankingPage() {
   const loadManualPayments = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${platformConfig.apiBaseUrl}/api/v1/billing/payments/search`, {
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/payments/search`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -214,7 +214,7 @@ export default function BankingPage() {
 
   const handleCreateAccount = async () => {
     try {
-      const response = await fetch(`${platformConfig.apiBaseUrl}/api/v1/billing/bank-accounts`, {
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -235,7 +235,7 @@ export default function BankingPage() {
 
   const handleRecordPayment = async () => {
     try {
-      const endpoint = `${platformConfig.apiBaseUrl}/api/v1/billing/payments/${selectedPaymentMethod.replace('_', '-')}`;
+      const endpoint = `${platformConfig.api.baseUrl}/api/v1/billing/payments/${selectedPaymentMethod.replace('_', '-')}`;
 
       const paymentData = {
         ...paymentForm,
@@ -263,7 +263,7 @@ export default function BankingPage() {
 
   const handleVerifyAccount = async (accountId: number) => {
     try {
-      const response = await fetch(`${platformConfig.apiBaseUrl}/api/v1/billing/bank-accounts/${accountId}/verify`, {
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts/${accountId}/verify`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -282,7 +282,7 @@ export default function BankingPage() {
 
   const handleVerifyPayment = async (paymentId: number) => {
     try {
-      const response = await fetch(`${platformConfig.apiBaseUrl}/api/v1/billing/payments/${paymentId}/verify`, {
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/payments/${paymentId}/verify`, {
         method: 'POST',
         credentials: 'include',
         headers: {

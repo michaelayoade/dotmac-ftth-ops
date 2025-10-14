@@ -5,6 +5,7 @@ from sqlalchemy import create_engine, text
 
 DATABASE_URL = "postgresql://dotmac_user:change-me-in-production@localhost:5432/dotmac"
 
+
 def main():
     engine = create_engine(DATABASE_URL, echo=True)  # echo=True for SQL logging
 
@@ -14,12 +15,16 @@ def main():
 
         try:
             # Create alembic_version table if it doesn't exist
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 CREATE TABLE IF NOT EXISTS alembic_version (
                     version_num VARCHAR(32) NOT NULL,
                     CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num)
                 )
-            """))
+            """
+                )
+            )
 
             print("✅ Created alembic_version table")
 
@@ -36,6 +41,7 @@ def main():
             trans.rollback()
             print(f"❌ Error: {e}")
             raise
+
 
 if __name__ == "__main__":
     main()

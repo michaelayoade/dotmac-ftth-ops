@@ -52,8 +52,8 @@ export default function RolesManagementPage() {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get<Role[]>('/api/v1/rbac/roles');
-      if (response.success && response.data) {
+      const response = await apiClient.get<Role[]>('/api/v1/auth/rbac/roles');
+      if (response.data) {
         setRoles(response.data);
       }
     } catch (error) {
@@ -66,8 +66,8 @@ export default function RolesManagementPage() {
 
   const fetchPermissions = async () => {
     try {
-      const response = await apiClient.get<Permission[]>('/api/v1/rbac/permissions');
-      if (response.success && response.data) {
+      const response = await apiClient.get<Permission[]>('/api/v1/auth/rbac/permissions');
+      if (response.data) {
         setPermissions(response.data);
       }
     } catch (error) {
@@ -86,13 +86,9 @@ export default function RolesManagementPage() {
     }
 
     try {
-      const response = await apiClient.delete(`/api/v1/rbac/roles/${role.name}`);
-      if (response.success) {
-        toast.success('Role deleted successfully');
-        fetchRoles();
-      } else {
-        toast.error('Failed to delete role');
-      }
+      await apiClient.delete(`/api/v1/auth/rbac/roles/${role.name}`);
+      toast.success('Role deleted successfully');
+      fetchRoles();
     } catch (error) {
       console.error('Error deleting role:', error);
       toast.error('Failed to delete role');

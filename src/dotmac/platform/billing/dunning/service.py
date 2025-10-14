@@ -8,13 +8,11 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 
 from dotmac.platform.billing.dunning.models import (
     DunningActionLog,
-    DunningActionType,
     DunningCampaign,
     DunningExecution,
     DunningExecutionStatus,
@@ -25,13 +23,13 @@ from dotmac.platform.billing.dunning.schemas import (
     DunningCampaignUpdate,
     DunningStats,
 )
-from dotmac.platform.core.exceptions import NotFoundError, ValidationError
+from dotmac.platform.core.exceptions import EntityNotFoundError, ValidationError
 
 
 class DunningService:
     """Service for managing dunning campaigns and executions."""
 
-    def __init__(self, session: Session):
+    def __init__(self, session: AsyncSession):
         """Initialize service with database session."""
         self.session = session
 
@@ -97,7 +95,7 @@ class DunningService:
             DunningCampaign
 
         Raises:
-            NotFoundError: If campaign not found
+            EntityNotFoundError: If campaign not found
         """
         stmt = select(DunningCampaign).where(
             DunningCampaign.id == campaign_id,
@@ -108,14 +106,14 @@ class DunningService:
         campaign = result.scalar_one_or_none()
 
         if not campaign:
-            raise NotFoundError(f"Campaign {campaign_id} not found")
+            raise EntityNotFoundError(f"Campaign {campaign_id} not found")
 
         return campaign
 
     async def list_campaigns(
         self,
         tenant_id: str,
-        is_active: bool | None = None,
+        active_only: bool = False,
         skip: int = 0,
         limit: int = 100,
     ) -> list[DunningCampaign]:
@@ -124,7 +122,7 @@ class DunningService:
 
         Args:
             tenant_id: Tenant identifier
-            is_active: Filter by active status (None = all)
+            active_only: Filter to only active campaigns
             skip: Number of records to skip
             limit: Maximum number of records to return
 
@@ -133,8 +131,8 @@ class DunningService:
         """
         stmt = select(DunningCampaign).where(DunningCampaign.tenant_id == tenant_id)
 
-        if is_active is not None:
-            stmt = stmt.where(DunningCampaign.is_active == is_active)
+        if active_only:
+            stmt = stmt.where(DunningCampaign.is_active)
 
         stmt = stmt.order_by(DunningCampaign.priority.desc(), DunningCampaign.created_at)
         stmt = stmt.offset(skip).limit(limit)
@@ -162,7 +160,7 @@ class DunningService:
             Updated DunningCampaign
 
         Raises:
-            NotFoundError: If campaign not found
+            EntityNotFoundError: If campaign not found
         """
         campaign = await self.get_campaign(campaign_id, tenant_id)
 
@@ -183,31 +181,43 @@ class DunningService:
 
         return campaign
 
-    async def delete_campaign(self, campaign_id: UUID, tenant_id: str) -> None:
+    async def delete_campaign(
+        self, campaign_id: UUID, tenant_id: str, deleted_by_user_id: UUID | None = None
+    ) -> bool:
         """
-        Delete a dunning campaign.
+        Delete a dunning campaign (soft delete by marking as inactive).
 
         Args:
             campaign_id: Campaign ID
             tenant_id: Tenant identifier
+            deleted_by_user_id: User who deleted the campaign
+
+        Returns:
+            True if deleted successfully
 
         Raises:
-            NotFoundError: If campaign not found
+            EntityNotFoundError: If campaign not found
             ValidationError: If campaign has active executions
         """
         campaign = await self.get_campaign(campaign_id, tenant_id)
 
         # Check for active executions
-        stmt = select(func.count()).select_from(DunningExecution).where(
-            DunningExecution.campaign_id == campaign_id,
-            DunningExecution.status.in_([
-                DunningExecutionStatus.PENDING,
-                DunningExecutionStatus.IN_PROGRESS,
-            ]),
+        stmt = (
+            select(func.count())
+            .select_from(DunningExecution)
+            .where(
+                DunningExecution.campaign_id == campaign_id,
+                DunningExecution.status.in_(
+                    [
+                        DunningExecutionStatus.PENDING,
+                        DunningExecutionStatus.IN_PROGRESS,
+                    ]
+                ),
+            )
         )
 
         result = await self.session.execute(stmt)
-        active_count = result.scalar()
+        active_count = result.scalar() or 0
 
         if active_count > 0:
             raise ValidationError(
@@ -215,8 +225,14 @@ class DunningService:
                 "Cancel them first or wait for completion."
             )
 
-        await self.session.delete(campaign)
+        # Soft delete by marking as inactive
+        campaign.is_active = False
+        if deleted_by_user_id:
+            campaign.updated_by_user_id = deleted_by_user_id
+
         await self.session.flush()
+
+        return True
 
     # Execution Management
 
@@ -246,7 +262,7 @@ class DunningService:
             Created DunningExecution
 
         Raises:
-            NotFoundError: If campaign not found
+            EntityNotFoundError: If campaign not found
             ValidationError: If execution already exists
         """
         # Get campaign
@@ -258,10 +274,12 @@ class DunningService:
         # Check for existing active execution
         stmt = select(DunningExecution).where(
             DunningExecution.subscription_id == subscription_id,
-            DunningExecution.status.in_([
-                DunningExecutionStatus.PENDING,
-                DunningExecutionStatus.IN_PROGRESS,
-            ]),
+            DunningExecution.status.in_(
+                [
+                    DunningExecutionStatus.PENDING,
+                    DunningExecutionStatus.IN_PROGRESS,
+                ]
+            ),
         )
 
         result = await self.session.execute(stmt)
@@ -317,7 +335,7 @@ class DunningService:
             DunningExecution
 
         Raises:
-            NotFoundError: If execution not found
+            EntityNotFoundError: If execution not found
         """
         stmt = select(DunningExecution).where(
             DunningExecution.id == execution_id,
@@ -328,7 +346,7 @@ class DunningService:
         execution = result.scalar_one_or_none()
 
         if not execution:
-            raise NotFoundError(f"Execution {execution_id} not found")
+            raise EntityNotFoundError(f"Execution {execution_id} not found")
 
         return execution
 
@@ -394,7 +412,7 @@ class DunningService:
             Canceled DunningExecution
 
         Raises:
-            NotFoundError: If execution not found
+            EntityNotFoundError: If execution not found
             ValidationError: If execution cannot be canceled
         """
         execution = await self.get_execution(execution_id, tenant_id)
@@ -403,9 +421,7 @@ class DunningService:
             DunningExecutionStatus.PENDING,
             DunningExecutionStatus.IN_PROGRESS,
         ]:
-            raise ValidationError(
-                f"Cannot cancel execution with status {execution.status}"
-            )
+            raise ValidationError(f"Cannot cancel execution with status {execution.status}")
 
         execution.status = DunningExecutionStatus.CANCELED
         execution.canceled_reason = reason
@@ -413,17 +429,44 @@ class DunningService:
         execution.completed_at = datetime.now(UTC)
 
         # Log cancellation
-        execution.execution_log.append({
-            "step": execution.current_step,
-            "action_type": "canceled",
-            "executed_at": datetime.now(UTC).isoformat(),
-            "status": "canceled",
-            "details": {"reason": reason, "canceled_by": str(canceled_by_user_id)},
-        })
+        execution.execution_log.append(
+            {
+                "step": execution.current_step,
+                "action_type": "canceled",
+                "executed_at": datetime.now(UTC).isoformat(),
+                "status": "canceled",
+                "details": {"reason": reason, "canceled_by": str(canceled_by_user_id)},
+            }
+        )
 
         await self.session.flush()
 
         return execution
+
+    async def get_execution_logs(
+        self, execution_id: UUID, tenant_id: str
+    ) -> list[DunningActionLog]:
+        """
+        Get action logs for an execution.
+
+        Args:
+            execution_id: Execution ID
+            tenant_id: Tenant identifier
+
+        Returns:
+            List of DunningActionLog records
+        """
+        stmt = (
+            select(DunningActionLog)
+            .where(
+                DunningActionLog.execution_id == execution_id,
+                DunningActionLog.tenant_id == tenant_id,
+            )
+            .order_by(DunningActionLog.attempted_at.desc())
+        )
+
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
 
     async def get_pending_actions(
         self, tenant_id: str | None = None, limit: int = 100
@@ -441,10 +484,12 @@ class DunningService:
         now = datetime.now(UTC)
 
         stmt = select(DunningExecution).where(
-            DunningExecution.status.in_([
-                DunningExecutionStatus.PENDING,
-                DunningExecutionStatus.IN_PROGRESS,
-            ]),
+            DunningExecution.status.in_(
+                [
+                    DunningExecutionStatus.PENDING,
+                    DunningExecutionStatus.IN_PROGRESS,
+                ]
+            ),
             DunningExecution.next_action_at <= now,
         )
 
@@ -458,9 +503,7 @@ class DunningService:
 
     # Statistics
 
-    async def get_campaign_stats(
-        self, campaign_id: UUID, tenant_id: str
-    ) -> DunningCampaignStats:
+    async def get_campaign_stats(self, campaign_id: UUID, tenant_id: str) -> DunningCampaignStats:
         """
         Get statistics for a specific campaign.
 
@@ -474,21 +517,29 @@ class DunningService:
         campaign = await self.get_campaign(campaign_id, tenant_id)
 
         # Count executions by status and amounts
-        stmt = (
-            select(
-                func.count().label("total"),
-                func.count().filter(DunningExecution.status == DunningExecutionStatus.IN_PROGRESS).label("active"),
-                func.count().filter(DunningExecution.status == DunningExecutionStatus.COMPLETED).label("completed"),
-                func.count().filter(DunningExecution.status == DunningExecutionStatus.FAILED).label("failed"),
-                func.count().filter(DunningExecution.status == DunningExecutionStatus.CANCELED).label("canceled"),
-                func.sum(DunningExecution.recovered_amount).label("recovered"),
-                func.sum(DunningExecution.outstanding_amount).label("outstanding"),
-                func.avg(
-                    func.extract("epoch", DunningExecution.completed_at - DunningExecution.started_at) / 3600
-                ).filter(DunningExecution.completed_at.isnot(None)).label("avg_hours"),
+        stmt = select(
+            func.count().label("total"),
+            func.count()
+            .filter(DunningExecution.status == DunningExecutionStatus.IN_PROGRESS)
+            .label("active"),
+            func.count()
+            .filter(DunningExecution.status == DunningExecutionStatus.COMPLETED)
+            .label("completed"),
+            func.count()
+            .filter(DunningExecution.status == DunningExecutionStatus.FAILED)
+            .label("failed"),
+            func.count()
+            .filter(DunningExecution.status == DunningExecutionStatus.CANCELED)
+            .label("canceled"),
+            func.sum(DunningExecution.recovered_amount).label("recovered"),
+            func.sum(DunningExecution.outstanding_amount).label("outstanding"),
+            func.avg(
+                func.extract("epoch", DunningExecution.completed_at - DunningExecution.started_at)
+                / 3600
             )
-            .where(DunningExecution.campaign_id == campaign_id)
-        )
+            .filter(DunningExecution.completed_at.isnot(None))
+            .label("avg_hours"),
+        ).where(DunningExecution.campaign_id == campaign_id)
 
         result = await self.session.execute(stmt)
         row = result.one()
@@ -501,7 +552,9 @@ class DunningService:
 
         total_recovered = row.recovered or 0
         total_outstanding = row.outstanding or 0
-        recovery_rate = (total_recovered / total_outstanding * 100) if total_outstanding > 0 else 0.0
+        recovery_rate = (
+            (total_recovered / total_outstanding * 100) if total_outstanding > 0 else 0.0
+        )
 
         return DunningCampaignStats(
             campaign_id=campaign_id,
@@ -538,19 +591,26 @@ class DunningService:
         campaign_row = campaign_result.one()
 
         # Execution counts
-        execution_stmt = (
-            select(
-                func.count().label("total"),
-                func.count().filter(DunningExecution.status == DunningExecutionStatus.PENDING).label("pending"),
-                func.count().filter(DunningExecution.status == DunningExecutionStatus.IN_PROGRESS).label("active"),
-                func.count().filter(DunningExecution.status == DunningExecutionStatus.COMPLETED).label("completed"),
-                func.count().filter(DunningExecution.status == DunningExecutionStatus.FAILED).label("failed"),
-                func.count().filter(DunningExecution.status == DunningExecutionStatus.CANCELED).label("canceled"),
-                func.sum(DunningExecution.recovered_amount).label("recovered"),
-                func.sum(DunningExecution.outstanding_amount).label("outstanding"),
-            )
-            .where(DunningExecution.tenant_id == tenant_id)
-        )
+        execution_stmt = select(
+            func.count().label("total"),
+            func.count()
+            .filter(DunningExecution.status == DunningExecutionStatus.PENDING)
+            .label("pending"),
+            func.count()
+            .filter(DunningExecution.status == DunningExecutionStatus.IN_PROGRESS)
+            .label("active"),
+            func.count()
+            .filter(DunningExecution.status == DunningExecutionStatus.COMPLETED)
+            .label("completed"),
+            func.count()
+            .filter(DunningExecution.status == DunningExecutionStatus.FAILED)
+            .label("failed"),
+            func.count()
+            .filter(DunningExecution.status == DunningExecutionStatus.CANCELED)
+            .label("canceled"),
+            func.sum(DunningExecution.recovered_amount).label("recovered"),
+            func.sum(DunningExecution.outstanding_amount).label("outstanding"),
+        ).where(DunningExecution.tenant_id == tenant_id)
 
         execution_result = await self.session.execute(execution_stmt)
         execution_row = execution_result.one()
@@ -561,15 +621,15 @@ class DunningService:
         recovery_rate = (total_recovered / total_outstanding * 100) if total_outstanding > 0 else 0
 
         # Calculate average completion time (for completed executions)
-        avg_time_stmt = (
-            select(func.avg(
-                func.extract('epoch', DunningExecution.completed_at - DunningExecution.started_at) / 3600
-            ))
-            .where(
-                DunningExecution.tenant_id == tenant_id,
-                DunningExecution.status == DunningExecutionStatus.COMPLETED,
-                DunningExecution.completed_at.isnot(None),
+        avg_time_stmt = select(
+            func.avg(
+                func.extract("epoch", DunningExecution.completed_at - DunningExecution.started_at)
+                / 3600
             )
+        ).where(
+            DunningExecution.tenant_id == tenant_id,
+            DunningExecution.status == DunningExecutionStatus.COMPLETED,
+            DunningExecution.completed_at.isnot(None),
         )
 
         avg_time_result = await self.session.execute(avg_time_stmt)

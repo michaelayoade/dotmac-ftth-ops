@@ -5,6 +5,7 @@ Provides seamless conversion between the existing invoice system (using integers
 for cents) and the new Money-based system with proper currency handling.
 """
 
+import structlog
 from decimal import Decimal
 from typing import Any, cast
 
@@ -12,6 +13,8 @@ from dotmac.platform.billing.core.models import Invoice as LegacyInvoice
 from dotmac.platform.billing.core.models import InvoiceLineItem as LegacyLineItem
 from dotmac.platform.billing.money_models import MoneyField, MoneyInvoice
 from dotmac.platform.billing.money_utils import money_handler
+
+logger = structlog.get_logger(__name__)
 
 
 class InvoiceMigrationAdapter:
@@ -247,7 +250,12 @@ class BatchMigrationService:
 
             except Exception as e:
                 # Log error but continue with other invoices
-                print(f"Error migrating invoice {legacy_invoice.invoice_id}: {e}")
+                logger.error(
+                    "invoice.migration.error",
+                    invoice_id=legacy_invoice.invoice_id,
+                    error=str(e),
+                    error_type=type(e).__name__,
+                )
                 continue
 
         return money_invoices

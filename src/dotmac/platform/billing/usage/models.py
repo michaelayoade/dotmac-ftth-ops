@@ -10,7 +10,6 @@ from enum import Enum
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
-    DECIMAL,
     DateTime,
     ForeignKey,
     Index,

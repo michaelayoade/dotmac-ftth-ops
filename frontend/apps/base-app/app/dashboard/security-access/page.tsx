@@ -233,7 +233,7 @@ export default function SecurityAccessPage() {
       // Fetch recent audit events
       try {
         const eventsResponse = await apiClient.get<Array<Record<string, unknown>>>('/api/v1/audit/activities/recent?limit=10');
-        if (eventsResponse.success && eventsResponse.data) {
+        if (eventsResponse.data) {
           const events: SecurityEvent[] = eventsResponse.data.map((e, index: number) => {
             const eventType = e.type as string;
             const validTypes: SecurityEvent['type'][] = ['auth_success', 'auth_failure', 'permission_change', 'api_key_created', 'secret_accessed'];

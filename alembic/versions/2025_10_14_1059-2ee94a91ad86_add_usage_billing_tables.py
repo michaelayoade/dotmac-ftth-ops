@@ -6,9 +6,10 @@ Create Date: 2025-10-14 10:59:33.875990
 
 """
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "2ee94a91ad86"
@@ -20,7 +21,7 @@ depends_on = None
 def upgrade() -> None:
     """Add usage billing tables for metered services."""
 
-    # Create UsageType enum
+    # Create UsageType enum (with checkfirst to avoid duplicate errors)
     usage_type_enum = sa.Enum(
         "data_transfer",
         "voice_minutes",
@@ -33,9 +34,9 @@ def upgrade() -> None:
         "custom",
         name="usagetype",
     )
-    usage_type_enum.create(op.get_bind())
+    usage_type_enum.create(op.get_bind(), checkfirst=True)
 
-    # Create BilledStatus enum
+    # Create BilledStatus enum (with checkfirst to avoid duplicate errors)
     billed_status_enum = sa.Enum(
         "pending",
         "billed",
@@ -43,7 +44,7 @@ def upgrade() -> None:
         "excluded",
         name="billedstatus",
     )
-    billed_status_enum.create(op.get_bind())
+    billed_status_enum.create(op.get_bind(), checkfirst=True)
 
     # Create usage_records table
     op.create_table(
@@ -65,7 +66,7 @@ def upgrade() -> None:
         # Usage details
         sa.Column(
             "usage_type",
-            usage_type_enum,
+            postgresql.ENUM(name="usagetype", create_type=False),
             nullable=False,
             comment="Type of metered usage",
         ),
@@ -117,7 +118,7 @@ def upgrade() -> None:
         # Billing status
         sa.Column(
             "billed_status",
-            billed_status_enum,
+            postgresql.ENUM(name="billedstatus", create_type=False),
             nullable=False,
             server_default="pending",
             comment="Billing status",
@@ -185,10 +186,16 @@ def upgrade() -> None:
     op.create_index("ix_usage_records_billed_status", "usage_records", ["billed_status"])
     op.create_index("ix_usage_records_invoice", "usage_records", ["invoice_id"])
     op.create_index("ix_usage_records_source_system", "usage_records", ["source_system"])
-    op.create_index("ix_usage_tenant_subscription", "usage_records", ["tenant_id", "subscription_id"])
+    op.create_index(
+        "ix_usage_tenant_subscription", "usage_records", ["tenant_id", "subscription_id"]
+    )
     op.create_index("ix_usage_tenant_customer", "usage_records", ["tenant_id", "customer_id"])
-    op.create_index("ix_usage_tenant_period", "usage_records", ["tenant_id", "period_start", "period_end"])
-    op.create_index("ix_usage_billed_status_period", "usage_records", ["billed_status", "period_end"])
+    op.create_index(
+        "ix_usage_tenant_period", "usage_records", ["tenant_id", "period_start", "period_end"]
+    )
+    op.create_index(
+        "ix_usage_billed_status_period", "usage_records", ["billed_status", "period_end"]
+    )
     op.create_index("ix_usage_type_period", "usage_records", ["usage_type", "period_start"])
 
     # Create usage_aggregates table
@@ -208,7 +215,7 @@ def upgrade() -> None:
             nullable=True,
             comment="Customer-level aggregate",
         ),
-        sa.Column("usage_type", usage_type_enum, nullable=False),
+        sa.Column("usage_type", postgresql.ENUM(name="usagetype", create_type=False), nullable=False),
         # Time period
         sa.Column("period_start", sa.DateTime(timezone=True), nullable=False),
         sa.Column("period_end", sa.DateTime(timezone=True), nullable=False),

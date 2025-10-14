@@ -54,6 +54,11 @@ class TenantCreate(TenantBase):
     max_api_calls_per_month: int = Field(default=10000, ge=0, description="Monthly API call limit")
     max_storage_gb: int = Field(default=10, ge=1, description="Storage limit in GB")
 
+    oss_config: dict[str, dict[str, Any]] | None = Field(
+        default=None,
+        description="Optional VOLTHA/GenieACS/NetBox/AWX overrides per service",
+    )
+
     @field_validator("slug")
     @classmethod
     def validate_slug(cls, v: str) -> str:

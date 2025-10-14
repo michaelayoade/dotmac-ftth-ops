@@ -18,7 +18,8 @@ from starlette.responses import Response
 from dotmac.platform.audit import AuditContextMiddleware
 from dotmac.platform.auth.exceptions import AuthError, get_http_status
 from dotmac.platform.core.rate_limiting import get_limiter
-from dotmac.platform.db import init_db
+from dotmac.platform.db import AsyncSessionLocal, init_db
+from dotmac.platform.auth.isp_permissions import ensure_isp_rbac
 from dotmac.platform.monitoring.health_checks import HealthChecker, ensure_infrastructure_running
 from dotmac.platform.routers import get_api_info, register_routers
 from dotmac.platform.secrets import load_secrets_from_vault_sync
@@ -51,8 +52,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     try:
         settings.validate_production_security()
     except ValueError as e:
-        # Log security error and fail fast
-        print(f"❌ {e}")
+        # Setup basic logging to capture security validation failure
+        import structlog
+        logger = structlog.get_logger(__name__)
+        logger.critical("security.validation.failed", error=str(e), environment=settings.environment)
         raise RuntimeError(str(e)) from e
 
     # Setup telemetry first to enable structured logging
@@ -86,16 +89,30 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             message=check.message,
         )
 
-    # Summary for human-readable console output (keep minimal print for deployment visibility)
-    print(f"🚀 DotMac Platform Services starting (v{settings.app_version})")
+    # Summary with structured logging for deployment visibility
+    logger.info(
+        "service.startup.services_check",
+        version=settings.app_version,
+        all_healthy=all_healthy,
+        emoji="🚀"
+    )
+
     failed_services = [c.name for c in checks if c.required and not c.is_healthy]
     if failed_services:
-        print(f"❌ Required services unavailable: {', '.join(failed_services)}")
+        logger.error(
+            "service.startup.required_services_unavailable",
+            failed_services=failed_services,
+            emoji="❌"
+        )
     elif not all_healthy:
         optional_failed = [c.name for c in checks if not c.required and not c.is_healthy]
-        print(f"⚠️  Optional services unavailable: {', '.join(optional_failed)}")
+        logger.warning(
+            "service.startup.optional_services_unavailable",
+            optional_failed_services=optional_failed,
+            emoji="⚠️"
+        )
     else:
-        print("✅ All service dependencies healthy")
+        logger.info("service.startup.all_services_healthy", emoji="✅")
 
     # Fail fast in production if required services are missing
     if not all_healthy:
@@ -117,11 +134,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Load secrets from Vault/OpenBao if configured
     try:
         load_secrets_from_vault_sync()
-        logger.info("secrets.load.success", source="vault")
-        print("✅ Secrets loaded from Vault/OpenBao")
+        logger.info("secrets.load.success", source="vault", emoji="✅")
     except Exception as e:
-        logger.warning("secrets.load.failed", source="vault", error=str(e))
-        print(f"⚠️  Using default secrets (Vault unavailable: {e})")
+        logger.warning("secrets.load.failed", source="vault", error=str(e), emoji="⚠️")
         # Continue with default values in development, fail in production
         if settings.environment == "production":
             logger.error("secrets.load.production_failure", error=str(e))
@@ -130,28 +145,33 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Initialize database
     try:
         init_db()
-        logger.info("database.init.success")
-        print("✅ Database initialized successfully")
+        logger.info("database.init.success", emoji="✅")
     except Exception as e:
-        logger.error("database.init.failed", error=str(e))
-        print(f"❌ Database initialization failed: {e}")
+        logger.error("database.init.failed", error=str(e), emoji="❌")
         # Continue in development, fail in production
         if settings.environment == "production":
             raise
 
-    logger.info("service.startup.complete", healthy=all_healthy)
-    print("🎉 Startup complete - service ready")
+    # Seed ISP RBAC permissions/roles after database init
+    try:
+        async with AsyncSessionLocal() as session:
+            await ensure_isp_rbac(session)
+        logger.info("rbac.isp_permissions.seeded", emoji="✅")
+    except Exception as e:
+        logger.error("rbac.isp_permissions.failed", error=str(e), emoji="❌")
+        if settings.environment == "production":
+            raise
+
+    logger.info("service.startup.complete", healthy=all_healthy, emoji="🎉")
 
     yield
 
     # Shutdown with structured logging
-    logger.info("service.shutdown.begin")
-    print("👋 Shutting down DotMac Platform Services...")
+    logger.info("service.shutdown.begin", emoji="👋")
 
     # Cleanup resources here if needed
 
-    logger.info("service.shutdown.complete")
-    print("✅ Shutdown complete")
+    logger.info("service.shutdown.complete", emoji="✅")
 
 
 def create_application() -> FastAPI:

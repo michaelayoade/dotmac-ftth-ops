@@ -753,7 +753,7 @@ class APIKeyService:
                 key_id = await client.get(f"api_key_lookup:{api_key_hash}")
                 if key_id:
                     if isinstance(key_id, bytes):
-                        key_id = key_id.decode('utf-8')
+                        key_id = key_id.decode("utf-8")
 
                     # Load metadata
                     metadata_str = await client.get(f"api_key_meta:{key_id}")

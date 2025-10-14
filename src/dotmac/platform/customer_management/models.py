@@ -343,7 +343,12 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
         Index("ix_customer_status_tier", "status", "tier"),
         Index("ix_customer_search", "first_name", "last_name", "company_name"),
         Index("ix_customer_location", "country", "state_province", "city"),
-        Index("ix_customer_service_location", "service_country", "service_state_province", "service_city"),
+        Index(
+            "ix_customer_service_location",
+            "service_country",
+            "service_state_province",
+            "service_city",
+        ),
         Index("ix_customer_installation_status", "tenant_id", "installation_status"),
         Index("ix_customer_connection_type", "tenant_id", "connection_type"),
     )

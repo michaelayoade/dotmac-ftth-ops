@@ -22,6 +22,7 @@ celery_app = Celery(
         "dotmac.platform.tasks",
         "dotmac.platform.communications.task_service",
         "dotmac.platform.billing.dunning.tasks",
+        "dotmac.platform.services.lifecycle.tasks",
     ],  # Auto-discover task modules
 )
 
@@ -102,13 +103,46 @@ def setup_periodic_tasks(sender: Any, **kwargs: Any) -> None:
         name="dunning-process-pending-actions",
     )
 
+    # Service Lifecycle - Process scheduled terminations every 10 minutes
+    from dotmac.platform.services.lifecycle.tasks import (
+        perform_health_checks_task,
+        process_auto_resume_task,
+        process_scheduled_terminations_task,
+    )
+
+    sender.add_periodic_task(
+        600.0,  # 10 minutes
+        process_scheduled_terminations_task.s(),
+        name="lifecycle-process-scheduled-terminations",
+    )
+
+    # Service Lifecycle - Process auto-resumption every 15 minutes
+    sender.add_periodic_task(
+        900.0,  # 15 minutes
+        process_auto_resume_task.s(),
+        name="lifecycle-process-auto-resume",
+    )
+
+    # Service Lifecycle - Health checks every hour
+    sender.add_periodic_task(
+        3600.0,  # 1 hour
+        perform_health_checks_task.s(),
+        name="lifecycle-perform-health-checks",
+    )
+
     logger = structlog.get_logger(__name__)
     logger.info(
         "celery.worker.configured",
         broker=settings.celery.broker_url,
         backend=settings.celery.result_backend,
         queues=["default", "high_priority", "low_priority"],
-        periodic_tasks=["currency-refresh-rates", "dunning-process-pending-actions"],
+        periodic_tasks=[
+            "currency-refresh-rates",
+            "dunning-process-pending-actions",
+            "lifecycle-process-scheduled-terminations",
+            "lifecycle-process-auto-resume",
+            "lifecycle-perform-health-checks",
+        ],
     )
 
 
