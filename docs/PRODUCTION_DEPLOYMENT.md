@@ -367,7 +367,7 @@ Before going live:
 - [ ] Rate limiting configured
 - [ ] CORS settings appropriate
 - [ ] Security headers enabled
-- [ ] Error tracking configured (Sentry)
+- [ ] OpenTelemetry observability configured (traces, metrics, logs)
 - [ ] Documentation updated
 
 ## Support

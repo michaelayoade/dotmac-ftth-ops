@@ -301,9 +301,9 @@ Production Score: 98/100 ⭐⭐⭐
 - 90/100 production score
 
 ### Week 1 - Post-Launch Monitoring
-- Set up error tracking (Sentry, LogRocket)
-- Monitor API performance (New Relic, Datadog)
-- Track user analytics (Mixpanel, Amplitude)
+- Monitor OpenTelemetry traces, metrics, and logs
+- Track API performance and errors
+- Analyze user analytics (if configured)
 - Gather user feedback
 
 ### Week 2-3 - Optional Enhancements

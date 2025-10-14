@@ -315,9 +315,9 @@ curl https://your-domain.com/api/health/ready
 
 ### High Priority
 1. **Monitor Production** (Week 1)
-   - Set up error tracking (Sentry, LogRocket)
-   - Monitor API performance (New Relic, Datadog)
-   - Track user analytics (Mixpanel, Amplitude)
+   - Monitor OpenTelemetry observability (traces, metrics, logs)
+   - Track API performance and error rates
+   - Analyze user behavior (if analytics configured)
 
 2. **Gather User Feedback** (Week 1-2)
    - Conduct user testing

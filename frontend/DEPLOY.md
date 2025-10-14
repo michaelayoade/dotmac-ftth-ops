@@ -55,9 +55,8 @@ NODE_ENV=production
 NEXT_PUBLIC_ENABLE_ANALYTICS=true
 NEXT_PUBLIC_ENABLE_ERROR_TRACKING=true
 
-# Monitoring (if using Sentry, etc.)
-SENTRY_DSN=https://your-sentry-dsn
-SENTRY_ENVIRONMENT=production
+# Observability - OpenTelemetry endpoint
+NEXT_PUBLIC_OTEL_ENDPOINT=http://localhost:4318
 
 # API timeouts (milliseconds)
 NEXT_PUBLIC_API_TIMEOUT=30000
@@ -202,10 +201,10 @@ pm2 startup
 - [ ] Lighthouse score >90
 
 ### Monitoring
-- [ ] Error tracking configured (Sentry, etc.)
+- [ ] OpenTelemetry observability configured (traces, metrics, logs)
 - [ ] Analytics configured (if needed)
 - [ ] Health check endpoint works
-- [ ] Logging configured
+- [ ] Error boundary components working
 
 ---
 
@@ -399,22 +398,19 @@ module.exports = {
 
 ## Monitoring & Alerts
 
-### Error Tracking (Sentry)
+### OpenTelemetry Observability
 ```bash
-# Install Sentry
-pnpm add @sentry/nextjs
-
-# Initialize
-npx @sentry/wizard -i nextjs
-
-# Configure
-# sentry.client.config.js
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-  environment: process.env.NODE_ENV,
-  tracesSampleRate: 0.1,
-});
+# OpenTelemetry is already configured in the project
+# Traces, metrics, and logs are sent to the backend collector
+# Configure the endpoint in environment variables:
+NEXT_PUBLIC_OTEL_ENDPOINT=http://your-otel-collector:4318
 ```
+
+**Built-in features:**
+- Automatic error tracking via OpenTelemetry spans
+- Performance monitoring and tracing
+- Custom metrics and events
+- Error boundaries with detailed context
 
 ### Analytics (Optional)
 ```bash
