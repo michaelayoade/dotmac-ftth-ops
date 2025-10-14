@@ -36,14 +36,20 @@ logger = structlog.get_logger(__name__)
 class NetBoxService:
     """Service for NetBox IPAM and DCIM operations"""
 
-    def __init__(self, client: NetBoxClient | None = None):
+    def __init__(
+        self,
+        client: NetBoxClient | None = None,
+        tenant_id: str | None = None,
+    ):
         """
         Initialize NetBox service
 
         Args:
             client: NetBox client instance (creates new if not provided)
+            tenant_id: Tenant ID for multi-tenancy support
         """
-        self.client = client or NetBoxClient()
+        self.client = client or NetBoxClient(tenant_id=tenant_id)
+        self.tenant_id = tenant_id
 
     # =========================================================================
     # Health and Status
@@ -90,7 +96,8 @@ class NetBoxService:
         # Try to find existing tenant by name
         existing = await self.client.get_tenant_by_name(tenant_name)
         if existing:
-            return existing["id"]
+            existing_id = existing.get("id")
+            return int(existing_id) if existing_id is not None else 0
 
         # Create new tenant
         slug = self._generate_slug(tenant_name)
@@ -100,7 +107,8 @@ class NetBoxService:
             description=f"Tenant {tenant_id}",
         )
         tenant = await self.client.create_tenant(data.model_dump(exclude_none=True))
-        return tenant["id"]
+        tenant_id_value = tenant.get("id")
+        return int(tenant_id_value) if tenant_id_value is not None else 0
 
     # =========================================================================
     # IP Address Management (IPAM)
@@ -404,7 +412,7 @@ class NetBoxService:
         try:
             # Step 1: Check if subscriber already has an IP assigned
             # Query NetBox API directly for IPs with this subscriber description
-            existing_ips_response = await self.client._request(
+            existing_ips_response = await self.client._netbox_request(
                 "GET",
                 "ipam/ip-addresses/",
                 params={
@@ -436,7 +444,7 @@ class NetBoxService:
 
             # Step 2: Find available IP from prefix pool
             # Query prefixes for the subscriber's site/tenant
-            prefixes_response = await self.client._request(
+            prefixes_response = await self.client._netbox_request(
                 "GET",
                 "ipam/prefixes/",
                 params={
@@ -466,7 +474,7 @@ class NetBoxService:
 
                 # Get available IP from prefix
                 try:
-                    available_ip_response = await self.client._request(
+                    available_ip_response = await self.client._netbox_request(
                         "POST",
                         f"ipam/prefixes/{prefix_id}/available-ips/",
                         json={

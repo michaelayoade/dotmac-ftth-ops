@@ -4,7 +4,6 @@ GenieACS NBI (Northbound Interface) Client
 Provides interface to GenieACS REST API for TR-069/CWMP device management.
 """
 
-import asyncio
 import os
 from typing import Any
 from urllib.parse import quote, urljoin
@@ -12,122 +11,97 @@ from urllib.parse import quote, urljoin
 import httpx
 import structlog
 
+from dotmac.platform.core.http_client import RobustHTTPClient
+
 logger = structlog.get_logger(__name__)
 
 
-class GenieACSClient:
+class GenieACSClient(RobustHTTPClient):
     """
     GenieACS NBI Client
 
     Interacts with GenieACS Northbound Interface (NBI) for CPE management.
     """
 
+    # Configurable timeouts for different operations
+    TIMEOUTS = {
+        "health_check": 5.0,
+        "list": 15.0,
+        "get": 10.0,
+        "create": 30.0,
+        "update": 30.0,
+        "delete": 30.0,
+        "task": 60.0,
+        "provision": 60.0,
+    }
+
+
     def __init__(
         self,
         base_url: str | None = None,
         username: str | None = None,
         password: str | None = None,
+        tenant_id: str | None = None,
         verify_ssl: bool = True,
         timeout_seconds: float = 30.0,
-        max_retries: int = 2,
+        max_retries: int = 3,
     ):
         """
-        Initialize GenieACS client
+        Initialize GenieACS client with robust HTTP capabilities.
 
         Args:
             base_url: GenieACS NBI URL (defaults to GENIEACS_URL env var)
             username: Basic auth username (defaults to GENIEACS_USERNAME env var)
             password: Basic auth password (defaults to GENIEACS_PASSWORD env var)
+            tenant_id: Tenant ID for multi-tenancy support
             verify_ssl: Verify SSL certificates (default True)
+            timeout_seconds: Default timeout in seconds
+            max_retries: Maximum retry attempts
         """
-        self.base_url = base_url or os.getenv("GENIEACS_URL", "http://localhost:7557")
-        self.username = username or os.getenv("GENIEACS_USERNAME", "")
-        self.password = password or os.getenv("GENIEACS_PASSWORD", "")
-        self.verify_ssl = verify_ssl
+        base_url = base_url or os.getenv("GENIEACS_URL", "http://localhost:7557")
+        username = username or os.getenv("GENIEACS_USERNAME", "")
+        password = password or os.getenv("GENIEACS_PASSWORD", "")
 
-        # Ensure base_url ends with /
-        if not self.base_url.endswith("/"):
-            self.base_url += "/"
+        # Initialize robust HTTP client
+        super().__init__(
+            service_name="genieacs",
+            base_url=base_url,
+            tenant_id=tenant_id,
+            username=username,
+            password=password,
+            verify_ssl=verify_ssl,
+            default_timeout=timeout_seconds,
+            max_retries=max_retries,
+        )
 
-        self.headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
-
-        # Setup basic auth if credentials provided
-        self.auth = None
-        if self.username and self.password:
-            self.auth = (self.username, self.password)
-        self.timeout_seconds = timeout_seconds
-        self.max_retries = max(0, max_retries)
-        self._limits = httpx.Limits(max_connections=10, max_keepalive_connections=5)
-
-    async def _request(
+    async def _genieacs_request(
         self,
         method: str,
         endpoint: str,
         params: dict[str, Any] | None = None,
         json: dict[str, Any] | None = None,
+        timeout: float | None = None,
     ) -> Any:
         """
-        Make HTTP request to GenieACS NBI
+        Make HTTP request to GenieACS NBI using robust base client.
 
         Args:
             method: HTTP method (GET, POST, PUT, PATCH, DELETE)
-            endpoint: API endpoint (e.g., 'devices')
+            endpoint: API endpoint
             params: Query parameters
-            json: JSON body for POST/PUT/PATCH
+            json: JSON body
+            timeout: Request timeout (overrides default)
 
         Returns:
             Response JSON data or empty dict
-
-        Raises:
-            httpx.HTTPError: On HTTP errors
         """
-        url = urljoin(self.base_url, endpoint)
-
-        last_error: Exception | None = None
-
-        for attempt in range(self.max_retries + 1):
-            try:
-                async with httpx.AsyncClient(
-                    verify=self.verify_ssl,
-                    timeout=httpx.Timeout(self.timeout_seconds),
-                    limits=self._limits,
-                ) as client:
-                    response = await client.request(
-                        method=method,
-                        url=url,
-                        headers=self.headers,
-                        params=params,
-                        json=json,
-                        auth=self.auth,
-                    )
-
-                response.raise_for_status()
-
-                # DELETE may return empty response
-                if response.status_code == 204 or not response.content:
-                    return {}
-
-                return response.json()
-            except httpx.HTTPStatusError as exc:
-                if exc.response.status_code >= 500 and attempt < self.max_retries:
-                    last_error = exc
-                    await asyncio.sleep(min(2 ** attempt * 0.5, 5.0))
-                    continue
-                raise
-            except httpx.RequestError as exc:
-                last_error = exc
-                if attempt < self.max_retries:
-                    await asyncio.sleep(min(2 ** attempt * 0.5, 5.0))
-                    continue
-                raise
-
-        if last_error:
-            raise last_error
-
-        raise RuntimeError("GenieACS request failed without raising an exception")
+        return await self.request(
+            method=method,
+            endpoint=endpoint,
+            params=params,
+            json=json,
+            timeout=timeout,
+        )
 
     # =========================================================================
     # Device Operations
@@ -162,7 +136,7 @@ class GenieACSClient:
         if projection:
             params["projection"] = projection
 
-        response = await self._request("GET", "devices", params=params)
+        response = await self._genieacs_request("GET", "devices", params=params)
         return response if isinstance(response, list) else []
 
     async def get_device(self, device_id: str) -> dict[str, Any] | None:
@@ -178,7 +152,7 @@ class GenieACSClient:
         try:
             # URL encode device ID
             encoded_id = quote(device_id, safe="")
-            return await self._request("GET", f"devices/{encoded_id}")
+            return await self._genieacs_request("GET", f"devices/{encoded_id}")
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -196,7 +170,7 @@ class GenieACSClient:
         """
         try:
             encoded_id = quote(device_id, safe="")
-            await self._request("DELETE", f"devices/{encoded_id}")
+            await self._genieacs_request("DELETE", f"devices/{encoded_id}")
             return True
         except Exception as e:
             logger.error("genieacs.delete_device.failed", device_id=device_id, error=str(e))
@@ -252,7 +226,7 @@ class GenieACSClient:
         if task_data:
             payload.update(task_data)
 
-        return await self._request("POST", endpoint, json=payload)
+        return await self._genieacs_request("POST", endpoint, json=payload)
 
     async def refresh_device(
         self,
@@ -380,14 +354,14 @@ class GenieACSClient:
 
     async def get_presets(self) -> list[dict[str, Any]]:
         """Get all presets"""
-        response = await self._request("GET", "presets")
+        response = await self._genieacs_request("GET", "presets")
         return response if isinstance(response, list) else []
 
     async def get_preset(self, preset_id: str) -> dict[str, Any] | None:
         """Get preset by ID"""
         try:
             encoded_id = quote(preset_id, safe="")
-            return await self._request("GET", f"presets/{encoded_id}")
+            return await self._genieacs_request("GET", f"presets/{encoded_id}")
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -395,18 +369,18 @@ class GenieACSClient:
 
     async def create_preset(self, preset_data: dict[str, Any]) -> dict[str, Any]:
         """Create preset"""
-        return await self._request("POST", "presets", json=preset_data)
+        return await self._genieacs_request("POST", "presets", json=preset_data)
 
     async def update_preset(self, preset_id: str, preset_data: dict[str, Any]) -> dict[str, Any]:
         """Update preset"""
         encoded_id = quote(preset_id, safe="")
-        return await self._request("PUT", f"presets/{encoded_id}", json=preset_data)
+        return await self._genieacs_request("PUT", f"presets/{encoded_id}", json=preset_data)
 
     async def delete_preset(self, preset_id: str) -> bool:
         """Delete preset"""
         try:
             encoded_id = quote(preset_id, safe="")
-            await self._request("DELETE", f"presets/{encoded_id}")
+            await self._genieacs_request("DELETE", f"presets/{encoded_id}")
             return True
         except Exception as e:
             logger.error("genieacs.delete_preset.failed", preset_id=preset_id, error=str(e))
@@ -418,14 +392,14 @@ class GenieACSClient:
 
     async def get_provisions(self) -> list[dict[str, Any]]:
         """Get all provisions"""
-        response = await self._request("GET", "provisions")
+        response = await self._genieacs_request("GET", "provisions")
         return response if isinstance(response, list) else []
 
     async def get_provision(self, provision_id: str) -> dict[str, Any] | None:
         """Get provision by ID"""
         try:
             encoded_id = quote(provision_id, safe="")
-            return await self._request("GET", f"provisions/{encoded_id}")
+            return await self._genieacs_request("GET", f"provisions/{encoded_id}")
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -437,14 +411,14 @@ class GenieACSClient:
 
     async def get_files(self) -> list[dict[str, Any]]:
         """Get all files"""
-        response = await self._request("GET", "files")
+        response = await self._genieacs_request("GET", "files")
         return response if isinstance(response, list) else []
 
     async def get_file(self, file_id: str) -> dict[str, Any] | None:
         """Get file by ID"""
         try:
             encoded_id = quote(file_id, safe="")
-            return await self._request("GET", f"files/{encoded_id}")
+            return await self._genieacs_request("GET", f"files/{encoded_id}")
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -454,7 +428,7 @@ class GenieACSClient:
         """Delete file"""
         try:
             encoded_id = quote(file_id, safe="")
-            await self._request("DELETE", f"files/{encoded_id}")
+            await self._genieacs_request("DELETE", f"files/{encoded_id}")
             return True
         except Exception as e:
             logger.error("genieacs.delete_file.failed", file_id=file_id, error=str(e))
@@ -488,14 +462,14 @@ class GenieACSClient:
 
             params["query"] = json.dumps({"device": device_id})
 
-        response = await self._request("GET", "faults", params=params)
+        response = await self._genieacs_request("GET", "faults", params=params)
         return response if isinstance(response, list) else []
 
     async def delete_fault(self, fault_id: str) -> bool:
         """Delete fault"""
         try:
             encoded_id = quote(fault_id, safe="")
-            await self._request("DELETE", f"faults/{encoded_id}")
+            await self._genieacs_request("DELETE", f"faults/{encoded_id}")
             return True
         except Exception as e:
             logger.error("genieacs.delete_fault.failed", fault_id=fault_id, error=str(e))

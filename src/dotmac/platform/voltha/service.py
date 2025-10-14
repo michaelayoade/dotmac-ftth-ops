@@ -29,14 +29,20 @@ logger = structlog.get_logger(__name__)
 class VOLTHAService:
     """Service for VOLTHA PON management"""
 
-    def __init__(self, client: VOLTHAClient | None = None):
+    def __init__(
+        self,
+        client: VOLTHAClient | None = None,
+        tenant_id: str | None = None,
+    ):
         """
         Initialize VOLTHA service
 
         Args:
-            client: VOLTHA client instance
+            client: VOLTHA client instance (creates new if not provided)
+            tenant_id: Tenant ID for multi-tenancy support
         """
-        self.client = client or VOLTHAClient()
+        self.client = client or VOLTHAClient(tenant_id=tenant_id)
+        self.tenant_id = tenant_id
 
     # =========================================================================
     # Health and Status
@@ -148,7 +154,8 @@ class VOLTHAService:
 
     async def delete_device(self, device_id: str) -> bool:
         """Delete device"""
-        return await self.client.delete_device(device_id)
+        result = await self.client.delete_device(device_id)
+        return bool(result)
 
     # =========================================================================
     # Logical Device Operations (OLTs)

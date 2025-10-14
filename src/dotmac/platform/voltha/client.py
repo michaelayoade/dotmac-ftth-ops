@@ -5,7 +5,6 @@ Provides interface to VOLTHA REST API for PON network management.
 Note: VOLTHA primarily uses gRPC, but also provides REST API for common operations.
 """
 
-import asyncio
 import os
 from typing import Any
 from urllib.parse import urljoin
@@ -13,10 +12,12 @@ from urllib.parse import urljoin
 import httpx
 import structlog
 
+from dotmac.platform.core.http_client import RobustHTTPClient
+
 logger = structlog.get_logger(__name__)
 
 
-class VOLTHAClient:
+class VOLTHAClient(RobustHTTPClient):
     """
     VOLTHA REST API Client
 
@@ -24,113 +25,96 @@ class VOLTHAClient:
     in PON networks.
     """
 
+    # Configurable timeouts for different operations
+    TIMEOUTS = {
+        "health_check": 5.0,
+        "list": 10.0,
+        "get": 10.0,
+        "enable": 30.0,
+        "disable": 30.0,
+        "delete": 30.0,
+        "reboot": 60.0,
+        "provision": 60.0,
+    }
+
     def __init__(
         self,
         base_url: str | None = None,
         username: str | None = None,
         password: str | None = None,
         api_token: str | None = None,
+        tenant_id: str | None = None,
         verify_ssl: bool = True,
         timeout_seconds: float = 30.0,
-        max_retries: int = 2,
+        max_retries: int = 3,
     ):
         """
-        Initialize VOLTHA client
+        Initialize VOLTHA client with robust HTTP capabilities.
 
         Args:
             base_url: VOLTHA API URL (defaults to VOLTHA_URL env var)
+            username: Basic auth username (defaults to VOLTHA_USERNAME env var)
+            password: Basic auth password (defaults to VOLTHA_PASSWORD env var)
+            api_token: Bearer token (defaults to VOLTHA_TOKEN env var)
+            tenant_id: Tenant ID for multi-tenancy support
             verify_ssl: Verify SSL certificates (default True)
+            timeout_seconds: Default timeout in seconds
+            max_retries: Maximum retry attempts
         """
-        self.base_url = base_url or os.getenv("VOLTHA_URL", "http://localhost:8881")
-        self.username = username or os.getenv("VOLTHA_USERNAME")
-        self.password = password or os.getenv("VOLTHA_PASSWORD")
-        self.api_token = api_token or os.getenv("VOLTHA_TOKEN")
-        self.verify_ssl = verify_ssl
+        base_url = base_url or os.getenv("VOLTHA_URL", "http://localhost:8881")
+        username = username or os.getenv("VOLTHA_USERNAME")
+        password = password or os.getenv("VOLTHA_PASSWORD")
+        api_token = api_token or os.getenv("VOLTHA_TOKEN")
 
-        # Ensure base_url ends with /
-        if not self.base_url.endswith("/"):
-            self.base_url += "/"
+        # Initialize robust HTTP client
+        super().__init__(
+            service_name="voltha",
+            base_url=base_url,
+            tenant_id=tenant_id,
+            api_token=api_token,
+            username=username,
+            password=password,
+            verify_ssl=verify_ssl,
+            default_timeout=timeout_seconds,
+            max_retries=max_retries,
+        )
 
+        # API base path
         self.api_base = urljoin(self.base_url, "api/v1/")
 
-        self.headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
-        if self.api_token:
-            self.headers["Authorization"] = f"Bearer {self.api_token}"
-        self.auth = None
-        if not self.api_token and self.username and self.password:
-            self.auth = (self.username, self.password)
-        self.timeout_seconds = timeout_seconds
-        self.max_retries = max(0, max_retries)
-        self._limits = httpx.Limits(max_connections=10, max_keepalive_connections=5)
-
-    async def _request(
+    async def _voltha_request(
         self,
         method: str,
         endpoint: str,
         params: dict[str, Any] | None = None,
         json: dict[str, Any] | None = None,
+        timeout: float | None = None,
     ) -> Any:
         """
-        Make HTTP request to VOLTHA API
+        Make HTTP request to VOLTHA API using robust base client.
 
         Args:
             method: HTTP method
-            endpoint: API endpoint
+            endpoint: API endpoint (relative to api_base)
             params: Query parameters
             json: JSON body
+            timeout: Request timeout (overrides default)
 
         Returns:
             Response JSON data
         """
-        url = urljoin(self.api_base, endpoint)
+        # Construct full endpoint with api/v1/ prefix
+        full_endpoint = urljoin(self.api_base, endpoint.lstrip("/"))
+        # Make endpoint relative to base_url
+        relative_endpoint = full_endpoint.replace(self.base_url, "")
 
-        last_error: Exception | None = None
-
-        for attempt in range(self.max_retries + 1):
-            try:
-                async with httpx.AsyncClient(
-                    verify=self.verify_ssl,
-                    timeout=httpx.Timeout(self.timeout_seconds),
-                    limits=self._limits,
-                ) as client:
-                    response = await client.request(
-                        method=method,
-                        url=url,
-                        headers=self.headers,
-                        params=params,
-                        json=json,
-                        auth=self.auth,
-                    )
-
-                response.raise_for_status()
-
-                if response.status_code == 204 or not response.content:
-                    return {}
-
-                return response.json()
-            except httpx.HTTPStatusError as exc:
-                # Retry 5xx responses
-                if exc.response.status_code >= 500 and attempt < self.max_retries:
-                    last_error = exc
-                    backoff = min(2 ** attempt * 0.5, 5.0)
-                    await asyncio.sleep(backoff)
-                    continue
-                raise
-            except httpx.RequestError as exc:
-                last_error = exc
-                if attempt < self.max_retries:
-                    backoff = min(2 ** attempt * 0.5, 5.0)
-                    await asyncio.sleep(backoff)
-                    continue
-                raise
-
-        if last_error:
-            raise last_error
-
-        raise RuntimeError("VOLTHA request failed without raising an exception")
+        return await self.request(
+            method=method,
+            endpoint=relative_endpoint,
+            params=params,
+            json=json,
+            timeout=timeout,
+        )
 
     # =========================================================================
     # Logical Device Operations (OLTs)
@@ -138,14 +122,18 @@ class VOLTHAClient:
 
     async def get_logical_devices(self) -> list[dict[str, Any]]:
         """Get all logical devices (OLTs)"""
-        response = await self._request("GET", "logical_devices")
+        response = await self._voltha_request(
+            "GET", "logical_devices", timeout=self.TIMEOUTS["list"]
+        )
         items = response.get("items", []) if isinstance(response, dict) else response
         return items if isinstance(items, list) else []
 
     async def get_logical_device(self, device_id: str) -> dict[str, Any] | None:
         """Get logical device by ID"""
         try:
-            return await self._request("GET", f"logical_devices/{device_id}")
+            return await self._voltha_request(
+                "GET", f"logical_devices/{device_id}", timeout=self.TIMEOUTS["get"]
+            )
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -153,13 +141,17 @@ class VOLTHAClient:
 
     async def get_logical_device_ports(self, device_id: str) -> list[dict[str, Any]]:
         """Get ports for logical device"""
-        response = await self._request("GET", f"logical_devices/{device_id}/ports")
+        response = await self._voltha_request(
+            "GET", f"logical_devices/{device_id}/ports", timeout=self.TIMEOUTS["get"]
+        )
         items = response.get("items", []) if isinstance(response, dict) else response
         return items if isinstance(items, list) else []
 
     async def get_logical_device_flows(self, device_id: str) -> list[dict[str, Any]]:
         """Get flows for logical device"""
-        response = await self._request("GET", f"logical_devices/{device_id}/flows")
+        response = await self._voltha_request(
+            "GET", f"logical_devices/{device_id}/flows", timeout=self.TIMEOUTS["get"]
+        )
         items = response.get("items", []) if isinstance(response, dict) else response
         return items if isinstance(items, list) else []
 
@@ -169,14 +161,16 @@ class VOLTHAClient:
 
     async def get_devices(self) -> list[dict[str, Any]]:
         """Get all physical devices (ONUs)"""
-        response = await self._request("GET", "devices")
+        response = await self._voltha_request("GET", "devices", timeout=self.TIMEOUTS["list"])
         items = response.get("items", []) if isinstance(response, dict) else response
         return items if isinstance(items, list) else []
 
     async def get_device(self, device_id: str) -> dict[str, Any] | None:
         """Get physical device by ID"""
         try:
-            return await self._request("GET", f"devices/{device_id}")
+            return await self._voltha_request(
+                "GET", f"devices/{device_id}", timeout=self.TIMEOUTS["get"]
+            )
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -184,28 +178,38 @@ class VOLTHAClient:
 
     async def enable_device(self, device_id: str) -> dict[str, Any]:
         """Enable device"""
-        return await self._request("POST", f"devices/{device_id}/enable")
+        return await self._voltha_request(
+            "POST", f"devices/{device_id}/enable", timeout=self.TIMEOUTS["enable"]
+        )
 
     async def disable_device(self, device_id: str) -> dict[str, Any]:
         """Disable device"""
-        return await self._request("POST", f"devices/{device_id}/disable")
+        return await self._voltha_request(
+            "POST", f"devices/{device_id}/disable", timeout=self.TIMEOUTS["disable"]
+        )
 
     async def delete_device(self, device_id: str) -> bool:
         """Delete device"""
         try:
-            await self._request("DELETE", f"devices/{device_id}")
+            await self._voltha_request(
+                "DELETE", f"devices/{device_id}", timeout=self.TIMEOUTS["delete"]
+            )
             return True
         except Exception as e:
-            logger.error("voltha.delete_device.failed", device_id=device_id, error=str(e))
+            self.logger.error("voltha.delete_device.failed", device_id=device_id, error=str(e))
             return False
 
     async def reboot_device(self, device_id: str) -> dict[str, Any]:
         """Reboot device"""
-        return await self._request("POST", f"devices/{device_id}/reboot")
+        return await self._voltha_request(
+            "POST", f"devices/{device_id}/reboot", timeout=self.TIMEOUTS["reboot"]
+        )
 
     async def get_device_ports(self, device_id: str) -> list[dict[str, Any]]:
         """Get ports for device"""
-        response = await self._request("GET", f"devices/{device_id}/ports")
+        response = await self._voltha_request(
+            "GET", f"devices/{device_id}/ports", timeout=self.TIMEOUTS["get"]
+        )
         items = response.get("items", []) if isinstance(response, dict) else response
         return items if isinstance(items, list) else []
 
@@ -215,13 +219,13 @@ class VOLTHAClient:
 
     async def get_adapters(self) -> list[dict[str, Any]]:
         """Get all adapters"""
-        response = await self._request("GET", "adapters")
+        response = await self._voltha_request("GET", "adapters", timeout=self.TIMEOUTS["list"])
         items = response.get("items", []) if isinstance(response, dict) else response
         return items if isinstance(items, list) else []
 
     async def get_device_types(self) -> list[dict[str, Any]]:
         """Get all device types"""
-        response = await self._request("GET", "device_types")
+        response = await self._voltha_request("GET", "device_types", timeout=self.TIMEOUTS["list"])
         items = response.get("items", []) if isinstance(response, dict) else response
         return items if isinstance(items, list) else []
 
@@ -232,10 +236,10 @@ class VOLTHAClient:
     async def health_check(self) -> dict[str, Any]:
         """Check VOLTHA health"""
         try:
-            response = await self._request("GET", "health")
+            response = await self._voltha_request("GET", "health", timeout=self.TIMEOUTS["health_check"])
             return response if isinstance(response, dict) else {"state": "HEALTHY"}
         except Exception as e:
-            logger.error("voltha.health_check.failed", error=str(e))
+            self.logger.error("voltha.health_check.failed", error=str(e))
             return {"state": "UNKNOWN", "error": str(e)}
 
     async def ping(self) -> bool:
@@ -244,5 +248,5 @@ class VOLTHAClient:
             health = await self.health_check()
             return health.get("state") == "HEALTHY"
         except Exception as e:
-            logger.warning("voltha.ping.failed", error=str(e))
+            self.logger.warning("voltha.ping.failed", error=str(e))
             return False

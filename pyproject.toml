@@ -114,6 +114,7 @@ pandas = "^2.2.0"
 sse-starlette = "^3.0.2"
 croniter = "^6.0.0"
 elasticsearch = "^9.1.1"
+pybreaker = "^1.4.1"
 
 [tool.poetry.extras]
 # Media processing (for video/audio file handling - currently unused)

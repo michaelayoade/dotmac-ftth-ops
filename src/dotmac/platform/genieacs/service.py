@@ -41,14 +41,20 @@ logger = structlog.get_logger(__name__)
 class GenieACSService:
     """Service for GenieACS CPE management"""
 
-    def __init__(self, client: GenieACSClient | None = None):
+    def __init__(
+        self,
+        client: GenieACSClient | None = None,
+        tenant_id: str | None = None,
+    ):
         """
         Initialize GenieACS service
 
         Args:
             client: GenieACS client instance (creates new if not provided)
+            tenant_id: Tenant ID for multi-tenancy support
         """
-        self.client = client or GenieACSClient()
+        self.client = client or GenieACSClient(tenant_id=tenant_id)
+        self.tenant_id = tenant_id
 
     # =========================================================================
     # Health and Status

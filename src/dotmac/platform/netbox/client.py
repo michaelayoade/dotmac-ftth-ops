@@ -4,18 +4,19 @@ NetBox API Client Wrapper
 Provides a clean interface to the NetBox REST API using pynetbox library.
 """
 
-import asyncio
 import os
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urljoin
 
 import httpx
 import structlog
 
+from dotmac.platform.core.http_client import RobustHTTPClient
+
 logger = structlog.get_logger(__name__)
 
 
-class NetBoxClient:
+class NetBoxClient(RobustHTTPClient):
     """
     NetBox API Client
 
@@ -23,104 +24,92 @@ class NetBoxClient:
     Uses httpx for async HTTP requests.
     """
 
+    # Configurable timeouts for different operations
+    TIMEOUTS = {
+        "health_check": 5.0,
+        "list": 15.0,
+        "get": 10.0,
+        "create": 30.0,
+        "update": 30.0,
+        "delete": 30.0,
+        "allocate": 30.0,
+    }
+
+
     def __init__(
         self,
         base_url: str | None = None,
         api_token: str | None = None,
+        tenant_id: str | None = None,
         verify_ssl: bool = True,
         timeout_seconds: float = 30.0,
-        max_retries: int = 2,
+        max_retries: int = 3,
     ):
         """
-        Initialize NetBox client
+        Initialize NetBox client with robust HTTP capabilities.
 
         Args:
             base_url: NetBox instance URL (defaults to NETBOX_URL env var)
             api_token: API token for authentication (defaults to NETBOX_API_TOKEN env var)
+            tenant_id: Tenant ID for multi-tenancy support
             verify_ssl: Verify SSL certificates (default True)
+            timeout_seconds: Default timeout in seconds
+            max_retries: Maximum retry attempts
         """
-        self.base_url = base_url or os.getenv("NETBOX_URL", "http://localhost:8080")
-        self.api_token = api_token or os.getenv("NETBOX_API_TOKEN", "")
-        self.verify_ssl = verify_ssl
+        base_url = base_url or os.getenv("NETBOX_URL", "http://localhost:8080")
+        api_token = api_token or os.getenv("NETBOX_API_TOKEN", "")
 
-        # Ensure base_url ends with /
-        if not self.base_url.endswith("/"):
-            self.base_url += "/"
+        # Initialize robust HTTP client
+        # NetBox uses "Token" prefix for auth, not "Bearer"
+        super().__init__(
+            service_name="netbox",
+            base_url=base_url,
+            tenant_id=tenant_id,
+            verify_ssl=verify_ssl,
+            default_timeout=timeout_seconds,
+            max_retries=max_retries,
+        )
 
+        # Override auth header for NetBox Token format
+        if api_token:
+            self.headers["Authorization"] = f"Token {api_token}"
+
+        # API base path
         self.api_base = urljoin(self.base_url, "api/")
 
-        self.headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
-
-        if self.api_token:
-            self.headers["Authorization"] = f"Token {self.api_token}"
-        self.timeout_seconds = timeout_seconds
-        self.max_retries = max(0, max_retries)
-        self._limits = httpx.Limits(max_connections=10, max_keepalive_connections=5)
-
-    async def _request(
+    async def _netbox_request(
         self,
         method: str,
         endpoint: str,
         params: dict[str, Any] | None = None,
         json: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+        timeout: float | None = None,
+    ) -> Any:
         """
-        Make HTTP request to NetBox API
+        Make HTTP request to NetBox API using robust base client.
 
         Args:
             method: HTTP method (GET, POST, PUT, PATCH, DELETE)
-            endpoint: API endpoint (e.g., 'ipam/ip-addresses/')
+            endpoint: API endpoint (relative to api/)
             params: Query parameters
-            json: JSON body for POST/PUT/PATCH
+            json: JSON body
+            timeout: Request timeout (overrides default)
 
         Returns:
             Response JSON data
-
-        Raises:
-            httpx.HTTPError: On HTTP errors
         """
-        url = urljoin(self.api_base, endpoint)
+        # Construct full endpoint with api/ prefix
+        full_endpoint = urljoin(self.api_base, endpoint.lstrip("/"))
+        # Make endpoint relative to base_url
+        relative_endpoint = full_endpoint.replace(self.base_url, "")
 
-        last_error: Exception | None = None
-
-        for attempt in range(self.max_retries + 1):
-            try:
-                async with httpx.AsyncClient(
-                    verify=self.verify_ssl,
-                    timeout=httpx.Timeout(self.timeout_seconds),
-                    limits=self._limits,
-                ) as client:
-                    response = await client.request(
-                        method=method,
-                        url=url,
-                        headers=self.headers,
-                        params=params,
-                        json=json,
-                    )
-
-                response.raise_for_status()
-
-                return response.json()
-            except httpx.HTTPStatusError as exc:
-                if exc.response.status_code >= 500 and attempt < self.max_retries:
-                    last_error = exc
-                    await asyncio.sleep(min(2 ** attempt * 0.5, 5.0))
-                    continue
-                raise
-            except httpx.RequestError as exc:
-                last_error = exc
-                if attempt < self.max_retries:
-                    await asyncio.sleep(min(2 ** attempt * 0.5, 5.0))
-                    continue
-                raise
-
-        if last_error:
-            raise last_error
-
-        raise RuntimeError("NetBox request failed without raising an exception")
+        return await self.request(
+            method=method,
+            endpoint=relative_endpoint,
+            params=params,
+            json=json,
+            timeout=timeout,
+        )
 
     # =========================================================================
     # IPAM Operations
@@ -134,29 +123,33 @@ class NetBoxClient:
         offset: int = 0,
     ) -> dict[str, Any]:
         """Get IP addresses from NetBox"""
-        params = {"limit": limit, "offset": offset}
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
         if tenant:
             params["tenant"] = tenant
         if vrf:
             params["vrf"] = vrf
 
-        return await self._request("GET", "ipam/ip-addresses/", params=params)
+        response = await self._netbox_request("GET", "ipam/ip-addresses/", params=params)
+        return cast(dict[str, Any], response)
 
     async def get_ip_address(self, ip_id: int) -> dict[str, Any]:
         """Get single IP address by ID"""
-        return await self._request("GET", f"ipam/ip-addresses/{ip_id}/")
+        response = await self._netbox_request("GET", f"ipam/ip-addresses/{ip_id}/")
+        return cast(dict[str, Any], response)
 
     async def create_ip_address(self, data: dict[str, Any]) -> dict[str, Any]:
         """Create new IP address"""
-        return await self._request("POST", "ipam/ip-addresses/", json=data)
+        response = await self._netbox_request("POST", "ipam/ip-addresses/", json=data)
+        return cast(dict[str, Any], response)
 
     async def update_ip_address(self, ip_id: int, data: dict[str, Any]) -> dict[str, Any]:
         """Update IP address"""
-        return await self._request("PATCH", f"ipam/ip-addresses/{ip_id}/", json=data)
+        response = await self._netbox_request("PATCH", f"ipam/ip-addresses/{ip_id}/", json=data)
+        return cast(dict[str, Any], response)
 
     async def delete_ip_address(self, ip_id: int) -> None:
         """Delete IP address"""
-        await self._request("DELETE", f"ipam/ip-addresses/{ip_id}/")
+        await self._netbox_request("DELETE", f"ipam/ip-addresses/{ip_id}/")
 
     async def get_prefixes(
         self,
@@ -166,25 +159,28 @@ class NetBoxClient:
         offset: int = 0,
     ) -> dict[str, Any]:
         """Get IP prefixes (subnets)"""
-        params = {"limit": limit, "offset": offset}
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
         if tenant:
             params["tenant"] = tenant
         if vrf:
             params["vrf"] = vrf
 
-        return await self._request("GET", "ipam/prefixes/", params=params)
+        response = await self._netbox_request("GET", "ipam/prefixes/", params=params)
+        return cast(dict[str, Any], response)
 
     async def get_prefix(self, prefix_id: int) -> dict[str, Any]:
         """Get single prefix by ID"""
-        return await self._request("GET", f"ipam/prefixes/{prefix_id}/")
+        response = await self._netbox_request("GET", f"ipam/prefixes/{prefix_id}/")
+        return cast(dict[str, Any], response)
 
     async def create_prefix(self, data: dict[str, Any]) -> dict[str, Any]:
         """Create new prefix"""
-        return await self._request("POST", "ipam/prefixes/", json=data)
+        response = await self._netbox_request("POST", "ipam/prefixes/", json=data)
+        return cast(dict[str, Any], response)
 
     async def get_available_ips(self, prefix_id: int, limit: int = 10) -> list[dict[str, Any]]:
         """Get available IP addresses in a prefix"""
-        response = await self._request(
+        response = await self._netbox_request(
             "GET",
             f"ipam/prefixes/{prefix_id}/available-ips/",
             params={"limit": limit},
@@ -193,11 +189,12 @@ class NetBoxClient:
 
     async def allocate_ip(self, prefix_id: int, data: dict[str, Any]) -> dict[str, Any]:
         """Allocate next available IP from prefix"""
-        return await self._request(
+        response = await self._netbox_request(
             "POST",
             f"ipam/prefixes/{prefix_id}/available-ips/",
             json=data,
         )
+        return cast(dict[str, Any], response)
 
     async def get_vrfs(
         self,
@@ -206,15 +203,17 @@ class NetBoxClient:
         offset: int = 0,
     ) -> dict[str, Any]:
         """Get VRFs (Virtual Routing and Forwarding)"""
-        params = {"limit": limit, "offset": offset}
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
         if tenant:
             params["tenant"] = tenant
 
-        return await self._request("GET", "ipam/vrfs/", params=params)
+        response = await self._netbox_request("GET", "ipam/vrfs/", params=params)
+        return cast(dict[str, Any], response)
 
     async def create_vrf(self, data: dict[str, Any]) -> dict[str, Any]:
         """Create new VRF"""
-        return await self._request("POST", "ipam/vrfs/", json=data)
+        response = await self._netbox_request("POST", "ipam/vrfs/", json=data)
+        return cast(dict[str, Any], response)
 
     # =========================================================================
     # DCIM Operations (Devices, Sites, Racks)
@@ -227,19 +226,22 @@ class NetBoxClient:
         offset: int = 0,
     ) -> dict[str, Any]:
         """Get sites"""
-        params = {"limit": limit, "offset": offset}
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
         if tenant:
             params["tenant"] = tenant
 
-        return await self._request("GET", "dcim/sites/", params=params)
+        response = await self._netbox_request("GET", "dcim/sites/", params=params)
+        return cast(dict[str, Any], response)
 
     async def get_site(self, site_id: int) -> dict[str, Any]:
         """Get single site by ID"""
-        return await self._request("GET", f"dcim/sites/{site_id}/")
+        response = await self._netbox_request("GET", f"dcim/sites/{site_id}/")
+        return cast(dict[str, Any], response)
 
     async def create_site(self, data: dict[str, Any]) -> dict[str, Any]:
         """Create new site"""
-        return await self._request("POST", "dcim/sites/", json=data)
+        response = await self._netbox_request("POST", "dcim/sites/", json=data)
+        return cast(dict[str, Any], response)
 
     async def get_devices(
         self,
@@ -250,7 +252,7 @@ class NetBoxClient:
         offset: int = 0,
     ) -> dict[str, Any]:
         """Get devices"""
-        params = {"limit": limit, "offset": offset}
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
         if tenant:
             params["tenant"] = tenant
         if site:
@@ -258,19 +260,23 @@ class NetBoxClient:
         if role:
             params["role"] = role
 
-        return await self._request("GET", "dcim/devices/", params=params)
+        response = await self._netbox_request("GET", "dcim/devices/", params=params)
+        return cast(dict[str, Any], response)
 
     async def get_device(self, device_id: int) -> dict[str, Any]:
         """Get single device by ID"""
-        return await self._request("GET", f"dcim/devices/{device_id}/")
+        response = await self._netbox_request("GET", f"dcim/devices/{device_id}/")
+        return cast(dict[str, Any], response)
 
     async def create_device(self, data: dict[str, Any]) -> dict[str, Any]:
         """Create new device"""
-        return await self._request("POST", "dcim/devices/", json=data)
+        response = await self._netbox_request("POST", "dcim/devices/", json=data)
+        return cast(dict[str, Any], response)
 
     async def update_device(self, device_id: int, data: dict[str, Any]) -> dict[str, Any]:
         """Update device"""
-        return await self._request("PATCH", f"dcim/devices/{device_id}/", json=data)
+        response = await self._netbox_request("PATCH", f"dcim/devices/{device_id}/", json=data)
+        return cast(dict[str, Any], response)
 
     async def get_interfaces(
         self,
@@ -279,15 +285,17 @@ class NetBoxClient:
         offset: int = 0,
     ) -> dict[str, Any]:
         """Get network interfaces"""
-        params = {"limit": limit, "offset": offset}
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
         if device_id:
             params["device_id"] = device_id
 
-        return await self._request("GET", "dcim/interfaces/", params=params)
+        response = await self._netbox_request("GET", "dcim/interfaces/", params=params)
+        return cast(dict[str, Any], response)
 
     async def create_interface(self, data: dict[str, Any]) -> dict[str, Any]:
         """Create new interface"""
-        return await self._request("POST", "dcim/interfaces/", json=data)
+        response = await self._netbox_request("POST", "dcim/interfaces/", json=data)
+        return cast(dict[str, Any], response)
 
     # =========================================================================
     # Tenancy Operations
@@ -299,21 +307,25 @@ class NetBoxClient:
         offset: int = 0,
     ) -> dict[str, Any]:
         """Get tenants"""
-        params = {"limit": limit, "offset": offset}
-        return await self._request("GET", "tenancy/tenants/", params=params)
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        response = await self._netbox_request("GET", "tenancy/tenants/", params=params)
+        return cast(dict[str, Any], response)
 
     async def get_tenant(self, tenant_id: int) -> dict[str, Any]:
         """Get single tenant by ID"""
-        return await self._request("GET", f"tenancy/tenants/{tenant_id}/")
+        response = await self._netbox_request("GET", f"tenancy/tenants/{tenant_id}/")
+        return cast(dict[str, Any], response)
 
     async def create_tenant(self, data: dict[str, Any]) -> dict[str, Any]:
         """Create new tenant"""
-        return await self._request("POST", "tenancy/tenants/", json=data)
+        response = await self._netbox_request("POST", "tenancy/tenants/", json=data)
+        return cast(dict[str, Any], response)
 
     async def get_tenant_by_name(self, name: str) -> dict[str, Any] | None:
         """Get tenant by name"""
-        response = await self._request("GET", "tenancy/tenants/", params={"name": name})
-        results = response.get("results", [])
+        response = await self._netbox_request("GET", "tenancy/tenants/", params={"name": name})
+        response_dict = cast(dict[str, Any], response)
+        results = response_dict.get("results", [])
         return results[0] if results else None
 
     # =========================================================================
@@ -323,7 +335,7 @@ class NetBoxClient:
     async def health_check(self) -> bool:
         """Check if NetBox is accessible"""
         try:
-            await self._request("GET", "status/")
+            await self._netbox_request("GET", "status/")
             return True
         except Exception as e:
             logger.warning("netbox.health_check.failed", error=str(e))
@@ -331,4 +343,5 @@ class NetBoxClient:
 
     async def get_status(self) -> dict[str, Any]:
         """Get NetBox status"""
-        return await self._request("GET", "status/")
+        response = await self._netbox_request("GET", "status/")
+        return cast(dict[str, Any], response)
