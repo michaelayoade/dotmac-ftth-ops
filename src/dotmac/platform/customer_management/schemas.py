@@ -26,6 +26,44 @@ from dotmac.platform.customer_management.models import (
 )
 
 
+class ISPServiceInfo(BaseModel):
+    """ISP-specific service information."""
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+        extra="forbid",
+    )
+
+    # Service address
+    service_address_line1: str | None = Field(None, max_length=200)
+    service_address_line2: str | None = Field(None, max_length=200)
+    service_city: str | None = Field(None, max_length=100)
+    service_state_province: str | None = Field(None, max_length=100)
+    service_postal_code: str | None = Field(None, max_length=20)
+    service_country: str | None = Field(None, pattern="^[A-Z]{2}$")
+    service_coordinates: dict[str, Any] = Field(default_factory=dict, description="GPS: {lat, lon}")
+
+    # Installation
+    installation_status: str | None = Field(
+        None,
+        pattern="^(pending|scheduled|in_progress|completed|failed|canceled)$",
+    )
+    scheduled_installation_date: datetime | None = None
+    installation_notes: str | None = None
+
+    # Service details
+    connection_type: str | None = Field(None, pattern="^(ftth|wireless|dsl|cable|fiber|hybrid)$")
+    last_mile_technology: str | None = Field(None, max_length=50)
+    service_plan_speed: str | None = Field(None, max_length=50)
+
+    # Network assignments
+    assigned_devices: dict[str, Any] = Field(default_factory=dict)
+    current_bandwidth_profile: str | None = Field(None, max_length=50)
+    static_ip_assigned: str | None = Field(None, max_length=45)
+    ipv6_prefix: str | None = Field(None, max_length=50)
+
+
 class CustomerBase(BaseModel):
     """Base customer schema with common fields."""
 
@@ -95,6 +133,26 @@ class CustomerCreate(CustomerBase):
     assigned_to: UUID | None = None
     segment_id: UUID | None = None
 
+    # ISP-specific fields
+    service_address_line1: str | None = Field(None, max_length=200)
+    service_address_line2: str | None = Field(None, max_length=200)
+    service_city: str | None = Field(None, max_length=100)
+    service_state_province: str | None = Field(None, max_length=100)
+    service_postal_code: str | None = Field(None, max_length=20)
+    service_country: str | None = Field(None, pattern="^[A-Z]{2}$")
+    service_coordinates: dict[str, Any] = Field(default_factory=dict)
+    installation_status: str | None = None
+    scheduled_installation_date: datetime | None = None
+    installation_technician_id: UUID | None = None
+    installation_notes: str | None = None
+    connection_type: str | None = None
+    last_mile_technology: str | None = None
+    service_plan_speed: str | None = None
+    assigned_devices: dict[str, Any] = Field(default_factory=dict)
+    current_bandwidth_profile: str | None = None
+    static_ip_assigned: str | None = None
+    ipv6_prefix: str | None = None
+
 
 class CustomerUpdate(BaseModel):
     """Schema for updating customer information."""
@@ -150,6 +208,26 @@ class CustomerUpdate(BaseModel):
     custom_fields: dict[str, Any] | None = None
     tags: list[str] | None = None
 
+    # ISP-specific fields
+    service_address_line1: str | None = Field(None, max_length=200)
+    service_address_line2: str | None = Field(None, max_length=200)
+    service_city: str | None = Field(None, max_length=100)
+    service_state_province: str | None = Field(None, max_length=100)
+    service_postal_code: str | None = Field(None, max_length=20)
+    service_country: str | None = Field(None, pattern="^[A-Z]{2}$")
+    service_coordinates: dict[str, Any] | None = None
+    installation_status: str | None = None
+    scheduled_installation_date: datetime | None = None
+    installation_technician_id: UUID | None = None
+    installation_notes: str | None = None
+    connection_type: str | None = None
+    last_mile_technology: str | None = None
+    service_plan_speed: str | None = None
+    assigned_devices: dict[str, Any] | None = None
+    current_bandwidth_profile: str | None = None
+    static_ip_assigned: str | None = None
+    ipv6_prefix: str | None = None
+
 
 class CustomerResponse(CustomerBase):
     """Schema for customer response."""
@@ -190,6 +268,31 @@ class CustomerResponse(CustomerBase):
     metadata: dict[str, Any]
     custom_fields: dict[str, Any]
 
+    # ISP-specific fields
+    service_address_line1: str | None = None
+    service_address_line2: str | None = None
+    service_city: str | None = None
+    service_state_province: str | None = None
+    service_postal_code: str | None = None
+    service_country: str | None = None
+    service_coordinates: dict[str, Any] = Field(default_factory=dict)
+    installation_status: str | None = None
+    installation_date: datetime | None = None
+    scheduled_installation_date: datetime | None = None
+    installation_technician_id: UUID | None = None
+    installation_notes: str | None = None
+    connection_type: str | None = None
+    last_mile_technology: str | None = None
+    service_plan_speed: str | None = None
+    assigned_devices: dict[str, Any] = Field(default_factory=dict)
+    current_bandwidth_profile: str | None = None
+    static_ip_assigned: str | None = None
+    ipv6_prefix: str | None = None
+    avg_uptime_percent: Decimal | None = None
+    last_outage_date: datetime | None = None
+    total_outages: int = 0
+    total_downtime_minutes: int = 0
+
 
 class CustomerListResponse(BaseModel):
     """Response for customer list endpoint."""
@@ -227,6 +330,13 @@ class CustomerSearchParams(BaseModel):
     # Value filters
     min_lifetime_value: Decimal | None = Field(None, ge=0)
     max_lifetime_value: Decimal | None = Field(None, ge=0)
+
+    # ISP-specific filters
+    installation_status: str | None = None
+    connection_type: str | None = None
+    service_city: str | None = None
+    service_state_province: str | None = None
+    service_country: str | None = Field(None, pattern="^[A-Z]{2}$")
 
     # Pagination
     page: int = Field(default=1, ge=1)

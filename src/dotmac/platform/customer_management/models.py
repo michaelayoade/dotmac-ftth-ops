@@ -231,6 +231,92 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
     )
     birthday: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
+    # ISP-Specific Fields (Service Management)
+    service_address_line1: Mapped[str | None] = mapped_column(
+        String(200), nullable=True, comment="Installation/service address"
+    )
+    service_address_line2: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    service_city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    service_state_province: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    service_postal_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    service_country: Mapped[str | None] = mapped_column(
+        String(2), nullable=True, comment="ISO 3166-1 alpha-2"
+    )
+    service_coordinates: Mapped[dict[str, Any]] = mapped_column(
+        JSON,
+        default=dict,
+        nullable=False,
+        comment="GPS coordinates: {lat: float, lon: float}",
+    )
+
+    # Installation Tracking
+    installation_status: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        index=True,
+        comment="pending, scheduled, in_progress, completed, failed, canceled",
+    )
+    installation_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, comment="Actual installation date"
+    )
+    scheduled_installation_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, comment="Scheduled installation date"
+    )
+    installation_technician_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="Assigned field technician",
+    )
+    installation_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Service Details
+    connection_type: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        index=True,
+        comment="ftth, wireless, dsl, cable, fiber, hybrid",
+    )
+    last_mile_technology: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="gpon, xgs-pon, docsis3.1, lte, 5g, etc"
+    )
+    service_plan_speed: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="e.g., 100/100 Mbps, 1 Gbps"
+    )
+
+    # Network Device Links (JSON for flexibility)
+    assigned_devices: Mapped[dict[str, Any]] = mapped_column(
+        JSON,
+        default=dict,
+        nullable=False,
+        comment="Device assignments: {onu_serial, cpe_mac, router_id, etc}",
+    )
+
+    # Bandwidth Management
+    current_bandwidth_profile: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="Current speed/QoS profile"
+    )
+    static_ip_assigned: Mapped[str | None] = mapped_column(
+        String(45), nullable=True, comment="Static IPv4 address if assigned"
+    )
+    ipv6_prefix: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="IPv6 prefix if assigned"
+    )
+
+    # Service Quality Metrics
+    avg_uptime_percent: Mapped[Decimal | None] = mapped_column(
+        Numeric(5, 2), nullable=True, comment="Average uptime percentage"
+    )
+    last_outage_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, comment="Last service outage"
+    )
+    total_outages: Mapped[int] = mapped_column(
+        default=0, nullable=False, comment="Total number of outages"
+    )
+    total_downtime_minutes: Mapped[int] = mapped_column(
+        default=0, nullable=False, comment="Total downtime in minutes"
+    )
+
     # Custom Fields (JSON for flexibility)
     metadata_: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSON, default=dict, nullable=False
@@ -257,6 +343,9 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
         Index("ix_customer_status_tier", "status", "tier"),
         Index("ix_customer_search", "first_name", "last_name", "company_name"),
         Index("ix_customer_location", "country", "state_province", "city"),
+        Index("ix_customer_service_location", "service_country", "service_state_province", "service_city"),
+        Index("ix_customer_installation_status", "tenant_id", "installation_status"),
+        Index("ix_customer_connection_type", "tenant_id", "connection_type"),
     )
 
     @property
