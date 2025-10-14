@@ -10,7 +10,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .models import TicketActorType, TicketPriority, TicketStatus
+from .models import TicketActorType, TicketPriority, TicketStatus, TicketType
 
 
 class TicketCreate(BaseModel):
@@ -43,6 +43,25 @@ class TicketCreate(BaseModel):
         description="Optional attachment metadata bundled with the initial message.",
     )
 
+    # ISP-specific fields
+    ticket_type: TicketType | None = Field(
+        default=None,
+        description="ISP-specific ticket categorization",
+    )
+    service_address: str | None = Field(
+        default=None,
+        max_length=500,
+        description="Service location address for field operations",
+    )
+    affected_services: list[str] = Field(
+        default_factory=list,
+        description="Affected services: internet, voip, tv, etc",
+    )
+    device_serial_numbers: list[str] = Field(
+        default_factory=list,
+        description="Serial numbers of involved equipment",
+    )
+
 
 class TicketMessageCreate(BaseModel):
     """Payload for appending a message to an existing ticket."""
@@ -62,6 +81,14 @@ class TicketUpdate(BaseModel):
     priority: TicketPriority | None = None
     assigned_to_user_id: UUID | None = None
     metadata: dict[str, Any] | None = None
+
+    # ISP-specific updates
+    ticket_type: TicketType | None = None
+    service_address: str | None = None
+    affected_services: list[str] | None = None
+    device_serial_numbers: list[str] | None = None
+    escalation_level: int | None = None
+    escalated_to_user_id: UUID | None = None
 
 
 class TicketMessageRead(BaseModel):
@@ -97,6 +124,14 @@ class TicketSummary(BaseModel):
     assigned_to_user_id: UUID | None
     last_response_at: datetime | None
     context: dict[str, Any] = Field(default_factory=dict)
+
+    # ISP-specific fields
+    ticket_type: TicketType | None = None
+    service_address: str | None = None
+    sla_due_date: datetime | None = None
+    sla_breached: bool = False
+    escalation_level: int = 0
+
     created_at: datetime
     updated_at: datetime
 
@@ -105,6 +140,14 @@ class TicketDetail(TicketSummary):
     """Detailed ticket representation with threaded messages."""
 
     messages: list[TicketMessageRead] = Field(default_factory=list)
+
+    # Additional ISP-specific detailed fields
+    affected_services: list[str] = Field(default_factory=list)
+    device_serial_numbers: list[str] = Field(default_factory=list)
+    first_response_at: datetime | None = None
+    resolution_time_minutes: int | None = None
+    escalated_at: datetime | None = None
+    escalated_to_user_id: UUID | None = None
 
 
 __all__ = [
