@@ -1,0 +1,193 @@
+# Promtail Configuration for Log Shipping
+# Ships logs from various sources to Loki
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: info
+
+# Loki client configuration
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    batchwait: 1s
+    batchsize: 1048576
+    timeout: 10s
+
+# Positions file (tracks log file offsets)
+positions:
+  filename: /tmp/positions.yaml
+
+# Scrape configurations
+scrape_configs:
+  # System logs
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlogs
+          host: ${HOSTNAME}
+          __path__: /var/log/*.log
+
+  # Docker container logs
+  - job_name: containers
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      # Extract container name
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'container'
+      # Extract image name
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: 'service'
+      # Add compose project
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_project']
+        target_label: 'project'
+      # Log file path
+      - source_labels: ['__meta_docker_container_id']
+        target_label: '__path__'
+        replacement: '/var/lib/docker/containers/$1/*.log'
+    pipeline_stages:
+      # Parse Docker JSON logs
+      - docker: {}
+      # Extract log level
+      - regex:
+          expression: '(?P<level>DEBUG|INFO|WARNING|ERROR|CRITICAL)'
+      - labels:
+          level:
+
+  # FastAPI application logs
+  - job_name: fastapi
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: fastapi
+          app: backend
+          __path__: /var/log/fastapi/*.log
+    pipeline_stages:
+      # Parse JSON logs
+      - json:
+          expressions:
+            timestamp: timestamp
+            level: level
+            message: message
+            module: module
+            request_id: request_id
+            tenant_id: tenant_id
+      # Parse timestamp
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      # Extract labels
+      - labels:
+          level:
+          module:
+          tenant_id:
+
+  # RADIUS logs
+  - job_name: radius
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: radius
+          service: freeradius
+          __path__: /var/log/radius/*.log
+    pipeline_stages:
+      # Parse RADIUS log format
+      - regex:
+          expression: '^(?P<timestamp>\w{3}\s+\d+\s+\d+:\d+:\d+)\s+(?P<level>\w+):\s+(?P<message>.*)$'
+      - timestamp:
+          source: timestamp
+          format: 'Jan 02 15:04:05'
+      - labels:
+          level:
+
+  # GenieACS logs
+  - job_name: genieacs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: genieacs
+          service: acs
+          __path__: /var/log/genieacs/*.log
+    pipeline_stages:
+      - json:
+          expressions:
+            timestamp: timestamp
+            level: severity
+            message: message
+            device_id: deviceId
+      - timestamp:
+          source: timestamp
+          format: RFC3339
+      - labels:
+          level:
+
+  # NetBox logs
+  - job_name: netbox
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: netbox
+          service: ipam
+          __path__: /var/log/netbox/*.log
+
+  # Nginx/Proxy logs
+  - job_name: nginx
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: nginx
+          __path__: /var/log/nginx/*.log
+    pipeline_stages:
+      # Parse nginx access log
+      - regex:
+          expression: '^(?P<remote_addr>[\w\.]+) - (?P<remote_user>[^ ]*) \[(?P<timestamp>.*?)\] "(?P<method>\S+)(?: +(?P<path>[^\"]*?)(?: +\S*)?)?" (?P<status>\d+) (?P<body_bytes_sent>\d+) "(?P<http_referer>[^\"]*)" "(?P<http_user_agent>[^\"]*)".*$'
+      - timestamp:
+          source: timestamp
+          format: '02/Jan/2006:15:04:05 -0700'
+      - labels:
+          method:
+          status:
+
+  # PostgreSQL logs
+  - job_name: postgres
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: postgres
+          __path__: /var/log/postgresql/*.log
+    pipeline_stages:
+      - regex:
+          expression: '^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} \w+) \[(?P<pid>\d+)\] (?P<level>\w+):\s+(?P<message>.*)$'
+      - timestamp:
+          source: timestamp
+          format: '2006-01-02 15:04:05.000 MST'
+      - labels:
+          level:
+
+  # Celery worker logs
+  - job_name: celery
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: celery
+          __path__: /var/log/celery/*.log
+    pipeline_stages:
+      - regex:
+          expression: '^\[(?P<timestamp>.*?)\] \[(?P<level>\w+)\] \[(?P<worker>.*?)\] (?P<message>.*)$'
+      - timestamp:
+          source: timestamp
+          format: '2006-01-02 15:04:05,000'
+      - labels:
+          level:
+          worker:

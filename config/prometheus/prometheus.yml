@@ -1,0 +1,118 @@
+# Prometheus Configuration for ISP Platform
+# Collects metrics from all services
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'isp-platform'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'alertmanager:9093'
+
+# Load alert rules
+rule_files:
+  - '/etc/prometheus/alerts.yml'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Node Exporter - Server metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # cAdvisor - Container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+
+  # PostgreSQL Exporter (if deployed)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  # Redis Exporter (if deployed)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+
+  # FastAPI Backend - Application metrics
+  - job_name: 'fastapi-backend'
+    static_configs:
+      - targets: ['backend:8000']
+    metrics_path: '/metrics'
+
+  # Celery Exporter (if deployed)
+  - job_name: 'celery'
+    static_configs:
+      - targets: ['celery-exporter:9808']
+
+  # FreeRADIUS Exporter (if deployed)
+  - job_name: 'freeradius'
+    static_configs:
+      - targets: ['freeradius-exporter:9812']
+
+  # NetBox (built-in metrics)
+  - job_name: 'netbox'
+    static_configs:
+      - targets: ['netbox:8080']
+    metrics_path: '/metrics'
+
+  # GenieACS (custom exporter if available)
+  - job_name: 'genieacs'
+    static_configs:
+      - targets: ['genieacs-exporter:9100']
+
+  # Jaeger (tracing metrics)
+  - job_name: 'jaeger'
+    static_configs:
+      - targets: ['jaeger:14269']
+
+  # Loki (log metrics)
+  - job_name: 'loki'
+    static_configs:
+      - targets: ['loki:3100']
+
+  # Alertmanager
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+
+  # LibreNMS (if exporter available)
+  - job_name: 'librenms'
+    static_configs:
+      - targets: ['librenms-exporter:9100']
+
+  # MongoDB Exporter (for GenieACS)
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['mongodb-exporter:9216']
+
+  # TimescaleDB/PostgreSQL metrics
+  - job_name: 'timescaledb'
+    static_configs:
+      - targets: ['timescale-exporter:9187']
+
+  # Service discovery for dynamic services
+  - job_name: 'service-discovery'
+    dns_sd_configs:
+      - names:
+          - 'tasks.backend'
+        type: 'A'
+        port: 8000

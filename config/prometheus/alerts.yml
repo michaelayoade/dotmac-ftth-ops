@@ -1,0 +1,198 @@
+# Prometheus Alert Rules for ISP Platform
+# Defines alerts for critical service failures and performance issues
+
+groups:
+  # Infrastructure Alerts
+  - name: infrastructure
+    interval: 30s
+    rules:
+      - alert: InstanceDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Instance {{ $labels.instance }} down"
+          description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 5 minutes."
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% for 10 minutes on {{ $labels.instance }}"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 85% on {{ $labels.instance }}"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk space low on {{ $labels.instance }}"
+          description: "Disk usage is above 85% on {{ $labels.instance }} mount {{ $labels.mountpoint }}"
+
+  # Database Alerts
+  - name: database
+    interval: 30s
+    rules:
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "PostgreSQL instance {{ $labels.instance }} is down"
+
+      - alert: PostgreSQLHighConnections
+        expr: sum(pg_stat_database_numbackends) / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL connection pool nearly exhausted"
+          description: "PostgreSQL is using more than 80% of available connections"
+
+      - alert: PostgreSQLSlowQueries
+        expr: rate(pg_stat_statements_mean_time_seconds[5m]) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL slow queries detected"
+          description: "Average query time is above 1 second"
+
+  # Application Alerts
+  - name: application
+    interval: 30s
+    rules:
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API latency detected"
+          description: "95th percentile API latency is above 500ms"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for the last 5 minutes"
+
+      - alert: CeleryQueueBacklog
+        expr: celery_queue_length > 1000
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Celery queue backlog detected"
+          description: "Celery queue has more than 1000 pending tasks"
+
+  # RADIUS Alerts
+  - name: radius
+    interval: 30s
+    rules:
+      - alert: RADIUSServerDown
+        expr: up{job="freeradius"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "RADIUS server is down"
+          description: "FreeRADIUS server {{ $labels.instance }} is not responding"
+
+      - alert: HighRADIUSAuthFailures
+        expr: rate(radius_auth_requests_total{result="reject"}[5m]) / rate(radius_auth_requests_total[5m]) > 0.20
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High RADIUS authentication failure rate"
+          description: "More than 20% of RADIUS auth requests are failing"
+
+      - alert: RADIUSAuthLatency
+        expr: radius_auth_duration_seconds > 0.100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "RADIUS authentication latency high"
+          description: "RADIUS auth taking more than 100ms"
+
+  # Network Services Alerts
+  - name: network_services
+    interval: 30s
+    rules:
+      - alert: NetBoxDown
+        expr: up{job="netbox"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "NetBox is down"
+          description: "NetBox IPAM/DCIM system is not accessible"
+
+      - alert: GenieACSDown
+        expr: up{job="genieacs"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "GenieACS is down"
+          description: "TR-069 ACS server is not accessible"
+
+      - alert: WireGuardVPNDown
+        expr: wireguard_peers_active == 0
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No active WireGuard VPN peers"
+          description: "All WireGuard VPN connections are down"
+
+  # Container Alerts
+  - name: containers
+    interval: 30s
+    rules:
+      - alert: ContainerCPUHigh
+        expr: rate(container_cpu_usage_seconds_total[5m]) * 100 > 80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} high CPU usage"
+          description: "Container CPU usage is above 80%"
+
+      - alert: ContainerMemoryHigh
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} high memory usage"
+          description: "Container memory usage is above 85%"
+
+      - alert: ContainerRestarting
+        expr: rate(container_last_seen[5m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} is restarting"
+          description: "Container has restarted multiple times in the last 5 minutes"
