@@ -68,30 +68,35 @@ def parse_coverage_xml(xml_path: Path) -> Dict[str, float]:
     for package in root.findall(".//package"):
         package_name = package.get("name", "")
 
-        # Extract module name from path (e.g., "src/dotmac/platform/auth" -> "auth")
-        if "dotmac/platform/" in package_name:
+        # Extract module name from package path
+        # Handle both dot notation (dotmac.platform.auth) and path notation (dotmac/platform/auth)
+        if "dotmac.platform." in package_name:
+            module = package_name.split("dotmac.platform.")[-1].split(".")[0]
+        elif "dotmac/platform/" in package_name:
             module = package_name.split("dotmac/platform/")[-1].split("/")[0]
+        else:
+            continue
 
-            # Calculate coverage for this package
-            lines_valid = int(package.get("line-rate", "0").replace(".", ""))
-            lines_covered = sum(
-                1 for line in package.findall(".//line") if line.get("hits", "0") != "0"
-            )
-            lines_total = len(package.findall(".//line"))
+        # Calculate coverage for this package
+        lines_valid = int(package.get("line-rate", "0").replace(".", ""))
+        lines_covered = sum(
+            1 for line in package.findall(".//line") if line.get("hits", "0") != "0"
+        )
+        lines_total = len(package.findall(".//line"))
 
-            if lines_total > 0:
-                coverage_pct = (lines_covered / lines_total) * 100
-            else:
-                # Use line-rate attribute if no lines found
-                coverage_pct = float(package.get("line-rate", "0")) * 100
+        if lines_total > 0:
+            coverage_pct = (lines_covered / lines_total) * 100
+        else:
+            # Use line-rate attribute if no lines found
+            coverage_pct = float(package.get("line-rate", "0")) * 100
 
-            # Aggregate coverage for this module
-            if module in module_coverage:
-                # Average coverage across submodules
-                existing_coverage = module_coverage[module]
-                module_coverage[module] = (existing_coverage + coverage_pct) / 2
-            else:
-                module_coverage[module] = coverage_pct
+        # Aggregate coverage for this module
+        if module in module_coverage:
+            # Average coverage across submodules
+            existing_coverage = module_coverage[module]
+            module_coverage[module] = (existing_coverage + coverage_pct) / 2
+        else:
+            module_coverage[module] = coverage_pct
 
     return module_coverage
 
