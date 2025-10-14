@@ -135,11 +135,12 @@ async def check_flag(
 ) -> FeatureFlagCheckResponse:
     """Check if a feature flag is enabled with context."""
     try:
-        # Add user context if available
+        user = _require_authenticated_user(current_user)
+
+        # Add user context
         context = request.context or {}
-        if current_user:
-            context["user_id"] = current_user.user_id
-            context["user_roles"] = current_user.roles
+        context["user_id"] = user.user_id
+        context["user_roles"] = user.roles
 
         enabled = await is_enabled(request.flag_name, context)
         variant = await get_variant(request.flag_name, context)
@@ -397,7 +398,7 @@ async def get_status(
 ) -> FlagStatusResponse:
     """Get feature flag system status."""
     try:
-        _require_authenticated_user(current_user)
+        user = _require_authenticated_user(current_user)
 
         status_data = await get_flag_status()
 
@@ -412,7 +413,7 @@ async def get_status(
         else:
             masked_url = None
 
-        return FlagStatusResponse(
+        response = FlagStatusResponse(
             redis_available=status_data["redis_available"],
             redis_url=masked_url,
             cache_size=status_data["cache_size"],
@@ -422,6 +423,9 @@ async def get_status(
             total_flags=status_data["total_flags"],
             healthy=status_data["redis_available"] or status_data["cache_size"] > 0,
         )
+
+        logger.info("Feature flag status fetched", user=user.user_id, healthy=response.healthy)
+        return response
 
     except Exception as e:
         logger.error("Failed to get feature flag status", error=str(e))
@@ -472,9 +476,7 @@ async def sync_flags_from_redis(
 
         synced_count = await sync_from_redis()
 
-        logger.info(
-            "Feature flags synced from Redis", count=synced_count, user=user.user_id
-        )
+        logger.info("Feature flags synced from Redis", count=synced_count, user=user.user_id)
         return {
             "message": f"Synced {synced_count} flags from Redis to cache",
             "synced_count": synced_count,

@@ -203,10 +203,13 @@ class InvoiceService:
             conversion_details, normalized_total, normalized_currency = normalization
             metrics_currency = normalized_currency
             metrics_total_amount = normalized_total
-            conversion_section = invoice_entity.extra_data.get("currency_conversion", {})
+            existing_extra = dict(invoice_entity.extra_data or {})
+            conversion_section = dict(existing_extra.get("currency_conversion", {}))
             conversion_section.update(conversion_details)
-            invoice_entity.extra_data["currency_conversion"] = conversion_section
+            existing_extra["currency_conversion"] = conversion_section
+            invoice_entity.extra_data = existing_extra
             await self.db.commit()
+            await self.db.refresh(invoice_entity, attribute_names=["extra_data"])
 
         # Create transaction record
         await self._create_invoice_transaction(invoice_entity)
