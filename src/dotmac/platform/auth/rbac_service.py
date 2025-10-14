@@ -49,11 +49,12 @@ class RBACService:
         if isinstance(user_id, str):
             user_id = UUID(user_id)
 
-        cache_key = f"user_perms:{user_id}"
+        # Include include_expired flag in cache key to prevent cache poisoning
+        cache_key = f"user_perms:{user_id}:expired={include_expired}"
 
         # Check cache first
         cached = cache_get(cache_key)
-        if isinstance(cached, list) and not include_expired:
+        if isinstance(cached, list):
             return {str(permission) for permission in cached}
 
         permissions: set[str] = set()

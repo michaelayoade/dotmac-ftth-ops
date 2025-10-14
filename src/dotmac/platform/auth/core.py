@@ -731,7 +731,8 @@ class APIKeyService:
         Verify API key by hashing and looking up.
 
         SECURITY: The API key is hashed before lookup to prevent
-        plaintext credential exposure in Redis.
+        plaintext credential exposure in Redis. Also validates is_active
+        and expires_at from metadata to prevent disabled/expired keys from working.
         """
         try:
             import hashlib
@@ -742,7 +743,41 @@ class APIKeyService:
             client = await self._get_redis()
             if client:
                 data = await client.get(f"api_key:{api_key_hash}")
-                return json.loads(data) if data else None
+                if not data:
+                    return None
+
+                key_data: dict[str, Any] = json.loads(data)
+
+                # SECURITY: Load metadata to check is_active and expires_at
+                # First get the key_id from the lookup table
+                key_id = await client.get(f"api_key_lookup:{api_key_hash}")
+                if key_id:
+                    if isinstance(key_id, bytes):
+                        key_id = key_id.decode('utf-8')
+
+                    # Load metadata
+                    metadata_str = await client.get(f"api_key_meta:{key_id}")
+                    if metadata_str:
+                        metadata = self._deserialize(metadata_str)
+
+                        # Check if key is active
+                        if not metadata.get("is_active", True):
+                            logger.warning(f"API key {key_id} is disabled")
+                            return None
+
+                        # Check if key is expired
+                        expires_at_str = metadata.get("expires_at")
+                        if expires_at_str:
+                            expires_at = datetime.fromisoformat(expires_at_str)
+                            if expires_at < datetime.now(UTC):
+                                logger.warning(f"API key {key_id} is expired")
+                                return None
+
+                        # Merge metadata into key_data for backward compatibility
+                        key_data.update(metadata)
+
+                return key_data
+
             # Fallback to memory (also uses hash)
             return self._memory_keys.get(api_key_hash)
         except Exception as e:
