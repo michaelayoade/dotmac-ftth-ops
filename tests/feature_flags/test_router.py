@@ -25,12 +25,12 @@ def client():
     """Create test client with mocked authentication."""
     from fastapi import FastAPI
 
-    from dotmac.platform.auth.core import get_current_user
+    from dotmac.platform.auth.core import get_current_user_optional
 
     app = FastAPI()
 
-    # Override authentication dependency
-    def override_get_current_user():
+    # Override authentication dependency - router now uses get_current_user_optional
+    def override_get_current_user_optional():
         return UserInfo(
             user_id="test-user-123",
             email="test@example.com",
@@ -40,7 +40,7 @@ def client():
             permissions=["read", "write"],
         )
 
-    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
     app.include_router(feature_flags_router, prefix="/feature-flags")
     return TestClient(app)
 
@@ -50,11 +50,11 @@ def regular_user_client():
     """Create test client with regular user (no admin privileges)."""
     from fastapi import FastAPI
 
-    from dotmac.platform.auth.core import get_current_user
+    from dotmac.platform.auth.core import get_current_user_optional
 
     app = FastAPI()
 
-    def override_get_current_user():
+    def override_get_current_user_optional():
         return UserInfo(
             user_id="regular-user",
             email="user@example.com",
@@ -64,7 +64,7 @@ def regular_user_client():
             permissions=["read"],
         )
 
-    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
     app.include_router(feature_flags_router, prefix="/feature-flags")
     return TestClient(app)
 
@@ -74,11 +74,11 @@ def feature_flag_admin_client():
     """Create test client with feature flag admin role."""
     from fastapi import FastAPI
 
-    from dotmac.platform.auth.core import get_current_user
+    from dotmac.platform.auth.core import get_current_user_optional
 
     app = FastAPI()
 
-    def override_get_current_user():
+    def override_get_current_user_optional():
         return UserInfo(
             user_id="flag-admin",
             email="flagadmin@example.com",
@@ -88,7 +88,7 @@ def feature_flag_admin_client():
             permissions=["read", "write"],
         )
 
-    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
     app.include_router(feature_flags_router, prefix="/feature-flags")
     return TestClient(app)
 

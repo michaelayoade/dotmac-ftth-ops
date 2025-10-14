@@ -4,7 +4,9 @@ Simple rate limiting using SlowAPI standard library.
 Replaces custom rate limiting implementations with industry standard.
 """
 
+import inspect
 from collections.abc import Callable
+from functools import wraps
 from typing import Any, ParamSpec, TypeVar, cast
 
 import structlog
@@ -94,8 +96,24 @@ def rate_limit(limit: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
-        limited_callable = get_limiter().limit(limit)(func)
-        return cast(Callable[P, R], limited_callable)
+        if inspect.iscoroutinefunction(func):
+
+            @wraps(func)
+            async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+                limited_callable = get_limiter().limit(limit)(func)
+                result = limited_callable(*args, **kwargs)
+                if inspect.isawaitable(result):
+                    return cast(R, await result)
+                return cast(R, result)
+
+            return cast(Callable[P, R], async_wrapper)
+
+        @wraps(func)
+        def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            limited_callable = get_limiter().limit(limit)(func)
+            return cast(R, limited_callable(*args, **kwargs))
+
+        return cast(Callable[P, R], sync_wrapper)
 
     return decorator
 

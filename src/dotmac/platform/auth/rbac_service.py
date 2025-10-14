@@ -39,6 +39,12 @@ class RBACService:
         self._permission_cache: dict[str, Permission] = {}
         self._role_cache: dict[str, Role] = {}
 
+    def _invalidate_user_permission_cache(self, user_id: UUID | str) -> None:
+        """Remove cached permissions for a user (with and without expired grants)."""
+        user_key = str(user_id)
+        cache_delete(f"user_perms:{user_key}:expired=False")
+        cache_delete(f"user_perms:{user_key}:expired=True")
+
     # ==================== User Permissions ====================
 
     async def get_user_permissions(
@@ -239,7 +245,7 @@ class RBACService:
         )
 
         # Clear cache
-        cache_delete(f"user_perms:{user_id}")
+        self._invalidate_user_permission_cache(user_id)
 
         logger.info(f"Assigned role {role_name} to user {user_id}")
 
@@ -294,7 +300,7 @@ class RBACService:
         )
 
         # Clear cache
-        cache_delete(f"user_perms:{user_id}")
+        self._invalidate_user_permission_cache(user_id)
 
         logger.info(f"Revoked role {role_name} from user {user_id}")
 
@@ -384,8 +390,8 @@ class RBACService:
             reason=reason,
         )
 
-        # Clear cache
-        cache_delete(f"user_perms:{user_id}")
+        # Clear cache (need to clear both cache keys for expired=True and expired=False)
+        self._invalidate_user_permission_cache(user_id)
 
         logger.info(f"Granted permission {permission_name} to user {user_id}")
 
@@ -447,7 +453,7 @@ class RBACService:
         )
 
         # Clear cache
-        cache_delete(f"user_perms:{user_id}")
+        self._invalidate_user_permission_cache(user_id)
 
         logger.info(f"Revoked permission {permission_name} from user {user_id}")
 

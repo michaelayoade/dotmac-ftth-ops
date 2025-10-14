@@ -12,7 +12,7 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from dotmac.platform.auth.core import UserInfo, get_current_user
+from dotmac.platform.auth.core import UserInfo, get_current_user_optional
 from dotmac.platform.feature_flags import (
     clear_cache,
     delete_flag,
@@ -27,6 +27,16 @@ from dotmac.platform.feature_flags import (
 logger = structlog.get_logger(__name__)
 
 feature_flags_router = APIRouter(tags=["Feature Flags"])
+
+
+def _require_authenticated_user(current_user: UserInfo | None) -> UserInfo:
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return current_user
 
 
 # Request/Response Models
@@ -120,7 +130,8 @@ class BulkFlagUpdateRequest(BaseModel):
 
 @feature_flags_router.post("/flags/check", response_model=FeatureFlagCheckResponse)
 async def check_flag(
-    request: FeatureFlagCheckRequest, current_user: UserInfo | None = Depends(get_current_user)
+    request: FeatureFlagCheckRequest,
+    current_user: UserInfo | None = Depends(get_current_user_optional),
 ) -> FeatureFlagCheckResponse:
     """Check if a feature flag is enabled with context."""
     try:
@@ -146,11 +157,14 @@ async def check_flag(
 
 @feature_flags_router.post("/flags/bulk", response_model=dict[str, Any])
 async def bulk_update_flags(
-    request: BulkFlagUpdateRequest, current_user: UserInfo = Depends(get_current_user)
+    request: BulkFlagUpdateRequest,
+    current_user: UserInfo | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
     """Bulk create/update feature flags (admin only)."""
     try:
-        if "admin" not in current_user.roles and "feature_flag_admin" not in current_user.roles:
+        user = _require_authenticated_user(current_user)
+
+        if "admin" not in user.roles and "feature_flag_admin" not in user.roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions for bulk operations",
@@ -171,7 +185,7 @@ async def bulk_update_flags(
                 if flag_request.description:
                     enhanced_context["_description"] = flag_request.description
 
-                enhanced_context["_created_by"] = current_user.user_id
+                enhanced_context["_created_by"] = user.user_id
                 enhanced_context["_bulk_updated_at"] = int(datetime.now(UTC).timestamp())
 
                 await set_flag(flag_name, flag_request.enabled, enhanced_context)
@@ -184,7 +198,7 @@ async def bulk_update_flags(
             "Bulk feature flag update completed",
             success=success_count,
             failed=len(failed_flags),
-            user=current_user.user_id,
+            user=user.user_id,
         )
 
         return {
@@ -206,12 +220,16 @@ async def bulk_update_flags(
 
 @feature_flags_router.post("/flags/{flag_name}", response_model=FeatureFlagResponse)
 async def create_or_update_flag(
-    flag_name: str, request: FeatureFlagRequest, current_user: UserInfo = Depends(get_current_user)
+    flag_name: str,
+    request: FeatureFlagRequest,
+    current_user: UserInfo | None = Depends(get_current_user_optional),
 ) -> FeatureFlagResponse:
     """Create or update a feature flag."""
     try:
         # Check if user has permission to manage feature flags
-        if "admin" not in current_user.roles and "feature_flag_admin" not in current_user.roles:
+        user = _require_authenticated_user(current_user)
+
+        if "admin" not in user.roles and "feature_flag_admin" not in user.roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions to manage feature flags",
@@ -229,7 +247,7 @@ async def create_or_update_flag(
         if request.description:
             enhanced_context["_description"] = request.description
 
-        enhanced_context["_created_by"] = current_user.user_id
+        enhanced_context["_created_by"] = user.user_id
         enhanced_context["_created_at"] = int(datetime.now(UTC).timestamp())
 
         await set_flag(flag_name, request.enabled, enhanced_context)
@@ -238,7 +256,7 @@ async def create_or_update_flag(
             "Feature flag created/updated",
             flag=flag_name,
             enabled=request.enabled,
-            user=current_user.user_id,
+            user=user.user_id,
         )
 
         return FeatureFlagResponse(
@@ -262,10 +280,13 @@ async def create_or_update_flag(
 
 @feature_flags_router.get("/flags/{flag_name}", response_model=FeatureFlagResponse)
 async def get_flag(
-    flag_name: str, current_user: UserInfo = Depends(get_current_user)
+    flag_name: str,
+    current_user: UserInfo | None = Depends(get_current_user_optional),
 ) -> FeatureFlagResponse:
     """Get a specific feature flag."""
     try:
+        user = _require_authenticated_user(current_user)
+
         flags = await list_flags()
 
         if flag_name not in flags:
@@ -297,10 +318,12 @@ async def get_flag(
 @feature_flags_router.get("/flags", response_model=list[FeatureFlagResponse])
 async def list_all_flags(
     enabled_only: bool = Query(False, description="Return only enabled flags"),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo | None = Depends(get_current_user_optional),
 ) -> list[FeatureFlagResponse]:
     """List all feature flags."""
     try:
+        user = _require_authenticated_user(current_user)
+
         flags = await list_flags()
 
         result = []
@@ -321,7 +344,7 @@ async def list_all_flags(
                 )
             )
 
-        logger.info("Listed feature flags", count=len(result), user=current_user.user_id)
+        logger.info("Listed feature flags", count=len(result), user=user.user_id)
         return result
 
     except Exception as e:
@@ -333,12 +356,15 @@ async def list_all_flags(
 
 @feature_flags_router.delete("/flags/{flag_name}")
 async def delete_feature_flag(
-    flag_name: str, current_user: UserInfo = Depends(get_current_user)
+    flag_name: str,
+    current_user: UserInfo | None = Depends(get_current_user_optional),
 ) -> dict[str, str]:
     """Delete a feature flag."""
     try:
         # Check permissions
-        if "admin" not in current_user.roles and "feature_flag_admin" not in current_user.roles:
+        user = _require_authenticated_user(current_user)
+
+        if "admin" not in user.roles and "feature_flag_admin" not in user.roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions to delete feature flags",
@@ -352,7 +378,7 @@ async def delete_feature_flag(
                 detail=f"Feature flag '{flag_name}' not found",
             )
 
-        logger.info("Feature flag deleted", flag=flag_name, user=current_user.user_id)
+        logger.info("Feature flag deleted", flag=flag_name, user=user.user_id)
         return {"message": f"Feature flag '{flag_name}' deleted successfully"}
 
     except HTTPException:
@@ -366,9 +392,13 @@ async def delete_feature_flag(
 
 
 @feature_flags_router.get("/status", response_model=FlagStatusResponse)
-async def get_status(current_user: UserInfo = Depends(get_current_user)) -> FlagStatusResponse:
+async def get_status(
+    current_user: UserInfo | None = Depends(get_current_user_optional),
+) -> FlagStatusResponse:
     """Get feature flag system status."""
     try:
+        _require_authenticated_user(current_user)
+
         status_data = await get_flag_status()
 
         # Mask Redis URL for security
@@ -401,16 +431,20 @@ async def get_status(current_user: UserInfo = Depends(get_current_user)) -> Flag
 
 
 @feature_flags_router.post("/admin/clear-cache")
-async def clear_flag_cache(current_user: UserInfo = Depends(get_current_user)) -> dict[str, str]:
+async def clear_flag_cache(
+    current_user: UserInfo | None = Depends(get_current_user_optional),
+) -> dict[str, str]:
     """Clear the feature flag cache (admin only)."""
     try:
-        if "admin" not in current_user.roles:
+        user = _require_authenticated_user(current_user)
+
+        if "admin" not in user.roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Admin role required to clear cache"
             )
 
         await clear_cache()
-        logger.info("Feature flag cache cleared", user=current_user.user_id)
+        logger.info("Feature flag cache cleared", user=user.user_id)
         return {"message": "Cache cleared successfully"}
 
     except HTTPException:
@@ -424,11 +458,13 @@ async def clear_flag_cache(current_user: UserInfo = Depends(get_current_user)) -
 
 @feature_flags_router.post("/admin/sync-redis")
 async def sync_flags_from_redis(
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo | None = Depends(get_current_user_optional),
 ) -> dict[str, Any]:
     """Sync feature flags from Redis to cache (admin only)."""
     try:
-        if "admin" not in current_user.roles:
+        user = _require_authenticated_user(current_user)
+
+        if "admin" not in user.roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Admin role required to sync from Redis",
@@ -437,7 +473,7 @@ async def sync_flags_from_redis(
         synced_count = await sync_from_redis()
 
         logger.info(
-            "Feature flags synced from Redis", count=synced_count, user=current_user.user_id
+            "Feature flags synced from Redis", count=synced_count, user=user.user_id
         )
         return {
             "message": f"Synced {synced_count} flags from Redis to cache",
