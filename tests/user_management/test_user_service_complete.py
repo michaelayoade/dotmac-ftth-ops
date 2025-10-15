@@ -304,7 +304,7 @@ class TestCreateUserErrorHandling:
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute.return_value = mock_result
 
-        user = await user_service.create_user(
+        await user_service.create_user(
             username="newuser",
             email="new@example.com",
             password="password123",
@@ -323,7 +323,7 @@ class TestCreateUserErrorHandling:
         mock_result.scalar_one_or_none.return_value = None
         mock_session.execute.return_value = mock_result
 
-        user = await user_service.create_user(
+        await user_service.create_user(
             username="inactiveuser",
             email="inactive@example.com",
             password="password123",

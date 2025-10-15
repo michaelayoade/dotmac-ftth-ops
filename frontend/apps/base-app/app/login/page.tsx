@@ -29,23 +29,24 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      logger.info('Starting login process', { username: data.username });
+      logger.info('Starting login process', { email: data.email });
 
-      const response = await apiClient.login(data.username, data.password);
-      logger.debug('Login response received', { success: response.success });
+      const response = await apiClient.post('/auth/login', {
+        email: data.email,
+        password: data.password,
+      });
+      logger.debug('Login response received', { status: response.status });
 
-      if (response.success) {
+      if (response.status === 200) {
         logger.info('Login successful, cookies should be set by server');
         await new Promise(resolve => setTimeout(resolve, 500));
         logger.info('Redirecting to dashboard');
         router.push('/dashboard');
-      } else {
-        logger.error('Login failed', { error: response.error?.message || 'Login failed', response: response.error });
-        setError(response.error?.message || 'Login failed');
       }
-    } catch (err) {
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.detail || err?.response?.data?.message || err?.message || 'Login failed';
       logger.error('Login error', err instanceof Error ? err : new Error(String(err)));
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -78,22 +79,22 @@ export default function LoginPage() {
           )}
 
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-muted-foreground mb-2">
-              Username
+            <label htmlFor="email" className="block text-sm font-medium text-muted-foreground mb-2">
+              Email
             </label>
             <input
-              id="username"
-              type="text"
-              autoComplete="username"
-              {...register('username')}
+              id="email"
+              type="email"
+              autoComplete="email"
+              {...register('email')}
               className={`w-full px-3 py-2 bg-accent border ${
-                errors.username ? 'border-red-500' : 'border-border'
+                errors.email ? 'border-red-500' : 'border-border'
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
-              placeholder="your-username"
-              data-testid="username-input"
+              placeholder="user@example.com"
+              data-testid="email-input"
             />
-            {errors.username && (
-              <p className="mt-1 text-sm text-red-400">{errors.username.message}</p>
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
             )}
           </div>
 

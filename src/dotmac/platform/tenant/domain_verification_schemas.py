@@ -10,7 +10,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class DomainVerificationInitiate(BaseModel):
+class DomainVerificationInitiate(BaseModel):  # BaseModel resolves to Any in isolation
     """Request to initiate domain verification."""
 
     model_config = ConfigDict(
@@ -46,7 +46,7 @@ class DomainVerificationInitiate(BaseModel):
         return domain
 
 
-class DomainVerificationCheck(BaseModel):
+class DomainVerificationCheck(BaseModel):  # BaseModel resolves to Any in isolation
     """Request to check domain verification status."""
 
     model_config = ConfigDict(
@@ -71,7 +71,7 @@ class DomainVerificationCheck(BaseModel):
     )
 
 
-class DNSRecordInstruction(BaseModel):
+class DNSRecordInstruction(BaseModel):  # BaseModel resolves to Any in isolation
     """DNS record configuration instructions."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -83,7 +83,7 @@ class DNSRecordInstruction(BaseModel):
     ttl: int = Field(default=3600, description="TTL in seconds")
 
 
-class DomainVerificationInstructions(BaseModel):
+class DomainVerificationInstructions(BaseModel):  # BaseModel resolves to Any in isolation
     """Domain verification instructions."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -95,7 +95,7 @@ class DomainVerificationInstructions(BaseModel):
     verification_command: str | None = Field(None, description="Command to verify DNS propagation")
 
 
-class DomainVerificationResponse(BaseModel):
+class DomainVerificationResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for domain verification operations."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -114,7 +114,7 @@ class DomainVerificationResponse(BaseModel):
     error_message: str | None = Field(None, description="Error message (if failed)")
 
 
-class DomainVerificationStatusResponse(BaseModel):
+class DomainVerificationStatusResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for domain verification status check."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -125,7 +125,7 @@ class DomainVerificationStatusResponse(BaseModel):
     verified_at: datetime | None = Field(None, description="When domain was verified")
 
 
-class DomainRemovalResponse(BaseModel):
+class DomainRemovalResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for domain removal."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -135,7 +135,7 @@ class DomainRemovalResponse(BaseModel):
     removed_at: datetime = Field(description="When domain was removed")
 
 
-class DomainVerificationErrorResponse(BaseModel):
+class DomainVerificationErrorResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Error response for domain verification operations."""
 
     model_config = ConfigDict(str_strip_whitespace=True)

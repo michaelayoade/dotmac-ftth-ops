@@ -31,7 +31,7 @@ from dotmac.platform.billing.exceptions import (
 logger = structlog.get_logger(__name__)
 
 
-class CachedProductService(ProductService):
+class CachedProductService(ProductService):  # type: ignore[misc]  # ProductService resolves to Any in isolation
     """
     Product service with integrated caching for improved performance.
 

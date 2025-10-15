@@ -71,7 +71,7 @@ class InvoiceDetail(BaseModel):
     billing_address: dict[str, str]
 
     # Line items
-    line_items: list[dict[str, Any]] = Field(default_factory=list)
+    line_items: list[dict[str, Any]] = Field(default_factory=lambda: [])
 
     # Amounts
     subtotal: int
@@ -92,7 +92,7 @@ class InvoiceDetail(BaseModel):
     voided_at: datetime | None = None
 
     # Payments (denormalized summary)
-    payments: list[dict[str, Any]] = Field(default_factory=list)
+    payments: list[dict[str, Any]] = Field(default_factory=lambda: [])
     total_paid: int = Field(default=0)
 
     # Notes
@@ -103,7 +103,7 @@ class InvoiceDetail(BaseModel):
     subscription_id: str | None = None
     idempotency_key: str | None = None
     created_by: str | None = None
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
     # Computed fields
     is_overdue: bool = Field(default=False)
@@ -188,7 +188,7 @@ class CustomerInvoiceSummary(BaseModel):
     payment_reliability_score: int | None = Field(None, ge=0, le=100)
 
     # Recent activity
-    recent_invoices: list[InvoiceListItem] = Field(default_factory=list)
+    recent_invoices: list[InvoiceListItem] = Field(default_factory=lambda: [])
 
 
 class OverdueInvoicesSummary(BaseModel):
@@ -202,4 +202,4 @@ class OverdueInvoicesSummary(BaseModel):
     by_age: dict[str, int] = Field(
         default_factory=dict, description="Counts by age bucket: 1-30, 31-60, 61-90, 90+"
     )
-    top_customers: list[dict[str, Any]] = Field(default_factory=list)
+    top_customers: list[dict[str, Any]] = Field(default_factory=lambda: [])

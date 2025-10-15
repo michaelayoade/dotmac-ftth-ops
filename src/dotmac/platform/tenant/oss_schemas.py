@@ -4,21 +4,25 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from dotmac.platform.tenant.oss_config import OSSService, ServiceConfig
 
 
-class OSSServiceConfigResponse(BaseModel):
+class OSSServiceConfigResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response payload for OSS configuration."""
+
+    model_config = ConfigDict()
 
     service: OSSService
     config: ServiceConfig
-    overrides: dict[str, Any] = Field(default_factory=dict)
+    overrides: dict[str, Any] = Field(default_factory=lambda: {})
 
 
-class OSSServiceConfigUpdate(BaseModel):
+class OSSServiceConfigUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Partial update payload for OSS configuration."""
+
+    model_config = ConfigDict()
 
     url: str | None = Field(None, description="Override base URL (null to clear)")
     username: str | None = Field(None, description="Override username (null to clear)")

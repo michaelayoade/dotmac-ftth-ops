@@ -153,7 +153,6 @@ class TestInvoiceE2EFlow:
 
             invoice = await handler.handle_create_invoice(create_command)
             initial_invoice_id = invoice.id
-            initial_total = invoice.total_amount.amount
 
             # Reset mocks
             mock_event_bus.reset_mock()

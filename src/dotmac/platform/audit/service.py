@@ -137,7 +137,7 @@ class AuditService:
         filters: AuditFilterParams,
         for_user: str | None,
         for_tenant: str | None,
-    ) -> list:
+    ) -> list[Any]:
         """Build user and tenant filter conditions."""
         conditions = []
 
@@ -153,7 +153,7 @@ class AuditService:
 
         return conditions
 
-    def _build_attribute_conditions(self, filters: AuditFilterParams) -> list:
+    def _build_attribute_conditions(self, filters: AuditFilterParams) -> list[Any]:
         """Build activity attribute filter conditions."""
         conditions = []
 
@@ -171,7 +171,7 @@ class AuditService:
 
         return conditions
 
-    def _build_date_conditions(self, filters: AuditFilterParams) -> list:
+    def _build_date_conditions(self, filters: AuditFilterParams) -> list[Any]:
         """Build date range filter conditions."""
         conditions = []
 
@@ -188,7 +188,7 @@ class AuditService:
         filters: AuditFilterParams,
         for_user: str | None,
         for_tenant: str | None,
-    ) -> list:
+    ) -> list[Any]:
         """Build all filter conditions."""
         conditions = []
         conditions.extend(self._build_user_tenant_conditions(filters, for_user, for_tenant))

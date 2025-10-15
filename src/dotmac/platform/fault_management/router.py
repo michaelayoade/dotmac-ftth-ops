@@ -5,6 +5,7 @@ REST endpoints for alarm management, SLA monitoring, and maintenance windows.
 """
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -16,6 +17,7 @@ from dotmac.platform.db import get_session_dependency
 from dotmac.platform.fault_management.schemas import (
     AlarmAcknowledge,
     AlarmCreate,
+    AlarmCreateTicketRequest,
     AlarmNoteCreate,
     AlarmQueryParams,
     AlarmResponse,
@@ -40,7 +42,7 @@ from dotmac.platform.fault_management.service import AlarmService
 from dotmac.platform.fault_management.sla_service import SLAMonitoringService
 from dotmac.platform.tenant.dependencies import TenantAdminAccess
 
-router = APIRouter(prefix="/api/v1/faults", tags=["fault-management"])
+router = APIRouter(prefix="/api/v1/faults", tags=["Fault Management"])
 
 
 # =============================================================================
@@ -234,10 +236,49 @@ async def add_alarm_note(
     data: AlarmNoteCreate,
     user: UserInfo = Depends(require_permission("faults.alarms.write")),
     service: AlarmService = Depends(get_alarm_service),
-) -> dict:
+) -> dict[str, Any]:
     """Add note to alarm"""
     await service.add_note(alarm_id, data, user.user_id)
     return {"message": "Note added successfully"}
+
+
+@router.post(
+    "/alarms/{alarm_id}/create-ticket",
+    status_code=status.HTTP_201_CREATED,
+    summary="Create Ticket from Alarm",
+    description="Manually create a support ticket from an alarm",
+)
+async def create_ticket_from_alarm(
+    alarm_id: UUID,
+    data: AlarmCreateTicketRequest,
+    user: UserInfo = Depends(require_permission("faults.alarms.write")),
+    service: AlarmService = Depends(get_alarm_service),
+) -> dict[str, Any]:
+    """
+    Create a support ticket from an alarm.
+
+    This allows operators to manually escalate alarms to support tickets.
+    The alarm details, probable cause, and recommended actions are automatically
+    included in the ticket description.
+    """
+    try:
+        result = await service.create_ticket_from_alarm(
+            alarm_id=alarm_id,
+            priority=data.priority,
+            additional_notes=data.additional_notes,
+            assign_to_user_id=data.assign_to_user_id,
+            user_id=user.user_id,
+        )
+        if not isinstance(result, dict):
+            raise TypeError("AlarmService.create_ticket_from_alarm must return a dictionary")
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create ticket: {str(e)}",
+        )
 
 
 @router.get(

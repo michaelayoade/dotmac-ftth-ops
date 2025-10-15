@@ -13,6 +13,7 @@ from .invoicing.router import router as invoice_router
 from .payments.router import router as payments_router
 from .settings.router import router as settings_router
 from .subscriptions.router import router as subscriptions_router
+from .usage.router import router as usage_router
 from .webhooks.router import router as webhook_router
 
 # Create main billing router - no prefix here as it's added in main router registration
@@ -31,6 +32,7 @@ router.include_router(
 )
 router.include_router(payments_router, prefix="", tags=["Billing - Payments"])
 router.include_router(dunning_router, prefix="/dunning", tags=["Billing - Dunning"])
+router.include_router(usage_router, prefix="", tags=["Billing - Usage"])
 
 # Additional billing endpoints can be added here
 

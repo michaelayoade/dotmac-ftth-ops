@@ -3,10 +3,9 @@ Test fixtures for fault management tests
 """
 
 from datetime import UTC, datetime, timedelta
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.fault_management.models import (
@@ -15,8 +14,6 @@ from dotmac.platform.fault_management.models import (
     AlarmSeverity,
     AlarmSource,
     AlarmStatus,
-    CorrelationAction,
-    RuleType,
     SLADefinition,
     SLAInstance,
     SLAStatus,
@@ -69,14 +66,12 @@ async def sample_alarm(session: AsyncSession, test_tenant: str) -> Alarm:
 
 
 @pytest.fixture
-async def sample_correlation_rule(
-    session: AsyncSession, test_tenant: str
-) -> AlarmRule:
+async def sample_correlation_rule(session: AsyncSession, test_tenant: str) -> AlarmRule:
     """Create sample correlation rule"""
     rule = AlarmRule(
         tenant_id=test_tenant,
         name="OLT to ONT Correlation",
-        rule_type=RuleType.CORRELATION,
+        rule_type="correlation",
         enabled=True,
         priority=1,
         conditions={
@@ -96,9 +91,7 @@ async def sample_correlation_rule(
 
 
 @pytest.fixture
-async def sample_sla_definition(
-    session: AsyncSession, test_tenant: str
-) -> SLADefinition:
+async def sample_sla_definition(session: AsyncSession, test_tenant: str) -> SLADefinition:
     """Create sample SLA definition"""
     definition = SLADefinition(
         tenant_id=test_tenant,

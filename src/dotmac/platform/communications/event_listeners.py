@@ -31,7 +31,7 @@ def _email_html_message(recipient: str, subject: str, html_body: str) -> EmailMe
 # ============================================================================
 
 
-@subscribe("invoice.created")
+@subscribe("invoice.created")  # type: ignore[misc]
 async def send_invoice_created_email(event: Event) -> None:
     """
     Send email notification when an invoice is created.
@@ -89,7 +89,7 @@ async def send_invoice_created_email(event: Event) -> None:
         raise
 
 
-@subscribe("invoice.paid")
+@subscribe("invoice.paid")  # type: ignore[misc]
 async def send_invoice_paid_email(event: Event) -> None:
     """
     Send email notification when an invoice is paid.
@@ -146,7 +146,7 @@ async def send_invoice_paid_email(event: Event) -> None:
         raise
 
 
-@subscribe("invoice.overdue")
+@subscribe("invoice.overdue")  # type: ignore[misc]
 async def send_invoice_overdue_reminder(event: Event) -> None:
     """
     Send reminder email when an invoice becomes overdue.
@@ -209,7 +209,7 @@ async def send_invoice_overdue_reminder(event: Event) -> None:
 # ============================================================================
 
 
-@subscribe("payment.failed")
+@subscribe("payment.failed")  # type: ignore[misc]
 async def send_payment_failed_notification(event: Event) -> None:
     """
     Send notification when a payment fails.
@@ -271,7 +271,7 @@ async def send_payment_failed_notification(event: Event) -> None:
 # ============================================================================
 
 
-@subscribe("subscription.created")
+@subscribe("subscription.created")  # type: ignore[misc]
 async def send_subscription_welcome_email(event: Event) -> None:
     """
     Send welcome email when a subscription is created.
@@ -326,7 +326,7 @@ async def send_subscription_welcome_email(event: Event) -> None:
         raise
 
 
-@subscribe("subscription.cancelled")
+@subscribe("subscription.cancelled")  # type: ignore[misc]
 async def send_subscription_cancelled_email(event: Event) -> None:
     """
     Send confirmation email when a subscription is cancelled.
@@ -382,7 +382,7 @@ async def send_subscription_cancelled_email(event: Event) -> None:
         raise
 
 
-@subscribe("subscription.trial_ending")
+@subscribe("subscription.trial_ending")  # type: ignore[misc]
 async def send_trial_ending_reminder(event: Event) -> None:
     """
     Send reminder email when subscription trial is ending soon.

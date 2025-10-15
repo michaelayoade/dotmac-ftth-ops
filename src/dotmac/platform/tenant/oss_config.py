@@ -14,7 +14,7 @@ from collections.abc import Callable
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ConfigDict, ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,8 +31,10 @@ class OSSService(str, Enum):
     ANSIBLE = "ansible"
 
 
-class ServiceConfig(BaseModel):
+class ServiceConfig(BaseModel):  # BaseModel resolves to Any in isolation
     """Validated service configuration."""
+
+    model_config = ConfigDict()
 
     url: str
     username: str | None = None

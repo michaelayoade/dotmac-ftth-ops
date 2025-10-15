@@ -174,7 +174,7 @@ class TestCSVImporter:
             # This test expects an error due to integer column names
             # but we'll catch it to test error handling instead
             with pytest.raises(ImportError):
-                async for batch in importer.import_from_file(file_path):
+                async for _batch in importer.import_from_file(file_path):
                     pass
 
             assert importer._progress.status == TransferStatus.FAILED
@@ -222,7 +222,7 @@ class TestCSVImporter:
             file_path = Path(tmp.name)
 
         try:
-            async for batch in importer.import_from_file(file_path):
+            async for _batch in importer.import_from_file(file_path):
                 pass
 
             assert len(progress_updates) > 0
@@ -239,7 +239,7 @@ class TestCSVImporter:
         non_existent = Path("/non/existent/file.csv")
 
         with pytest.raises(ImportError):
-            async for batch in importer.import_from_file(non_existent):
+            async for _batch in importer.import_from_file(non_existent):
                 pass
 
         assert importer._progress.status == TransferStatus.FAILED
@@ -335,7 +335,7 @@ class TestJSONImporter:
 
         try:
             with pytest.raises(ImportError):
-                async for batch in importer.import_from_file(file_path):
+                async for _batch in importer.import_from_file(file_path):
                     pass
 
             assert importer._progress.status == TransferStatus.FAILED
@@ -436,7 +436,7 @@ class TestExcelImporter:
         non_existent = Path("/non/existent/file.xlsx")
 
         with pytest.raises(ImportError):
-            async for batch in importer.import_from_file(non_existent):
+            async for _batch in importer.import_from_file(non_existent):
                 pass
 
         assert importer._progress.status == TransferStatus.FAILED
@@ -567,7 +567,7 @@ class TestXMLImporter:
 
         try:
             with pytest.raises(ImportError):
-                async for batch in importer.import_from_file(file_path):
+                async for _batch in importer.import_from_file(file_path):
                     pass
 
             assert importer._progress.status == TransferStatus.FAILED
@@ -667,7 +667,7 @@ class TestYAMLImporter:
 
         try:
             with pytest.raises(ImportError):
-                async for batch in importer.import_from_file(file_path):
+                async for _batch in importer.import_from_file(file_path):
                     pass
 
             assert importer._progress.status == TransferStatus.FAILED
@@ -687,7 +687,7 @@ class TestYAMLImporter:
 
         try:
             with pytest.raises(ImportError):
-                async for batch in importer.import_from_file(file_path):
+                async for _batch in importer.import_from_file(file_path):
                     pass
 
             assert importer._progress.status == TransferStatus.FAILED
@@ -882,7 +882,7 @@ class TestImportFileFunction:
     async def test_import_file_not_found(self):
         """Test import_file with non-existent file."""
         with pytest.raises(ImportError, match="File not found"):
-            async for batch in import_file("/non/existent/file.csv"):
+            async for _batch in import_file("/non/existent/file.csv"):
                 pass
 
 

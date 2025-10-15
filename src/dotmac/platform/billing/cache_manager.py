@@ -76,7 +76,7 @@ class BillingCacheManager:
     def __init__(self) -> None:
         self.cache: BillingCache = get_billing_cache()
         self.config = BillingCacheConfig()
-        self.invalidation_queue: list[dict] = []
+        self.invalidation_queue: list[dict[str, Any]] = []
         self.dependency_map: dict[str, set[str]] = {}
         self._init_dependency_map()
 
@@ -367,7 +367,7 @@ class BillingCacheManager:
 
         return total_cleared
 
-    def get_cache_health(self) -> dict:
+    def get_cache_health(self) -> dict[str, Any]:
         """
         Get cache health metrics for monitoring.
 
@@ -406,9 +406,7 @@ class BillingCacheManager:
             "status": (
                 "healthy"
                 if health_score >= 75
-                else "degraded"
-                if health_score >= 50
-                else "unhealthy"
+                else "degraded" if health_score >= 50 else "unhealthy"
             ),
         }
 

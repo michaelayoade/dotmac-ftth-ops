@@ -8,11 +8,8 @@ by managing configuration files and executing wg commands.
 import asyncio
 import ipaddress
 import logging
-import re
-import subprocess
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -111,8 +108,7 @@ class WireGuardClient:
 
             if process.returncode != 0:
                 raise WireGuardClientError(
-                    f"Command failed: {' '.join(command)}\n"
-                    f"Error: {stderr.decode('utf-8')}"
+                    f"Command failed: {' '.join(command)}\n" f"Error: {stderr.decode('utf-8')}"
                 )
 
             return stdout.decode("utf-8"), stderr.decode("utf-8")
@@ -175,9 +171,7 @@ class WireGuardClient:
             WireGuardClientError: If key cannot be retrieved
         """
         try:
-            stdout, _ = await self._docker_exec([
-                "wg", "show", self.server_interface, "public-key"
-            ])
+            stdout, _ = await self._docker_exec(["wg", "show", self.server_interface, "public-key"])
             return stdout.strip()
         except Exception as e:
             raise WireGuardClientError(f"Failed to get server public key: {e}") from e
@@ -196,9 +190,7 @@ class WireGuardClient:
             WireGuardClientError: If stats cannot be retrieved
         """
         try:
-            stdout, _ = await self._docker_exec([
-                "wg", "show", self.server_interface, "dump"
-            ])
+            stdout, _ = await self._docker_exec(["wg", "show", self.server_interface, "dump"])
             return self._parse_peer_stats(stdout, public_key)
         except Exception as e:
             raise WireGuardClientError(f"Failed to get peer stats: {e}") from e
@@ -270,9 +262,7 @@ class WireGuardClient:
             stdout, _ = await self._docker_exec(["cat", config_path])
             return stdout
         except Exception as e:
-            raise WireGuardClientError(
-                f"Failed to read peer config for {peer_name}: {e}"
-            ) from e
+            raise WireGuardClientError(f"Failed to read peer config for {peer_name}: {e}") from e
 
     async def write_peer_config(
         self,
@@ -296,15 +286,12 @@ class WireGuardClient:
             await self._docker_exec(["mkdir", "-p", f"{self.config_base_path}/{peer_name}"])
 
             # Write config file
-            await self._docker_exec([
-                "sh", "-c",
-                f"cat > {config_path} << 'EOF'\n{config_content}\nEOF"
-            ])
+            await self._docker_exec(
+                ["sh", "-c", f"cat > {config_path} << 'EOF'\n{config_content}\nEOF"]
+            )
 
         except Exception as e:
-            raise WireGuardClientError(
-                f"Failed to write peer config for {peer_name}: {e}"
-            ) from e
+            raise WireGuardClientError(f"Failed to write peer config for {peer_name}: {e}") from e
 
     async def generate_peer_config(
         self,
@@ -369,7 +356,12 @@ AllowedIPs = {', '.join(allowed_ips)}
 
             # Derive public key
             process = await asyncio.create_subprocess_exec(
-                "docker", "exec", "-i", self.container_name, "wg", "pubkey",
+                "docker",
+                "exec",
+                "-i",
+                self.container_name,
+                "wg",
+                "pubkey",
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -420,9 +412,13 @@ AllowedIPs = {', '.join(allowed_ips)}
             WireGuardClientError: If peer cannot be added
         """
         command = [
-            "wg", "set", self.server_interface,
-            "peer", public_key,
-            "allowed-ips", ",".join(allowed_ips),
+            "wg",
+            "set",
+            self.server_interface,
+            "peer",
+            public_key,
+            "allowed-ips",
+            ",".join(allowed_ips),
         ]
 
         if preshared_key:
@@ -446,11 +442,16 @@ AllowedIPs = {', '.join(allowed_ips)}
             WireGuardClientError: If peer cannot be removed
         """
         try:
-            await self._docker_exec([
-                "wg", "set", self.server_interface,
-                "peer", public_key,
-                "remove",
-            ])
+            await self._docker_exec(
+                [
+                    "wg",
+                    "set",
+                    self.server_interface,
+                    "peer",
+                    public_key,
+                    "remove",
+                ]
+            )
         except Exception as e:
             raise WireGuardClientError(f"Failed to remove peer: {e}") from e
 
@@ -466,12 +467,8 @@ AllowedIPs = {', '.join(allowed_ips)}
         try:
             # For LinuxServer WireGuard, we can trigger a reload by
             # restarting the container or using wg-quick
-            await self._docker_exec([
-                "wg-quick", "down", self.server_interface
-            ])
-            await self._docker_exec([
-                "wg-quick", "up", self.server_interface
-            ])
+            await self._docker_exec(["wg-quick", "down", self.server_interface])
+            await self._docker_exec(["wg-quick", "up", self.server_interface])
         except Exception as e:
             logger.warning(f"Failed to reload interface: {e}")
             # Don't raise - interface might already be up/down
@@ -497,7 +494,11 @@ AllowedIPs = {', '.join(allowed_ips)}
 
             # Read QR code
             process = await asyncio.create_subprocess_exec(
-                "docker", "exec", self.container_name, "cat", qr_path,
+                "docker",
+                "exec",
+                self.container_name,
+                "cat",
+                qr_path,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
@@ -566,7 +567,8 @@ AllowedIPs = {', '.join(allowed_ips)}
             # Get peer count
             stats = await self.get_peer_stats()
             active_peers = sum(
-                1 for s in stats
+                1
+                for s in stats
                 if s.latest_handshake
                 and (datetime.utcnow() - s.latest_handshake).total_seconds() < 180
             )

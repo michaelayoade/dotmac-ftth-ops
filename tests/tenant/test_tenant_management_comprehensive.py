@@ -164,7 +164,7 @@ class TestTenantCRUD:
         tenant1 = await tenant_service.create_tenant(tenant_data1)
 
         tenant_data2 = TenantCreate(name="Trial Org", slug="trial-org")
-        tenant2 = await tenant_service.create_tenant(tenant_data2)
+        await tenant_service.create_tenant(tenant_data2)
 
         # Update one to active
         await tenant_service.update_tenant(tenant1.id, TenantUpdate(status=TenantStatus.ACTIVE))
@@ -509,10 +509,10 @@ class TestTenantInvitations:
         """Test filtering invitations by status."""
         # Create and accept one invitation
         invitation_data1 = TenantInvitationCreate(email="accepted@example.com")
-        inv1 = await tenant_service.create_invitation(
+        invitation = await tenant_service.create_invitation(
             sample_tenant.id, invitation_data1, invited_by="admin"
         )
-        await tenant_service.accept_invitation(inv1.token)
+        await tenant_service.accept_invitation(invitation.token)
 
         # Create pending invitation
         invitation_data2 = TenantInvitationCreate(email="pending@example.com")

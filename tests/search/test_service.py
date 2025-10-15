@@ -417,7 +417,7 @@ class TestMeilisearchBackend:
     async def test_meilisearch_filters(self, mock_require):
         """Test MeilisearchBackend filter conversion."""
         mock_meilisearch = Mock()
-        mock_client = Mock()
+        Mock()
         mock_require.return_value = mock_meilisearch
 
         backend = MeilisearchBackend()
@@ -770,7 +770,7 @@ class TestMeilisearchBackendAdditional:
     async def test_meilisearch_bulk_index_empty(self, mock_require):
         """Test MeilisearchBackend bulk_index with no valid documents."""
         mock_meilisearch = Mock()
-        mock_client = Mock()
+        Mock()
         mock_require.return_value = mock_meilisearch
 
         backend = MeilisearchBackend()
@@ -998,7 +998,7 @@ class TestMeilisearchBackendAdditional:
         mock_client.http_client = mock_http_client
         mock_require.return_value = mock_meilisearch
 
-        backend = MeilisearchBackend(default_timeout=30)
+        MeilisearchBackend(default_timeout=30)
 
         assert mock_http_client.timeout == 30
 

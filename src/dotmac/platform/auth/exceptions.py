@@ -124,8 +124,8 @@ class InsufficientScope(AuthError):
     def __init__(
         self,
         message: str = "Insufficient permissions",
-        required_scopes: list | None = None,
-        user_scopes: list | None = None,
+        required_scopes: list[str] | None = None,
+        user_scopes: list[str] | None = None,
     ) -> None:
         details = {}
         if required_scopes:
@@ -141,8 +141,8 @@ class InsufficientRole(AuthError):
     def __init__(
         self,
         message: str = "Insufficient role permissions",
-        required_roles: list | None = None,
-        user_roles: list | None = None,
+        required_roles: list[str] | None = None,
+        user_roles: list[str] | None = None,
     ) -> None:
         details = {}
         if required_roles:

@@ -41,12 +41,11 @@ from dotmac.platform.genieacs.schemas import (
     SetParameterRequest,
     TaskResponse,
 )
-from dotmac.platform.genieacs.service import GenieACSService
 from dotmac.platform.genieacs.service_db import GenieACSServiceDB
 from dotmac.platform.tenant.dependencies import TenantAdminAccess
 from dotmac.platform.tenant.oss_config import OSSService, get_service_config
 
-router = APIRouter(prefix="/api/v1/genieacs", tags=["genieacs"])
+router = APIRouter(prefix="/api/v1/genieacs", tags=["GenieACS"])
 
 
 # =============================================================================

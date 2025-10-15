@@ -1,7 +1,7 @@
 """
-Simple feature flags using Redis + cache - no bloat.
+Simple feature flags using Redis  # type: ignore[misc] + cache - no bloat.
 
-Provides a lightweight feature flag system with Redis backend and in-memory cache.
+Provides a lightweight feature flag system with Redis  # type: ignore[misc] backend and in-memory cache.
 Supports simple on/off flags, context-based evaluation, and A/B testing.
 """
 
@@ -9,20 +9,21 @@ import inspect
 import json
 import time
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 import redis.asyncio as redis
 import structlog
 from cachetools import TTLCache  # noqa: PGH003
 
+from dotmac.platform.redis_client import RedisClientType
 from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
 
 # In-memory cache for fast lookups
 _flag_cache: TTLCache[str, dict[str, Any]] = TTLCache(maxsize=1000, ttl=60)  # 1 minute TTL
-_redis_client: redis.Redis | None = None
-_redis_available: bool | None = None  # Cache Redis availability check
+_redis_client: RedisClientType | None = None
+_redis_available: bool | None = None  # Cache Redis  # type: ignore[misc] availability check
 
 
 class FeatureFlagError(Exception):
@@ -32,23 +33,25 @@ class FeatureFlagError(Exception):
 
 
 class RedisUnavailableError(FeatureFlagError):
-    """Redis is not available for feature flags."""
+    """Redis  # type: ignore[misc] is not available for feature flags."""
 
     pass
 
 
 async def _check_redis_availability() -> bool:
-    """Check if Redis is available and accessible."""
+    """Check if Redis  # type: ignore[misc] is available and accessible."""
     global _redis_available
 
     if _redis_available is not None:
         return _redis_available
 
     try:
-        # Get Redis URL from settings
+        # Get Redis  # type: ignore[misc] URL from settings
         redis_url = getattr(settings.redis, "redis_url", None)
         if not redis_url:
-            logger.warning("Redis URL not configured, feature flags will use in-memory fallback")
+            logger.warning(
+                "Redis  # type: ignore[misc] URL not configured, feature flags will use in-memory fallback"
+            )
             _redis_available = False
             return False
 
@@ -70,19 +73,20 @@ async def _check_redis_availability() -> bool:
                         await result
 
         _redis_available = True
-        logger.info("Redis available for feature flags", redis_url=redis_url)
+        logger.info("Redis  # type: ignore[misc] available for feature flags", redis_url=redis_url)
         return True
 
     except Exception as e:
         logger.warning(
-            "Redis not available, feature flags will use in-memory fallback", error=str(e)
+            "Redis  # type: ignore[misc] not available, feature flags will use in-memory fallback",
+            error=str(e),
         )
         _redis_available = False
         return False
 
 
-async def get_redis_client() -> redis.Redis | None:
-    """Get Redis client for flags, returns None if Redis unavailable."""
+async def get_redis_client() -> RedisClientType | None:
+    """Get Redis  # type: ignore[misc] client for flags, returns None if Redis  # type: ignore[misc] unavailable."""
     global _redis_client
 
     if not await _check_redis_availability():
@@ -91,11 +95,14 @@ async def get_redis_client() -> redis.Redis | None:
     if _redis_client is None:
         try:
             redis_url = settings.redis.redis_url
-            _redis_client = redis.from_url(redis_url)
+            _redis_client = cast(RedisClientType, redis.from_url(redis_url))
             # Test the connection
             await _redis_client.ping()
         except Exception as e:
-            logger.error("Failed to create Redis client for feature flags", error=str(e))
+            logger.error(
+                "Failed to create Redis  # type: ignore[misc] client for feature flags",
+                error=str(e),
+            )
             _redis_client = None
             # Mark as unavailable for future calls
             global _redis_available
@@ -112,19 +119,27 @@ async def set_flag(name: str, enabled: bool, context: dict[str, Any] | None = No
     # Always update cache
     _flag_cache[name] = flag_data
 
-    # Try to persist to Redis if available
+    # Try to persist to Redis  # type: ignore[misc] if available
     client = await get_redis_client()
     if client:
         try:
             await client.hset("feature_flags", name, json.dumps(flag_data))
-            logger.info("Feature flag updated in Redis and cache", flag=name, enabled=enabled)
+            logger.info(
+                "Feature flag updated in Redis  # type: ignore[misc] and cache",
+                flag=name,
+                enabled=enabled,
+            )
         except Exception as e:
             logger.warning(
-                "Failed to persist flag to Redis, using cache only", flag=name, error=str(e)
+                "Failed to persist flag to Redis  # type: ignore[misc], using cache only",
+                flag=name,
+                error=str(e),
             )
     else:
         logger.info(
-            "Feature flag updated in cache only (Redis unavailable)", flag=name, enabled=enabled
+            "Feature flag updated in cache only (Redis  # type: ignore[misc] unavailable)",
+            flag=name,
+            enabled=enabled,
         )
 
 
@@ -135,7 +150,7 @@ async def is_enabled(name: str, context: dict[str, Any] | None = None) -> bool:
     if name in _flag_cache:
         flag_data = _flag_cache[name]
     else:
-        # Try to get from Redis if available
+        # Try to get from Redis  # type: ignore[misc] if available
         client = await get_redis_client()
         flag_data = None
 
@@ -147,10 +162,12 @@ async def is_enabled(name: str, context: dict[str, Any] | None = None) -> bool:
                     _flag_cache[name] = flag_data
             except Exception as e:
                 logger.warning(
-                    "Failed to get flag from Redis, checking cache only", flag=name, error=str(e)
+                    "Failed to get flag from Redis  # type: ignore[misc], checking cache only",
+                    flag=name,
+                    error=str(e),
                 )
 
-        # If not found in Redis or Redis unavailable, check if we have a default
+        # If not found in Redis  # type: ignore[misc] or Redis  # type: ignore[misc] unavailable, check if we have a default
         if not flag_data:
             logger.debug("Feature flag not found, defaulting to False", flag=name)
             return False
@@ -191,7 +208,7 @@ async def list_flags() -> dict[str, dict[str, Any]]:
     for name, flag_data in _flag_cache.items():
         result[name] = flag_data.copy()
 
-    # Try to get additional flags from Redis if available
+    # Try to get additional flags from Redis  # type: ignore[misc] if available
     client = await get_redis_client()
     if client:
         try:
@@ -206,15 +223,20 @@ async def list_flags() -> dict[str, dict[str, Any]]:
                 try:
                     flag_data = json.loads(flag_json)
                     result[name] = flag_data
-                    # Update cache with fresh data from Redis
+                    # Update cache with fresh data from Redis  # type: ignore[misc]
                     _flag_cache[name] = flag_data
                 except json.JSONDecodeError:
-                    logger.warning("Invalid flag data in Redis", flag=name)
+                    logger.warning("Invalid flag data in Redis  # type: ignore[misc]", flag=name)
         except Exception as e:
-            logger.warning("Failed to list flags from Redis, returning cache only", error=str(e))
+            logger.warning(
+                "Failed to list flags from Redis  # type: ignore[misc], returning cache only",
+                error=str(e),
+            )
 
     logger.debug(
-        "Listed feature flags", count=len(result), source="Redis+Cache" if client else "Cache"
+        "Listed feature flags",
+        count=len(result),
+        source="Redis  # type: ignore[misc]+Cache" if client else "Cache",
     )
     return result
 
@@ -229,14 +251,16 @@ async def delete_flag(name: str) -> bool:
         del _flag_cache[name]
         deleted_from_cache = True
 
-    # Try to remove from Redis if available
+    # Try to remove from Redis  # type: ignore[misc] if available
     client = await get_redis_client()
     if client:
         try:
             deleted_count = await client.hdel("feature_flags", name)
             deleted_from_redis = bool(deleted_count)
         except Exception as e:
-            logger.warning("Failed to delete flag from Redis", flag=name, error=str(e))
+            logger.warning(
+                "Failed to delete flag from Redis  # type: ignore[misc]", flag=name, error=str(e)
+            )
 
     success = deleted_from_redis or deleted_from_cache
     if success:
@@ -274,7 +298,7 @@ async def get_flag_status() -> dict[str, Any]:
                 status["redis_flags"] = redis_flags
                 status["total_flags"] = max(cache_size, redis_flags)
             except Exception as e:
-                logger.warning("Failed to get Redis flag count", error=str(e))
+                logger.warning("Failed to get Redis  # type: ignore[misc] flag count", error=str(e))
 
     return status
 
@@ -286,10 +310,10 @@ async def clear_cache() -> None:
 
 
 async def sync_from_redis() -> int:
-    """Sync all flags from Redis to cache. Returns number of flags synced."""
+    """Sync all flags from Redis  # type: ignore[misc] to cache. Returns number of flags synced."""
     client = await get_redis_client()
     if not client:
-        logger.warning("Cannot sync from Redis: not available")
+        logger.warning("Cannot sync from Redis  # type: ignore[misc]: not available")
         return 0
 
     try:
@@ -309,11 +333,11 @@ async def sync_from_redis() -> int:
             except json.JSONDecodeError:
                 logger.warning("Skipped invalid flag data during sync", flag=name)
 
-        logger.info("Synced flags from Redis to cache", count=synced_count)
+        logger.info("Synced flags from Redis  # type: ignore[misc] to cache", count=synced_count)
         return synced_count
 
     except Exception as e:
-        logger.error("Failed to sync flags from Redis", error=str(e))
+        logger.error("Failed to sync flags from Redis  # type: ignore[misc]", error=str(e))
         return 0
 
 
@@ -382,7 +406,7 @@ def feature_flag(flag_name: str, default: bool = False) -> Callable[[F], F]:
 # async def experimental_function():
 #     return "This only runs if flag is enabled"
 #
-# # For even simpler cases, use Redis directly:
+# # For even simpler cases, use Redis  # type: ignore[misc] directly:
 # import redis.asyncio as redis
 # client = redis.from_url("redis://localhost")
 # await client.hset("flags", "my_flag", "true")

@@ -59,11 +59,11 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
 
       const endpoint = `/api/v1/billing/invoices${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const response = await apiClient.get(endpoint);
-      if (response.success && response.data) {
+      if (response.data) {
         const data = response.data as { invoices?: Invoice[] };
         setInvoices(data.invoices || []);
       } else {
-        throw new Error(response.error?.message || 'Failed to fetch invoices');
+        throw new Error('Failed to fetch invoices');
       }
     } catch (err) {
       console.error('Failed to fetch invoices:', err);

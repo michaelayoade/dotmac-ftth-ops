@@ -25,7 +25,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dotmac.platform.db import BaseModel
 
-
 # =============================================================================
 # Enums
 # =============================================================================
@@ -87,7 +86,7 @@ class SLAStatus(str, PyEnum):
 # =============================================================================
 
 
-class Alarm(BaseModel):
+class Alarm(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in isolation
     """
     Network and service alarms with correlation support.
 
@@ -104,9 +103,7 @@ class Alarm(BaseModel):
     )  # External alarm ID
 
     # Alarm classification
-    severity: Mapped[AlarmSeverity] = mapped_column(
-        Enum(AlarmSeverity), nullable=False, index=True
-    )
+    severity: Mapped[AlarmSeverity] = mapped_column(Enum(AlarmSeverity), nullable=False, index=True)
     status: Mapped[AlarmStatus] = mapped_column(Enum(AlarmStatus), nullable=False, index=True)
     source: Mapped[AlarmSource] = mapped_column(Enum(AlarmSource), nullable=False)
 
@@ -131,9 +128,7 @@ class Alarm(BaseModel):
     subscriber_count: Mapped[int] = mapped_column(Integer, default=0)  # Affected subscribers
 
     # Correlation
-    correlation_id: Mapped[UUID] = mapped_column(
-        nullable=True, index=True
-    )  # Groups related alarms
+    correlation_id: Mapped[UUID] = mapped_column(nullable=True, index=True)  # Groups related alarms
     correlation_action: Mapped[CorrelationAction] = mapped_column(
         Enum(CorrelationAction), default=CorrelationAction.NONE
     )
@@ -162,9 +157,9 @@ class Alarm(BaseModel):
 
     # Additional data
     tags: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
-    metadata: Mapped[dict[str, Any]] = mapped_column(
-        JSON, default=dict
-    )  # Source-specific data
+    alarm_metadata: Mapped[dict[str, Any]] = mapped_column(
+        JSON, default=dict, name="metadata"
+    )  # Source-specific data (mapped to 'metadata' column in DB)
     probable_cause: Mapped[str] = mapped_column(Text, nullable=True)
     recommended_action: Mapped[str] = mapped_column(Text, nullable=True)
 
@@ -172,9 +167,7 @@ class Alarm(BaseModel):
     parent_alarm: Mapped["Alarm"] = relationship(
         "Alarm", remote_side=[id], back_populates="child_alarms"
     )
-    child_alarms: Mapped[list["Alarm"]] = relationship(
-        "Alarm", back_populates="parent_alarm"
-    )
+    child_alarms: Mapped[list["Alarm"]] = relationship("Alarm", back_populates="parent_alarm")
     notes: Mapped[list["AlarmNote"]] = relationship(
         "AlarmNote", back_populates="alarm", cascade="all, delete-orphan"
     )
@@ -188,7 +181,7 @@ class Alarm(BaseModel):
     )
 
 
-class AlarmNote(BaseModel):
+class AlarmNote(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in isolation
     """
     Notes and comments on alarms.
 
@@ -208,7 +201,7 @@ class AlarmNote(BaseModel):
     alarm: Mapped["Alarm"] = relationship("Alarm", back_populates="notes")
 
 
-class AlarmRule(BaseModel):
+class AlarmRule(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in isolation
     """
     Alarm correlation and processing rules.
 
@@ -245,7 +238,7 @@ class AlarmRule(BaseModel):
 # =============================================================================
 
 
-class SLADefinition(BaseModel):
+class SLADefinition(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in isolation
     """
     Service Level Agreement definitions.
 
@@ -264,35 +257,23 @@ class SLADefinition(BaseModel):
     )  # fiber, wireless, etc.
 
     # Availability targets
-    availability_target: Mapped[float] = mapped_column(
-        Float, nullable=False
-    )  # e.g., 99.9% = 0.999
-    measurement_period_days: Mapped[int] = mapped_column(
-        Integer, default=30
-    )  # Monthly by default
+    availability_target: Mapped[float] = mapped_column(Float, nullable=False)  # e.g., 99.9% = 0.999
+    measurement_period_days: Mapped[int] = mapped_column(Integer, default=30)  # Monthly by default
 
     # Performance targets
     max_latency_ms: Mapped[float] = mapped_column(Float, nullable=True)  # Maximum latency
     max_packet_loss_percent: Mapped[float] = mapped_column(
         Float, nullable=True
     )  # Maximum packet loss
-    min_bandwidth_mbps: Mapped[float] = mapped_column(
-        Float, nullable=True
-    )  # Minimum bandwidth
+    min_bandwidth_mbps: Mapped[float] = mapped_column(Float, nullable=True)  # Minimum bandwidth
 
     # Response time targets (minutes)
-    response_time_critical: Mapped[int] = mapped_column(
-        Integer, default=15
-    )  # 15 min for critical
+    response_time_critical: Mapped[int] = mapped_column(Integer, default=15)  # 15 min for critical
     response_time_major: Mapped[int] = mapped_column(Integer, default=60)  # 1 hour for major
-    response_time_minor: Mapped[int] = mapped_column(
-        Integer, default=240
-    )  # 4 hours for minor
+    response_time_minor: Mapped[int] = mapped_column(Integer, default=240)  # 4 hours for minor
 
     # Resolution time targets (minutes)
-    resolution_time_critical: Mapped[int] = mapped_column(
-        Integer, default=240
-    )  # 4 hours
+    resolution_time_critical: Mapped[int] = mapped_column(Integer, default=240)  # 4 hours
     resolution_time_major: Mapped[int] = mapped_column(Integer, default=480)  # 8 hours
     resolution_time_minor: Mapped[int] = mapped_column(Integer, default=1440)  # 24 hours
 
@@ -308,7 +289,7 @@ class SLADefinition(BaseModel):
     )
 
 
-class SLAInstance(BaseModel):
+class SLAInstance(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in isolation
     """
     SLA instance for a specific customer or service.
 
@@ -365,7 +346,7 @@ class SLAInstance(BaseModel):
     )
 
 
-class SLABreach(BaseModel):
+class SLABreach(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in isolation
     """
     SLA breach events.
 
@@ -420,7 +401,7 @@ class SLABreach(BaseModel):
 # =============================================================================
 
 
-class MaintenanceWindow(BaseModel):
+class MaintenanceWindow(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in isolation
     """
     Scheduled maintenance windows.
 
@@ -439,9 +420,7 @@ class MaintenanceWindow(BaseModel):
     start_time: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, index=True
     )
-    end_time: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False, index=True
-    )
+    end_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     timezone: Mapped[str] = mapped_column(String(100), default="UTC")
 
     # Affected scope

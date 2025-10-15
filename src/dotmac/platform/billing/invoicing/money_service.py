@@ -19,7 +19,7 @@ from dotmac.platform.billing.money_utils import money_handler
 from dotmac.platform.billing.pdf_generator_reportlab import ReportLabInvoiceGenerator
 
 
-class MoneyInvoiceService(InvoiceService):
+class MoneyInvoiceService(InvoiceService):  # type: ignore[misc]  # InvoiceService resolves to Any in isolation
     """
     Invoice service that uses Money objects internally for accurate
     currency calculations while maintaining compatibility with the legacy system.

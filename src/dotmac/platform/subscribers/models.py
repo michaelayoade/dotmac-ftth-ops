@@ -49,7 +49,7 @@ class SubscriberStatus(str, Enum):
     QUARANTINED = "quarantined"  # Limited access (security/policy)
 
 
-class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
+class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     Network Subscriber Model.
 

@@ -227,7 +227,7 @@ class TestMinIOStorageInitialization:
             assert "test-bucket" not in fake_minio_client.buckets
 
             # Create storage - should create bucket
-            storage = MinIOStorage(bucket="test-bucket")
+            MinIOStorage(bucket="test-bucket")
 
             # Bucket should now exist
             assert "test-bucket" in fake_minio_client.buckets
@@ -238,12 +238,12 @@ class TestMinIOStorageInitialization:
             mock_minio.return_value = fake_minio_client
 
             # Create with http:// prefix
-            storage = MinIOStorage(endpoint="http://minio.example.com:9000", bucket="test-bucket")
+            MinIOStorage(endpoint="http://minio.example.com:9000", bucket="test-bucket")
 
             # Verify Minio was called with stripped endpoint and secure=False
             call_kwargs = mock_minio.call_args.kwargs
             assert call_kwargs["endpoint"] == "minio.example.com:9000"
-            assert call_kwargs["secure"] == False
+            assert not call_kwargs["secure"]
 
     def test_init_handles_https_prefix(self, fake_minio_client):
         """Test that https:// prefix is stripped and secure=True is set."""
@@ -251,12 +251,12 @@ class TestMinIOStorageInitialization:
             mock_minio.return_value = fake_minio_client
 
             # Create with https:// prefix
-            storage = MinIOStorage(endpoint="https://minio.example.com:9000", bucket="test-bucket")
+            MinIOStorage(endpoint="https://minio.example.com:9000", bucket="test-bucket")
 
             # Verify Minio was called with stripped endpoint and secure=True
             call_kwargs = mock_minio.call_args.kwargs
             assert call_kwargs["endpoint"] == "minio.example.com:9000"
-            assert call_kwargs["secure"] == True
+            assert call_kwargs["secure"]
 
 
 class TestMinIOStorageFileOperations:

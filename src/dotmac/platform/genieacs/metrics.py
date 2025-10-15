@@ -118,9 +118,7 @@ def record_firmware_upgrade_device(tenant_id: str, status: str) -> None:
 
 def record_firmware_upgrade_duration(tenant_id: str, duration_seconds: float) -> None:
     """Record firmware upgrade execution duration."""
-    firmware_upgrade_duration_seconds.labels(tenant_id=tenant_id).observe(
-        duration_seconds
-    )
+    firmware_upgrade_duration_seconds.labels(tenant_id=tenant_id).observe(duration_seconds)
 
 
 def set_firmware_upgrade_schedule_status(
@@ -156,9 +154,7 @@ def set_mass_config_job_status(
     tenant_id: str, job_id: str, status: str, value: float = 1.0
 ) -> None:
     """Set mass configuration job status gauge."""
-    mass_config_job_status.labels(
-        tenant_id=tenant_id, job_id=job_id, status=status
-    ).set(value)
+    mass_config_job_status.labels(tenant_id=tenant_id, job_id=job_id, status=status).set(value)
 
 
 def set_mass_config_active_jobs(tenant_id: str, count: int) -> None:
@@ -173,9 +169,9 @@ def record_genieacs_api_request(
     genieacs_api_requests_total.labels(
         tenant_id=tenant_id, operation=operation, status=status
     ).inc()
-    genieacs_api_request_duration_seconds.labels(
-        tenant_id=tenant_id, operation=operation
-    ).observe(duration_seconds)
+    genieacs_api_request_duration_seconds.labels(tenant_id=tenant_id, operation=operation).observe(
+        duration_seconds
+    )
 
 
 def set_task_queue_size(tenant_id: str, task_type: str, size: int) -> None:

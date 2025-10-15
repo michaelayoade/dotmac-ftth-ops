@@ -368,8 +368,8 @@ class TestFactoryIntegration:
                 assert isinstance(exporter_str, BaseExporter)
 
                 # Both should be the same class
-                assert type(importer) == type(importer_str)
-                assert type(exporter) == type(exporter_str)
+                assert type(importer) is type(importer_str)
+                assert type(exporter) is type(exporter_str)
 
     def test_importer_exporter_configuration_inheritance(self):
         """Test that custom configurations are properly passed to importers/exporters."""

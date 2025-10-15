@@ -307,7 +307,7 @@ class TestInvoiceImportIntegration:
         # This test verifies that the import pipeline is wired correctly
         # Actual processing is tested in data_import tests
 
-        mock_session = AsyncMock()
+        AsyncMock()
         mock_job = MagicMock()
         mock_job.id = "job-123"
         mock_job.status = "processing"

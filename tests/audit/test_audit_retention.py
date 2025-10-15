@@ -212,7 +212,7 @@ class TestAuditRetentionService:
         from unittest.mock import AsyncMock, patch
 
         # Await the fixture coroutine
-        activities = await old_activities
+        await old_activities
 
         # Patch get_async_db to use test session
         with patch("dotmac.platform.audit.retention.get_async_db") as mock_get_db:
@@ -369,7 +369,7 @@ class TestAuditRetentionService:
         assert "records_to_delete" in stats
 
         # Verify deletion counts are correct for any records to delete
-        for severity, info in stats["records_to_delete"].items():
+        for _severity, info in stats["records_to_delete"].items():
             assert info["count"] > 0
             assert "older_than" in info
 
@@ -410,7 +410,7 @@ class TestAuditRetentionService:
         from unittest.mock import AsyncMock, patch
 
         # Await the fixture coroutine
-        activities = await old_activities
+        await old_activities
 
         # Create retention service with unwritable path but AFTER directory setup
         invalid_path = tmp_path / "readonly"
@@ -489,5 +489,5 @@ class TestCleanupTask:
         with patch("dotmac.platform.audit.retention.AuditRetentionService") as MockService:
             MockService.side_effect = Exception("Service initialization failed")
 
-            with pytest.raises(Exception):
+            with pytest.raises(Exception):  # noqa: B017
                 await cleanup_audit_logs_task()

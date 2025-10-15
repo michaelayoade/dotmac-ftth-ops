@@ -117,7 +117,9 @@ class CacheKey:
     def generate_hash(data: dict[str, Any]) -> str:
         """Generate hash from dictionary data for cache keys."""
         json_str = json.dumps(data, sort_keys=True)
-        return hashlib.md5(json_str.encode(), usedforsecurity=False).hexdigest()  # nosec B324 - MD5 used for cache key generation, not security
+        return hashlib.md5(
+            json_str.encode(), usedforsecurity=False
+        ).hexdigest()  # nosec B324 - MD5 used for cache key generation, not security
 
 
 class BillingCacheMetrics:
@@ -577,7 +579,7 @@ def invalidate_on_change(tags: list[str] | None = None, patterns: list[str] | No
 
     Example:
         @invalidate_on_change(patterns=["billing:product:*"])
-        async def update_product(product_id: str, data: dict):
+        async def update_product(product_id: str, data: dict[str, Any]):
             # Update product
             return updated_product
     """

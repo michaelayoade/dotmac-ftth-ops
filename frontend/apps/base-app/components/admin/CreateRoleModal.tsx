@@ -111,7 +111,7 @@ export default function CreateRoleModal({ permissions, roles, onClose, onCreate 
 
       const response = await apiClient.post('/api/v1/auth/rbac/roles', createData);
 
-      if (response.success) {
+      if (response.status >= 200 && response.status < 300) {
         toast.success('Role created successfully');
         onCreate();
       } else {

@@ -192,11 +192,13 @@ def upgrade() -> None:
     op.create_index("idx_radacct_nasip", "radacct", ["nasipaddress"])
 
     # Partial index for active sessions (where acctstoptime IS NULL)
-    op.execute("""
+    op.execute(
+        """
         CREATE INDEX idx_radacct_active_session
         ON radacct (tenant_id, username)
         WHERE acctstoptime IS NULL
-    """)
+    """
+    )
 
     # =========================================================================
     # 4. RadPostAuth - Authentication Logging

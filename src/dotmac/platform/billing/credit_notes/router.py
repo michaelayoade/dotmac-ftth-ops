@@ -4,6 +4,7 @@ Credit note API router
 
 import csv
 import io
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, ConfigDict, Field
@@ -35,7 +36,7 @@ class CreateCreditNoteRequest(BaseModel):
 
     invoice_id: str = Field(..., description="Invoice to credit")
     reason: CreditReason = Field(..., description="Reason for credit")
-    line_items: list[dict] = Field(..., min_length=1, description="Credit line items")
+    line_items: list[dict[str, Any]] = Field(..., min_length=1, description="Credit line items")
     notes: str | None = Field(None, max_length=2000, description="Customer-visible notes")
     internal_notes: str | None = Field(None, max_length=2000, description="Internal notes")
     auto_apply: bool = Field(True, description="Auto-apply credit to invoice")

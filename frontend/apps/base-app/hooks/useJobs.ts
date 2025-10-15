@@ -4,7 +4,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { extractDataOrThrow } from '@/lib/api/utils';
+import { extractDataOrThrow } from '@/lib/api/response-helpers';
 
 export interface Job {
   id: string;

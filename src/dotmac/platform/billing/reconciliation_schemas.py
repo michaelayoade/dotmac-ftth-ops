@@ -116,6 +116,8 @@ class ReconciliationResponse(BaseModel):
 class ReconciliationListResponse(BaseModel):
     """Schema for paginated reconciliation list."""
 
+    model_config = ConfigDict()
+
     reconciliations: list[ReconciliationResponse] = Field(description="List of reconciliations")
     total: int = Field(description="Total number of reconciliations")
     page: int = Field(description="Current page number")
@@ -125,6 +127,8 @@ class ReconciliationListResponse(BaseModel):
 
 class ReconciliationSummary(BaseModel):
     """Schema for reconciliation summary statistics."""
+
+    model_config = ConfigDict()
 
     period_days: int = Field(description="Number of days in summary period")
     total_sessions: int = Field(description="Total reconciliation sessions")
@@ -148,6 +152,8 @@ class PaymentRetryRequest(BaseModel):
 class PaymentRetryResponse(BaseModel):
     """Schema for payment retry result."""
 
+    model_config = ConfigDict()
+
     success: bool = Field(description="Whether retry succeeded")
     payment_id: int = Field(description="Payment ID")
     attempts: int = Field(description="Number of attempts made")
@@ -168,6 +174,8 @@ class IdempotentOperationRequest(BaseModel):
 class CircuitBreakerStatus(BaseModel):
     """Schema for circuit breaker status."""
 
+    model_config = ConfigDict()
+
     state: str = Field(description="Circuit breaker state (closed/open/half_open)")
     failure_count: int = Field(description="Current failure count")
     failure_threshold: int = Field(description="Failure threshold")
@@ -177,6 +185,8 @@ class CircuitBreakerStatus(BaseModel):
 
 class RetryStatistics(BaseModel):
     """Schema for retry statistics."""
+
+    model_config = ConfigDict()
 
     total_retries: int = Field(description="Total retry attempts")
     successful_retries: int = Field(description="Number of successful retries")

@@ -13,7 +13,13 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from dotmac.platform.secrets import AsyncVaultClient, DataClassification, EncryptedField, SymmetricEncryptionService, VaultError
+from dotmac.platform.secrets import (
+    AsyncVaultClient,
+    DataClassification,
+    EncryptedField,
+    SymmetricEncryptionService,
+    VaultError,
+)
 from dotmac.platform.wireguard.client import WireGuardClient, WireGuardClientError
 from dotmac.platform.wireguard.models import (
     WireGuardPeer,
@@ -118,13 +124,15 @@ class WireGuardService:
                             "tenant_id": str(self.tenant_id),
                             "created_at": datetime.utcnow().isoformat(),
                             "classification": "restricted",
-                        }
+                        },
                     )
                     # Store reference to Vault path, not the actual key
                     private_key_encrypted = f"vault:{vault_path}"
                     logger.info(f"Stored WireGuard server private key in Vault at {vault_path}")
                 except VaultError as e:
-                    logger.error(f"Failed to store key in Vault: {e}, falling back to encrypted storage")
+                    logger.error(
+                        f"Failed to store key in Vault: {e}, falling back to encrypted storage"
+                    )
                     vault_path = None
 
             if not vault_path:
@@ -134,10 +142,14 @@ class WireGuardService:
                         private_key, classification=DataClassification.RESTRICTED
                     )
                     private_key_encrypted = encrypted_field.encrypted_data
-                    logger.warning("Storing WireGuard private key encrypted in database (Vault unavailable)")
+                    logger.warning(
+                        "Storing WireGuard private key encrypted in database (Vault unavailable)"
+                    )
                 else:
                     # Last resort: store unencrypted (not recommended for production)
-                    logger.warning("No Vault or encryption service - storing WireGuard private key UNENCRYPTED")
+                    logger.warning(
+                        "No Vault or encryption service - storing WireGuard private key UNENCRYPTED"
+                    )
                     private_key_encrypted = private_key
 
             # Create server record
@@ -194,21 +206,26 @@ class WireGuardService:
         Raises:
             WireGuardServiceError: If decryption fails or no encryption service configured
         """
-        encrypted_key = server.private_key_encrypted
+        encrypted_key = str(server.private_key_encrypted)
 
         # Check if key is stored in Vault
         if encrypted_key.startswith("vault:"):
             vault_path = encrypted_key[6:]  # Remove "vault:" prefix
             if not self.vault_client:
-                raise WireGuardServiceError("Private key is in Vault but no Vault client configured")
+                raise WireGuardServiceError(
+                    "Private key is in Vault but no Vault client configured"
+                )
 
             try:
                 secret = await self.vault_client.get_secret(vault_path)
-                if not secret or "private_key" not in secret:
+                private_key = secret.get("private_key") if secret else None
+                if not isinstance(private_key, str):
                     raise WireGuardServiceError(f"Private key not found in Vault at {vault_path}")
-                return secret["private_key"]
+                return private_key
             except VaultError as e:
-                raise WireGuardServiceError(f"Failed to retrieve private key from Vault: {e}") from e
+                raise WireGuardServiceError(
+                    f"Failed to retrieve private key from Vault: {e}"
+                ) from e
 
         # Check if key is encrypted with SymmetricEncryptionService
         if self.encryption_service:
@@ -219,7 +236,10 @@ class WireGuardService:
                     encrypted_data=encrypted_key,
                     classification=DataClassification.RESTRICTED,
                 )
-                return self.encryption_service.decrypt(encrypted_field)
+                decrypted = self.encryption_service.decrypt(encrypted_field)
+                if not isinstance(decrypted, str):
+                    raise WireGuardServiceError("Decrypted private key is not a string")
+                return decrypted
             except Exception as e:
                 # If decryption fails, might be unencrypted
                 logger.warning(f"Failed to decrypt with encryption service: {e}, returning as-is")
@@ -607,9 +627,7 @@ class WireGuardService:
 
             await self.session.commit()
 
-            logger.info(
-                f"Synced stats for {updated_count} peers on server {server_id}"
-            )
+            logger.info(f"Synced stats for {updated_count} peers on server {server_id}")
             return updated_count
 
         except Exception as e:

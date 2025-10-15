@@ -20,7 +20,7 @@ logger = structlog.get_logger(__name__)
 
 
 # Billing Event Listeners
-@subscribe("billing.invoice.created")
+@subscribe("billing.invoice.created")  # type: ignore[misc]
 async def on_invoice_created(event_data: dict[str, Any]) -> None:
     """Send notification when invoice is created."""
     try:
@@ -60,7 +60,7 @@ async def on_invoice_created(event_data: dict[str, Any]) -> None:
         logger.error("Failed to send invoice created notification", error=str(e))
 
 
-@subscribe("billing.invoice.finalized")
+@subscribe("billing.invoice.finalized")  # type: ignore[misc]
 async def on_invoice_finalized(event_data: dict[str, Any]) -> None:
     """Send notification when invoice is finalized and ready for payment."""
     try:
@@ -100,7 +100,7 @@ async def on_invoice_finalized(event_data: dict[str, Any]) -> None:
         logger.error("Failed to send invoice due notification", error=str(e))
 
 
-@subscribe("billing.payment.received")
+@subscribe("billing.payment.received")  # type: ignore[misc]
 async def on_payment_received(event_data: dict[str, Any]) -> None:
     """Send notification when payment is received."""
     try:
@@ -139,7 +139,7 @@ async def on_payment_received(event_data: dict[str, Any]) -> None:
         logger.error("Failed to send payment received notification", error=str(e))
 
 
-@subscribe("billing.payment.failed")
+@subscribe("billing.payment.failed")  # type: ignore[misc]
 async def on_payment_failed(event_data: dict[str, Any]) -> None:
     """Send notification when payment fails."""
     try:
@@ -177,7 +177,7 @@ async def on_payment_failed(event_data: dict[str, Any]) -> None:
         logger.error("Failed to send payment failed notification", error=str(e))
 
 
-@subscribe("billing.subscription.renewed")
+@subscribe("billing.subscription.renewed")  # type: ignore[misc]
 async def on_subscription_renewed(event_data: dict[str, Any]) -> None:
     """Send notification when subscription is renewed."""
     try:
@@ -215,7 +215,7 @@ async def on_subscription_renewed(event_data: dict[str, Any]) -> None:
 
 
 # Dunning Event Listeners
-@subscribe("dunning.reminder.sent")
+@subscribe("dunning.reminder.sent")  # type: ignore[misc]
 async def on_dunning_reminder(event_data: dict[str, Any]) -> None:
     """Send notification for dunning reminder."""
     try:
@@ -254,7 +254,7 @@ async def on_dunning_reminder(event_data: dict[str, Any]) -> None:
         logger.error("Failed to send dunning reminder notification", error=str(e))
 
 
-@subscribe("dunning.suspension_warning")
+@subscribe("dunning.suspension_warning")  # type: ignore[misc]
 async def on_dunning_suspension_warning(event_data: dict[str, Any]) -> None:
     """Send notification for suspension warning."""
     try:
@@ -293,7 +293,7 @@ async def on_dunning_suspension_warning(event_data: dict[str, Any]) -> None:
 
 
 # Ticketing Event Listeners
-@subscribe("ticket.created")
+@subscribe("ticket.created")  # type: ignore[misc]
 async def on_ticket_created(event_data: dict[str, Any]) -> None:
     """Send notification when ticket is created."""
     try:
@@ -304,7 +304,7 @@ async def on_ticket_created(event_data: dict[str, Any]) -> None:
             customer_id = event_data["payload"].get("customer_id")
             ticket_number = event_data["payload"]["ticket_number"]
             subject = event_data["payload"]["subject"]
-            created_by_id = event_data["payload"].get("created_by_id")
+            event_data["payload"].get("created_by_id")
 
             if customer_id:
                 stmt = select(Customer).where(
@@ -332,7 +332,7 @@ async def on_ticket_created(event_data: dict[str, Any]) -> None:
         logger.error("Failed to send ticket created notification", error=str(e))
 
 
-@subscribe("ticket.assigned")
+@subscribe("ticket.assigned")  # type: ignore[misc]
 async def on_ticket_assigned(event_data: dict[str, Any]) -> None:
     """Send notification when ticket is assigned to a user."""
     try:
@@ -363,7 +363,7 @@ async def on_ticket_assigned(event_data: dict[str, Any]) -> None:
         logger.error("Failed to send ticket assigned notification", error=str(e))
 
 
-@subscribe("ticket.resolved")
+@subscribe("ticket.resolved")  # type: ignore[misc]
 async def on_ticket_resolved(event_data: dict[str, Any]) -> None:
     """Send notification when ticket is resolved."""
     try:

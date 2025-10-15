@@ -144,9 +144,7 @@ class TestFeatureFlagDecorator:
             return "sync_result"
 
         # Mock is_enabled to return True
-        with patch(
-            "dotmac.platform.feature_flags.core.is_enabled", return_value=True
-        ) as mock_enabled:
+        with patch("dotmac.platform.feature_flags.core.is_enabled", return_value=True):
             # The decorator creates an event loop for sync functions
             with patch("asyncio.get_event_loop") as mock_loop:
                 mock_loop.return_value.run_until_complete.return_value = True
@@ -221,7 +219,7 @@ class TestFeatureFlagDecorator:
 
         context = {"user_id": "456", "role": "admin"}
 
-        with patch("dotmac.platform.feature_flags.core.is_enabled") as mock_enabled:
+        with patch("dotmac.platform.feature_flags.core.is_enabled"):
             with patch("asyncio.get_event_loop") as mock_loop:
                 mock_loop.return_value.run_until_complete.return_value = True
 

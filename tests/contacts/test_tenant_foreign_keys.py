@@ -26,7 +26,7 @@ pytestmark = [
     ),
 ]
 
-from dotmac.platform.contacts.models import (
+from dotmac.platform.contacts.models import (  # noqa: E402
     Contact,
     ContactFieldDefinition,
     ContactFieldType,
@@ -34,7 +34,7 @@ from dotmac.platform.contacts.models import (
     ContactStage,
     ContactStatus,
 )
-from dotmac.platform.tenant.models import Tenant
+from dotmac.platform.tenant.models import Tenant  # noqa: E402
 
 
 @pytest.mark.asyncio

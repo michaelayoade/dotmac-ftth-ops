@@ -8,7 +8,17 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/components/ui/use-toast"
 import { Search, Filter } from "lucide-react"
-import { platformAdminService, type CrossTenantSearchResultItem } from "@/lib/services/platform-admin-service"
+import { platformAdminService } from "@/lib/services/platform-admin-service"
+
+// Type definition for search results
+interface CrossTenantSearchResultItem {
+  id: string
+  type: string
+  tenantId: string
+  resourceId?: string
+  score?: number
+  data: Record<string, unknown>
+}
 
 export function CrossTenantSearch() {
   const [query, setQuery] = useState("")
@@ -35,8 +45,21 @@ export function CrossTenantSearch() {
         resource_type: resourceType === "all" ? null : resourceType,
         limit: 50,
       })
-      setResults(data.results || [])
-      setTotalResults(data.total || 0)
+      const mappedResults: CrossTenantSearchResultItem[] = (data.results ?? []).map((item) => ({
+        id: String(item.id ?? crypto.randomUUID()),
+        type: String(item.type ?? item.resource_type ?? "unknown"),
+        tenantId: String(item.tenant_id ?? item.tenantId ?? "n/a"),
+        resourceId: item.resource_id ? String(item.resource_id) : undefined,
+        score: typeof item.score === "number" ? item.score : undefined,
+        data:
+          typeof item.data === "object" && item.data !== null
+            ? (item.data as Record<string, unknown>)
+            : (item as Record<string, unknown>),
+      }))
+      setResults(mappedResults)
+      setTotalResults(
+        typeof data.total === "number" ? data.total : mappedResults.length
+      )
 
       if ((data.total ?? 0) === 0) {
         toast({
@@ -127,8 +150,18 @@ export function CrossTenantSearch() {
                       <div className="flex items-center gap-2 mb-2">
                         <Badge>{result.type}</Badge>
                         <Badge variant="outline" className="font-mono text-xs">
-                          {result.tenant_id}
+                          {result.tenantId}
                         </Badge>
+                        {result.resourceId && (
+                          <Badge variant="secondary" className="font-mono text-xs">
+                            {result.resourceId}
+                          </Badge>
+                        )}
+                        {typeof result.score === "number" && (
+                          <Badge variant="outline" className="text-xs">
+                            score: {result.score.toFixed(2)}
+                          </Badge>
+                        )}
                       </div>
                       <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-32">
                         {JSON.stringify(result.data, null, 2)}

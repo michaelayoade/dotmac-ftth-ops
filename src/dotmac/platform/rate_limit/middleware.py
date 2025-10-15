@@ -4,8 +4,6 @@ Rate Limiting Middleware.
 FastAPI middleware for automatic rate limiting.
 """
 
-from typing import Callable
-
 import structlog
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
@@ -20,9 +18,7 @@ logger = structlog.get_logger(__name__)
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Middleware to enforce rate limiting on all requests."""
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """Process request with rate limiting."""
         # Skip rate limiting for health/metrics endpoints
         if request.url.path in ["/health", "/ready", "/metrics"]:

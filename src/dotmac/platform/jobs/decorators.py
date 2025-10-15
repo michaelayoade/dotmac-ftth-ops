@@ -8,7 +8,7 @@ import asyncio
 import functools
 from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import Any, TypedDict, TypeVar
+from typing import Any, TypedDict, TypeVar, cast
 from uuid import uuid4
 
 import structlog
@@ -17,7 +17,7 @@ from dotmac.platform.jobs.models import JobPriority, JobStatus
 
 logger = structlog.get_logger(__name__)
 
-T = TypeVar("T")
+FuncType = TypeVar("FuncType", bound=Callable[..., Any])
 
 
 class ScheduledJobConfig(TypedDict):
@@ -38,7 +38,7 @@ def background_job(
     retry_delay_seconds: int = 60,
     timeout_seconds: int | None = None,
     track_progress: bool = True,
-) -> Callable:
+) -> Callable[..., Any]:
     """
     Decorator to run a function as a background job.
 
@@ -60,7 +60,7 @@ def background_job(
         Decorated function
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
         async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             # Extract tenant_id and user_id from kwargs
@@ -176,7 +176,7 @@ def scheduled_job(
     priority: JobPriority = JobPriority.NORMAL,
     max_retries: int = 3,
     max_concurrent_runs: int = 1,
-) -> Callable:
+) -> Callable[[FuncType], FuncType]:
     """
     Decorator to define a scheduled recurring job.
 
@@ -209,7 +209,7 @@ def scheduled_job(
     if cron and interval_seconds:
         raise ValueError("Cannot specify both cron and interval_seconds")
 
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+    def decorator(func: FuncType) -> FuncType:
         # Store scheduling metadata on function
         config: ScheduledJobConfig = {
             "cron_expression": cron,
@@ -221,7 +221,7 @@ def scheduled_job(
             "max_concurrent_runs": max_concurrent_runs,
             "job_type": func.__name__,
         }
-        setattr(func, "_scheduled_job_config", config)
+        cast(Any, func)._scheduled_job_config = config
 
         logger.info(
             "scheduled_job.registered",
@@ -241,7 +241,7 @@ def job_chain(
     execution_mode: str = "sequential",
     stop_on_failure: bool = True,
     timeout_seconds: int | None = None,
-) -> Callable:
+) -> Callable[..., Any]:
     """
     Decorator to define a job chain (sequential or parallel job execution).
 
@@ -266,7 +266,7 @@ def job_chain(
         Decorated function that creates and executes a job chain
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
         async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             tenant_id = kwargs.get("tenant_id")
@@ -329,7 +329,7 @@ def retry_on_failure(
     max_retries: int = 3,
     retry_delay_seconds: int = 60,
     exponential_backoff: bool = False,
-) -> Callable:
+) -> Callable[..., Any]:
     """
     Decorator to automatically retry a function on failure.
 
@@ -348,7 +348,7 @@ def retry_on_failure(
         Decorated function with retry logic
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
         async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             last_exception = None

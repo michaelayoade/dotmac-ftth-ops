@@ -48,7 +48,7 @@ class BilledStatus(str, Enum):
     EXCLUDED = "excluded"  # Excluded from billing (free tier, etc)
 
 
-class UsageRecord(Base, TimestampMixin, TenantMixin, AuditMixin):
+class UsageRecord(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]  # Mixin has type Any
     """
     Individual usage record for metered billing.
 
@@ -194,7 +194,7 @@ class UsageRecord(Base, TimestampMixin, TenantMixin, AuditMixin):
         )
 
 
-class UsageAggregate(Base, TimestampMixin, TenantMixin):
+class UsageAggregate(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]  # Mixin has type Any
     """
     Pre-aggregated usage statistics for reporting and dashboards.
 

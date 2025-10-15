@@ -39,7 +39,7 @@ class DunningExecutionStatus(str, Enum):
     CANCELED = "canceled"
 
 
-class DunningCampaign(Base, TimestampMixin, TenantMixin, AuditMixin):
+class DunningCampaign(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]  # Mixin has type Any
     """
     Dunning campaign configuration defining automated collection workflows.
 
@@ -166,7 +166,7 @@ class DunningCampaign(Base, TimestampMixin, TenantMixin, AuditMixin):
     )
 
 
-class DunningExecution(Base, TimestampMixin, TenantMixin, AuditMixin):
+class DunningExecution(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]  # Mixin has type Any
     """
     Individual execution of a dunning campaign for a specific subscription.
 
@@ -310,7 +310,7 @@ class DunningExecution(Base, TimestampMixin, TenantMixin, AuditMixin):
     )
 
 
-class DunningActionLog(Base, TimestampMixin, TenantMixin):
+class DunningActionLog(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]  # Mixin has type Any
     """
     Detailed log of individual dunning actions executed.
 

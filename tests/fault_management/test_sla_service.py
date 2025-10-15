@@ -3,7 +3,7 @@ Tests for SLA Monitoring Service
 """
 
 from datetime import UTC, datetime, timedelta
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from sqlalchemy import select
@@ -171,9 +171,7 @@ class TestSLAInstanceManagement:
         """Test filtering SLA instances by customer"""
         service = SLAMonitoringService(session, test_tenant)
 
-        instances = await service.list_instances(
-            customer_id=sample_sla_instance.customer_id
-        )
+        instances = await service.list_instances(customer_id=sample_sla_instance.customer_id)
 
         assert len(instances) >= 1
         assert all(i.customer_id == sample_sla_instance.customer_id for i in instances)
@@ -257,7 +255,7 @@ class TestDowntimeTracking:
         """Test that downtime recording creates SLADowntime record"""
         service = SLAMonitoringService(session, test_tenant)
 
-        start_time = datetime.now(UTC)
+        datetime.now(UTC)
         await service.record_downtime(
             sample_sla_instance.id,
             downtime_minutes=45,
@@ -266,9 +264,7 @@ class TestDowntimeTracking:
 
         # Verify SLADowntime record exists
         result = await session.execute(
-            select(SLADowntime).where(
-                SLADowntime.sla_instance_id == sample_sla_instance.id
-            )
+            select(SLADowntime).where(SLADowntime.sla_instance_id == sample_sla_instance.id)
         )
         downtime_records = list(result.scalars().all())
 
@@ -441,9 +437,7 @@ class TestBreachDetection:
 
         # Should have no breaches
         result = await session.execute(
-            select(SLABreach).where(
-                SLABreach.sla_instance_id == sample_sla_instance.id
-            )
+            select(SLABreach).where(SLABreach.sla_instance_id == sample_sla_instance.id)
         )
         breaches = list(result.scalars().all())
         assert len(breaches) == 0
@@ -602,15 +596,11 @@ class TestComplianceReporting:
         """Test generating compliance report for specific customer"""
         service = SLAMonitoringService(session, test_tenant)
 
-        report = await service.get_compliance_report(
-            customer_id=sample_sla_instance.customer_id
-        )
+        report = await service.get_compliance_report(customer_id=sample_sla_instance.customer_id)
 
         assert report.total_instances >= 1
         assert len(report.instances) >= 1
-        assert all(
-            i.customer_id == sample_sla_instance.customer_id for i in report.instances
-        )
+        assert all(i.customer_id == sample_sla_instance.customer_id for i in report.instances)
 
     @pytest.mark.asyncio
     async def test_list_breaches(

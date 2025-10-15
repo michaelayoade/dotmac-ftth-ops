@@ -134,7 +134,7 @@ class TestBaseModel:
         model = TestModel(name="test", value=42)
 
         # Assignment should trigger validation
-        with pytest.raises(Exception):  # Pydantic will raise validation error
+        with pytest.raises((ValueError, TypeError)):  # Pydantic will raise validation error
             model.value = "not an int"
 
     def test_base_model_dict_export(self):

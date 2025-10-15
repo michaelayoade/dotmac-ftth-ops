@@ -4,12 +4,9 @@ Ansible Integration with Service Lifecycle.
 Connects Ansible automation workflows with service lifecycle operations.
 """
 
-from datetime import UTC, datetime
 from typing import Any
-from uuid import UUID
 
 import structlog
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.ansible.client import AWXClient
@@ -93,9 +90,7 @@ class AnsibleLifecycleIntegration:
 
         # Launch AWX job
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             # Create lifecycle event
             await self._create_lifecycle_event(
@@ -178,14 +173,10 @@ class AnsibleLifecycleIntegration:
             api_token=self.api_token,
         )
 
-        extra_vars["playbook_path"] = PlaybookLibrary.get_playbook_path(
-            PlaybookType.ROUTER_CONFIG
-        )
+        extra_vars["playbook_path"] = PlaybookLibrary.get_playbook_path(PlaybookType.ROUTER_CONFIG)
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             await self._create_lifecycle_event(
                 service_instance=service_instance,
@@ -251,14 +242,10 @@ class AnsibleLifecycleIntegration:
             api_token=self.api_token,
         )
 
-        extra_vars["playbook_path"] = PlaybookLibrary.get_playbook_path(
-            PlaybookType.ONT_PROVISION
-        )
+        extra_vars["playbook_path"] = PlaybookLibrary.get_playbook_path(PlaybookType.ONT_PROVISION)
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             await self._create_lifecycle_event(
                 service_instance=service_instance,
@@ -327,9 +314,7 @@ class AnsibleLifecycleIntegration:
         )
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             await self._create_lifecycle_event(
                 service_instance=service_instance,
@@ -399,9 +384,7 @@ class AnsibleLifecycleIntegration:
         )
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             await self._create_lifecycle_event(
                 service_instance=service_instance,

@@ -165,7 +165,7 @@ async def demo_event_query():
         payload={"message": "First event"},
     )
 
-    event2 = await event_bus.publish(
+    await event_bus.publish(
         event_type="test.event",
         payload={"message": "Second event"},
     )

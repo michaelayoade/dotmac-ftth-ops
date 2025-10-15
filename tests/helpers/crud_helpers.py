@@ -339,9 +339,9 @@ async def list_entities_test_helper(
     entities, total = await method(**kwargs)
 
     # Assertions
-    assert len(entities) == len(sample_entities), (
-        f"Expected {len(sample_entities)} entities, got {len(entities)}"
-    )
+    assert len(entities) == len(
+        sample_entities
+    ), f"Expected {len(sample_entities)} entities, got {len(entities)}"
     assert total == expected_total, f"Expected total {expected_total}, got {total}"
 
     return entities, total

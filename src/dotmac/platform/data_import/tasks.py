@@ -36,7 +36,7 @@ def get_async_session() -> AsyncSession:
     return async_session_maker()
 
 
-@app.task(bind=True, max_retries=3)
+@app.task(bind=True, max_retries=3)  # type: ignore[misc]
 def process_import_job(
     self: Task,
     job_id: str,
@@ -97,7 +97,7 @@ def process_import_job(
         raise self.retry(exc=e, countdown=60)
 
 
-@app.task(bind=True)
+@app.task(bind=True)  # type: ignore[misc]
 def process_import_chunk(
     self: Task,
     job_id: str,
@@ -557,8 +557,8 @@ async def _process_subscription_import(
        - Optional fields: status, billing_cycle, start_date, end_date, trial_end_date, quantity
 
     2. Create SubscriptionMapper with methods:
-       - validate_import_row(row_data: dict, row_number: int) -> SubscriptionImportSchema | dict
-       - from_import_to_model(schema: SubscriptionImportSchema, tenant_id: str) -> dict
+       - validate_import_row(row_data: dict[str, Any], row_number: int) -> SubscriptionImportSchema | dict
+       - from_import_to_model(schema: SubscriptionImportSchema, tenant_id: str) -> dict[str, Any]
 
     3. Update _process_data_chunk() to handle ImportJobType.SUBSCRIPTIONS case:
        ```python
@@ -614,8 +614,8 @@ async def _process_payment_import(
        - Optional fields: invoice_id, status, payment_date, transaction_id, reference
 
     2. Create PaymentMapper with methods:
-       - validate_import_row(row_data: dict, row_number: int) -> PaymentImportSchema | dict
-       - from_import_to_model(schema: PaymentImportSchema, tenant_id: str) -> dict
+       - validate_import_row(row_data: dict[str, Any], row_number: int) -> PaymentImportSchema | dict
+       - from_import_to_model(schema: PaymentImportSchema, tenant_id: str) -> dict[str, Any]
 
     3. Update _process_data_chunk() to handle ImportJobType.PAYMENTS case:
        ```python
@@ -669,8 +669,8 @@ async def _process_chunk_data(
         return result
 
 
-@app.task
-@idempotent_task(ttl=300)
+@app.task  # type: ignore[misc]  # Celery decorator is untyped
+@idempotent_task(ttl=300)  # type: ignore[misc]  # Custom decorator is untyped
 def check_import_health() -> dict[str, Any]:
     """
     Periodic health check for import system.

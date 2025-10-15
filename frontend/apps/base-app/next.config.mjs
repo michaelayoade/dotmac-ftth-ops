@@ -5,6 +5,7 @@ const require = createRequire(import.meta.url);
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  transpilePackages: ['react-window'],
   // Server Actions are enabled by default in Next.js 14+
   experimental: {
     instrumentationHook: true,
@@ -53,6 +54,15 @@ const nextConfig = {
     } catch (error) {
       // ignore alias errors in environments where packages are not yet installed
     }
+
+    // Force react-window to use ES module build
+    config.resolve.alias['react-window'] = require.resolve('react-window');
+    config.resolve.extensionAlias = {
+      '.js': ['.js', '.ts', '.tsx'],
+      '.mjs': ['.mjs', '.mts'],
+      '.cjs': ['.cjs', '.cts'],
+    };
+
     return config;
   },
 };

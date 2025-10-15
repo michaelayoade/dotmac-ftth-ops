@@ -620,7 +620,7 @@ class TestOverageCharges:
             period_end=datetime.now(UTC),
             source_system="test",
         )
-        usage_record = await usage_service.create_usage_record(
+        await usage_service.create_usage_record(
             tenant_id=test_tenant_id,
             data=data,
         )

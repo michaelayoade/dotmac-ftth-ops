@@ -163,10 +163,7 @@ export function useCreateCustomer() {
           context.previousCustomers
         );
       }
-      handleError(error, {
-        showToast: true,
-        toastMessage: 'Failed to create customer',
-      });
+      handleError(error, 'Failed to create customer', true);
     },
     onSuccess: (data, variables, context) => {
       // Replace optimistic customer with real one
@@ -243,10 +240,7 @@ export function useUpdateCustomer() {
           );
         }
       }
-      handleError(error, {
-        showToast: true,
-        toastMessage: 'Failed to update customer',
-      });
+      handleError(error, 'Failed to update customer', true);
     },
     onSuccess: (data) => {
       toast({ title: 'Success', description: 'Customer updated successfully' });
@@ -297,10 +291,7 @@ export function useDeleteCustomer() {
           context.previousCustomers
         );
       }
-      handleError(error, {
-        showToast: true,
-        toastMessage: 'Failed to delete customer',
-      });
+      handleError(error, 'Failed to delete customer', true);
     },
     onSuccess: (data, customerId) => {
       // Remove from cache
@@ -386,10 +377,7 @@ export function useAddCustomerNote(customerId: string) {
           context.previousNotes
         );
       }
-      handleError(error, {
-        showToast: true,
-        toastMessage: 'Failed to add note',
-      });
+      handleError(error, 'Failed to add note', true);
     },
     onSuccess: (data, note, context) => {
       // Replace optimistic note with real one

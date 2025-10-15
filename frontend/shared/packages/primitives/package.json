@@ -13,11 +13,11 @@
     }
   },
   "scripts": {
-    "prebuild": "tsc -p tsconfig.json --emitDeclarationOnly",
+    "prebuild": "echo 'Type checking handled by tsup'",
     "build": "tsup",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "lint": "biome check src/",
-    "type-check": "echo 'Type checking disabled for experimental package'",
+    "type-check": "tsc -p tsconfig.json --noEmit",
     "clean": "rm -rf dist",
     "test": "jest",
     "lint:fix": "biome check src/ --write",
@@ -46,6 +46,7 @@
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.363.0",
     "react-hook-form": "^7.51.1",
+    "react-window": "^2.2.1",
     "recharts": "^2.12.2",
     "tailwind-merge": "^2.0.0",
     "zod": "^4.1.3"

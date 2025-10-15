@@ -9,7 +9,8 @@ export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const { branding } = useBranding();
-  const { apiBaseUrl } = useAppConfig();
+  const config = useAppConfig();
+  const apiBaseUrl = config.api.baseUrl;
 
   // Check if user is authenticated via API call (HttpOnly cookies can't be read by JS)
   useEffect(() => {

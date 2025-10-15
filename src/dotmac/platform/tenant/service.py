@@ -16,6 +16,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import attributes
 
+from ..settings import settings
 from .models import (
     Tenant,
     TenantInvitation,
@@ -120,8 +121,10 @@ class TenantService:
                 updated_by=created_by,
             )
 
-            # Set trial period (14 days)
-            tenant.trial_ends_at = datetime.now(UTC) + timedelta(days=14)
+            # Set trial period from settings
+            tenant.trial_ends_at = datetime.now(UTC) + timedelta(
+                days=settings.billing.default_trial_days
+            )
 
             # Set default features based on plan
             tenant.features = self._get_default_features(tenant_data.plan_type)
@@ -562,7 +565,10 @@ class TenantService:
 
     # Feature Management
     async def update_tenant_features(
-        self, tenant_id: str, features: dict[str, bool], updated_by: str | None = None
+        self,
+        tenant_id: str,
+        features: dict[str, bool] | None,
+        updated_by: str | None = None,
     ) -> Tenant:
         """Update tenant feature flags."""
         try:
@@ -592,7 +598,10 @@ class TenantService:
             raise RuntimeError(f"Failed to update tenant features: {str(e)}") from e
 
     async def update_tenant_metadata(
-        self, tenant_id: str, metadata: dict[str, Any], updated_by: str | None = None
+        self,
+        tenant_id: str,
+        metadata: dict[str, Any] | None,
+        updated_by: str | None = None,
     ) -> Tenant:
         """Update tenant metadata."""
         try:

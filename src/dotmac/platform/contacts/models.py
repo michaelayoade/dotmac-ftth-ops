@@ -33,7 +33,7 @@ from dotmac.platform.db import Base
 
 
 # Type that uses JSONB on PostgreSQL and JSON on SQLite
-class JSONBType(TypeDecorator):
+class JSONBType(TypeDecorator[Any]):
     """Custom type that uses JSONB on PostgreSQL and JSON on other databases."""
 
     impl = JSON
@@ -126,7 +126,7 @@ class ContactFieldType(str, Enum):
     JSON = "json"
 
 
-class Contact(Base):
+class Contact(Base):  # type: ignore[misc]
     """
     Core contact entity representing a person or organization
     """
@@ -234,7 +234,8 @@ class Contact(Base):
         "ContactLabelDefinition", secondary=contact_to_labels, back_populates="contacts"
     )
     # New normalized many-to-many relationship via join table
-    customer_links = relationship("CustomerContactLink", back_populates="contact", lazy="dynamic")
+    # Note: Commented to avoid circular import with customer_management module
+    # customer_links = relationship("CustomerContactLink", back_populates="contact", lazy="dynamic")
     # Legacy direct relationship - kept for backward compatibility
     customer = relationship("Customer", foreign_keys=[customer_id], viewonly=True)
     owner = relationship("User", foreign_keys=[owner_id])
@@ -259,7 +260,7 @@ class Contact(Base):
         )
 
 
-class ContactMethod(Base):
+class ContactMethod(Base):  # type: ignore[misc]
     """
     Individual contact method (email, phone, address, etc.)
     """
@@ -327,7 +328,7 @@ class ContactMethod(Base):
         return f"<ContactMethod(type='{self.type}', value='{self.value}', label='{self.label}')>"
 
 
-class ContactLabelDefinition(Base):
+class ContactLabelDefinition(Base):  # type: ignore[misc]
     """
     Tenant-specific label definitions
     """
@@ -387,7 +388,7 @@ class ContactLabelDefinition(Base):
         return f"<ContactLabelDefinition(name='{self.name}', slug='{self.slug}')>"
 
 
-class ContactFieldDefinition(Base):
+class ContactFieldDefinition(Base):  # type: ignore[misc]
     """
     Custom field definitions for contacts
     """
@@ -461,7 +462,7 @@ class ContactFieldDefinition(Base):
         return f"<ContactFieldDefinition(name='{self.name}', field_key='{self.field_key}', type='{self.field_type}')>"
 
 
-class ContactActivity(Base):
+class ContactActivity(Base):  # type: ignore[misc]
     """
     Activity log for contacts (calls, emails, meetings, etc.)
     """

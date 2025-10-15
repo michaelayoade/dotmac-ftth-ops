@@ -42,6 +42,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.0.0",
     "@dotmac/primitives": "workspace:*",
+    "@dotmac/headless": "workspace:*",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.378.0",
     "next": "^14.2.25",
@@ -50,6 +51,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-hook-form": "^7.51.3",
+    "react-window": "^1.8.10",
     "tailwind-merge": "^2.5.5",
     "zod": "^3.22.4"
   },

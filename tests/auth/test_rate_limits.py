@@ -33,7 +33,7 @@ class TestAuthRateLimits:
 
     def test_rate_limit_format(self):
         """Test all rate limits follow the expected format."""
-        for endpoint, limit in AUTH_RATE_LIMITS.items():
+        for _endpoint, limit in AUTH_RATE_LIMITS.items():
             assert "/" in limit  # Should be like "5/minute"
             parts = limit.split("/")
             assert len(parts) == 2

@@ -531,7 +531,7 @@ class TestMeilisearchBackend:
 def test_search_span_without_tracer():
     """Test _search_span when tracer is not available."""
     with patch("dotmac.platform.search.service.search_tracer", None):
-        with _search_span("test.operation", index="test") as span:
+        with _search_span("test.operation", index="test"):
             # Should be nullcontext
             pass
 

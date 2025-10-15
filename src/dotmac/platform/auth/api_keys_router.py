@@ -175,7 +175,7 @@ async def _enhanced_create_api_key(
     return api_key, key_id
 
 
-async def _list_user_api_keys(user_id: str) -> list[dict]:
+async def _list_user_api_keys(user_id: str) -> list[dict[str, Any]]:
     """List all API keys for a user."""
     client = await api_key_service._get_redis()
     keys: list[dict[str, Any]] = []
@@ -198,7 +198,7 @@ async def _list_user_api_keys(user_id: str) -> list[dict]:
     return keys
 
 
-async def _get_api_key_by_id(key_id: str) -> dict | None:
+async def _get_api_key_by_id(key_id: str) -> dict[str, Any] | None:
     """Get API key metadata by ID."""
     client = await api_key_service._get_redis()
 
@@ -541,7 +541,7 @@ async def revoke_api_key(
 @router.get("/scopes/available", response_model=dict)
 async def get_available_scopes(
     current_user: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """Get available API key scopes."""
     # Define available scopes based on your application's permissions
     scopes = {

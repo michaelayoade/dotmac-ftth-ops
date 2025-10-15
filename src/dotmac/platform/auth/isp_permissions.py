@@ -70,7 +70,7 @@ async def ensure_isp_rbac(session: AsyncSession) -> None:
 
     role_cache: dict[str, Role] = {}
 
-    for role_name, permissions in ROLE_PERMISSION_MAP.items():
+    for role_name, _permissions in ROLE_PERMISSION_MAP.items():
         role = await _get_role(session, role_name)
         if not role:
             role = Role(

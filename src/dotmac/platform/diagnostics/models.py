@@ -65,7 +65,7 @@ class DiagnosticSeverity(str, Enum):
     CRITICAL = "critical"
 
 
-class DiagnosticRun(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
+class DiagnosticRun(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """Diagnostic run tracking."""
 
     __tablename__ = "diagnostic_runs"

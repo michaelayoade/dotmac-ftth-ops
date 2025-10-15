@@ -71,7 +71,7 @@ class SecretsMetricsResponse(BaseModel):
 # ============================================================================
 
 
-@cached_result(
+@cached_result(  # type: ignore[misc]  # Untyped decorator
     ttl=SECRETS_STATS_CACHE_TTL,
     key_prefix="secrets:metrics",
     key_params=["period_days", "tenant_id"],

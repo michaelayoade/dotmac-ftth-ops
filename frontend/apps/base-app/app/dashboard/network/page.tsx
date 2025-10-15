@@ -7,7 +7,16 @@ import { useRBAC } from '@/contexts/RBACContext';
 import { useNetboxHealth, useNetboxSites } from '@/hooks/useNetworkInventory';
 import { platformConfig } from '@/lib/config';
 import { NetworkTopologyMap } from '@dotmac/primitives';
-import type { NetworkNode } from '@dotmac/primitives';
+
+// Type definition (matches @dotmac/primitives NetworkNode)
+interface NetworkNode {
+  id: string;
+  type: 'router' | 'switch' | 'server' | 'tower' | 'fiber_node';
+  name: string;
+  coordinates: { lat: number; lng: number };
+  status: 'online' | 'offline' | 'degraded' | 'maintenance';
+  metadata?: Record<string, any>;
+}
 
 export default function NetworkOverviewPage() {
   const { hasPermission } = useRBAC();
@@ -47,14 +56,13 @@ export default function NetworkOverviewPage() {
     .map(site => ({
       id: `site-${site.id}`,
       name: site.name,
-      type: 'fiber_node',
-      position: { lat: site.latitude as number, lng: site.longitude as number },
-      status: netboxHealth?.healthy ? 'online' : 'maintenance',
-      connections: [],
+      type: 'fiber_node' as NetworkNode['type'],
+      coordinates: { lat: site.latitude as number, lng: site.longitude as number },
+      status: (netboxHealth?.healthy ? 'online' : 'maintenance') as NetworkNode['status'],
     }));
 
   const mapCenter = topologyNodes.length
-    ? topologyNodes[0].position
+    ? topologyNodes[0].coordinates
     : { lat: 0, lng: 0 };
 
   return (
@@ -151,6 +159,7 @@ export default function NetworkOverviewPage() {
               height={360}
               variant="admin"
               showLegend
+              onNodeSelect={(node) => console.log('Selected node:', node)}
             />
           ) : (
             <p className="text-sm text-muted-foreground">

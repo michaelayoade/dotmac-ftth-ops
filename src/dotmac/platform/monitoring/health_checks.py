@@ -43,7 +43,7 @@ class ServiceHealth:
     def is_healthy(self) -> bool:
         return self.status == ServiceStatus.HEALTHY
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "status": self.status.value,
@@ -351,7 +351,7 @@ class HealthChecker:
                 # Try to connect to UDP port
                 sock.connect((radius_host, radius_port))
                 auth_reachable = True
-        except (socket.timeout, socket.error, OSError) as e:
+        except (TimeoutError, OSError) as e:
             logger.warning(f"RADIUS auth port unreachable: {e}")
             auth_reachable = False
 

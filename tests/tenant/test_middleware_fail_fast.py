@@ -119,7 +119,7 @@ class TestTenantMiddlewareFailFast:
         mock_call_next = AsyncMock(return_value={"status": "ok"})
 
         # Execute middleware
-        response = await middleware.dispatch(mock_request, mock_call_next)
+        await middleware.dispatch(mock_request, mock_call_next)
 
         # ASSERTION: Request is allowed through
         mock_call_next.assert_called_once()
@@ -174,7 +174,7 @@ class TestTenantMiddlewareFailFast:
         mock_call_next = AsyncMock(return_value={"status": "healthy"})
 
         # Execute middleware
-        response = await middleware.dispatch(mock_request, mock_call_next)
+        await middleware.dispatch(mock_request, mock_call_next)
 
         # ASSERTION: Request is allowed through
         assert mock_call_next.called

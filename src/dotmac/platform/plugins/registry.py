@@ -13,7 +13,7 @@ import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 # from ..secrets.interfaces import SecretsProvider  # Optional dependency
@@ -183,7 +183,7 @@ class PluginRegistry:
             config_schema = provider.get_config_schema()
 
             # Validate schema
-            self._validate_plugin_schema(config_schema)
+            self._validate_plugin_schema(config_schema, provider)
 
             # Store the provider
             plugin_name = config_schema.name
@@ -194,13 +194,17 @@ class PluginRegistry:
         except Exception as e:
             raise PluginRegistryError(f"Failed to register plugin {module_name}: {e}")
 
-    def _validate_plugin_schema(self, schema: PluginConfig) -> None:
+    def _validate_plugin_schema(
+        self, schema: PluginConfig, provider: PluginProvider | None = None
+    ) -> None:
         """Validate a plugin configuration schema."""
         # Check for required provider interface
         expected_base = PROVIDER_TYPE_MAP.get(schema.type.value)
         if expected_base:
-            provider = self._plugins.get(schema.name)
-            if provider and not isinstance(provider, expected_base):
+            provider_obj: object | None = cast(
+                object | None, provider or self._plugins.get(schema.name)
+            )
+            if provider_obj is not None and not isinstance(provider_obj, expected_base):
                 logger.warning(f"Plugin {schema.name} should inherit from {expected_base.__name__}")
 
     async def _load_configurations(self) -> None:

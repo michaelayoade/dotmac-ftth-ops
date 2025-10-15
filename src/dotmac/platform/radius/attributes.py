@@ -668,9 +668,7 @@ class RADIUSAttributeRegistry:
         """List all standard attributes."""
         return [attr.to_dict() for attr in self.standard_attrs.values()]
 
-    def list_vendor_attributes(
-        self, vendor_id: int | None = None
-    ) -> list[dict[str, Any]]:
+    def list_vendor_attributes(self, vendor_id: int | None = None) -> list[dict[str, Any]]:
         """List vendor attributes, optionally filtered by vendor ID."""
         attrs: list[VendorAttribute] = list(self.vendor_attrs.values())
         if vendor_id is not None:
@@ -679,19 +677,11 @@ class RADIUSAttributeRegistry:
 
     def list_check_items(self) -> list[dict[str, Any]]:
         """List attributes that can be used in radcheck."""
-        return [
-            attr.to_dict()
-            for attr in self.standard_attrs.values()
-            if attr.check_item
-        ]
+        return [attr.to_dict() for attr in self.standard_attrs.values() if attr.check_item]
 
     def list_reply_items(self) -> list[dict[str, Any]]:
         """List attributes that can be used in radreply."""
-        return [
-            attr.to_dict()
-            for attr in self.standard_attrs.values()
-            if attr.reply_item
-        ]
+        return [attr.to_dict() for attr in self.standard_attrs.values() if attr.reply_item]
 
 
 # Global registry instance

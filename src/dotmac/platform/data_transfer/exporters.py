@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 import zipfile
 from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import pandas as pd
 from defusedxml import minidom as defused_minidom
@@ -54,7 +54,7 @@ class CSVExporter(BaseExporter):
 
     async def export_to_file(
         self,
-        data: AsyncGenerator[DataBatch, None],
+        data: AsyncGenerator[DataBatch],
         file_path: Path,
     ) -> ProgressInfo:
         """Export data to CSV file."""
@@ -107,7 +107,7 @@ class JSONExporter(BaseExporter):
 
     async def export_to_file(
         self,
-        data: AsyncGenerator[DataBatch, None],
+        data: AsyncGenerator[DataBatch],
         file_path: Path,
     ) -> ProgressInfo:
         """Export data to JSON file."""
@@ -158,7 +158,7 @@ class ExcelExporter(BaseExporter):
 
     async def export_to_file(
         self,
-        data: AsyncGenerator[DataBatch, None],
+        data: AsyncGenerator[DataBatch],
         file_path: Path,
     ) -> ProgressInfo:
         """Export data to Excel file."""
@@ -203,7 +203,7 @@ class XMLExporter(BaseExporter):
 
     async def export_to_file(
         self,
-        data: AsyncGenerator[DataBatch, None],
+        data: AsyncGenerator[DataBatch],
         file_path: Path,
     ) -> ProgressInfo:
         """Export data to XML file."""
@@ -237,7 +237,7 @@ class XMLExporter(BaseExporter):
             self._progress.error_message = str(e)
             raise ExportError(f"Failed to export XML: {e}") from e
 
-    def _dict_to_xml(self, data: dict, parent: ET.Element) -> None:
+    def _dict_to_xml(self, data: dict[str, Any], parent: ET.Element) -> None:
         """Convert dictionary to XML elements."""
         for key, value in data.items():
             if isinstance(value, dict):
@@ -260,7 +260,7 @@ class YAMLExporter(BaseExporter):
 
     async def export_to_file(
         self,
-        data: AsyncGenerator[DataBatch, None],
+        data: AsyncGenerator[DataBatch],
         file_path: Path,
     ) -> ProgressInfo:
         """Export data to YAML file."""
@@ -325,7 +325,7 @@ def create_exporter(
 
 
 async def export_data(
-    data: AsyncGenerator[DataBatch, None],
+    data: AsyncGenerator[DataBatch],
     file_path: str,
     format: DataFormat | None = None,
     config: TransferConfig | None = None,

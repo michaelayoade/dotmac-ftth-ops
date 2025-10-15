@@ -80,7 +80,7 @@ class TestProcessPendingActions:
         ]
 
         # First call raises exception
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             process_pending_dunning_actions_task()
 
         # Second call succeeds (simulating retry)
@@ -264,7 +264,7 @@ class TestExecuteDunningAction:
         ]
 
         # First attempt raises exception
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             execute_dunning_action_task(
                 execution_id=execution_id, action_config=action_config, step_number=1
             )

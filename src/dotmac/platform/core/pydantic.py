@@ -16,7 +16,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, field_serializer
 
 
-class AppBaseModel(BaseModel):
+class AppBaseModel(BaseModel):  # BaseModel resolves to Any in isolation
     """
     Base Pydantic model with sensible serialization defaults.
 

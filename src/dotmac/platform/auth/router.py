@@ -118,7 +118,7 @@ def get_token_from_cookie(request: Request, cookie_name: str) -> str | None:
 # ========================================
 
 
-async def get_auth_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_auth_session() -> AsyncGenerator[AsyncSession]:
     """Adapter to reuse the shared session dependency helper."""
     dependency = get_session_dependency()
 
@@ -136,7 +136,7 @@ async def get_auth_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 # Backwards compatibility: some tests patch this symbol directly
-async def get_async_session() -> AsyncGenerator[AsyncSession, None]:  # pragma: no cover
+async def get_async_session() -> AsyncGenerator[AsyncSession]:  # pragma: no cover
     async for session in get_auth_session():
         yield session
 
@@ -408,7 +408,7 @@ async def _authenticate_and_issue_tokens(
 
 
 @auth_router.post("/login", response_model=TokenResponse)
-@rate_limit("5/minute")  # SECURITY: Prevent brute force attacks
+@rate_limit("5/minute")  # type: ignore[misc]  # SECURITY: Prevent brute force attacks
 async def login(
     login_request: LoginRequest,
     request: Request,
@@ -792,7 +792,7 @@ async def issue_token(
 
 
 @auth_router.post("/register", response_model=TokenResponse)
-@rate_limit("3/minute")  # SECURITY: Prevent mass account creation
+@rate_limit("3/minute")  # type: ignore[misc]  # SECURITY: Prevent mass account creation
 async def register(
     register_request: RegisterRequest,
     request: Request,
@@ -990,7 +990,7 @@ async def register(
 
 
 @auth_router.post("/refresh", response_model=TokenResponse)
-@rate_limit("10/minute")  # SECURITY: Reasonable limit for token refresh
+@rate_limit("10/minute")  # type: ignore[misc]  # SECURITY: Reasonable limit for token refresh
 async def refresh_token(
     request: Request,
     response: Response,
@@ -1079,7 +1079,7 @@ async def refresh_token(
 async def logout(
     request: Request,
     response: Response,
-) -> dict:
+) -> dict[str, Any]:
     """
     Logout user and invalidate session and tokens.
     """
@@ -1152,7 +1152,7 @@ async def logout(
 @auth_router.get("/me/sessions")
 async def list_active_sessions(
     user_info: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """
     List all active sessions for the current user.
 
@@ -1205,7 +1205,7 @@ async def revoke_session(
     request: Request,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Revoke a specific session by ID.
 
@@ -1280,7 +1280,7 @@ async def revoke_all_sessions(
     request: Request,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Revoke all sessions except the current one.
 
@@ -1353,7 +1353,7 @@ async def revoke_all_sessions(
 @auth_router.get("/verify")
 async def verify_token(
     user_info: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """
     Verify if the current token is valid from Bearer token or HttpOnly cookie.
     """
@@ -1367,11 +1367,11 @@ async def verify_token(
 
 
 @auth_router.post("/password-reset")
-@rate_limit("3/minute")  # SECURITY: Prevent abuse of password reset
+@rate_limit("3/minute")  # type: ignore[misc]  # SECURITY: Prevent abuse of password reset
 async def request_password_reset(
     request: PasswordResetRequest,
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Request a password reset token to be sent via email.
     """
@@ -1400,7 +1400,7 @@ async def confirm_password_reset(
     request: PasswordResetConfirm,
     response: Response,
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Confirm password reset with token and set new password.
     """
@@ -1588,7 +1588,7 @@ class ChangePasswordRequest(BaseModel):
 async def get_current_user_endpoint(
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Get current user information from Bearer token or HttpOnly cookie.
     """
@@ -1644,7 +1644,7 @@ async def get_current_user_endpoint(
 
 
 async def _validate_username_email_conflicts(
-    update_data: dict,
+    update_data: dict[str, Any],
     user: User,
     user_service: UserService,
 ) -> None:
@@ -1666,7 +1666,7 @@ async def _validate_username_email_conflicts(
             )
 
 
-def _prepare_name_fields(update_data: dict, user: User) -> None:
+def _prepare_name_fields(update_data: dict[str, Any], user: User) -> None:
     """Parse first_name and last_name into full_name."""
     if "first_name" in update_data or "last_name" in update_data:
         first_name = update_data.get("first_name", getattr(user, "first_name", ""))
@@ -1674,7 +1674,7 @@ def _prepare_name_fields(update_data: dict, user: User) -> None:
         update_data["full_name"] = f"{first_name} {last_name}".strip()
 
 
-def _collect_profile_changes(update_data: dict, user: User) -> list:
+def _collect_profile_changes(update_data: dict[str, Any], user: User) -> list[dict[str, Any]]:
     """Collect changes for logging by comparing old and new values."""
     changes_to_log = []
     for field, new_value in update_data.items():
@@ -1693,7 +1693,7 @@ def _collect_profile_changes(update_data: dict, user: User) -> list:
 
 
 async def _log_profile_change_history(
-    changes: list,
+    changes: list[dict[str, Any]],
     user: User,
     request: Request,
     session: AsyncSession,
@@ -1733,7 +1733,7 @@ async def _log_profile_change_history(
             )
 
 
-def _build_profile_response(user: User) -> dict:
+def _build_profile_response(user: User) -> dict[str, Any]:
     """Build profile response dictionary from user object."""
     return {
         "id": str(user.id),
@@ -1760,7 +1760,7 @@ async def update_current_user_profile(
     request: Request,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Update current user's profile information.
     """
@@ -1831,7 +1831,7 @@ async def upload_avatar(
     avatar: UploadFile = File(...),
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Upload user avatar image.
 
@@ -1955,7 +1955,7 @@ async def upload_avatar(
 async def delete_avatar(
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Delete user's avatar.
 
@@ -2064,7 +2064,7 @@ async def send_verification_email(
     email_request: SendVerificationEmailRequest,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Send email verification link to the specified email address.
 
@@ -2111,7 +2111,14 @@ async def send_verification_email(
         # Send verification email
         try:
             _email_service = get_auth_email_service()
-            verification_url = f"{getattr(settings, 'frontend_url', 'http://localhost:3000')}/verify-email?token={token}"
+            # Use centralized frontend URL (Phase 2 implementation)
+            try:
+                frontend_url = settings.external_services.frontend_url
+            except AttributeError:
+                # Fallback for backwards compatibility
+                frontend_url = getattr(settings, "frontend_url", "http://localhost:3000")
+
+            verification_url = f"{frontend_url}/verify-email?token={token}"
 
             # Send verification email using communications service
             user_name = user.username or user.email
@@ -2177,7 +2184,7 @@ async def confirm_email_verification(
     confirm_request: ConfirmEmailRequest,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Confirm email verification using the token sent via email.
 
@@ -2277,7 +2284,7 @@ async def resend_verification_email(
     email_request: SendVerificationEmailRequest,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Resend email verification link.
 
@@ -2320,7 +2327,7 @@ async def change_password(
     password_change: ChangePasswordRequest,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Change current user's password.
     """
@@ -2526,7 +2533,7 @@ async def verify_2fa_setup(
     request: Verify2FARequest,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Verify 2FA token and complete 2FA setup.
 
@@ -2605,7 +2612,7 @@ async def disable_2fa(
     request: Disable2FARequest,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Disable two-factor authentication for the current user.
 
@@ -2702,7 +2709,7 @@ async def regenerate_backup_codes(
     regenerate_request: RegenerateBackupCodesRequest,
     current_user: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Regenerate backup codes for MFA.
 
@@ -2803,7 +2810,7 @@ async def regenerate_backup_codes(
 async def get_auth_metrics(
     session: AsyncSession = Depends(get_auth_session),
     current_user: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """
     Get authentication metrics including failed login attempts.
 
@@ -2865,7 +2872,7 @@ async def get_auth_metrics(
 @auth_router.get("/sessions")
 async def list_user_sessions(
     user_info: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """
     List all active sessions for the current user.
 
@@ -2907,10 +2914,10 @@ async def list_user_sessions(
 
 @auth_router.post("/verify-phone/request")
 async def request_phone_verification(
-    phone_request: dict,
+    phone_request: dict[str, Any],
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Request phone number verification code.
     """
@@ -3062,10 +3069,10 @@ async def request_phone_verification(
 
 @auth_router.post("/verify-phone/confirm")
 async def confirm_phone_verification(
-    verify_request: dict,
+    verify_request: dict[str, Any],
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Confirm phone number with verification code.
     """
@@ -3133,7 +3140,7 @@ async def confirm_phone_verification(
 async def setup_2fa(
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Initialize 2FA setup and return QR code data.
     """

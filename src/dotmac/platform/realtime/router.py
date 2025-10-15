@@ -5,12 +5,10 @@ FastAPI endpoints for SSE streams and WebSocket connections.
 """
 
 from fastapi import APIRouter, Depends, WebSocket
-from redis.asyncio import Redis
 from sse_starlette.sse import EventSourceResponse
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.redis_client import get_redis_client
 from dotmac.platform.realtime.sse import (
     create_alert_stream,
     create_onu_status_stream,
@@ -18,18 +16,14 @@ from dotmac.platform.realtime.sse import (
     create_subscriber_stream,
     create_ticket_stream,
 )
-from dotmac.platform.realtime.websocket import (
-    handle_campaign_ws,
-    handle_job_ws,
-    handle_sessions_ws,
-)
 from dotmac.platform.realtime.websocket_authenticated import (
     handle_campaign_ws_authenticated,
     handle_job_ws_authenticated,
     handle_sessions_ws_authenticated,
 )
+from dotmac.platform.redis_client import RedisClientType, get_redis_client
 
-router = APIRouter(prefix="/api/v1/realtime", tags=["realtime"])
+router = APIRouter(prefix="/api/v1/realtime", tags=["Real-Time"])
 
 
 # =============================================================================
@@ -48,7 +42,7 @@ router = APIRouter(prefix="/api/v1/realtime", tags=["realtime"])
     description="Server-Sent Events stream for real-time ONU status changes",
 )
 async def stream_onu_status(
-    redis: Redis = Depends(get_redis_client),
+    redis: RedisClientType = Depends(get_redis_client),
     current_user: UserInfo = Depends(get_current_user),
 ) -> EventSourceResponse:
     """
@@ -71,7 +65,7 @@ async def stream_onu_status(
     description="Server-Sent Events stream for network and system alerts",
 )
 async def stream_alerts(
-    redis: Redis = Depends(get_redis_client),
+    redis: RedisClientType = Depends(get_redis_client),
     current_user: UserInfo = Depends(get_current_user),
 ) -> EventSourceResponse:
     """
@@ -94,7 +88,7 @@ async def stream_alerts(
     description="Server-Sent Events stream for ticket lifecycle events",
 )
 async def stream_tickets(
-    redis: Redis = Depends(get_redis_client),
+    redis: RedisClientType = Depends(get_redis_client),
     current_user: UserInfo = Depends(get_current_user),
 ) -> EventSourceResponse:
     """
@@ -118,7 +112,7 @@ async def stream_tickets(
     description="Server-Sent Events stream for subscriber lifecycle events",
 )
 async def stream_subscribers(
-    redis: Redis = Depends(get_redis_client),
+    redis: RedisClientType = Depends(get_redis_client),
     current_user: UserInfo = Depends(get_current_user),
 ) -> EventSourceResponse:
     """
@@ -142,7 +136,7 @@ async def stream_subscribers(
     description="Server-Sent Events stream for real-time RADIUS session tracking",
 )
 async def stream_radius_sessions(
-    redis: Redis = Depends(get_redis_client),
+    redis: RedisClientType = Depends(get_redis_client),
     current_user: UserInfo = Depends(get_current_user),
 ) -> EventSourceResponse:
     """
@@ -183,7 +177,7 @@ async def stream_radius_sessions(
 @router.websocket("/ws/sessions")
 async def websocket_sessions(
     websocket: WebSocket,
-    redis: Redis = Depends(get_redis_client),
+    redis: RedisClientType = Depends(get_redis_client),
 ) -> None:
     """
     Authenticated WebSocket endpoint for RADIUS session updates.
@@ -215,7 +209,7 @@ async def websocket_sessions(
 async def websocket_job_progress(
     websocket: WebSocket,
     job_id: str,
-    redis: Redis = Depends(get_redis_client),
+    redis: RedisClientType = Depends(get_redis_client),
 ) -> None:
     """
     Authenticated WebSocket endpoint for job progress monitoring.
@@ -256,7 +250,7 @@ async def websocket_job_progress(
 async def websocket_campaign_progress(
     websocket: WebSocket,
     campaign_id: str,
-    redis: Redis = Depends(get_redis_client),
+    redis: RedisClientType = Depends(get_redis_client),
 ) -> None:
     """
     Authenticated WebSocket endpoint for firmware campaign monitoring.

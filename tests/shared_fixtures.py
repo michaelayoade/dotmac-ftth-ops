@@ -29,14 +29,14 @@ except ImportError:
     HAS_USER_INFO = False
 
 try:
-    from dotmac.platform.user_management.models import CreateUserRequest, UpdateUserRequest, User
+    from dotmac.platform.user_management.models import User
 
     HAS_USER_MODELS = True
 except ImportError:
     HAS_USER_MODELS = False
 
 try:
-    from dotmac.platform.customer_management.models import Customer, CustomerCreate, CustomerUpdate
+    from dotmac.platform.customer_management.models import Customer, CustomerCreate
 
     HAS_CUSTOMER_MODELS = True
 except ImportError:

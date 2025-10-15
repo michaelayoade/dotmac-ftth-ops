@@ -6,14 +6,14 @@ Request and response schemas for VOLTHA PON management.
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # ============================================================================
 # Device Schemas
 # ============================================================================
 
 
-class DeviceType(BaseModel):
+class DeviceType(BaseModel):  # BaseModel resolves to Any in isolation
     """Device type information"""
 
     id: str
@@ -21,10 +21,10 @@ class DeviceType(BaseModel):
     model: str | None = None
     adapter: str | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class Port(BaseModel):
+class Port(BaseModel):  # BaseModel resolves to Any in isolation
     """Device port information"""
 
     port_no: int
@@ -33,12 +33,12 @@ class Port(BaseModel):
     admin_state: str | None = None
     oper_status: str | None = None
     device_id: str | None = None
-    peers: list[dict[str, Any]] = Field(default_factory=list)
+    peers: list[dict[str, Any]] = Field(default_factory=lambda: [])
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class Device(BaseModel):
+class Device(BaseModel):  # BaseModel resolves to Any in isolation
     """Physical device (ONU)"""
 
     id: str
@@ -58,21 +58,25 @@ class Device(BaseModel):
     connect_status: str | None = None
     reason: str | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class DeviceListResponse(BaseModel):
+class DeviceListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Device list response"""
+
+    model_config = ConfigDict()
 
     devices: list[Device]
     total: int
 
 
-class DeviceDetailResponse(BaseModel):
+class DeviceDetailResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Device detail response"""
 
+    model_config = ConfigDict()
+
     device: Device
-    ports: list[Port] = Field(default_factory=list)
+    ports: list[Port] = Field(default_factory=lambda: [])
 
 
 # ============================================================================
@@ -80,7 +84,7 @@ class DeviceDetailResponse(BaseModel):
 # ============================================================================
 
 
-class LogicalPort(BaseModel):
+class LogicalPort(BaseModel):  # BaseModel resolves to Any in isolation
     """Logical port information"""
 
     id: str
@@ -88,10 +92,10 @@ class LogicalPort(BaseModel):
     device_id: str | None = None
     device_port_no: int | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class LogicalDevice(BaseModel):
+class LogicalDevice(BaseModel):  # BaseModel resolves to Any in isolation
     """Logical device (OLT)"""
 
     id: str
@@ -100,22 +104,26 @@ class LogicalDevice(BaseModel):
     switch_features: dict[str, Any] | None = None
     root_device_id: str | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class LogicalDeviceListResponse(BaseModel):
+class LogicalDeviceListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Logical device list response"""
+
+    model_config = ConfigDict()
 
     devices: list[LogicalDevice]
     total: int
 
 
-class LogicalDeviceDetailResponse(BaseModel):
+class LogicalDeviceDetailResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Logical device detail response"""
 
+    model_config = ConfigDict()
+
     device: LogicalDevice
-    ports: list[LogicalPort] = Field(default_factory=list)
-    flows: list[dict[str, Any]] = Field(default_factory=list)
+    ports: list[LogicalPort] = Field(default_factory=lambda: [])
+    flows: list[dict[str, Any]] = Field(default_factory=lambda: [])
 
 
 # ============================================================================
@@ -123,7 +131,7 @@ class LogicalDeviceDetailResponse(BaseModel):
 # ============================================================================
 
 
-class Flow(BaseModel):
+class Flow(BaseModel):  # BaseModel resolves to Any in isolation
     """OpenFlow entry"""
 
     id: str | None = None
@@ -131,9 +139,9 @@ class Flow(BaseModel):
     priority: int | None = None
     cookie: int | None = None
     match: dict[str, Any] | None = None
-    instructions: list[dict[str, Any]] = Field(default_factory=list)
+    instructions: list[dict[str, Any]] = Field(default_factory=lambda: [])
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
@@ -141,7 +149,7 @@ class Flow(BaseModel):
 # ============================================================================
 
 
-class Adapter(BaseModel):
+class Adapter(BaseModel):  # BaseModel resolves to Any in isolation
     """Device adapter information"""
 
     id: str
@@ -149,7 +157,7 @@ class Adapter(BaseModel):
     version: str | None = None
     config: dict[str, Any] | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
@@ -157,26 +165,34 @@ class Adapter(BaseModel):
 # ============================================================================
 
 
-class DeviceEnableRequest(BaseModel):
+class DeviceEnableRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Enable device request"""
+
+    model_config = ConfigDict()
 
     device_id: str = Field(..., description="Device ID to enable")
 
 
-class DeviceDisableRequest(BaseModel):
+class DeviceDisableRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Disable device request"""
+
+    model_config = ConfigDict()
 
     device_id: str = Field(..., description="Device ID to disable")
 
 
-class DeviceRebootRequest(BaseModel):
+class DeviceRebootRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Reboot device request"""
+
+    model_config = ConfigDict()
 
     device_id: str = Field(..., description="Device ID to reboot")
 
 
-class DeviceOperationResponse(BaseModel):
+class DeviceOperationResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Device operation response"""
+
+    model_config = ConfigDict()
 
     success: bool
     message: str
@@ -188,15 +204,17 @@ class DeviceOperationResponse(BaseModel):
 # ============================================================================
 
 
-class PONStatistics(BaseModel):
+class PONStatistics(BaseModel):  # BaseModel resolves to Any in isolation
     """PON network statistics"""
+
+    model_config = ConfigDict()
 
     total_olts: int = 0
     total_onus: int = 0
     online_onus: int = 0
     offline_onus: int = 0
     total_flows: int = 0
-    adapters: list[str] = Field(default_factory=list)
+    adapters: list[str] = Field(default_factory=lambda: [])
 
 
 # ============================================================================
@@ -204,8 +222,10 @@ class PONStatistics(BaseModel):
 # ============================================================================
 
 
-class VOLTHAHealthResponse(BaseModel):
+class VOLTHAHealthResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """VOLTHA health check response"""
+
+    model_config = ConfigDict()
 
     healthy: bool
     state: str
@@ -218,7 +238,7 @@ class VOLTHAHealthResponse(BaseModel):
 # ============================================================================
 
 
-class DiscoveredONU(BaseModel):
+class DiscoveredONU(BaseModel):  # BaseModel resolves to Any in isolation
     """Discovered ONU information"""
 
     serial_number: str
@@ -230,11 +250,13 @@ class DiscoveredONU(BaseModel):
     discovered_at: str  # ISO timestamp
     status: str = "discovered"  # discovered, provisioning, provisioned, failed
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class ONUDiscoveryResponse(BaseModel):
+class ONUDiscoveryResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """ONU discovery response"""
+
+    model_config = ConfigDict()
 
     discovered: list[DiscoveredONU]
     total: int
@@ -244,6 +266,8 @@ class ONUDiscoveryResponse(BaseModel):
 class ONUProvisionRequest(BaseModel):
     """ONU provision request"""
 
+    model_config = ConfigDict()
+
     serial_number: str = Field(..., description="ONU serial number")
     olt_device_id: str = Field(..., description="Parent OLT device ID")
     pon_port: int = Field(..., description="PON port number")
@@ -252,8 +276,10 @@ class ONUProvisionRequest(BaseModel):
     bandwidth_profile: str | None = Field(None, description="Bandwidth profile name")
 
 
-class ONUProvisionResponse(BaseModel):
+class ONUProvisionResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """ONU provision response"""
+
+    model_config = ConfigDict()
 
     success: bool
     message: str
@@ -263,20 +289,16 @@ class ONUProvisionResponse(BaseModel):
     pon_port: int
 
 
-class ONUAutoDiscoveryConfig(BaseModel):
+class ONUAutoDiscoveryConfig(BaseModel):  # BaseModel resolves to Any in isolation
     """ONU auto-discovery configuration"""
 
+    model_config = ConfigDict()
+
     enabled: bool = True
-    polling_interval_seconds: int = Field(
-        default=60, description="Polling interval for discovery"
-    )
-    auto_provision: bool = Field(
-        default=False, description="Auto-provision discovered ONUs"
-    )
+    polling_interval_seconds: int = Field(default=60, description="Polling interval for discovery")
+    auto_provision: bool = Field(default=False, description="Auto-provision discovered ONUs")
     default_vlan: int | None = Field(None, description="Default service VLAN")
-    default_bandwidth_profile: str | None = Field(
-        None, description="Default bandwidth profile"
-    )
+    default_bandwidth_profile: str | None = Field(None, description="Default bandwidth profile")
 
 
 # ============================================================================
@@ -303,7 +325,7 @@ class VOLTHAAlarmCategory(str):
     NNI = "NNI"
 
 
-class VOLTHAAlarm(BaseModel):
+class VOLTHAAlarm(BaseModel):  # BaseModel resolves to Any in isolation
     """VOLTHA alarm/event"""
 
     id: str
@@ -313,15 +335,17 @@ class VOLTHAAlarm(BaseModel):
     state: str  # RAISED, CLEARED
     resource_id: str  # Device ID
     description: str | None = None
-    context: dict[str, Any] = Field(default_factory=dict)
+    context: dict[str, Any] = Field(default_factory=lambda: {})
     raised_ts: str  # ISO timestamp
     changed_ts: str | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class VOLTHAAlarmListResponse(BaseModel):
+class VOLTHAAlarmListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """VOLTHA alarm list response"""
+
+    model_config = ConfigDict()
 
     alarms: list[VOLTHAAlarm]
     total: int
@@ -341,7 +365,7 @@ class VOLTHAEventType(str):
     DEVICE_STATE_CHANGE = "device_state_change"
 
 
-class VOLTHAEvent(BaseModel):
+class VOLTHAEvent(BaseModel):  # BaseModel resolves to Any in isolation
     """VOLTHA event"""
 
     id: str
@@ -349,14 +373,180 @@ class VOLTHAEvent(BaseModel):
     category: str
     resource_id: str  # Device ID
     description: str | None = None
-    context: dict[str, Any] = Field(default_factory=dict)
+    context: dict[str, Any] = Field(default_factory=lambda: {})
     timestamp: str  # ISO timestamp
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class VOLTHAEventStreamResponse(BaseModel):
+class VOLTHAEventStreamResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """VOLTHA event stream response"""
+
+    model_config = ConfigDict()
 
     events: list[VOLTHAEvent]
     total: int
+
+
+# ============================================================================
+# Bandwidth Profile Schemas
+# ============================================================================
+
+
+class BandwidthProfile(BaseModel):  # BaseModel resolves to Any in isolation
+    """Bandwidth profile (meter) configuration"""
+
+    name: str = Field(..., description="Profile name")
+    committed_information_rate: int = Field(..., description="CIR in kbps (guaranteed bandwidth)")
+    committed_burst_size: int = Field(..., description="CBS in bytes (burst allowance)")
+    peak_information_rate: int | None = Field(None, description="PIR in kbps (maximum bandwidth)")
+    peak_burst_size: int | None = Field(None, description="PBS in bytes (peak burst allowance)")
+    meter_id: int | None = Field(None, description="Meter ID (assigned by VOLTHA)")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class BandwidthProfileRequest(BaseModel):  # BaseModel resolves to Any in isolation
+    """Request to create/update bandwidth profile"""
+
+    model_config = ConfigDict()
+
+    name: str
+    committed_information_rate: int = Field(..., ge=0, description="CIR in kbps")
+    committed_burst_size: int = Field(..., ge=0, description="CBS in bytes")
+    peak_information_rate: int | None = Field(None, ge=0, description="PIR in kbps")
+    peak_burst_size: int | None = Field(None, ge=0, description="PBS in bytes")
+
+
+class BandwidthProfileResponse(BaseModel):  # BaseModel resolves to Any in isolation
+    """Response after creating/updating bandwidth profile"""
+
+    model_config = ConfigDict()
+
+    success: bool
+    message: str
+    profile: BandwidthProfile | None = None
+    meter_id: int | None = None
+
+
+# ============================================================================
+# Technology Profile Schemas
+# ============================================================================
+
+
+class TechnologyProfile(BaseModel):  # BaseModel resolves to Any in isolation
+    """Technology profile configuration"""
+
+    profile_id: int = Field(..., description="Technology profile ID")
+    profile_type: str = Field(..., description="Profile type (XGSPON, GPON, EPON)")
+    version: int = Field(default=1, description="Profile version")
+    num_gem_ports: int = Field(default=1, description="Number of GEM ports")
+    instance_control: dict[str, Any] = Field(
+        default_factory=dict, description="Instance control parameters"
+    )
+    us_scheduler: dict[str, Any] = Field(default_factory=dict, description="Upstream scheduler")
+    ds_scheduler: dict[str, Any] = Field(default_factory=dict, description="Downstream scheduler")
+    upstream_gem_port_attribute_list: list[dict[str, Any]] = Field(
+        default_factory=list, description="Upstream GEM port attributes"
+    )
+    downstream_gem_port_attribute_list: list[dict[str, Any]] = Field(
+        default_factory=list, description="Downstream GEM port attributes"
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TechnologyProfileRequest(BaseModel):  # BaseModel resolves to Any in isolation
+    """Request to assign technology profile"""
+
+    model_config = ConfigDict()
+
+    profile_id: int = Field(..., description="Technology profile ID")
+    profile_type: str = Field(default="XGSPON", description="Profile type")
+
+
+class TechnologyProfileResponse(BaseModel):  # BaseModel resolves to Any in isolation
+    """Response after assigning technology profile"""
+
+    model_config = ConfigDict()
+
+    success: bool
+    message: str
+    profile_id: int | None = None
+    device_id: str | None = None
+
+
+# ============================================================================
+# VLAN Configuration Schemas
+# ============================================================================
+
+
+class VLANConfiguration(BaseModel):  # BaseModel resolves to Any in isolation
+    """VLAN configuration for ONU"""
+
+    c_vlan: int = Field(..., ge=1, le=4094, description="Customer VLAN (C-TAG)")
+    s_vlan: int | None = Field(None, ge=1, le=4094, description="Service VLAN (S-TAG)")
+    vlan_mode: str = Field(
+        default="transparent", description="VLAN mode (transparent, single-tag, double-tag)"
+    )
+    priority: int = Field(default=0, ge=0, le=7, description="VLAN priority (802.1p)")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class VLANConfigurationRequest(BaseModel):  # BaseModel resolves to Any in isolation
+    """Request to configure VLAN"""
+
+    model_config = ConfigDict()
+
+    c_vlan: int = Field(..., ge=1, le=4094, description="Customer VLAN")
+    s_vlan: int | None = Field(None, ge=1, le=4094, description="Service VLAN (optional)")
+    vlan_mode: str = Field(default="transparent")
+    priority: int = Field(default=0, ge=0, le=7)
+
+
+class VLANConfigurationResponse(BaseModel):  # BaseModel resolves to Any in isolation
+    """Response after configuring VLAN"""
+
+    model_config = ConfigDict()
+
+    success: bool
+    message: str
+    configuration: VLANConfiguration | None = None
+
+
+# ============================================================================
+# Service Configuration (Combined)
+# ============================================================================
+
+
+class ServiceConfiguration(BaseModel):  # BaseModel resolves to Any in isolation
+    """Complete service configuration for ONU"""
+
+    vlan: VLANConfiguration
+    bandwidth_profile: BandwidthProfile
+    technology_profile_id: int = Field(default=64, description="Technology profile ID")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ServiceConfigurationRequest(BaseModel):  # BaseModel resolves to Any in isolation
+    """Request to configure ONU service"""
+
+    model_config = ConfigDict()
+
+    vlan_config: VLANConfigurationRequest
+    bandwidth_config: BandwidthProfileRequest
+    technology_profile_id: int = Field(default=64)
+
+
+class ServiceConfigurationResponse(BaseModel):  # BaseModel resolves to Any in isolation
+    """Response after configuring ONU service"""
+
+    model_config = ConfigDict()
+
+    success: bool
+    message: str
+    device_id: str
+    configuration: ServiceConfiguration | None = None
+    errors: list[str] = Field(default_factory=lambda: [])

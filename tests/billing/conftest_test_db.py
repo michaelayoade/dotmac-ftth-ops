@@ -60,7 +60,7 @@ def sync_test_engine():
     engine.dispose()
     try:
         os.unlink(db_path)
-    except:
+    except (OSError, PermissionError):
         pass
 
 

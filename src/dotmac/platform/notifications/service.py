@@ -158,9 +158,9 @@ class NotificationService:
                 }
             ),
             autoescape=select_autoescape(
-                enabled_extensions=('html', 'xml'),
+                enabled_extensions=("html", "xml"),
                 default_for_string=True,
-            )
+            ),
         )
 
         title = env.get_template("title").render(**variables)

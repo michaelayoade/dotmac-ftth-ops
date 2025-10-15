@@ -430,7 +430,7 @@ class TestMissingCoverage:
         with patch("prometheus_client.make_asgi_app") as mock_make_asgi:
             mock_make_asgi.return_value = MagicMock()
 
-            test_app = create_application()
+            create_application()
 
             # Should have mounted metrics endpoint
             mock_make_asgi.assert_called_once()

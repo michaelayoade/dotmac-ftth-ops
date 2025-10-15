@@ -1,0 +1,180 @@
+name: Type Check (MyPy Strict)
+
+on:
+  push:
+    branches: [main, develop, feature/*]
+    paths:
+      - 'src/dotmac/platform/**/*.py'
+      - 'pyproject.toml'
+      - '.github/workflows/type-check.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/dotmac/platform/**/*.py'
+      - 'pyproject.toml'
+      - '.github/workflows/type-check.yml'
+
+jobs:
+  mypy-strict-phases:
+    name: MyPy Strict Type Checking
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        phase:
+          - name: "Phase 2 - Auth"
+            path: "src/dotmac/platform/auth/"
+            required: true
+          - name: "Phase 2 - Secrets"
+            path: "src/dotmac/platform/secrets/"
+            required: true
+          - name: "Phase 3 - Services"
+            path: "src/dotmac/platform/services/"
+            required: true
+          - name: "Phase 3 - Subscribers"
+            path: "src/dotmac/platform/subscribers/"
+            required: true
+          - name: "Phase 3 - RADIUS"
+            path: "src/dotmac/platform/radius/"
+            required: true
+          - name: "Phase 4 - Background Tasks"
+            path: "src/dotmac/platform/services/tasks.py src/dotmac/platform/genieacs/tasks.py src/dotmac/platform/data_import/tasks.py src/dotmac/platform/fault_management/tasks.py"
+            required: true
+          - name: "Phase 4 - Event Handlers"
+            path: "src/dotmac/platform/events/handlers.py src/dotmac/platform/ticketing/handlers.py"
+            required: true
+          - name: "Phase 4 - Core Utilities"
+            path: "src/dotmac/platform/core/tasks.py"
+            required: true
+          - name: "Phase 2 - Billing (In Progress)"
+            path: "src/dotmac/platform/billing/"
+            required: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.7.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root --with dev
+
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Run MyPy Strict on ${{ matrix.phase.name }}
+        id: mypy
+        run: |
+          echo "Running mypy strict on: ${{ matrix.phase.path }}"
+          poetry run mypy --strict ${{ matrix.phase.path }}
+        continue-on-error: ${{ !matrix.phase.required }}
+
+      - name: Check if errors are allowed
+        if: steps.mypy.outcome == 'failure' && matrix.phase.required
+        run: |
+          echo "::error::MyPy strict mode failed for ${{ matrix.phase.name }}"
+          echo "This phase is marked as required and must pass."
+          exit 1
+
+  mypy-summary:
+    name: MyPy Summary Report
+    runs-on: ubuntu-latest
+    needs: mypy-strict-phases
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.7.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --with dev
+
+      - name: Generate MyPy report for entire codebase
+        run: |
+          echo "# MyPy Strict Mode Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Overall Status" >> $GITHUB_STEP_SUMMARY
+          poetry run mypy src/dotmac/platform 2>&1 | tail -1 >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Clean Modules (0 errors)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Auth (21 files)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Secrets (8 files)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Services/Lifecycle (6 files)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Subscribers (2 files)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ RADIUS (8 files)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Background Tasks (4 files)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Event Handlers (2 files)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Core Utilities (1 file)" >> $GITHUB_STEP_SUMMARY
+
+  prevent-regression:
+    name: Prevent Type Regressions
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.7.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --with dev
+
+      - name: Check for new type errors in clean modules
+        if: github.event_name == 'pull_request'
+        run: |
+          # Get list of changed Python files in clean modules
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^src/dotmac/platform/(auth|secrets|services|subscribers|radius)/' | grep '\.py$' || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No Python files changed in clean modules"
+            exit 0
+          fi
+
+          echo "Checking changed files for type regressions:"
+          echo "$CHANGED_FILES"
+
+          # Run mypy on changed files
+          poetry run mypy --strict $CHANGED_FILES

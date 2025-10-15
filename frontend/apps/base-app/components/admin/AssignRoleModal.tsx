@@ -48,7 +48,7 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
   const fetchUsers = useCallback(async () => {
     try {
       const response = await apiClient.get('/api/v1/users');
-      if (response.success && response.data) {
+      if (response.data) {
         setUsers(response.data as User[]);
       }
     } catch (error) {
@@ -61,7 +61,7 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
     try {
       setLoading(true);
       const response = await apiClient.get(`/api/v1/auth/rbac/roles/${role.name}/users`);
-      if (response.success && response.data) {
+      if (response.data) {
         setAssignedUsers(response.data as (User & UserRoleAssignment)[]);
       }
     } catch (error) {
@@ -95,7 +95,7 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
       });
 
       const results = await Promise.all(assignments);
-      const failed = results.filter(r => !r.success);
+      const failed = results.filter(r => r.status < 200 || r.status >= 300);
 
       if (failed.length === 0) {
         toast.success(`Role assigned to ${selectedUsers.size} user(s)`);
@@ -125,7 +125,7 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
         role_name: role.name,
       });
 
-      if (response.success) {
+      if (response.status >= 200 && response.status < 300) {
         toast.success('Role revoked successfully');
         fetchRoleAssignments();
         onAssign();

@@ -4,7 +4,6 @@ WireGuard VPN API Router.
 FastAPI router for WireGuard VPN management endpoints.
 """
 
-import base64
 import logging
 from typing import Annotated
 from uuid import UUID
@@ -15,9 +14,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.rbac_dependencies import require_permission
-from dotmac.platform.auth.tenant_context import TenantAdminAccess
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.secrets import AsyncVaultClient, SymmetricEncryptionService
+from dotmac.platform.tenant.dependencies import TenantAdminAccess
 from dotmac.platform.wireguard.client import WireGuardClient
 from dotmac.platform.wireguard.models import WireGuardPeer, WireGuardPeerStatus, WireGuardServer
 from dotmac.platform.wireguard.schemas import (
@@ -81,13 +80,15 @@ async def get_wireguard_service(
                 kv_version=settings.vault.kv_version,
                 namespace=settings.vault.namespace,
             )
-            logger.info("✅ WireGuard service initialized with Vault/OpenBao secret storage (Pure Vault mode)")
+            logger.info(
+                "✅ WireGuard service initialized with Vault/OpenBao secret storage (Pure Vault mode)"
+            )
         except Exception as e:
             logger.error(f"❌ Failed to initialize Vault client: {e}")
             if settings.is_production:
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                    detail="WireGuard service unavailable: Vault connection required in production but failed"
+                    detail="WireGuard service unavailable: Vault connection required in production but failed",
                 ) from e
             # Development: Fall back to encryption
             encryption_service = SymmetricEncryptionService(secret=settings.secret_key)
@@ -97,10 +98,12 @@ async def get_wireguard_service(
         if settings.is_production:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                detail="WireGuard service unavailable: Vault MUST be enabled in production"
+                detail="WireGuard service unavailable: Vault MUST be enabled in production",
             )
         encryption_service = SymmetricEncryptionService(secret=settings.secret_key)
-        logger.warning("⚠️  WireGuard using encrypted database storage (Vault disabled - development only)")
+        logger.warning(
+            "⚠️  WireGuard using encrypted database storage (Vault disabled - development only)"
+        )
 
     return WireGuardService(
         session=session,
@@ -659,10 +662,12 @@ async def bulk_create_peers(
 
         except Exception as e:
             logger.error(f"Failed to create peer {peer_name}: {e}")
-            errors.append({
-                "peer_name": peer_name,
-                "error": str(e),
-            })
+            errors.append(
+                {
+                    "peer_name": peer_name,
+                    "error": str(e),
+                }
+            )
 
     return WireGuardBulkPeerCreateResponse(
         created=len(created_peers),

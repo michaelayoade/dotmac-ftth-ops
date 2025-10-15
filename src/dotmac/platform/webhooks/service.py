@@ -234,11 +234,10 @@ class WebhookSubscriptionService:
             return
 
         subscription.is_active = False
-        # Use custom_metadata instead of metadata (which is SQLAlchemy's internal attribute)
-        if subscription.custom_metadata is None:
-            subscription.custom_metadata = {}
-        subscription.custom_metadata["disabled_reason"] = reason
-        subscription.custom_metadata["disabled_at"] = datetime.now(UTC).isoformat()
+        metadata = dict(subscription.custom_metadata or {})
+        metadata["disabled_reason"] = reason
+        metadata["disabled_at"] = datetime.now(UTC).isoformat()
+        subscription.custom_metadata = metadata
         # Mark the JSON field as modified so SQLAlchemy persists the changes
         flag_modified(subscription, "custom_metadata")
 
@@ -266,11 +265,10 @@ class WebhookSubscriptionService:
         new_secret = generate_webhook_secret()
 
         subscription.secret = new_secret
-        # Use custom_metadata instead of metadata (which is SQLAlchemy's internal attribute)
-        if subscription.custom_metadata is None:
-            subscription.custom_metadata = {}
-        subscription.custom_metadata["secret_rotated_at"] = datetime.now(UTC).isoformat()
-        subscription.custom_metadata["previous_secret_hash"] = old_secret[:8]  # Store hint only
+        metadata = dict(subscription.custom_metadata or {})
+        metadata["secret_rotated_at"] = datetime.now(UTC).isoformat()
+        metadata["previous_secret_hash"] = old_secret[:8]  # Store hint only
+        subscription.custom_metadata = metadata
         # Mark the JSON field as modified so SQLAlchemy persists the changes
         flag_modified(subscription, "custom_metadata")
 

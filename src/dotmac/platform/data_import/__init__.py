@@ -5,8 +5,8 @@ Provides services for importing customers, billing data, and other entities
 from CSV, JSON, and other formats.
 """
 
-from .models import ImportFailure, ImportJobStatus, ImportJobType
-from .service import DataImportService, ImportJob, ImportResult
+from .models import ImportFailure, ImportJob, ImportJobStatus, ImportJobType
+from .service import DataImportService, ImportResult
 
 __all__ = [
     "DataImportService",

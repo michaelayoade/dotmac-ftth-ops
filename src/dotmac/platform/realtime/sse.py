@@ -7,11 +7,13 @@ Real-time one-way event streaming for ONU status, alerts, and tickets.
 import asyncio
 import json
 from collections.abc import AsyncGenerator
+from typing import Any
 
 import structlog
-from redis.asyncio import Redis
 from redis.asyncio.client import PubSub
 from sse_starlette.sse import EventSourceResponse
+
+from dotmac.platform.redis_client import RedisClientType
 
 logger = structlog.get_logger(__name__)
 
@@ -19,12 +21,12 @@ logger = structlog.get_logger(__name__)
 class SSEStream:
     """Base class for SSE event streams."""
 
-    def __init__(self, redis: Redis, tenant_id: str):
+    def __init__(self, redis: RedisClientType, tenant_id: str):
         self.redis = redis
         self.tenant_id = tenant_id
         self.pubsub: PubSub | None = None
 
-    async def subscribe(self, channel: str) -> AsyncGenerator[dict, None]:
+    async def subscribe(self, channel: str) -> AsyncGenerator[dict[str, Any]]:
         """
         Subscribe to Redis channel and yield SSE events.
 
@@ -86,7 +88,7 @@ class SSEStream:
 class ONUStatusStream(SSEStream):
     """SSE stream for ONU status changes."""
 
-    async def stream(self) -> AsyncGenerator[dict, None]:
+    async def stream(self) -> AsyncGenerator[dict[str, Any]]:
         """Stream ONU status events for tenant."""
         channel = f"onu_status:{self.tenant_id}"
         async for event in self.subscribe(channel):
@@ -96,7 +98,7 @@ class ONUStatusStream(SSEStream):
 class AlertStream(SSEStream):
     """SSE stream for network and system alerts."""
 
-    async def stream(self) -> AsyncGenerator[dict, None]:
+    async def stream(self) -> AsyncGenerator[dict[str, Any]]:
         """Stream alert events for tenant."""
         channel = f"alerts:{self.tenant_id}"
         async for event in self.subscribe(channel):
@@ -106,7 +108,7 @@ class AlertStream(SSEStream):
 class TicketStream(SSEStream):
     """SSE stream for ticket updates."""
 
-    async def stream(self) -> AsyncGenerator[dict, None]:
+    async def stream(self) -> AsyncGenerator[dict[str, Any]]:
         """Stream ticket events for tenant."""
         channel = f"tickets:{self.tenant_id}"
         async for event in self.subscribe(channel):
@@ -116,7 +118,7 @@ class TicketStream(SSEStream):
 class SubscriberStream(SSEStream):
     """SSE stream for subscriber lifecycle events."""
 
-    async def stream(self) -> AsyncGenerator[dict, None]:
+    async def stream(self) -> AsyncGenerator[dict[str, Any]]:
         """Stream subscriber events for tenant."""
         channel = f"subscribers:{self.tenant_id}"
         async for event in self.subscribe(channel):
@@ -126,7 +128,7 @@ class SubscriberStream(SSEStream):
 class RADIUSSessionStream(SSEStream):
     """SSE stream for RADIUS session events."""
 
-    async def stream(self) -> AsyncGenerator[dict, None]:
+    async def stream(self) -> AsyncGenerator[dict[str, Any]]:
         """
         Stream RADIUS session events for tenant.
 
@@ -147,7 +149,7 @@ class RADIUSSessionStream(SSEStream):
 # =============================================================================
 
 
-async def create_onu_status_stream(redis: Redis, tenant_id: str) -> EventSourceResponse:
+async def create_onu_status_stream(redis: RedisClientType, tenant_id: str) -> EventSourceResponse:
     """
     Create SSE stream for ONU status updates.
 
@@ -162,7 +164,7 @@ async def create_onu_status_stream(redis: Redis, tenant_id: str) -> EventSourceR
     return EventSourceResponse(stream.stream())
 
 
-async def create_alert_stream(redis: Redis, tenant_id: str) -> EventSourceResponse:
+async def create_alert_stream(redis: RedisClientType, tenant_id: str) -> EventSourceResponse:
     """
     Create SSE stream for network alerts.
 
@@ -177,7 +179,7 @@ async def create_alert_stream(redis: Redis, tenant_id: str) -> EventSourceRespon
     return EventSourceResponse(stream.stream())
 
 
-async def create_ticket_stream(redis: Redis, tenant_id: str) -> EventSourceResponse:
+async def create_ticket_stream(redis: RedisClientType, tenant_id: str) -> EventSourceResponse:
     """
     Create SSE stream for ticket updates.
 
@@ -192,7 +194,7 @@ async def create_ticket_stream(redis: Redis, tenant_id: str) -> EventSourceRespo
     return EventSourceResponse(stream.stream())
 
 
-async def create_subscriber_stream(redis: Redis, tenant_id: str) -> EventSourceResponse:
+async def create_subscriber_stream(redis: RedisClientType, tenant_id: str) -> EventSourceResponse:
     """
     Create SSE stream for subscriber events.
 
@@ -207,7 +209,9 @@ async def create_subscriber_stream(redis: Redis, tenant_id: str) -> EventSourceR
     return EventSourceResponse(stream.stream())
 
 
-async def create_radius_session_stream(redis: Redis, tenant_id: str) -> EventSourceResponse:
+async def create_radius_session_stream(
+    redis: RedisClientType, tenant_id: str
+) -> EventSourceResponse:
     """
     Create SSE stream for RADIUS session events.
 

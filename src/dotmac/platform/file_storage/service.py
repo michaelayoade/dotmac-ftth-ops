@@ -35,7 +35,7 @@ class StorageBackend:
     MEMORY = "memory"  # For testing
 
 
-class FileMetadata(BaseModel):
+class FileMetadata(BaseModel):  # BaseModel resolves to Any in isolation
     """File metadata."""
 
     model_config = ConfigDict()
@@ -51,7 +51,7 @@ class FileMetadata(BaseModel):
     checksum: str | None = Field(None, description="File checksum")
     tenant_id: str | None = Field(None, description="Tenant identifier")
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "file_id": self.file_id,
@@ -207,7 +207,7 @@ class LocalFileStorage:
 
     async def retrieve(
         self, file_id: str, tenant_id: str | None = None
-    ) -> tuple[bytes | None, dict | None]:
+    ) -> tuple[bytes | None, dict[str, Any] | None]:
         """Retrieve a file."""
         tenant_id = self._sanitize_tenant_id(tenant_id)
         file_path = self._get_file_path(file_id, tenant_id)
@@ -294,7 +294,7 @@ class LocalFileStorage:
 
         return files
 
-    async def get_metadata(self, file_id: str) -> dict | None:
+    async def get_metadata(self, file_id: str) -> dict[str, Any] | None:
         """Get file metadata."""
         metadata = self._load_metadata(file_id)
         return metadata.to_dict() if metadata else None
@@ -347,7 +347,7 @@ class MemoryFileStorage:
 
     async def retrieve(
         self, file_id: str, tenant_id: str | None = None
-    ) -> tuple[bytes | None, dict | None]:
+    ) -> tuple[bytes | None, dict[str, Any] | None]:
         """Retrieve a file from memory."""
         file_data = self.files.get(file_id)
         metadata = self.metadata.get(file_id)
@@ -400,7 +400,7 @@ class MemoryFileStorage:
         # Apply pagination
         return files[offset : offset + limit]
 
-    async def get_metadata(self, file_id: str) -> dict | None:
+    async def get_metadata(self, file_id: str) -> dict[str, Any] | None:
         """Get file metadata."""
         metadata = self.metadata.get(file_id)
         return metadata.to_dict() if metadata else None
@@ -464,7 +464,7 @@ class MinIOFileStorage:
 
     async def retrieve(
         self, file_id: str, tenant_id: str | None = None
-    ) -> tuple[bytes | None, dict | None]:
+    ) -> tuple[bytes | None, dict[str, Any] | None]:
         """Retrieve a file from MinIO."""
         tenant_id = tenant_id or "default"
 
@@ -538,7 +538,7 @@ class MinIOFileStorage:
         # Apply pagination
         return files[offset : offset + limit]
 
-    async def get_metadata(self, file_id: str) -> dict | None:
+    async def get_metadata(self, file_id: str) -> dict[str, Any] | None:
         """Get file metadata."""
         metadata = self.metadata_store.get(file_id)
         return metadata.to_dict() if metadata else None
@@ -613,7 +613,7 @@ class FileStorageService:
 
     async def retrieve_file(
         self, file_id: str, tenant_id: str | None = None
-    ) -> tuple[bytes | None, dict | None]:
+    ) -> tuple[bytes | None, dict[str, Any] | None]:
         """Retrieve a file by ID."""
         safe_file_id = self._ensure_valid_file_id(file_id)
         return await self.backend.retrieve(safe_file_id, tenant_id)
@@ -638,7 +638,7 @@ class FileStorageService:
             tenant_id=tenant_id,
         )
 
-    async def get_file_metadata(self, file_id: str) -> dict | None:
+    async def get_file_metadata(self, file_id: str) -> dict[str, Any] | None:
         """Get file metadata."""
         safe_file_id = self._ensure_valid_file_id(file_id)
         return await self.backend.get_metadata(safe_file_id)
@@ -722,7 +722,7 @@ class StorageBackendProtocol(Protocol):
 
     async def retrieve(
         self, file_id: str, tenant_id: str | None = None
-    ) -> tuple[bytes | None, dict | None]: ...
+    ) -> tuple[bytes | None, dict[str, Any] | None]: ...
 
     async def delete(self, file_id: str, tenant_id: str | None = None) -> bool: ...
 
@@ -734,4 +734,4 @@ class StorageBackendProtocol(Protocol):
         tenant_id: str | None = None,
     ) -> list[FileMetadata]: ...
 
-    async def get_metadata(self, file_id: str) -> dict | None: ...
+    async def get_metadata(self, file_id: str) -> dict[str, Any] | None: ...

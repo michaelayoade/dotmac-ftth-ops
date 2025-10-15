@@ -71,7 +71,7 @@ class TestEndToEndServiceProvisioning:
         netbox_service = NetBoxService(async_session, test_tenant_id, mock_netbox_client)
 
         # Create VLAN
-        vlan = await netbox_service.create_vlan(
+        await netbox_service.create_vlan(
             vid=sample_service_provisioning_request["vlan_id"],
             name=f"VLAN{sample_service_provisioning_request['vlan_id']}-Customers",
             tenant=test_tenant_id,
@@ -741,7 +741,7 @@ class TestServiceLifecycleHealthChecks:
         # - Latency/packet loss monitoring
         # - CPE online status check
 
-        health_result = await lifecycle_service.perform_health_check(
+        await lifecycle_service.perform_health_check(
             service_instance_id=service_instance_id,
             tenant_id=test_tenant_id,
         )

@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.core.rate_limiting import limiter
+from dotmac.platform.billing._typing_helpers import rate_limit
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant import get_current_tenant_id
 
@@ -42,7 +42,7 @@ router = APIRouter(tags=["Billing - Dunning"])
     response_model=DunningCampaignResponse,
     status_code=status.HTTP_201_CREATED,
 )
-@limiter.limit("20/minute")
+@rate_limit("20/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def create_campaign(
     request: Request,
     campaign_data: DunningCampaignCreate,
@@ -76,7 +76,7 @@ async def create_campaign(
 
 
 @router.get("/campaigns", response_model=list[DunningCampaignResponse])
-@limiter.limit("100/minute")
+@rate_limit("100/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def list_campaigns(
     request: Request,
     db_session: AsyncSession = Depends(get_async_session),
@@ -102,7 +102,7 @@ async def list_campaigns(
 
 
 @router.get("/campaigns/{campaign_id}", response_model=DunningCampaignResponse)
-@limiter.limit("100/minute")
+@rate_limit("100/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def get_campaign(
     request: Request,
     campaign_id: UUID,
@@ -125,7 +125,7 @@ async def get_campaign(
 
 
 @router.patch("/campaigns/{campaign_id}", response_model=DunningCampaignResponse)
-@limiter.limit("20/minute")
+@rate_limit("20/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def update_campaign(
     request: Request,
     campaign_id: UUID,
@@ -167,7 +167,7 @@ async def update_campaign(
 
 
 @router.delete("/campaigns/{campaign_id}", status_code=status.HTTP_204_NO_CONTENT)
-@limiter.limit("10/minute")
+@rate_limit("10/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def delete_campaign(
     request: Request,
     campaign_id: UUID,
@@ -196,7 +196,7 @@ async def delete_campaign(
 
 
 @router.get("/campaigns/{campaign_id}/stats", response_model=DunningCampaignStats)
-@limiter.limit("100/minute")
+@rate_limit("100/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def get_campaign_stats(
     request: Request,
     campaign_id: UUID,
@@ -231,7 +231,7 @@ async def get_campaign_stats(
     response_model=DunningExecutionResponse,
     status_code=status.HTTP_201_CREATED,
 )
-@limiter.limit("50/minute")
+@rate_limit("50/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def start_execution(
     request: Request,
     execution_data: DunningExecutionStart,
@@ -273,7 +273,7 @@ async def start_execution(
 
 
 @router.get("/executions", response_model=list[DunningExecutionResponse])
-@limiter.limit("100/minute")
+@rate_limit("100/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def list_executions(
     request: Request,
     db_session: AsyncSession = Depends(get_async_session),
@@ -318,7 +318,7 @@ async def list_executions(
 
 
 @router.get("/executions/{execution_id}", response_model=DunningExecutionResponse)
-@limiter.limit("100/minute")
+@rate_limit("100/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def get_execution(
     request: Request,
     execution_id: UUID,
@@ -341,7 +341,7 @@ async def get_execution(
 
 
 @router.post("/executions/{execution_id}/cancel", status_code=status.HTTP_200_OK)
-@limiter.limit("20/minute")
+@rate_limit("20/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def cancel_execution(
     request: Request,
     execution_id: UUID,
@@ -391,7 +391,7 @@ async def cancel_execution(
 
 
 @router.get("/executions/{execution_id}/logs", response_model=list[DunningActionLogResponse])
-@limiter.limit("100/minute")
+@rate_limit("100/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def get_execution_logs(
     request: Request,
     execution_id: UUID,
@@ -423,7 +423,7 @@ async def get_execution_logs(
 
 
 @router.get("/stats", response_model=DunningStats)
-@limiter.limit("100/minute")
+@rate_limit("100/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def get_tenant_stats(
     request: Request,
     db_session: AsyncSession = Depends(get_async_session),
@@ -445,7 +445,7 @@ async def get_tenant_stats(
 
 
 @router.get("/pending-actions", response_model=list[DunningExecutionResponse])
-@limiter.limit("10/minute")
+@rate_limit("10/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def get_pending_actions(
     request: Request,
     db_session: AsyncSession = Depends(get_async_session),

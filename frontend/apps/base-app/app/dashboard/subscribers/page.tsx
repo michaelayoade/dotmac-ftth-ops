@@ -310,7 +310,7 @@ export default function SubscribersPage() {
               {selectedSubscriber?.enabled ? (
                 <Button
                   variant="destructive"
-                  disabled={toggleSubscriber.isLoading}
+                  disabled={toggleSubscriber.isPending}
                   onClick={async () => {
                     if (!selectedSubscriber) return;
                     try {
@@ -331,7 +331,7 @@ export default function SubscribersPage() {
               ) : (
                 <Button
                   variant="outline"
-                  disabled={toggleSubscriber.isLoading}
+                  disabled={toggleSubscriber.isPending}
                   onClick={async () => {
                     if (!selectedSubscriber) return;
                     try {

@@ -8,7 +8,7 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import get_current_user
@@ -28,8 +28,10 @@ router = APIRouter()
 # Request/Response Models
 
 
-class DiagnosticRunResponse(BaseModel):
+class DiagnosticRunResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response model for diagnostic run."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     tenant_id: str
@@ -49,14 +51,11 @@ class DiagnosticRunResponse(BaseModel):
     diagnostic_metadata: dict[str, Any]
     created_at: str
 
-    class Config:
-        """Pydantic config."""
 
-        from_attributes = True
-
-
-class DiagnosticRunListResponse(BaseModel):
+class DiagnosticRunListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response model for diagnostic runs list."""
+
+    model_config = ConfigDict()
 
     total: int
     items: list[DiagnosticRunResponse]

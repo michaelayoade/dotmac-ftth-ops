@@ -101,7 +101,7 @@ class TestUpdatePaymentStatus:
         mock_db_session.execute.return_value = mock_result
 
         # Execute
-        result = await payment_service.update_payment_status(
+        await payment_service.update_payment_status(
             tenant_id="tenant_456",
             payment_id="pay_123",
             new_status=PaymentStatus.SUCCEEDED,
@@ -125,7 +125,7 @@ class TestUpdatePaymentStatus:
         mock_db_session.execute.return_value = mock_result
 
         # Execute
-        result = await payment_service.update_payment_status(
+        await payment_service.update_payment_status(
             tenant_id="tenant_456",
             payment_id="pay_123",
             new_status=PaymentStatus.FAILED,
@@ -165,7 +165,7 @@ class TestUpdatePaymentStatus:
         mock_db_session.execute.return_value = mock_result
 
         # Execute
-        result = await payment_service.update_payment_status(
+        await payment_service.update_payment_status(
             tenant_id="tenant_456",
             payment_id="pay_123",
             new_status=PaymentStatus.SUCCEEDED,
@@ -193,7 +193,7 @@ class TestProcessRefundNotification:
         mocker.patch.object(payment_service, "_create_transaction", new_callable=AsyncMock)
 
         # Execute - refund full amount
-        result = await payment_service.process_refund_notification(
+        await payment_service.process_refund_notification(
             tenant_id="tenant_456",
             payment_id="pay_123",
             refund_amount=Decimal("100.00"),
@@ -227,7 +227,7 @@ class TestProcessRefundNotification:
         mocker.patch.object(payment_service, "_create_transaction", new_callable=AsyncMock)
 
         # Execute - refund partial amount
-        result = await payment_service.process_refund_notification(
+        await payment_service.process_refund_notification(
             tenant_id="tenant_456",
             payment_id="pay_123",
             refund_amount=Decimal("50.00"),

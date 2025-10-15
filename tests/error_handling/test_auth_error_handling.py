@@ -186,7 +186,7 @@ class TestLoginErrors:
         """Test login rate limiting after multiple failures."""
         # Attempt multiple logins
         for _ in range(10):
-            response = test_client.post(
+            test_client.post(
                 "/api/v1/auth/login",
                 json={
                     "email": "user@example.com",

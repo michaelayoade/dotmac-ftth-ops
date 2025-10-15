@@ -8,12 +8,15 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 import structlog
-from redis.asyncio import Redis, ConnectionPool
+from redis.asyncio import ConnectionPool, Redis
 from redis.exceptions import RedisError
 
 from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
+
+type RedisClientType = Redis[Any]
+type RedisPoolType = ConnectionPool[Any]
 
 
 class RedisClientManager:
@@ -28,8 +31,8 @@ class RedisClientManager:
     """
 
     _instance: "RedisClientManager | None" = None
-    _pool: ConnectionPool | None = None
-    _client: Redis | None = None
+    _pool: RedisPoolType | None = None
+    _client: RedisClientType | None = None
 
     def __new__(cls) -> "RedisClientManager":
         """Ensure singleton instance."""
@@ -121,7 +124,7 @@ class RedisClientManager:
 
         logger.info("redis.closed")
 
-    def get_client(self) -> Redis:
+    def get_client(self) -> RedisClientType:
         """
         Get Redis client instance.
 
@@ -132,9 +135,7 @@ class RedisClientManager:
             RuntimeError: If client not initialized
         """
         if self._client is None:
-            raise RuntimeError(
-                "Redis client not initialized. Call initialize() first."
-            )
+            raise RuntimeError("Redis client not initialized. Call initialize() first.")
         return self._client
 
     async def health_check(self) -> dict[str, Any]:
@@ -177,7 +178,7 @@ class RedisClientManager:
 redis_manager = RedisClientManager()
 
 
-async def get_redis_client() -> AsyncGenerator[Redis, None]:
+async def get_redis_client() -> AsyncGenerator[RedisClientType]:
     """
     FastAPI dependency for Redis client.
 
@@ -237,7 +238,7 @@ async def shutdown_redis() -> None:
 
 
 # Convenience function for direct client access
-def get_redis_sync() -> Redis:
+def get_redis_sync() -> RedisClientType:
     """
     Get Redis client synchronously.
 

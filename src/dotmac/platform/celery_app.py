@@ -62,7 +62,7 @@ celery_app.conf.update(
 
 
 # Auto-initialize OpenTelemetry instrumentation when worker starts
-@celery_app.on_after_configure.connect
+@celery_app.on_after_configure.connect  # type: ignore[misc]
 def setup_celery_instrumentation(sender: Any, **kwargs: Any) -> None:
     """Setup OpenTelemetry instrumentation for Celery workers."""
     try:
@@ -80,7 +80,7 @@ def setup_celery_instrumentation(sender: Any, **kwargs: Any) -> None:
 
 
 # Log worker startup
-@celery_app.on_after_finalize.connect
+@celery_app.on_after_finalize.connect  # type: ignore[misc]
 def setup_periodic_tasks(sender: Any, **kwargs: Any) -> None:
     """Configure any periodic tasks here."""
     import structlog

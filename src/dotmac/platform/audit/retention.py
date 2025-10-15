@@ -28,8 +28,8 @@ class AuditCleanupResult:
 
     total_deleted: int = 0
     total_archived: int = 0
-    by_severity: dict[str, int] = field(default_factory=dict)
-    errors: list[str] = field(default_factory=list)
+    by_severity: dict[str, int] = field(default_factory=lambda: {})
+    errors: list[str] = field(default_factory=lambda: [])
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -46,7 +46,7 @@ class AuditRestoreResult:
 
     total_restored: int = 0
     skipped: int = 0
-    errors: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=lambda: [])
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -72,10 +72,10 @@ class AuditRetentionStats:
     """Comprehensive statistics about current audit retention state."""
 
     total_records: int = 0
-    by_severity: dict[str, int] = field(default_factory=dict)
+    by_severity: dict[str, int] = field(default_factory=lambda: {})
     oldest_record: str | None = None
     newest_record: str | None = None
-    records_to_delete: dict[str, AuditDeletionInfo] = field(default_factory=dict)
+    records_to_delete: dict[str, AuditDeletionInfo] = field(default_factory=lambda: {})
 
     def as_dict(self) -> dict[str, Any]:
         return {

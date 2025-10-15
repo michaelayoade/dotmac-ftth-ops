@@ -7,6 +7,7 @@ Enhanced with scheduling and job chain capabilities.
 
 from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -68,7 +69,7 @@ class JobExecutionMode(str, Enum):
     PARALLEL = "parallel"
 
 
-class Job(Base):
+class Job(Base):  # type: ignore[misc]
     """
     Generic job tracking model for async operations.
 
@@ -148,23 +149,23 @@ class Job(Base):
         Text,
         nullable=True,
     )
-    error_details: Mapped[dict | None] = mapped_column(
+    error_details: Mapped[dict[str, Any] | None] = mapped_column(
         JSON,
         nullable=True,
     )
-    failed_items: Mapped[list | None] = mapped_column(
+    failed_items: Mapped[list[Any] | None] = mapped_column(
         JSON,
         nullable=True,
         comment="List of failed item IDs or references for retry",
     )
 
     # Job parameters and results
-    parameters: Mapped[dict | None] = mapped_column(
+    parameters: Mapped[dict[str, Any] | None] = mapped_column(
         JSON,
         nullable=True,
         comment="Input parameters for the job",
     )
-    result: Mapped[dict | None] = mapped_column(
+    result: Mapped[dict[str, Any] | None] = mapped_column(
         JSON,
         nullable=True,
         comment="Job execution result data",
@@ -310,7 +311,7 @@ class Job(Base):
         return int((end_time - self.started_at).total_seconds())
 
 
-class ScheduledJob(Base):
+class ScheduledJob(Base):  # type: ignore[misc]
     """
     Scheduled job configuration.
 
@@ -395,7 +396,7 @@ class ScheduledJob(Base):
     )
 
     # Job parameters (will be passed to each job execution)
-    parameters: Mapped[dict | None] = mapped_column(
+    parameters: Mapped[dict[str, Any] | None] = mapped_column(
         JSON,
         nullable=True,
     )
@@ -473,7 +474,7 @@ class ScheduledJob(Base):
         return (self.successful_runs / self.total_runs) * 100
 
 
-class JobChain(Base):
+class JobChain(Base):  # type: ignore[misc]
     """
     Job chain configuration.
 
@@ -517,7 +518,7 @@ class JobChain(Base):
 
     # Chain definition
     # Format: [{"job_type": "task1", "parameters": {...}}, {...}]
-    chain_definition: Mapped[list] = mapped_column(
+    chain_definition: Mapped[list[Any]] = mapped_column(
         JSON,
         nullable=False,
         comment="List of job definitions to execute",
@@ -570,7 +571,7 @@ class JobChain(Base):
     )
 
     # Results
-    results: Mapped[dict | None] = mapped_column(
+    results: Mapped[dict[str, Any] | None] = mapped_column(
         JSON,
         nullable=True,
         comment="Aggregated results from all jobs",

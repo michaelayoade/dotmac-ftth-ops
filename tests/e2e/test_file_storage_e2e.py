@@ -708,7 +708,7 @@ class TestCompleteWorkflowE2E:
         mock_storage_service.store_file.side_effect = file_ids
 
         # Upload 3 files
-        for i, file_id in enumerate(file_ids):
+        for i, _file_id in enumerate(file_ids):
             response = await async_client.post(
                 "/api/v1/files/storage/upload",
                 files={

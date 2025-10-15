@@ -30,7 +30,7 @@ from dotmac.platform.billing.pricing.service import PricingEngine
 logger = structlog.get_logger(__name__)
 
 
-class CachedPricingEngine(PricingEngine):
+class CachedPricingEngine(PricingEngine):  # type: ignore[misc]  # PricingEngine resolves to Any in isolation
     """
     Pricing engine with intelligent caching for improved performance.
 

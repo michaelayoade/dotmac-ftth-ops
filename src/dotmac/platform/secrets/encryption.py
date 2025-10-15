@@ -79,7 +79,9 @@ class SymmetricEncryptionService:
         algorithm = (algorithm or "fernet").lower()
         metadata: dict[str, Any] = {
             "classification": classification.value,
-            "fingerprint": hashlib.sha1(self._secret, usedforsecurity=False).hexdigest(),  # nosec B324 - SHA1 for fingerprint only,
+            "fingerprint": hashlib.sha1(
+                self._secret, usedforsecurity=False
+            ).hexdigest(),  # nosec B324 - SHA1 for fingerprint only,
         }
 
         if algorithm == "fernet" and self._fernet is not None:

@@ -662,7 +662,7 @@ class TestStripeEventProcessing:
             },
         }
 
-        mock_payment = Mock()
+        Mock()
         with patch.object(
             stripe_handler, "_handle_payment_succeeded", return_value={"status": "processed"}
         ) as mock_handler:

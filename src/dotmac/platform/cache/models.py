@@ -71,7 +71,7 @@ class CacheNamespace(str, Enum):
     FEATURE_FLAGS = "feature_flags"
 
 
-class CacheConfig(Base, TimestampMixin, TenantMixin):
+class CacheConfig(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Cache configuration for specific namespaces/patterns."""
 
     __tablename__ = "cache_configs"
@@ -131,7 +131,7 @@ class CacheConfig(Base, TimestampMixin, TenantMixin):
         return f"<CacheConfig(name={self.name}, namespace={self.namespace}, ttl={self.default_ttl_seconds}s)>"
 
 
-class CacheStatistics(Base, TimestampMixin, TenantMixin):
+class CacheStatistics(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Cache performance statistics."""
 
     __tablename__ = "cache_statistics"

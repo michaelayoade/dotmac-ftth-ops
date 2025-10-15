@@ -97,7 +97,7 @@ export default function RoleDetailsModal({ role, permissions, onClose, onUpdate 
 
       const response = await apiClient.patch(`/api/v1/auth/rbac/roles/${role.name}`, updateData);
 
-      if (response.success) {
+      if (response.status >= 200 && response.status < 300) {
         toast.success('Role updated successfully');
         onUpdate();
       } else {

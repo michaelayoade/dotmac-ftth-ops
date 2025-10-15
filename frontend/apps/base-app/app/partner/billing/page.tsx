@@ -63,7 +63,7 @@ const CREDIT_NOTE_STATUS: Record<
   voided: { label: "Voided", variant: "destructive" },
 };
 
-const formatUsd = (amount: number) => formatCurrency(amount, "USD", 1);
+const formatUsd = (amount: number) => formatCurrency(amount, "USD");
 
 const getStatementStatus = (status: PartnerPayoutStatus) =>
   STATEMENT_STATUS[status] ?? STATEMENT_STATUS.pending;

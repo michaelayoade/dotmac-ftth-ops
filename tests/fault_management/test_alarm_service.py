@@ -3,7 +3,7 @@ Tests for Alarm Service
 """
 
 from datetime import UTC, datetime, timedelta
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from sqlalchemy import select
@@ -20,7 +20,6 @@ from dotmac.platform.fault_management.models import (
     RuleType,
 )
 from dotmac.platform.fault_management.schemas import (
-    AlarmAcknowledge,
     AlarmCreate,
     AlarmNoteCreate,
     AlarmQueryParams,
@@ -58,9 +57,7 @@ class TestAlarmServiceCreation:
         assert alarm_response.subscriber_count == 10
 
         # Verify in database
-        result = await session.execute(
-            select(Alarm).where(Alarm.id == alarm_response.id)
-        )
+        result = await session.execute(select(Alarm).where(Alarm.id == alarm_response.id))
         alarm = result.scalar_one()
         assert alarm is not None
         assert alarm.tenant_id == test_tenant

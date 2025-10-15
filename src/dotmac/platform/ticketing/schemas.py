@@ -13,8 +13,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from .models import TicketActorType, TicketPriority, TicketStatus, TicketType
 
 
-class TicketCreate(BaseModel):
+class TicketCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Payload for opening a new ticket."""
+
+    model_config = ConfigDict()
 
     subject: str = Field(..., min_length=3, max_length=255)
     message: str = Field(..., min_length=1)
@@ -63,19 +65,23 @@ class TicketCreate(BaseModel):
     )
 
 
-class TicketMessageCreate(BaseModel):
+class TicketMessageCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Payload for appending a message to an existing ticket."""
 
+    model_config = ConfigDict()
+
     message: str = Field(..., min_length=1)
-    attachments: list[dict[str, Any]] = Field(default_factory=list)
+    attachments: list[dict[str, Any]] = Field(default_factory=lambda: [])
     new_status: TicketStatus | None = Field(
         default=None,
         description="Optional status transition to apply after posting the message.",
     )
 
 
-class TicketUpdate(BaseModel):
+class TicketUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Partial update payload for ticket metadata."""
+
+    model_config = ConfigDict()
 
     status: TicketStatus | None = None
     priority: TicketPriority | None = None
@@ -91,7 +97,7 @@ class TicketUpdate(BaseModel):
     escalated_to_user_id: UUID | None = None
 
 
-class TicketMessageRead(BaseModel):
+class TicketMessageRead(BaseModel):  # BaseModel resolves to Any in isolation
     """Serialized ticket message."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -101,12 +107,12 @@ class TicketMessageRead(BaseModel):
     sender_type: TicketActorType
     sender_user_id: UUID | None
     body: str
-    attachments: list[dict[str, Any]] = Field(default_factory=list)
+    attachments: list[dict[str, Any]] = Field(default_factory=lambda: [])
     created_at: datetime
     updated_at: datetime
 
 
-class TicketSummary(BaseModel):
+class TicketSummary(BaseModel):  # BaseModel resolves to Any in isolation
     """Lightweight representation of a ticket for list views."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -123,7 +129,7 @@ class TicketSummary(BaseModel):
     partner_id: UUID | None
     assigned_to_user_id: UUID | None
     last_response_at: datetime | None
-    context: dict[str, Any] = Field(default_factory=dict)
+    context: dict[str, Any] = Field(default_factory=lambda: {})
 
     # ISP-specific fields
     ticket_type: TicketType | None = None
@@ -139,11 +145,11 @@ class TicketSummary(BaseModel):
 class TicketDetail(TicketSummary):
     """Detailed ticket representation with threaded messages."""
 
-    messages: list[TicketMessageRead] = Field(default_factory=list)
+    messages: list[TicketMessageRead] = Field(default_factory=lambda: [])
 
     # Additional ISP-specific detailed fields
-    affected_services: list[str] = Field(default_factory=list)
-    device_serial_numbers: list[str] = Field(default_factory=list)
+    affected_services: list[str] = Field(default_factory=lambda: [])
+    device_serial_numbers: list[str] = Field(default_factory=lambda: [])
     first_response_at: datetime | None = None
     resolution_time_minutes: int | None = None
     escalated_at: datetime | None = None

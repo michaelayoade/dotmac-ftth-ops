@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.core.rate_limiting import limiter
+from dotmac.platform.billing._typing_helpers import rate_limit
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant import get_current_tenant_id
 
@@ -42,7 +42,7 @@ router = APIRouter(tags=["Billing - Subscriptions"])
     response_model=SubscriptionPlanResponse,
     status_code=status.HTTP_201_CREATED,
 )
-@limiter.limit("20/minute")
+@rate_limit("20/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def create_subscription_plan(
     request: Request,
     plan_data: SubscriptionPlanCreateRequest,
@@ -61,7 +61,7 @@ async def create_subscription_plan(
 
 
 @router.get("/plans", response_model=list[SubscriptionPlanResponse])
-@limiter.limit("100/minute")
+@rate_limit("100/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def list_subscription_plans(
     request: Request,
     db_session: AsyncSession = Depends(get_async_session),
@@ -82,7 +82,7 @@ async def list_subscription_plans(
 
 
 @router.get("/plans/{plan_id}", response_model=SubscriptionPlanResponse)
-@limiter.limit("100/minute")
+@rate_limit("100/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def get_subscription_plan(
     request: Request,
     plan_id: str,

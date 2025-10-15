@@ -148,7 +148,7 @@ class LifecycleEventType(str, Enum):
     ERROR_RESOLVED = "error_resolved"
 
 
-class ServiceInstance(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
+class ServiceInstance(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     Service instance representing a provisioned service for a customer.
 
@@ -446,7 +446,7 @@ class ServiceInstance(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
     )
 
 
-class LifecycleEvent(Base, TimestampMixin, TenantMixin):
+class LifecycleEvent(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Lifecycle event tracking for service instances.
 
@@ -592,7 +592,7 @@ class LifecycleEvent(Base, TimestampMixin, TenantMixin):
     )
 
 
-class ProvisioningWorkflow(Base, TimestampMixin, TenantMixin):
+class ProvisioningWorkflow(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Tracks multi-step provisioning workflows.
 

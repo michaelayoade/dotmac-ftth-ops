@@ -9,13 +9,12 @@ import asyncio
 from collections.abc import Coroutine
 from concurrent.futures import Future
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
+import redis.asyncio as aioredis
 import structlog
 from celery import Task
-from redis.asyncio import Redis
-from sqlalchemy import select, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from dotmac.platform.celery_app import celery_app
 from dotmac.platform.db import _async_session_maker
@@ -26,6 +25,7 @@ from dotmac.platform.genieacs.models import (
     MassConfigJob,
     MassConfigResult,
 )
+from dotmac.platform.redis_client import RedisClientType
 
 logger = structlog.get_logger(__name__)
 
@@ -56,16 +56,24 @@ def _run_async[T](coro: Coroutine[Any, Any, T]) -> T:
         return loop.run_until_complete(coro)
 
 
-async def get_redis_client() -> Redis:
-    """Get Redis client for pub/sub."""
-    import os
+async def get_redis_client() -> RedisClientType:
+    """Get Redis client for pub/sub.
 
-    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-    return Redis.from_url(redis_url, decode_responses=True)
+    Uses centralized Redis URL from settings (Phase 1 implementation).
+    """
+    from dotmac.platform.settings import settings
+
+    # Use Celery broker URL as default for background task pub/sub
+    # This ensures consistency with task queue Redis instance
+    redis_url = settings.celery.broker_url
+    return cast(
+        RedisClientType,
+        aioredis.from_url(redis_url, decode_responses=True),
+    )
 
 
 async def publish_progress(
-    redis: Redis,
+    redis: RedisClientType,
     channel: str,
     event_type: str,
     data: dict[str, Any],
@@ -86,7 +94,7 @@ async def publish_progress(
 # ---------------------------------------------------------------------------
 
 
-@celery_app.task(
+@celery_app.task(  # type: ignore[misc]  # Celery decorator is untyped
     name="genieacs.execute_firmware_upgrade",
     bind=True,
     max_retries=3,
@@ -317,7 +325,7 @@ async def _execute_firmware_upgrade_async(schedule_id: str, task: Task) -> dict[
 # ---------------------------------------------------------------------------
 
 
-@celery_app.task(
+@celery_app.task(  # type: ignore[misc]  # Celery decorator is untyped
     name="genieacs.execute_mass_config",
     bind=True,
     max_retries=3,
@@ -344,9 +352,7 @@ async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
     """Async implementation of mass configuration execution."""
     async with _async_session_maker() as session:
         # Get job
-        result = await session.execute(
-            select(MassConfigJob).where(MassConfigJob.job_id == job_id)
-        )
+        result = await session.execute(select(MassConfigJob).where(MassConfigJob.job_id == job_id))
         job = result.scalar_one_or_none()
 
         if not job:
@@ -595,7 +601,7 @@ async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-@celery_app.task(name="genieacs.check_scheduled_upgrades")
+@celery_app.task(name="genieacs.check_scheduled_upgrades")  # type: ignore[misc]  # Celery decorator is untyped
 def check_scheduled_upgrades() -> dict[str, Any]:
     """
     Check for firmware upgrades that are due to run.

@@ -94,7 +94,7 @@ class ActivityType(str, Enum):
     IMPORT = "import"
 
 
-class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
+class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     Core customer model with comprehensive profile information.
     """
@@ -372,7 +372,7 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
         return self.full_name
 
 
-class CustomerSegment(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
+class CustomerSegment(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type: ignore[misc]
     """Customer segmentation for targeted operations."""
 
     __tablename__ = "customer_segments"
@@ -403,7 +403,7 @@ class CustomerSegment(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
     __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_tenant_segment_name"),)
 
 
-class CustomerActivity(Base, TimestampMixin, TenantMixin):
+class CustomerActivity(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Track all customer activities and interactions."""
 
     __tablename__ = "customer_activities"
@@ -450,7 +450,7 @@ class CustomerActivity(Base, TimestampMixin, TenantMixin):
     __table_args__ = (Index("ix_activity_customer_time", "customer_id", "created_at"),)
 
 
-class CustomerNote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
+class CustomerNote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type: ignore[misc]
     """Notes and comments about customers."""
 
     __tablename__ = "customer_notes"
@@ -494,7 +494,7 @@ class CustomerNote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
     __table_args__ = (Index("ix_note_customer_created", "customer_id", "created_at"),)
 
 
-class CustomerTag(Base, TimestampMixin, TenantMixin):
+class CustomerTag(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Many-to-many relationship for customer tags."""
 
     __tablename__ = "customer_tags_association"
@@ -535,7 +535,7 @@ class ContactRole(str, Enum):
     OTHER = "other"
 
 
-class CustomerContactLink(Base, TimestampMixin, TenantMixin):
+class CustomerContactLink(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Join table linking customers to contacts with roles.
 
@@ -587,7 +587,8 @@ class CustomerContactLink(Base, TimestampMixin, TenantMixin):
 
     # Relationships
     customer = relationship("Customer", back_populates="contact_links")
-    contact = relationship("Contact", back_populates="customer_links")
+    # Note: Contact model is in contacts module, relationship commented to avoid circular import
+    # contact = relationship("Contact", back_populates="customer_links")
 
     __table_args__ = (
         UniqueConstraint("customer_id", "contact_id", "role", name="uq_customer_contact_role"),

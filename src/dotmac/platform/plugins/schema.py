@@ -30,7 +30,7 @@ class FieldType(str, Enum):
     ARRAY = "array"
 
 
-class ValidationRule(BaseModel):
+class ValidationRule(BaseModel):  # BaseModel resolves to Any in isolation
     """Validation rule for a field."""
 
     model_config = ConfigDict()
@@ -40,7 +40,7 @@ class ValidationRule(BaseModel):
     message: str | None = Field(None, description="Custom error message")
 
 
-class SelectOption(BaseModel):
+class SelectOption(BaseModel):  # BaseModel resolves to Any in isolation
     """Option for select fields."""
 
     model_config = ConfigDict()
@@ -50,7 +50,7 @@ class SelectOption(BaseModel):
     description: str | None = Field(None, description="Option description")
 
 
-class FieldSpec(BaseModel):
+class FieldSpec(BaseModel):  # BaseModel resolves to Any in isolation
     """Specification for a configuration field."""
 
     model_config = ConfigDict()
@@ -125,7 +125,7 @@ class PluginStatus(str, Enum):
     ERROR = "error"
 
 
-class PluginConfig(BaseModel):
+class PluginConfig(BaseModel):  # BaseModel resolves to Any in isolation
     """Plugin configuration schema."""
 
     model_config = ConfigDict()
@@ -170,7 +170,7 @@ class PluginConfig(BaseModel):
         return v
 
 
-class PluginInstance(BaseModel):
+class PluginInstance(BaseModel):  # BaseModel resolves to Any in isolation
     """Instance of a registered plugin."""
 
     model_config = ConfigDict()
@@ -190,7 +190,7 @@ class PluginInstance(BaseModel):
     configuration_version: str | None = Field(None, description="Configuration version/hash")
 
 
-class PluginConfigurationValue(BaseModel):
+class PluginConfigurationValue(BaseModel):  # BaseModel resolves to Any in isolation
     """Plugin configuration field value."""
 
     model_config = ConfigDict()
@@ -206,7 +206,7 @@ class PluginConfigurationValue(BaseModel):
     updated_at: str = Field(description="When value was last updated")
 
 
-class PluginHealthCheck(BaseModel):
+class PluginHealthCheck(BaseModel):  # BaseModel resolves to Any in isolation
     """Plugin health check result."""
 
     model_config = ConfigDict()
@@ -219,7 +219,7 @@ class PluginHealthCheck(BaseModel):
     response_time_ms: int | None = Field(None, description="Response time in milliseconds")
 
 
-class PluginTestResult(BaseModel):
+class PluginTestResult(BaseModel):  # BaseModel resolves to Any in isolation
     """Plugin connection test result."""
 
     model_config = ConfigDict()
@@ -234,7 +234,7 @@ class PluginTestResult(BaseModel):
 # API Response Models
 
 
-class PluginConfigurationResponse(BaseModel):
+class PluginConfigurationResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response model for plugin configuration."""
 
     model_config = ConfigDict()
@@ -246,7 +246,7 @@ class PluginConfigurationResponse(BaseModel):
     last_updated: str | None = Field(None, description="Last configuration update")
 
 
-class PluginListResponse(BaseModel):
+class PluginListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response model for plugin list."""
 
     model_config = ConfigDict()
@@ -255,7 +255,7 @@ class PluginListResponse(BaseModel):
     total: int = Field(description="Total number of plugins")
 
 
-class PluginSchemaResponse(BaseModel):
+class PluginSchemaResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response model for plugin schema."""
 
     model_config = ConfigDict()

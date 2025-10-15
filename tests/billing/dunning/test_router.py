@@ -443,7 +443,7 @@ class TestRateLimiting:
 
             # Make 21 requests rapidly
             responses = []
-            for i in range(21):
+            for _i in range(21):
                 response = await async_client.post(
                     "/api/v1/billing/dunning/campaigns",
                     json=sample_campaign_data.model_dump(mode="json"),
@@ -452,9 +452,7 @@ class TestRateLimiting:
                 responses.append(response)
 
             # At least one should be rate limited
-            rate_limited = any(
-                r.status_code == status.HTTP_429_TOO_MANY_REQUESTS for r in responses
-            )
+            any(r.status_code == status.HTTP_429_TOO_MANY_REQUESTS for r in responses)
             # Note: This test may be flaky depending on rate limiter implementation
             # In production, the 21st request should be rate limited
 

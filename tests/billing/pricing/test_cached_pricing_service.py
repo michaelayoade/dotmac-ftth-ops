@@ -186,7 +186,7 @@ class TestCreatePricingRule:
             )
 
             # Execute
-            result = await cached_pricing_engine.create_pricing_rule(create_request, "tenant-1")
+            await cached_pricing_engine.create_pricing_rule(create_request, "tenant-1")
 
             # Verify cache invalidation
             assert mock_cache.invalidate_pattern.called
@@ -317,12 +317,12 @@ class TestDeletePricingRule:
 
             # Verify multiple invalidation patterns were called
             invalidate_calls = [call[0][0] for call in mock_cache.invalidate_pattern.call_args_list]
-            assert any("pricing:rules" in pattern for pattern in invalidate_calls), (
-                "Should invalidate pricing rules list cache"
-            )
-            assert any("applicable" in pattern for pattern in invalidate_calls), (
-                "Should invalidate applicable rules cache"
-            )
+            assert any(
+                "pricing:rules" in pattern for pattern in invalidate_calls
+            ), "Should invalidate pricing rules list cache"
+            assert any(
+                "applicable" in pattern for pattern in invalidate_calls
+            ), "Should invalidate applicable rules cache"
 
 
 class TestCacheKeyGeneration:

@@ -3,6 +3,7 @@ FastAPI router for audit and activity endpoints.
 """
 
 from datetime import UTC
+from typing import Any
 from uuid import UUID
 
 import structlog
@@ -229,7 +230,7 @@ async def get_activity_summary(
     days: int = Query(7, ge=1, le=90, description="Number of days to look back"),
     session: AsyncSession = Depends(get_async_session),
     current_user: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """
     Get activity summary statistics for the current tenant.
 

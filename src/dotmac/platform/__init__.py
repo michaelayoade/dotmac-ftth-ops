@@ -77,7 +77,13 @@ class PlatformConfig:
                         os.getenv("DOTMAC_JWT_REFRESH_TOKEN_EXPIRE_DAYS", "30")
                     ),
                     "session_backend": os.getenv("DOTMAC_SESSION_BACKEND", "memory"),
-                    "redis_url": os.getenv("DOTMAC_REDIS_URL", "redis://localhost:6379"),
+                    # Use centralized Redis URL from settings (Phase 1 implementation)
+                    "redis_url": os.getenv(
+                        "DOTMAC_REDIS_URL",
+                        os.getenv(
+                            "SESSION_REDIS_URL", os.getenv("REDIS_URL", "redis://localhost:6379")
+                        ),
+                    ),
                 },
                 # Secrets management configuration
                 "secrets": {

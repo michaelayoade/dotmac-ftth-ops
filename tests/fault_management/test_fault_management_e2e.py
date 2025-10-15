@@ -5,24 +5,20 @@ Tests complete workflows from event generation to alarm resolution.
 """
 
 from datetime import UTC, datetime, timedelta
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.fault_management.correlation import CorrelationEngine
 from dotmac.platform.fault_management.models import (
     Alarm,
     AlarmNote,
-    AlarmRule,
     AlarmSeverity,
     AlarmSource,
     AlarmStatus,
     RuleType,
     SLABreach,
-    SLADefinition,
-    SLADowntime,
     SLAInstance,
     SLAStatus,
 )
@@ -180,9 +176,7 @@ class TestDeviceFailureWorkflow:
         assert acknowledged_alarm.acknowledged_at is not None
 
         # Verify: Acknowledgment note created
-        result = await session.execute(
-            select(AlarmNote).where(AlarmNote.alarm_id == olt_alarm.id)
-        )
+        result = await session.execute(select(AlarmNote).where(AlarmNote.alarm_id == olt_alarm.id))
         notes = list(result.scalars().all())
         assert len(notes) >= 1
         assert any(n.note_type == "acknowledgment" for n in notes)
@@ -216,8 +210,7 @@ class TestDeviceFailureWorkflow:
         db_olt_alarm = await session.get(Alarm, olt_alarm.id)
         if db_olt_alarm.cleared_at and db_olt_alarm.first_occurrence:
             downtime_minutes = int(
-                (db_olt_alarm.cleared_at - db_olt_alarm.first_occurrence).total_seconds()
-                / 60
+                (db_olt_alarm.cleared_at - db_olt_alarm.first_occurrence).total_seconds() / 60
             )
             await sla_service.record_downtime(
                 sla_instance.id,
@@ -248,7 +241,7 @@ class TestSLABreachWorkflow:
         5. Breach report generated
         """
         sla_service = SLAMonitoringService(session, test_tenant)
-        alarm_service = AlarmService(session, test_tenant)
+        AlarmService(session, test_tenant)
         user_id = uuid4()
 
         # Step 1: Create SLA definition and instance

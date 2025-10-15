@@ -190,7 +190,7 @@ class MockAsyncSessionFactory:
 
 
 # Pytest fixtures for common use
-import pytest
+import pytest  # noqa: E402
 
 
 @pytest.fixture

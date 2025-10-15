@@ -378,7 +378,7 @@ class TestImportErrorHandling:
                     # Make mapper raise exception
                     mock_mapper.batch_validate.side_effect = Exception("Validation error")
 
-                    with pytest.raises(Exception):
+                    with pytest.raises(Exception):  # noqa: B017
                         await import_service.import_customers_csv(
                             file_content=csv_file, tenant_id="test-tenant", dry_run=False
                         )

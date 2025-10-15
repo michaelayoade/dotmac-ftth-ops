@@ -25,7 +25,7 @@ from io import BytesIO
 from unittest.mock import Mock, patch
 
 import pytest
-from minio.error import S3Error
+from minio.error import S3Error as OriginalS3Error  # noqa: F401
 
 from dotmac.platform.file_storage.minio_storage import (
     FileInfo,
@@ -52,7 +52,7 @@ class _NonFrozenS3Error(BaseException):
 
 
 # Replace S3Error in the minio.error module for tests
-import minio.error
+import minio.error  # noqa: E402
 
 minio.error.S3Error = _NonFrozenS3Error
 # Also update the local import
@@ -60,7 +60,7 @@ S3Error = _NonFrozenS3Error
 
 # CRITICAL: Patch S3Error in the minio_storage module that was already imported
 # This ensures the except S3Error clauses catch our non-frozen version
-import dotmac.platform.file_storage.minio_storage as minio_storage_module
+import dotmac.platform.file_storage.minio_storage as minio_storage_module  # noqa: E402
 
 minio_storage_module.S3Error = _NonFrozenS3Error
 
@@ -127,7 +127,7 @@ class TestMinIOStorageInit:
         mock_client.bucket_exists.return_value = True
         mock_minio.return_value = mock_client
 
-        storage = MinIOStorage(endpoint="http://minio.example.com:9000")
+        MinIOStorage(endpoint="http://minio.example.com:9000")
 
         mock_minio.assert_called_once()
         call_args = mock_minio.call_args
@@ -148,7 +148,7 @@ class TestMinIOStorageInit:
         mock_client.bucket_exists.return_value = True
         mock_minio.return_value = mock_client
 
-        storage = MinIOStorage(endpoint="https://minio.example.com")
+        MinIOStorage(endpoint="https://minio.example.com")
 
         call_args = mock_minio.call_args
         assert call_args.kwargs["endpoint"] == "minio.example.com"
@@ -169,7 +169,7 @@ class TestMinIOStorageInit:
         mock_client.make_bucket = Mock()
         mock_minio.return_value = mock_client
 
-        storage = MinIOStorage()
+        MinIOStorage()
 
         mock_client.bucket_exists.assert_called_once_with("test-bucket")
         mock_client.make_bucket.assert_called_once_with("test-bucket")

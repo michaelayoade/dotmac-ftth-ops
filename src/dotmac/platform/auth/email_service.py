@@ -89,8 +89,14 @@ async def send_password_reset_email(email: str, user_name: str) -> tuple[bool, s
             return False, None
         redis_client.setex(token_key, 3600, email)  # 1 hour expiry
 
-        # Create reset link (placeholder - should be actual frontend URL)
-        reset_link = f"https://localhost:3001/reset-password?token={reset_token}"
+        # Create reset link using centralized frontend URL (Phase 2 implementation)
+        frontend_url = getattr(
+            getattr(settings, "external_services", None),
+            "frontend_admin_url",
+            "https://localhost:3001",
+        )
+
+        reset_link = f"{frontend_url}/reset-password?token={reset_token}"
 
         subject = f"Reset Your Password - {app_name}"
 

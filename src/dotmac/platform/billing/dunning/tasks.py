@@ -55,7 +55,7 @@ def _run_async[T](coro: Coroutine[Any, Any, T]) -> T:
 # ---------------------------------------------------------------------------
 
 
-@celery_app.task(
+@celery_app.task(  # type: ignore[misc]  # Celery decorator is untyped
     name="dunning.process_pending_actions",
     bind=True,
     max_retries=3,
@@ -92,7 +92,7 @@ def process_pending_dunning_actions_task(self: Task) -> dict[str, Any]:
         raise self.retry(exc=e)
 
 
-@celery_app.task(
+@celery_app.task(  # type: ignore[misc]  # Celery decorator is untyped
     name="dunning.execute_action",
     bind=True,
     max_retries=3,
@@ -288,7 +288,7 @@ async def _execute_action(
             elif action_type == DunningActionType.CUSTOM:
                 result = await _execute_custom_action(execution, action_config)
             else:
-                result["status"] = "failed"
+                result["status"] = "failed"  # type: ignore[unreachable]  # Fallback for unknown action types
                 result["error"] = f"Unknown action type: {action_type}"
 
             # Log the action execution
@@ -748,9 +748,11 @@ async def _trigger_webhook(
                 "outstanding_amount": str(execution.outstanding_amount),
                 "recovered_amount": str(execution.recovered_amount),
                 "current_step": execution.current_step,
-                "status": execution.status.value
-                if hasattr(execution.status, "value")
-                else str(execution.status),
+                "status": (
+                    execution.status.value
+                    if hasattr(execution.status, "value")
+                    else str(execution.status)
+                ),
                 "tenant_id": execution.tenant_id,
             },
             "metadata": action_config.get("metadata", {}),
@@ -868,7 +870,7 @@ async def _execute_custom_action(
         "config": {...}  # Custom configuration passed to handler
     }
 
-    Handler signature: async def handler(execution: DunningExecution, config: dict) -> dict
+    Handler signature: async def handler(execution: DunningExecution, config: dict[str, Any]) -> dict[str, Any]
     """
     logger.info(
         "dunning.custom.executing",

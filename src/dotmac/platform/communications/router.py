@@ -41,7 +41,7 @@ router = APIRouter(tags=["Communications"])
 # === Email Endpoints ===
 
 
-class EmailRequest(BaseModel):
+class EmailRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Email request model."""
 
     model_config = ConfigDict()
@@ -181,7 +181,7 @@ async def queue_email_endpoint(request: EmailRequest) -> Any:
 # === Template Endpoints ===
 
 
-class TemplateRequest(BaseModel):
+class TemplateRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Template creation request."""
 
     model_config = ConfigDict()
@@ -192,7 +192,7 @@ class TemplateRequest(BaseModel):
     html_template: str | None = Field(None, description="HTML template")
 
 
-class TemplateResponse(BaseModel):
+class TemplateResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Template response."""
 
     model_config = ConfigDict()
@@ -275,7 +275,7 @@ async def get_template_endpoint(template_id: str) -> Any:
     )
 
 
-class RenderRequest(BaseModel):
+class RenderRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Template render request."""
 
     model_config = ConfigDict()
@@ -313,7 +313,7 @@ async def delete_template_endpoint(template_id: str) -> Any:
 # === Bulk Email Endpoints ===
 
 
-class BulkEmailRequest(BaseModel):
+class BulkEmailRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Bulk email request."""
 
     model_config = ConfigDict()
@@ -425,7 +425,7 @@ async def health_check() -> Any:
 # === Quick Utilities ===
 
 
-class QuickRenderRequest(BaseModel):
+class QuickRenderRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Quick template render request."""
 
     model_config = ConfigDict()
@@ -457,7 +457,7 @@ async def quick_render_endpoint(request: QuickRenderRequest) -> Any:
 # === Stats and Activity Endpoints ===
 
 
-class CommunicationStats(BaseModel):
+class CommunicationStats(BaseModel):  # BaseModel resolves to Any in isolation
     """Communication statistics model."""
 
     model_config = ConfigDict()
@@ -469,7 +469,7 @@ class CommunicationStats(BaseModel):
     last_updated: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
-class CommunicationActivity(BaseModel):
+class CommunicationActivity(BaseModel):  # BaseModel resolves to Any in isolation
     """Communication activity model."""
 
     model_config = ConfigDict()
@@ -480,7 +480,7 @@ class CommunicationActivity(BaseModel):
     subject: str | None = Field(None, description="Subject")
     status: str = Field(..., description="Status (sent/delivered/failed/pending)")
     timestamp: datetime = Field(..., description="Activity timestamp")
-    metadata: dict[str, Any] | None = Field(default_factory=dict)
+    metadata: dict[str, Any] | None = Field(default_factory=lambda: {})
 
 
 @router.get("/stats", response_model=CommunicationStats)

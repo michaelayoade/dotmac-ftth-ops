@@ -743,9 +743,7 @@ async def authenticated_client(
     from dotmac.platform.tenant.onboarding_router import (
         get_user_service_dependency,
     )
-    from dotmac.platform.tenant.onboarding_router import (
-        router as onboarding_router,
-    )
+    from dotmac.platform.tenant.onboarding_router import router as onboarding_router
     from dotmac.platform.tenant.router import get_tenant_service as get_tenant_service_main
     from dotmac.platform.tenant.usage_billing_router import (
         get_subscription_service,

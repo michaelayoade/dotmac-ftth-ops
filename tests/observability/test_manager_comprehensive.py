@@ -47,7 +47,7 @@ class TestObservabilityMetricsRegistry:
         mock_get_meter.return_value = mock_meter
 
         registry = ObservabilityMetricsRegistry(service_name="test-service")
-        counter = registry.create_counter(
+        registry.create_counter(
             name="test_counter", description="Test counter metric", unit="requests"
         )
 
@@ -62,7 +62,7 @@ class TestObservabilityMetricsRegistry:
         mock_get_meter.return_value = mock_meter
 
         registry = ObservabilityMetricsRegistry(service_name="test-service")
-        histogram = registry.create_histogram(
+        registry.create_histogram(
             name="test_histogram", description="Test histogram metric", unit="ms"
         )
 
@@ -77,7 +77,7 @@ class TestObservabilityMetricsRegistry:
         mock_get_meter.return_value = mock_meter
 
         registry = ObservabilityMetricsRegistry(service_name="test-service")
-        counter = registry.create_up_down_counter(
+        registry.create_up_down_counter(
             name="test_updown", description="Test up-down counter", unit="connections"
         )
 
@@ -121,7 +121,7 @@ class TestObservabilityManagerInitialization:
     def test_manager_auto_initialize(self, mock_app):
         """Test manager with auto initialization."""
         with patch.object(ObservabilityManager, "initialize") as mock_init:
-            manager = ObservabilityManager(app=mock_app, auto_initialize=True)
+            ObservabilityManager(app=mock_app, auto_initialize=True)
 
             mock_init.assert_called_once()
 
@@ -477,7 +477,7 @@ class TestObservabilityManagerHelpers:
 
         manager = ObservabilityManager()
 
-        meter = manager.get_meter(name="test-meter")
+        manager.get_meter(name="test-meter")
 
         mock_get_meter.assert_called_once_with("test-meter", None)
 
@@ -578,7 +578,7 @@ class TestObservabilityManagerIntegration:
         manager.initialize()
 
         registry = manager.get_metrics_registry()
-        counter = registry.create_counter(name="requests_total")
+        registry.create_counter(name="requests_total")
 
         mock_meter.create_counter.assert_called_once()
 

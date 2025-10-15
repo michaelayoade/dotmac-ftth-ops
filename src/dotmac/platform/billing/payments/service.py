@@ -28,6 +28,7 @@ from dotmac.platform.billing.core.exceptions import (
 )
 from dotmac.platform.billing.core.models import Payment, PaymentMethod
 from dotmac.platform.billing.payments.providers import PaymentProvider
+from dotmac.platform.settings import settings
 from dotmac.platform.webhooks.events import get_event_bus
 from dotmac.platform.webhooks.models import WebhookEvent
 
@@ -561,13 +562,17 @@ class PaymentService:
         if payment.status != PaymentStatus.FAILED:
             raise PaymentError("Can only retry failed payments")
 
-        # Check retry limit
-        if payment.retry_count >= 3:
-            raise PaymentError("Maximum retry attempts reached")
+        # Check retry limit (from settings)
+        if payment.retry_count >= settings.billing.payment_retry_attempts:
+            raise PaymentError(
+                f"Maximum retry attempts ({settings.billing.payment_retry_attempts}) reached"
+            )
 
-        # Update retry count and schedule
+        # Update retry count and schedule with exponential backoff (from settings)
         payment.retry_count += 1
-        payment.next_retry_at = datetime.now(UTC) + timedelta(hours=2**payment.retry_count)
+        payment.next_retry_at = datetime.now(UTC) + timedelta(
+            hours=settings.billing.payment_retry_exponential_base_hours**payment.retry_count
+        )
         payment.status = PaymentStatus.PROCESSING
 
         await self.db.commit()

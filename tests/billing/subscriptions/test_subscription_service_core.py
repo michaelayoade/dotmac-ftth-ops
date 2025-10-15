@@ -667,7 +667,7 @@ class TestSubscriptionRenewal:
             mock_dt.now.return_value = past_time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
 
-            subscription = await subscription_service.create_subscription(
+            await subscription_service.create_subscription(
                 subscription_data=sub_data,
                 tenant_id=tenant_id,
             )
@@ -1310,7 +1310,7 @@ class TestSubscriptionStatusTransitions:
         )
 
         # Create multiple subscriptions
-        for i in range(3):
+        for _i in range(3):
             sub_data = SubscriptionCreateRequest(
                 customer_id=customer_id,
                 plan_id=plan.plan_id,

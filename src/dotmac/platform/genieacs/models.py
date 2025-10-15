@@ -12,7 +12,7 @@ from sqlalchemy.orm import relationship
 from dotmac.platform.db import Base
 
 
-class FirmwareUpgradeSchedule(Base):
+class FirmwareUpgradeSchedule(Base):  # type: ignore[misc]
     """Firmware upgrade schedule model."""
 
     __tablename__ = "firmware_upgrade_schedules"
@@ -50,7 +50,7 @@ class FirmwareUpgradeSchedule(Base):
         return f"<FirmwareUpgradeSchedule {self.schedule_id}: {self.name}>"
 
 
-class FirmwareUpgradeResult(Base):
+class FirmwareUpgradeResult(Base):  # type: ignore[misc]
     """Firmware upgrade result per device."""
 
     __tablename__ = "firmware_upgrade_results"
@@ -81,7 +81,7 @@ class FirmwareUpgradeResult(Base):
         return f"<FirmwareUpgradeResult {self.id}: {self.device_id} - {self.status}>"
 
 
-class MassConfigJob(Base):
+class MassConfigJob(Base):  # type: ignore[misc]
     """Mass configuration job model."""
 
     __tablename__ = "mass_config_jobs"
@@ -121,7 +121,7 @@ class MassConfigJob(Base):
         return f"<MassConfigJob {self.job_id}: {self.name}>"
 
 
-class MassConfigResult(Base):
+class MassConfigResult(Base):  # type: ignore[misc]
     """Mass configuration result per device."""
 
     __tablename__ = "mass_config_results"

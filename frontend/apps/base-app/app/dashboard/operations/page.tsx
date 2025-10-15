@@ -14,7 +14,7 @@ import {
   Package
 } from 'lucide-react';
 import { useCustomers } from '@/hooks/useCustomers';
-import { metricsService, OperationsMetrics } from '@/lib/services/metrics-service';
+import { metricsService, type OperationsMetrics } from '@/lib/services/metrics-service';
 import { AlertBanner } from '@/components/alerts/AlertBanner';
 import { MetricCardEnhanced } from '@/components/ui/metric-card-enhanced';
 

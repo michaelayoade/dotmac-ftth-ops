@@ -28,7 +28,7 @@ def cached(
     key_prefix: str | None = None,
     include_tenant: bool = True,
     include_user: bool = False,
-) -> Callable:
+) -> Callable[..., Any]:
     """
     Decorator to cache function results.
 
@@ -46,7 +46,7 @@ def cached(
         include_user: Include user_id in cache key
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
         async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             cache = CacheService()
@@ -123,8 +123,8 @@ def cached(
 def cache_aside(
     ttl: int = 3600,
     namespace: CacheNamespace | str = CacheNamespace.QUERY_RESULT,
-    key_builder: Callable | None = None,
-) -> Callable:
+    key_builder: Callable[..., Any] | None = None,
+) -> Callable[..., Any]:
     """
     Cache-aside pattern decorator.
 
@@ -144,7 +144,7 @@ def invalidate_cache(
     namespace: CacheNamespace | str,
     key_pattern: str | None = None,
     keys: list[str] | None = None,
-) -> Callable:
+) -> Callable[..., Any]:
     """
     Decorator to invalidate cache after function execution.
 
@@ -153,7 +153,7 @@ def invalidate_cache(
             namespace=CacheNamespace.CUSTOMER,
             key_pattern="get_customer:*"
         )
-        async def update_customer(customer_id: UUID, data: dict):
+        async def update_customer(customer_id: UUID, data: dict[str, Any]):
             # Update customer
             return customer
 
@@ -163,7 +163,7 @@ def invalidate_cache(
         keys: Specific keys to invalidate
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
         async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             # Execute function first
@@ -216,7 +216,7 @@ def invalidate_cache(
     return decorator
 
 
-def cache_result_per_user(ttl: int = 3600) -> Callable:
+def cache_result_per_user(ttl: int = 3600) -> Callable[..., Any]:
     """
     Convenience decorator for user-specific caching.
 
@@ -229,7 +229,7 @@ def cache_result_per_user(ttl: int = 3600) -> Callable:
     return cached(ttl=ttl, include_tenant=True, include_user=True)
 
 
-def cache_result_per_tenant(ttl: int = 3600) -> Callable:
+def cache_result_per_tenant(ttl: int = 3600) -> Callable[..., Any]:
     """
     Convenience decorator for tenant-specific caching.
 
@@ -242,7 +242,7 @@ def cache_result_per_tenant(ttl: int = 3600) -> Callable:
     return cached(ttl=ttl, include_tenant=True, include_user=False)
 
 
-def memoize(maxsize: int = 128) -> Callable:
+def memoize(maxsize: int = 128) -> Callable[..., Any]:
     """
     LRU cache for function results (in-memory, not Redis).
 
@@ -257,9 +257,9 @@ def memoize(maxsize: int = 128) -> Callable:
 
 
 def _generate_cache_key(
-    func: Callable,
-    args: tuple,
-    kwargs: dict,
+    func: Callable[..., Any],
+    args: tuple[Any, ...],
+    kwargs: dict[str, Any],
     key_prefix: str | None,
     include_tenant: bool,
     include_user: bool,
@@ -305,7 +305,9 @@ def _generate_cache_key(
                 # Hash complex objects
                 # MD5 used for cache key generation, not security
                 value_str = json.dumps(param_value, sort_keys=True, default=str)
-                value_hash = hashlib.md5(value_str.encode(), usedforsecurity=False).hexdigest()[:8]  # nosec B324
+                value_hash = hashlib.md5(value_str.encode(), usedforsecurity=False).hexdigest()[
+                    :8
+                ]  # nosec B324
                 key_parts.append(f"{param_name}:{value_hash}")
         except Exception:
             # Skip unpicklable objects
@@ -320,7 +322,7 @@ def _generate_cache_key(
     return ":".join(key_parts)
 
 
-def _extract_tenant_id(args: tuple, kwargs: dict) -> str | None:
+def _extract_tenant_id(args: tuple[Any, ...], kwargs: dict[str, Any]) -> str | None:
     """Extract tenant_id from function arguments."""
     # Check kwargs first
     if "tenant_id" in kwargs:
@@ -334,7 +336,7 @@ def _extract_tenant_id(args: tuple, kwargs: dict) -> str | None:
     return None
 
 
-def _extract_user_id(args: tuple, kwargs: dict) -> str | None:
+def _extract_user_id(args: tuple[Any, ...], kwargs: dict[str, Any]) -> str | None:
     """Extract user_id from function arguments."""
     if "user_id" in kwargs:
         return str(kwargs["user_id"])

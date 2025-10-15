@@ -5,11 +5,9 @@ Tests the ability to rollback failed provisioning workflows and
 clean up allocated resources.
 """
 
-from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
-
 
 from dotmac.platform.services.lifecycle.models import (
     ProvisioningStatus,
@@ -22,7 +20,9 @@ from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationSer
 
 
 @pytest.fixture
-async def failed_service_with_workflow(async_session) -> tuple[ServiceInstance, ProvisioningWorkflow]:
+async def failed_service_with_workflow(
+    async_session,
+) -> tuple[ServiceInstance, ProvisioningWorkflow]:
     """Create a failed service instance with a failed provisioning workflow."""
     service = ServiceInstance(
         id=uuid4(),

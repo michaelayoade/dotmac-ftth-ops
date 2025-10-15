@@ -23,7 +23,7 @@ from .enums import (
 )
 
 
-class BillingBaseModel(BaseModel):
+class BillingBaseModel(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in isolation
     """Base model for all billing entities with tenant support"""
 
     model_config = ConfigDict(
@@ -42,7 +42,7 @@ class BillingBaseModel(BaseModel):
 # ============================================================================
 
 
-class InvoiceLineItem(BaseModel):
+class InvoiceLineItem(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in isolation
     """Invoice line item"""
 
     model_config = ConfigDict()
@@ -65,7 +65,7 @@ class InvoiceLineItem(BaseModel):
     discount_percentage: float = Field(0.0, ge=0, le=100)
     discount_amount: int = Field(0, ge=0)
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
     @field_validator("tax_amount", "discount_amount", mode="before")
     @classmethod
@@ -127,7 +127,7 @@ class Invoice(BillingBaseModel):
     payment_status: str = Field("pending", description="Payment status")
 
     # Line items
-    line_items: list[InvoiceLineItem] = Field(default_factory=list)
+    line_items: list[InvoiceLineItem] = Field(default_factory=lambda: [])
 
     # References
     subscription_id: str | None = None
@@ -136,7 +136,7 @@ class Invoice(BillingBaseModel):
     # Metadata
     notes: str | None = Field(None, max_length=2000)
     internal_notes: str | None = Field(None, max_length=2000)
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
     # Timestamps
     created_at: datetime | None = Field(None, description="Creation timestamp")
@@ -176,7 +176,7 @@ class Payment(BillingBaseModel):
 
     # Payment method
     payment_method_type: PaymentMethodType
-    payment_method_details: dict[str, Any] = Field(default_factory=dict)
+    payment_method_details: dict[str, Any] = Field(default_factory=lambda: {})
 
     # Provider info
     provider: str = Field(..., description="Payment provider (stripe, paypal, etc.)")
@@ -184,7 +184,7 @@ class Payment(BillingBaseModel):
     provider_fee: int | None = Field(None, ge=0)
 
     # Related entities
-    invoice_ids: list[str] = Field(default_factory=list)
+    invoice_ids: list[str] = Field(default_factory=lambda: [])
 
     # Failure handling
     failure_reason: str | None = Field(None, max_length=500)
@@ -195,7 +195,7 @@ class Payment(BillingBaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     processed_at: datetime | None = None
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 class PaymentMethod(BillingBaseModel):
@@ -234,7 +234,7 @@ class PaymentMethod(BillingBaseModel):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     verified_at: datetime | None = None
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 # ============================================================================
@@ -264,7 +264,7 @@ class Transaction(BillingBaseModel):
     # Timestamp
     transaction_date: datetime = Field(default_factory=datetime.utcnow)
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 # ============================================================================
@@ -272,7 +272,7 @@ class Transaction(BillingBaseModel):
 # ============================================================================
 
 
-class CreditNoteLineItem(BaseModel):
+class CreditNoteLineItem(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in isolation
     """Credit note line item"""
 
     model_config = ConfigDict()
@@ -293,7 +293,7 @@ class CreditNoteLineItem(BaseModel):
     # Product reference
     product_id: str | None = None
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 class CreditNote(BillingBaseModel):
@@ -339,7 +339,7 @@ class CreditNote(BillingBaseModel):
     # Metadata
     notes: str | None = Field(None, max_length=2000)
     internal_notes: str | None = Field(None, max_length=2000)
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
     # Timestamps
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -367,7 +367,7 @@ class CreditApplication(BillingBaseModel):
     applied_by: str
     notes: str | None = Field(None, max_length=500)
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 class CustomerCredit(BillingBaseModel):
@@ -390,7 +390,7 @@ class CustomerCredit(BillingBaseModel):
     # Timestamps
     last_updated: datetime = Field(default_factory=datetime.utcnow)
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 # ============================================================================
@@ -417,7 +417,7 @@ class Customer(BillingBaseModel):
     # Status
     is_active: bool = Field(default=True, description="Customer account status")
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 # ============================================================================
@@ -441,7 +441,7 @@ class Subscription(BillingBaseModel):
     billing_cycle: str = Field(default="monthly", description="Billing frequency")
     next_billing_date: datetime | None = Field(None, description="Next billing date")
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 # ============================================================================
@@ -462,7 +462,7 @@ class Product(BillingBaseModel):
     unit_price: int = Field(description="Price in cents")
     currency: str = Field(default="USD", description="Currency code")
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 class Price(BillingBaseModel):
@@ -477,7 +477,7 @@ class Price(BillingBaseModel):
     unit_amount: int = Field(description="Amount in cents")
     currency: str = Field(default="USD", description="Currency code")
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 # ============================================================================
@@ -503,4 +503,4 @@ class InvoiceItem(BillingBaseModel):
     total_amount: int = Field(description="Total amount in cents")
     currency: str = Field(default="USD", description="Currency code")
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})

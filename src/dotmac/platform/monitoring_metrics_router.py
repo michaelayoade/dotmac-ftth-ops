@@ -29,7 +29,7 @@ metrics_router = APIRouter(tags=["Metrics"])
 # ========================================
 
 
-class ErrorRateResponse(BaseModel):
+class ErrorRateResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Error rate monitoring response."""
 
     model_config = ConfigDict()
@@ -108,7 +108,7 @@ async def get_error_rate(
 # ========================================
 
 
-class LatencyMetrics(BaseModel):
+class LatencyMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     """API latency metrics response."""
 
     model_config = ConfigDict()
@@ -198,7 +198,7 @@ async def get_latency_metrics(
         )
 
 
-class ResourceMetrics(BaseModel):
+class ResourceMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     """System resource metrics response."""
 
     model_config = ConfigDict()

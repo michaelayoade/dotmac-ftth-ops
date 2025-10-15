@@ -54,7 +54,7 @@ class TestMoneyField:
         """Test MoneyField is frozen (immutable)."""
         field = MoneyField(amount="100", currency="USD", minor_units=10000)
 
-        with pytest.raises(Exception):  # Pydantic ValidationError
+        with pytest.raises(Exception):  # Pydantic ValidationError  # noqa: B017
             field.amount = "200"
 
     def test_money_field_different_currencies(self):
@@ -156,7 +156,7 @@ class TestMoneyInvoiceLineItem:
 
     def test_line_item_quantity_validation(self):
         """Test quantity must be >= 1."""
-        with pytest.raises(Exception):  # Pydantic ValidationError
+        with pytest.raises(Exception):  # Pydantic ValidationError  # noqa: B017
             MoneyInvoiceLineItem.create_from_values(
                 description="Invalid", quantity=0, unit_price_amount="10.00"
             )
@@ -175,12 +175,12 @@ class TestMoneyInvoiceLineItem:
         assert item2.tax_rate == Decimal("1")
 
         # Invalid tax rates
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             MoneyInvoiceLineItem.create_from_values(
                 description="Item", quantity=1, unit_price_amount="100", tax_rate="-0.1"
             )
 
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             MoneyInvoiceLineItem.create_from_values(
                 description="Item", quantity=1, unit_price_amount="100", tax_rate="1.1"
             )
@@ -257,7 +257,7 @@ class TestMoneyInvoice:
 
     def test_invoice_currency_validation_invalid(self):
         """Test invalid currency code raises error."""
-        with pytest.raises(Exception):  # ValueError
+        with pytest.raises(Exception):  # ValueError  # noqa: B017
             zero_money = MoneyField.from_money(create_money(0, "USD"))
             MoneyInvoice(
                 tenant_id="tenant_1",
@@ -449,7 +449,7 @@ class TestMoneyInvoice:
 
     def test_invoice_extra_forbid(self):
         """Test extra fields are forbidden."""
-        with pytest.raises(Exception):  # Pydantic ValidationError
+        with pytest.raises(Exception):  # Pydantic ValidationError  # noqa: B017
             zero_money = MoneyField.from_money(create_money(0, "USD"))
             MoneyInvoice(
                 tenant_id="tenant_1",

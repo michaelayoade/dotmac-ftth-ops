@@ -4,9 +4,7 @@ Real-Time Event Publishers
 Redis pub/sub publishers for broadcasting real-time events.
 """
 
-
 import structlog
-from redis.asyncio import Redis
 
 from dotmac.platform.realtime.schemas import (
     AlertEvent,
@@ -17,6 +15,7 @@ from dotmac.platform.realtime.schemas import (
     SubscriberEvent,
     TicketEvent,
 )
+from dotmac.platform.redis_client import RedisClientType
 
 logger = structlog.get_logger(__name__)
 
@@ -24,7 +23,7 @@ logger = structlog.get_logger(__name__)
 class EventPublisher:
     """Publishes events to Redis pub/sub channels."""
 
-    def __init__(self, redis_client: Redis):
+    def __init__(self, redis_client: RedisClientType):
         self.redis = redis_client
 
     async def publish_event(self, channel: str, event: BaseEvent) -> None:
@@ -95,7 +94,7 @@ class EventPublisher:
 
 
 async def publish_onu_online(
-    redis: Redis,
+    redis: RedisClientType,
     tenant_id: str,
     onu_serial: str,
     subscriber_id: str | None = None,
@@ -124,7 +123,7 @@ async def publish_onu_online(
 
 
 async def publish_job_update(
-    redis: Redis,
+    redis: RedisClientType,
     tenant_id: str,
     job_id: str,
     job_type: str,
@@ -173,7 +172,7 @@ async def publish_job_update(
 
 
 async def publish_radius_session_start(
-    redis: Redis,
+    redis: RedisClientType,
     tenant_id: str,
     username: str,
     session_id: str,
@@ -203,7 +202,7 @@ async def publish_radius_session_start(
 
 
 async def publish_radius_session_stop(
-    redis: Redis,
+    redis: RedisClientType,
     tenant_id: str,
     username: str,
     session_id: str,
@@ -235,7 +234,7 @@ async def publish_radius_session_stop(
 
 
 async def publish_radius_session_update(
-    redis: Redis,
+    redis: RedisClientType,
     tenant_id: str,
     username: str,
     session_id: str,

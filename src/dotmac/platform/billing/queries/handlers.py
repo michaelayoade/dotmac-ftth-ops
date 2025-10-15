@@ -87,7 +87,7 @@ class InvoiceQueryHandler:
 
         return self._map_to_detail(invoice)
 
-    async def handle_list_invoices(self, query: ListInvoicesQuery) -> dict:
+    async def handle_list_invoices(self, query: ListInvoicesQuery) -> dict[str, Any]:
         """List invoices with pagination"""
         logger.debug("Handling ListInvoicesQuery", page=query.page)
 
@@ -395,7 +395,7 @@ class PaymentQueryHandler:
 
         return PaymentDetail.model_validate(payment)
 
-    async def handle_list_payments(self, query: ListPaymentsQuery) -> dict:
+    async def handle_list_payments(self, query: ListPaymentsQuery) -> dict[str, Any]:
         """List payments with pagination"""
         stmt = select(PaymentEntity).where(PaymentEntity.tenant_id == query.tenant_id)
 
@@ -481,7 +481,7 @@ class SubscriptionQueryHandler:
 
         return SubscriptionDetail.model_validate(subscription)
 
-    async def handle_list_subscriptions(self, query: ListSubscriptionsQuery) -> dict:
+    async def handle_list_subscriptions(self, query: ListSubscriptionsQuery) -> dict[str, Any]:
         """List subscriptions"""
         stmt = select(BillingSubscriptionTable).where(
             BillingSubscriptionTable.tenant_id == query.tenant_id

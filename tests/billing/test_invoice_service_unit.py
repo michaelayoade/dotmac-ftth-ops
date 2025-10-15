@@ -82,7 +82,7 @@ class TestInvoiceCreation:
                     ) as mock_event_bus:
                         mock_event_bus.return_value.publish = AsyncMock()
 
-                        invoice = await invoice_service.create_invoice(
+                        await invoice_service.create_invoice(
                             tenant_id="tenant-1",
                             customer_id="cust_123",
                             billing_email="customer@example.com",
@@ -161,7 +161,7 @@ class TestInvoiceCreation:
                     invoice_service, "_create_invoice_transaction", return_value=None
                 ):
                     with patch("dotmac.platform.billing.invoicing.service.get_event_bus"):
-                        invoice = await invoice_service.create_invoice(
+                        await invoice_service.create_invoice(
                             tenant_id="tenant-1",
                             customer_id="cust_123",
                             billing_email="test@example.com",
@@ -215,9 +215,7 @@ class TestInvoiceFinalization:
         """Test successful invoice finalization."""
         with patch.object(invoice_service, "_get_invoice_entity", return_value=draft_invoice):
             with patch.object(invoice_service, "_send_invoice_notification", return_value=None):
-                invoice = await invoice_service.finalize_invoice(
-                    tenant_id="tenant-1", invoice_id="inv_123"
-                )
+                await invoice_service.finalize_invoice(tenant_id="tenant-1", invoice_id="inv_123")
 
                 # Status should be changed to OPEN
                 assert draft_invoice.status == InvoiceStatus.OPEN
@@ -284,7 +282,7 @@ class TestInvoiceVoiding:
                 ) as mock_event_bus:
                     mock_event_bus.return_value.publish = AsyncMock()
 
-                    invoice = await invoice_service.void_invoice(
+                    await invoice_service.void_invoice(
                         tenant_id="tenant-1",
                         invoice_id="inv_123",
                         reason="Customer requested cancellation",
@@ -358,7 +356,7 @@ class TestInvoicePayment:
             with patch("dotmac.platform.billing.invoicing.service.get_event_bus") as mock_event_bus:
                 mock_event_bus.return_value.publish = AsyncMock()
 
-                invoice = await invoice_service.mark_invoice_paid(
+                await invoice_service.mark_invoice_paid(
                     tenant_id="tenant-1",
                     invoice_id="inv_123",
                     payment_id="pay_123",
@@ -427,7 +425,7 @@ class TestCreditApplication:
     async def test_apply_partial_credit(self, invoice_service, open_invoice, mock_db_session):
         """Test applying partial credit to invoice."""
         with patch.object(invoice_service, "_get_invoice_entity", return_value=open_invoice):
-            invoice = await invoice_service.apply_credit_to_invoice(
+            await invoice_service.apply_credit_to_invoice(
                 tenant_id="tenant-1",
                 invoice_id="inv_123",
                 credit_amount=30,
@@ -442,7 +440,7 @@ class TestCreditApplication:
     async def test_apply_full_credit(self, invoice_service, open_invoice, mock_db_session):
         """Test applying full credit marks invoice as paid."""
         with patch.object(invoice_service, "_get_invoice_entity", return_value=open_invoice):
-            invoice = await invoice_service.apply_credit_to_invoice(
+            await invoice_service.apply_credit_to_invoice(
                 tenant_id="tenant-1",
                 invoice_id="inv_123",
                 credit_amount=100,  # Full amount

@@ -21,11 +21,11 @@ pytestmark = pytest.mark.asyncio
 # TODO: Move to integration test suite with properly seeded test database
 pytest.skip("Integration test - requires full database schema", allow_module_level=True)
 
-from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select  # noqa: E402
+from sqlalchemy.exc import IntegrityError  # noqa: E402
 
-from dotmac.platform.contacts.models import Contact
-from dotmac.platform.customer_management.models import (
+from dotmac.platform.contacts.models import Contact  # noqa: E402
+from dotmac.platform.customer_management.models import (  # noqa: E402
     ContactRole,
     Customer,
     CustomerContactLink,

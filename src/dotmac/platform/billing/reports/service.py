@@ -262,12 +262,12 @@ class BillingReportService:
             data_section["aging"] = await self.aging_generator.get_aging_summary(tenant_id)
 
         if "tax" in metrics:
-            data_section[
-                "tax"
-            ] = await self.tax_generator.tax_service.get_tax_summary_by_jurisdiction(
-                tenant_id,
-                filters.get("start_date"),
-                filters.get("end_date"),
+            data_section["tax"] = (
+                await self.tax_generator.tax_service.get_tax_summary_by_jurisdiction(
+                    tenant_id,
+                    filters.get("start_date"),
+                    filters.get("end_date"),
+                )
             )
 
         return report_data

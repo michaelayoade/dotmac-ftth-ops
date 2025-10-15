@@ -7,11 +7,10 @@ Redis-backed rate limiting with sliding window algorithm.
 import hashlib
 import re
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
 import structlog
-from redis.asyncio import Redis
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,6 +21,7 @@ from dotmac.platform.rate_limit.models import (
     RateLimitScope,
     RateLimitWindow,
 )
+from dotmac.platform.redis_client import RedisClientType
 from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
@@ -51,21 +51,24 @@ class RateLimitExceeded(Exception):
 class RateLimitService:
     """Service for rate limiting with Redis backend."""
 
-    def __init__(self, db: AsyncSession, redis: Redis | None = None):
+    def __init__(self, db: AsyncSession, redis: RedisClientType | None = None):
         """Initialize rate limit service."""
         self.db = db
         self.redis = redis  # Will be injected or created
 
-    async def _get_redis(self) -> Redis:
+    async def _get_redis(self) -> RedisClientType:
         """Get Redis connection."""
         if self.redis is None:
             # Create Redis connection from settings
             import redis.asyncio as aioredis
 
-            self.redis = await aioredis.from_url(
-                settings.redis_url,
-                encoding="utf-8",
-                decode_responses=True,
+            self.redis = cast(
+                RedisClientType,
+                await aioredis.from_url(
+                    settings.redis_url,
+                    encoding="utf-8",
+                    decode_responses=True,
+                ),
             )
         return self.redis
 
@@ -92,7 +95,9 @@ class RateLimitService:
         """Generate Redis key for rate limit tracking."""
         # Use hash to keep key length reasonable
         # MD5 used for identifier hashing, not security
-        id_hash = hashlib.md5(identifier.encode(), usedforsecurity=False).hexdigest()[:12]  # nosec B324
+        id_hash = hashlib.md5(identifier.encode(), usedforsecurity=False).hexdigest()[
+            :12
+        ]  # nosec B324
         return f"ratelimit:{tenant_id}:{scope.value}:{id_hash}:{rule_id}"
 
     async def check_rate_limit(

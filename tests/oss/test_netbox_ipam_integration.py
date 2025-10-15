@@ -10,7 +10,6 @@ Tests complete IPAM workflows including:
 - IP address reclamation
 """
 
-
 import pytest
 
 
@@ -227,7 +226,7 @@ class TestNetBoxPrefixManagement:
         prefix = await service.create_prefix(**sample_prefix_allocation)
 
         # Allocate some IPs
-        for i in range(50):
+        for _i in range(50):
             allocation_request = IPAllocationRequest(
                 prefix_id=prefix["id"] if isinstance(prefix, dict) else prefix.id,
                 tenant=test_tenant_id,
@@ -379,7 +378,7 @@ class TestNetBoxDeviceInterfaces:
         interface = await service.create_interface(**sample_device_interface)
 
         # Assign VLAN
-        configured_interface = await service.assign_vlan_to_interface(
+        await service.assign_vlan_to_interface(
             interface_id=interface["id"],
             vlan_id=vlan["id"],
             mode="access",
@@ -528,7 +527,7 @@ class TestNetBoxReporting:
         # Create prefix and allocate some IPs
         prefix = await service.create_prefix(**sample_prefix_allocation)
 
-        for i in range(25):
+        for _i in range(25):
             ip_request = IPAllocationRequest(
                 prefix_id=prefix["id"] if isinstance(prefix, dict) else prefix.id,
                 tenant=test_tenant_id,

@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 from dotmac.platform.fault_management.models import (
     AlarmSeverity,
@@ -18,14 +18,15 @@ from dotmac.platform.fault_management.models import (
     SLAStatus,
 )
 
-
 # =============================================================================
 # Alarm Schemas
 # =============================================================================
 
 
-class AlarmCreate(BaseModel):
+class AlarmCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create alarm request"""
+
+    model_config = ConfigDict()
 
     alarm_id: str = Field(..., description="External alarm ID (from source system)")
     severity: AlarmSeverity
@@ -46,14 +47,16 @@ class AlarmCreate(BaseModel):
     subscriber_count: int = Field(default=0, ge=0)
 
     # Additional data
-    tags: dict[str, Any] = Field(default_factory=dict)
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    tags: dict[str, Any] = Field(default_factory=lambda: {})
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
     probable_cause: str | None = None
     recommended_action: str | None = None
 
 
-class AlarmUpdate(BaseModel):
+class AlarmUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Update alarm request"""
+
+    model_config = ConfigDict()
 
     severity: AlarmSeverity | None = None
     status: AlarmStatus | None = None
@@ -63,13 +66,34 @@ class AlarmUpdate(BaseModel):
     tags: dict[str, Any] | None = None
 
 
-class AlarmAcknowledge(BaseModel):
+class AlarmAcknowledge(BaseModel):  # BaseModel resolves to Any in isolation
     """Acknowledge alarm request"""
+
+    model_config = ConfigDict()
 
     note: str | None = Field(None, description="Acknowledgment note")
 
 
-class AlarmResponse(BaseModel):
+class AlarmCreateTicketRequest(BaseModel):  # BaseModel resolves to Any in isolation
+    """Request to create a ticket from an alarm"""
+
+    model_config = ConfigDict()
+
+    priority: str | None = Field(
+        default="normal",
+        description="Ticket priority (low, normal, high, critical)",
+    )
+    additional_notes: str | None = Field(
+        None,
+        description="Additional context to include in ticket",
+    )
+    assign_to_user_id: UUID | None = Field(
+        None,
+        description="Optionally assign ticket to specific user",
+    )
+
+
+class AlarmResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Alarm response"""
 
     id: UUID
@@ -114,16 +138,18 @@ class AlarmResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class AlarmNoteCreate(BaseModel):
+class AlarmNoteCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create alarm note request"""
+
+    model_config = ConfigDict()
 
     note: str = Field(..., min_length=1, description="Note content")
 
 
-class AlarmNoteResponse(BaseModel):
+class AlarmNoteResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Alarm note response"""
 
     id: UUID
@@ -132,11 +158,13 @@ class AlarmNoteResponse(BaseModel):
     created_by: UUID
     created_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class AlarmRuleCreate(BaseModel):
+class AlarmRuleCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create alarm rule request"""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
@@ -156,8 +184,10 @@ class AlarmRuleCreate(BaseModel):
         return v
 
 
-class AlarmRuleUpdate(BaseModel):
+class AlarmRuleUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Update alarm rule request"""
+
+    model_config = ConfigDict()
 
     name: str | None = None
     description: str | None = None
@@ -168,7 +198,7 @@ class AlarmRuleUpdate(BaseModel):
     time_window: int | None = Field(None, ge=0)
 
 
-class AlarmRuleResponse(BaseModel):
+class AlarmRuleResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Alarm rule response"""
 
     id: UUID
@@ -184,7 +214,7 @@ class AlarmRuleResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 # =============================================================================
@@ -194,6 +224,8 @@ class AlarmRuleResponse(BaseModel):
 
 class SLADefinitionCreate(BaseModel):
     """Create SLA definition request"""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
@@ -219,8 +251,10 @@ class SLADefinitionCreate(BaseModel):
     enabled: bool = True
 
 
-class SLADefinitionUpdate(BaseModel):
+class SLADefinitionUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Update SLA definition request"""
+
+    model_config = ConfigDict()
 
     name: str | None = None
     description: str | None = None
@@ -231,7 +265,7 @@ class SLADefinitionUpdate(BaseModel):
     enabled: bool | None = None
 
 
-class SLADefinitionResponse(BaseModel):
+class SLADefinitionResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """SLA definition response"""
 
     id: UUID
@@ -256,11 +290,13 @@ class SLADefinitionResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class SLAInstanceCreate(BaseModel):
+class SLAInstanceCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create SLA instance request"""
+
+    model_config = ConfigDict()
 
     sla_definition_id: UUID
     customer_id: UUID | None = None
@@ -270,7 +306,7 @@ class SLAInstanceCreate(BaseModel):
     period_end: datetime
 
 
-class SLAInstanceResponse(BaseModel):
+class SLAInstanceResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """SLA instance response"""
 
     id: UUID
@@ -294,10 +330,10 @@ class SLAInstanceResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class SLABreachResponse(BaseModel):
+class SLABreachResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """SLA breach response"""
 
     id: UUID
@@ -319,7 +355,7 @@ class SLABreachResponse(BaseModel):
     credit_amount: float
     created_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 # =============================================================================
@@ -327,17 +363,19 @@ class SLABreachResponse(BaseModel):
 # =============================================================================
 
 
-class MaintenanceWindowCreate(BaseModel):
+class MaintenanceWindowCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create maintenance window request"""
+
+    model_config = ConfigDict()
 
     title: str = Field(..., min_length=1, max_length=500)
     description: str | None = None
     start_time: datetime
     end_time: datetime
     timezone: str = "UTC"
-    affected_services: list[str] = Field(default_factory=list)
-    affected_customers: list[str] = Field(default_factory=list)
-    affected_resources: dict[str, Any] = Field(default_factory=dict)
+    affected_services: list[str] = Field(default_factory=lambda: [])
+    affected_customers: list[str] = Field(default_factory=lambda: [])
+    affected_resources: dict[str, Any] = Field(default_factory=lambda: {})
     suppress_alarms: bool = True
     notify_customers: bool = True
 
@@ -349,8 +387,10 @@ class MaintenanceWindowCreate(BaseModel):
         return v
 
 
-class MaintenanceWindowUpdate(BaseModel):
+class MaintenanceWindowUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Update maintenance window request"""
+
+    model_config = ConfigDict()
 
     title: str | None = None
     description: str | None = None
@@ -360,7 +400,7 @@ class MaintenanceWindowUpdate(BaseModel):
     suppress_alarms: bool | None = None
 
 
-class MaintenanceWindowResponse(BaseModel):
+class MaintenanceWindowResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Maintenance window response"""
 
     id: UUID
@@ -380,7 +420,7 @@ class MaintenanceWindowResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 # =============================================================================
@@ -388,8 +428,10 @@ class MaintenanceWindowResponse(BaseModel):
 # =============================================================================
 
 
-class AlarmQueryParams(BaseModel):
+class AlarmQueryParams(BaseModel):  # BaseModel resolves to Any in isolation
     """Alarm query parameters"""
+
+    model_config = ConfigDict()
 
     severity: list[AlarmSeverity] | None = None
     status: list[AlarmStatus] | None = None
@@ -406,8 +448,10 @@ class AlarmQueryParams(BaseModel):
     offset: int = Field(default=0, ge=0)
 
 
-class AlarmStatistics(BaseModel):
+class AlarmStatistics(BaseModel):  # BaseModel resolves to Any in isolation
     """Alarm statistics response"""
+
+    model_config = ConfigDict()
 
     total_alarms: int
     active_alarms: int
@@ -426,6 +470,8 @@ class AlarmStatistics(BaseModel):
 
 class SLAComplianceReport(BaseModel):
     """SLA compliance report"""
+
+    model_config = ConfigDict()
 
     period_start: datetime
     period_end: datetime

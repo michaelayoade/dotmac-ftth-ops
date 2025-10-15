@@ -8,18 +8,19 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 from dotmac.platform.wireguard.models import WireGuardPeerStatus, WireGuardServerStatus
-
 
 # ========================================================================
 # Server Schemas
 # ========================================================================
 
 
-class WireGuardServerCreate(BaseModel):
+class WireGuardServerCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for creating a WireGuard server."""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, max_length=255, description="Server name")
     description: str | None = Field(None, description="Server description")
@@ -76,8 +77,10 @@ class WireGuardServerCreate(BaseModel):
     )
 
 
-class WireGuardServerUpdate(BaseModel):
+class WireGuardServerUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating a WireGuard server."""
+
+    model_config = ConfigDict()
 
     name: str | None = Field(None, min_length=1, max_length=255)
     description: str | None = None
@@ -89,7 +92,7 @@ class WireGuardServerUpdate(BaseModel):
     metadata_: dict[str, Any] | None = Field(None, alias="metadata")
 
 
-class WireGuardServerResponse(BaseModel):
+class WireGuardServerResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for WireGuard server response."""
 
     id: UUID
@@ -119,14 +122,16 @@ class WireGuardServerResponse(BaseModel):
     created_at: datetime
     updated_at: datetime | None
 
-    model_config = {
-        "from_attributes": True,
-        "populate_by_name": True,
-    }
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
 
 
-class WireGuardServerListResponse(BaseModel):
+class WireGuardServerListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for list of servers."""
+
+    model_config = ConfigDict()
 
     servers: list[WireGuardServerResponse]
     total: int
@@ -139,8 +144,10 @@ class WireGuardServerListResponse(BaseModel):
 # ========================================================================
 
 
-class WireGuardPeerCreate(BaseModel):
+class WireGuardPeerCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for creating a WireGuard peer."""
+
+    model_config = ConfigDict()
 
     server_id: UUID = Field(..., description="Server ID")
     name: str = Field(..., min_length=1, max_length=255, description="Peer name")
@@ -182,15 +189,19 @@ class WireGuardPeerCreate(BaseModel):
 
     @field_validator("public_key")
     @classmethod
-    def validate_public_key_if_not_generating(cls, v: str | None, info: ValidationInfo) -> str | None:
+    def validate_public_key_if_not_generating(
+        cls, v: str | None, info: ValidationInfo
+    ) -> str | None:
         """Validate public key is provided if not generating."""
         if not info.data.get("generate_keys") and not v:
             raise ValueError("public_key is required when generate_keys=False")
         return v
 
 
-class WireGuardPeerUpdate(BaseModel):
+class WireGuardPeerUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating a WireGuard peer."""
+
+    model_config = ConfigDict()
 
     name: str | None = Field(None, min_length=1, max_length=255)
     description: str | None = None
@@ -202,7 +213,7 @@ class WireGuardPeerUpdate(BaseModel):
     notes: str | None = None
 
 
-class WireGuardPeerResponse(BaseModel):
+class WireGuardPeerResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for WireGuard peer response."""
 
     id: UUID
@@ -233,14 +244,16 @@ class WireGuardPeerResponse(BaseModel):
     created_at: datetime
     updated_at: datetime | None
 
-    model_config = {
-        "from_attributes": True,
-        "populate_by_name": True,
-    }
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
 
 
-class WireGuardPeerListResponse(BaseModel):
+class WireGuardPeerListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for list of peers."""
+
+    model_config = ConfigDict()
 
     peers: list[WireGuardPeerResponse]
     total: int
@@ -248,8 +261,10 @@ class WireGuardPeerListResponse(BaseModel):
     offset: int
 
 
-class WireGuardPeerConfigResponse(BaseModel):
+class WireGuardPeerConfigResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for peer configuration file."""
+
+    model_config = ConfigDict()
 
     peer_id: UUID
     peer_name: str
@@ -257,8 +272,10 @@ class WireGuardPeerConfigResponse(BaseModel):
     created_at: datetime
 
 
-class WireGuardPeerQRCodeResponse(BaseModel):
+class WireGuardPeerQRCodeResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for peer QR code."""
+
+    model_config = ConfigDict()
 
     peer_id: UUID
     peer_name: str
@@ -270,8 +287,10 @@ class WireGuardPeerQRCodeResponse(BaseModel):
 # ========================================================================
 
 
-class WireGuardServerHealthResponse(BaseModel):
+class WireGuardServerHealthResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for server health status."""
+
+    model_config = ConfigDict()
 
     server_id: str
     server_name: str
@@ -288,8 +307,10 @@ class WireGuardServerHealthResponse(BaseModel):
     error: str | None = Field(None, description="Error message if unhealthy")
 
 
-class WireGuardDashboardStatsResponse(BaseModel):
+class WireGuardDashboardStatsResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for dashboard statistics."""
+
+    model_config = ConfigDict()
 
     servers: dict[str, Any] = Field(
         ...,
@@ -331,8 +352,10 @@ class WireGuardDashboardStatsResponse(BaseModel):
     )
 
 
-class WireGuardPeerStatsResponse(BaseModel):
+class WireGuardPeerStatsResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for peer statistics."""
+
+    model_config = ConfigDict()
 
     peer_id: UUID
     peer_name: str
@@ -351,8 +374,10 @@ class WireGuardPeerStatsResponse(BaseModel):
 # ========================================================================
 
 
-class WireGuardBulkPeerCreate(BaseModel):
+class WireGuardBulkPeerCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for bulk peer creation."""
+
+    model_config = ConfigDict()
 
     server_id: UUID
     count: int = Field(..., ge=1, le=100, description="Number of peers to create")
@@ -365,11 +390,13 @@ class WireGuardBulkPeerCreate(BaseModel):
     customer_id: UUID | None = None
     description: str | None = None
     allowed_ips: list[str] | None = None
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
-class WireGuardBulkPeerCreateResponse(BaseModel):
+class WireGuardBulkPeerCreateResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for bulk peer creation response."""
+
+    model_config = ConfigDict()
 
     created: int
     peers: list[WireGuardPeerResponse]
@@ -379,14 +406,18 @@ class WireGuardBulkPeerCreateResponse(BaseModel):
     )
 
 
-class WireGuardSyncStatsRequest(BaseModel):
+class WireGuardSyncStatsRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for sync statistics request."""
+
+    model_config = ConfigDict()
 
     server_id: UUID
 
 
-class WireGuardSyncStatsResponse(BaseModel):
+class WireGuardSyncStatsResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for sync statistics response."""
+
+    model_config = ConfigDict()
 
     server_id: UUID
     peers_updated: int
@@ -400,6 +431,8 @@ class WireGuardSyncStatsResponse(BaseModel):
 
 class WireGuardServiceProvisionRequest(BaseModel):
     """Schema for provisioning VPN service for a customer."""
+
+    model_config = ConfigDict()
 
     customer_id: UUID
     subscriber_id: str | None = None
@@ -421,8 +454,10 @@ class WireGuardServiceProvisionRequest(BaseModel):
     )
 
 
-class WireGuardServiceProvisionResponse(BaseModel):
+class WireGuardServiceProvisionResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for service provisioning response."""
+
+    model_config = ConfigDict()
 
     server: WireGuardServerResponse
     peer: WireGuardPeerResponse

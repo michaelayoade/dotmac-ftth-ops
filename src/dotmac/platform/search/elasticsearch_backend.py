@@ -10,7 +10,6 @@ import structlog
 from elasticsearch import AsyncElasticsearch, NotFoundError
 
 from dotmac.platform.search.interfaces import (
-    SearchBackend,
     SearchQuery,
     SearchResponse,
     SearchResult,
@@ -21,7 +20,7 @@ from dotmac.platform.settings import settings
 logger = structlog.get_logger(__name__)
 
 
-class ElasticsearchBackend(SearchBackend):
+class ElasticsearchBackend:
     """Elasticsearch search backend."""
 
     def __init__(self, es_url: str | None = None):
@@ -29,9 +28,15 @@ class ElasticsearchBackend(SearchBackend):
         Initialize Elasticsearch backend.
 
         Args:
-            es_url: Elasticsearch URL (defaults to settings.elasticsearch_url)
+            es_url: Elasticsearch URL (defaults to settings.external_services.elasticsearch_url)
         """
-        default_url = getattr(settings, "elasticsearch_url", "http://localhost:9200")
+        # Load from centralized settings (Phase 2 implementation)
+        try:
+            default_url = settings.external_services.elasticsearch_url
+        except AttributeError:
+            # Fallback for backwards compatibility
+            default_url = getattr(settings, "elasticsearch_url", "http://localhost:9200")
+
         self.es_url: str = str(es_url or default_url)
         self.client: AsyncElasticsearch | None = None
 
@@ -107,7 +112,7 @@ class ElasticsearchBackend(SearchBackend):
         try:
             # Add search_text field combining searchable fields
             search_text_parts = []
-            for key, value in document.items():
+            for _key, value in document.items():
                 if isinstance(value, str):
                     search_text_parts.append(value)
             document["search_text"] = " ".join(search_text_parts)
@@ -196,7 +201,7 @@ class ElasticsearchBackend(SearchBackend):
 
             # Add search_text
             search_text_parts = []
-            for key, value in doc.items():
+            for _key, value in doc.items():
                 if isinstance(value, str):
                     search_text_parts.append(value)
             doc["search_text"] = " ".join(search_text_parts)

@@ -409,7 +409,7 @@ class TestTimeWindowAggregator:
         now = datetime.now(UTC)
 
         # Add metrics to current window
-        for i in range(3):
+        for _i in range(3):
             metric = Metric(
                 name="errors",
                 value=1,

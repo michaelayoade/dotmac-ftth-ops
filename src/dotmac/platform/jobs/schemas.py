@@ -5,26 +5,31 @@ Pydantic models for job API requests and responses.
 """
 
 from datetime import datetime
+from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # =============================================================================
 # Job Request Schemas
 # =============================================================================
 
 
-class JobCreate(BaseModel):
+class JobCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for creating a new job."""
+
+    model_config = ConfigDict()
 
     job_type: str = Field(..., description="Type of job (e.g., bulk_import, firmware_upgrade)")
     title: str = Field(..., min_length=1, max_length=255, description="Job title")
     description: str | None = Field(None, description="Detailed job description")
     items_total: int | None = Field(None, ge=0, description="Total number of items to process")
-    parameters: dict | None = Field(None, description="Job-specific parameters")
+    parameters: dict[str, Any] | None = Field(None, description="Job-specific parameters")
 
 
-class JobUpdate(BaseModel):
+class JobUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating job progress."""
+
+    model_config = ConfigDict()
 
     status: str | None = None
     progress_percent: int | None = Field(None, ge=0, le=100)
@@ -33,8 +38,8 @@ class JobUpdate(BaseModel):
     items_failed: int | None = Field(None, ge=0)
     current_item: str | None = None
     error_message: str | None = None
-    error_details: dict | None = None
-    result: dict | None = None
+    error_details: dict[str, Any] | None = None
+    result: dict[str, Any] | None = None
 
 
 # =============================================================================
@@ -42,7 +47,7 @@ class JobUpdate(BaseModel):
 # =============================================================================
 
 
-class JobResponse(BaseModel):
+class JobResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Complete job response with all fields."""
 
     id: str
@@ -58,10 +63,10 @@ class JobResponse(BaseModel):
     items_failed: int
     current_item: str | None
     error_message: str | None
-    error_details: dict | None
-    failed_items: list | None
-    parameters: dict | None
-    result: dict | None
+    error_details: dict[str, Any] | None
+    failed_items: list[Any] | None
+    parameters: dict[str, Any] | None
+    result: dict[str, Any] | None
     created_by: str
     cancelled_by: str | None
     created_at: datetime
@@ -76,10 +81,10 @@ class JobResponse(BaseModel):
     failure_rate: float = Field(..., description="Failure rate percentage")
     duration_seconds: int | None = Field(..., description="Job duration in seconds")
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class JobSummary(BaseModel):
+class JobSummary(BaseModel):  # BaseModel resolves to Any in isolation
     """Summary job response for list views."""
 
     id: str
@@ -97,11 +102,13 @@ class JobSummary(BaseModel):
     completed_at: datetime | None
     duration_seconds: int | None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class JobListResponse(BaseModel):
+class JobListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Paginated list of jobs."""
+
+    model_config = ConfigDict()
 
     jobs: list[JobSummary]
     total: int
@@ -115,8 +122,10 @@ class JobListResponse(BaseModel):
 # =============================================================================
 
 
-class JobCancelResponse(BaseModel):
+class JobCancelResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response after cancelling a job."""
+
+    model_config = ConfigDict()
 
     id: str
     status: str
@@ -125,8 +134,10 @@ class JobCancelResponse(BaseModel):
     message: str
 
 
-class JobRetryResponse(BaseModel):
+class JobRetryResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response after retrying failed items."""
+
+    model_config = ConfigDict()
 
     original_job_id: str
     new_job_id: str
@@ -139,8 +150,10 @@ class JobRetryResponse(BaseModel):
 # =============================================================================
 
 
-class JobStatistics(BaseModel):
+class JobStatistics(BaseModel):  # BaseModel resolves to Any in isolation
     """Job statistics for a tenant."""
+
+    model_config = ConfigDict()
 
     total_jobs: int
     pending_jobs: int

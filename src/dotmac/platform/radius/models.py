@@ -25,7 +25,7 @@ from sqlalchemy.orm import relationship
 from dotmac.platform.db import Base
 
 
-class INET(TypeDecorator):
+class INET(TypeDecorator[str]):
     """
     Cross-database INET type.
 
@@ -41,11 +41,12 @@ class INET(TypeDecorator):
             return dialect.type_descriptor(PostgreSQL_INET())
         return dialect.type_descriptor(String(45))
 
+
 if TYPE_CHECKING:
     pass
 
 
-class RadCheck(Base):
+class RadCheck(Base):  # type: ignore[misc]
     """
     RADIUS Check Table - Authentication attributes
 
@@ -84,7 +85,7 @@ class RadCheck(Base):
         return f"<RadCheck(id={self.id}, username={self.username}, attribute={self.attribute})>"
 
 
-class RadReply(Base):
+class RadReply(Base):  # type: ignore[misc]
     """
     RADIUS Reply Table - Authorization attributes
 
@@ -123,7 +124,7 @@ class RadReply(Base):
         return f"<RadReply(id={self.id}, username={self.username}, attribute={self.attribute})>"
 
 
-class RadAcct(Base):
+class RadAcct(Base):  # type: ignore[misc]
     """
     RADIUS Accounting Table
 
@@ -186,7 +187,7 @@ class RadAcct(Base):
             "idx_radacct_active_session",
             "tenant_id",
             "username",
-            postgresql_where=(acctstoptime == None),
+            postgresql_where=(acctstoptime is None),
         ),
     )
 
@@ -206,7 +207,7 @@ class RadAcct(Base):
         return upload + download
 
 
-class RadPostAuth(Base):
+class RadPostAuth(Base):  # type: ignore[misc]
     """
     RADIUS Post-Auth Table
 
@@ -241,7 +242,7 @@ class RadPostAuth(Base):
         return f"<RadPostAuth(id={self.id}, username={self.username}, reply={self.reply})>"
 
 
-class NAS(Base):
+class NAS(Base):  # type: ignore[misc]
     """
     NAS (Network Access Server) Table
 
@@ -280,7 +281,7 @@ class NAS(Base):
         return f"<NAS(id={self.id}, name={self.shortname}, nasname={self.nasname})>"
 
 
-class RadiusBandwidthProfile(Base):
+class RadiusBandwidthProfile(Base):  # type: ignore[misc]
     """
     Bandwidth Profile Table
 

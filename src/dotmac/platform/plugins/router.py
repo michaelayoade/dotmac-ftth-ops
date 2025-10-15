@@ -33,7 +33,7 @@ router = APIRouter(
 # Request/Response Models
 
 
-class CreatePluginInstanceRequest(BaseModel):
+class CreatePluginInstanceRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request to create a plugin instance."""
 
     model_config = ConfigDict()
@@ -43,7 +43,7 @@ class CreatePluginInstanceRequest(BaseModel):
     configuration: dict[str, Any] = {}
 
 
-class UpdatePluginConfigurationRequest(BaseModel):
+class UpdatePluginConfigurationRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request to update plugin configuration."""
 
     model_config = ConfigDict()
@@ -51,7 +51,7 @@ class UpdatePluginConfigurationRequest(BaseModel):
     configuration: dict[str, Any]
 
 
-class TestConnectionRequest(BaseModel):
+class TestConnectionRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request to test plugin connection."""
 
     model_config = ConfigDict()
@@ -208,7 +208,7 @@ async def update_plugin_configuration(
     request: UpdatePluginConfigurationRequest,
     registry: PluginRegistry = Depends(get_registry),
     current_user: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """
     Update plugin configuration.
 
@@ -334,7 +334,7 @@ async def bulk_health_check(
 async def refresh_plugins(
     registry: PluginRegistry = Depends(get_registry),
     current_user: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """
     Refresh plugin discovery.
 

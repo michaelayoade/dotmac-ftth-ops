@@ -20,7 +20,7 @@ class ServiceStatus(str, Enum):
     UNKNOWN = "unknown"
 
 
-class ServiceHealth(BaseModel):
+class ServiceHealth(BaseModel):  # BaseModel resolves to Any in isolation
     """Service health information."""
 
     model_config = ConfigDict()
@@ -31,11 +31,11 @@ class ServiceHealth(BaseModel):
     memory_usage: float | None = None
     error_rate: float | None = None
     request_count: int | None = None
-    details: dict[str, Any] = Field(default_factory=dict)
+    details: dict[str, Any] = Field(default_factory=lambda: {})
     checked_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
-class ServiceInfo(BaseModel):
+class ServiceInfo(BaseModel):  # BaseModel resolves to Any in isolation
     """Service registration information."""
 
     model_config = ConfigDict()
@@ -45,8 +45,8 @@ class ServiceInfo(BaseModel):
     version: str
     host: str
     port: int
-    tags: list[str] = Field(default_factory=list)
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    tags: list[str] = Field(default_factory=lambda: [])
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
     health_check_url: str
     status: ServiceStatus = ServiceStatus.UNKNOWN
     health: ServiceHealth | None = None

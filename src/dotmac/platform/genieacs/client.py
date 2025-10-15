@@ -16,7 +16,7 @@ from dotmac.platform.core.http_client import RobustHTTPClient
 logger = structlog.get_logger(__name__)
 
 
-class GenieACSClient(RobustHTTPClient):
+class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
     """
     GenieACS NBI Client
 
@@ -49,7 +49,7 @@ class GenieACSClient(RobustHTTPClient):
         Initialize GenieACS client with robust HTTP capabilities.
 
         Args:
-            base_url: GenieACS NBI URL (defaults to GENIEACS_URL env var)
+            base_url: GenieACS NBI URL (defaults to settings.external_services.genieacs_url)
             username: Basic auth username (defaults to GENIEACS_USERNAME env var)
             password: Basic auth password (defaults to GENIEACS_PASSWORD env var)
             tenant_id: Tenant ID for multi-tenancy support
@@ -57,7 +57,16 @@ class GenieACSClient(RobustHTTPClient):
             timeout_seconds: Default timeout in seconds
             max_retries: Maximum retry attempts
         """
-        base_url = base_url or os.getenv("GENIEACS_URL", "http://localhost:7557")
+        # Load from centralized settings (Phase 2 implementation)
+        if base_url is None:
+            try:
+                from dotmac.platform.settings import settings
+
+                base_url = settings.external_services.genieacs_url
+            except (ImportError, AttributeError):
+                # Fallback to environment variable if settings not available
+                base_url = os.getenv("GENIEACS_URL", "http://localhost:7557")
+
         username = username or os.getenv("GENIEACS_USERNAME", "")
         password = password or os.getenv("GENIEACS_PASSWORD", "")
 

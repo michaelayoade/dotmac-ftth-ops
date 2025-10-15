@@ -76,7 +76,7 @@ class EventBus:
         self._enable_persistence = enable_persistence
 
         # Background task for processing
-        self._processing_task: asyncio.Task | None = None
+        self._processing_task: asyncio.Task[None] | None = None
         self._running = False
 
         logger.info(

@@ -1,155 +1,117 @@
-"""
-Billing module exceptions
-"""
+"""Billing module exceptions."""
 
-from dotmac.platform.core.exceptions import DotMacError
+from __future__ import annotations
+
+from typing import Any
+
+try:
+    from ..core.exceptions import DotMacError  # type: ignore[attr-defined]  # May not be exported
+except Exception:  # pragma: no cover - fallback when core module unavailable
+
+    class DotMacError(Exception):  # type: ignore[no-redef]  # Fallback for isolated analysis
+        """Fallback DotMacError definition used when core exceptions are unavailable."""
 
 
-class BillingError(DotMacError):
-    """Base exception for all billing-related errors"""
+class BillingError(DotMacError):  # type: ignore[misc]  # DotMacError resolves to Any in isolation
+    """Base exception for all billing-related errors."""
 
-    pass
+    message: str = "Billing error"
+
+    def __init__(self, message: str | None = None, **context: Any) -> None:
+        super().__init__(message or self.message, details=context or None)
 
 
 class ValidationError(BillingError):
-    """Validation error for billing operations"""
-
-    pass
+    """Validation error for billing operations."""
 
 
 class InvoiceError(BillingError):
-    """Base exception for invoice-related errors"""
-
-    pass
+    """Base exception for invoice-related errors."""
 
 
 class InvoiceNotFoundError(InvoiceError):
-    """Invoice not found error"""
-
-    pass
+    """Invoice not found error."""
 
 
 class InvalidInvoiceStatusError(InvoiceError):
-    """Invalid invoice status for requested operation"""
-
-    pass
+    """Invalid invoice status for requested operation."""
 
 
 class PaymentError(BillingError):
-    """Base exception for payment-related errors"""
-
-    pass
+    """Base exception for payment-related errors."""
 
 
 class PaymentNotFoundError(PaymentError):
-    """Payment not found error"""
-
-    pass
+    """Payment not found error."""
 
 
 class PaymentMethodNotFoundError(PaymentError):
-    """Payment method not found error"""
-
-    pass
+    """Payment method not found error."""
 
 
 class PaymentProcessingError(PaymentError):
-    """Error processing payment"""
-
-    pass
+    """Error processing payment."""
 
 
 class InsufficientFundsError(PaymentError):
-    """Insufficient funds for payment"""
-
-    pass
+    """Insufficient funds for payment."""
 
 
 class CreditNoteError(BillingError):
-    """Base exception for credit note-related errors"""
-
-    pass
+    """Base exception for credit note-related errors."""
 
 
 class CreditNoteNotFoundError(CreditNoteError):
-    """Credit note not found error"""
-
-    pass
+    """Credit note not found error."""
 
 
 class InvalidCreditNoteStatusError(CreditNoteError):
-    """Invalid credit note status for requested operation"""
-
-    pass
+    """Invalid credit note status for requested operation."""
 
 
 class InsufficientCreditError(CreditNoteError):
-    """Insufficient credit amount available"""
-
-    pass
+    """Insufficient credit amount available."""
 
 
 class TaxError(BillingError):
-    """Base exception for tax-related errors"""
-
-    pass
+    """Base exception for tax-related errors."""
 
 
 class TaxCalculationError(TaxError):
-    """Error calculating tax"""
-
-    pass
+    """Error calculating tax."""
 
 
 class TaxRateNotFoundError(TaxError):
-    """Tax rate not found for location"""
-
-    pass
+    """Tax rate not found for location."""
 
 
 class CurrencyError(BillingError):
-    """Base exception for currency-related errors"""
-
-    pass
+    """Base exception for currency-related errors."""
 
 
 class CurrencyConversionError(CurrencyError):
-    """Error converting between currencies"""
-
-    pass
+    """Error converting between currencies."""
 
 
 class UnsupportedCurrencyError(CurrencyError):
-    """Currency not supported"""
-
-    pass
+    """Currency not supported."""
 
 
 class ConfigurationError(BillingError):
-    """Billing configuration error"""
-
-    pass
+    """Billing configuration error."""
 
 
 class IdempotencyError(BillingError):
-    """Idempotency key conflict error"""
-
-    pass
+    """Idempotency key conflict error."""
 
 
 class SubscriptionError(BillingError):
-    """Base exception for subscription-related errors"""
-
-    pass
+    """Base exception for subscription-related errors."""
 
 
 class SubscriptionNotFoundError(SubscriptionError):
-    """Subscription not found error"""
-
-    pass
+    """Subscription not found error."""
 
 
 class InvalidSubscriptionStatusError(SubscriptionError):
-    """Invalid subscription status for requested operation"""
-
-    pass
+    """Invalid subscription status for requested operation."""

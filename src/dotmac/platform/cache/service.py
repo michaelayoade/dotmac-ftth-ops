@@ -6,20 +6,19 @@ Redis-backed caching with multiple strategies and patterns.
 
 import hashlib
 import json
-import pickle
 import zlib
-from datetime import UTC, datetime
-from typing import Any, TypedDict, TypeVar
+from dataclasses import asdict, is_dataclass
+from datetime import UTC, date, datetime
+from enum import Enum
+from typing import Any, TypedDict, cast
 
 import structlog
-from redis.asyncio import Redis
 
 from dotmac.platform.cache.models import CacheNamespace
+from dotmac.platform.redis_client import RedisClientType
 from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
-
-T = TypeVar("T")
 
 
 class CacheService:
@@ -33,20 +32,23 @@ class CacheService:
         total_hit_latency: float
         total_miss_latency: float
 
-    def __init__(self, redis: Redis | None = None):
+    def __init__(self, redis: RedisClientType | None = None):
         """Initialize cache service."""
         self.redis = redis
         self._local_stats: dict[str, CacheService.NamespaceStats] = {}
 
-    async def _get_redis(self) -> Redis:
+    async def _get_redis(self) -> RedisClientType:
         """Get Redis connection."""
         if self.redis is None:
             import redis.asyncio as aioredis
 
-            self.redis = await aioredis.from_url(
-                settings.redis_url,
-                encoding="utf-8",
-                decode_responses=False,  # We'll handle encoding
+            self.redis = cast(
+                RedisClientType,
+                await aioredis.from_url(
+                    settings.redis_url,
+                    encoding="utf-8",
+                    decode_responses=False,  # We'll handle encoding
+                ),
             )
         return self.redis
 
@@ -387,8 +389,8 @@ class CacheService:
         cache_key = self._generate_key(namespace, self._hash_key(key), tenant_id)
 
         try:
-            value = await redis.incrby(cache_key, amount)
-            return value
+            result = await redis.incrby(cache_key, amount)
+            return int(result)
 
         except Exception as e:
             logger.error("Cache increment error", error=str(e), key=cache_key)
@@ -405,27 +407,65 @@ class CacheService:
         return await self.increment(key, -amount, namespace, tenant_id)
 
     def _serialize(self, value: Any) -> bytes:
-        """Serialize value for storage."""
+        """
+        Serialize value for storage using JSON only.
+
+        Raises:
+            ValueError: If the value cannot be represented safely as JSON.
+        """
         try:
-            # Try JSON first (most efficient for simple types)
-            return json.dumps(value).encode("utf-8")
-        except (TypeError, ValueError):
-            # Fall back to pickle for complex types
-            return pickle.dumps(value)
+            json_payload = json.dumps(
+                value, default=self._json_default_encoder, separators=(",", ":")
+            )
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Cannot cache non-JSON-serializable value of type {type(value).__name__}. "
+                "Use a Pydantic model, dataclass, or convert the value to JSON-safe primitives."
+            ) from exc
+
+        return json_payload.encode("utf-8")
 
     def _deserialize(self, value: bytes) -> Any:
         """Deserialize value from storage."""
-        try:
-            # Check if compressed
-            if value[:2] == b"\x78\x9c":  # zlib magic number
-                value = zlib.decompress(value)
+        raw_value = value
 
-            # Try JSON first
-            return json.loads(value.decode("utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            # Fall back to pickle for internal cache data only
-            # This is safe because Redis is internal and not exposed to external users
-            return pickle.loads(value)  # nosec B301 - internal cache only
+        if self._is_compressed(raw_value):
+            try:
+                raw_value = zlib.decompress(raw_value)
+            except zlib.error as exc:
+                logger.error("Cache decompress error", error=str(exc))
+                return None
+
+        try:
+            return json.loads(raw_value.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            logger.error("Corrupted cache data", error=str(exc))
+            return None
+
+    @staticmethod
+    def _is_compressed(value: bytes) -> bool:
+        """Detect if a payload looks like zlib-compressed data."""
+        return len(value) >= 2 and value[:2] == b"\x78\x9c"
+
+    @staticmethod
+    def _json_default_encoder(value: Any) -> Any:
+        """
+        Provide safe fallbacks for objects commonly cached in the application.
+
+        Raises TypeError for unsupported objects so json.dumps surfaces the issue.
+        """
+        if hasattr(value, "model_dump") and callable(value.model_dump):
+            return value.model_dump()
+        if is_dataclass(value) and not isinstance(value, type):
+            return asdict(value)
+        if isinstance(value, datetime):
+            return value.isoformat()
+        if isinstance(value, date):
+            return value.isoformat()
+        if isinstance(value, Enum):
+            return value.value
+
+        raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
 
     def _record_hit(self, namespace: CacheNamespace | str, latency_ms: float) -> None:
         """Record cache hit for statistics."""

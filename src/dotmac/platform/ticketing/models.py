@@ -65,7 +65,7 @@ class TicketType(str, Enum):
     CONNECTIVITY_ISSUE = "connectivity_issue"
 
 
-class Ticket(Base, TimestampMixin, TenantMixin, AuditMixin):
+class Ticket(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]
     """
     Ticket record capturing the high-level support request.
 
@@ -229,7 +229,7 @@ class Ticket(Base, TimestampMixin, TenantMixin, AuditMixin):
         )
 
 
-class TicketMessage(Base, TimestampMixin, TenantMixin, AuditMixin):
+class TicketMessage(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]
     """
     Threaded message within a ticket conversation.
 

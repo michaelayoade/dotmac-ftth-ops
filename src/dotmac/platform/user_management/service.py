@@ -6,6 +6,7 @@ Production-ready user service with proper database operations.
 
 import secrets
 from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import UUID
 
 import structlog
@@ -14,6 +15,7 @@ from sqlalchemy import Text, and_, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..settings import settings
 from .models import User
 
 logger = structlog.get_logger(__name__)
@@ -169,7 +171,7 @@ class UserService:
         if is_verified is not None:
             user.is_verified = is_verified
 
-    def _update_metadata(self, user: User, metadata: dict) -> None:
+    def _update_metadata(self, user: User, metadata: dict[str, Any]) -> None:
         """Update user metadata."""
         user.metadata_ = metadata
 
@@ -183,7 +185,7 @@ class UserService:
         is_active: bool | None = None,
         is_verified: bool | None = None,
         phone_number: str | None = None,
-        metadata: dict | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> User | None:
         """Update user information."""
         user = await self.get_user_by_id(user_id)
@@ -351,10 +353,15 @@ class UserService:
             # Increment failed attempts
             user.failed_login_attempts += 1
 
-            # Lock account after 5 failed attempts
-            if user.failed_login_attempts >= 5:
-                user.locked_until = datetime.now(UTC) + timedelta(hours=1)
-                logger.warning(f"Account locked due to failed attempts: {user.username}")
+            # Lock account after max failed attempts (from settings)
+            if user.failed_login_attempts >= settings.security.max_failed_login_attempts:
+                user.locked_until = datetime.now(UTC) + timedelta(
+                    hours=settings.security.account_lockout_duration_hours
+                )
+                logger.warning(
+                    f"Account locked due to {settings.security.max_failed_login_attempts} "
+                    f"failed attempts: {user.username}"
+                )
 
             await self.session.commit()
             return None

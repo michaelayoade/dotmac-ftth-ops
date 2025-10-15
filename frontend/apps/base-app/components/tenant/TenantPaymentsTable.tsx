@@ -44,9 +44,8 @@ export default function TenantPaymentsTable({ payments }: TenantPaymentsTablePro
               </td>
               <td className="px-3 py-2 text-foreground">
                 {formatCurrency(
-                  payment.amount?.amount ?? 0,
-                  payment.amount?.currency ?? 'USD',
-                  payment.amount?.minor_unit ?? payment.amount?.minorUnit ?? 100
+                  (payment.amount?.amount ?? 0) / (payment.amount?.minor_unit ?? payment.amount?.minorUnit ?? 100),
+                  payment.amount?.currency ?? 'USD'
                 )}
               </td>
               <td className="px-3 py-2">

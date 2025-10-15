@@ -4,18 +4,16 @@ SLA Monitoring Service
 Real-time SLA tracking, breach detection, and compliance reporting.
 """
 
-from datetime import UTC, datetime, timedelta
-from typing import Any
+from datetime import UTC, datetime
 from uuid import UUID
 
 import structlog
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.fault_management.models import (
     Alarm,
     AlarmSeverity,
-    MaintenanceWindow,
     SLABreach,
     SLADefinition,
     SLAInstance,

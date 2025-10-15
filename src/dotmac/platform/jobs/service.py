@@ -8,7 +8,6 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 import structlog
-from redis.asyncio import Redis
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,6 +20,7 @@ from dotmac.platform.jobs.schemas import (
     JobUpdate,
 )
 from dotmac.platform.realtime import publish_job_update
+from dotmac.platform.redis_client import RedisClientType
 
 logger = structlog.get_logger(__name__)
 
@@ -28,7 +28,7 @@ logger = structlog.get_logger(__name__)
 class JobService:
     """Service for managing async jobs."""
 
-    def __init__(self, session: AsyncSession, redis_client: Redis | None = None):
+    def __init__(self, session: AsyncSession, redis_client: RedisClientType | None = None):
         self.session = session
         self.redis = redis_client
 

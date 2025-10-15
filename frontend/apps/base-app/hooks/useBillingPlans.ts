@@ -152,7 +152,7 @@ export const useBillingPlans = () => {
     try {
       const response = await apiClient.delete(`/api/v1/billing/subscriptions/plans/${planId}`);
 
-      if ((response as any).success || response.error?.status === 204) {
+      if (response.status >= 200 && response.status < 300) {
         setPlans(prev => prev.filter(plan => plan.plan_id !== planId));
         return true;
       }

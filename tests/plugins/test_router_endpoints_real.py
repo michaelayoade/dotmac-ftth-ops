@@ -18,7 +18,7 @@ from dotmac.platform.plugins.router import router as plugin_router
 
 # Mark all tests as integration - they test real router endpoints with full app
 pytestmark = pytest.mark.integration
-from dotmac.platform.plugins.schema import (
+from dotmac.platform.plugins.schema import (  # noqa: E402
     FieldSpec,
     FieldType,
     PluginConfig,

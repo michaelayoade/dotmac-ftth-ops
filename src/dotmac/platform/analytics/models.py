@@ -99,7 +99,7 @@ class DashboardPeriod(str, Enum):
 # ========================================
 
 
-class EventTrackRequest(BaseModel):
+class EventTrackRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Event tracking request with validation."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -138,7 +138,7 @@ class EventTrackRequest(BaseModel):
         return v
 
 
-class MetricRecordRequest(BaseModel):
+class MetricRecordRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Metric recording request with validation."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -184,7 +184,7 @@ class MetricRecordRequest(BaseModel):
         return v
 
 
-class AnalyticsQueryRequest(BaseModel):
+class AnalyticsQueryRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Analytics query request with validation."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -226,7 +226,7 @@ class AnalyticsQueryRequest(BaseModel):
 # ========================================
 
 
-class EventTrackResponse(BaseModel):
+class EventTrackResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Event tracking response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -242,7 +242,7 @@ class EventTrackResponse(BaseModel):
         return _format_datetime(value)
 
 
-class MetricRecordResponse(BaseModel):
+class MetricRecordResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Metric recording response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -259,7 +259,7 @@ class MetricRecordResponse(BaseModel):
         return _format_datetime(value)
 
 
-class MetricDataPoint(BaseModel):
+class MetricDataPoint(BaseModel):  # BaseModel resolves to Any in isolation
     """Single metric data point."""
 
     model_config = ConfigDict()
@@ -273,7 +273,7 @@ class MetricDataPoint(BaseModel):
         return _format_datetime(value)
 
 
-class MetricSeries(BaseModel):
+class MetricSeries(BaseModel):  # BaseModel resolves to Any in isolation
     """Time series of metric data."""
 
     model_config = ConfigDict()
@@ -298,7 +298,7 @@ class EventData(BaseModel):
     properties: dict[str, Any] = Field(default_factory=dict, description="Event properties")
 
 
-class EventsQueryResponse(BaseModel):
+class EventsQueryResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Events query response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -311,7 +311,7 @@ class EventsQueryResponse(BaseModel):
     query_time_ms: float | None = Field(None, description="Query execution time")
 
 
-class MetricsQueryResponse(BaseModel):
+class MetricsQueryResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Metrics query response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -329,7 +329,7 @@ class MetricsQueryResponse(BaseModel):
         }
 
 
-class AggregationResult(BaseModel):
+class AggregationResult(BaseModel):  # BaseModel resolves to Any in isolation
     """Single aggregation result."""
 
     model_config = ConfigDict()
@@ -340,7 +340,7 @@ class AggregationResult(BaseModel):
     count: int = Field(..., description="Number of records in aggregation")
 
 
-class AggregationQueryResponse(BaseModel):
+class AggregationQueryResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Aggregation query response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -351,7 +351,7 @@ class AggregationQueryResponse(BaseModel):
     metadata: dict[str, Any] | None = Field(None, description="Additional metadata")
 
 
-class ReportSection(BaseModel):
+class ReportSection(BaseModel):  # BaseModel resolves to Any in isolation
     """Section of an analytics report."""
 
     model_config = ConfigDict()
@@ -361,7 +361,7 @@ class ReportSection(BaseModel):
     charts: list[dict[str, Any]] | None = Field(None, description="Chart configurations")
 
 
-class ReportResponse(BaseModel):
+class ReportResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Analytics report response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -383,7 +383,7 @@ class ReportResponse(BaseModel):
         return {key: _format_datetime(val) for key, val in value.items()}
 
 
-class DashboardWidget(BaseModel):
+class DashboardWidget(BaseModel):  # BaseModel resolves to Any in isolation
     """Dashboard widget data."""
 
     model_config = ConfigDict()
@@ -395,7 +395,7 @@ class DashboardWidget(BaseModel):
     config: dict[str, Any] | None = Field(None, description="Widget configuration")
 
 
-class DashboardResponse(BaseModel):
+class DashboardResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Dashboard data response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -416,7 +416,7 @@ class DashboardResponse(BaseModel):
 # ========================================
 
 
-class AnalyticsErrorResponse(BaseModel):
+class AnalyticsErrorResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Analytics error response."""
 
     model_config = ConfigDict()

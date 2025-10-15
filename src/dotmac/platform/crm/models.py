@@ -93,7 +93,7 @@ class Serviceability(str, Enum):
     REQUIRES_CONSTRUCTION = "requires_construction"
 
 
-class Lead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
+class Lead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     Sales Lead.
 
@@ -289,7 +289,7 @@ class Lead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
         return ", ".join(parts)
 
 
-class Quote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
+class Quote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     Service Quote.
 
@@ -457,7 +457,7 @@ class Quote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
         return self.total_upfront_cost + (self.monthly_recurring_charge * 12)
 
 
-class SiteSurvey(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
+class SiteSurvey(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     Site Survey.
 

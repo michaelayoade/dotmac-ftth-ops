@@ -7,6 +7,7 @@ SQLAlchemy models for tracking email, webhook, and SMS communications.
 import uuid
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from sqlalchemy import JSON, Boolean, Integer, String, Text
 from sqlalchemy import Enum as SQLEnum
@@ -36,7 +37,7 @@ class CommunicationStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-class CommunicationLog(Base, TimestampMixin, TenantMixin):
+class CommunicationLog(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Communication activity log for tracking all sent communications."""
 
     __tablename__ = "communication_logs"
@@ -86,13 +87,15 @@ class CommunicationLog(Base, TimestampMixin, TenantMixin):
     job_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
 
     # Metadata
-    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict, nullable=False)
-    headers: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
+    headers: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
 
     def __repr__(self) -> str:
         return f"<CommunicationLog(id={self.id}, type={self.type}, recipient={self.recipient}, status={self.status})>"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""
         return {
             "id": str(self.id),
@@ -113,7 +116,7 @@ class CommunicationLog(Base, TimestampMixin, TenantMixin):
         }
 
 
-class CommunicationTemplate(Base, TimestampMixin, TenantMixin):
+class CommunicationTemplate(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Email and SMS templates for communications."""
 
     __tablename__ = "communication_templates"
@@ -136,8 +139,8 @@ class CommunicationTemplate(Base, TimestampMixin, TenantMixin):
     html_template: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Template variables and validation
-    variables: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
-    required_variables: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    variables: Mapped[list[Any]] = mapped_column(JSON, default=list, nullable=False)
+    required_variables: Mapped[list[Any]] = mapped_column(JSON, default=list, nullable=False)
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
@@ -148,12 +151,14 @@ class CommunicationTemplate(Base, TimestampMixin, TenantMixin):
     last_used_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
     # Metadata
-    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict, nullable=False)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
 
     def __repr__(self) -> str:
         return f"<CommunicationTemplate(id={self.id}, name={self.name}, type={self.type})>"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""
         return {
             "id": str(self.id),
@@ -174,7 +179,7 @@ class CommunicationTemplate(Base, TimestampMixin, TenantMixin):
         }
 
 
-class CommunicationStats(Base, TimestampMixin, TenantMixin):
+class CommunicationStats(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Aggregated communication statistics."""
 
     __tablename__ = "communication_stats"
@@ -203,12 +208,14 @@ class CommunicationStats(Base, TimestampMixin, TenantMixin):
     avg_delivery_time_seconds: Mapped[float | None] = mapped_column(nullable=True)
 
     # Metadata
-    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict, nullable=False)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
 
     def __repr__(self) -> str:
         return f"<CommunicationStats(id={self.id}, date={self.stats_date}, type={self.type})>"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""
         return {
             "id": str(self.id),

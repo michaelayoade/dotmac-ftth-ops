@@ -16,7 +16,7 @@ from dotmac.platform.services.orchestration import OrchestrationService
 logger = structlog.get_logger(__name__)
 
 
-@shared_task(bind=True, max_retries=3)
+@shared_task(bind=True, max_retries=3)  # type: ignore[misc]  # Celery decorator is untyped
 def provision_subscriber_async(
     self: Any,
     tenant_id: str,
@@ -113,7 +113,7 @@ def provision_subscriber_async(
         raise self.retry(exc=e, countdown=60 * (2**self.request.retries))
 
 
-@shared_task(bind=True, max_retries=3)
+@shared_task(bind=True, max_retries=3)  # type: ignore[misc]  # Celery decorator is untyped
 def deprovision_subscriber_async(
     self: Any,
     tenant_id: str,
@@ -183,7 +183,7 @@ def deprovision_subscriber_async(
         raise self.retry(exc=e, countdown=60 * (2**self.request.retries))
 
 
-@shared_task(bind=True)
+@shared_task(bind=True)  # type: ignore[misc]  # Celery decorator is untyped
 def convert_lead_to_customer_async(
     self: Any,
     tenant_id: str,

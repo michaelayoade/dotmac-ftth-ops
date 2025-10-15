@@ -10,13 +10,12 @@ from typing import Any
 from uuid import UUID, uuid4
 
 import structlog
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.fault_management.models import (
     Alarm,
     AlarmRule,
-    AlarmSeverity,
     AlarmStatus,
     CorrelationAction,
 )
@@ -163,8 +162,7 @@ class CorrelationEngine:
         filters = [
             Alarm.tenant_id == self.tenant_id,
             Alarm.status.in_([AlarmStatus.ACTIVE, AlarmStatus.ACKNOWLEDGED]),
-            Alarm.first_occurrence
-            >= datetime.now(UTC) - timedelta(seconds=time_window),
+            Alarm.first_occurrence >= datetime.now(UTC) - timedelta(seconds=time_window),
         ]
 
         # Add condition filters
@@ -193,8 +191,7 @@ class CorrelationEngine:
             Alarm.status.in_([AlarmStatus.ACTIVE, AlarmStatus.ACKNOWLEDGED]),
             Alarm.id != alarm.id,
             Alarm.first_occurrence >= alarm.first_occurrence,
-            Alarm.first_occurrence
-            <= alarm.first_occurrence + timedelta(seconds=time_window),
+            Alarm.first_occurrence <= alarm.first_occurrence + timedelta(seconds=time_window),
         ]
 
         # Add condition filters

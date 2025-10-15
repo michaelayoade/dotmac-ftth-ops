@@ -26,7 +26,7 @@ class EmailServiceProtocol(Protocol):
         """Send an email message."""
 
 
-class BulkEmailJob(BaseModel):
+class BulkEmailJob(BaseModel):  # BaseModel resolves to Any in isolation
     """Bulk email job model."""
 
     id: str = Field(default_factory=lambda: f"bulk_{uuid4().hex[:8]}")
@@ -38,7 +38,7 @@ class BulkEmailJob(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
 
-class BulkEmailResult(BaseModel):
+class BulkEmailResult(BaseModel):  # BaseModel resolves to Any in isolation
     """Bulk email job result."""
 
     model_config = ConfigDict()
@@ -160,7 +160,7 @@ def _send_email_sync(email_service: EmailServiceProtocol, message: EmailMessage)
 # ---------------------------------------------------------------------------
 
 
-@celery_app.task(bind=True, name="send_bulk_email")
+@celery_app.task(bind=True, name="send_bulk_email")  # type: ignore[misc]
 def send_bulk_email_task(self: Any, job_data: dict[str, Any]) -> dict[str, Any]:
     """Celery task that delegates to the async bulk email processor."""
 
@@ -233,7 +233,7 @@ def send_bulk_email_task(self: Any, job_data: dict[str, Any]) -> dict[str, Any]:
         ).model_dump()
 
 
-@celery_app.task(name="send_single_email")
+@celery_app.task(name="send_single_email")  # type: ignore[misc]
 def send_single_email_task(message_data: dict[str, Any]) -> dict[str, Any]:
     """Celery task for a single email."""
 

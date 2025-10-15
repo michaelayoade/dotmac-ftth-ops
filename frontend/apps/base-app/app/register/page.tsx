@@ -32,7 +32,7 @@ export default function RegisterPage() {
       await registerUser({
         email: data.email,
         password: data.password,
-        name: data.full_name,
+        name: data.name,
       });
 
       // Server sets HttpOnly cookies; navigate once ready
@@ -60,21 +60,21 @@ export default function RegisterPage() {
           )}
 
           <div>
-            <label htmlFor="full_name" className="block text-sm font-medium text-muted-foreground mb-2">
-              Full Name (optional)
+            <label htmlFor="name" className="block text-sm font-medium text-muted-foreground mb-2">
+              Full Name
             </label>
             <input
-              id="full_name"
+              id="name"
               type="text"
-              {...register('full_name')}
+              {...register('name')}
               className={`w-full px-3 py-2 bg-accent border ${
-                errors.full_name ? 'border-red-500' : 'border-border'
+                errors.name ? 'border-red-500' : 'border-border'
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
               placeholder="John Doe"
-              data-testid="full-name-input"
+              data-testid="name-input"
             />
-            {errors.full_name && (
-              <p className="mt-1 text-sm text-red-400">{errors.full_name.message}</p>
+            {errors.name && (
+              <p className="mt-1 text-sm text-red-400">{errors.name.message}</p>
             )}
           </div>
 

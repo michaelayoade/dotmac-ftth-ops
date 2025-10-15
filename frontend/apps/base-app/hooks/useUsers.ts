@@ -169,9 +169,9 @@ export function useDeleteUser() {
   return useMutation({
     mutationFn: async (userId: string) => {
       const response = await apiClient.delete(`/api/v1/users/${userId}`);
-      // Allow success=false for 204 No Content (DELETE operations)
-      if (!response.success && response.error?.status !== 204) {
-        throw new Error(response.error?.message || 'Failed to delete user');
+      // Check for successful status codes (2xx)
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to delete user');
       }
     },
     onSuccess: () => {
@@ -202,8 +202,8 @@ export function useDisableUser() {
   return useMutation({
     mutationFn: async (userId: string) => {
       const response = await apiClient.post(`/api/v1/users/${userId}/disable`);
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to disable user');
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to disable user');
       }
     },
     onSuccess: () => {
@@ -234,8 +234,8 @@ export function useEnableUser() {
   return useMutation({
     mutationFn: async (userId: string) => {
       const response = await apiClient.post(`/api/v1/users/${userId}/enable`);
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to enable user');
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to enable user');
       }
     },
     onSuccess: () => {

@@ -75,14 +75,10 @@ class RouterManagementService:
             dns_servers=wan_config.get("dns_servers"),
         )
 
-        extra_vars["playbook_path"] = PlaybookLibrary.get_playbook_path(
-            PlaybookType.ROUTER_CONFIG
-        )
+        extra_vars["playbook_path"] = PlaybookLibrary.get_playbook_path(PlaybookType.ROUTER_CONFIG)
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             logger.info(
                 "router.configure.started",
@@ -140,9 +136,7 @@ class RouterManagementService:
         }
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             logger.info(
                 "router.bandwidth.update.started",
@@ -200,9 +194,7 @@ class RouterManagementService:
         }
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             logger.info(
                 "router.vlan.change.started",
@@ -251,9 +243,7 @@ class RouterManagementService:
         }
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             logger.info(
                 "router.reboot.started",
@@ -300,9 +290,7 @@ class RouterManagementService:
         }
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             logger.info(
                 "router.backup.started",

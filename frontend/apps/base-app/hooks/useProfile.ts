@@ -43,13 +43,8 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: async (data: UpdateProfileData) => {
       logger.info('Updating profile', { fields: Object.keys(data) });
-      const response = await authService.updateProfile(data);
-
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to update profile');
-      }
-
-      return response.data;
+      const user = await authService.updateProfile(data);
+      return user;
     },
     onSuccess: (data) => {
       // Update the user in auth context
@@ -76,8 +71,8 @@ export function useChangePassword() {
         data
       );
 
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to change password');
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to change password');
       }
 
       return response.data;
@@ -106,8 +101,8 @@ export function useVerifyPhone() {
         { phone }
       );
 
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to verify phone');
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to verify phone');
       }
 
       return response.data;
@@ -155,8 +150,8 @@ export function useEnable2FA() {
         data
       );
 
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to enable 2FA');
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to enable 2FA');
       }
 
       return response.data;
@@ -185,8 +180,8 @@ export function useVerify2FA() {
         data
       );
 
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to verify 2FA');
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to verify 2FA');
       }
 
       return response.data;
@@ -216,8 +211,8 @@ export function useDisable2FA() {
         data
       );
 
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to disable 2FA');
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to disable 2FA');
       }
 
       return response.data;
@@ -241,14 +236,8 @@ export function useUploadAvatar() {
   return useMutation({
     mutationFn: async (file: File) => {
       logger.info('Uploading avatar', { fileName: file.name, size: file.size });
-
-      const response = await authService.uploadAvatar(file);
-
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to upload avatar');
-      }
-
-      return response.data;
+      const data = await authService.uploadAvatar(file);
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
@@ -276,11 +265,11 @@ export function useDeleteAccount() {
         '/api/v1/auth/me',
         {
           headers: { 'X-Password': data.password }
-        } as RequestInit
+        }
       );
 
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to delete account');
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to delete account');
       }
 
       return response.data;
@@ -306,8 +295,8 @@ export function useExportData() {
 
       const response = await apiClient.get<any>('/api/v1/auth/me/export');
 
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to export data');
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to export data');
       }
 
       return response.data;
@@ -344,8 +333,8 @@ export function useListSessions() {
         '/api/v1/auth/me/sessions'
       );
 
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to fetch sessions');
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to fetch sessions');
       }
 
       return response.data;
@@ -368,8 +357,8 @@ export function useRevokeSession() {
         `/api/v1/auth/me/sessions/${sessionId}`
       );
 
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to revoke session');
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to revoke session');
       }
 
       return response.data;
@@ -398,8 +387,8 @@ export function useRevokeAllSessions() {
         '/api/v1/auth/me/sessions'
       );
 
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to revoke sessions');
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error('Failed to revoke sessions');
       }
 
       return response.data;

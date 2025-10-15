@@ -6,6 +6,7 @@ Database models for user notifications and preferences.
 
 from datetime import datetime
 from enum import Enum
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, String, Text
@@ -94,7 +95,7 @@ class NotificationChannel(str, Enum):
     WEBHOOK = "webhook"
 
 
-class Notification(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
+class Notification(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type: ignore[misc]
     """User notifications for in-app and multi-channel delivery."""
 
     __tablename__ = "notifications"
@@ -146,7 +147,7 @@ class Notification(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
     push_sent_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
     # Additional metadata (renamed to avoid SQLAlchemy reserved name)
-    notification_metadata: Mapped[dict] = mapped_column(
+    notification_metadata: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSON, default=dict, nullable=False
     )
 
@@ -154,7 +155,7 @@ class Notification(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
         return f"<Notification(id={self.id}, type={self.type}, user_id={self.user_id}, is_read={self.is_read})>"
 
 
-class NotificationPreference(Base, TimestampMixin, TenantMixin):
+class NotificationPreference(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """User preferences for notification delivery."""
 
     __tablename__ = "notification_preferences"
@@ -183,7 +184,7 @@ class NotificationPreference(Base, TimestampMixin, TenantMixin):
 
     # Per-type preferences (JSON structure)
     # Example: {"subscriber_provisioned": {"email": true, "sms": false, "push": true}}
-    type_preferences: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    type_preferences: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
 
     # Priority filtering
     minimum_priority: Mapped[NotificationPriority] = mapped_column(
@@ -202,7 +203,7 @@ class NotificationPreference(Base, TimestampMixin, TenantMixin):
         return f"<NotificationPreference(id={self.id}, user_id={self.user_id}, enabled={self.enabled})>"
 
 
-class NotificationTemplate(Base, TimestampMixin, TenantMixin):
+class NotificationTemplate(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Templates for notification content generation."""
 
     __tablename__ = "notification_templates"

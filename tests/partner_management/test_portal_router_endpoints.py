@@ -48,7 +48,7 @@ class TestPartnerDashboardEndpoint:
         db_session.add(partner)
 
         # Create active customer accounts
-        for i in range(3):
+        for _i in range(3):
             account = PartnerAccount(
                 id=uuid4(),
                 partner_id=partner.id,
@@ -86,7 +86,7 @@ class TestPartnerDashboardEndpoint:
         result = await db_session.execute(
             select(PartnerAccount).where(
                 PartnerAccount.partner_id == partner.id,
-                PartnerAccount.is_active == True,
+                PartnerAccount.is_active,
             )
         )
         active_accounts = result.scalars().all()

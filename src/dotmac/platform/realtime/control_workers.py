@@ -7,17 +7,16 @@ for jobs and campaigns (cancel, pause, resume).
 
 import asyncio
 import json
-from typing import Any
+from contextlib import suppress
 
 import structlog
-from redis.asyncio import Redis
+from redis.asyncio.client import PubSub
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.billing.dunning.models import DunningCampaign
 from dotmac.platform.billing.dunning.service import DunningService
 from dotmac.platform.db import get_async_session
 from dotmac.platform.jobs.service import JobService
-from dotmac.platform.redis_client import RedisClientManager
+from dotmac.platform.redis_client import RedisClientManager, RedisClientType
 
 logger = structlog.get_logger(__name__)
 
@@ -32,7 +31,7 @@ class JobControlWorker:
     - resume: Resume a paused job
     """
 
-    def __init__(self, redis_client: Redis, session: AsyncSession):
+    def __init__(self, redis_client: RedisClientType, session: AsyncSession):
         """
         Initialize the job control worker.
 
@@ -44,7 +43,7 @@ class JobControlWorker:
         self.session = session
         self.job_service = JobService(session, redis_client)
         self.running = False
-        self.pubsub = None
+        self.pubsub: PubSub | None = None
 
     async def start(self, tenant_pattern: str = "*") -> None:
         """
@@ -283,7 +282,7 @@ class CampaignControlWorker:
     - cancel: Cancel a campaign
     """
 
-    def __init__(self, redis_client: Redis, session: AsyncSession):
+    def __init__(self, redis_client: RedisClientType, session: AsyncSession):
         """
         Initialize the campaign control worker.
 
@@ -295,7 +294,7 @@ class CampaignControlWorker:
         self.session = session
         self.dunning_service = DunningService(session)
         self.running = False
-        self.pubsub = None
+        self.pubsub: PubSub | None = None
 
     async def start(self, tenant_pattern: str = "*") -> None:
         """
@@ -412,9 +411,7 @@ class CampaignControlWorker:
                 error_type=type(e).__name__,
             )
 
-    async def _pause_campaign(
-        self, campaign_id: str, tenant_id: str, user_id: str
-    ) -> None:
+    async def _pause_campaign(self, campaign_id: str, tenant_id: str, user_id: str) -> None:
         """
         Pause a campaign by setting is_active = False.
 
@@ -467,9 +464,7 @@ class CampaignControlWorker:
             )
             await self.session.rollback()
 
-    async def _resume_campaign(
-        self, campaign_id: str, tenant_id: str, user_id: str
-    ) -> None:
+    async def _resume_campaign(self, campaign_id: str, tenant_id: str, user_id: str) -> None:
         """
         Resume a campaign by setting is_active = True.
 
@@ -522,9 +517,7 @@ class CampaignControlWorker:
             )
             await self.session.rollback()
 
-    async def _cancel_campaign(
-        self, campaign_id: str, tenant_id: str, user_id: str
-    ) -> None:
+    async def _cancel_campaign(self, campaign_id: str, tenant_id: str, user_id: str) -> None:
         """
         Cancel a campaign by setting is_active = False and marking as cancelled.
 
@@ -589,39 +582,38 @@ async def start_control_workers() -> None:
     redis_manager = RedisClientManager()
     redis_client = await redis_manager.get_client()
 
-    # Get database session
-    async for session in get_async_session():
-        # Create workers
-        job_worker = JobControlWorker(redis_client, session)
-        campaign_worker = CampaignControlWorker(redis_client, session)
+    session_iter = get_async_session()
+    session = await anext(session_iter)
 
-        # Start both workers concurrently
-        try:
-            await asyncio.gather(
-                job_worker.start(),
-                campaign_worker.start(),
-            )
-        except KeyboardInterrupt:
-            logger.info("control_workers.shutting_down")
-            await job_worker.stop()
-            await campaign_worker.stop()
-        except Exception as e:
-            logger.error(
-                "control_workers.error",
-                error=str(e),
-                error_type=type(e).__name__,
-            )
-            raise
-        finally:
-            break  # Only use first session
+    job_worker = JobControlWorker(redis_client, session)
+    campaign_worker = CampaignControlWorker(redis_client, session)
+
+    try:
+        await asyncio.gather(
+            job_worker.start(),
+            campaign_worker.start(),
+        )
+    except KeyboardInterrupt:
+        logger.info("control_workers.shutting_down")
+        await job_worker.stop()
+        await campaign_worker.stop()
+    except Exception as e:
+        logger.error(
+            "control_workers.error",
+            error=str(e),
+            error_type=type(e).__name__,
+        )
+        raise
+    finally:
+        with suppress(Exception):
+            await session_iter.aclose()
 
 
 if __name__ == "__main__":
     """Run the control workers as a standalone process."""
-    import sys
-
     # Setup logging
     import logging
+    import sys
 
     logging.basicConfig(
         level=logging.INFO,

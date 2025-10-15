@@ -215,7 +215,7 @@ class RADIUSRepository:
         username: str | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Get usage statistics"""
         query = select(
             func.count(RadAcct.radacctid).label("total_sessions"),

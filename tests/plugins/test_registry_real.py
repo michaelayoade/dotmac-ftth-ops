@@ -747,7 +747,7 @@ class TestConfigurationPersistence:
         """Test saving configurations to file."""
         await registry._register_plugin_provider(fake_plugin, "test")
 
-        instance = await registry.create_plugin_instance(
+        await registry.create_plugin_instance(
             plugin_name="Test Notification",
             instance_name="Saved Instance",
             configuration={"api_key": "key", "endpoint": "https://api.com"},
@@ -920,7 +920,7 @@ class TestErrorHandling:
         fake_plugin.fail_configure = True
 
         # Update should set error status
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             await registry.update_plugin_configuration(instance.id, {"api_key": "new_key"})
 
         # Instance should have error status

@@ -50,6 +50,7 @@ class RADIUSService:
 
         # RADIUS secret from Vault (Pure Vault mode in production)
         from dotmac.platform.settings import settings
+
         self.radius_secret = settings.radius.secret
 
         # Production validation

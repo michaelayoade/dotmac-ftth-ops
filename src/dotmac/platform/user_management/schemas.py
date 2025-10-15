@@ -10,7 +10,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class TeamBase(BaseModel):
+class TeamBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base team schema with common fields."""
 
     model_config = ConfigDict(
@@ -52,13 +52,13 @@ class TeamBase(BaseModel):
         return v.upper()
 
 
-class TeamCreate(TeamBase):
+class TeamCreate(TeamBase):  # TeamBase resolves to Any in isolation
     """Schema for creating a new team."""
 
     pass
 
 
-class TeamUpdate(BaseModel):
+class TeamUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating a team."""
 
     model_config = ConfigDict(
@@ -102,7 +102,7 @@ class TeamUpdate(BaseModel):
         return v.upper()
 
 
-class Team(TeamBase):
+class Team(TeamBase):  # TeamBase resolves to Any in isolation
     """Schema for team response."""
 
     id: UUID = Field(description="Team ID")
@@ -114,7 +114,7 @@ class Team(TeamBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class TeamMemberBase(BaseModel):
+class TeamMemberBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base team member schema with common fields."""
 
     model_config = ConfigDict(
@@ -138,13 +138,13 @@ class TeamMemberBase(BaseModel):
         return v.lower()
 
 
-class TeamMemberCreate(TeamMemberBase):
+class TeamMemberCreate(TeamMemberBase):  # TeamMemberBase resolves to Any in isolation
     """Schema for adding a member to a team."""
 
     pass
 
 
-class TeamMemberUpdate(BaseModel):
+class TeamMemberUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating team membership."""
 
     model_config = ConfigDict(
@@ -168,7 +168,7 @@ class TeamMemberUpdate(BaseModel):
         return v.lower()
 
 
-class TeamMember(TeamMemberBase):
+class TeamMember(TeamMemberBase):  # TeamMemberBase resolves to Any in isolation
     """Schema for team member response."""
 
     id: UUID = Field(description="Team member ID")
@@ -191,8 +191,10 @@ class TeamWithMembers(Team):
     members: list[TeamMember] = Field(default_factory=list, description="Team members")
 
 
-class TeamListResponse(BaseModel):
+class TeamListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for paginated team list response."""
+
+    model_config = ConfigDict()
 
     items: list[Team] = Field(description="List of teams")
     total: int = Field(description="Total number of teams")
@@ -201,8 +203,10 @@ class TeamListResponse(BaseModel):
     pages: int = Field(description="Total number of pages")
 
 
-class TeamMemberListResponse(BaseModel):
+class TeamMemberListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for paginated team member list response."""
+
+    model_config = ConfigDict()
 
     items: list[TeamMember] = Field(description="List of team members")
     total: int = Field(description="Total number of members")

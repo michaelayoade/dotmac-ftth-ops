@@ -325,9 +325,7 @@ class WebSocketConnectionManager:
         """
         connection_ids = self._tenant_connections.get(tenant_id, set())
         return [
-            self._connections[conn_id]
-            for conn_id in connection_ids
-            if conn_id in self._connections
+            self._connections[conn_id] for conn_id in connection_ids if conn_id in self._connections
         ]
 
     def get_resource_connections(
@@ -346,9 +344,7 @@ class WebSocketConnectionManager:
         resource_key = f"{resource_type}:{resource_id}"
         connection_ids = self._resource_connections.get(resource_key, set())
         return [
-            self._connections[conn_id]
-            for conn_id in connection_ids
-            if conn_id in self._connections
+            self._connections[conn_id] for conn_id in connection_ids if conn_id in self._connections
         ]
 
     def get_user_connections(self, user_id: str) -> list[ConnectionInfo]:
@@ -363,9 +359,7 @@ class WebSocketConnectionManager:
         """
         connection_ids = self._user_connections.get(user_id, set())
         return [
-            self._connections[conn_id]
-            for conn_id in connection_ids
-            if conn_id in self._connections
+            self._connections[conn_id] for conn_id in connection_ids if conn_id in self._connections
         ]
 
     def get_stats(self) -> dict[str, Any]:
@@ -381,8 +375,7 @@ class WebSocketConnectionManager:
             "total_users": len(self._user_connections),
             "total_resources": len(self._resource_connections),
             "connections_by_tenant": {
-                tenant_id: len(conn_ids)
-                for tenant_id, conn_ids in self._tenant_connections.items()
+                tenant_id: len(conn_ids) for tenant_id, conn_ids in self._tenant_connections.items()
             },
             "connections_by_resource": {
                 resource_key: len(conn_ids)

@@ -3,10 +3,8 @@ Tests for Alarm Correlation Engine
 """
 
 from datetime import UTC, datetime, timedelta
-from uuid import UUID, uuid4
 
 import pytest
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.fault_management.correlation import CorrelationEngine
@@ -16,7 +14,6 @@ from dotmac.platform.fault_management.models import (
     AlarmSeverity,
     AlarmSource,
     AlarmStatus,
-    CorrelationAction,
     RuleType,
 )
 

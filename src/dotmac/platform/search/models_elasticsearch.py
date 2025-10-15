@@ -7,7 +7,7 @@ Elasticsearch index mappings and search models.
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class SearchableEntity(str, Enum):
@@ -205,23 +205,29 @@ INDEX_MAPPINGS = {
 # =============================================================================
 
 
-class SearchFilter(BaseModel):
+class SearchFilter(BaseModel):  # BaseModel resolves to Any in isolation
     """Search filter for field-specific queries."""
+
+    model_config = ConfigDict()
 
     field: str = Field(..., description="Field name to filter on")
     value: Any = Field(..., description="Filter value")
     operator: SearchOperator = Field(SearchOperator.AND, description="Filter operator")
 
 
-class SearchSort(BaseModel):
+class SearchSort(BaseModel):  # BaseModel resolves to Any in isolation
     """Search sort specification."""
+
+    model_config = ConfigDict()
 
     field: str = Field(..., description="Field to sort by")
     order: SortOrder = Field(SortOrder.DESC, description="Sort order")
 
 
-class SearchQuery(BaseModel):
+class SearchQuery(BaseModel):  # BaseModel resolves to Any in isolation
     """Search query specification."""
+
+    model_config = ConfigDict()
 
     query: str | None = Field(None, description="Full-text search query")
     filters: list[SearchFilter] = Field(default_factory=list, description="Field filters")
@@ -231,8 +237,10 @@ class SearchQuery(BaseModel):
     highlight: bool = Field(True, description="Enable search term highlighting")
 
 
-class SearchResult(BaseModel):
+class SearchResult(BaseModel):  # BaseModel resolves to Any in isolation
     """Individual search result."""
+
+    model_config = ConfigDict()
 
     entity_type: SearchableEntity
     entity_id: str
@@ -241,8 +249,10 @@ class SearchResult(BaseModel):
     highlights: dict[str, list[str]] | None = None
 
 
-class SearchResponse(BaseModel):
+class SearchResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Search response with results and metadata."""
+
+    model_config = ConfigDict()
 
     results: list[SearchResult]
     total: int
@@ -255,12 +265,16 @@ class SearchResponse(BaseModel):
 class AggregationResult(BaseModel):
     """Aggregation result."""
 
+    model_config = ConfigDict()
+
     field: str
     buckets: list[dict[str, Any]]
 
 
-class SearchSuggestion(BaseModel):
+class SearchSuggestion(BaseModel):  # BaseModel resolves to Any in isolation
     """Search suggestion for autocomplete."""
+
+    model_config = ConfigDict()
 
     text: str
     score: float

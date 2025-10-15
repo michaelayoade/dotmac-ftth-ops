@@ -44,9 +44,7 @@ async def provisioned_service(async_session) -> ServiceInstance:
 
 
 @pytest.mark.asyncio
-async def test_schedule_service_activation(
-    async_session, provisioned_service: ServiceInstance
-):
+async def test_schedule_service_activation(async_session, provisioned_service: ServiceInstance):
     """Test scheduling a service for future activation."""
     service = LifecycleOrchestrationService(async_session)
 
@@ -67,7 +65,10 @@ async def test_schedule_service_activation(
     # Verify metadata was updated
     await async_session.refresh(provisioned_service)
     assert "scheduled_activation_datetime" in provisioned_service.service_metadata
-    assert provisioned_service.service_metadata["scheduled_activation_datetime"] == activation_time.isoformat()
+    assert (
+        provisioned_service.service_metadata["scheduled_activation_datetime"]
+        == activation_time.isoformat()
+    )
 
 
 @pytest.mark.asyncio
@@ -173,6 +174,7 @@ async def test_scheduled_activation_workflow_end_to_end(
     if "scheduled_activation_datetime" in service_instance.service_metadata:
         del service_instance.service_metadata["scheduled_activation_datetime"]
         from sqlalchemy.orm import attributes
+
         attributes.flag_modified(service_instance, "service_metadata")
 
     await async_session.commit()

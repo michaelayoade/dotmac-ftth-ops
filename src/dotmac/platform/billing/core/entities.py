@@ -48,7 +48,7 @@ from .enums import (
 # ============================================================================
 
 
-class InvoiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin):
+class InvoiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin):  # type: ignore[misc]  # Mixin has type Any
     """Invoice database entity"""
 
     __tablename__ = "invoices"
@@ -120,7 +120,7 @@ class InvoiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin):
     )
 
 
-class InvoiceLineItemEntity(Base):
+class InvoiceLineItemEntity(Base):  # type: ignore[misc]  # Base has type Any
     """Invoice line item database entity"""
 
     __tablename__ = "invoice_line_items"
@@ -161,7 +161,7 @@ class InvoiceLineItemEntity(Base):
 # ============================================================================
 
 
-class PaymentEntity(Base, TenantMixin, TimestampMixin):
+class PaymentEntity(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  # Mixin has type Any
     """Payment database entity"""
 
     __tablename__ = "payments"
@@ -217,7 +217,7 @@ class PaymentEntity(Base, TenantMixin, TimestampMixin):
     )
 
 
-class PaymentInvoiceEntity(Base):
+class PaymentInvoiceEntity(Base):  # type: ignore[misc]  # Base has type Any
     """Payment-Invoice association table"""
 
     __tablename__ = "payment_invoices"
@@ -239,7 +239,7 @@ class PaymentInvoiceEntity(Base):
     invoice: Mapped[InvoiceEntity] = relationship(back_populates="payments")
 
 
-class PaymentMethodEntity(Base, TenantMixin, TimestampMixin, SoftDeleteMixin):
+class PaymentMethodEntity(Base, TenantMixin, TimestampMixin, SoftDeleteMixin):  # type: ignore[misc]  # Mixin has type Any
     """Payment method database entity"""
 
     __tablename__ = "payment_methods"
@@ -293,7 +293,7 @@ class PaymentMethodEntity(Base, TenantMixin, TimestampMixin, SoftDeleteMixin):
 # ============================================================================
 
 
-class TransactionEntity(Base, TenantMixin):
+class TransactionEntity(Base, TenantMixin):  # type: ignore[misc]  # Mixin has type Any
     """Transaction ledger database entity"""
 
     __tablename__ = "transactions"
@@ -337,7 +337,7 @@ class TransactionEntity(Base, TenantMixin):
 # ============================================================================
 
 
-class CreditNoteEntity(Base, TenantMixin, TimestampMixin, AuditMixin):
+class CreditNoteEntity(Base, TenantMixin, TimestampMixin, AuditMixin):  # type: ignore[misc]  # Mixin has type Any
     """Credit note database entity"""
 
     __tablename__ = "credit_notes"
@@ -402,7 +402,7 @@ class CreditNoteEntity(Base, TenantMixin, TimestampMixin, AuditMixin):
     )
 
 
-class CreditNoteLineItemEntity(Base):
+class CreditNoteLineItemEntity(Base):  # type: ignore[misc]  # Base has type Any
     """Credit note line item database entity"""
 
     __tablename__ = "credit_note_line_items"
@@ -439,7 +439,7 @@ class CreditNoteLineItemEntity(Base):
     credit_note: Mapped[CreditNoteEntity] = relationship(back_populates="line_items")
 
 
-class CreditApplicationEntity(Base, TenantMixin):
+class CreditApplicationEntity(Base, TenantMixin):  # type: ignore[misc]  # Mixin has type Any
     """Credit application database entity"""
 
     __tablename__ = "credit_applications"
@@ -480,7 +480,7 @@ class CreditApplicationEntity(Base, TenantMixin):
     )
 
 
-class CustomerCreditEntity(Base, TenantMixin, TimestampMixin):
+class CustomerCreditEntity(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  # Mixin has type Any
     """Customer credit balance database entity"""
 
     __tablename__ = "customer_credits"

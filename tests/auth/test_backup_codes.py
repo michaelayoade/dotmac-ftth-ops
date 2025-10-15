@@ -258,7 +258,7 @@ async def test_verify_backup_code_marks_as_used(test_user, async_db_session):
 
     # Check that it's marked as used
     result = await async_db_session.execute(
-        select(BackupCode).where(BackupCode.user_id == test_user.id, BackupCode.used == True)
+        select(BackupCode).where(BackupCode.user_id == test_user.id, BackupCode.used)
     )
     used_codes = result.scalars().all()
 

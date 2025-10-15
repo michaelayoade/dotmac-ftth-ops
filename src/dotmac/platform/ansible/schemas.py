@@ -3,10 +3,10 @@
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class JobTemplate(BaseModel):
+class JobTemplate(BaseModel):  # BaseModel resolves to Any in isolation
     """Job template information"""
 
     id: int
@@ -17,10 +17,10 @@ class JobTemplate(BaseModel):
     project: int | None = None
     playbook: str | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class Job(BaseModel):
+class Job(BaseModel):  # BaseModel resolves to Any in isolation
     """Job execution information"""
 
     id: int
@@ -31,26 +31,32 @@ class Job(BaseModel):
     finished: datetime | None = None
     elapsed: float | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class JobLaunchRequest(BaseModel):
+class JobLaunchRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Launch job template request"""
+
+    model_config = ConfigDict()
 
     template_id: int = Field(..., description="Job template ID")
     extra_vars: dict[str, Any] | None = Field(None, description="Extra variables")
 
 
-class JobLaunchResponse(BaseModel):
+class JobLaunchResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Job launch response"""
+
+    model_config = ConfigDict()
 
     job_id: int
     status: str
     message: str
 
 
-class AWXHealthResponse(BaseModel):
+class AWXHealthResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """AWX health check response"""
+
+    model_config = ConfigDict()
 
     healthy: bool
     message: str

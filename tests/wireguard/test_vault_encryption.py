@@ -8,16 +8,19 @@ Verifies that:
 4. Pure Vault mode enforced in production environment
 """
 
-import os
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import UUID, uuid4
+from unittest.mock import AsyncMock, MagicMock
+from uuid import uuid4
 
 import pytest
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.secrets import AsyncVaultClient, DataClassification, SymmetricEncryptionService, VaultError
+from dotmac.platform.secrets import (
+    AsyncVaultClient,
+    DataClassification,
+    SymmetricEncryptionService,
+    VaultError,
+)
 from dotmac.platform.wireguard.client import WireGuardClient
 from dotmac.platform.wireguard.models import WireGuardServer, WireGuardServerStatus
 from dotmac.platform.wireguard.service import WireGuardService, WireGuardServiceError
@@ -105,7 +108,7 @@ class TestWireGuardVaultIntegration:
         )
 
         # Create server
-        server = await service.create_server(
+        await service.create_server(
             name="Test VPN Server",
             public_endpoint="vpn.example.com:51820",
             server_ipv4="10.8.0.1/24",
@@ -165,7 +168,7 @@ class TestWireGuardVaultIntegration:
         )
 
         # Create server
-        server = await service.create_server(
+        await service.create_server(
             name="Test VPN Server",
             public_endpoint="vpn.example.com:51820",
             server_ipv4="10.8.0.1/24",
@@ -267,7 +270,9 @@ class TestWireGuardVaultIntegration:
         )
 
         # Attempt to decrypt - should raise error
-        with pytest.raises(WireGuardServiceError, match="Failed to retrieve private key from Vault"):
+        with pytest.raises(
+            WireGuardServiceError, match="Failed to retrieve private key from Vault"
+        ):
             await service.decrypt_server_private_key(server)
 
     @pytest.mark.asyncio
@@ -339,7 +344,9 @@ class TestWireGuardVaultIntegration:
         )
 
         # Attempt to decrypt - should raise error
-        with pytest.raises(WireGuardServiceError, match="Private key is in Vault but no Vault client configured"):
+        with pytest.raises(
+            WireGuardServiceError, match="Private key is in Vault but no Vault client configured"
+        ):
             await service.decrypt_server_private_key(server)
 
 

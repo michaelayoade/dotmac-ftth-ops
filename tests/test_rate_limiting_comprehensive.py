@@ -313,7 +313,7 @@ class TestEdgeCases:
 
     def test_multiple_reset_and_get_cycles(self):
         """Test multiple cycles of reset and get."""
-        for i in range(5):
+        for _i in range(5):
             limiter_instance = get_limiter()
             assert isinstance(limiter_instance, Limiter)
             reset_limiter()

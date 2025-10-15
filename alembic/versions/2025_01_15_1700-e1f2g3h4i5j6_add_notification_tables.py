@@ -22,7 +22,8 @@ def upgrade() -> None:
     """Create notification tables and enums."""
 
     # Create enums
-    op.execute("""
+    op.execute(
+        """
         CREATE TYPE notificationtype AS ENUM (
             'subscriber_provisioned', 'subscriber_deprovisioned', 'subscriber_suspended',
             'subscriber_reactivated', 'service_activated', 'service_failed',
@@ -37,11 +38,14 @@ def upgrade() -> None:
             'password_reset', 'account_locked', 'two_factor_enabled',
             'api_key_expiring', 'system_announcement', 'custom'
         )
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         CREATE TYPE notificationpriority AS ENUM ('low', 'medium', 'high', 'urgent')
-    """)
+    """
+    )
 
     # Create notifications table
     op.create_table(

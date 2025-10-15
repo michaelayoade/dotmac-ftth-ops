@@ -11,7 +11,8 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import INET, UUID as PostgresUUID
+from sqlalchemy.dialects.postgresql import INET
+from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dotmac.platform.db import (
@@ -41,7 +42,7 @@ class WireGuardPeerStatus(str, PyEnum):
     EXPIRED = "expired"
 
 
-class WireGuardServer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
+class WireGuardServer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     WireGuard VPN Server Model.
 
@@ -220,7 +221,7 @@ class WireGuardServer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
         return (self.current_peers / self.max_peers) * 100
 
 
-class WireGuardPeer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
+class WireGuardPeer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     WireGuard VPN Peer Model.
 

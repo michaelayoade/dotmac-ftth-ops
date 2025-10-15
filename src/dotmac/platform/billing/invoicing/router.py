@@ -44,7 +44,7 @@ class CreateInvoiceRequest(BaseModel):
     idempotency_key: str | None = Field(
         None, description="Idempotency key for duplicate prevention"
     )
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 class UpdateInvoiceRequest(BaseModel):

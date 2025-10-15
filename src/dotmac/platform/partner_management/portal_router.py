@@ -39,7 +39,7 @@ def _statement_download_url(statement_id: UUID) -> str:
 
 
 # Portal-specific schemas
-class PartnerDashboardStats(BaseModel):
+class PartnerDashboardStats(BaseModel):  # BaseModel resolves to Any in isolation
     """Dashboard statistics for partner portal."""
 
     model_config = ConfigDict()
@@ -67,7 +67,7 @@ class PartnerDashboardStats(BaseModel):
     default_commission_rate: Decimal = Field(description="Default commission rate")
 
 
-class PartnerCustomerResponse(BaseModel):
+class PartnerCustomerResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Partner customer information for portal."""
 
     model_config = ConfigDict()

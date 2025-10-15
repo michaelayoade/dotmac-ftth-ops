@@ -262,9 +262,7 @@ class DiagnosticsService:
 
             # Check last online
             if subscriber.last_online:
-                delta = datetime.now(UTC) - subscriber.last_online.replace(
-                    tzinfo=UTC
-                )
+                delta = datetime.now(UTC) - subscriber.last_online.replace(tzinfo=UTC)
                 results["last_seen_seconds"] = int(delta.total_seconds())
                 results["last_seen_hours"] = delta.total_seconds() / 3600
 
@@ -728,12 +726,16 @@ class DiagnosticsService:
             checks_results = await asyncio.gather(
                 self.check_subscriber_connectivity(tenant_id, subscriber_id),
                 self.get_radius_sessions(tenant_id, subscriber_id),
-                self.check_onu_status(tenant_id, subscriber_id)
-                if subscriber.onu_serial
-                else self._create_skipped_check("ONU check skipped (no ONU configured)"),
-                self.check_cpe_status(tenant_id, subscriber_id)
-                if subscriber.cpe_mac_address
-                else self._create_skipped_check("CPE check skipped (no CPE configured)"),
+                (
+                    self.check_onu_status(tenant_id, subscriber_id)
+                    if subscriber.onu_serial
+                    else self._create_skipped_check("ONU check skipped (no ONU configured)")
+                ),
+                (
+                    self.check_cpe_status(tenant_id, subscriber_id)
+                    if subscriber.cpe_mac_address
+                    else self._create_skipped_check("CPE check skipped (no CPE configured)")
+                ),
                 self.verify_ip_allocation(tenant_id, subscriber_id),
                 return_exceptions=True,
             )
@@ -763,9 +765,9 @@ class DiagnosticsService:
                     results["checks"][check_name] = {
                         "status": "passed" if check_result.success else "failed",
                         "summary": check_result.summary,
-                        "severity": check_result.severity.value
-                        if check_result.severity
-                        else "info",
+                        "severity": (
+                            check_result.severity.value if check_result.severity else "info"
+                        ),
                     }
                     if check_result.success:
                         results["checks_passed"] += 1

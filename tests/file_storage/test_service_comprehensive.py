@@ -973,7 +973,7 @@ class TestFileStorageServiceMetadataUpdate:
 
         # Get current metadata and remove 'metadata' field
         current = await service.backend.get_metadata(file_id)
-        current_dict = current.copy()
+        current.copy()
 
         # Mock backend that returns metadata without 'metadata' field
         with patch.object(service.backend, "get_metadata") as mock_get:
@@ -1002,7 +1002,7 @@ class TestGetStorageService:
             mock_instance = Mock()
             mock_service.return_value = mock_instance
 
-            result = get_storage_service()
+            get_storage_service()
 
             # Should initialize with MINIO backend
             mock_service.assert_called_once_with(backend=StorageBackend.MINIO)

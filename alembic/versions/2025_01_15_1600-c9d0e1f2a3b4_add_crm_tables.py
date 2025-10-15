@@ -22,38 +22,48 @@ def upgrade() -> None:
     """Create CRM tables for leads, quotes, and site surveys."""
 
     # Create enums
-    op.execute("""
+    op.execute(
+        """
         CREATE TYPE leadstatus AS ENUM (
             'new', 'contacted', 'qualified', 'site_survey_scheduled',
             'site_survey_completed', 'quote_sent', 'negotiating',
             'won', 'lost', 'disqualified'
         )
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         CREATE TYPE leadsource AS ENUM (
             'website', 'referral', 'partner', 'cold_call',
             'social_media', 'event', 'advertisement', 'walk_in', 'other'
         )
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         CREATE TYPE quotestatus AS ENUM (
             'draft', 'sent', 'viewed', 'accepted', 'rejected', 'expired', 'revised'
         )
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         CREATE TYPE sitesurveystatus AS ENUM (
             'scheduled', 'in_progress', 'completed', 'failed', 'canceled'
         )
-    """)
+    """
+    )
 
-    op.execute("""
+    op.execute(
+        """
         CREATE TYPE serviceability AS ENUM (
             'serviceable', 'not_serviceable', 'pending_expansion', 'requires_construction'
         )
-    """)
+    """
+    )
 
     # Create leads table
     op.create_table(

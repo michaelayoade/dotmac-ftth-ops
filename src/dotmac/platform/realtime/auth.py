@@ -44,9 +44,7 @@ async def extract_token_from_websocket(websocket: WebSocket) -> str | None:
             return token
 
     # 2. Try Authorization header
-    auth_header = websocket.headers.get("authorization") or websocket.headers.get(
-        "Authorization"
-    )
+    auth_header = websocket.headers.get("authorization") or websocket.headers.get("Authorization")
     if auth_header:
         parts = auth_header.split()
         if len(parts) == 2 and parts[0].lower() == "bearer":
@@ -283,6 +281,8 @@ class AuthenticatedWebSocketConnection:
         """Receive JSON message from client."""
         try:
             data = await self.websocket.receive_json()
+            if not isinstance(data, dict):
+                raise TypeError("Expected JSON object from WebSocket client")
             return data
         except WebSocketDisconnect:
             logger.info(

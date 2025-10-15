@@ -9,10 +9,11 @@ Tests cover:
 - Connection statistics
 """
 
-import pytest
-from fastapi import WebSocket
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
+
+import pytest
+from fastapi import WebSocket
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.realtime.connection_manager import (
@@ -200,7 +201,7 @@ class TestWebSocketConnectionManager:
             permissions=[],
         )
         mock_ws1 = AsyncMock(spec=WebSocket)
-        conn1 = manager.register(mock_ws1, user1)
+        manager.register(mock_ws1, user1)
 
         user2 = UserInfo(
             user_id="user2",
@@ -211,7 +212,7 @@ class TestWebSocketConnectionManager:
             permissions=[],
         )
         mock_ws2 = AsyncMock(spec=WebSocket)
-        conn2 = manager.register(mock_ws2, user2)
+        manager.register(mock_ws2, user2)
 
         # Broadcast message
         message = {"type": "test", "data": "value"}
@@ -246,13 +247,11 @@ class TestWebSocketConnectionManager:
             permissions=[],
         )
         mock_ws2 = AsyncMock(spec=WebSocket)
-        conn2 = manager.register(mock_ws2, user2)
+        manager.register(mock_ws2, user2)
 
         # Broadcast excluding conn1
         message = {"type": "test", "data": "value"}
-        sent_count = await manager.broadcast_to_tenant(
-            "tenant123", message, exclude={conn1}
-        )
+        sent_count = await manager.broadcast_to_tenant("tenant123", message, exclude={conn1})
 
         assert sent_count == 1
         mock_ws1.send_json.assert_not_called()
@@ -272,9 +271,7 @@ class TestWebSocketConnectionManager:
             permissions=[],
         )
         mock_ws1 = AsyncMock(spec=WebSocket)
-        conn1 = manager.register(
-            mock_ws1, user1, resource_type="job", resource_id="job123"
-        )
+        manager.register(mock_ws1, user1, resource_type="job", resource_id="job123")
 
         user2 = UserInfo(
             user_id="user2",
@@ -285,9 +282,7 @@ class TestWebSocketConnectionManager:
             permissions=[],
         )
         mock_ws2 = AsyncMock(spec=WebSocket)
-        conn2 = manager.register(
-            mock_ws2, user2, resource_type="job", resource_id="job456"
-        )
+        manager.register(mock_ws2, user2, resource_type="job", resource_id="job456")
 
         # Broadcast to job123 only
         message = {"type": "job_update", "status": "completed"}
@@ -313,10 +308,10 @@ class TestWebSocketConnectionManager:
 
         # Register multiple connections for same user (e.g., different tabs)
         mock_ws1 = AsyncMock(spec=WebSocket)
-        conn1 = manager.register(mock_ws1, user_info)
+        manager.register(mock_ws1, user_info)
 
         mock_ws2 = AsyncMock(spec=WebSocket)
-        conn2 = manager.register(mock_ws2, user_info)
+        manager.register(mock_ws2, user_info)
 
         # Broadcast to user
         message = {"type": "notification", "text": "Hello"}
@@ -339,8 +334,8 @@ class TestWebSocketConnectionManager:
             permissions=[],
         )
 
-        conn1 = manager.register(Mock(spec=WebSocket), user_info)
-        conn2 = manager.register(Mock(spec=WebSocket), user_info)
+        manager.register(Mock(spec=WebSocket), user_info)
+        manager.register(Mock(spec=WebSocket), user_info)
 
         connections = manager.get_tenant_connections("tenant123")
 
@@ -360,12 +355,8 @@ class TestWebSocketConnectionManager:
             permissions=[],
         )
 
-        manager.register(
-            Mock(spec=WebSocket), user_info, resource_type="job", resource_id="job123"
-        )
-        manager.register(
-            Mock(spec=WebSocket), user_info, resource_type="job", resource_id="job123"
-        )
+        manager.register(Mock(spec=WebSocket), user_info, resource_type="job", resource_id="job123")
+        manager.register(Mock(spec=WebSocket), user_info, resource_type="job", resource_id="job123")
 
         connections = manager.get_resource_connections("job", "job123")
 
@@ -421,9 +412,7 @@ class TestWebSocketConnectionManager:
         )
 
         manager.register(Mock(spec=WebSocket), user_info)
-        manager.register(
-            Mock(spec=WebSocket), user_info, resource_type="job", resource_id="job123"
-        )
+        manager.register(Mock(spec=WebSocket), user_info, resource_type="job", resource_id="job123")
 
         tenant_stats = manager.get_tenant_stats("tenant123")
 

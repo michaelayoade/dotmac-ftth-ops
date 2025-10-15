@@ -28,10 +28,18 @@ class AWXClient:
         timeout_seconds: float = 30.0,
         max_retries: int = 2,
     ):
-        """Initialize AWX client"""
-        base_url_value: str = (
-            base_url if base_url is not None else os.getenv("AWX_URL", "http://localhost:80")
-        )
+        """Initialize AWX client (defaults to settings.external_services.awx_url)"""
+        # Load from centralized settings (Phase 2 implementation)
+        if base_url is None:
+            try:
+                from dotmac.platform.settings import settings
+
+                base_url_value = settings.external_services.awx_url
+            except (ImportError, AttributeError):
+                # Fallback to environment variable if settings not available
+                base_url_value = os.getenv("AWX_URL", "http://localhost:80")
+        else:
+            base_url_value = base_url
         self.username = username or os.getenv("AWX_USERNAME", "admin")
         self.password = password or os.getenv("AWX_PASSWORD", "password")
         self.token = token or os.getenv("AWX_TOKEN", "")

@@ -5,8 +5,7 @@ Tests playbook library, lifecycle integration, router management,
 and device provisioning.
 """
 
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -158,9 +157,7 @@ class TestLifecycleIntegration:
 
         return service
 
-    async def test_provision_fiber_service(
-        self, async_session, mock_awx_client, service_instance
-    ):
+    async def test_provision_fiber_service(self, async_session, mock_awx_client, service_instance):
         """Test fiber service provisioning via Ansible"""
         integration = AnsibleLifecycleIntegration(
             session=async_session,
@@ -215,9 +212,7 @@ class TestLifecycleIntegration:
         assert result["awx_job_id"] == 123
         assert "Router configuration playbook launched" in result["message"]
 
-    async def test_provision_ont_device(
-        self, async_session, mock_awx_client, service_instance
-    ):
+    async def test_provision_ont_device(self, async_session, mock_awx_client, service_instance):
         """Test ONT device provisioning via Ansible"""
         integration = AnsibleLifecycleIntegration(
             session=async_session,
@@ -247,9 +242,7 @@ class TestRouterManagement:
     def mock_awx_client(self):
         """Create mock AWX client"""
         client = AsyncMock(spec=AWXClient)
-        client.launch_job_template = AsyncMock(
-            return_value={"id": 456, "status": "pending"}
-        )
+        client.launch_job_template = AsyncMock(return_value={"id": 456, "status": "pending"})
         return client
 
     async def test_configure_router(self, mock_awx_client):
@@ -338,9 +331,7 @@ class TestDeviceProvisioning:
     def mock_awx_client(self):
         """Create mock AWX client"""
         client = AsyncMock(spec=AWXClient)
-        client.launch_job_template = AsyncMock(
-            return_value={"id": 789, "status": "pending"}
-        )
+        client.launch_job_template = AsyncMock(return_value={"id": 789, "status": "pending"})
         return client
 
     async def test_provision_ont(self, mock_awx_client):

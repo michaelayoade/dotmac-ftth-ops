@@ -96,7 +96,7 @@ class TestProductCatalogE2E:
             headers=auth_headers,
         )
         assert category_response.status_code == 201
-        category_id = category_response.json()["category_id"]
+        category_response.json()["category_id"]
 
         # Create product in category
         product_data = {
@@ -568,7 +568,7 @@ class TestPricingAndCatalogIntegrationE2E:
             json=category_data,
             headers=auth_headers,
         )
-        category_id = category_response.json()["category_id"]
+        category_response.json()["category_id"]
 
         # Create products in category
         for i in range(2):

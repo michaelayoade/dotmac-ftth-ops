@@ -82,7 +82,7 @@ def async_db_engine():
     # Remove temporary database file
     try:
         Path(db_path).unlink()
-    except:
+    except (OSError, PermissionError):
         pass
 
 

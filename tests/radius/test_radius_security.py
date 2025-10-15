@@ -75,7 +75,24 @@ class TestRADIUSAttributeInjectionPrevention:
     def test_special_characters_blocked(self):
         """Test that special characters that could break RADIUS syntax are blocked"""
         # Test various special characters
-        invalid_chars = ['$', '&', ';', '|', '`', '(', ')', '<', '>', '[', ']', '{', '}', '"', "'", '\\']
+        invalid_chars = [
+            "$",
+            "&",
+            ";",
+            "|",
+            "`",
+            "(",
+            ")",
+            "<",
+            ">",
+            "[",
+            "]",
+            "{",
+            "}",
+            '"',
+            "'",
+            "\\",
+        ]
 
         for char in invalid_chars:
             with pytest.raises(ValidationError) as exc_info:
@@ -328,7 +345,7 @@ class TestRADIUSSecurityDocumentation:
 
     def test_validator_has_security_documentation(self):
         """Verify that the validator has proper security documentation"""
-        import inspect
+
         from dotmac.platform.radius.schemas import RADIUSSessionDisconnect
 
         # Get the validator method

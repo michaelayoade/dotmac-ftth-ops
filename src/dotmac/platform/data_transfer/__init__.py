@@ -18,8 +18,10 @@ from .core import (  # Core classes and enums; Exceptions; Base classes; Protoco
     DataValidationError,
     DataValidator,
     ExportError,
+    ExportOptions,
     FormatError,
     ImportError,
+    ImportOptions,
     ProgressCallback,
     ProgressError,
     ProgressInfo,
@@ -30,7 +32,6 @@ from .core import (  # Core classes and enums; Exceptions; Base classes; Protoco
 from .exporters import (
     CSVExporter,
     ExcelExporter,
-    ExportOptions,
     JSONExporter,
     XMLExporter,
     YAMLExporter,
@@ -51,7 +52,6 @@ from .factory import (
 from .importers import (
     CSVImporter,
     ExcelImporter,
-    ImportOptions,
     JSONImporter,
     XMLImporter,
     YAMLImporter,

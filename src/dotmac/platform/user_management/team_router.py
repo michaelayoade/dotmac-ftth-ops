@@ -35,7 +35,7 @@ from .team_service import TeamService
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/teams", tags=["teams"])
+router = APIRouter(prefix="/teams", tags=["Team Management"])
 
 
 def get_team_service(

@@ -5,8 +5,9 @@ Tests for VLAN management, cable tracking, circuit management,
 and automatic IP cleanup functionality.
 """
 
+from unittest.mock import AsyncMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from dotmac.platform.netbox.client import NetBoxClient
 from dotmac.platform.netbox.schemas import (
@@ -405,9 +406,7 @@ class TestIPCleanup:
     """Test automatic IP cleanup functionality"""
 
     @pytest.mark.asyncio
-    async def test_cleanup_subscriber_ips_deprecate(
-        self, netbox_service, mock_netbox_client
-    ):
+    async def test_cleanup_subscriber_ips_deprecate(self, netbox_service, mock_netbox_client):
         """Test IP cleanup marks IPs as deprecated"""
         subscriber_id = "sub-123"
         tenant_netbox_id = 1
@@ -449,9 +448,7 @@ class TestIPCleanup:
         assert mock_netbox_client.update_ip_address.call_count == 2
 
     @pytest.mark.asyncio
-    async def test_cleanup_subscriber_ips_no_ips(
-        self, netbox_service, mock_netbox_client
-    ):
+    async def test_cleanup_subscriber_ips_no_ips(self, netbox_service, mock_netbox_client):
         """Test IP cleanup when no IPs exist"""
         subscriber_id = "sub-123"
         tenant_netbox_id = 1
@@ -467,9 +464,7 @@ class TestIPCleanup:
         assert cleaned_count == 0
 
     @pytest.mark.asyncio
-    async def test_cleanup_subscriber_ips_partial_failure(
-        self, netbox_service, mock_netbox_client
-    ):
+    async def test_cleanup_subscriber_ips_partial_failure(self, netbox_service, mock_netbox_client):
         """Test IP cleanup with partial failures"""
         subscriber_id = "sub-123"
         tenant_netbox_id = 1
@@ -516,9 +511,7 @@ class TestIntegrationWorkflows:
     """Test complete integration workflows"""
 
     @pytest.mark.asyncio
-    async def test_vlan_to_interface_assignment(
-        self, netbox_service, mock_netbox_client
-    ):
+    async def test_vlan_to_interface_assignment(self, netbox_service, mock_netbox_client):
         """Test workflow: Create VLAN and assign to interface"""
         # Create VLAN
         mock_netbox_client.create_vlan.return_value = {

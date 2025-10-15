@@ -9,7 +9,7 @@ project_root = Path(__file__).resolve().parent
 src_root = project_root / "src"
 sys.path.insert(0, str(src_root))
 
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine, inspect, text  # noqa: E402
 
 # Database URL from alembic.ini
 DATABASE_URL = "postgresql://dotmac_user:change-me-in-production@localhost:5432/dotmac"

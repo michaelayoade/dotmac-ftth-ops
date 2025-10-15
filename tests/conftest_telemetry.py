@@ -15,7 +15,7 @@ import pytest
 
 
 @pytest.fixture(scope="session", autouse=True)
-def disable_telemetry_exports() -> Generator[None, None, None]:
+def disable_telemetry_exports() -> Generator[None]:
     """
     Automatically disable OpenTelemetry exports during tests.
 

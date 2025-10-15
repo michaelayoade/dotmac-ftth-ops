@@ -10,8 +10,9 @@ from typing import Any, cast
 
 import structlog
 from fastapi import WebSocket, WebSocketDisconnect
-from redis.asyncio import Redis
 from redis.asyncio.client import PubSub
+
+from dotmac.platform.redis_client import RedisClientType
 
 logger = structlog.get_logger(__name__)
 
@@ -19,7 +20,7 @@ logger = structlog.get_logger(__name__)
 class WebSocketConnection:
     """Manages a single WebSocket connection."""
 
-    def __init__(self, websocket: WebSocket, tenant_id: str, redis: Redis):
+    def __init__(self, websocket: WebSocket, tenant_id: str, redis: RedisClientType):
         self.websocket = websocket
         self.tenant_id = tenant_id
         self.redis = redis
@@ -136,7 +137,7 @@ class WebSocketConnection:
 # =============================================================================
 
 
-async def handle_sessions_ws(websocket: WebSocket, tenant_id: str, redis: Redis) -> None:
+async def handle_sessions_ws(websocket: WebSocket, tenant_id: str, redis: RedisClientType) -> None:
     """
     WebSocket handler for RADIUS session updates.
 
@@ -180,7 +181,9 @@ async def handle_sessions_ws(websocket: WebSocket, tenant_id: str, redis: Redis)
         await connection.close()
 
 
-async def handle_job_ws(websocket: WebSocket, job_id: str, tenant_id: str, redis: Redis) -> None:
+async def handle_job_ws(
+    websocket: WebSocket, job_id: str, tenant_id: str, redis: RedisClientType
+) -> None:
     """
     WebSocket handler for job progress updates.
 
@@ -253,7 +256,7 @@ async def handle_job_ws(websocket: WebSocket, job_id: str, tenant_id: str, redis
 
 
 async def handle_campaign_ws(
-    websocket: WebSocket, campaign_id: str, tenant_id: str, redis: Redis
+    websocket: WebSocket, campaign_id: str, tenant_id: str, redis: RedisClientType
 ) -> None:
     """
     WebSocket handler for firmware campaign progress.

@@ -9,7 +9,7 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,8 +31,10 @@ router = APIRouter()
 # Request/Response Models
 
 
-class RateLimitRuleRequest(BaseModel):
+class RateLimitRuleRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request schema for creating/updating rate limit rule."""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
@@ -43,14 +45,16 @@ class RateLimitRuleRequest(BaseModel):
     action: RateLimitAction = RateLimitAction.BLOCK
     priority: int = Field(default=0)
     is_active: bool = Field(default=True)
-    exempt_user_ids: list[str] = Field(default_factory=list)
-    exempt_ip_addresses: list[str] = Field(default_factory=list)
-    exempt_api_keys: list[str] = Field(default_factory=list)
-    config: dict[str, Any] = Field(default_factory=dict)
+    exempt_user_ids: list[str] = Field(default_factory=lambda: [])
+    exempt_ip_addresses: list[str] = Field(default_factory=lambda: [])
+    exempt_api_keys: list[str] = Field(default_factory=lambda: [])
+    config: dict[str, Any] = Field(default_factory=lambda: {})
 
 
-class RateLimitRuleResponse(BaseModel):
+class RateLimitRuleResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response schema for rate limit rule."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     tenant_id: str
@@ -71,22 +75,21 @@ class RateLimitRuleResponse(BaseModel):
     created_at: str
     updated_at: str
 
-    class Config:
-        """Pydantic config."""
 
-        from_attributes = True
-
-
-class RateLimitStatusResponse(BaseModel):
+class RateLimitStatusResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response schema for rate limit status."""
+
+    model_config = ConfigDict()
 
     endpoint: str
     rules_applied: int
     limits: list[dict[str, Any]]
 
 
-class RateLimitLogResponse(BaseModel):
+class RateLimitLogResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response schema for rate limit log."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     tenant_id: str
@@ -103,11 +106,6 @@ class RateLimitLogResponse(BaseModel):
     action: RateLimitAction
     was_blocked: bool
     created_at: str
-
-    class Config:
-        """Pydantic config."""
-
-        from_attributes = True
 
 
 # API Endpoints

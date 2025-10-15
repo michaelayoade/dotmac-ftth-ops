@@ -22,7 +22,7 @@ logger = structlog.get_logger(__name__)
 # Cache TTL (in seconds)
 FILES_STATS_CACHE_TTL = 300  # 5 minutes
 
-router = APIRouter(tags=["File Storage Stats"])
+router = APIRouter(tags=["File Storage Metrics"])
 
 
 # ============================================================================
@@ -30,7 +30,7 @@ router = APIRouter(tags=["File Storage Stats"])
 # ============================================================================
 
 
-class FileStatsResponse(BaseModel):
+class FileStatsResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """File storage statistics response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -92,7 +92,7 @@ def _categorize_content_type(content_type: str) -> str:
 # ============================================================================
 
 
-@cached_result(
+@cached_result(  # type: ignore[misc]  # Cache decorator is untyped
     ttl=FILES_STATS_CACHE_TTL,
     key_prefix="files:stats",
     key_params=["period_days", "tenant_id"],

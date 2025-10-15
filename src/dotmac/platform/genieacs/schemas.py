@@ -7,15 +7,17 @@ Request and response schemas for GenieACS TR-069/CWMP operations.
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # ============================================================================
 # Device Schemas
 # ============================================================================
 
 
-class DeviceQuery(BaseModel):
+class DeviceQuery(BaseModel):  # BaseModel resolves to Any in isolation
     """Query parameters for device search"""
+
+    model_config = ConfigDict()
 
     query: dict[str, Any] | None = Field(None, description="MongoDB-style query")
     projection: str | None = Field(None, description="Comma-separated fields")
@@ -23,7 +25,7 @@ class DeviceQuery(BaseModel):
     limit: int = Field(100, ge=1, le=1000, description="Maximum records")
 
 
-class DeviceInfo(BaseModel):
+class DeviceInfo(BaseModel):  # BaseModel resolves to Any in isolation
     """Basic device information"""
 
     device_id: str = Field(..., alias="_id", description="Device ID (serial number)")
@@ -38,10 +40,10 @@ class DeviceInfo(BaseModel):
     last_inform: datetime | None = Field(None, description="Last inform time")
     registered: datetime | None = Field(None, description="Registration time")
 
-    model_config = {"from_attributes": True, "populate_by_name": True}
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
-class DeviceResponse(BaseModel):
+class DeviceResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Detailed device response"""
 
     device_id: str = Field(..., description="Device ID")
@@ -49,11 +51,13 @@ class DeviceResponse(BaseModel):
     parameters: dict[str, Any] = Field(default_factory=dict, description="Device parameters")
     tags: list[str] = Field(default_factory=list, description="Device tags")
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class DeviceListResponse(BaseModel):
+class DeviceListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Device list response"""
+
+    model_config = ConfigDict()
 
     devices: list[DeviceInfo]
     total: int
@@ -66,16 +70,20 @@ class DeviceListResponse(BaseModel):
 # ============================================================================
 
 
-class TaskCreate(BaseModel):
+class TaskCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create task for device"""
+
+    model_config = ConfigDict()
 
     device_id: str = Field(..., description="Device ID")
     task_name: str = Field(..., description="Task name (refreshObject, setParameterValues, etc.)")
     task_data: dict[str, Any] | None = Field(None, description="Task-specific data")
 
 
-class RefreshRequest(BaseModel):
+class RefreshRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Refresh device parameters"""
+
+    model_config = ConfigDict()
 
     device_id: str = Field(..., description="Device ID")
     object_path: str = Field(
@@ -87,31 +95,41 @@ class RefreshRequest(BaseModel):
 class SetParameterRequest(BaseModel):
     """Set parameter values on device"""
 
+    model_config = ConfigDict()
+
     device_id: str = Field(..., description="Device ID")
     parameters: dict[str, Any] = Field(..., description="Parameter path and values")
 
 
-class GetParameterRequest(BaseModel):
+class GetParameterRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Get parameter values from device"""
+
+    model_config = ConfigDict()
 
     device_id: str = Field(..., description="Device ID")
     parameter_names: list[str] = Field(..., description="List of parameter paths")
 
 
-class RebootRequest(BaseModel):
+class RebootRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Reboot device"""
 
+    model_config = ConfigDict()
+
     device_id: str = Field(..., description="Device ID")
 
 
-class FactoryResetRequest(BaseModel):
+class FactoryResetRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Factory reset device"""
 
+    model_config = ConfigDict()
+
     device_id: str = Field(..., description="Device ID")
 
 
-class FirmwareDownloadRequest(BaseModel):
+class FirmwareDownloadRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Download firmware to device"""
+
+    model_config = ConfigDict()
 
     device_id: str = Field(..., description="Device ID")
     file_type: str = Field(
@@ -122,8 +140,10 @@ class FirmwareDownloadRequest(BaseModel):
     target_file_name: str | None = Field(None, description="Target filename on device")
 
 
-class TaskResponse(BaseModel):
+class TaskResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Task creation response"""
+
+    model_config = ConfigDict()
 
     success: bool
     message: str
@@ -136,8 +156,10 @@ class TaskResponse(BaseModel):
 # ============================================================================
 
 
-class PresetCreate(BaseModel):
+class PresetCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create preset configuration"""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, max_length=100, description="Preset name")
     channel: str = Field(..., description="Channel (e.g., default)")
@@ -149,8 +171,10 @@ class PresetCreate(BaseModel):
     )
 
 
-class PresetUpdate(BaseModel):
+class PresetUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Update preset configuration"""
+
+    model_config = ConfigDict()
 
     channel: str | None = None
     schedule: dict[str, Any] | None = None
@@ -159,7 +183,7 @@ class PresetUpdate(BaseModel):
     configurations: list[dict[str, Any]] | None = None
 
 
-class PresetResponse(BaseModel):
+class PresetResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Preset response"""
 
     preset_id: str = Field(..., alias="_id", description="Preset ID")
@@ -168,7 +192,7 @@ class PresetResponse(BaseModel):
     events: dict[str, bool]
     configurations: list[dict[str, Any]]
 
-    model_config = {"from_attributes": True, "populate_by_name": True}
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 # ============================================================================
@@ -176,13 +200,13 @@ class PresetResponse(BaseModel):
 # ============================================================================
 
 
-class ProvisionResponse(BaseModel):
+class ProvisionResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Provision script response"""
 
     provision_id: str = Field(..., alias="_id", description="Provision ID")
     script: str = Field(..., description="JavaScript provision script")
 
-    model_config = {"from_attributes": True, "populate_by_name": True}
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 # ============================================================================
@@ -190,7 +214,7 @@ class ProvisionResponse(BaseModel):
 # ============================================================================
 
 
-class FileResponse(BaseModel):
+class FileResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """File metadata response"""
 
     file_id: str = Field(..., alias="_id", description="File ID")
@@ -198,7 +222,7 @@ class FileResponse(BaseModel):
     length: int | None = Field(None, description="File size in bytes")
     upload_date: datetime | None = Field(None, description="Upload date")
 
-    model_config = {"from_attributes": True, "populate_by_name": True}
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 # ============================================================================
@@ -206,7 +230,7 @@ class FileResponse(BaseModel):
 # ============================================================================
 
 
-class FaultResponse(BaseModel):
+class FaultResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Fault/error response"""
 
     fault_id: str = Field(..., alias="_id", description="Fault ID")
@@ -218,7 +242,7 @@ class FaultResponse(BaseModel):
     timestamp: datetime = Field(..., description="Fault timestamp")
     retries: int = Field(default=0, description="Retry count")
 
-    model_config = {"from_attributes": True, "populate_by_name": True}
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 # ============================================================================
@@ -226,8 +250,10 @@ class FaultResponse(BaseModel):
 # ============================================================================
 
 
-class WiFiConfig(BaseModel):
+class WiFiConfig(BaseModel):  # BaseModel resolves to Any in isolation
     """WiFi configuration"""
+
+    model_config = ConfigDict()
 
     ssid: str = Field(..., min_length=1, max_length=32, description="WiFi SSID")
     password: str = Field(..., min_length=8, description="WiFi password")
@@ -239,8 +265,10 @@ class WiFiConfig(BaseModel):
     enabled: bool = Field(default=True, description="Enable WiFi")
 
 
-class LANConfig(BaseModel):
+class LANConfig(BaseModel):  # BaseModel resolves to Any in isolation
     """LAN configuration"""
+
+    model_config = ConfigDict()
 
     ip_address: str = Field(..., description="LAN IP address")
     subnet_mask: str = Field(..., description="Subnet mask")
@@ -249,8 +277,10 @@ class LANConfig(BaseModel):
     dhcp_end: str | None = Field(None, description="DHCP pool end")
 
 
-class WANConfig(BaseModel):
+class WANConfig(BaseModel):  # BaseModel resolves to Any in isolation
     """WAN configuration"""
+
+    model_config = ConfigDict()
 
     connection_type: str = Field(..., description="Connection type (DHCP, PPPoE, Static)")
     username: str | None = Field(None, description="PPPoE username")
@@ -258,8 +288,10 @@ class WANConfig(BaseModel):
     vlan_id: int | None = Field(None, ge=1, le=4094, description="VLAN ID")
 
 
-class CPEConfigRequest(BaseModel):
+class CPEConfigRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """CPE configuration request"""
+
+    model_config = ConfigDict()
 
     device_id: str = Field(..., description="Device ID")
     wifi: WiFiConfig | None = Field(None, description="WiFi configuration")
@@ -272,8 +304,10 @@ class CPEConfigRequest(BaseModel):
 # ============================================================================
 
 
-class GenieACSHealthResponse(BaseModel):
+class GenieACSHealthResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """GenieACS health check response"""
+
+    model_config = ConfigDict()
 
     healthy: bool
     message: str
@@ -283,6 +317,8 @@ class GenieACSHealthResponse(BaseModel):
 
 class DeviceStatusResponse(BaseModel):
     """Device online/offline status"""
+
+    model_config = ConfigDict()
 
     device_id: str
     online: bool
@@ -299,11 +335,13 @@ class DeviceStatusResponse(BaseModel):
 class DeviceStatsResponse(BaseModel):
     """Device statistics"""
 
+    model_config = ConfigDict()
+
     total_devices: int
     online_devices: int
     offline_devices: int
-    manufacturers: dict[str, int] = Field(default_factory=dict)
-    models: dict[str, int] = Field(default_factory=dict)
+    manufacturers: dict[str, int] = Field(default_factory=lambda: {})
+    models: dict[str, int] = Field(default_factory=lambda: {})
 
 
 # ============================================================================
@@ -311,24 +349,18 @@ class DeviceStatsResponse(BaseModel):
 # ============================================================================
 
 
-class FirmwareUpgradeSchedule(BaseModel):
+class FirmwareUpgradeSchedule(BaseModel):  # BaseModel resolves to Any in isolation
     """Scheduled firmware upgrade"""
 
     schedule_id: str | None = Field(None, description="Schedule ID (auto-generated)")
     name: str = Field(..., min_length=1, description="Schedule name")
     description: str | None = Field(None, description="Schedule description")
     firmware_file: str = Field(..., description="Firmware file name on GenieACS")
-    file_type: str = Field(
-        default="1 Firmware Upgrade Image", description="TR-069 file type"
-    )
-    device_filter: dict[str, Any] = Field(
-        ..., description="Device filter query (MongoDB-style)"
-    )
+    file_type: str = Field(default="1 Firmware Upgrade Image", description="TR-069 file type")
+    device_filter: dict[str, Any] = Field(..., description="Device filter query (MongoDB-style)")
     scheduled_at: datetime = Field(..., description="Scheduled execution time")
     timezone: str = Field(default="UTC", description="Timezone for scheduled_at")
-    max_concurrent: int = Field(
-        default=10, ge=1, le=100, description="Maximum concurrent upgrades"
-    )
+    max_concurrent: int = Field(default=10, ge=1, le=100, description="Maximum concurrent upgrades")
     status: str = Field(
         default="pending", description="Status: pending, running, completed, failed, cancelled"
     )
@@ -336,10 +368,10 @@ class FirmwareUpgradeSchedule(BaseModel):
     started_at: datetime | None = Field(None, description="Execution start time")
     completed_at: datetime | None = Field(None, description="Completion time")
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class FirmwareUpgradeResult(BaseModel):
+class FirmwareUpgradeResult(BaseModel):  # BaseModel resolves to Any in isolation
     """Firmware upgrade result for a device"""
 
     device_id: str
@@ -348,42 +380,44 @@ class FirmwareUpgradeResult(BaseModel):
     started_at: datetime | None = None
     completed_at: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class FirmwareUpgradeScheduleResponse(BaseModel):
+class FirmwareUpgradeScheduleResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Firmware upgrade schedule response"""
+
+    model_config = ConfigDict()
 
     schedule: FirmwareUpgradeSchedule
     total_devices: int
     completed_devices: int
     failed_devices: int
     pending_devices: int
-    results: list[FirmwareUpgradeResult] = Field(default_factory=list)
+    results: list[FirmwareUpgradeResult] = Field(default_factory=lambda: [])
 
 
-class FirmwareUpgradeScheduleCreate(BaseModel):
+class FirmwareUpgradeScheduleCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create firmware upgrade schedule"""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, description="Schedule name")
     description: str | None = Field(None, description="Schedule description")
     firmware_file: str = Field(..., description="Firmware file name on GenieACS")
-    file_type: str = Field(
-        default="1 Firmware Upgrade Image", description="TR-069 file type"
-    )
+    file_type: str = Field(default="1 Firmware Upgrade Image", description="TR-069 file type")
     device_filter: dict[str, Any] = Field(
         ...,
         description="Device filter query (e.g., {'manufacturer': 'Huawei', 'model': 'HG8245H'})",
     )
     scheduled_at: datetime = Field(..., description="Scheduled execution time (ISO 8601)")
     timezone: str = Field(default="UTC", description="Timezone")
-    max_concurrent: int = Field(
-        default=10, ge=1, le=100, description="Maximum concurrent upgrades"
-    )
+    max_concurrent: int = Field(default=10, ge=1, le=100, description="Maximum concurrent upgrades")
 
 
-class FirmwareUpgradeScheduleList(BaseModel):
+class FirmwareUpgradeScheduleList(BaseModel):  # BaseModel resolves to Any in isolation
     """List of firmware upgrade schedules"""
+
+    model_config = ConfigDict()
 
     schedules: list[FirmwareUpgradeSchedule]
     total: int
@@ -394,8 +428,10 @@ class FirmwareUpgradeScheduleList(BaseModel):
 # ============================================================================
 
 
-class MassConfigFilter(BaseModel):
+class MassConfigFilter(BaseModel):  # BaseModel resolves to Any in isolation
     """Device filter for mass configuration"""
+
+    model_config = ConfigDict()
 
     query: dict[str, Any] = Field(..., description="MongoDB-style query filter")
     expected_count: int | None = Field(None, description="Expected device count (for validation)")
@@ -404,6 +440,8 @@ class MassConfigFilter(BaseModel):
 class MassWiFiConfig(BaseModel):
     """Mass WiFi configuration"""
 
+    model_config = ConfigDict()
+
     ssid: str | None = Field(None, min_length=1, max_length=32, description="New SSID")
     password: str | None = Field(None, min_length=8, description="New password")
     security_mode: str | None = Field(None, description="Security mode")
@@ -411,23 +449,29 @@ class MassWiFiConfig(BaseModel):
     enabled: bool | None = Field(None, description="Enable/disable WiFi")
 
 
-class MassLANConfig(BaseModel):
+class MassLANConfig(BaseModel):  # BaseModel resolves to Any in isolation
     """Mass LAN configuration"""
+
+    model_config = ConfigDict()
 
     dhcp_enabled: bool | None = Field(None, description="Enable/disable DHCP server")
     dhcp_start: str | None = Field(None, description="DHCP pool start")
     dhcp_end: str | None = Field(None, description="DHCP pool end")
 
 
-class MassWANConfig(BaseModel):
+class MassWANConfig(BaseModel):  # BaseModel resolves to Any in isolation
     """Mass WAN configuration"""
+
+    model_config = ConfigDict()
 
     connection_type: str | None = Field(None, description="Connection type")
     vlan_id: int | None = Field(None, ge=1, le=4094, description="VLAN ID")
 
 
-class MassConfigRequest(BaseModel):
+class MassConfigRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Mass CPE configuration request"""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, description="Configuration job name")
     description: str | None = Field(None, description="Job description")
@@ -441,25 +485,23 @@ class MassConfigRequest(BaseModel):
     max_concurrent: int = Field(
         default=10, ge=1, le=100, description="Maximum concurrent configuration tasks"
     )
-    dry_run: bool = Field(
-        default=False, description="Preview changes without applying them"
-    )
+    dry_run: bool = Field(default=False, description="Preview changes without applying them")
 
 
-class MassConfigResult(BaseModel):
+class MassConfigResult(BaseModel):  # BaseModel resolves to Any in isolation
     """Mass configuration result for a device"""
 
     device_id: str
     status: str  # success, failed, pending, in_progress, skipped
-    parameters_changed: dict[str, Any] = Field(default_factory=dict)
+    parameters_changed: dict[str, Any] = Field(default_factory=lambda: {})
     error_message: str | None = None
     started_at: datetime | None = None
     completed_at: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class MassConfigJob(BaseModel):
+class MassConfigJob(BaseModel):  # BaseModel resolves to Any in isolation
     """Mass configuration job"""
 
     job_id: str
@@ -476,21 +518,25 @@ class MassConfigJob(BaseModel):
     started_at: datetime | None = None
     completed_at: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class MassConfigResponse(BaseModel):
+class MassConfigResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Mass configuration response"""
+
+    model_config = ConfigDict()
 
     job: MassConfigJob
     preview: list[str] | None = Field(
         None, description="Device IDs that will be affected (dry run)"
     )
-    results: list[MassConfigResult] = Field(default_factory=list)
+    results: list[MassConfigResult] = Field(default_factory=lambda: [])
 
 
-class MassConfigJobList(BaseModel):
+class MassConfigJobList(BaseModel):  # BaseModel resolves to Any in isolation
     """List of mass configuration jobs"""
+
+    model_config = ConfigDict()
 
     jobs: list[MassConfigJob]
     total: int

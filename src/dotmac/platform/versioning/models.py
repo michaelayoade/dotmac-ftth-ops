@@ -48,7 +48,7 @@ class VersionConfig:
     supported_versions: list[APIVersion] = field(
         default_factory=lambda: [APIVersion.V1, APIVersion.V2]
     )
-    deprecated_versions: list[APIVersion] = field(default_factory=list)
+    deprecated_versions: list[APIVersion] = field(default_factory=lambda: [])
     sunset_dates: dict[APIVersion, date] = field(
         default_factory=dict
     )  # When versions will be removed

@@ -5,7 +5,6 @@ FastAPI endpoints for ISP metrics and KPIs.
 """
 
 from fastapi import APIRouter, Depends, Query
-from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
@@ -13,9 +12,9 @@ from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.metrics.schemas import DashboardMetrics, SubscriberKPIs
 from dotmac.platform.metrics.service import MetricsService
-from dotmac.platform.redis_client import get_redis_client
+from dotmac.platform.redis_client import RedisClientType, get_redis_client
 
-router = APIRouter(prefix="/api/v1/metrics", tags=["metrics"])
+router = APIRouter(prefix="/api/v1/metrics", tags=["Metrics"])
 
 
 # =============================================================================
@@ -25,7 +24,7 @@ router = APIRouter(prefix="/api/v1/metrics", tags=["metrics"])
 
 async def get_metrics_service(
     session: AsyncSession = Depends(get_session_dependency),
-    redis: Redis = Depends(get_redis_client),
+    redis: RedisClientType = Depends(get_redis_client),
 ) -> MetricsService:
     """Get metrics service instance with Redis caching."""
     return MetricsService(session, redis_client=redis)

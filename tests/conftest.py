@@ -97,14 +97,14 @@ except Exception:  # pragma: no cover - fallback for environments without fakere
     HAS_FAKEREDIS = False
 
 try:
-    import freezegun
+    import freezegun  # noqa: F401
 
     HAS_FREEZEGUN = True
 except ImportError:
     HAS_FREEZEGUN = False
 
 try:
-    from fastapi import FastAPI
+    from fastapi import FastAPI  # noqa: F401
     from fastapi.testclient import TestClient
 
     HAS_FASTAPI = True
@@ -115,7 +115,7 @@ try:
     from sqlalchemy import create_engine
     from sqlalchemy.engine import make_url
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-    from sqlalchemy.orm import Session, sessionmaker
+    from sqlalchemy.orm import Session, sessionmaker  # noqa: F401
     from sqlalchemy.pool import StaticPool
 
     HAS_SQLALCHEMY = True
@@ -124,7 +124,7 @@ except ImportError:
 
 # Graceful imports from dotmac platform
 try:
-    from dotmac.platform.auth.core import JWTService
+    from dotmac.platform.auth.core import JWTService  # noqa: F401
 
     HAS_JWT_SERVICE = True
 except ImportError:
@@ -189,6 +189,16 @@ try:
 
     try:
         from dotmac.platform.radius import models as radius_models  # noqa: F401
+    except ImportError:
+        pass
+
+    try:
+        from dotmac.platform.fault_management import models as fault_models  # noqa: F401
+    except ImportError:
+        pass
+
+    try:
+        from dotmac.platform.notifications import models as notification_models  # noqa: F401
     except ImportError:
         pass
 

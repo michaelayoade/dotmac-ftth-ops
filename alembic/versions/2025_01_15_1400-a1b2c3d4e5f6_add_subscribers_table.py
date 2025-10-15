@@ -22,7 +22,8 @@ def upgrade() -> None:
     """Create subscribers table for ISP network service management."""
 
     # Create SubscriberStatus enum (with IF NOT EXISTS to avoid duplicate errors)
-    op.execute("""
+    op.execute(
+        """
         DO $$ BEGIN
             CREATE TYPE subscriberstatus AS ENUM (
                 'pending',
@@ -35,7 +36,8 @@ def upgrade() -> None:
         EXCEPTION
             WHEN duplicate_object THEN null;
         END $$;
-    """)
+    """
+    )
 
     # Create ServiceType enum (with checkfirst to avoid duplicate errors)
     # This enum may also be created by the service lifecycle migration (dc34675b64e9)

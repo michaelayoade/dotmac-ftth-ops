@@ -90,7 +90,7 @@ def rate_limit(limit: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
         limit: Rate limit string (e.g., "100/minute", "10/second")
 
     Example:
-        @rate_limit("100/minute")
+        @rate_limit("100/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
         async def my_endpoint():
             return {"message": "success"}
     """

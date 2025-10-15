@@ -5,22 +5,18 @@ Production-ready service with database persistence, Celery tasks,
 and Prometheus metrics.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.genieacs.client import GenieACSClient
 from dotmac.platform.genieacs.metrics import (
     record_firmware_upgrade_created,
-    record_firmware_upgrade_device,
-    record_firmware_upgrade_duration,
     record_mass_config_created,
-    record_mass_config_device,
-    record_mass_config_duration,
     set_firmware_upgrade_active_schedules,
     set_firmware_upgrade_schedule_status,
     set_mass_config_active_jobs,
@@ -32,18 +28,20 @@ from dotmac.platform.genieacs.models import (
     MassConfigJob,
     MassConfigResult,
 )
+from dotmac.platform.genieacs.schemas import FirmwareUpgradeResult as FirmwareUpgradeResultSchema
+from dotmac.platform.genieacs.schemas import (
+    FirmwareUpgradeSchedule as FirmwareUpgradeScheduleSchema,
+)
 from dotmac.platform.genieacs.schemas import (
     FirmwareUpgradeScheduleCreate,
     FirmwareUpgradeScheduleList,
     FirmwareUpgradeScheduleResponse,
-    FirmwareUpgradeResult as FirmwareUpgradeResultSchema,
-    FirmwareUpgradeSchedule as FirmwareUpgradeScheduleSchema,
     MassConfigJobList,
     MassConfigRequest,
     MassConfigResponse,
-    MassConfigJob as MassConfigJobSchema,
-    MassConfigResult as MassConfigResultSchema,
 )
+from dotmac.platform.genieacs.schemas import MassConfigJob as MassConfigJobSchema
+from dotmac.platform.genieacs.schemas import MassConfigResult as MassConfigResultSchema
 
 logger = structlog.get_logger(__name__)
 
@@ -105,7 +103,7 @@ class GenieACSServiceDB:
             timezone=request.timezone,
             max_concurrent=request.max_concurrent,
             status="pending",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         self.session.add(schedule)
@@ -113,9 +111,7 @@ class GenieACSServiceDB:
 
         # Record metrics
         record_firmware_upgrade_created(self.tenant_id)
-        set_firmware_upgrade_schedule_status(
-            self.tenant_id, schedule_id, "pending", 1.0
-        )
+        set_firmware_upgrade_schedule_status(self.tenant_id, schedule_id, "pending", 1.0)
 
         logger.info(
             "firmware_schedule.created_db",
@@ -202,9 +198,7 @@ class GenieACSServiceDB:
 
         # Get results
         results_result = await self.session.execute(
-            select(FirmwareUpgradeResult).where(
-                FirmwareUpgradeResult.schedule_id == schedule_id
-            )
+            select(FirmwareUpgradeResult).where(FirmwareUpgradeResult.schedule_id == schedule_id)
         )
 
         results = results_result.scalars().all()
@@ -267,13 +261,11 @@ class GenieACSServiceDB:
             raise ValueError(f"Cannot cancel schedule with status: {schedule.status}")
 
         schedule.status = "cancelled"
-        schedule.completed_at = datetime.now(timezone.utc)
+        schedule.completed_at = datetime.now(UTC)
         await self.session.commit()
 
         # Update metrics
-        set_firmware_upgrade_schedule_status(
-            self.tenant_id, schedule_id, "cancelled", 1.0
-        )
+        set_firmware_upgrade_schedule_status(self.tenant_id, schedule_id, "cancelled", 1.0)
 
         logger.info(
             "firmware_schedule.cancelled_db",
@@ -325,9 +317,7 @@ class GenieACSServiceDB:
     # Mass CPE Configuration
     # =========================================================================
 
-    async def create_mass_config_job(
-        self, request: MassConfigRequest
-    ) -> MassConfigResponse:
+    async def create_mass_config_job(self, request: MassConfigRequest) -> MassConfigResponse:
         """Create mass configuration job with database persistence."""
         # Generate job ID
         job_id = str(uuid4())
@@ -366,7 +356,7 @@ class GenieACSServiceDB:
             status="pending",
             dry_run="true" if request.dry_run else "false",
             max_concurrent=request.max_concurrent,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         self.session.add(job)
@@ -513,7 +503,7 @@ class GenieACSServiceDB:
             raise ValueError(f"Cannot cancel job with status: {job.status}")
 
         job.status = "cancelled"
-        job.completed_at = datetime.now(timezone.utc)
+        job.completed_at = datetime.now(UTC)
         await self.session.commit()
 
         # Update metrics

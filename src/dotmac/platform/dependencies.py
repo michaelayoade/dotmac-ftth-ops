@@ -6,9 +6,12 @@ helpful error messages when they're missing.
 """
 
 import importlib
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar, cast
 
 from .settings import settings
+
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 class DependencyError(ImportError):
@@ -203,7 +206,7 @@ class DependencyChecker:
                 cls.require_feature_dependency(feature_flag)
 
 
-def require_dependency(feature_flag: str) -> Any:
+def require_dependency(feature_flag: str) -> Callable[[F], F]:
     """
     Decorator to require dependencies for a function/class.
 
@@ -217,7 +220,7 @@ def require_dependency(feature_flag: str) -> Any:
             return Minio(...)
     """
 
-    def decorator(func: Any) -> Any:
+    def decorator(func: F) -> F:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             # Check if feature is enabled
             if not getattr(settings.features, feature_flag, False):
@@ -227,7 +230,7 @@ def require_dependency(feature_flag: str) -> Any:
             DependencyChecker.require_feature_dependency(feature_flag)
             return func(*args, **kwargs)
 
-        return wrapper
+        return cast(F, wrapper)
 
     return decorator
 

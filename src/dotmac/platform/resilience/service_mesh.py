@@ -96,7 +96,7 @@ class ServiceEndpoint:
     protocol: str = "http"
     weight: int = 100
     health_check_path: str = "/health"
-    metadata: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=lambda: {})
     status: ServiceStatus = ServiceStatus.UNKNOWN
 
     @property
@@ -118,8 +118,8 @@ class TrafficRule:
     source_service: str
     destination_service: str
     policy: TrafficPolicy = TrafficPolicy.ROUND_ROBIN
-    weight_distribution: dict[str, int] = field(default_factory=dict)
-    headers: dict[str, str] = field(default_factory=dict)
+    weight_distribution: dict[str, int] = field(default_factory=lambda: {})
+    headers: dict[str, str] = field(default_factory=lambda: {})
     timeout_seconds: int = 30
     retry_policy: RetryPolicy = RetryPolicy.EXPONENTIAL_BACKOFF
     max_retries: int = 3
@@ -434,7 +434,7 @@ class ServiceMesh:
         self.http_session: aiohttp.ClientSession | None = None
 
         # Health monitoring
-        self.health_check_task: asyncio.Task | None = None
+        self.health_check_task: asyncio.Task[None] | None = None
 
     async def initialize(self) -> None:
         """Initialize the service mesh."""

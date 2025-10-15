@@ -476,7 +476,7 @@ class TestRoleUpdateEdgeCases:
         """Test updating role to make it default."""
         # Create two roles
         rbac = RBACService(async_db_session)
-        role1 = await rbac.create_role(name="role1", display_name="Role 1", permissions=[])
+        await rbac.create_role(name="role1", display_name="Role 1", permissions=[])
         role2 = await rbac.create_role(name="role2", display_name="Role 2", permissions=[])
         await async_db_session.commit()
 

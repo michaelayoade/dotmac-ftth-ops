@@ -27,7 +27,7 @@ class EventStatus(str, Enum):
     DEAD_LETTER = "dead_letter"
 
 
-class EventMetadata(BaseModel):
+class EventMetadata(BaseModel):  # BaseModel resolves to Any in isolation
     """Event metadata for tracking and correlation."""
 
     model_config = ConfigDict(
@@ -56,7 +56,7 @@ def _default_event_metadata() -> EventMetadata:
     )
 
 
-class Event(BaseModel):
+class Event(BaseModel):  # BaseModel resolves to Any in isolation
     """Base event model."""
 
     model_config = ConfigDict(

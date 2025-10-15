@@ -322,7 +322,7 @@ class TestVaultConnectionManager:
         mock_client.client.headers = {}
         mock_vault_client.return_value = mock_client
 
-        client = manager.get_sync_client()
+        manager.get_sync_client()
 
         # Should have called AppRole login
         mock_client.client.post.assert_called_once_with(
@@ -349,7 +349,7 @@ class TestVaultConnectionManager:
         mock_client.client.headers = {}
         mock_vault_client.return_value = mock_client
 
-        client = manager.get_sync_client()
+        manager.get_sync_client()
 
         # Should have called Kubernetes login
         mock_client.client.post.assert_called_once_with(

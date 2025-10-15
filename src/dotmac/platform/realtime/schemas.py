@@ -8,7 +8,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 # =============================================================================
 # Event Types
@@ -59,8 +59,10 @@ class EventType(str, Enum):
 # =============================================================================
 
 
-class BaseEvent(BaseModel):
+class BaseEvent(BaseModel):  # BaseModel resolves to Any in isolation
     """Base schema for all real-time events."""
+
+    model_config = ConfigDict()
 
     event_type: EventType
     tenant_id: str
@@ -82,8 +84,10 @@ class ONUStatus(str, Enum):
     DEGRADED = "degraded"
 
 
-class ONUStatusEvent(BaseModel):
+class ONUStatusEvent(BaseModel):  # BaseModel resolves to Any in isolation
     """ONU status change event."""
+
+    model_config = ConfigDict()
 
     event_type: EventType
     tenant_id: str
@@ -102,8 +106,10 @@ class ONUStatusEvent(BaseModel):
 # =============================================================================
 
 
-class RADIUSSessionEvent(BaseModel):
+class RADIUSSessionEvent(BaseModel):  # BaseModel resolves to Any in isolation
     """RADIUS session event."""
+
+    model_config = ConfigDict()
 
     event_type: EventType
     tenant_id: str
@@ -133,8 +139,10 @@ class JobStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-class JobProgressEvent(BaseModel):
+class JobProgressEvent(BaseModel):  # BaseModel resolves to Any in isolation
     """Job progress update event."""
+
+    model_config = ConfigDict()
 
     event_type: EventType
     tenant_id: str
@@ -156,8 +164,10 @@ class JobProgressEvent(BaseModel):
 # =============================================================================
 
 
-class TicketEvent(BaseModel):
+class TicketEvent(BaseModel):  # BaseModel resolves to Any in isolation
     """Ticket lifecycle event."""
+
+    model_config = ConfigDict()
 
     event_type: EventType
     tenant_id: str
@@ -186,8 +196,10 @@ class AlertSeverity(str, Enum):
     CRITICAL = "critical"
 
 
-class AlertEvent(BaseModel):
+class AlertEvent(BaseModel):  # BaseModel resolves to Any in isolation
     """Network or system alert event."""
+
+    model_config = ConfigDict()
 
     event_type: EventType
     tenant_id: str
@@ -205,8 +217,10 @@ class AlertEvent(BaseModel):
 # =============================================================================
 
 
-class SubscriberEvent(BaseModel):
+class SubscriberEvent(BaseModel):  # BaseModel resolves to Any in isolation
     """Subscriber lifecycle event."""
+
+    model_config = ConfigDict()
 
     event_type: EventType
     tenant_id: str

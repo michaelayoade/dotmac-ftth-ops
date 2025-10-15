@@ -25,7 +25,7 @@ from dotmac.platform.core.pydantic import AppBaseModel
 from dotmac.platform.db import BaseModel as SQLBaseModel
 
 
-class BillingBaseModel(AppBaseModel):
+class BillingBaseModel(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Base model for all billing entities with common fields."""
 
     tenant_id: str = Field(description="Tenant identifier for multi-tenancy")
@@ -35,7 +35,7 @@ class BillingBaseModel(AppBaseModel):
     updated_at: datetime | None = Field(None, description="Last update timestamp")
 
 
-class BillingSQLModel(SQLBaseModel):
+class BillingSQLModel(SQLBaseModel):  # type: ignore[misc]  # SQLBaseModel resolves to Any in isolation
     """Base SQLAlchemy model for billing tables."""
 
     __abstract__ = True

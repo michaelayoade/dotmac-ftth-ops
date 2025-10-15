@@ -12,7 +12,7 @@ from dotmac.platform.billing.core.models import BillingBaseModel
 from dotmac.platform.core.pydantic import AppBaseModel
 
 
-class ReceiptLineItem(AppBaseModel):
+class ReceiptLineItem(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Receipt line item"""
 
     line_item_id: str = Field(default_factory=lambda: str(uuid4()))
@@ -30,10 +30,10 @@ class ReceiptLineItem(AppBaseModel):
     sku: str | None = None
 
     # Metadata
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
 
-class Receipt(BillingBaseModel):
+class Receipt(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resolves to Any in isolation
     """Receipt for payments and transactions"""
 
     receipt_id: str = Field(default_factory=lambda: str(uuid4()))
@@ -63,7 +63,7 @@ class Receipt(BillingBaseModel):
     # Customer information
     customer_name: str = Field(..., min_length=1)
     customer_email: str = Field(..., description="Customer email")
-    billing_address: dict[str, str] = Field(default_factory=dict)
+    billing_address: dict[str, str] = Field(default_factory=lambda: {})
 
     # Content
     notes: str | None = Field(None, max_length=1000)
@@ -77,7 +77,7 @@ class Receipt(BillingBaseModel):
     delivery_method: str | None = Field(None, description="How receipt was delivered")
 
     # Metadata
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
     model_config = ConfigDict(
         json_schema_extra={

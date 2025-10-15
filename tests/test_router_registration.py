@@ -25,9 +25,9 @@ class TestRouterRegistration:
             try:
                 module = import_module(config.module_path)
                 router = getattr(module, config.router_name)
-                assert isinstance(router, APIRouter), (
-                    f"{config.module_path}.{config.router_name} is not an APIRouter"
-                )
+                assert isinstance(
+                    router, APIRouter
+                ), f"{config.module_path}.{config.router_name} is not an APIRouter"
             except (ImportError, AttributeError) as e:
                 failed_imports.append(
                     {"module": config.module_path, "router": config.router_name, "error": str(e)}
@@ -37,9 +37,10 @@ class TestRouterRegistration:
         if skipped_configs:
             print(f"Skipped {len(skipped_configs)} commented configs: {skipped_configs}")
 
-        assert len(failed_imports) == 0, (
-            f"Failed to import {len(failed_imports)} routers:\n"
-            + "\n".join([f"  - {f['module']}.{f['router']}: {f['error']}" for f in failed_imports])
+        assert (
+            len(failed_imports) == 0
+        ), f"Failed to import {len(failed_imports)} routers:\n" + "\n".join(
+            [f"  - {f['module']}.{f['router']}: {f['error']}" for f in failed_imports]
         )
 
     @patch("dotmac.platform.settings.settings")
@@ -134,9 +135,9 @@ class TestRouterRegistration:
                 else:
                     unexpected_duplicates.append(f"{prefix}: {router_ids}")
 
-        assert len(unexpected_duplicates) == 0, (
-            f"Unexpected duplicate prefixes found: {unexpected_duplicates}"
-        )
+        assert (
+            len(unexpected_duplicates) == 0
+        ), f"Unexpected duplicate prefixes found: {unexpected_duplicates}"
 
     def test_router_requires_auth_flag(self):
         """Test routers that require authentication have the flag set."""

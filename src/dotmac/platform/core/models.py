@@ -7,7 +7,7 @@ from pydantic import BaseModel as PydanticBaseModel
 from pydantic import ConfigDict, Field
 
 
-class BaseModel(PydanticBaseModel):
+class BaseModel(PydanticBaseModel):  # PydanticBaseModel resolves to Any in isolation
     """Base model for DotMac Framework entities.
 
     This base model provides common configuration for all domain entities
@@ -19,7 +19,7 @@ class BaseModel(PydanticBaseModel):
     )
 
 
-class TenantContext(BaseModel):
+class TenantContext(BaseModel):  # BaseModel resolves to Any in isolation
     """Tenant context information for multi-tenant operations.
 
     This model represents the tenant context that flows through the
@@ -32,7 +32,7 @@ class TenantContext(BaseModel):
     tenant_name: str | None = None
     domain: str | None = None
     is_active: bool = True
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
     @classmethod
     def create_default(cls) -> "TenantContext":

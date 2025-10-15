@@ -5,11 +5,3 @@
 
 export { VirtualizedDataTable } from './VirtualizedDataTable';
 export type { VirtualizedColumn, VirtualizedDataTableProps } from './VirtualizedDataTable';
-
-export {
-  LazyChart,
-  preloadChartComponents,
-  clearChartCache,
-  getChartCacheStats,
-} from './LazyChart';
-export type { LazyChartProps } from './LazyChart';

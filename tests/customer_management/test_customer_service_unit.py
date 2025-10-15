@@ -67,7 +67,7 @@ class TestCustomerCreation:
                 "dotmac.platform.customer_management.service.get_current_tenant_id",
                 return_value="tenant-1",
             ):
-                customer = await customer_service.create_customer(
+                await customer_service.create_customer(
                     data=customer_create_data,
                     created_by="admin_user",
                 )
@@ -257,7 +257,7 @@ class TestCustomerUpdate:
         ):
             with patch.object(service, "get_customer", return_value=existing_customer):
                 with patch.object(mock_session, "execute", return_value=None):
-                    customer = await service.update_customer(
+                    await service.update_customer(
                         customer_id=str(existing_customer.id),
                         data=update_data,
                         updated_by="admin_user",

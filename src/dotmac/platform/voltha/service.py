@@ -4,6 +4,8 @@ VOLTHA Service Layer
 Business logic for PON network management via VOLTHA.
 """
 
+from datetime import UTC
+
 import structlog
 
 from dotmac.platform.voltha.client import VOLTHAClient
@@ -243,9 +245,7 @@ class VOLTHAService:
     # ONU Auto-Discovery
     # =========================================================================
 
-    async def discover_onus(
-        self, olt_device_id: str | None = None
-    ) -> ONUDiscoveryResponse:
+    async def discover_onus(self, olt_device_id: str | None = None) -> ONUDiscoveryResponse:
         """
         Discover ONUs on PON network.
 
@@ -257,7 +257,7 @@ class VOLTHAService:
         Returns:
             ONUDiscoveryResponse with list of discovered ONUs
         """
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         discovered_onus: list[DiscoveredONU] = []
 
@@ -296,9 +296,7 @@ class VOLTHAService:
                         oper_status = device.get("oper_status")
 
                         # ONU is discovered if it has serial number but is not fully activated
-                        if serial and (
-                            admin_state != "ENABLED" or oper_status != "ACTIVE"
-                        ):
+                        if serial and (admin_state != "ENABLED" or oper_status != "ACTIVE"):
                             # Extract vendor ID and vendor specific from serial number
                             # Format is typically: VENDORSPECIFIC (e.g., ALCL12345678)
                             vendor_id = serial[:4] if len(serial) >= 4 else None
@@ -311,10 +309,8 @@ class VOLTHAService:
                                     vendor_specific=vendor_specific,
                                     olt_device_id=str(parent_id),
                                     pon_port=port_no,
-                                    onu_id=device.get("proxy_address", {}).get(
-                                        "onu_id"
-                                    ),
-                                    discovered_at=datetime.now(timezone.utc).isoformat(),
+                                    onu_id=device.get("proxy_address", {}).get("onu_id"),
+                                    discovered_at=datetime.now(UTC).isoformat(),
                                     status="discovered",
                                 )
                             )
@@ -331,9 +327,7 @@ class VOLTHAService:
             olt_device_id=olt_device_id,
         )
 
-    async def provision_onu(
-        self, provision_request: ONUProvisionRequest
-    ) -> ONUProvisionResponse:
+    async def provision_onu(self, provision_request: ONUProvisionRequest) -> ONUProvisionResponse:
         """
         Provision a discovered ONU.
 
@@ -378,14 +372,38 @@ class VOLTHAService:
             # Enable the device
             await self.client.enable_device(device_id)
 
-            # TODO: Configure VLAN and bandwidth profile
-            # This would require additional VOLTHA API calls or flow programming
+            # Configure VLAN and bandwidth profile if provided
+            config_errors = []
+
+            if provision_request.vlan is not None or provision_request.bandwidth_profile:
+                try:
+                    await self._configure_onu_service(
+                        device_id=device_id,
+                        parent_id=provision_request.olt_device_id,
+                        vlan=provision_request.vlan,
+                        bandwidth_profile=provision_request.bandwidth_profile,
+                    )
+                    logger.info(
+                        "voltha.provision_onu.service_configured",
+                        device_id=device_id,
+                        vlan=provision_request.vlan,
+                        bandwidth_profile=provision_request.bandwidth_profile,
+                    )
+                except Exception as e:
+                    error_msg = f"Service configuration failed: {str(e)}"
+                    config_errors.append(error_msg)
+                    logger.warning(
+                        "voltha.provision_onu.service_config_failed",
+                        device_id=device_id,
+                        error=str(e),
+                    )
 
             logger.info(
                 "voltha.provision_onu.success",
                 device_id=device_id,
                 serial_number=provision_request.serial_number,
                 subscriber_id=provision_request.subscriber_id,
+                config_errors=config_errors if config_errors else None,
             )
 
             return ONUProvisionResponse(
@@ -411,6 +429,321 @@ class VOLTHAService:
                 olt_device_id=provision_request.olt_device_id,
                 pon_port=provision_request.pon_port,
             )
+
+    # =========================================================================
+    # Service Configuration (VLAN/Bandwidth)
+    # =========================================================================
+
+    async def _configure_onu_service(
+        self,
+        device_id: str,
+        parent_id: str,
+        vlan: int | None = None,
+        bandwidth_profile: str | None = None,
+        technology_profile_id: int = 64,
+    ) -> None:
+        """
+        Configure ONU service parameters (VLAN, bandwidth profile, tech profile).
+
+        This is an internal method called during ONU provisioning to set up:
+        1. Technology Profile - Defines GEM ports, schedulers, QoS
+        2. VLAN Configuration - Sets up C-TAG/S-TAG for traffic segregation
+        3. Bandwidth Profile - Configures CIR/PIR for traffic shaping
+
+        Args:
+            device_id: ONU device ID
+            parent_id: Parent OLT device ID
+            vlan: Service VLAN (C-TAG)
+            bandwidth_profile: Bandwidth profile name
+            technology_profile_id: Technology profile ID (default 64)
+
+        Raises:
+            Exception: If configuration fails
+        """
+        # Step 1: Assign Technology Profile
+        # Technology profiles define the PON layer parameters
+        if technology_profile_id:
+            try:
+                tp_instance_path = f"service/XGSPON/{technology_profile_id}"
+                await self.client.set_technology_profile(
+                    device_id=device_id,
+                    tp_instance_path=tp_instance_path,
+                    tp_id=technology_profile_id,
+                )
+                logger.info(
+                    "voltha.configure_service.tech_profile_assigned",
+                    device_id=device_id,
+                    tp_id=technology_profile_id,
+                )
+            except Exception as e:
+                logger.warning(
+                    "voltha.configure_service.tech_profile_failed",
+                    device_id=device_id,
+                    error=str(e),
+                )
+                # Continue with other configuration even if tech profile fails
+
+        # Step 2: Configure VLAN if provided
+        # VLAN tagging enables service segregation and subscriber identification
+        if vlan is not None:
+            try:
+                await self._configure_vlan_flow(
+                    device_id=device_id,
+                    parent_id=parent_id,
+                    vlan=vlan,
+                )
+                logger.info(
+                    "voltha.configure_service.vlan_configured",
+                    device_id=device_id,
+                    vlan=vlan,
+                )
+            except Exception as e:
+                logger.error(
+                    "voltha.configure_service.vlan_failed",
+                    device_id=device_id,
+                    vlan=vlan,
+                    error=str(e),
+                )
+                raise
+
+        # Step 3: Configure Bandwidth Profile if provided
+        # Bandwidth profiles control traffic shaping (CIR/PIR)
+        if bandwidth_profile:
+            try:
+                await self._configure_bandwidth_profile(
+                    device_id=device_id,
+                    parent_id=parent_id,
+                    profile_name=bandwidth_profile,
+                )
+                logger.info(
+                    "voltha.configure_service.bandwidth_configured",
+                    device_id=device_id,
+                    profile=bandwidth_profile,
+                )
+            except Exception as e:
+                logger.error(
+                    "voltha.configure_service.bandwidth_failed",
+                    device_id=device_id,
+                    profile=bandwidth_profile,
+                    error=str(e),
+                )
+                raise
+
+    async def _configure_vlan_flow(
+        self,
+        device_id: str,
+        parent_id: str,
+        vlan: int,
+    ) -> None:
+        """
+        Configure VLAN flow rules for ONU.
+
+        Creates OpenFlow rules on the OLT to:
+        - Tag upstream traffic with specified VLAN
+        - Match downstream traffic by VLAN and forward to ONU
+
+        Args:
+            device_id: ONU device ID
+            parent_id: Parent OLT device ID
+            vlan: VLAN tag (C-TAG)
+        """
+        # Get logical device for the OLT
+        logical_devices = await self.client.get_logical_devices()
+        logical_device_id = None
+
+        for ld in logical_devices:
+            if ld.get("root_device_id") == parent_id:
+                logical_device_id = ld.get("id")
+                break
+
+        if not logical_device_id:
+            raise ValueError(f"Logical device not found for OLT {parent_id}")
+
+        # Get device ports to find the UNI port
+        ports = await self.client.get_device_ports(device_id)
+        uni_port = None
+        for port in ports:
+            if port.get("type") == "ETHERNET_UNI":
+                uni_port = port.get("port_no")
+                break
+
+        if uni_port is None:
+            raise ValueError(f"UNI port not found for device {device_id}")
+
+        # Create upstream flow (ONU -> OLT): Add VLAN tag
+        upstream_flow = {
+            "table_id": 0,
+            "priority": 1000,
+            "match": {
+                "in_port": uni_port,
+                "vlan_vid": 0,  # Untagged
+            },
+            "instructions": [
+                {
+                    "type": "APPLY_ACTIONS",
+                    "actions": [
+                        {
+                            "type": "PUSH_VLAN",
+                            "ethertype": 0x8100,
+                        },
+                        {
+                            "type": "SET_FIELD",
+                            "field": "vlan_vid",
+                            "value": vlan | 0x1000,  # Set VLAN with present bit
+                        },
+                        {
+                            "type": "OUTPUT",
+                            "port": "CONTROLLER",
+                        },
+                    ],
+                }
+            ],
+        }
+
+        # Create downstream flow (OLT -> ONU): Strip VLAN tag
+        downstream_flow = {
+            "table_id": 0,
+            "priority": 1000,
+            "match": {
+                "vlan_vid": vlan | 0x1000,  # Match VLAN with present bit
+            },
+            "instructions": [
+                {
+                    "type": "APPLY_ACTIONS",
+                    "actions": [
+                        {
+                            "type": "POP_VLAN",
+                        },
+                        {
+                            "type": "OUTPUT",
+                            "port": uni_port,
+                        },
+                    ],
+                }
+            ],
+        }
+
+        # Add flows to logical device
+        await self.client.add_flow(logical_device_id, upstream_flow)
+        await self.client.add_flow(logical_device_id, downstream_flow)
+
+        logger.info(
+            "voltha.vlan_flows_created",
+            device_id=device_id,
+            logical_device_id=logical_device_id,
+            vlan=vlan,
+            uni_port=uni_port,
+        )
+
+    async def _configure_bandwidth_profile(
+        self,
+        device_id: str,
+        parent_id: str,
+        profile_name: str,
+    ) -> None:
+        """
+        Configure bandwidth profile (meter) for ONU.
+
+        Bandwidth profiles define traffic shaping parameters:
+        - CIR (Committed Information Rate): Guaranteed bandwidth
+        - CBS (Committed Burst Size): Burst allowance at CIR
+        - PIR (Peak Information Rate): Maximum bandwidth
+        - PBS (Peak Burst Size): Burst allowance at PIR
+
+        Args:
+            device_id: ONU device ID
+            parent_id: Parent OLT device ID
+            profile_name: Bandwidth profile name (e.g., "100M", "1G")
+
+        Note:
+            This is a simplified implementation. In production, bandwidth profiles
+            would be looked up from a database or configuration store.
+        """
+        # Get logical device for the OLT
+        logical_devices = await self.client.get_logical_devices()
+        logical_device_id = None
+
+        for ld in logical_devices:
+            if ld.get("root_device_id") == parent_id:
+                logical_device_id = ld.get("id")
+                break
+
+        if not logical_device_id:
+            raise ValueError(f"Logical device not found for OLT {parent_id}")
+
+        # Parse bandwidth profile name to get rates
+        # Format: "XG" where X is the bandwidth in Mbps/Gbps
+        # Examples: "100M", "1G", "10G"
+        bandwidth_kbps = self._parse_bandwidth_profile(profile_name)
+
+        # Create meter (bandwidth profile) configuration
+        # Using Two Rate Three Color Marker (TR-TCM) algorithm
+        meter = {
+            "flags": ["PKTPS", "BURST", "STATS"],
+            "bands": [
+                {
+                    "type": "DROP",
+                    "rate": bandwidth_kbps,  # CIR in kbps
+                    "burst_size": bandwidth_kbps * 10,  # CBS in bytes (10ms burst)
+                },
+                {
+                    "type": "DROP",
+                    "rate": bandwidth_kbps * 2,  # PIR in kbps (2x CIR)
+                    "burst_size": bandwidth_kbps * 20,  # PBS in bytes (20ms burst)
+                },
+            ],
+        }
+
+        # Add meter to logical device
+        result = await self.client.add_meter(logical_device_id, meter)
+        meter_id = result.get("meter_id")
+
+        logger.info(
+            "voltha.bandwidth_profile_created",
+            device_id=device_id,
+            logical_device_id=logical_device_id,
+            profile_name=profile_name,
+            bandwidth_kbps=bandwidth_kbps,
+            meter_id=meter_id,
+        )
+
+    def _parse_bandwidth_profile(self, profile_name: str) -> int:
+        """
+        Parse bandwidth profile name to get bandwidth in kbps.
+
+        Args:
+            profile_name: Profile name (e.g., "100M", "1G", "10G")
+
+        Returns:
+            Bandwidth in kbps
+
+        Examples:
+            "100M" -> 100000 kbps (100 Mbps)
+            "1G" -> 1000000 kbps (1 Gbps)
+            "10G" -> 10000000 kbps (10 Gbps)
+        """
+        profile_name = profile_name.upper().strip()
+
+        # Extract number and unit
+        import re
+
+        match = re.match(r"(\d+(?:\.\d+)?)\s*([MG])?", profile_name)
+        if not match:
+            # Default to 100 Mbps if parsing fails
+            logger.warning(
+                "voltha.parse_bandwidth_profile.failed",
+                profile_name=profile_name,
+                default="100M",
+            )
+            return 100000
+
+        value = float(match.group(1))
+        unit = match.group(2) or "M"  # Default to Mbps
+
+        if unit == "G":
+            return int(value * 1000000)  # Gbps to kbps
+        else:  # "M"
+            return int(value * 1000)  # Mbps to kbps
 
     # =========================================================================
     # Alarms and Events

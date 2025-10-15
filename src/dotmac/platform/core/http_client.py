@@ -6,7 +6,8 @@ for all OSS/BSS HTTP clients (VOLTHA, GenieACS, NetBox, etc.).
 """
 
 import asyncio
-from typing import Any, ClassVar
+from collections.abc import Awaitable, Callable
+from typing import Any, ClassVar, cast
 from urllib.parse import urljoin
 
 import httpx
@@ -142,7 +143,9 @@ class RobustHTTPClient:
 
         self.circuit_breaker = self._circuit_breakers[breaker_key]
 
-    class _CircuitBreakerListener(CircuitBreakerListener):
+    class _CircuitBreakerListener(
+        CircuitBreakerListener
+    ):  # CircuitBreakerListener resolves to Any in isolation
         def __init__(
             self,
             service_name: str,
@@ -212,8 +215,12 @@ class RobustHTTPClient:
 
         # Wrap in circuit breaker
         try:
+            call_async = cast(
+                Callable[..., Awaitable[Any]],
+                self.circuit_breaker.call_async,
+            )
             if retry:
-                result = await self.circuit_breaker.call_async(
+                result = await call_async(
                     self._request_with_retry,
                     method=method,
                     url=url,
@@ -222,7 +229,7 @@ class RobustHTTPClient:
                     timeout=request_timeout,
                 )
             else:
-                result = await self.circuit_breaker.call_async(
+                result = await call_async(
                     self._request_once,
                     method=method,
                     url=url,

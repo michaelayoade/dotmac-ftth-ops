@@ -50,7 +50,7 @@ class TestCommunicationMetricsService:
 
         mock_db_session.refresh.side_effect = mock_refresh
 
-        result = await metrics_service.log_communication(
+        await metrics_service.log_communication(
             type=CommunicationType.EMAIL,
             recipient="test@example.com",
             subject="Test Subject",
@@ -71,7 +71,7 @@ class TestCommunicationMetricsService:
 
         mock_db_session.refresh.side_effect = mock_refresh
 
-        result = await metrics_service.log_communication(
+        await metrics_service.log_communication(
             type=CommunicationType.EMAIL,
             recipient="test@example.com",
             subject="Full Test",
@@ -238,7 +238,7 @@ class TestCommunicationMetricsService:
             mock_existing_result,  # PUSH
         ]
 
-        result = await metrics_service.aggregate_daily_stats()
+        await metrics_service.aggregate_daily_stats()
 
         # Result should be a CommunicationStats entry (from last iteration)
         assert mock_db_session.commit.called

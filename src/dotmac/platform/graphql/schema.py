@@ -10,7 +10,7 @@ from dotmac.platform.graphql.queries.analytics import AnalyticsQueries
 
 
 @strawberry.type
-class Query(AnalyticsQueries):
+class Query(AnalyticsQueries):  # type: ignore[misc]
     """
     Root GraphQL query type.
 
@@ -19,7 +19,7 @@ class Query(AnalyticsQueries):
     - Analytics and metrics queries for dashboards
     """
 
-    @strawberry.field(description="API version and info")
+    @strawberry.field(description="API version and info")  # type: ignore[misc]
     def version(self) -> str:
         """Get GraphQL API version."""
         return "1.0.0"
@@ -34,7 +34,7 @@ class Mutation:
     CRUD operations should remain in REST endpoints.
     """
 
-    @strawberry.field(description="Health check mutation")
+    @strawberry.field(description="Health check mutation")  # type: ignore[misc]
     def ping(self) -> str:
         """Simple ping mutation for testing."""
         return "pong"

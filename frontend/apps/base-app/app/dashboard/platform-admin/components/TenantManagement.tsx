@@ -126,7 +126,7 @@ export function TenantManagement() {
     try {
       setIsDetailOpen(true);
       setDetailTenant(null);
-      const tenant = await platformAdminTenantService.getTenantDetail(tenantId);
+      const tenant = await platformAdminTenantService.getTenantDetails(tenantId);
       setDetailTenant(tenant);
     } catch (error) {
       setIsDetailOpen(false);
@@ -256,7 +256,7 @@ export function TenantManagement() {
                   </TableRow>
                 ) : (
                   tenants.map((tenant) => (
-                    <TableRow key={tenant.tenant_id}>
+                    <TableRow key={tenant.id}>
                       <TableCell>
                         <div className="flex flex-col gap-1">
                           <span className="font-medium">{tenant.name}</span>
@@ -266,21 +266,21 @@ export function TenantManagement() {
                         </div>
                       </TableCell>
                       <TableCell className="hidden font-mono text-xs xl:table-cell">
-                        {tenant.tenant_id}
+                        {tenant.id}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={tenant.is_active ? "default" : "outline"}>
-                          {tenant.status?.toString() ?? "unknown"}
+                        <Badge variant={tenant.status === 'active' ? "default" : "outline"}>
+                          {tenant.status ?? "unknown"}
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden capitalize lg:table-cell">
-                        {tenant.plan_type ?? "—"}
+                        {tenant.subscription?.plan ?? "—"}
                       </TableCell>
                       <TableCell className="hidden text-right sm:table-cell">
-                        <Badge variant="secondary">{tenant.user_count ?? 0}</Badge>
+                        <Badge variant="secondary">{tenant.usage?.users ?? 0}</Badge>
                       </TableCell>
                       <TableCell className="hidden text-right md:table-cell">
-                        <Badge variant="secondary">{tenant.resource_count ?? 0}</Badge>
+                        <Badge variant="secondary">{tenant.usage?.storage_gb ?? 0}</Badge>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
                         {tenant.created_at
@@ -292,14 +292,14 @@ export function TenantManagement() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => openDetail(tenant.tenant_id)}
+                            onClick={() => openDetail(tenant.id)}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setImpersonateTenantId(tenant.tenant_id)}
+                            onClick={() => setImpersonateTenantId(tenant.id)}
                           >
                             <Key className="h-4 w-4" />
                           </Button>

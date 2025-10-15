@@ -5,8 +5,9 @@ Request and response schemas for RADIUS API endpoints.
 """
 
 from datetime import datetime
+from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # ============================================================================
 # RADIUS Subscriber Schemas
@@ -15,6 +16,8 @@ from pydantic import BaseModel, Field, field_validator
 
 class RADIUSSubscriberCreate(BaseModel):
     """Create RADIUS subscriber credentials"""
+
+    model_config = ConfigDict()
 
     subscriber_id: str = Field(..., description="Internal subscriber ID")
     username: str = Field(..., min_length=3, max_length=64, description="RADIUS username")
@@ -35,6 +38,8 @@ class RADIUSSubscriberCreate(BaseModel):
 
 class RADIUSSubscriberUpdate(BaseModel):
     """Update RADIUS subscriber credentials"""
+
+    model_config = ConfigDict()
 
     password: str | None = Field(None, min_length=8, description="New password")
     bandwidth_profile_id: str | None = Field(None, description="New bandwidth profile")
@@ -59,7 +64,7 @@ class RADIUSSubscriberResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
@@ -84,11 +89,13 @@ class RADIUSSessionResponse(BaseModel):
     total_bytes: int = 0
     is_active: bool = True
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RADIUSSessionDisconnect(BaseModel):
     """Disconnect RADIUS session"""
+
+    model_config = ConfigDict()
 
     username: str | None = Field(None, description="Username to disconnect")
     nasipaddress: str | None = Field(None, description="NAS IP address")
@@ -110,20 +117,21 @@ class RADIUSSessionDisconnect(BaseModel):
             return v
 
         # Check for newline injection (primary attack vector)
-        if '\n' in v or '\r' in v:
+        if "\n" in v or "\r" in v:
             raise ValueError(
                 "Input cannot contain newline or carriage return characters. "
                 "These can be used to inject additional RADIUS attributes."
             )
 
         # Check for null bytes (secondary attack vector)
-        if '\x00' in v:
+        if "\x00" in v:
             raise ValueError("Input cannot contain null bytes")
 
         # Additional safety: validate character set for RADIUS-safe values
         # Allow: alphanumeric, @, ., _, -, :, / (common in usernames, IPs, session IDs)
         import re
-        if not re.match(r'^[a-zA-Z0-9@._\-:/]+$', v):
+
+        if not re.match(r"^[a-zA-Z0-9@._\-:/]+$", v):
             raise ValueError(
                 "Input contains invalid characters. "
                 "Only alphanumeric characters and @._-:/ are allowed for RADIUS attributes."
@@ -140,6 +148,8 @@ class RADIUSSessionDisconnect(BaseModel):
 class RADIUSUsageResponse(BaseModel):
     """Usage statistics for a subscriber"""
 
+    model_config = ConfigDict()
+
     subscriber_id: str
     username: str
     total_sessions: int
@@ -155,6 +165,8 @@ class RADIUSUsageResponse(BaseModel):
 class RADIUSUsageQuery(BaseModel):
     """Query parameters for usage statistics"""
 
+    model_config = ConfigDict()
+
     subscriber_id: str | None = None
     username: str | None = None
     start_date: datetime | None = None
@@ -169,6 +181,8 @@ class RADIUSUsageQuery(BaseModel):
 
 class NASCreate(BaseModel):
     """Create NAS device"""
+
+    model_config = ConfigDict()
 
     nasname: str = Field(..., description="IP address or hostname")
     shortname: str = Field(..., min_length=1, max_length=32, description="Short identifier")
@@ -190,6 +204,8 @@ class NASCreate(BaseModel):
 
 class NASUpdate(BaseModel):
     """Update NAS device"""
+
+    model_config = ConfigDict()
 
     shortname: str | None = Field(None, min_length=1, max_length=32)
     type: str | None = None
@@ -213,7 +229,7 @@ class NASResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
@@ -223,6 +239,8 @@ class NASResponse(BaseModel):
 
 class BandwidthProfileCreate(BaseModel):
     """Create bandwidth profile"""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, max_length=100, description="Profile name")
     description: str | None = None
@@ -234,6 +252,8 @@ class BandwidthProfileCreate(BaseModel):
 
 class BandwidthProfileUpdate(BaseModel):
     """Update bandwidth profile"""
+
+    model_config = ConfigDict()
 
     name: str | None = Field(None, min_length=1, max_length=100)
     description: str | None = None
@@ -257,7 +277,7 @@ class BandwidthProfileResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
@@ -268,6 +288,8 @@ class BandwidthProfileResponse(BaseModel):
 class RADIUSAuthTest(BaseModel):
     """Test RADIUS authentication"""
 
+    model_config = ConfigDict()
+
     username: str = Field(..., description="Username to test")
     password: str = Field(..., description="Password to test")
     nas_ip: str | None = Field(None, description="NAS IP to test against")
@@ -276,7 +298,9 @@ class RADIUSAuthTest(BaseModel):
 class RADIUSAuthTestResponse(BaseModel):
     """RADIUS authentication test result"""
 
+    model_config = ConfigDict()
+
     success: bool
     message: str
-    attributes: dict | None = None
+    attributes: dict[str, Any] | None = None
     response_time_ms: float | None = None

@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * DotMac Headless UI Package
  *
@@ -255,3 +257,6 @@ export * from './utils/production-data-guard';
 
 // Unified Management Operations (High-Impact DRY Solution)
 export * from './management';
+
+// Telemetry and OpenTelemetry utilities
+export { initializeOTEL, createSpan, recordMetric, performance } from './utils/telemetry';

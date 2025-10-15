@@ -294,7 +294,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       toast({ title: 'Success', description: 'Role created successfully' });
     },
     onError: (error) => {
-      handleError(error, { showToast: true, toastMessage: 'Failed to create role' });
+      handleError(error, 'Failed to create role', true);
     },
   });
 
@@ -306,7 +306,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       toast({ title: 'Success', description: 'Role updated successfully' });
     },
     onError: (error) => {
-      handleError(error, { showToast: true, toastMessage: 'Failed to update role' });
+      handleError(error, 'Failed to update role', true);
     },
   });
 
@@ -317,7 +317,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       toast({ title: 'Success', description: 'Role deleted successfully' });
     },
     onError: (error) => {
-      handleError(error, { showToast: true, toastMessage: 'Failed to delete role' });
+      handleError(error, 'Failed to delete role', true);
     },
   });
 
@@ -329,7 +329,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       toast({ title: 'Success', description: 'Role assigned successfully' });
     },
     onError: (error) => {
-      handleError(error, { showToast: true, toastMessage: 'Failed to assign role' });
+      handleError(error, 'Failed to assign role', true);
     },
   });
 
@@ -340,7 +340,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       toast({ title: 'Success', description: 'Role revoked successfully' });
     },
     onError: (error) => {
-      handleError(error, { showToast: true, toastMessage: 'Failed to revoke role' });
+      handleError(error, 'Failed to revoke role', true);
     },
   });
 
@@ -351,7 +351,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       toast({ title: 'Success', description: 'Permission granted successfully' });
     },
     onError: (error) => {
-      handleError(error, { showToast: true, toastMessage: 'Failed to grant permission' });
+      handleError(error, 'Failed to grant permission', true);
     },
   });
 

@@ -36,7 +36,7 @@ class LogLevel(str, Enum):
     CRITICAL = "CRITICAL"
 
 
-class LogMetadata(BaseModel):
+class LogMetadata(BaseModel):  # BaseModel resolves to Any in isolation
     """Log entry metadata."""
 
     model_config = ConfigDict(
@@ -51,7 +51,7 @@ class LogMetadata(BaseModel):
     ip: str | None = Field(default=None, description="Client IP address")
 
 
-class LogEntry(BaseModel):
+class LogEntry(BaseModel):  # BaseModel resolves to Any in isolation
     """Individual log entry."""
 
     model_config = ConfigDict(
@@ -69,7 +69,7 @@ class LogEntry(BaseModel):
     )
 
 
-class LogsResponse(BaseModel):
+class LogsResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for log queries."""
 
     model_config = ConfigDict(validate_assignment=True)
@@ -81,7 +81,7 @@ class LogsResponse(BaseModel):
     has_more: bool = Field(description="Whether more logs are available")
 
 
-class LogStats(BaseModel):
+class LogStats(BaseModel):  # BaseModel resolves to Any in isolation
     """Log statistics."""
 
     model_config = ConfigDict()

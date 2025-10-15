@@ -47,7 +47,7 @@ def auth_error_handler(request: Request, exc: Exception) -> JSONResponse:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Manage application lifecycle events."""
     # SECURITY: Validate production security settings before anything else
     try:

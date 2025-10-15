@@ -39,16 +39,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuth = async () => {
     try {
       setLoading(true);
-      const response = await authService.getCurrentUser();
-      if (response.success && response.data) {
-        setUser(response.data);
+      const userData = await authService.getCurrentUser();
+      if (userData) {
+        setUser(userData);
 
         // Fetch user permissions from RBAC endpoint
         try {
           const permissionsResponse = await apiClient.get('/api/v1/auth/rbac/my-permissions');
           setPermissions(permissionsResponse.data as UserPermissions);
           logger.info('User permissions loaded', {
-            userId: response.data.id,
+            userId: userData.id,
             permissionCount: (permissionsResponse.data as UserPermissions)?.effective_permissions?.length || 0
           });
         } catch (permErr) {
@@ -73,17 +73,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
 
-      const response = await authService.login({ username, password });
+      const authResponse = await authService.login({ email: username, password });
 
-      if (response.success && response.data) {
-        setUser(response.data.user);
+      if (authResponse && authResponse.user) {
+        setUser(authResponse.user);
 
         // Fetch permissions after successful login
         try {
           const permissionsResponse = await apiClient.get('/api/v1/auth/rbac/my-permissions');
           setPermissions(permissionsResponse.data as UserPermissions);
           logger.info('User permissions loaded after login', {
-            userId: response.data.user.id,
+            userId: authResponse.user.id,
             permissionCount: (permissionsResponse.data as UserPermissions)?.effective_permissions?.length || 0
           });
         } catch (permErr) {
@@ -92,8 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         router.push('/dashboard');
       } else {
-        setError(response.error?.message || 'Login failed');
-        throw new Error(response.error?.message || 'Login failed');
+        throw new Error('Login failed');
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
@@ -123,14 +122,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
 
-      const response = await authService.register(data as any);
+      await authService.register({
+        email: data.email,
+        password: data.password,
+        name: data.name || ''
+      });
 
-      if (response.success) {
-        router.push('/login?registered=true');
-      } else {
-        setError(response.error?.message || 'Registration failed');
-        throw new Error(response.error?.message || 'Registration failed');
-      }
+      router.push('/login?registered=true');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Registration failed';
       setError(errorMessage);

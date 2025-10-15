@@ -539,7 +539,7 @@ class TestRADIUSIntegrationWithLifecycle:
 
         # Verify RADIUS subscriber was created
         # In real implementation, this would be part of the provisioning workflow
-        subscriber = await radius_service.get_subscriber_by_subscription(
+        await radius_service.get_subscriber_by_subscription(
             subscription_id=sample_service_provisioning_request["subscription_id"]
         )
 

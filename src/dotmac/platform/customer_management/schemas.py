@@ -26,7 +26,7 @@ from dotmac.platform.customer_management.models import (
 )
 
 
-class ISPServiceInfo(BaseModel):
+class ISPServiceInfo(BaseModel):  # BaseModel resolves to Any in isolation
     """ISP-specific service information."""
 
     model_config = ConfigDict(
@@ -58,13 +58,13 @@ class ISPServiceInfo(BaseModel):
     service_plan_speed: str | None = Field(None, max_length=50)
 
     # Network assignments
-    assigned_devices: dict[str, Any] = Field(default_factory=dict)
+    assigned_devices: dict[str, Any] = Field(default_factory=lambda: {})
     current_bandwidth_profile: str | None = Field(None, max_length=50)
     static_ip_assigned: str | None = Field(None, max_length=45)
     ipv6_prefix: str | None = Field(None, max_length=50)
 
 
-class CustomerBase(BaseModel):
+class CustomerBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base customer schema with common fields."""
 
     model_config = ConfigDict(
@@ -120,14 +120,14 @@ class CustomerBase(BaseModel):
         return v.lower()
 
 
-class CustomerCreate(CustomerBase):
+class CustomerCreate(CustomerBase):  # CustomerBase resolves to Any in isolation
     """Schema for creating a new customer."""
 
     external_id: str | None = Field(None, max_length=100)
     source_system: str | None = Field(None, max_length=50)
-    tags: list[str] = Field(default_factory=list)
-    metadata: dict[str, Any] = Field(default_factory=dict)
-    custom_fields: dict[str, Any] = Field(default_factory=dict)
+    tags: list[str] = Field(default_factory=lambda: [])
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
+    custom_fields: dict[str, Any] = Field(default_factory=lambda: {})
 
     # Optional assignment
     assigned_to: UUID | None = None
@@ -140,7 +140,7 @@ class CustomerCreate(CustomerBase):
     service_state_province: str | None = Field(None, max_length=100)
     service_postal_code: str | None = Field(None, max_length=20)
     service_country: str | None = Field(None, pattern="^[A-Z]{2}$")
-    service_coordinates: dict[str, Any] = Field(default_factory=dict)
+    service_coordinates: dict[str, Any] = Field(default_factory=lambda: {})
     installation_status: str | None = None
     scheduled_installation_date: datetime | None = None
     installation_technician_id: UUID | None = None
@@ -148,13 +148,13 @@ class CustomerCreate(CustomerBase):
     connection_type: str | None = None
     last_mile_technology: str | None = None
     service_plan_speed: str | None = None
-    assigned_devices: dict[str, Any] = Field(default_factory=dict)
+    assigned_devices: dict[str, Any] = Field(default_factory=lambda: {})
     current_bandwidth_profile: str | None = None
     static_ip_assigned: str | None = None
     ipv6_prefix: str | None = None
 
 
-class CustomerUpdate(BaseModel):
+class CustomerUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating customer information."""
 
     model_config = ConfigDict(
@@ -229,7 +229,7 @@ class CustomerUpdate(BaseModel):
     ipv6_prefix: str | None = None
 
 
-class CustomerResponse(CustomerBase):
+class CustomerResponse(CustomerBase):  # CustomerBase resolves to Any in isolation
     """Schema for customer response."""
 
     id: UUID
@@ -275,7 +275,7 @@ class CustomerResponse(CustomerBase):
     service_state_province: str | None = None
     service_postal_code: str | None = None
     service_country: str | None = None
-    service_coordinates: dict[str, Any] = Field(default_factory=dict)
+    service_coordinates: dict[str, Any] = Field(default_factory=lambda: {})
     installation_status: str | None = None
     installation_date: datetime | None = None
     scheduled_installation_date: datetime | None = None
@@ -284,7 +284,7 @@ class CustomerResponse(CustomerBase):
     connection_type: str | None = None
     last_mile_technology: str | None = None
     service_plan_speed: str | None = None
-    assigned_devices: dict[str, Any] = Field(default_factory=dict)
+    assigned_devices: dict[str, Any] = Field(default_factory=lambda: {})
     current_bandwidth_profile: str | None = None
     static_ip_assigned: str | None = None
     ipv6_prefix: str | None = None
@@ -294,7 +294,7 @@ class CustomerResponse(CustomerBase):
     total_downtime_minutes: int = 0
 
 
-class CustomerListResponse(BaseModel):
+class CustomerListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for customer list endpoint."""
 
     model_config = ConfigDict()
@@ -307,7 +307,7 @@ class CustomerListResponse(BaseModel):
     has_prev: bool
 
 
-class CustomerSearchParams(BaseModel):
+class CustomerSearchParams(BaseModel):  # BaseModel resolves to Any in isolation
     """Parameters for searching customers."""
 
     model_config = ConfigDict()
@@ -345,7 +345,7 @@ class CustomerSearchParams(BaseModel):
     sort_order: str = Field(default="desc", pattern="^(asc|desc)$")
 
 
-class CustomerActivityCreate(BaseModel):
+class CustomerActivityCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for creating customer activity."""
 
     model_config = ConfigDict(
@@ -357,12 +357,12 @@ class CustomerActivityCreate(BaseModel):
     activity_type: ActivityType
     title: str = Field(min_length=1, max_length=200)
     description: str | None = None
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
     ip_address: str | None = Field(None, max_length=45)
     user_agent: str | None = Field(None, max_length=500)
 
 
-class CustomerActivityResponse(BaseModel):
+class CustomerActivityResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response schema for customer activity."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -379,7 +379,7 @@ class CustomerActivityResponse(BaseModel):
     created_at: datetime
 
 
-class CustomerNoteCreate(BaseModel):
+class CustomerNoteCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for creating customer note."""
 
     model_config = ConfigDict(
@@ -393,7 +393,7 @@ class CustomerNoteCreate(BaseModel):
     is_internal: bool = Field(default=True)
 
 
-class CustomerNoteResponse(BaseModel):
+class CustomerNoteResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response schema for customer note."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -408,7 +408,7 @@ class CustomerNoteResponse(BaseModel):
     updated_at: datetime
 
 
-class CustomerSegmentCreate(BaseModel):
+class CustomerSegmentCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for creating customer segment."""
 
     model_config = ConfigDict(
@@ -419,12 +419,12 @@ class CustomerSegmentCreate(BaseModel):
 
     name: str = Field(min_length=1, max_length=100)
     description: str | None = None
-    criteria: dict[str, Any] = Field(default_factory=dict)
+    criteria: dict[str, Any] = Field(default_factory=lambda: {})
     is_dynamic: bool = Field(default=False)
     priority: int = Field(default=0, ge=0)
 
 
-class CustomerSegmentResponse(BaseModel):
+class CustomerSegmentResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response schema for customer segment."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -441,7 +441,7 @@ class CustomerSegmentResponse(BaseModel):
     updated_at: datetime
 
 
-class CustomerSegmentSummary(BaseModel):
+class CustomerSegmentSummary(BaseModel):  # BaseModel resolves to Any in isolation
     """Summary of a customer segment for metrics."""
 
     model_config = ConfigDict()
@@ -450,7 +450,7 @@ class CustomerSegmentSummary(BaseModel):
     count: int
 
 
-class CustomerMetrics(BaseModel):
+class CustomerMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     """Customer metrics and analytics."""
 
     model_config = ConfigDict()

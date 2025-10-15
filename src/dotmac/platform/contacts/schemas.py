@@ -19,7 +19,7 @@ from dotmac.platform.contacts.models import (
 
 
 # Contact Method Schemas
-class ContactMethodBase(BaseModel):
+class ContactMethodBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base contact method schema."""
 
     model_config = ConfigDict()
@@ -42,13 +42,13 @@ class ContactMethodBase(BaseModel):
     country: str | None = Field(None, max_length=2)  # ISO code
 
 
-class ContactMethodCreate(ContactMethodBase):
+class ContactMethodCreate(ContactMethodBase):  # ContactMethodBase resolves to Any in isolation
     """Schema for creating contact method."""
 
     pass
 
 
-class ContactMethodUpdate(BaseModel):
+class ContactMethodUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating contact method."""
 
     model_config = ConfigDict()
@@ -70,7 +70,7 @@ class ContactMethodUpdate(BaseModel):
     country: str | None = Field(None, max_length=2)
 
 
-class ContactMethodResponse(ContactMethodBase):
+class ContactMethodResponse(ContactMethodBase):  # ContactMethodBase resolves to Any in isolation
     """Contact method response schema."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -84,7 +84,7 @@ class ContactMethodResponse(ContactMethodBase):
 
 
 # Contact Schemas
-class ContactBase(BaseModel):
+class ContactBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base contact schema."""
 
     model_config = ConfigDict()
@@ -132,7 +132,7 @@ class ContactBase(BaseModel):
     timezone: str | None = Field(None, max_length=50)
 
 
-class ContactCreate(ContactBase):
+class ContactCreate(ContactBase):  # ContactBase resolves to Any in isolation
     """Schema for creating contact."""
 
     customer_id: UUID | None = None
@@ -163,7 +163,7 @@ class ContactCreate(ContactBase):
         return None  # Will be handled in service
 
 
-class ContactUpdate(BaseModel):
+class ContactUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating contact."""
 
     model_config = ConfigDict()
@@ -212,7 +212,7 @@ class ContactUpdate(BaseModel):
     timezone: str | None = Field(None, max_length=50)
 
 
-class ContactResponse(ContactBase):
+class ContactResponse(ContactBase):  # ContactBase resolves to Any in isolation
     """Contact response schema."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -231,7 +231,7 @@ class ContactResponse(ContactBase):
     labels: list["ContactLabelDefinitionResponse"] | None = None
 
 
-class ContactListResponse(BaseModel):
+class ContactListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for contact list."""
 
     model_config = ConfigDict()
@@ -245,7 +245,7 @@ class ContactListResponse(BaseModel):
 
 
 # Label Schemas
-class ContactLabelDefinitionBase(BaseModel):
+class ContactLabelDefinitionBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base label definition schema."""
 
     model_config = ConfigDict()
@@ -263,13 +263,15 @@ class ContactLabelDefinitionBase(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class ContactLabelDefinitionCreate(ContactLabelDefinitionBase):
+class ContactLabelDefinitionCreate(
+    ContactLabelDefinitionBase
+):  # ContactLabelDefinitionBase resolves to Any in isolation
     """Schema for creating label definition."""
 
     pass
 
 
-class ContactLabelDefinitionUpdate(BaseModel):
+class ContactLabelDefinitionUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating label definition."""
 
     model_config = ConfigDict()
@@ -298,7 +300,7 @@ class ContactLabelDefinitionResponse(ContactLabelDefinitionBase):
 
 
 # Field Definition Schemas
-class ContactFieldDefinitionBase(BaseModel):
+class ContactFieldDefinitionBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base field definition schema."""
 
     model_config = ConfigDict()
@@ -325,13 +327,15 @@ class ContactFieldDefinitionBase(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class ContactFieldDefinitionCreate(ContactFieldDefinitionBase):
+class ContactFieldDefinitionCreate(
+    ContactFieldDefinitionBase
+):  # ContactFieldDefinitionBase resolves to Any in isolation
     """Schema for creating field definition."""
 
     pass
 
 
-class ContactFieldDefinitionUpdate(BaseModel):
+class ContactFieldDefinitionUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating field definition."""
 
     model_config = ConfigDict()
@@ -355,7 +359,9 @@ class ContactFieldDefinitionUpdate(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class ContactFieldDefinitionResponse(ContactFieldDefinitionBase):
+class ContactFieldDefinitionResponse(
+    ContactFieldDefinitionBase
+):  # ContactFieldDefinitionBase resolves to Any in isolation
     """Field definition response schema."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -368,7 +374,7 @@ class ContactFieldDefinitionResponse(ContactFieldDefinitionBase):
 
 
 # Activity Schemas
-class ContactActivityBase(BaseModel):
+class ContactActivityBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base activity schema."""
 
     model_config = ConfigDict()
@@ -383,13 +389,17 @@ class ContactActivityBase(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class ContactActivityCreate(ContactActivityBase):
+class ContactActivityCreate(
+    ContactActivityBase
+):  # ContactActivityBase resolves to Any in isolation
     """Schema for creating activity."""
 
     pass
 
 
-class ContactActivityResponse(ContactActivityBase):
+class ContactActivityResponse(
+    ContactActivityBase
+):  # ContactActivityBase resolves to Any in isolation
     """Activity response schema."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -402,7 +412,7 @@ class ContactActivityResponse(ContactActivityBase):
 
 
 # Search Schemas
-class ContactSearchRequest(BaseModel):
+class ContactSearchRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Contact search request schema."""
 
     model_config = ConfigDict()
@@ -420,7 +430,7 @@ class ContactSearchRequest(BaseModel):
 
 
 # Bulk Operations
-class ContactBulkUpdate(BaseModel):
+class ContactBulkUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for bulk contact updates."""
 
     model_config = ConfigDict()
@@ -429,7 +439,7 @@ class ContactBulkUpdate(BaseModel):
     update_data: ContactUpdate
 
 
-class ContactBulkDelete(BaseModel):
+class ContactBulkDelete(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for bulk contact deletion."""
 
     model_config = ConfigDict()

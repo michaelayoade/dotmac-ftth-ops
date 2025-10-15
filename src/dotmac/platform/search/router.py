@@ -14,23 +14,23 @@ search_router = APIRouter()
 
 
 # Response Models
-class SearchResult(BaseModel):
+class SearchResult(BaseModel):  # BaseModel resolves to Any in isolation
     model_config = ConfigDict()
     id: str = Field(..., description="Result ID")
     type: str = Field(..., description="Result type")
     title: str = Field(..., description="Title")
     content: str = Field(..., description="Content snippet")
     score: float = Field(..., description="Relevance score")
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
-class SearchResponse(BaseModel):
+class SearchResponse(BaseModel):  # BaseModel resolves to Any in isolation
     model_config = ConfigDict()
     query: str = Field(..., description="Search query")
     results: list[SearchResult] = Field(..., description="Search results")
     total: int = Field(..., description="Total results")
     page: int = Field(..., description="Current page")
-    facets: dict[str, Any] = Field(default_factory=dict)
+    facets: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 @search_router.get("/", response_model=SearchResponse)
@@ -63,7 +63,7 @@ async def search(
 @search_router.post("/index")
 async def index_content(
     content: dict[str, Any], current_user: UserInfo = Depends(get_current_user)
-) -> dict:
+) -> dict[str, Any]:
     """Index new content for search."""
     if current_user:
         logger.info(f"User {current_user.user_id} indexing content")
@@ -75,7 +75,7 @@ async def index_content(
 @search_router.delete("/index/{content_id}")
 async def remove_from_index(
     content_id: str, current_user: UserInfo = Depends(get_current_user)
-) -> dict:
+) -> dict[str, Any]:
     """Remove content from search index."""
     if current_user:
         logger.info(f"User {current_user.user_id} removing {content_id} from index")

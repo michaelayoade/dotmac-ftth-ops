@@ -124,9 +124,6 @@ class TestPlatformConfig:
         """Test recursive configuration merging."""
         config = platform.PlatformConfig()
 
-        # Initial state
-        original_algo = config.get("auth.jwt_algorithm")
-
         # Update with nested dict
         updates = {
             "auth": {

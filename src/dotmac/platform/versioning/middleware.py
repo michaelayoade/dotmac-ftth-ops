@@ -4,8 +4,6 @@ API Version Detection Middleware.
 Middleware for detecting and validating API versions from requests.
 """
 
-from typing import Awaitable, Callable
-
 import structlog
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
@@ -57,9 +55,7 @@ class APIVersionMiddleware(BaseHTTPMiddleware):
             strategy=strategy.value,
         )
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """
         Process request and detect API version.
 

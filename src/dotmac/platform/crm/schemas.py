@@ -21,8 +21,10 @@ from dotmac.platform.crm.models import (
 
 
 # Lead Schemas
-class LeadCreateRequest(BaseModel):
+class LeadCreateRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request schema for creating a lead."""
+
+    model_config = ConfigDict()
 
     first_name: str = Field(..., min_length=1, max_length=100)
     last_name: str = Field(..., min_length=1, max_length=100)
@@ -35,21 +37,23 @@ class LeadCreateRequest(BaseModel):
     service_state_province: str = Field(..., min_length=1, max_length=100)
     service_postal_code: str = Field(..., min_length=1, max_length=20)
     service_country: str = Field("US", max_length=2)
-    service_coordinates: dict[str, Any] = Field(default_factory=dict)
+    service_coordinates: dict[str, Any] = Field(default_factory=lambda: {})
     source: LeadSource = LeadSource.WEBSITE
-    interested_service_types: list[str] = Field(default_factory=list)
+    interested_service_types: list[str] = Field(default_factory=lambda: [])
     desired_bandwidth: str | None = Field(None, max_length=50)
     estimated_monthly_budget: Decimal | None = None
     desired_installation_date: datetime | None = None
     assigned_to_id: UUID | None = None
     partner_id: UUID | None = None
     priority: int = Field(3, ge=1, le=5)
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
     notes: str | None = None
 
 
-class LeadUpdateRequest(BaseModel):
+class LeadUpdateRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request schema for updating a lead."""
+
+    model_config = ConfigDict()
 
     first_name: str | None = Field(None, min_length=1, max_length=100)
     last_name: str | None = Field(None, min_length=1, max_length=100)
@@ -74,14 +78,18 @@ class LeadUpdateRequest(BaseModel):
     notes: str | None = None
 
 
-class LeadStatusUpdateRequest(BaseModel):
+class LeadStatusUpdateRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request schema for updating lead status."""
+
+    model_config = ConfigDict()
 
     status: LeadStatus
 
 
-class LeadDisqualifyRequest(BaseModel):
+class LeadDisqualifyRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request schema for disqualifying a lead."""
+
+    model_config = ConfigDict()
 
     reason: str = Field(..., min_length=1)
 
@@ -89,11 +97,13 @@ class LeadDisqualifyRequest(BaseModel):
 class LeadServiceabilityUpdateRequest(BaseModel):
     """Request schema for updating lead serviceability."""
 
+    model_config = ConfigDict()
+
     serviceability: Serviceability
     notes: str | None = None
 
 
-class LeadResponse(BaseModel):
+class LeadResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response schema for lead."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -143,8 +153,10 @@ class LeadResponse(BaseModel):
 
 
 # Quote Schemas
-class QuoteCreateRequest(BaseModel):
+class QuoteCreateRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request schema for creating a quote."""
+
+    model_config = ConfigDict()
 
     lead_id: UUID
     service_plan_name: str = Field(..., min_length=1, max_length=200)
@@ -158,26 +170,30 @@ class QuoteCreateRequest(BaseModel):
     promo_discount_months: int | None = Field(None, gt=0)
     promo_monthly_discount: Decimal | None = Field(None, gt=0)
     valid_days: int = Field(30, gt=0, le=365)
-    line_items: list[dict[str, Any]] = Field(default_factory=list)
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    line_items: list[dict[str, Any]] = Field(default_factory=lambda: [])
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
     notes: str | None = None
 
 
-class QuoteAcceptRequest(BaseModel):
+class QuoteAcceptRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request schema for accepting a quote."""
+
+    model_config = ConfigDict()
 
     signature_data: dict[str, Any] = Field(
         ..., description="E-signature data (name, date, IP, etc.)"
     )
 
 
-class QuoteRejectRequest(BaseModel):
+class QuoteRejectRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request schema for rejecting a quote."""
+
+    model_config = ConfigDict()
 
     rejection_reason: str = Field(..., min_length=1)
 
 
-class QuoteResponse(BaseModel):
+class QuoteResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response schema for quote."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -216,18 +232,22 @@ class QuoteResponse(BaseModel):
 
 
 # Site Survey Schemas
-class SiteSurveyScheduleRequest(BaseModel):
+class SiteSurveyScheduleRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request schema for scheduling a site survey."""
+
+    model_config = ConfigDict()
 
     lead_id: UUID
     scheduled_date: datetime
     technician_id: UUID | None = None
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
     notes: str | None = None
 
 
-class SiteSurveyCompleteRequest(BaseModel):
+class SiteSurveyCompleteRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request schema for completing a site survey."""
+
+    model_config = ConfigDict()
 
     serviceability: Serviceability
     nearest_fiber_distance_meters: int | None = Field(None, ge=0)
@@ -236,14 +256,14 @@ class SiteSurveyCompleteRequest(BaseModel):
     nearest_olt_id: str | None = Field(None, max_length=100)
     available_pon_ports: int | None = Field(None, ge=0)
     estimated_installation_time_hours: int | None = Field(None, gt=0)
-    special_equipment_required: list[str] = Field(default_factory=list)
+    special_equipment_required: list[str] = Field(default_factory=lambda: [])
     installation_complexity: str | None = Field(None, max_length=20)
-    photos: list[dict[str, Any]] = Field(default_factory=list)
+    photos: list[dict[str, Any]] = Field(default_factory=lambda: [])
     recommendations: str | None = None
     obstacles: str | None = None
 
 
-class SiteSurveyResponse(BaseModel):
+class SiteSurveyResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response schema for site survey."""
 
     model_config = ConfigDict(from_attributes=True)

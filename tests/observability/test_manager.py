@@ -223,7 +223,7 @@ class TestObservabilityManagerLifecycle:
         """Test initialize with configuration overrides."""
         manager = ObservabilityManager()
 
-        with patch("dotmac.platform.observability.manager.setup_telemetry") as mock_setup:
+        with patch("dotmac.platform.observability.manager.setup_telemetry"):
             manager.initialize(
                 service_name="override-service",
                 enable_tracing=True,
@@ -372,7 +372,7 @@ class TestObservabilityManagerHelpers:
             with patch("dotmac.platform.observability.manager.settings") as mock_settings:
                 mock_settings.observability.otel_service_name = "default-service"
 
-                logger = manager.get_logger()
+                manager.get_logger()
 
                 mock_get_logger.assert_called_once_with("default-service")
 
@@ -381,7 +381,7 @@ class TestObservabilityManagerHelpers:
         manager = ObservabilityManager()
 
         with patch("dotmac.platform.observability.manager.structlog.get_logger") as mock_get_logger:
-            logger = manager.get_logger("custom-logger")
+            manager.get_logger("custom-logger")
 
             mock_get_logger.assert_called_once_with("custom-logger")
 
@@ -390,7 +390,7 @@ class TestObservabilityManagerHelpers:
         manager = ObservabilityManager(service_name="my-service")
 
         with patch("dotmac.platform.observability.manager.structlog.get_logger") as mock_get_logger:
-            logger = manager.get_logger()
+            manager.get_logger()
 
             mock_get_logger.assert_called_once_with("my-service")
 
@@ -444,7 +444,7 @@ class TestObservabilityManagerHelpers:
 
         assert manager._metrics_registry is None
 
-        with patch("dotmac.platform.observability.manager.get_meter") as mock_get_meter:
+        with patch("dotmac.platform.observability.manager.get_meter"):
             registry = manager.get_metrics_registry()
 
             assert registry is not None
@@ -455,7 +455,7 @@ class TestObservabilityManagerHelpers:
         """Test get_metrics_registry returns cached instance."""
         manager = ObservabilityManager()
 
-        with patch("dotmac.platform.observability.manager.get_meter") as mock_get_meter:
+        with patch("dotmac.platform.observability.manager.get_meter"):
             registry1 = manager.get_metrics_registry()
             registry2 = manager.get_metrics_registry()
 
@@ -658,7 +658,7 @@ class TestObservabilityManagerInternalMethods:
         """Test _apply_settings_overrides handles invalid environment."""
         manager = ObservabilityManager(environment="invalid")
 
-        with patch("dotmac.platform.observability.manager.settings") as mock_settings:
+        with patch("dotmac.platform.observability.manager.settings"):
             # Should not raise exception
             manager._apply_settings_overrides()
 
@@ -760,7 +760,7 @@ class TestAddObservabilityMiddleware:
 
         app = FastAPI()
 
-        with patch("dotmac.platform.observability.manager.setup_telemetry") as mock_setup:
+        with patch("dotmac.platform.observability.manager.setup_telemetry"):
             manager = add_observability_middleware(
                 app,
                 service_name="test-service",

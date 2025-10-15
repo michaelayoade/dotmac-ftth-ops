@@ -344,7 +344,7 @@ class TestSessionManagement:
         mock_session_local.return_value = mock_session
 
         with pytest.raises(ValueError):
-            with get_db() as session:
+            with get_db():
                 raise ValueError("Test exception")
 
         mock_session.rollback.assert_called_once()
@@ -381,7 +381,7 @@ class TestSessionManagement:
         mock_session_local.return_value = mock_context()
 
         with pytest.raises(ValueError):
-            async with get_async_db() as session:
+            async with get_async_db():
                 raise ValueError("Test exception")
 
         mock_session.rollback.assert_called_once()
@@ -417,7 +417,7 @@ class TestSessionManagement:
         # Use the async generator properly
         try:
             async_gen = get_async_session()
-            session = await async_gen.__anext__()
+            await async_gen.__anext__()
             # Raise an exception inside the generator context
             await async_gen.athrow(ValueError("Test exception"))
         except ValueError:

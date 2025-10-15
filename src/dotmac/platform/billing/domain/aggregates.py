@@ -68,7 +68,7 @@ class InvoiceLineItem:
             )
 
 
-class Invoice(AggregateRoot):
+class Invoice(AggregateRoot):  # type: ignore[misc]  # AggregateRoot resolves to Any in isolation
     """
     Invoice aggregate root.
 
@@ -90,7 +90,7 @@ class Invoice(AggregateRoot):
     remaining_balance: Money  # Track unpaid balance
 
     # Line items (stored as dict for Pydantic compatibility)
-    line_items_data: list[dict[str, Any]] = Field(default_factory=list)
+    line_items_data: list[dict[str, Any]] = Field(default_factory=lambda: [])
 
     # Status
     status: str = "draft"  # draft, finalized, sent, paid, void, overdue
@@ -341,7 +341,7 @@ class Invoice(AggregateRoot):
 # ============================================================================
 
 
-class Payment(AggregateRoot):
+class Payment(AggregateRoot):  # type: ignore[misc]  # AggregateRoot resolves to Any in isolation
     """
     Payment aggregate root.
 
@@ -497,7 +497,7 @@ class Payment(AggregateRoot):
 # ============================================================================
 
 
-class Subscription(AggregateRoot):
+class Subscription(AggregateRoot):  # type: ignore[misc]  # AggregateRoot resolves to Any in isolation
     """
     Subscription aggregate root.
 
@@ -672,7 +672,7 @@ class Subscription(AggregateRoot):
 # ============================================================================
 
 
-class Customer(AggregateRoot):
+class Customer(AggregateRoot):  # type: ignore[misc]  # AggregateRoot resolves to Any in isolation
     """
     Customer aggregate root.
 
@@ -690,7 +690,7 @@ class Customer(AggregateRoot):
     is_deleted: bool = False
 
     # Metadata
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
     # Timestamps
     deleted_at: datetime | None = None

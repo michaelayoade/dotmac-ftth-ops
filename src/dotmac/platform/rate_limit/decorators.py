@@ -20,13 +20,13 @@ def rate_limit(
     window: RateLimitWindow = RateLimitWindow.MINUTE,
     scope: RateLimitScope = RateLimitScope.PER_USER,
     action: RateLimitAction = RateLimitAction.BLOCK,
-) -> Callable:
+) -> Callable[..., Any]:
     """
     Decorator to apply rate limiting to a specific endpoint.
 
     Usage:
         @router.get("/api/expensive-operation")
-        @rate_limit(max_requests=10, window=RateLimitWindow.HOUR, scope=RateLimitScope.PER_USER)
+        @rate_limit(max_requests=10, window=RateLimitWindow.HOUR, scope=RateLimitScope.PER_USER)  # type: ignore[misc]  # Rate limit decorator is untyped
         async def expensive_operation():
             ...
 
@@ -37,7 +37,7 @@ def rate_limit(
         action: Action to take when limit exceeded
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             # Extract request from args/kwargs
@@ -56,7 +56,6 @@ def rate_limit(
 
             # Extract request info
             endpoint = request.url.path
-            method = request.method
             user_id = getattr(request.state, "user_id", None)
             tenant_id = getattr(request.state, "tenant_id", None) or "public"
             ip_address = _get_client_ip(request)
@@ -155,7 +154,7 @@ def _get_client_ip(request: Request) -> str:
 
 
 # Convenience decorators for common use cases
-def rate_limit_per_minute(max_requests: int = 60) -> Callable:
+def rate_limit_per_minute(max_requests: int = 60) -> Callable[..., Any]:
     """Rate limit per user per minute."""
     return rate_limit(
         max_requests=max_requests,
@@ -164,7 +163,7 @@ def rate_limit_per_minute(max_requests: int = 60) -> Callable:
     )
 
 
-def rate_limit_per_hour(max_requests: int = 1000) -> Callable:
+def rate_limit_per_hour(max_requests: int = 1000) -> Callable[..., Any]:
     """Rate limit per user per hour."""
     return rate_limit(
         max_requests=max_requests,
@@ -173,7 +172,7 @@ def rate_limit_per_hour(max_requests: int = 1000) -> Callable:
     )
 
 
-def rate_limit_per_day(max_requests: int = 10000) -> Callable:
+def rate_limit_per_day(max_requests: int = 10000) -> Callable[..., Any]:
     """Rate limit per user per day."""
     return rate_limit(
         max_requests=max_requests,
@@ -184,7 +183,7 @@ def rate_limit_per_day(max_requests: int = 10000) -> Callable:
 
 def rate_limit_per_ip(
     max_requests: int = 100, window: RateLimitWindow = RateLimitWindow.MINUTE
-) -> Callable:
+) -> Callable[..., Any]:
     """Rate limit per IP address."""
     return rate_limit(
         max_requests=max_requests,

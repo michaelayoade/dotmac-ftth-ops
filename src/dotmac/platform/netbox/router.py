@@ -50,7 +50,7 @@ from dotmac.platform.netbox.service import NetBoxService
 from dotmac.platform.tenant.dependencies import TenantAdminAccess
 from dotmac.platform.tenant.oss_config import OSSService, get_service_config
 
-router = APIRouter(prefix="/api/v1/netbox", tags=["netbox"])
+router = APIRouter(prefix="/api/v1/netbox", tags=["NetBox"])
 
 
 # =============================================================================
@@ -565,9 +565,7 @@ async def list_vlans(
     _: UserInfo = Depends(require_permission("isp.ipam.read")),
 ) -> list[VLANResponse]:
     """List VLANs"""
-    result = await service.list_vlans(
-        tenant=tenant, site=site, vid=vid, limit=limit, offset=offset
-    )
+    result = await service.list_vlans(tenant=tenant, site=site, vid=vid, limit=limit, offset=offset)
     return cast(list[VLANResponse], result)
 
 

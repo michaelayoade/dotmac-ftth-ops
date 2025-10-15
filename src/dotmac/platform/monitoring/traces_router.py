@@ -30,7 +30,7 @@ class TraceStatus(str, Enum):
     WARNING = "warning"
 
 
-class SpanData(BaseModel):
+class SpanData(BaseModel):  # BaseModel resolves to Any in isolation
     """Individual span within a trace."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -44,7 +44,7 @@ class SpanData(BaseModel):
     attributes: dict[str, Any] = Field(default_factory=dict, description="Span attributes")
 
 
-class TraceData(BaseModel):
+class TraceData(BaseModel):  # BaseModel resolves to Any in isolation
     """Distributed trace information."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
@@ -61,7 +61,7 @@ class TraceData(BaseModel):
     )
 
 
-class TracesResponse(BaseModel):
+class TracesResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for trace queries."""
 
     model_config = ConfigDict()
@@ -81,7 +81,7 @@ class MetricType(str, Enum):
     HISTOGRAM = "histogram"
 
 
-class MetricDataPoint(BaseModel):
+class MetricDataPoint(BaseModel):  # BaseModel resolves to Any in isolation
     """Single metric data point."""
 
     model_config = ConfigDict()
@@ -91,7 +91,7 @@ class MetricDataPoint(BaseModel):
     labels: dict[str, str] = Field(default_factory=dict, description="Metric labels")
 
 
-class MetricSeries(BaseModel):
+class MetricSeries(BaseModel):  # BaseModel resolves to Any in isolation
     """Time series metric data."""
 
     model_config = ConfigDict()
@@ -102,7 +102,7 @@ class MetricSeries(BaseModel):
     unit: str = Field(default="count", description="Metric unit")
 
 
-class MetricsResponse(BaseModel):
+class MetricsResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for metrics queries."""
 
     model_config = ConfigDict()
@@ -123,7 +123,7 @@ class ServiceDependency(BaseModel):
     avg_latency: float = Field(description="Average latency in ms")
 
 
-class ServiceMapResponse(BaseModel):
+class ServiceMapResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Service dependency map."""
 
     model_config = ConfigDict()
@@ -137,7 +137,7 @@ class ServiceMapResponse(BaseModel):
     )
 
 
-class PerformanceMetrics(BaseModel):
+class PerformanceMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     """Performance percentile metrics."""
 
     model_config = ConfigDict()
@@ -148,7 +148,7 @@ class PerformanceMetrics(BaseModel):
     within_sla: bool = Field(description="Whether within SLA target")
 
 
-class PerformanceResponse(BaseModel):
+class PerformanceResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Performance metrics response."""
 
     model_config = ConfigDict()

@@ -15,10 +15,10 @@ project_root = Path(__file__).resolve().parent
 src_root = project_root / "src"
 sys.path.insert(0, str(src_root))
 
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, select  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
 
-from dotmac.platform.customer_management.models import (
+from dotmac.platform.customer_management.models import (  # noqa: E402
     Customer,
     CustomerStatus,
     CustomerTier,

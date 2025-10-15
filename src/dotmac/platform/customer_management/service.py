@@ -748,7 +748,7 @@ class CustomerService:
 
     async def batch_process_customers(
         self, customer_ids: list[UUID | str], operation: str, batch_size: int = 100
-    ) -> dict[str, list]:
+    ) -> dict[str, list[Any]]:
         """Process customers in batches using itertools for efficiency."""
         results: dict[str, list[UUID | str]] = {"success": [], "failed": []}
 

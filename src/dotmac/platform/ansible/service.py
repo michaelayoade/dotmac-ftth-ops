@@ -1,5 +1,7 @@
 """Ansible/AWX Service Layer"""
 
+from typing import Any
+
 import structlog
 
 from dotmac.platform.ansible.client import AWXClient
@@ -55,7 +57,7 @@ class AWXService:
         return JobTemplate(**template)
 
     async def launch_job(
-        self, template_id: int, extra_vars: dict | None = None
+        self, template_id: int, extra_vars: dict[str, Any] | None = None
     ) -> JobLaunchResponse:
         """Launch job template"""
         try:

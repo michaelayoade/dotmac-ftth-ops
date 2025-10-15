@@ -26,7 +26,7 @@ from dotmac.platform.services.lifecycle.tasks import (  # noqa: F401
 from dotmac.platform.settings import settings
 
 
-@celery_app.task(name="currency.refresh_rates")
+@celery_app.task(name="currency.refresh_rates")  # type: ignore[misc]
 def refresh_currency_rates_task() -> dict[str, Any]:
     """Periodic task to refresh configured currency exchange rates."""
     if not settings.billing.enable_multi_currency:

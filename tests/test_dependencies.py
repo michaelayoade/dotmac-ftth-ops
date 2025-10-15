@@ -61,7 +61,7 @@ class TestDependencyChecker:
         assert "encryption_fernet" in deps
 
         # Verify structure
-        for feature, config in deps.items():
+        for _feature, config in deps.items():
             assert "packages" in config
             if "install_cmd" in config:
                 assert isinstance(config["install_cmd"], str)
@@ -382,8 +382,6 @@ class TestFeatureDependencyIntegration:
         """Test that all defined features have proper structure."""
         deps = DependencyChecker.FEATURE_DEPENDENCIES
 
-        required_keys = {"packages"}
-
         for feature, config in deps.items():
             # Each feature should have packages
             assert "packages" in config, f"Feature {feature} missing packages"
@@ -393,8 +391,8 @@ class TestFeatureDependencyIntegration:
                 assert len(packages) > 0, f"Feature {feature} has empty package string"
             elif isinstance(packages, list):
                 assert len(packages) > 0, f"Feature {feature} has empty package list"
-                assert all(isinstance(pkg, str) for pkg in packages), (
-                    f"Feature {feature} has non-string packages"
-                )
+                assert all(
+                    isinstance(pkg, str) for pkg in packages
+                ), f"Feature {feature} has non-string packages"
             else:
-                assert False, f"Feature {feature} packages must be string or list"
+                raise AssertionError(f"Feature {feature} packages must be string or list")

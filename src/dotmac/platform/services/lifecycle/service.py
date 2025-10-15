@@ -1151,7 +1151,7 @@ class LifecycleOrchestrationService:
                 and_(
                     ProvisioningWorkflow.tenant_id == tenant_id,
                     ProvisioningWorkflow.status == ProvisioningStatus.FAILED,
-                    ProvisioningWorkflow.rollback_completed == False,
+                    ProvisioningWorkflow.rollback_completed.is_(False),
                 )
             )
             .order_by(ProvisioningWorkflow.created_at.desc())
@@ -1246,7 +1246,6 @@ class LifecycleOrchestrationService:
         Returns:
             List of service instances due for activation
         """
-        from sqlalchemy import or_
 
         now = datetime.now(UTC)
 

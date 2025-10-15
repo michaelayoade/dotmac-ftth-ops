@@ -60,7 +60,7 @@ class ProrationBehavior(str, Enum):
     CREATE_PRORATIONS = "prorate"  # Create prorated charges/credits
 
 
-class SubscriptionPlan(BillingBaseModel):
+class SubscriptionPlan(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resolves to Any in isolation
     """Subscription plan definition."""
 
     plan_id: str = Field(description="Plan identifier")
@@ -122,7 +122,7 @@ class SubscriptionPlan(BillingBaseModel):
         return bool(self.included_usage or self.overage_rates)
 
 
-class Subscription(BillingBaseModel):
+class Subscription(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resolves to Any in isolation
     """Customer subscription instance."""
 
     subscription_id: str = Field(description="Subscription identifier")
@@ -177,7 +177,7 @@ class Subscription(BillingBaseModel):
         return self.status == SubscriptionStatus.PAST_DUE
 
 
-class SubscriptionEvent(BillingBaseModel):
+class SubscriptionEvent(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resolves to Any in isolation
     """Subscription lifecycle event for audit trail."""
 
     event_id: str = Field(description="Event identifier")
@@ -193,7 +193,7 @@ class SubscriptionEvent(BillingBaseModel):
 # Request/Response Models
 
 
-class SubscriptionPlanCreateRequest(AppBaseModel):
+class SubscriptionPlanCreateRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for creating subscription plans."""
 
     product_id: str = Field(description="Associated product ID")
@@ -204,9 +204,9 @@ class SubscriptionPlanCreateRequest(AppBaseModel):
     currency: str = Field(default="USD", max_length=3)
     setup_fee: Decimal | None = Field(None, description="One-time setup fee")
     trial_days: int | None = Field(None, description="Trial period days")
-    included_usage: dict[str, int] = Field(default_factory=dict)
-    overage_rates: dict[str, Decimal] = Field(default_factory=dict)
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    included_usage: dict[str, int] = Field(default_factory=lambda: {})
+    overage_rates: dict[str, Decimal] = Field(default_factory=lambda: {})
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
     @field_validator("price", "setup_fee")
     @classmethod
@@ -217,7 +217,7 @@ class SubscriptionPlanCreateRequest(AppBaseModel):
         return v
 
 
-class SubscriptionCreateRequest(AppBaseModel):
+class SubscriptionCreateRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for creating subscriptions."""
 
     customer_id: str = Field(description="Customer ID")
@@ -225,7 +225,7 @@ class SubscriptionCreateRequest(AppBaseModel):
     start_date: datetime | None = Field(None, description="Subscription start date")
     custom_price: Decimal | None = Field(None, description="Customer-specific pricing")
     trial_end_override: datetime | None = Field(None, description="Override trial end date")
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
     @field_validator("custom_price")
     @classmethod
@@ -236,7 +236,7 @@ class SubscriptionCreateRequest(AppBaseModel):
         return v
 
 
-class SubscriptionUpdateRequest(AppBaseModel):
+class SubscriptionUpdateRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for updating subscriptions."""
 
     status: SubscriptionStatus | None = Field(None, description="Update subscription status")
@@ -252,7 +252,7 @@ class SubscriptionUpdateRequest(AppBaseModel):
         return v
 
 
-class SubscriptionPlanChangeRequest(AppBaseModel):
+class SubscriptionPlanChangeRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for changing subscription plans."""
 
     new_plan_id: str = Field(description="New plan to switch to")
@@ -264,7 +264,7 @@ class SubscriptionPlanChangeRequest(AppBaseModel):
     )
 
 
-class UsageRecordRequest(AppBaseModel):
+class UsageRecordRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for recording usage."""
 
     subscription_id: str = Field(description="Subscription ID")
@@ -273,7 +273,7 @@ class UsageRecordRequest(AppBaseModel):
     timestamp: datetime | None = Field(None, description="Usage timestamp (default: now)")
 
 
-class SubscriptionResponse(AppBaseModel):
+class SubscriptionResponse(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Response model for subscription data."""
 
     subscription_id: str
@@ -298,7 +298,7 @@ class SubscriptionResponse(AppBaseModel):
     days_until_renewal: int
 
 
-class SubscriptionPlanResponse(AppBaseModel):
+class SubscriptionPlanResponse(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Response model for subscription plan data."""
 
     plan_id: str
@@ -319,7 +319,7 @@ class SubscriptionPlanResponse(AppBaseModel):
     updated_at: datetime | None
 
 
-class ProrationResult(AppBaseModel):
+class ProrationResult(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Result of proration calculation."""
 
     proration_amount: Decimal = Field(

@@ -73,7 +73,9 @@ def cached_result(
                     },
                     sort_keys=True,
                 )
-                args_hash = hashlib.md5(args_str.encode(), usedforsecurity=False).hexdigest()  # nosec B324 - Hash used for cache key generation only, not security
+                args_hash = hashlib.md5(
+                    args_str.encode(), usedforsecurity=False
+                ).hexdigest()  # nosec B324 - Hash used for cache key generation only, not security
                 cache_key = f"{key_prefix}:{func_name}:{args_hash}"
 
             # Only L2_REDIS is supported for now (L1 would need instance-specific cache)

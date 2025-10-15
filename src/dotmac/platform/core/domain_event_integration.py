@@ -7,7 +7,7 @@ Domain events (in-process) can be published as integration events
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
@@ -196,7 +196,7 @@ class DomainEventPublisher:
 
         return ".".join(parts)
 
-    def _map_event_payload(self, event: DomainEvent) -> dict:
+    def _map_event_payload(self, event: DomainEvent) -> dict[str, Any]:
         """
         Map domain event to integration event payload.
 

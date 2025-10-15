@@ -493,7 +493,7 @@ async def recalculate_segment(
     segment_id: UUID,
     service: Annotated[CustomerService, Depends(get_customer_service)],
     current_user: Annotated[UserInfo, Depends(get_current_user)],
-) -> dict:
+) -> dict[str, Any]:
     """
     Recalculate dynamic segment membership.
 

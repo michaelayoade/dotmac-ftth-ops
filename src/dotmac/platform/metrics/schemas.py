@@ -7,11 +7,13 @@ Pydantic models for ISP metrics and KPIs.
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
-class SubscriberMetrics(BaseModel):
+class SubscriberMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     """Subscriber-related metrics."""
+
+    model_config = ConfigDict()
 
     total: int = Field(..., description="Total subscribers")
     active: int = Field(..., description="Active subscribers")
@@ -23,8 +25,10 @@ class SubscriberMetrics(BaseModel):
     arpu: float = Field(..., description="Average revenue per user")
 
 
-class NetworkMetrics(BaseModel):
+class NetworkMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     """Network infrastructure metrics."""
+
+    model_config = ConfigDict()
 
     olt_count: int = Field(..., description="Total OLT count")
     olts_online: int = Field(..., description="OLTs currently online")
@@ -38,8 +42,10 @@ class NetworkMetrics(BaseModel):
     degraded_onus: int = Field(..., description="ONUs with degraded signal")
 
 
-class SupportMetrics(BaseModel):
+class SupportMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     """Support and ticketing metrics."""
+
+    model_config = ConfigDict()
 
     open_tickets: int = Field(..., description="Currently open tickets")
     avg_response_time_minutes: float = Field(..., description="Average first response time")
@@ -49,8 +55,10 @@ class SupportMetrics(BaseModel):
     tickets_last_week: int = Field(..., description="Tickets opened last week")
 
 
-class RevenueMetrics(BaseModel):
+class RevenueMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     """Revenue and financial metrics."""
+
+    model_config = ConfigDict()
 
     mrr: float = Field(..., description="Monthly recurring revenue")
     arr: float = Field(..., description="Annual recurring revenue")
@@ -58,8 +66,10 @@ class RevenueMetrics(BaseModel):
     overdue_30_days: float = Field(..., description="Overdue >30 days")
 
 
-class DashboardMetrics(BaseModel):
+class DashboardMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     """Aggregated dashboard metrics for ISP operations."""
+
+    model_config = ConfigDict()
 
     subscriber_metrics: SubscriberMetrics
     network_metrics: NetworkMetrics
@@ -69,31 +79,39 @@ class DashboardMetrics(BaseModel):
     cache_ttl_seconds: int = Field(300, description="Cache TTL in seconds")
 
 
-class SubscriberByPlan(BaseModel):
+class SubscriberByPlan(BaseModel):  # BaseModel resolves to Any in isolation
     """Subscriber count by service plan."""
+
+    model_config = ConfigDict()
 
     plan: str
     count: int
     percentage: float
 
 
-class SubscriberByStatus(BaseModel):
+class SubscriberByStatus(BaseModel):  # BaseModel resolves to Any in isolation
     """Subscriber count by status."""
+
+    model_config = ConfigDict()
 
     status: str
     count: int
     percentage: float
 
 
-class DailyActivation(BaseModel):
+class DailyActivation(BaseModel):  # BaseModel resolves to Any in isolation
     """Daily subscriber activation count."""
+
+    model_config = ConfigDict()
 
     date: str  # ISO date format
     count: int
 
 
-class SubscriberKPIs(BaseModel):
+class SubscriberKPIs(BaseModel):  # BaseModel resolves to Any in isolation
     """Detailed subscriber KPIs with trends."""
+
+    model_config = ConfigDict()
 
     total_subscribers: int
     active_subscribers: int
@@ -106,24 +124,30 @@ class SubscriberKPIs(BaseModel):
     daily_activations: list[DailyActivation]
 
 
-class SignalQualityBand(BaseModel):
+class SignalQualityBand(BaseModel):  # BaseModel resolves to Any in isolation
     """ONU count by signal strength band."""
+
+    model_config = ConfigDict()
 
     range: str  # e.g., "-20 to -25 dBm"
     count: int
     status: str  # excellent, good, degraded, critical
 
 
-class NetworkUptimeMetrics(BaseModel):
+class NetworkUptimeMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     """Network uptime statistics."""
+
+    model_config = ConfigDict()
 
     olt_uptime_percent: float
     onu_uptime_percent: float
     average_session_duration_hours: float
 
 
-class NetworkDeviceHealth(BaseModel):
+class NetworkDeviceHealth(BaseModel):  # BaseModel resolves to Any in isolation
     """Device health statistics."""
+
+    model_config = ConfigDict()
 
     onus_online: int
     onus_offline: int
@@ -134,8 +158,10 @@ class NetworkDeviceHealth(BaseModel):
     cpe_firmware_outdated: int
 
 
-class NetworkCapacity(BaseModel):
+class NetworkCapacity(BaseModel):  # BaseModel resolves to Any in isolation
     """Network capacity metrics."""
+
+    model_config = ConfigDict()
 
     pon_ports_total: int
     pon_ports_used: int
@@ -144,8 +170,10 @@ class NetworkCapacity(BaseModel):
     estimated_months_to_full: int | None
 
 
-class NetworkAlert(BaseModel):
+class NetworkAlert(BaseModel):  # BaseModel resolves to Any in isolation
     """Network alert summary."""
+
+    model_config = ConfigDict()
 
     type: str
     count: int
@@ -154,6 +182,8 @@ class NetworkAlert(BaseModel):
 
 class NetworkHealthMetrics(BaseModel):
     """Detailed network health and capacity metrics."""
+
+    model_config = ConfigDict()
 
     uptime: NetworkUptimeMetrics
     signal_quality: dict[str, Any]  # Contains onus_by_signal list
@@ -165,14 +195,18 @@ class NetworkHealthMetrics(BaseModel):
 class TicketVolume(BaseModel):
     """Ticket volume statistics."""
 
+    model_config = ConfigDict()
+
     total_tickets: int
     open_tickets: int
     closed_tickets: int
     avg_daily_tickets: float
 
 
-class SLAMetric(BaseModel):
+class SLAMetric(BaseModel):  # BaseModel resolves to Any in isolation
     """SLA compliance metric."""
+
+    model_config = ConfigDict()
 
     target_minutes: int | None = None
     target_hours: int | None = None
@@ -182,23 +216,29 @@ class SLAMetric(BaseModel):
     breached_count: int
 
 
-class TicketCategory(BaseModel):
+class TicketCategory(BaseModel):  # BaseModel resolves to Any in isolation
     """Ticket count by category."""
+
+    model_config = ConfigDict()
 
     category: str
     count: int
     percentage: float
 
 
-class TicketPriority(BaseModel):
+class TicketPriority(BaseModel):  # BaseModel resolves to Any in isolation
     """Ticket count by priority."""
+
+    model_config = ConfigDict()
 
     priority: str
     count: int
 
 
-class AgentPerformance(BaseModel):
+class AgentPerformance(BaseModel):  # BaseModel resolves to Any in isolation
     """Support agent performance metrics."""
+
+    model_config = ConfigDict()
 
     agent: str
     tickets_resolved: int
@@ -209,6 +249,8 @@ class AgentPerformance(BaseModel):
 class SupportKPIs(BaseModel):
     """Detailed support and ticketing KPIs."""
 
+    model_config = ConfigDict()
+
     ticket_volume: TicketVolume
     sla_compliance: dict[str, SLAMetric]
     tickets_by_category: list[TicketCategory]
@@ -216,8 +258,10 @@ class SupportKPIs(BaseModel):
     agent_performance: list[AgentPerformance]
 
 
-class RevenueTrend(BaseModel):
+class RevenueTrend(BaseModel):  # BaseModel resolves to Any in isolation
     """Monthly revenue trend."""
+
+    model_config = ConfigDict()
 
     month: str  # YYYY-MM format
     mrr: float
@@ -225,16 +269,20 @@ class RevenueTrend(BaseModel):
     churned_mrr: float
 
 
-class RevenueByPlan(BaseModel):
+class RevenueByPlan(BaseModel):  # BaseModel resolves to Any in isolation
     """Revenue breakdown by service plan."""
+
+    model_config = ConfigDict()
 
     plan: str
     mrr: float
     subscribers: int
 
 
-class CollectionsMetrics(BaseModel):
+class CollectionsMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     """Collections and accounts receivable metrics."""
+
+    model_config = ConfigDict()
 
     current_ar: float
     overdue_0_30_days: float
@@ -244,8 +292,10 @@ class CollectionsMetrics(BaseModel):
     collection_rate_percent: float
 
 
-class RevenueKPIs(BaseModel):
+class RevenueKPIs(BaseModel):  # BaseModel resolves to Any in isolation
     """Detailed revenue and financial KPIs."""
+
+    model_config = ConfigDict()
 
     mrr: float
     arr: float

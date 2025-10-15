@@ -7,15 +7,17 @@ Request and response schemas for NetBox API integration.
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # ============================================================================
 # IP Address Management (IPAM) Schemas
 # ============================================================================
 
 
-class IPAddressCreate(BaseModel):
+class IPAddressCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create IP address in NetBox"""
+
+    model_config = ConfigDict()
 
     address: str = Field(..., description="IP address with prefix (e.g., 10.0.0.1/24)")
     status: str = Field(default="active", description="IP status (active, reserved, dhcp)")
@@ -37,8 +39,10 @@ class IPAddressCreate(BaseModel):
         return v.lower()
 
 
-class IPAddressUpdate(BaseModel):
+class IPAddressUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Update IP address in NetBox"""
+
+    model_config = ConfigDict()
 
     status: str | None = None
     tenant: int | None = None
@@ -49,7 +53,7 @@ class IPAddressUpdate(BaseModel):
     custom_fields: dict[str, Any] | None = None
 
 
-class IPAddressResponse(BaseModel):
+class IPAddressResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """IP address response from NetBox"""
 
     id: int
@@ -64,13 +68,15 @@ class IPAddressResponse(BaseModel):
     assigned_object: dict[str, Any] | None = None
     created: datetime | None = None
     last_updated: datetime | None = None
-    tags: list[dict[str, Any]] = Field(default_factory=list)
+    tags: list[dict[str, Any]] = Field(default_factory=lambda: [])
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class PrefixCreate(BaseModel):
+class PrefixCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create IP prefix (subnet) in NetBox"""
+
+    model_config = ConfigDict()
 
     prefix: str = Field(..., description="IP prefix in CIDR notation (e.g., 10.0.0.0/24)")
     status: str = Field(default="active", description="Prefix status")
@@ -84,7 +90,7 @@ class PrefixCreate(BaseModel):
     tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
-class PrefixResponse(BaseModel):
+class PrefixResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """IP prefix response from NetBox"""
 
     id: int
@@ -100,11 +106,13 @@ class PrefixResponse(BaseModel):
     created: datetime | None = None
     last_updated: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class VRFCreate(BaseModel):
+class VRFCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create VRF in NetBox"""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, max_length=100, description="VRF name")
     rd: str | None = Field(None, max_length=21, description="Route distinguisher")
@@ -114,7 +122,7 @@ class VRFCreate(BaseModel):
     tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
-class VRFResponse(BaseModel):
+class VRFResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """VRF response from NetBox"""
 
     id: int
@@ -126,7 +134,7 @@ class VRFResponse(BaseModel):
     created: datetime | None = None
     last_updated: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
@@ -134,8 +142,10 @@ class VRFResponse(BaseModel):
 # ============================================================================
 
 
-class SiteCreate(BaseModel):
+class SiteCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create site in NetBox"""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, max_length=100, description="Site name")
     slug: str = Field(..., min_length=1, max_length=100, description="URL-friendly slug")
@@ -152,7 +162,7 @@ class SiteCreate(BaseModel):
     tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
-class SiteResponse(BaseModel):
+class SiteResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Site response from NetBox"""
 
     id: int
@@ -168,11 +178,13 @@ class SiteResponse(BaseModel):
     created: datetime | None = None
     last_updated: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class DeviceCreate(BaseModel):
+class DeviceCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create device in NetBox"""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, max_length=64, description="Device name")
     device_type: int = Field(..., description="Device type ID")
@@ -192,8 +204,10 @@ class DeviceCreate(BaseModel):
     tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
-class DeviceUpdate(BaseModel):
+class DeviceUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Update device in NetBox"""
+
+    model_config = ConfigDict()
 
     name: str | None = Field(None, min_length=1, max_length=64)
     device_role: int | None = None
@@ -208,7 +222,7 @@ class DeviceUpdate(BaseModel):
     tags: list[str] | None = None
 
 
-class DeviceResponse(BaseModel):
+class DeviceResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Device response from NetBox"""
 
     id: int
@@ -230,11 +244,13 @@ class DeviceResponse(BaseModel):
     created: datetime | None = None
     last_updated: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class InterfaceCreate(BaseModel):
+class InterfaceCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create interface in NetBox"""
+
+    model_config = ConfigDict()
 
     device: int = Field(..., description="Device ID")
     name: str = Field(..., min_length=1, max_length=64, description="Interface name")
@@ -249,7 +265,7 @@ class InterfaceCreate(BaseModel):
     tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
-class InterfaceResponse(BaseModel):
+class InterfaceResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Interface response from NetBox"""
 
     id: int
@@ -262,11 +278,11 @@ class InterfaceResponse(BaseModel):
     description: str
     mode: dict[str, Any] | None = None
     untagged_vlan: dict[str, Any] | None = None
-    tagged_vlans: list[dict[str, Any]] = Field(default_factory=list)
+    tagged_vlans: list[dict[str, Any]] = Field(default_factory=lambda: [])
     created: datetime | None = None
     last_updated: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
@@ -274,8 +290,10 @@ class InterfaceResponse(BaseModel):
 # ============================================================================
 
 
-class TenantCreate(BaseModel):
+class TenantCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create tenant in NetBox"""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, max_length=100, description="Tenant name")
     slug: str = Field(..., min_length=1, max_length=100, description="URL-friendly slug")
@@ -285,7 +303,7 @@ class TenantCreate(BaseModel):
     tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
-class TenantResponse(BaseModel):
+class TenantResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Tenant response from NetBox"""
 
     id: int
@@ -297,7 +315,7 @@ class TenantResponse(BaseModel):
     created: datetime | None = None
     last_updated: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
@@ -305,8 +323,10 @@ class TenantResponse(BaseModel):
 # ============================================================================
 
 
-class NetBoxQuery(BaseModel):
+class NetBoxQuery(BaseModel):  # BaseModel resolves to Any in isolation
     """Common query parameters for NetBox API"""
+
+    model_config = ConfigDict()
 
     tenant: str | None = Field(None, description="Filter by tenant")
     site: str | None = Field(None, description="Filter by site")
@@ -314,8 +334,10 @@ class NetBoxQuery(BaseModel):
     offset: int = Field(0, ge=0, description="Results offset")
 
 
-class IPAllocationRequest(BaseModel):
+class IPAllocationRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request to allocate IP from prefix"""
+
+    model_config = ConfigDict()
 
     prefix_id: int = Field(..., description="Prefix ID to allocate from")
     description: str | None = Field(None, max_length=200, description="Description")
@@ -323,8 +345,10 @@ class IPAllocationRequest(BaseModel):
     tenant: int | None = Field(None, description="Tenant ID")
 
 
-class NetBoxHealthResponse(BaseModel):
+class NetBoxHealthResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """NetBox health check response"""
+
+    model_config = ConfigDict()
 
     healthy: bool
     version: str | None = None
@@ -336,8 +360,10 @@ class NetBoxHealthResponse(BaseModel):
 # ============================================================================
 
 
-class VLANCreate(BaseModel):
+class VLANCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create VLAN in NetBox"""
+
+    model_config = ConfigDict()
 
     vid: int = Field(..., ge=1, le=4094, description="VLAN ID (1-4094)")
     name: str = Field(..., min_length=1, max_length=64, description="VLAN name")
@@ -350,8 +376,10 @@ class VLANCreate(BaseModel):
     tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
-class VLANUpdate(BaseModel):
+class VLANUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Update VLAN in NetBox"""
+
+    model_config = ConfigDict()
 
     name: str | None = Field(None, min_length=1, max_length=64)
     site: int | None = None
@@ -363,7 +391,7 @@ class VLANUpdate(BaseModel):
     tags: list[str] | None = None
 
 
-class VLANResponse(BaseModel):
+class VLANResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """VLAN response from NetBox"""
 
     id: int
@@ -378,7 +406,7 @@ class VLANResponse(BaseModel):
     created: datetime | None = None
     last_updated: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
@@ -386,8 +414,10 @@ class VLANResponse(BaseModel):
 # ============================================================================
 
 
-class CableCreate(BaseModel):
+class CableCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create cable in NetBox"""
+
+    model_config = ConfigDict()
 
     a_terminations: list[dict[str, Any]] = Field(
         ..., description="A-side terminations (e.g., interface, circuit termination)"
@@ -406,8 +436,10 @@ class CableCreate(BaseModel):
     tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
-class CableUpdate(BaseModel):
+class CableUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Update cable in NetBox"""
+
+    model_config = ConfigDict()
 
     type: str | None = None
     status: str | None = None
@@ -420,7 +452,7 @@ class CableUpdate(BaseModel):
     tags: list[str] | None = None
 
 
-class CableResponse(BaseModel):
+class CableResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Cable response from NetBox"""
 
     id: int
@@ -437,7 +469,7 @@ class CableResponse(BaseModel):
     created: datetime | None = None
     last_updated: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ============================================================================
@@ -445,8 +477,10 @@ class CableResponse(BaseModel):
 # ============================================================================
 
 
-class CircuitProviderCreate(BaseModel):
+class CircuitProviderCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create circuit provider in NetBox"""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, max_length=100, description="Provider name")
     slug: str = Field(..., min_length=1, max_length=100, description="URL-friendly slug")
@@ -459,7 +493,7 @@ class CircuitProviderCreate(BaseModel):
     tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
-class CircuitProviderResponse(BaseModel):
+class CircuitProviderResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Circuit provider response from NetBox"""
 
     id: int
@@ -474,18 +508,20 @@ class CircuitProviderResponse(BaseModel):
     created: datetime | None = None
     last_updated: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class CircuitTypeCreate(BaseModel):
+class CircuitTypeCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create circuit type in NetBox"""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., min_length=1, max_length=100, description="Circuit type name")
     slug: str = Field(..., min_length=1, max_length=100, description="URL-friendly slug")
     description: str | None = Field(None, max_length=200, description="Description")
 
 
-class CircuitTypeResponse(BaseModel):
+class CircuitTypeResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Circuit type response from NetBox"""
 
     id: int
@@ -495,11 +531,13 @@ class CircuitTypeResponse(BaseModel):
     created: datetime | None = None
     last_updated: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class CircuitCreate(BaseModel):
+class CircuitCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create circuit in NetBox"""
+
+    model_config = ConfigDict()
 
     cid: str = Field(..., min_length=1, max_length=100, description="Circuit ID")
     provider: int = Field(..., description="Provider ID")
@@ -513,8 +551,10 @@ class CircuitCreate(BaseModel):
     tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
-class CircuitUpdate(BaseModel):
+class CircuitUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Update circuit in NetBox"""
+
+    model_config = ConfigDict()
 
     status: str | None = None
     tenant: int | None = None
@@ -525,7 +565,7 @@ class CircuitUpdate(BaseModel):
     tags: list[str] | None = None
 
 
-class CircuitResponse(BaseModel):
+class CircuitResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Circuit response from NetBox"""
 
     id: int
@@ -541,11 +581,13 @@ class CircuitResponse(BaseModel):
     created: datetime | None = None
     last_updated: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
-class CircuitTerminationCreate(BaseModel):
+class CircuitTerminationCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create circuit termination in NetBox"""
+
+    model_config = ConfigDict()
 
     circuit: int = Field(..., description="Circuit ID")
     term_side: str = Field(..., description="Termination side (A or Z)")
@@ -557,7 +599,7 @@ class CircuitTerminationCreate(BaseModel):
     description: str | None = Field(None, max_length=200, description="Description")
 
 
-class CircuitTerminationResponse(BaseModel):
+class CircuitTerminationResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Circuit termination response from NetBox"""
 
     id: int
@@ -573,4 +615,4 @@ class CircuitTerminationResponse(BaseModel):
     created: datetime | None = None
     last_updated: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)

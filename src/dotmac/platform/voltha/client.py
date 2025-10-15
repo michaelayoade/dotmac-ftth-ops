@@ -17,7 +17,7 @@ from dotmac.platform.core.http_client import RobustHTTPClient
 logger = structlog.get_logger(__name__)
 
 
-class VOLTHAClient(RobustHTTPClient):
+class VOLTHAClient(RobustHTTPClient):  # type: ignore[misc]
     """
     VOLTHA REST API Client
 
@@ -52,7 +52,7 @@ class VOLTHAClient(RobustHTTPClient):
         Initialize VOLTHA client with robust HTTP capabilities.
 
         Args:
-            base_url: VOLTHA API URL (defaults to VOLTHA_URL env var)
+            base_url: VOLTHA API URL (defaults to settings.external_services.voltha_url)
             username: Basic auth username (defaults to VOLTHA_USERNAME env var)
             password: Basic auth password (defaults to VOLTHA_PASSWORD env var)
             api_token: Bearer token (defaults to VOLTHA_TOKEN env var)
@@ -61,7 +61,16 @@ class VOLTHAClient(RobustHTTPClient):
             timeout_seconds: Default timeout in seconds
             max_retries: Maximum retry attempts
         """
-        base_url = base_url or os.getenv("VOLTHA_URL", "http://localhost:8881")
+        # Load from centralized settings (Phase 2 implementation)
+        if base_url is None:
+            try:
+                from dotmac.platform.settings import settings
+
+                base_url = settings.external_services.voltha_url
+            except (ImportError, AttributeError):
+                # Fallback to environment variable if settings not available
+                base_url = os.getenv("VOLTHA_URL", "http://localhost:8881")
+
         username = username or os.getenv("VOLTHA_USERNAME")
         password = password or os.getenv("VOLTHA_PASSWORD")
         api_token = api_token or os.getenv("VOLTHA_TOKEN")
@@ -256,4 +265,248 @@ class VOLTHAClient(RobustHTTPClient):
             return health.get("state") == "HEALTHY"
         except Exception as e:
             self.logger.warning("voltha.ping.failed", error=str(e))
+            return False
+
+    # =========================================================================
+    # Flow Programming (VLAN/Bandwidth Configuration)
+    # =========================================================================
+
+    async def add_flow(self, logical_device_id: str, flow: dict[str, Any]) -> dict[str, Any]:
+        """
+        Add OpenFlow rule to logical device.
+
+        Args:
+            logical_device_id: Logical device (OLT) ID
+            flow: OpenFlow flow specification
+
+        Returns:
+            Flow creation response
+        """
+        response = await self._voltha_request(
+            "POST",
+            f"logical_devices/{logical_device_id}/flows",
+            json=flow,
+            timeout=self.TIMEOUTS["provision"],
+        )
+        return cast(dict[str, Any], response)
+
+    async def delete_flow(self, logical_device_id: str, flow_id: str) -> bool:
+        """
+        Delete OpenFlow rule from logical device.
+
+        Args:
+            logical_device_id: Logical device (OLT) ID
+            flow_id: Flow ID to delete
+
+        Returns:
+            True if successful
+        """
+        try:
+            await self._voltha_request(
+                "DELETE",
+                f"logical_devices/{logical_device_id}/flows/{flow_id}",
+                timeout=self.TIMEOUTS["provision"],
+            )
+            return True
+        except Exception as e:
+            self.logger.error(
+                "voltha.delete_flow.failed",
+                logical_device_id=logical_device_id,
+                flow_id=flow_id,
+                error=str(e),
+            )
+            return False
+
+    async def update_flow(
+        self, logical_device_id: str, flow_id: str, flow: dict[str, Any]
+    ) -> dict[str, Any]:
+        """
+        Update OpenFlow rule on logical device.
+
+        Args:
+            logical_device_id: Logical device (OLT) ID
+            flow_id: Flow ID to update
+            flow: Updated flow specification
+
+        Returns:
+            Flow update response
+        """
+        response = await self._voltha_request(
+            "PUT",
+            f"logical_devices/{logical_device_id}/flows/{flow_id}",
+            json=flow,
+            timeout=self.TIMEOUTS["provision"],
+        )
+        return cast(dict[str, Any], response)
+
+    # =========================================================================
+    # Technology Profile Management
+    # =========================================================================
+
+    async def get_technology_profiles(self, device_id: str) -> list[dict[str, Any]]:
+        """
+        Get technology profiles for device.
+
+        Args:
+            device_id: Device ID
+
+        Returns:
+            List of technology profiles
+        """
+        response = await self._voltha_request(
+            "GET",
+            f"devices/{device_id}/technology_profiles",
+            timeout=self.TIMEOUTS["get"],
+        )
+        items = response.get("items", []) if isinstance(response, dict) else response
+        return items if isinstance(items, list) else []
+
+    async def set_technology_profile(
+        self,
+        device_id: str,
+        tp_instance_path: str,
+        tp_id: int,
+    ) -> dict[str, Any]:
+        """
+        Assign technology profile to device.
+
+        Args:
+            device_id: Device ID
+            tp_instance_path: Technology profile instance path
+            tp_id: Technology profile ID
+
+        Returns:
+            Assignment response
+        """
+        response = await self._voltha_request(
+            "POST",
+            f"devices/{device_id}/technology_profile",
+            json={
+                "tp_instance_path": tp_instance_path,
+                "tp_id": tp_id,
+            },
+            timeout=self.TIMEOUTS["provision"],
+        )
+        return cast(dict[str, Any], response)
+
+    async def delete_technology_profile(
+        self,
+        device_id: str,
+        tp_instance_path: str,
+    ) -> bool:
+        """
+        Remove technology profile from device.
+
+        Args:
+            device_id: Device ID
+            tp_instance_path: Technology profile instance path
+
+        Returns:
+            True if successful
+        """
+        try:
+            await self._voltha_request(
+                "DELETE",
+                f"devices/{device_id}/technology_profile",
+                params={"tp_instance_path": tp_instance_path},
+                timeout=self.TIMEOUTS["provision"],
+            )
+            return True
+        except Exception as e:
+            self.logger.error(
+                "voltha.delete_technology_profile.failed",
+                device_id=device_id,
+                tp_instance_path=tp_instance_path,
+                error=str(e),
+            )
+            return False
+
+    # =========================================================================
+    # Meter Management (Bandwidth Profiles)
+    # =========================================================================
+
+    async def get_meters(self, logical_device_id: str) -> list[dict[str, Any]]:
+        """
+        Get meters (bandwidth profiles) for logical device.
+
+        Args:
+            logical_device_id: Logical device (OLT) ID
+
+        Returns:
+            List of meters
+        """
+        response = await self._voltha_request(
+            "GET",
+            f"logical_devices/{logical_device_id}/meters",
+            timeout=self.TIMEOUTS["get"],
+        )
+        items = response.get("items", []) if isinstance(response, dict) else response
+        return items if isinstance(items, list) else []
+
+    async def add_meter(self, logical_device_id: str, meter: dict[str, Any]) -> dict[str, Any]:
+        """
+        Add meter (bandwidth profile) to logical device.
+
+        Args:
+            logical_device_id: Logical device (OLT) ID
+            meter: Meter specification
+
+        Returns:
+            Meter creation response
+        """
+        response = await self._voltha_request(
+            "POST",
+            f"logical_devices/{logical_device_id}/meters",
+            json=meter,
+            timeout=self.TIMEOUTS["provision"],
+        )
+        return cast(dict[str, Any], response)
+
+    async def update_meter(
+        self, logical_device_id: str, meter_id: int, meter: dict[str, Any]
+    ) -> dict[str, Any]:
+        """
+        Update meter (bandwidth profile) on logical device.
+
+        Args:
+            logical_device_id: Logical device (OLT) ID
+            meter_id: Meter ID
+            meter: Updated meter specification
+
+        Returns:
+            Meter update response
+        """
+        response = await self._voltha_request(
+            "PUT",
+            f"logical_devices/{logical_device_id}/meters/{meter_id}",
+            json=meter,
+            timeout=self.TIMEOUTS["provision"],
+        )
+        return cast(dict[str, Any], response)
+
+    async def delete_meter(self, logical_device_id: str, meter_id: int) -> bool:
+        """
+        Delete meter (bandwidth profile) from logical device.
+
+        Args:
+            logical_device_id: Logical device (OLT) ID
+            meter_id: Meter ID to delete
+
+        Returns:
+            True if successful
+        """
+        try:
+            await self._voltha_request(
+                "DELETE",
+                f"logical_devices/{logical_device_id}/meters/{meter_id}",
+                timeout=self.TIMEOUTS["provision"],
+            )
+            return True
+        except Exception as e:
+            self.logger.error(
+                "voltha.delete_meter.failed",
+                logical_device_id=logical_device_id,
+                meter_id=meter_id,
+                error=str(e),
+            )
             return False

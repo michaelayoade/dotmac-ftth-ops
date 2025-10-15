@@ -1,5 +1,6 @@
 """Comprehensive tests for dunning models and schemas."""
 
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest

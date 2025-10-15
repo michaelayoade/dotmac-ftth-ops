@@ -9,11 +9,10 @@ Tests cover:
 - Connection lifecycle
 """
 
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
 from fastapi import WebSocket, status
-from fastapi.testclient import TestClient
-from unittest.mock import AsyncMock, Mock, patch
-from urllib.parse import urlencode
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.realtime.auth import (
@@ -259,15 +258,11 @@ class TestAuthenticatedWebSocketConnection:
         )
         mock_redis = Mock()
 
-        connection = AuthenticatedWebSocketConnection(
-            mock_websocket, user_info, mock_redis
-        )
+        connection = AuthenticatedWebSocketConnection(mock_websocket, user_info, mock_redis)
 
         await connection.send_json({"type": "test", "data": "value"})
 
-        mock_websocket.send_json.assert_called_once_with(
-            {"type": "test", "data": "value"}
-        )
+        mock_websocket.send_json.assert_called_once_with({"type": "test", "data": "value"})
 
     @pytest.mark.asyncio
     async def test_subscribe_to_channel_with_tenant_prefix(self):
@@ -285,9 +280,7 @@ class TestAuthenticatedWebSocketConnection:
         mock_pubsub = AsyncMock()
         mock_redis.pubsub.return_value = mock_pubsub
 
-        connection = AuthenticatedWebSocketConnection(
-            mock_websocket, user_info, mock_redis
-        )
+        connection = AuthenticatedWebSocketConnection(mock_websocket, user_info, mock_redis)
 
         await connection.subscribe_to_channel("sessions")
 
@@ -310,9 +303,7 @@ class TestAuthenticatedWebSocketConnection:
         mock_pubsub = AsyncMock()
         mock_redis.pubsub.return_value = mock_pubsub
 
-        connection = AuthenticatedWebSocketConnection(
-            mock_websocket, user_info, mock_redis
-        )
+        connection = AuthenticatedWebSocketConnection(mock_websocket, user_info, mock_redis)
 
         await connection.subscribe_to_channel("tenant123:sessions")
 
@@ -334,9 +325,7 @@ class TestAuthenticatedWebSocketConnection:
         mock_redis = AsyncMock()
         mock_pubsub = AsyncMock()
 
-        connection = AuthenticatedWebSocketConnection(
-            mock_websocket, user_info, mock_redis
-        )
+        connection = AuthenticatedWebSocketConnection(mock_websocket, user_info, mock_redis)
         connection.pubsub = mock_pubsub
 
         await connection.close()
@@ -387,9 +376,7 @@ class TestAcceptWebSocketWithAuth:
         mock_auth.return_value = user_info
 
         with pytest.raises(WebSocketAuthError, match="Insufficient permissions"):
-            await accept_websocket_with_auth(
-                mock_websocket, required_permissions=["jobs.read"]
-            )
+            await accept_websocket_with_auth(mock_websocket, required_permissions=["jobs.read"])
 
         mock_websocket.close.assert_called_once_with(
             code=status.WS_1008_POLICY_VIOLATION,

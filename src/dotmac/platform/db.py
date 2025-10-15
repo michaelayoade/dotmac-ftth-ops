@@ -76,7 +76,7 @@ def get_async_database_url() -> str:
 # ==========================================
 
 
-class Base(DeclarativeBase):
+class Base(DeclarativeBase):  # DeclarativeBase resolves to Any in isolation
     """Base class for all database models using SQLAlchemy 2.0 declarative mapping."""
 
     pass
@@ -162,7 +162,7 @@ class BaseModel(Base):
 
     __abstract__ = True
 
-    id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID[Any]] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     tenant_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False

@@ -192,10 +192,8 @@ export default function BillingSettingsPage() {
     setLoading(true);
     try {
       const response = await apiClient.get('/api/v1/billing/settings');
-      if (response.success && response.data) {
+      if (response.data) {
         setSettings(response.data as BillingSettings);
-      } else {
-        throw new Error(response.error?.message || 'Failed to load settings');
       }
     } catch (error) {
       console.error('Failed to load billing settings:', error);
@@ -215,13 +213,11 @@ export default function BillingSettingsPage() {
         : settings;
 
       const response = await apiClient.put('/api/v1/billing/settings', body);
-      if (response.success && response.data) {
+      if (response.data) {
         setSettings(response.data as BillingSettings);
-        setMessage({ type: 'success', text: 'Settings saved successfully!' });
-        setTimeout(() => setMessage(null), 3000);
-      } else {
-        throw new Error(response.error?.message || 'Failed to save settings');
       }
+      setMessage({ type: 'success', text: 'Settings saved successfully!' });
+      setTimeout(() => setMessage(null), 3000);
     } catch (error) {
       console.error('Error saving settings:', error);
       setMessage({ type: 'error', text: 'Failed to save settings' });
@@ -236,13 +232,11 @@ export default function BillingSettingsPage() {
     setSaving(true);
     try {
       const response = await apiClient.post('/api/v1/billing/settings/reset');
-      if (response.success && response.data) {
+      if (response.data) {
         setSettings(response.data as BillingSettings);
-        setMessage({ type: 'success', text: 'Settings reset to defaults!' });
-        setTimeout(() => setMessage(null), 3000);
-      } else {
-        throw new Error(response.error?.message || 'Failed to reset settings');
       }
+      setMessage({ type: 'success', text: 'Settings reset to defaults!' });
+      setTimeout(() => setMessage(null), 3000);
     } catch (error) {
       console.error('Error resetting settings:', error);
       setMessage({ type: 'error', text: 'Failed to reset settings' });

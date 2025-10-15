@@ -484,12 +484,12 @@ class NetBoxService:
             provider_data = await self.client.get_circuit_provider(provider_id)
             return CircuitProviderResponse(**provider_data)
         except Exception as e:
-            logger.warning("netbox.get_circuit_provider.not_found", provider_id=provider_id, error=str(e))
+            logger.warning(
+                "netbox.get_circuit_provider.not_found", provider_id=provider_id, error=str(e)
+            )
             return None
 
-    async def create_circuit_provider(
-        self, data: CircuitProviderCreate
-    ) -> CircuitProviderResponse:
+    async def create_circuit_provider(self, data: CircuitProviderCreate) -> CircuitProviderResponse:
         """Create circuit provider"""
         provider_data = await self.client.create_circuit_provider(
             data.model_dump(exclude_none=True)
@@ -577,17 +577,13 @@ class NetBoxService:
             offset=offset,
         )
 
-        return [
-            CircuitTerminationResponse(**term) for term in response.get("results", [])
-        ]
+        return [CircuitTerminationResponse(**term) for term in response.get("results", [])]
 
     async def create_circuit_termination(
         self, data: CircuitTerminationCreate
     ) -> CircuitTerminationResponse:
         """Create circuit termination"""
-        term_data = await self.client.create_circuit_termination(
-            data.model_dump(exclude_none=True)
-        )
+        term_data = await self.client.create_circuit_termination(data.model_dump(exclude_none=True))
         return CircuitTerminationResponse(**term_data)
 
     # =========================================================================

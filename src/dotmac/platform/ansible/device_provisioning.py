@@ -81,14 +81,10 @@ class DeviceProvisioningService:
             auto_discover=auto_discover,
         )
 
-        extra_vars["playbook_path"] = PlaybookLibrary.get_playbook_path(
-            PlaybookType.ONT_PROVISION
-        )
+        extra_vars["playbook_path"] = PlaybookLibrary.get_playbook_path(PlaybookType.ONT_PROVISION)
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             logger.info(
                 "device.ont.provision.started",
@@ -147,9 +143,7 @@ class DeviceProvisioningService:
         }
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             logger.info(
                 "device.auto_discover.started",
@@ -203,9 +197,7 @@ class DeviceProvisioningService:
         }
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             logger.info(
                 "device.bulk_provision.started",
@@ -262,9 +254,7 @@ class DeviceProvisioningService:
         }
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             logger.info(
                 "device.ont.deprovision.started",
@@ -326,9 +316,7 @@ class DeviceProvisioningService:
         }
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             logger.info(
                 "device.firmware_upgrade.started",
@@ -389,9 +377,7 @@ class DeviceProvisioningService:
         }
 
         try:
-            job_result = await self.awx_client.launch_job_template(
-                self.job_template_id, extra_vars
-            )
+            job_result = await self.awx_client.launch_job_template(self.job_template_id, extra_vars)
 
             logger.info(
                 "device.status.check.started",

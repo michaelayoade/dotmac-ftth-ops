@@ -78,7 +78,7 @@ class MoneyInvoiceLineItem(BaseModel):
     product_id: str | None = Field(None, description="Product reference")
     subscription_id: str | None = Field(None, description="Subscription reference")
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
     @field_validator("unit_price", "total_price", "tax_amount", "discount_amount")
     @classmethod
@@ -171,7 +171,7 @@ class MoneyInvoice(BaseModel):
     # Customer info
     customer_id: str = Field(description="Customer identifier")
     billing_email: str = Field(description="Billing email")
-    billing_address: dict[str, str] = Field(default_factory=dict)
+    billing_address: dict[str, str] = Field(default_factory=lambda: {})
 
     # Dates
     issue_date: datetime = Field(default_factory=datetime.utcnow)
@@ -181,7 +181,7 @@ class MoneyInvoice(BaseModel):
     currency: str = Field("USD", min_length=3, max_length=3)
 
     # Line items
-    line_items: list[MoneyInvoiceLineItem] = Field(default_factory=list)
+    line_items: list[MoneyInvoiceLineItem] = Field(default_factory=lambda: [])
 
     # Money totals (computed from line items)
     subtotal: MoneyField = Field(description="Subtotal before tax")
@@ -201,7 +201,7 @@ class MoneyInvoice(BaseModel):
     notes: str | None = Field(None, max_length=2000)
     internal_notes: str | None = Field(None, max_length=2000)
     subscription_id: str | None = Field(None, description="Subscription reference")
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra_data: dict[str, Any] = Field(default_factory=lambda: {})
 
     # Timestamps
     created_at: datetime | None = Field(None)

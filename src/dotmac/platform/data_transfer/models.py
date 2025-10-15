@@ -57,7 +57,7 @@ class ValidationLevel(str, Enum):
 # ========================================
 
 
-class ImportRequest(BaseModel):
+class ImportRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Import data request with validation."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -141,7 +141,7 @@ class ImportRequest(BaseModel):
         return v
 
 
-class ExportRequest(BaseModel):
+class ExportRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Export data request with validation."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -225,7 +225,7 @@ class ExportRequest(BaseModel):
         return unique_fields
 
 
-class TransferJobRequest(BaseModel):
+class TransferJobRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Transfer job creation request."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -266,7 +266,7 @@ class TransferJobRequest(BaseModel):
 # ========================================
 
 
-class TransferJobResponse(BaseModel):
+class TransferJobResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Transfer job response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -306,7 +306,7 @@ class TransferJobResponse(BaseModel):
         return 100.0
 
 
-class TransferJobListResponse(BaseModel):
+class TransferJobListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """List of transfer jobs response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -318,7 +318,7 @@ class TransferJobListResponse(BaseModel):
     has_more: bool = Field(False, description="More results available")
 
 
-class TransferValidationResult(BaseModel):
+class TransferValidationResult(BaseModel):  # BaseModel resolves to Any in isolation
     """Validation result for transfer operation."""
 
     model_config = ConfigDict()
@@ -337,7 +337,7 @@ class TransferValidationResult(BaseModel):
     )
 
 
-class TransferProgressUpdate(BaseModel):
+class TransferProgressUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Progress update for transfer job."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -357,7 +357,7 @@ class TransferProgressUpdate(BaseModel):
     )
 
 
-class DataFormatInfo(BaseModel):
+class DataFormatInfo(BaseModel):  # BaseModel resolves to Any in isolation
     """Information about a data format."""
 
     model_config = ConfigDict()
@@ -374,7 +374,7 @@ class DataFormatInfo(BaseModel):
     )
 
 
-class FormatsResponse(BaseModel):
+class FormatsResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Supported formats response."""
 
     model_config = ConfigDict()
@@ -384,7 +384,7 @@ class FormatsResponse(BaseModel):
     compression_types: list[str] = Field(..., description="Supported compression types")
 
 
-class TransferStatistics(BaseModel):
+class TransferStatistics(BaseModel):  # BaseModel resolves to Any in isolation
     """Transfer operation statistics."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -406,7 +406,7 @@ class TransferStatistics(BaseModel):
 # ========================================
 
 
-class TransferErrorResponse(BaseModel):
+class TransferErrorResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Transfer error response."""
 
     model_config = ConfigDict()

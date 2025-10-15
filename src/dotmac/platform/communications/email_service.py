@@ -22,7 +22,7 @@ from dotmac.platform.settings import settings
 logger = structlog.get_logger(__name__)
 
 
-class EmailMessage(BaseModel):
+class EmailMessage(BaseModel):  # BaseModel resolves to Any in isolation
     """Email message model."""
 
     to: list[EmailStr] = Field(..., description="Recipient email addresses")
@@ -38,7 +38,7 @@ class EmailMessage(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
 
-class EmailResponse(BaseModel):
+class EmailResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Email sending response."""
 
     model_config = ConfigDict()

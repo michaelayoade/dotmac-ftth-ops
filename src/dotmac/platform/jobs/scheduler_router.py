@@ -7,8 +7,7 @@ REST endpoints for scheduled jobs and job chains management.
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
-from redis.asyncio import Redis
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
@@ -16,9 +15,9 @@ from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.jobs.models import JobExecutionMode, JobPriority
 from dotmac.platform.jobs.scheduler_service import SchedulerService
-from dotmac.platform.redis_client import get_redis_client
+from dotmac.platform.redis_client import RedisClientType, get_redis_client
 
-router = APIRouter(prefix="/api/v1/jobs/scheduler", tags=["job-scheduler"])
+router = APIRouter(prefix="/api/v1/jobs/scheduler", tags=["Job Scheduler"])
 
 
 # =============================================================================
@@ -26,8 +25,10 @@ router = APIRouter(prefix="/api/v1/jobs/scheduler", tags=["job-scheduler"])
 # =============================================================================
 
 
-class ScheduledJobCreate(BaseModel):
+class ScheduledJobCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for creating a scheduled job."""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., description="Scheduled job name")
     job_type: str = Field(..., description="Type of job to execute")
@@ -42,8 +43,10 @@ class ScheduledJobCreate(BaseModel):
     timeout_seconds: int | None = Field(None, description="Job timeout")
 
 
-class ScheduledJobUpdate(BaseModel):
+class ScheduledJobUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating a scheduled job."""
+
+    model_config = ConfigDict()
 
     name: str | None = None
     description: str | None = None
@@ -58,8 +61,10 @@ class ScheduledJobUpdate(BaseModel):
     parameters: dict[str, Any] | None = None
 
 
-class ScheduledJobResponse(BaseModel):
+class ScheduledJobResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for scheduled job response."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: str
     tenant_id: str
@@ -82,12 +87,11 @@ class ScheduledJobResponse(BaseModel):
     created_by: str
     created_at: str
 
-    class Config:
-        from_attributes = True
 
-
-class JobChainCreate(BaseModel):
+class JobChainCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for creating a job chain."""
+
+    model_config = ConfigDict()
 
     name: str = Field(..., description="Chain name")
     chain_definition: list[dict[str, Any]] = Field(..., description="List of job definitions")
@@ -99,8 +103,10 @@ class JobChainCreate(BaseModel):
     timeout_seconds: int | None = Field(None, description="Total chain timeout")
 
 
-class JobChainResponse(BaseModel):
+class JobChainResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for job chain response."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: str
     tenant_id: str
@@ -121,9 +127,6 @@ class JobChainResponse(BaseModel):
     created_by: str
     created_at: str
 
-    class Config:
-        from_attributes = True
-
 
 # =============================================================================
 # Dependencies
@@ -132,7 +135,7 @@ class JobChainResponse(BaseModel):
 
 async def get_scheduler_service(
     session: AsyncSession = Depends(get_session_dependency),
-    redis: Redis = Depends(get_redis_client),
+    redis: RedisClientType = Depends(get_redis_client),
 ) -> SchedulerService:
     """Get scheduler service instance."""
     return SchedulerService(session, redis_client=redis)

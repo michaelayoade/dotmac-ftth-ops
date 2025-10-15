@@ -33,7 +33,7 @@ from dotmac.platform.radius.schemas import (
 from dotmac.platform.radius.service import RADIUSService
 from dotmac.platform.tenant.dependencies import TenantAdminAccess
 
-router = APIRouter(prefix="/api/v1/radius", tags=["radius"])
+router = APIRouter(prefix="/api/v1/radius", tags=["RADIUS"])
 
 
 # =============================================================================
@@ -707,16 +707,22 @@ async def get_radius_health(
     # Check recent authentication failures (last 5 minutes)
     try:
         from datetime import datetime, timedelta
+
         from sqlalchemy import and_, func, select
+
         from dotmac.platform.radius.models import RadPostAuth
 
         five_minutes_ago = datetime.utcnow() - timedelta(minutes=5)
 
-        stmt = select(func.count()).select_from(RadPostAuth).where(
-            and_(
-                RadPostAuth.tenant_id == service.tenant_id,
-                RadPostAuth.authdate >= five_minutes_ago,
-                RadPostAuth.reply == "Access-Reject",
+        stmt = (
+            select(func.count())
+            .select_from(RadPostAuth)
+            .where(
+                and_(
+                    RadPostAuth.tenant_id == service.tenant_id,
+                    RadPostAuth.authdate >= five_minutes_ago,
+                    RadPostAuth.reply == "Access-Reject",
+                )
             )
         )
 

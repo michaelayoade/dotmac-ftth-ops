@@ -44,8 +44,8 @@ class Metric:
     value: Any = field(default=0)
     unit: str | None = None
     description: str | None = None
-    attributes: dict[str, Any] = field(default_factory=dict)
-    resource_attributes: dict[str, Any] = field(default_factory=dict)
+    attributes: dict[str, Any] = field(default_factory=lambda: {})
+    resource_attributes: dict[str, Any] = field(default_factory=lambda: {})
     span_context: SpanContext | None = None
 
     def to_otel_attributes(self) -> dict[str, Any]:

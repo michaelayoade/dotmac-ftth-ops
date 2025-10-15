@@ -91,7 +91,8 @@ def create_subscriber(session, tenant_id: str, username: str, password: str, ip_
     subscriber_id = f"SUB-{datetime.now().strftime('%Y%m%d')}-{username}"
 
     # Insert subscriber
-    query = text("""
+    query = text(
+        """
         INSERT INTO subscribers (
             id, tenant_id, username, password,
             status, service_type, static_ipv4,
@@ -109,7 +110,8 @@ def create_subscriber(session, tenant_id: str, username: str, password: str, ip_
             0, 0, 0
         )
         RETURNING id, username, static_ipv4, status
-    """)
+    """
+    )
 
     result = session.execute(
         query,
@@ -129,28 +131,32 @@ def create_subscriber(session, tenant_id: str, username: str, password: str, ip_
 def create_radius_auth(session, subscriber_id: str, username: str, password: str):
     """Create RADIUS authentication entries."""
     # Insert radcheck (authentication)
-    query = text("""
+    query = text(
+        """
         INSERT INTO radcheck (
             subscriber_id, username, attribute, op, value
         )
         VALUES
             (:subscriber_id, :username, 'Cleartext-Password', ':=', :password)
         ON CONFLICT DO NOTHING
-    """)
+    """
+    )
 
     session.execute(
         query, {"subscriber_id": subscriber_id, "username": username, "password": password}
     )
 
     # Insert radreply (authorization - IP assignment)
-    query = text("""
+    query = text(
+        """
         INSERT INTO radreply (
             subscriber_id, username, attribute, op, value
         )
         VALUES
             (:subscriber_id, :username, 'Framed-IP-Address', ':=', :ip_address)
         ON CONFLICT DO NOTHING
-    """)
+    """
+    )
 
     session.execute(
         query,

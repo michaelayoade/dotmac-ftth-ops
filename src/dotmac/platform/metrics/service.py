@@ -8,7 +8,6 @@ import asyncio
 from datetime import UTC, datetime, timedelta
 
 import structlog
-from redis.asyncio import Redis
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,6 +24,7 @@ from dotmac.platform.metrics.schemas import (
     SubscriberMetrics,
     SupportMetrics,
 )
+from dotmac.platform.redis_client import RedisClientType
 from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
 from dotmac.platform.ticketing.models import (
     Ticket,
@@ -37,7 +37,7 @@ logger = structlog.get_logger(__name__)
 class MetricsService:
     """Service for computing and caching ISP metrics."""
 
-    def __init__(self, session: AsyncSession, redis_client: Redis | None = None):
+    def __init__(self, session: AsyncSession, redis_client: RedisClientType | None = None):
         self.session = session
         self.redis = redis_client
         self.cache_ttl = 300  # 5 minutes
@@ -359,9 +359,9 @@ class MetricsService:
             SubscriberByStatus(
                 status=status.value,
                 count=count,
-                percentage=round(count / total_subscribers * 100, 1)
-                if total_subscribers > 0
-                else 0.0,
+                percentage=(
+                    round(count / total_subscribers * 100, 1) if total_subscribers > 0 else 0.0
+                ),
             )
             for status, count in status_counts.items()
         ]
@@ -372,7 +372,9 @@ class MetricsService:
                 date=(datetime.now(UTC) - timedelta(days=i)).strftime("%Y-%m-%d"), count=2 + (i % 3)
             )
             for i in range(30)
-        ][::-1]  # Reverse to oldest first
+        ][
+            ::-1
+        ]  # Reverse to oldest first
 
         return SubscriberKPIs(
             total_subscribers=total_subscribers,

@@ -54,7 +54,7 @@ class TestCreateInvoiceCommand:
             ],
         )
 
-        with pytest.raises(Exception):  # Pydantic ValidationError for frozen model
+        with pytest.raises(Exception):  # Pydantic ValidationError for frozen model  # noqa: B017
             command.tenant_id = "different-tenant"
 
     def test_create_invoice_command_with_optional_fields(self):
@@ -88,7 +88,7 @@ class TestCreateInvoiceCommand:
 
     def test_create_invoice_command_validation_fails_empty_line_items(self):
         """Test validation fails with empty line items"""
-        with pytest.raises(Exception):  # Pydantic ValidationError
+        with pytest.raises(Exception):  # Pydantic ValidationError  # noqa: B017
             CreateInvoiceCommand(
                 tenant_id="tenant-1",
                 customer_id="cust-456",
@@ -176,7 +176,7 @@ class TestVoidInvoiceCommand:
 
     def test_void_invoice_command_requires_reason(self):
         """Test void command requires reason with min length"""
-        with pytest.raises(Exception):  # Pydantic ValidationError
+        with pytest.raises(Exception):  # Pydantic ValidationError  # noqa: B017
             VoidInvoiceCommand(
                 tenant_id="tenant-1",
                 invoice_id="inv-123",
@@ -224,7 +224,7 @@ class TestApplyPaymentToInvoiceCommand:
 
     def test_apply_payment_command_requires_positive_amount(self):
         """Test command requires positive payment amount"""
-        with pytest.raises(Exception):  # Pydantic ValidationError
+        with pytest.raises(Exception):  # Pydantic ValidationError  # noqa: B017
             ApplyPaymentToInvoiceCommand(
                 tenant_id="tenant-1",
                 invoice_id="inv-123",

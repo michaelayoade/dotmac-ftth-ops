@@ -265,7 +265,7 @@ export default function AutomationOverviewPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      disabled={executeChain.isLoading}
+                      disabled={executeChain.isPending}
                       onClick={async (event) => {
                         event.stopPropagation();
                         try {
@@ -417,7 +417,7 @@ export default function AutomationOverviewPage() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                disabled={!selectedService || suspendService.isLoading || resumeService.isLoading}
+                disabled={!selectedService || suspendService.isPending || resumeService.isPending}
                 onClick={async () => {
                   if (!selectedService) return;
                   try {
@@ -437,7 +437,7 @@ export default function AutomationOverviewPage() {
               </Button>
               <Button
                 variant="outline"
-                disabled={!selectedService || suspendService.isLoading || resumeService.isLoading}
+                disabled={!selectedService || suspendService.isPending || resumeService.isPending}
                 onClick={async () => {
                   if (!selectedService) return;
                   try {

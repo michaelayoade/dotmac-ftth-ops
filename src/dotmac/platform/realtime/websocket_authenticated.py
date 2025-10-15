@@ -6,24 +6,22 @@ Provides secure, multi-tenant WebSocket handlers for real-time communication.
 
 import asyncio
 import json
-from typing import Any
 
 import structlog
 from fastapi import WebSocket, WebSocketDisconnect
-from redis.asyncio import Redis
 
 from dotmac.platform.realtime.auth import (
     AuthenticatedWebSocketConnection,
     WebSocketAuthError,
     accept_websocket_with_auth,
     authorize_websocket_resource,
-    validate_tenant_isolation,
 )
+from dotmac.platform.redis_client import RedisClientType
 
 logger = structlog.get_logger(__name__)
 
 
-async def handle_sessions_ws_authenticated(websocket: WebSocket, redis: Redis) -> None:
+async def handle_sessions_ws_authenticated(websocket: WebSocket, redis: RedisClientType) -> None:
     """
     Authenticated WebSocket handler for RADIUS session updates.
 
@@ -59,9 +57,7 @@ async def handle_sessions_ws_authenticated(websocket: WebSocket, redis: Redis) -
         )
 
         # Start listening to Redis pub/sub
-        listen_task = asyncio.create_task(
-            _listen_to_redis_with_auth(connection, channel)
-        )
+        listen_task = asyncio.create_task(_listen_to_redis_with_auth(connection, channel))
 
         try:
             # Handle client messages
@@ -117,7 +113,7 @@ async def handle_sessions_ws_authenticated(websocket: WebSocket, redis: Redis) -
 async def handle_job_ws_authenticated(
     websocket: WebSocket,
     job_id: str,
-    redis: Redis,
+    redis: RedisClientType,
 ) -> None:
     """
     Authenticated WebSocket handler for job progress monitoring.
@@ -167,9 +163,7 @@ async def handle_job_ws_authenticated(
         )
 
         # Start listening to Redis pub/sub
-        listen_task = asyncio.create_task(
-            _listen_to_redis_with_auth(connection, channel)
-        )
+        listen_task = asyncio.create_task(_listen_to_redis_with_auth(connection, channel))
 
         try:
             # Handle client messages
@@ -275,7 +269,7 @@ async def handle_job_ws_authenticated(
 async def handle_campaign_ws_authenticated(
     websocket: WebSocket,
     campaign_id: str,
-    redis: Redis,
+    redis: RedisClientType,
 ) -> None:
     """
     Authenticated WebSocket handler for firmware campaign monitoring.
@@ -325,9 +319,7 @@ async def handle_campaign_ws_authenticated(
         )
 
         # Start listening to Redis pub/sub
-        listen_task = asyncio.create_task(
-            _listen_to_redis_with_auth(connection, channel)
-        )
+        listen_task = asyncio.create_task(_listen_to_redis_with_auth(connection, channel))
 
         try:
             # Handle client messages

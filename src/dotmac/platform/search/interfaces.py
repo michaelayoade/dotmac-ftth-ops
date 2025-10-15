@@ -1,9 +1,8 @@
 """Search service interfaces."""
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 
 class SearchType(str, Enum):
@@ -38,7 +37,7 @@ class SearchQuery:
 
     query: str
     search_type: SearchType = SearchType.FULL_TEXT
-    filters: list[SearchFilter] = field(default_factory=list)
+    filters: list[SearchFilter] = field(default_factory=lambda: [])
     fields: list[str] | None = None  # Fields to search in
     limit: int = 10
     offset: int = 0
@@ -69,40 +68,38 @@ class SearchResponse:
     took_ms: int | None = None
 
 
-class SearchBackend(ABC):
-    """Abstract search backend interface."""
+@runtime_checkable
+class SearchBackend(Protocol):
+    """Search backend interface."""
 
-    @abstractmethod
     async def index(self, index_name: str, doc_id: str, document: dict[str, Any]) -> bool:
         """Index a document."""
-        pass
 
-    @abstractmethod
     async def search(self, index_name: str, query: SearchQuery) -> SearchResponse:
         """Search documents."""
-        pass
 
-    @abstractmethod
     async def delete(self, index_name: str, doc_id: str) -> bool:
         """Delete a document."""
-        pass
 
-    @abstractmethod
     async def update(self, index_name: str, doc_id: str, document: dict[str, Any]) -> bool:
         """Update a document."""
-        pass
 
-    @abstractmethod
     async def bulk_index(self, index_name: str, documents: list[dict[str, Any]]) -> int:
         """Bulk index documents."""
-        pass
 
-    @abstractmethod
     async def create_index(self, index_name: str, mappings: dict[str, Any] | None = None) -> bool:
         """Create an index."""
-        pass
 
-    @abstractmethod
     async def delete_index(self, index_name: str) -> bool:
         """Delete an index."""
-        pass
+
+
+__all__ = [
+    "SearchType",
+    "SortOrder",
+    "SearchFilter",
+    "SearchQuery",
+    "SearchResult",
+    "SearchResponse",
+    "SearchBackend",
+]

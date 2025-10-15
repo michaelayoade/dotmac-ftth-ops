@@ -59,7 +59,7 @@ class MetricAggregator:
             return datetime.now(UTC) - timedelta(seconds=self.window_size)
         return cutoff_time
 
-    def _filter_values_by_time(self, buffer: deque, cutoff_time: datetime) -> list[float]:
+    def _filter_values_by_time(self, buffer: deque[Any], cutoff_time: datetime) -> list[float]:
         """Filter buffer values by cutoff time."""
         return [entry["value"] for entry in buffer if entry["timestamp"] >= cutoff_time]
 

@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
-from typing import TypeVar, overload
+from typing import TypeVar, cast, overload
 
 import structlog
 
@@ -22,7 +22,6 @@ logger = structlog.get_logger(__name__)
 # Type aliases
 DomainEventHandler = Callable[[DomainEvent], Awaitable[None]]
 T = TypeVar("T", bound=DomainEvent)
-HandlerT = Callable[[T], Awaitable[None]]
 
 
 class DomainEventDispatcher:
@@ -59,7 +58,7 @@ class DomainEventDispatcher:
     def subscribe(
         self,
         event_type: type[T],
-    ) -> Callable[[HandlerT], HandlerT]: ...
+    ) -> Callable[[Callable[[T], Awaitable[None]]], Callable[[T], Awaitable[None]]]: ...
 
     @overload
     def subscribe(
@@ -103,9 +102,9 @@ class DomainEventDispatcher:
 
             return decorator_str
 
-        def decorator(handler: HandlerT) -> HandlerT:
+        def decorator(handler: Callable[[T], Awaitable[None]]) -> Callable[[T], Awaitable[None]]:
             type_name = event_type.__name__
-            self._handlers[type_name].append(handler)
+            self._handlers[type_name].append(cast(DomainEventHandler, handler))
 
             logger.info(
                 "Domain event handler registered",

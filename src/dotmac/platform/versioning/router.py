@@ -36,7 +36,7 @@ class VersionedAPIRouter(APIRouter):
         )
 
         # Register route for specific versions
-        @router.get("/customers", versions=[APIVersion.V1, APIVersion.V2])
+        @router.get("/customers"), versions=[APIVersion.V1, APIVersion.V2])  # type: ignore[misc]
         async def list_customers():
             return customers
 
@@ -78,7 +78,7 @@ class VersionedAPIRouter(APIRouter):
     def add_api_route(
         self,
         path: str,
-        endpoint: Callable,
+        endpoint: Callable[..., Any],
         versions: list[APIVersion] | None = None,
         deprecated_in: list[APIVersion] | None = None,
         removed_in: list[APIVersion] | None = None,
@@ -132,7 +132,7 @@ class VersionedAPIRouter(APIRouter):
         removed_in: list[APIVersion] | None = None,
         replacement: str | None = None,
         **kwargs: Any,
-    ) -> Callable:
+    ) -> Callable[..., Any]:
         """
         Decorator for GET routes with version support.
 
@@ -148,7 +148,7 @@ class VersionedAPIRouter(APIRouter):
             Decorator function
         """
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             self.add_api_route(
                 path,
                 func,
@@ -171,7 +171,7 @@ class VersionedAPIRouter(APIRouter):
         removed_in: list[APIVersion] | None = None,
         replacement: str | None = None,
         **kwargs: Any,
-    ) -> Callable:
+    ) -> Callable[..., Any]:
         """
         Decorator for POST routes with version support.
 
@@ -187,7 +187,7 @@ class VersionedAPIRouter(APIRouter):
             Decorator function
         """
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             self.add_api_route(
                 path,
                 func,
@@ -210,7 +210,7 @@ class VersionedAPIRouter(APIRouter):
         removed_in: list[APIVersion] | None = None,
         replacement: str | None = None,
         **kwargs: Any,
-    ) -> Callable:
+    ) -> Callable[..., Any]:
         """
         Decorator for PUT routes with version support.
 
@@ -226,7 +226,7 @@ class VersionedAPIRouter(APIRouter):
             Decorator function
         """
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             self.add_api_route(
                 path,
                 func,
@@ -249,7 +249,7 @@ class VersionedAPIRouter(APIRouter):
         removed_in: list[APIVersion] | None = None,
         replacement: str | None = None,
         **kwargs: Any,
-    ) -> Callable:
+    ) -> Callable[..., Any]:
         """
         Decorator for PATCH routes with version support.
 
@@ -265,7 +265,7 @@ class VersionedAPIRouter(APIRouter):
             Decorator function
         """
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             self.add_api_route(
                 path,
                 func,
@@ -288,7 +288,7 @@ class VersionedAPIRouter(APIRouter):
         removed_in: list[APIVersion] | None = None,
         replacement: str | None = None,
         **kwargs: Any,
-    ) -> Callable:
+    ) -> Callable[..., Any]:
         """
         Decorator for DELETE routes with version support.
 
@@ -304,7 +304,7 @@ class VersionedAPIRouter(APIRouter):
             Decorator function
         """
 
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             self.add_api_route(
                 path,
                 func,
@@ -319,7 +319,9 @@ class VersionedAPIRouter(APIRouter):
 
         return decorator
 
-    def _wrap_endpoint(self, endpoint: Callable, route_config: VersionedRoute) -> Callable:
+    def _wrap_endpoint(
+        self, endpoint: Callable[..., Any], route_config: VersionedRoute
+    ) -> Callable[..., Any]:
         """
         Wrap endpoint with version checking logic.
 

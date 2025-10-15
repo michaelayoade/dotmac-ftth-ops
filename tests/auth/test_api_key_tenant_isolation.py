@@ -153,7 +153,7 @@ class TestAPIKeyTenantIsolation:
         import hashlib
         import json
 
-        api_key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+        hashlib.sha256(api_key.encode()).hexdigest()
         stored_data = {
             "user_id": tenant1_user.user_id,
             "name": "Tenant 1 Key",

@@ -196,7 +196,7 @@ async def test_upload_avatar_updates_user_profile(
     )
 
     assert upload_response.status_code == 200
-    avatar_url = upload_response.json()["avatar_url"]
+    upload_response.json()["avatar_url"]
 
     # Get current user profile
     profile_response = await client.get(

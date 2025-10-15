@@ -12,10 +12,11 @@ import asyncio
 import statistics
 import time
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 import structlog
@@ -55,7 +56,7 @@ class BenchmarkMetric:
     value: int | float
     unit: str
     category: str = "general"
-    metadata: dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=lambda: {})
     timestamp: datetime | None = None
 
     def __post_init__(self) -> None:
@@ -74,8 +75,8 @@ class BenchmarkResult:
     start_time: datetime
     end_time: datetime | None = None
     duration: timedelta | None = None
-    metrics: list[BenchmarkMetric] = field(default_factory=list)
-    metadata: dict[str, Any] = field(default_factory=dict)
+    metrics: list[BenchmarkMetric] = field(default_factory=lambda: [])
+    metadata: dict[str, Any] = field(default_factory=lambda: {})
     error_message: str | None = None
 
     def __post_init__(self) -> None:
@@ -579,7 +580,7 @@ class BenchmarkManager:
     """Central manager for coordinating benchmark execution and results."""
 
     def __init__(self) -> None:
-        self.active_benchmarks: dict[str, asyncio.Task] = {}
+        self.active_benchmarks: dict[str, object] = {}
         self.benchmark_history: list[BenchmarkResult] = []
         self.suites: dict[str, BenchmarkSuite] = {}
         self.logger = logger.bind(component="benchmark_manager")
@@ -644,14 +645,19 @@ class BenchmarkManager:
         """Cancel a running benchmark."""
         if task_id in self.active_benchmarks:
             task = self.active_benchmarks[task_id]
-            task.cancel()
 
-            # Some tests may inject a non-awaitable mock; only await real awaitables
-            if isinstance(task, asyncio.Task) or hasattr(task, "__await__"):
+            if isinstance(task, asyncio.Task):
+                task.cancel()
                 try:
                     await task
                 except asyncio.CancelledError:
                     pass
+            else:
+                cancel = getattr(task, "cancel", None)
+                if callable(cancel):
+                    cancel()
+                if hasattr(task, "__await__"):
+                    await cast(Awaitable[Any], task)
 
             # Remove from active once cancelled
             self.active_benchmarks.pop(task_id, None)

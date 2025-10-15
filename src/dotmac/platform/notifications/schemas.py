@@ -18,7 +18,7 @@ from dotmac.platform.notifications.models import (
 
 
 # Notification Schemas
-class NotificationResponse(BaseModel):
+class NotificationResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response schema for notification."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -50,8 +50,10 @@ class NotificationResponse(BaseModel):
     updated_at: datetime
 
 
-class NotificationCreateRequest(BaseModel):
+class NotificationCreateRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request schema for creating a notification."""
+
+    model_config = ConfigDict()
 
     user_id: UUID
     type: NotificationType
@@ -63,11 +65,13 @@ class NotificationCreateRequest(BaseModel):
     related_entity_type: str | None = Field(None, max_length=100)
     related_entity_id: str | None = Field(None, max_length=255)
     channels: list[NotificationChannel] | None = None
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
-class NotificationListResponse(BaseModel):
+class NotificationListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response schema for notification list."""
+
+    model_config = ConfigDict()
 
     notifications: list[NotificationResponse]
     total: int
@@ -75,7 +79,7 @@ class NotificationListResponse(BaseModel):
 
 
 # Preference Schemas
-class NotificationPreferenceResponse(BaseModel):
+class NotificationPreferenceResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response schema for notification preferences."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -99,8 +103,10 @@ class NotificationPreferenceResponse(BaseModel):
     updated_at: datetime
 
 
-class NotificationPreferenceUpdateRequest(BaseModel):
+class NotificationPreferenceUpdateRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request schema for updating notification preferences."""
+
+    model_config = ConfigDict()
 
     enabled: bool | None = None
     email_enabled: bool | None = None
@@ -117,9 +123,11 @@ class NotificationPreferenceUpdateRequest(BaseModel):
 
 
 # Template Schemas
-class NotificationFromTemplateRequest(BaseModel):
+class NotificationFromTemplateRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request schema for creating notification from template."""
+
+    model_config = ConfigDict()
 
     user_id: UUID
     type: NotificationType
-    variables: dict[str, Any] = Field(default_factory=dict)
+    variables: dict[str, Any] = Field(default_factory=lambda: {})

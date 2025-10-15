@@ -5,7 +5,6 @@ REST endpoints for job management and monitoring.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
@@ -21,9 +20,9 @@ from dotmac.platform.jobs.schemas import (
     JobUpdate,
 )
 from dotmac.platform.jobs.service import JobService
-from dotmac.platform.redis_client import get_redis_client
+from dotmac.platform.redis_client import RedisClientType, get_redis_client
 
-router = APIRouter(prefix="/api/v1/jobs", tags=["jobs"])
+router = APIRouter(prefix="/api/v1/jobs", tags=["Jobs"])
 
 
 # =============================================================================
@@ -33,7 +32,7 @@ router = APIRouter(prefix="/api/v1/jobs", tags=["jobs"])
 
 async def get_job_service(
     session: AsyncSession = Depends(get_session_dependency),
-    redis: Redis = Depends(get_redis_client),
+    redis: RedisClientType = Depends(get_redis_client),
 ) -> JobService:
     """Get job service instance."""
     return JobService(session, redis_client=redis)

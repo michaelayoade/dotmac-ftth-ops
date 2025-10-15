@@ -46,7 +46,7 @@ class TaxClass(str, Enum):
     DIGITAL_SERVICES = "digital_services"  # Digital services tax
 
 
-class ProductCategory(BillingBaseModel):
+class ProductCategory(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resolves to Any in isolation
     """Simple flat product categories."""
 
     category_id: str = Field(description="Category identifier")
@@ -62,7 +62,7 @@ class ProductCategory(BillingBaseModel):
     sort_order: int = Field(default=0, description="Display sort order")
 
 
-class Product(BillingBaseModel):
+class Product(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resolves to Any in isolation
     """Core product model - simple and flexible."""
 
     product_id: str = Field(description="Unique product identifier")
@@ -138,7 +138,7 @@ class Product(BillingBaseModel):
 # Request/Response Models
 
 
-class ProductCategoryCreateRequest(AppBaseModel):
+class ProductCategoryCreateRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for creating product categories."""
 
     name: str = Field(description="Category name", max_length=100)
@@ -155,7 +155,7 @@ class ProductCategoryCreateRequest(AppBaseModel):
         return v.strip()
 
 
-class ProductCreateRequest(AppBaseModel):
+class ProductCreateRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for creating products."""
 
     sku: str = Field(description="Stock keeping unit", max_length=100)
@@ -168,7 +168,7 @@ class ProductCreateRequest(AppBaseModel):
     tax_class: TaxClass = Field(default=TaxClass.STANDARD)
     usage_type: UsageType | None = Field(None)
     usage_unit_name: str | None = Field(None, max_length=50)
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
     @field_validator("base_price")
     @classmethod
@@ -179,7 +179,7 @@ class ProductCreateRequest(AppBaseModel):
         return v
 
 
-class ProductUpdateRequest(AppBaseModel):
+class ProductUpdateRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for updating products."""
 
     name: str | None = Field(None, max_length=255)
@@ -200,7 +200,7 @@ class ProductUpdateRequest(AppBaseModel):
         return v
 
 
-class ProductFilters(AppBaseModel):
+class ProductFilters(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Filter options for product listings."""
 
     category: str | None = Field(None, description="Filter by category")
@@ -210,7 +210,7 @@ class ProductFilters(AppBaseModel):
     search: str | None = Field(None, description="Search in name and description")
 
 
-class ProductResponse(AppBaseModel):
+class ProductResponse(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Response model for product data."""
 
     product_id: str
@@ -231,7 +231,7 @@ class ProductResponse(AppBaseModel):
     updated_at: datetime | None
 
 
-class ProductCategoryResponse(AppBaseModel):
+class ProductCategoryResponse(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Response model for product category data."""
 
     category_id: str

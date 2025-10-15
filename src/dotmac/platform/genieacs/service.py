@@ -708,7 +708,7 @@ class GenieACSService:
             results=results,
         )
 
-    async def cancel_firmware_upgrade_schedule(self, schedule_id: str) -> dict:
+    async def cancel_firmware_upgrade_schedule(self, schedule_id: str) -> dict[str, Any]:
         """
         Cancel a pending firmware upgrade schedule.
 
@@ -781,7 +781,7 @@ class GenieACSService:
 
         # Execute firmware downloads (simplified - in production use Celery)
         # Here we'll process a limited number concurrently
-        for i, result in enumerate(results[: schedule.max_concurrent]):
+        for _i, result in enumerate(results[: schedule.max_concurrent]):
             try:
                 device_id = result.device_id
                 result.status = "in_progress"
@@ -846,9 +846,7 @@ class GenieACSService:
     # Mass CPE Configuration
     # =========================================================================
 
-    async def create_mass_config_job(
-        self, request: MassConfigRequest
-    ) -> MassConfigResponse:
+    async def create_mass_config_job(self, request: MassConfigRequest) -> MassConfigResponse:
         """
         Create mass configuration job.
 
@@ -931,7 +929,7 @@ class GenieACSService:
 
         return MassConfigResponse(job=job, preview=None, results=results)
 
-    async def cancel_mass_config_job(self, job_id: str) -> dict:
+    async def cancel_mass_config_job(self, job_id: str) -> dict[str, Any]:
         """
         Cancel a pending mass configuration job.
 

@@ -38,9 +38,9 @@ with patch("dotmac.platform.billing.cache.cached_result", mock_cached_result):
         router,
     )
 
-from dotmac.platform.auth.core import UserInfo
-from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.file_storage.service import (
+from dotmac.platform.auth.core import UserInfo  # noqa: E402
+from dotmac.platform.auth.dependencies import get_current_user  # noqa: E402
+from dotmac.platform.file_storage.service import (  # noqa: E402
     FileMetadata,
     get_storage_service,
 )

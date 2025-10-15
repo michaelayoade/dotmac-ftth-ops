@@ -8,12 +8,12 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import get_current_user
-from dotmac.platform.database import get_async_session as get_db
 from dotmac.platform.core.exceptions import NotFoundError, ValidationError
+from dotmac.platform.database import get_async_session as get_db
 from dotmac.platform.services.orchestration import OrchestrationService
 from dotmac.platform.services.tasks import (
     convert_lead_to_customer_async,
@@ -26,15 +26,19 @@ router = APIRouter(prefix="/orchestration", tags=["Orchestration"])
 
 
 # Request/Response Schemas
-class ConvertLeadRequest(BaseModel):
+class ConvertLeadRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request to convert lead to customer."""
+
+    model_config = ConfigDict()
 
     lead_id: UUID
     accepted_quote_id: UUID
 
 
-class ConvertLeadResponse(BaseModel):
+class ConvertLeadResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for lead conversion."""
+
+    model_config = ConfigDict()
 
     customer_id: UUID
     lead_id: UUID
@@ -42,8 +46,10 @@ class ConvertLeadResponse(BaseModel):
     conversion_date: str
 
 
-class ProvisionSubscriberRequest(BaseModel):
+class ProvisionSubscriberRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request to provision a new subscriber."""
+
+    model_config = ConfigDict()
 
     customer_id: UUID
     username: str = Field(..., min_length=3, max_length=64)
@@ -56,8 +62,10 @@ class ProvisionSubscriberRequest(BaseModel):
     site_id: str | None = None
 
 
-class ProvisionSubscriberResponse(BaseModel):
+class ProvisionSubscriberResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for subscriber provisioning."""
+
+    model_config = ConfigDict()
 
     subscriber_id: str
     customer_id: UUID
@@ -67,28 +75,36 @@ class ProvisionSubscriberResponse(BaseModel):
     provisioning_date: str
 
 
-class DeprovisionSubscriberRequest(BaseModel):
+class DeprovisionSubscriberRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request to deprovision a subscriber."""
+
+    model_config = ConfigDict()
 
     reason: str = Field(..., min_length=1)
 
 
-class DeprovisionSubscriberResponse(BaseModel):
+class DeprovisionSubscriberResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for subscriber deprovisioning."""
+
+    model_config = ConfigDict()
 
     subscriber_id: str
     status: str
     deprovisioning_date: str
 
 
-class SuspendSubscriberRequest(BaseModel):
+class SuspendSubscriberRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request to suspend a subscriber."""
+
+    model_config = ConfigDict()
 
     reason: str = Field(..., min_length=1)
 
 
-class SuspendSubscriberResponse(BaseModel):
+class SuspendSubscriberResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for subscriber suspension."""
+
+    model_config = ConfigDict()
 
     subscriber_id: str
     status: str
@@ -131,9 +147,11 @@ async def convert_lead_to_customer(
     except (NotFoundError, ValidationError) as e:
         await db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST
-            if isinstance(e, ValidationError)
-            else status.HTTP_404_NOT_FOUND,
+            status_code=(
+                status.HTTP_400_BAD_REQUEST
+                if isinstance(e, ValidationError)
+                else status.HTTP_404_NOT_FOUND
+            ),
             detail=str(e),
         )
     except Exception as e:
@@ -209,17 +227,19 @@ async def provision_subscriber(
             customer_id=result["customer"].id,
             username=result["subscriber"].username,
             status=result["subscriber"].status.value,
-            ip_address=result["ip_allocation"].get("address")
-            if result.get("ip_allocation")
-            else None,
+            ip_address=(
+                result["ip_allocation"].get("address") if result.get("ip_allocation") else None
+            ),
             provisioning_date=result["provisioning_date"].isoformat(),
         )
     except (NotFoundError, ValidationError) as e:
         await db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST
-            if isinstance(e, ValidationError)
-            else status.HTTP_404_NOT_FOUND,
+            status_code=(
+                status.HTTP_400_BAD_REQUEST
+                if isinstance(e, ValidationError)
+                else status.HTTP_404_NOT_FOUND
+            ),
             detail=str(e),
         )
     except Exception as e:
@@ -401,9 +421,11 @@ async def reactivate_subscriber(
     except (NotFoundError, ValidationError) as e:
         await db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST
-            if isinstance(e, ValidationError)
-            else status.HTTP_404_NOT_FOUND,
+            status_code=(
+                status.HTTP_400_BAD_REQUEST
+                if isinstance(e, ValidationError)
+                else status.HTTP_404_NOT_FOUND
+            ),
             detail=str(e),
         )
     except Exception as e:

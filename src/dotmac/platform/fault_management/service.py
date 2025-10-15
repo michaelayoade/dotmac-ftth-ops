@@ -4,12 +4,12 @@ Alarm Service Layer
 Business logic for alarm management, correlation, and ticket integration.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
 import structlog
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.fault_management.correlation import CorrelationEngine
@@ -17,7 +17,6 @@ from dotmac.platform.fault_management.models import (
     Alarm,
     AlarmNote,
     AlarmRule,
-    AlarmSeverity,
     AlarmStatus,
     MaintenanceWindow,
 )
@@ -47,9 +46,7 @@ class AlarmService:
         self.tenant_id = tenant_id
         self.correlation_engine = CorrelationEngine(session, tenant_id)
 
-    async def create(
-        self, data: AlarmCreate, user_id: UUID | None = None
-    ) -> AlarmResponse:
+    async def create(self, data: AlarmCreate, user_id: UUID | None = None) -> AlarmResponse:
         """
         Create new alarm with automatic correlation.
 
@@ -82,7 +79,7 @@ class AlarmService:
             customer_name=data.customer_name,
             subscriber_count=data.subscriber_count,
             tags=data.tags,
-            metadata=data.metadata,
+            alarm_metadata=data.metadata,
             probable_cause=data.probable_cause,
             recommended_action=data.recommended_action,
             status=AlarmStatus.SUPPRESSED if in_maintenance else AlarmStatus.ACTIVE,
@@ -111,9 +108,7 @@ class AlarmService:
     async def get(self, alarm_id: UUID) -> AlarmResponse | None:
         """Get alarm by ID"""
         result = await self.session.execute(
-            select(Alarm).where(
-                and_(Alarm.id == alarm_id, Alarm.tenant_id == self.tenant_id)
-            )
+            select(Alarm).where(and_(Alarm.id == alarm_id, Alarm.tenant_id == self.tenant_id))
         )
 
         alarm = result.scalar_one_or_none()
@@ -124,9 +119,7 @@ class AlarmService:
     ) -> AlarmResponse | None:
         """Update alarm"""
         result = await self.session.execute(
-            select(Alarm).where(
-                and_(Alarm.id == alarm_id, Alarm.tenant_id == self.tenant_id)
-            )
+            select(Alarm).where(and_(Alarm.id == alarm_id, Alarm.tenant_id == self.tenant_id))
         )
 
         alarm = result.scalar_one_or_none()
@@ -160,9 +153,7 @@ class AlarmService:
     ) -> AlarmResponse | None:
         """Acknowledge alarm"""
         result = await self.session.execute(
-            select(Alarm).where(
-                and_(Alarm.id == alarm_id, Alarm.tenant_id == self.tenant_id)
-            )
+            select(Alarm).where(and_(Alarm.id == alarm_id, Alarm.tenant_id == self.tenant_id))
         )
 
         alarm = result.scalar_one_or_none()
@@ -189,16 +180,12 @@ class AlarmService:
 
         return AlarmResponse.model_validate(alarm)
 
-    async def clear(
-        self, alarm_id: UUID, user_id: UUID | None = None
-    ) -> AlarmResponse | None:
+    async def clear(self, alarm_id: UUID, user_id: UUID | None = None) -> AlarmResponse | None:
         """Clear alarm and correlated children"""
         await self.correlation_engine.clear_correlation(alarm_id)
 
         result = await self.session.execute(
-            select(Alarm).where(
-                and_(Alarm.id == alarm_id, Alarm.tenant_id == self.tenant_id)
-            )
+            select(Alarm).where(and_(Alarm.id == alarm_id, Alarm.tenant_id == self.tenant_id))
         )
 
         alarm = result.scalar_one_or_none()
@@ -215,9 +202,7 @@ class AlarmService:
     ) -> AlarmResponse | None:
         """Resolve alarm"""
         result = await self.session.execute(
-            select(Alarm).where(
-                and_(Alarm.id == alarm_id, Alarm.tenant_id == self.tenant_id)
-            )
+            select(Alarm).where(and_(Alarm.id == alarm_id, Alarm.tenant_id == self.tenant_id))
         )
 
         alarm = result.scalar_one_or_none()
@@ -293,16 +278,12 @@ class AlarmService:
             filters.append(Alarm.first_occurrence <= to_date)
 
         # Total alarms
-        result = await self.session.execute(
-            select(func.count(Alarm.id)).where(and_(*filters))
-        )
+        result = await self.session.execute(select(func.count(Alarm.id)).where(and_(*filters)))
         total = result.scalar() or 0
 
         # Active alarms
         result = await self.session.execute(
-            select(func.count(Alarm.id)).where(
-                and_(*filters, Alarm.status == AlarmStatus.ACTIVE)
-            )
+            select(func.count(Alarm.id)).where(and_(*filters, Alarm.status == AlarmStatus.ACTIVE))
         )
         active = result.scalar() or 0
 
@@ -316,25 +297,19 @@ class AlarmService:
 
         # By source
         result = await self.session.execute(
-            select(Alarm.source, func.count(Alarm.id))
-            .where(and_(*filters))
-            .group_by(Alarm.source)
+            select(Alarm.source, func.count(Alarm.id)).where(and_(*filters)).group_by(Alarm.source)
         )
         source_counts = {str(src.value): count for src, count in result}
 
         # By status
         result = await self.session.execute(
-            select(Alarm.status, func.count(Alarm.id))
-            .where(and_(*filters))
-            .group_by(Alarm.status)
+            select(Alarm.status, func.count(Alarm.id)).where(and_(*filters)).group_by(Alarm.status)
         )
         status_counts = {str(st.value): count for st, count in result}
 
         # With tickets
         result = await self.session.execute(
-            select(func.count(Alarm.id)).where(
-                and_(*filters, Alarm.ticket_id.isnot(None))
-            )
+            select(func.count(Alarm.id)).where(and_(*filters, Alarm.ticket_id.isnot(None)))
         )
         with_tickets = result.scalar() or 0
 
@@ -367,8 +342,7 @@ class AlarmService:
             major_alarms=severity_counts.get("major", 0),
             minor_alarms=severity_counts.get("minor", 0),
             acknowledged_alarms=status_counts.get("acknowledged", 0),
-            unacknowledged_alarms=active
-            - status_counts.get("acknowledged", 0),
+            unacknowledged_alarms=active - status_counts.get("acknowledged", 0),
             with_tickets=with_tickets,
             without_tickets=total - with_tickets,
             avg_resolution_time_minutes=avg_resolution_minutes,
@@ -377,9 +351,7 @@ class AlarmService:
             alarms_by_status=status_counts,
         )
 
-    async def add_note(
-        self, alarm_id: UUID, data: AlarmNoteCreate, user_id: UUID
-    ) -> None:
+    async def add_note(self, alarm_id: UUID, data: AlarmNoteCreate, user_id: UUID) -> None:
         """Add note to alarm"""
         note = AlarmNote(
             tenant_id=self.tenant_id,
@@ -391,6 +363,200 @@ class AlarmService:
         await self.session.commit()
 
         logger.info("alarm.note_added", alarm_id=alarm_id, user_id=user_id)
+
+    async def create_ticket_from_alarm(
+        self,
+        alarm_id: UUID,
+        priority: str | None,
+        additional_notes: str | None,
+        assign_to_user_id: UUID | None,
+        user_id: UUID,
+    ) -> dict[str, Any]:
+        """
+        Manually create a support ticket from an alarm.
+
+        Args:
+            alarm_id: ID of the alarm to create ticket from
+            priority: Ticket priority (low, normal, high, critical)
+            additional_notes: Additional context for the ticket
+            assign_to_user_id: User to assign ticket to
+            user_id: User creating the ticket
+
+        Returns:
+            Dictionary with ticket creation details
+
+        Raises:
+            ValueError: If alarm not found or already has a ticket
+        """
+        from dotmac.platform.auth.core import UserInfo
+        from dotmac.platform.ticketing.models import TicketActorType, TicketPriority, TicketType
+        from dotmac.platform.ticketing.schemas import TicketCreate
+        from dotmac.platform.ticketing.service import TicketService
+
+        # Get alarm
+        result = await self.session.execute(
+            select(Alarm).where(and_(Alarm.id == alarm_id, Alarm.tenant_id == self.tenant_id))
+        )
+        alarm = result.scalar_one_or_none()
+        if not alarm:
+            raise ValueError(f"Alarm {alarm_id} not found")
+
+        # Check if alarm already has a ticket
+        if alarm.ticket_id:
+            raise ValueError(
+                f"Alarm {alarm_id} already has ticket {alarm.ticket_id}. "
+                "Please update the existing ticket instead."
+            )
+
+        # Map alarm priority to ticket priority
+        priority_mapping = {
+            "critical": TicketPriority.CRITICAL,
+            "major": TicketPriority.HIGH,
+            "minor": TicketPriority.NORMAL,
+            "warning": TicketPriority.LOW,
+            "info": TicketPriority.LOW,
+        }
+
+        # Use provided priority or map from alarm severity
+        if priority:
+            ticket_priority = TicketPriority(priority)
+        else:
+            ticket_priority = priority_mapping.get(alarm.severity.value, TicketPriority.NORMAL)
+
+        # Build ticket subject and message
+        subject = f"[ALARM] {alarm.title}"
+
+        message_parts = [
+            "**Alarm Details:**",
+            f"- **ID:** {alarm.alarm_id}",
+            f"- **Severity:** {alarm.severity.value.upper()}",
+            f"- **Source:** {alarm.source.value}",
+            f"- **Type:** {alarm.alarm_type}",
+            f"- **Status:** {alarm.status.value}",
+            "",
+            "**Description:**",
+            alarm.description or "No description provided",
+        ]
+
+        if alarm.resource_type and alarm.resource_id:
+            message_parts.extend(
+                [
+                    "",
+                    "**Affected Resource:**",
+                    f"- **Type:** {alarm.resource_type}",
+                    f"- **ID:** {alarm.resource_id}",
+                    f"- **Name:** {alarm.resource_name or 'N/A'}",
+                ]
+            )
+
+        if alarm.customer_id:
+            message_parts.extend(
+                [
+                    "",
+                    "**Customer Impact:**",
+                    f"- **Customer:** {alarm.customer_name or alarm.customer_id}",
+                    f"- **Affected Subscribers:** {alarm.subscriber_count}",
+                ]
+            )
+
+        if alarm.probable_cause:
+            message_parts.extend(
+                [
+                    "",
+                    "**Probable Cause:**",
+                    alarm.probable_cause,
+                ]
+            )
+
+        if alarm.recommended_action:
+            message_parts.extend(
+                [
+                    "",
+                    "**Recommended Action:**",
+                    alarm.recommended_action,
+                ]
+            )
+
+        if additional_notes:
+            message_parts.extend(
+                [
+                    "",
+                    "**Additional Notes:**",
+                    additional_notes,
+                ]
+            )
+
+        message_parts.extend(
+            [
+                "",
+                "**Timing:**",
+                f"- **First Occurrence:** {alarm.first_occurrence.isoformat()}",
+                f"- **Last Occurrence:** {alarm.last_occurrence.isoformat()}",
+                f"- **Occurrence Count:** {alarm.occurrence_count}",
+            ]
+        )
+
+        message = "\n".join(message_parts)
+
+        # Determine ticket type based on alarm type
+        ticket_type = TicketType.FAULT
+        if "outage" in alarm.alarm_type.lower():
+            ticket_type = TicketType.OUTAGE
+        elif "maintenance" in alarm.alarm_type.lower():
+            ticket_type = TicketType.MAINTENANCE
+
+        # Create ticket payload
+        ticket_data = TicketCreate(
+            subject=subject,
+            message=message,
+            target_type=TicketActorType.TENANT,
+            priority=ticket_priority,
+            metadata={
+                "alarm_id": str(alarm.id),
+                "external_alarm_id": alarm.alarm_id,
+                "alarm_severity": alarm.severity.value,
+                "alarm_source": alarm.source.value,
+                "alarm_type": alarm.alarm_type,
+                "resource_type": alarm.resource_type,
+                "resource_id": alarm.resource_id,
+                "created_from_alarm": True,
+            },
+            ticket_type=ticket_type,
+            affected_services=[alarm.resource_type] if alarm.resource_type else [],
+        )
+
+        # Create ticket using ticket service
+        ticket_service = TicketService(self.session)
+        user_info = UserInfo(
+            user_id=user_id,
+            email="",  # Will be filled by ticket service
+            role="",  # Will be filled by ticket service
+        )
+
+        ticket = await ticket_service.create_ticket(
+            ticket_data,
+            user_info,
+            self.tenant_id,
+        )
+
+        # Update alarm with ticket reference
+        alarm.ticket_id = ticket.id
+        await self.session.commit()
+
+        logger.info(
+            "alarm.ticket_created",
+            alarm_id=alarm_id,
+            ticket_id=ticket.id,
+            ticket_number=ticket.ticket_number,
+            user_id=user_id,
+        )
+
+        return {
+            "alarm_id": str(alarm.id),
+            "ticket_id": str(ticket.id),
+            "ticket_number": ticket.ticket_number,
+            "message": f"Ticket {ticket.ticket_number} created successfully from alarm",
+        }
 
     # Alarm Rules
 

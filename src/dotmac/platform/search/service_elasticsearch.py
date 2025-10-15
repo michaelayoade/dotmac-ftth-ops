@@ -395,7 +395,7 @@ class SearchService:
 
         return query
 
-    def _build_sort(self, sort_specs: list) -> list[dict[str, Any]] | None:
+    def _build_sort(self, sort_specs: list[Any]) -> list[dict[str, Any]] | None:
         """Build Elasticsearch sort from sort specifications."""
         if not sort_specs:
             return None

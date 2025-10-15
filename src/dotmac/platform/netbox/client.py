@@ -15,7 +15,7 @@ from dotmac.platform.core.http_client import RobustHTTPClient
 logger = structlog.get_logger(__name__)
 
 
-class NetBoxClient(RobustHTTPClient):
+class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
     """
     NetBox API Client
 
@@ -47,14 +47,23 @@ class NetBoxClient(RobustHTTPClient):
         Initialize NetBox client with robust HTTP capabilities.
 
         Args:
-            base_url: NetBox instance URL (defaults to NETBOX_URL env var)
+            base_url: NetBox instance URL (defaults to settings.external_services.netbox_url)
             api_token: API token for authentication (defaults to NETBOX_API_TOKEN env var)
             tenant_id: Tenant ID for multi-tenancy support
             verify_ssl: Verify SSL certificates (default True)
             timeout_seconds: Default timeout in seconds
             max_retries: Maximum retry attempts
         """
-        base_url = base_url or os.getenv("NETBOX_URL", "http://localhost:8080")
+        # Load from centralized settings (Phase 2 implementation)
+        if base_url is None:
+            try:
+                from dotmac.platform.settings import settings
+
+                base_url = settings.external_services.netbox_url
+            except (ImportError, AttributeError):
+                # Fallback to environment variable if settings not available
+                base_url = os.getenv("NETBOX_URL", "http://localhost:8080")
+
         api_token = api_token or os.getenv("NETBOX_API_TOKEN", "")
 
         # Initialize robust HTTP client
@@ -446,7 +455,9 @@ class NetBoxClient(RobustHTTPClient):
 
     async def update_circuit(self, circuit_id: int, data: dict[str, Any]) -> dict[str, Any]:
         """Update circuit"""
-        response = await self._netbox_request("PATCH", f"circuits/circuits/{circuit_id}/", json=data)
+        response = await self._netbox_request(
+            "PATCH", f"circuits/circuits/{circuit_id}/", json=data
+        )
         return cast(dict[str, Any], response)
 
     async def delete_circuit(self, circuit_id: int) -> None:
@@ -467,7 +478,9 @@ class NetBoxClient(RobustHTTPClient):
         if site:
             params["site"] = site
 
-        response = await self._netbox_request("GET", "circuits/circuit-terminations/", params=params)
+        response = await self._netbox_request(
+            "GET", "circuits/circuit-terminations/", params=params
+        )
         return cast(dict[str, Any], response)
 
     async def create_circuit_termination(self, data: dict[str, Any]) -> dict[str, Any]:

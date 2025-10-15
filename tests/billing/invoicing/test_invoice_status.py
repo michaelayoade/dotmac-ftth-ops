@@ -32,7 +32,7 @@ class TestInvoiceServiceStatusManagement:
         mock_db.execute = AsyncMock(return_value=build_success_result(mock_invoice_entity))
 
         # Finalize invoice
-        result = await service.finalize_invoice(sample_tenant_id, mock_invoice_entity.invoice_id)
+        await service.finalize_invoice(sample_tenant_id, mock_invoice_entity.invoice_id)
 
         # Verify status update
         assert mock_invoice_entity.status == InvoiceStatus.OPEN
@@ -77,7 +77,7 @@ class TestInvoiceServiceStatusManagement:
         mock_db.execute = AsyncMock(return_value=build_success_result(mock_invoice_entity))
 
         # Void invoice
-        result = await service.void_invoice(
+        await service.void_invoice(
             sample_tenant_id,
             mock_invoice_entity.invoice_id,
             reason="Test void",

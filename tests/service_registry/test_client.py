@@ -456,7 +456,7 @@ class TestServiceClient:
                 mock_request.return_value = mock_response
 
                 # Make multiple requests and collect URLs that were used
-                for i in range(10):
+                for _i in range(10):
                     await client.get("/test")
 
                 # Extract the URLs that were used

@@ -5,8 +5,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Shield, Clock } from "lucide-react"
-import { platformAdminService, type AuditAction } from "@/lib/services/platform-admin-service"
+import { platformAdminService } from "@/lib/services/platform-admin-service"
 import { useToast } from "@/components/ui/use-toast"
+
+// Type definition for audit actions displayed in UI
+interface AuditAction {
+  id: string
+  action: string
+  resourceType: string
+  timestamp: string
+  userId: string
+  tenantId?: string
+  status: 'success' | 'failure'
+  details?: Record<string, unknown>
+}
 
 export function AuditLogViewer() {
   const [actions, setActions] = useState<AuditAction[]>([])
@@ -16,8 +28,18 @@ export function AuditLogViewer() {
   const loadAuditLog = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await platformAdminService.getAuditLog(50)
-      setActions(data.actions || [])
+      const data = await platformAdminService.getAuditLogs()
+      const mappedActions: AuditAction[] = (data.entries ?? []).map((entry) => ({
+        id: entry.id,
+        action: entry.action,
+        resourceType: entry.resource_type,
+        timestamp: entry.timestamp,
+        userId: entry.user_id,
+        tenantId: entry.tenant_id,
+        status: entry.status,
+        details: entry.changes ?? undefined,
+      }))
+      setActions(mappedActions)
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to fetch audit log"
       toast({ title: "Unable to load audit log", description: message, variant: "destructive" })
@@ -75,14 +97,20 @@ export function AuditLogViewer() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="outline">{action.action}</Badge>
-                        {action.target_tenant && (
+                        <Badge variant="secondary" className="text-xs uppercase tracking-wide">
+                          {action.status ?? 'unknown'}
+                        </Badge>
+                        {action.tenantId && (
                           <Badge variant="secondary" className="font-mono text-xs">
-                            {action.target_tenant}
+                            {action.tenantId}
                           </Badge>
                         )}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        User: <span className="font-mono">{action.user_id}</span>
+                        User: <span className="font-mono">{action.userId}</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Resource: <span className="font-mono">{action.resourceType}</span>
                       </p>
                       {action.details && Object.keys(action.details).length > 0 && (
                         <pre className="mt-2 text-xs bg-muted p-2 rounded overflow-auto">

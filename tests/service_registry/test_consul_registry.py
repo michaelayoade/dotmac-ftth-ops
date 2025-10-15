@@ -149,7 +149,7 @@ class TestConsulServiceRegistry:
     @pytest.mark.asyncio
     async def test_register_service_with_tags_and_meta(self, registry, mock_consul):
         """Test service registration with tags and metadata."""
-        service_id = await registry.register(
+        await registry.register(
             name="api-service",
             address="10.0.1.5",
             port=9090,

@@ -136,7 +136,7 @@ class BaseIntegration(ABC):
 
             for key, vault_path in secrets_mapping.items():
                 try:
-                    secret_value = await get_vault_secret_async(vault_path)
+                    secret_value: Any = await get_vault_secret_async(vault_path)
                     if secret_value:
                         # Convert dict to string if needed for secrets storage
                         if isinstance(secret_value, dict):

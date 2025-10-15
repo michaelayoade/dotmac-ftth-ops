@@ -22,7 +22,8 @@ def upgrade() -> None:
     """Create diagnostics tables."""
 
     # Create DiagnosticType enum
-    op.execute("""
+    op.execute(
+        """
         DO $$ BEGIN
             CREATE TYPE diagnostictype AS ENUM (
                 'connectivity_check',
@@ -43,10 +44,12 @@ def upgrade() -> None:
         EXCEPTION
             WHEN duplicate_object THEN null;
         END $$;
-    """)
+    """
+    )
 
     # Create DiagnosticStatus enum
-    op.execute("""
+    op.execute(
+        """
         DO $$ BEGIN
             CREATE TYPE diagnosticstatus AS ENUM (
                 'pending',
@@ -58,10 +61,12 @@ def upgrade() -> None:
         EXCEPTION
             WHEN duplicate_object THEN null;
         END $$;
-    """)
+    """
+    )
 
     # Create DiagnosticSeverity enum
-    op.execute("""
+    op.execute(
+        """
         DO $$ BEGIN
             CREATE TYPE diagnosticseverity AS ENUM (
                 'info',
@@ -72,7 +77,8 @@ def upgrade() -> None:
         EXCEPTION
             WHEN duplicate_object THEN null;
         END $$;
-    """)
+    """
+    )
 
     # Create diagnostic_runs table
     op.create_table(

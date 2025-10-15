@@ -18,7 +18,7 @@ from .schemas import (
 )
 
 
-class OnboardingAdminUserCreate(BaseModel):
+class OnboardingAdminUserCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Details for creating the initial tenant administrator."""
 
     model_config = ConfigDict(
@@ -55,7 +55,7 @@ class OnboardingAdminUserCreate(BaseModel):
         return self
 
 
-class TenantOnboardingOptions(BaseModel):
+class TenantOnboardingOptions(BaseModel):  # BaseModel resolves to Any in isolation
     """Toggleable options controlling onboarding automation behaviour."""
 
     model_config = ConfigDict(validate_assignment=True)
@@ -75,7 +75,7 @@ class TenantOnboardingOptions(BaseModel):
     )
 
 
-class TenantOnboardingRequest(BaseModel):
+class TenantOnboardingRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request body for tenant onboarding automation."""
 
     model_config = ConfigDict(
@@ -123,7 +123,7 @@ class TenantOnboardingRequest(BaseModel):
         return self
 
 
-class TenantOnboardingResponse(BaseModel):
+class TenantOnboardingResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response payload returned after onboarding automation."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -157,7 +157,7 @@ class TenantOnboardingResponse(BaseModel):
     logs: list[str] = Field(default_factory=list, description="Human-readable activity log.")
 
 
-class TenantOnboardingStatusResponse(BaseModel):
+class TenantOnboardingStatusResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response payload summarising onboarding status for a tenant."""
 
     model_config = ConfigDict(from_attributes=True)

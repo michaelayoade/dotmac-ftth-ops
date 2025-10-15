@@ -1,13 +1,13 @@
 """
-distributed locks using Redis SET NX EX.
+Distributed locks using Redis SET NX EX.
 
 """
 
 import asyncio
 import uuid
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, Awaitable, Callable, cast
 
 import redis.asyncio as redis
 import structlog
@@ -17,10 +17,10 @@ from dotmac.platform.settings import settings
 logger = structlog.get_logger(__name__)
 
 # Global Redis client
-_redis_client: redis.Redis | None = None
+_redis_client: redis.Redis[Any] | None = None
 
 
-async def get_redis_client() -> redis.Redis:
+async def get_redis_client() -> redis.Redis[Any]:
     """Get Redis client for locks."""
     global _redis_client
     if _redis_client is None:
@@ -31,7 +31,7 @@ async def get_redis_client() -> redis.Redis:
 @asynccontextmanager
 async def distributed_lock(
     key: str, timeout: int = 30, retry_delay: float = 0.1
-) -> AsyncGenerator[None, None]:
+) -> AsyncGenerator[None]:
     """
     Simple distributed lock using Redis SET NX EX.
 
@@ -74,10 +74,11 @@ async def distributed_lock(
                 return 0
             end
             """
-            # Handle both sync and async returns from eval
-            result = client.eval(lua_script, 1, lock_key, lock_value)
-            if asyncio.iscoroutine(result):
-                await result
+            eval_fn = cast(
+                Callable[[str, int, str, str], Awaitable[Any]],
+                client.eval,
+            )
+            await eval_fn(lua_script, 1, lock_key, lock_value)
             logger.debug("Lock released", key=key, value=lock_value)
 
 
@@ -104,10 +105,11 @@ async def release_lock(key: str, lock_value: str) -> bool:
         return 0
     end
     """
-    # Handle both sync and async returns from eval
-    result = client.eval(lua_script, 1, lock_key, lock_value)
-    if asyncio.iscoroutine(result):
-        result = await result
+    eval_fn = cast(
+        Callable[[str, int, str, str], Awaitable[Any]],
+        client.eval,
+    )
+    result = await eval_fn(lua_script, 1, lock_key, lock_value)
     return bool(result)
 
 
@@ -166,7 +168,7 @@ class DistributedLock:
         await self.release()
 
 
-# For even simpler use cases, use Redis directly:
+# For even simpler use cases, use Redis  # type: ignore[misc] directly:
 #
 # import redis.asyncio as redis
 # client = redis.from_url("redis://localhost")

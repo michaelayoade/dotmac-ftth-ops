@@ -54,8 +54,30 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 bearer_scheme = HTTPBearer(auto_error=False)
 
-# Configuration from settings or defaults
+# Configuration from centralized settings
 try:
+    from ..settings import settings
+
+    # Use new centralized AuthSettings (Phase 1 implementation)
+    _jwt_secret = (
+        settings.auth.jwt_secret_key or settings.jwt.secret_key
+    )  # Fallback to old jwt settings
+    _jwt_algorithm = settings.auth.jwt_algorithm
+    _access_token_expire_minutes = settings.auth.access_token_expire_minutes
+    _refresh_token_expire_days = settings.auth.refresh_token_expire_days
+    _redis_url = settings.auth.session_redis_url
+    _default_user_role = settings.auth.default_user_role
+except ImportError:
+    # Fallback values if settings not available (should only happen in tests)
+    _jwt_secret = "default-secret-change-this"
+    _jwt_algorithm = "HS256"
+    _access_token_expire_minutes = 15
+    _refresh_token_expire_days = 7
+    _redis_url = "redis://localhost:6379"
+    _default_user_role = "user"
+except AttributeError:
+    # Handle case where settings exists but auth field is not yet initialized
+    # This provides backwards compatibility during rollout
     from ..settings import settings
 
     _jwt_secret = settings.jwt.secret_key
@@ -63,16 +85,7 @@ try:
     _access_token_expire_minutes = settings.jwt.access_token_expire_minutes
     _refresh_token_expire_days = settings.jwt.refresh_token_expire_days
     _redis_url = settings.redis.redis_url
-    # Get default role from settings (now has proper field with default="user")
-    _default_user_role = settings.default_user_role
-except ImportError:
-    # Fallback values if settings not available
-    _jwt_secret = "default-secret-change-this"
-    _jwt_algorithm = "HS256"
-    _access_token_expire_minutes = 15
-    _refresh_token_expire_days = 7
-    _redis_url = "redis://localhost:6379"
-    _default_user_role = "user"  # Standard user role as fallback
+    _default_user_role = getattr(settings, "default_user_role", "user")
 
 # Module constants
 JWT_SECRET = _jwt_secret
@@ -126,8 +139,8 @@ class UserInfo(BaseModel):
     user_id: str  # String representation of UUID for JWT/API compatibility
     email: EmailStr | None = None
     username: str | None = None
-    roles: list[str] = Field(default_factory=list)
-    permissions: list[str] = Field(default_factory=list)
+    roles: list[str] = Field(default_factory=lambda: [])
+    permissions: list[str] = Field(default_factory=lambda: [])
     tenant_id: str | None = None  # None for platform admins
     is_platform_admin: bool = Field(
         default=False, description="Platform admin with cross-tenant access"
@@ -248,7 +261,7 @@ class JWTService:
         expires_delta = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
         return self._create_token(data, expires_delta)
 
-    def _create_token(self, data: dict, expires_delta: timedelta) -> str:
+    def _create_token(self, data: dict[str, Any], expires_delta: timedelta) -> str:
         """Internal token creation."""
         to_encode = data.copy()
         expire = datetime.now(UTC) + expires_delta
@@ -726,7 +739,7 @@ class APIKeyService:
 
         return api_key
 
-    async def verify_api_key(self, api_key: str) -> dict | None:
+    async def verify_api_key(self, api_key: str) -> dict[str, Any] | None:
         """
         Verify API key by hashing and looking up.
 
@@ -965,7 +978,7 @@ async def get_current_user_optional(
         return None
 
 
-def _claims_to_user_info(claims: dict) -> UserInfo:
+def _claims_to_user_info(claims: dict[str, Any]) -> UserInfo:
     """Convert JWT claims to UserInfo."""
     return UserInfo(
         user_id=claims.get("sub", ""),
@@ -1016,12 +1029,7 @@ def configure_auth(
     redis_url: str | None = None,
 ) -> None:
     """Configure auth services."""
-    global \
-        JWT_SECRET, \
-        JWT_ALGORITHM, \
-        ACCESS_TOKEN_EXPIRE_MINUTES, \
-        REFRESH_TOKEN_EXPIRE_DAYS, \
-        REDIS_URL
+    global JWT_SECRET, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, REDIS_URL
     global jwt_service, session_manager, oauth_service, api_key_service
 
     # Dynamic configuration requires "constant" reassignment

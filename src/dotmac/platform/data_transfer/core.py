@@ -3,7 +3,7 @@ Core classes and types for simplified data transfer using pandas.
 """
 
 from abc import abstractmethod
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 from pathlib import Path
@@ -76,7 +76,7 @@ class CompressionType(str, Enum):
     BZIP2 = "bzip2"
 
 
-class ProgressInfo(BaseModel):
+class ProgressInfo(BaseModel):  # BaseModel resolves to Any in isolation
     """Progress tracking information."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
@@ -128,23 +128,23 @@ class ProgressInfo(BaseModel):
         return 100.0  # Default to 100% if no records processed yet
 
 
-class DataRecord(BaseModel):
+class DataRecord(BaseModel):  # BaseModel resolves to Any in isolation
     """Single data record."""
 
     model_config = ConfigDict()
 
     data: dict[str, Any]
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
-class DataBatch(BaseModel):
+class DataBatch(BaseModel):  # BaseModel resolves to Any in isolation
     """Batch of data records."""
 
     model_config = ConfigDict()
 
     records: list[DataRecord]
     batch_number: int
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
     @property
     def size(self) -> int:
@@ -152,7 +152,7 @@ class DataBatch(BaseModel):
         return len(self.records)
 
 
-class TransferConfig(BaseModel):
+class TransferConfig(BaseModel):  # BaseModel resolves to Any in isolation
     """Configuration for transfer operations."""
 
     model_config = ConfigDict()
@@ -170,7 +170,7 @@ class TransferConfig(BaseModel):
     retry_delay: float = 1.0
 
 
-class ImportOptions(BaseModel):
+class ImportOptions(BaseModel):  # BaseModel resolves to Any in isolation
     """Import-specific options."""
 
     model_config = ConfigDict()
@@ -183,11 +183,11 @@ class ImportOptions(BaseModel):
     json_lines: bool = False
     xml_record_element: str | None = None
     encoding: str = "utf-8"
-    na_values: list[str] = Field(default_factory=list)
+    na_values: list[str] = Field(default_factory=lambda: [])
     parse_dates: bool = False
 
 
-class ExportOptions(BaseModel):
+class ExportOptions(BaseModel):  # BaseModel resolves to Any in isolation
     """Export-specific options."""
 
     model_config = ConfigDict()
@@ -275,15 +275,11 @@ class BaseImporter(BaseDataProcessor):
         self.options = options
 
     @abstractmethod
-    async def import_from_file(self, file_path: Path) -> AsyncGenerator[DataBatch, None]:
+    def import_from_file(self, file_path: Path) -> AsyncIterator[DataBatch]:
         """Import data from file."""
-        # This is an abstract async generator method
-        # Subclasses must implement this with yield statements
-        if False:  # pragma: no cover
-            yield  # This makes it a generator function
         raise NotImplementedError("Subclasses must implement import_from_file")
 
-    async def process(self, file_path: Path) -> AsyncGenerator[DataBatch, None]:
+    async def process(self, file_path: Path) -> AsyncIterator[DataBatch]:
         """Process import operation."""
         async for batch in self.import_from_file(file_path):
             yield batch
@@ -304,7 +300,7 @@ class BaseExporter(BaseDataProcessor):
     @abstractmethod
     async def export_to_file(
         self,
-        data: AsyncGenerator[DataBatch, None],
+        data: AsyncGenerator[DataBatch],
         file_path: Path,
     ) -> ProgressInfo:
         """Export data to file."""
@@ -312,7 +308,7 @@ class BaseExporter(BaseDataProcessor):
 
     async def process(
         self,
-        data: AsyncGenerator[DataBatch, None],
+        data: AsyncGenerator[DataBatch],
         file_path: Path,
     ) -> ProgressInfo:
         """Process export operation."""

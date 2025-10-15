@@ -509,7 +509,7 @@ class PartnerService:
     async def update_referral(
         self,
         referral_id: UUID | str,
-        data: ReferralLeadUpdate | dict,
+        data: ReferralLeadUpdate | dict[str, Any],
     ) -> ReferralLead | None:
         """Update referral lead."""
         referral_id = validate_uuid(referral_id, "referral_id")

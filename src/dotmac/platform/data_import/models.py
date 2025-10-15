@@ -49,7 +49,7 @@ class ImportJobStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-class ImportJob(Base, TimestampMixin, TenantMixin):
+class ImportJob(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Track import jobs and their progress."""
 
     __tablename__ = "data_import_jobs"
@@ -153,7 +153,7 @@ class ImportJob(Base, TimestampMixin, TenantMixin):
         return (end_time - self.started_at).total_seconds()
 
 
-class ImportFailure(Base, TimestampMixin, TenantMixin):
+class ImportFailure(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Track individual import failures for debugging and reprocessing."""
 
     __tablename__ = "data_import_failures"

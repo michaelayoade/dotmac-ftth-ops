@@ -294,7 +294,7 @@ async def _test_service_connectivity(
 # Celery Tasks
 
 
-@celery_app.task(
+@celery_app.task(  # type: ignore[misc]  # Celery decorator is untyped
     name="lifecycle.execute_provisioning_workflow",
     bind=True,
     max_retries=3,
@@ -325,7 +325,7 @@ def execute_provisioning_workflow_task(
         raise self.retry(exc=exc)
 
 
-@celery_app.task(name="lifecycle.process_scheduled_terminations", bind=True)
+@celery_app.task(name="lifecycle.process_scheduled_terminations", bind=True)  # type: ignore[misc]  # Celery decorator is untyped
 def process_scheduled_terminations_task(self: Task) -> dict[str, Any]:
     """
     Process services scheduled for termination.
@@ -401,7 +401,7 @@ def process_scheduled_terminations_task(self: Task) -> dict[str, Any]:
     return result
 
 
-@celery_app.task(name="lifecycle.process_auto_resume", bind=True)
+@celery_app.task(name="lifecycle.process_auto_resume", bind=True)  # type: ignore[misc]  # Celery decorator is untyped
 def process_auto_resume_task(self: Task) -> dict[str, Any]:
     """
     Process services scheduled for automatic resumption.
@@ -476,7 +476,7 @@ def process_auto_resume_task(self: Task) -> dict[str, Any]:
     return result
 
 
-@celery_app.task(name="lifecycle.perform_health_checks", bind=True)
+@celery_app.task(name="lifecycle.perform_health_checks", bind=True)  # type: ignore[misc]  # Celery decorator is untyped
 def perform_health_checks_task(self: Task) -> dict[str, Any]:
     """
     Perform automated health checks on active services.
@@ -561,7 +561,7 @@ def perform_health_checks_task(self: Task) -> dict[str, Any]:
     return result
 
 
-@celery_app.task(name="lifecycle.process_scheduled_activations", bind=True)
+@celery_app.task(name="lifecycle.process_scheduled_activations", bind=True)  # type: ignore[misc]  # Celery decorator is untyped
 def process_scheduled_activations_task(self: Task) -> dict[str, Any]:
     """
     Process services scheduled for activation.
@@ -596,6 +596,7 @@ def process_scheduled_activations_task(self: Task) -> dict[str, Any]:
                     if "scheduled_activation_datetime" in service_instance.service_metadata:
                         del service_instance.service_metadata["scheduled_activation_datetime"]
                         from sqlalchemy.orm import attributes
+
                         attributes.flag_modified(service_instance, "service_metadata")
 
                     await service._create_lifecycle_event(
@@ -625,7 +626,7 @@ def process_scheduled_activations_task(self: Task) -> dict[str, Any]:
     return result
 
 
-@celery_app.task(name="lifecycle.rollback_failed_workflows", bind=True)
+@celery_app.task(name="lifecycle.rollback_failed_workflows", bind=True)  # type: ignore[misc]  # Celery decorator is untyped
 def rollback_failed_workflows_task(self: Task, tenant_id: str | None = None) -> dict[str, Any]:
     """
     Automatically rollback failed provisioning workflows.
@@ -661,7 +662,7 @@ def rollback_failed_workflows_task(self: Task, tenant_id: str | None = None) -> 
                     select(ProvisioningWorkflow.tenant_id)
                     .where(
                         ProvisioningWorkflow.status == ProvisioningStatus.FAILED,
-                        ProvisioningWorkflow.rollback_completed == False,
+                        ProvisioningWorkflow.rollback_completed.is_(False),
                     )
                     .distinct()
                 )

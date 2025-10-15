@@ -54,7 +54,7 @@ class SettingsCategory(str, Enum):
         return display_names.get(category, category.value)
 
 
-class SettingField(AppBaseModel):
+class SettingField(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Individual setting field metadata."""
 
     name: str = Field(description="Field name")
@@ -67,7 +67,7 @@ class SettingField(AppBaseModel):
     validation_rules: dict[str, Any] | None = Field(None, description="Validation rules")
 
 
-class SettingsResponse(AppBaseModel):
+class SettingsResponse(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Response model for settings retrieval."""
 
     category: SettingsCategory = Field(description="Settings category")
@@ -77,7 +77,7 @@ class SettingsResponse(AppBaseModel):
     updated_by: str | None = Field(None, description="Last updated by user")
 
 
-class SettingsUpdateRequest(AppBaseModel):
+class SettingsUpdateRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for updating settings."""
 
     updates: dict[str, Any] = Field(description="Field updates as key-value pairs")
@@ -96,7 +96,7 @@ class SettingsUpdateRequest(AppBaseModel):
         return v
 
 
-class SettingsValidationResult(AppBaseModel):
+class SettingsValidationResult(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Result of settings validation."""
 
     valid: bool = Field(description="Whether all settings are valid")
@@ -107,7 +107,7 @@ class SettingsValidationResult(AppBaseModel):
     restart_required: bool = Field(False, description="Whether changes require restart")
 
 
-class AuditLog(AppBaseModel):
+class AuditLog(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Audit log entry for settings changes."""
 
     id: UUID = Field(description="Audit log ID")
@@ -122,7 +122,7 @@ class AuditLog(AppBaseModel):
     user_agent: str | None = Field(None, description="Client user agent")
 
 
-class SettingsBackup(AppBaseModel):
+class SettingsBackup(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Settings backup model."""
 
     id: UUID = Field(description="Backup ID")
@@ -134,7 +134,7 @@ class SettingsBackup(AppBaseModel):
     settings_data: dict[str, Any] = Field(description="Backup data")
 
 
-class SettingsCategoryInfo(AppBaseModel):
+class SettingsCategoryInfo(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Information about a settings category."""
 
     category: SettingsCategory = Field(description="Category identifier")
@@ -146,7 +146,7 @@ class SettingsCategoryInfo(AppBaseModel):
     last_updated: datetime | None = Field(None, description="Last update time")
 
 
-class BulkSettingsUpdate(AppBaseModel):
+class BulkSettingsUpdate(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request for updating multiple categories at once."""
 
     updates: dict[SettingsCategory, dict[str, Any]] = Field(description="Updates by category")
@@ -154,7 +154,7 @@ class BulkSettingsUpdate(AppBaseModel):
     reason: str | None = Field(None, description="Reason for bulk update")
 
 
-class SettingsExportRequest(AppBaseModel):
+class SettingsExportRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request for exporting settings."""
 
     categories: list[SettingsCategory] | None = Field(
@@ -164,7 +164,7 @@ class SettingsExportRequest(AppBaseModel):
     format: str = Field("json", description="Export format (json, yaml, env)")
 
 
-class SettingsImportRequest(AppBaseModel):
+class SettingsImportRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request for importing settings."""
 
     data: dict[str, Any] = Field(description="Settings data to import")
@@ -176,7 +176,7 @@ class SettingsImportRequest(AppBaseModel):
     reason: str | None = Field(None, description="Reason for import")
 
 
-class AdminSettingsAuditEntry(Base, TimestampMixin, TenantMixin):
+class AdminSettingsAuditEntry(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Database model for admin settings audit logs."""
 
     __tablename__ = "admin_settings_audit_log"

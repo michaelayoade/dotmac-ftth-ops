@@ -72,7 +72,7 @@ export const useFeatureFlags = () => {
         enabled,
       });
 
-      const success = ('success' in response && (response as any).success) || response.error?.status === 200;
+      const success = response.status >= 200 && response.status < 300;
       if (success) {
         // Update local state
         setFlags(prev =>
@@ -111,7 +111,7 @@ export const useFeatureFlags = () => {
     try {
       const response = await apiClient.delete(`/api/v1/feature-flags/flags/${flagName}`);
 
-      const success = ('success' in response && (response as any).success) || response.error?.status === 200 || response.error?.status === 204;
+      const success = response.status >= 200 && response.status < 300;
       if (success) {
         setFlags(prev => prev.filter(flag => flag.name !== flagName));
         return true;

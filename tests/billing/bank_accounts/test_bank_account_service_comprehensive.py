@@ -64,7 +64,7 @@ class TestBankAccountServiceCreate:
 
         assert result.account_name == "Test Account"
         assert result.account_number_last_four == "6789"
-        assert result.is_primary == False
+        assert not result.is_primary
         assert result.status == BankAccountStatus.PENDING
 
     @pytest.mark.asyncio
@@ -89,7 +89,7 @@ class TestBankAccountServiceCreate:
         result1 = await service.create_bank_account(
             tenant_id="tenant-123", data=create_data1, created_by="user-123"
         )
-        assert result1.is_primary == True
+        assert result1.is_primary
 
         # Create second primary account
         create_data2 = CompanyBankAccountCreate(
@@ -110,11 +110,11 @@ class TestBankAccountServiceCreate:
         )
 
         # New account should be primary
-        assert result2.is_primary == True
+        assert result2.is_primary
 
         # Old account should no longer be primary
         old_account = await service.get_bank_account("tenant-123", result1.id)
-        assert old_account.is_primary == False
+        assert not old_account.is_primary
 
 
 class TestBankAccountServiceRead:
@@ -315,7 +315,7 @@ class TestBankAccountServiceDeactivation:
 
         result = await service.deactivate_bank_account("tenant-123", secondary.id, "user-123")
 
-        assert result.is_active == False
+        assert not result.is_active
 
     @pytest.mark.asyncio
     async def test_cannot_deactivate_primary_account(self, async_session):

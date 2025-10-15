@@ -1,6 +1,7 @@
 """Data transfer API router."""
 
 from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import UUID, uuid4
 
 import structlog
@@ -182,7 +183,9 @@ async def list_jobs(
 
 
 @data_transfer_router.delete("/jobs/{job_id}")
-async def cancel_job(job_id: str, current_user: UserInfo = Depends(get_current_user)) -> dict:
+async def cancel_job(
+    job_id: str, current_user: UserInfo = Depends(get_current_user)
+) -> dict[str, Any]:
     """Cancel a data transfer job."""
     if current_user:
         logger.info(f"User {current_user.user_id} cancelling job {job_id}")

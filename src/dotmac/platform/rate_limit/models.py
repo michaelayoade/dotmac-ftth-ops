@@ -47,7 +47,7 @@ class RateLimitAction(str, Enum):
     CAPTCHA = "captcha"  # Require CAPTCHA verification
 
 
-class RateLimitRule(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
+class RateLimitRule(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """Rate limit rules configuration."""
 
     __tablename__ = "rate_limit_rules"
@@ -117,7 +117,7 @@ class RateLimitRule(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMix
         return f"<RateLimitRule(id={self.id}, name={self.name}, max_requests={self.max_requests}/{self.window})>"
 
 
-class RateLimitLog(Base, TimestampMixin, TenantMixin):
+class RateLimitLog(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Log of rate limit violations for monitoring and analytics."""
 
     __tablename__ = "rate_limit_logs"

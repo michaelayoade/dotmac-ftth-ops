@@ -40,7 +40,7 @@ def _require_authenticated_user(current_user: UserInfo | None) -> UserInfo:
 
 
 # Request/Response Models
-class FeatureFlagRequest(BaseModel):
+class FeatureFlagRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request model for creating/updating feature flags."""
 
     model_config = ConfigDict()
@@ -59,7 +59,7 @@ class FeatureFlagRequest(BaseModel):
         return v
 
 
-class FeatureFlagResponse(BaseModel):
+class FeatureFlagResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response model for feature flag data."""
 
     model_config = ConfigDict()
@@ -72,7 +72,7 @@ class FeatureFlagResponse(BaseModel):
     created_at: int | None = Field(None, description="Creation timestamp")
 
 
-class FeatureFlagCheckRequest(BaseModel):
+class FeatureFlagCheckRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request model for checking feature flags."""
 
     model_config = ConfigDict()
@@ -81,7 +81,7 @@ class FeatureFlagCheckRequest(BaseModel):
     context: dict[str, Any] | None = Field(None, description="Context for flag evaluation")
 
 
-class FeatureFlagCheckResponse(BaseModel):
+class FeatureFlagCheckResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response model for flag check results."""
 
     model_config = ConfigDict()
@@ -92,7 +92,7 @@ class FeatureFlagCheckResponse(BaseModel):
     checked_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
-class FlagStatusResponse(BaseModel):
+class FlagStatusResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response model for feature flag system status."""
 
     model_config = ConfigDict()
@@ -107,7 +107,7 @@ class FlagStatusResponse(BaseModel):
     healthy: bool = Field(description="Overall system health")
 
 
-class BulkFlagUpdateRequest(BaseModel):
+class BulkFlagUpdateRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request model for bulk flag operations."""
 
     model_config = ConfigDict()
@@ -285,7 +285,7 @@ async def get_flag(
 ) -> FeatureFlagResponse:
     """Get a specific feature flag."""
     try:
-        user = _require_authenticated_user(current_user)
+        _require_authenticated_user(current_user)
 
         flags = await list_flags()
 

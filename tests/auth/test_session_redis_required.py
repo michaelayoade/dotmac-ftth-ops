@@ -314,14 +314,14 @@ class TestGlobalSessionManagerConfiguration:
             importlib.reload(core)
 
             # ASSERTION: Production mode detected
-            assert core._is_production is True, (
-                f"Expected production mode, got: {core._is_production}"
-            )
+            assert (
+                core._is_production is True
+            ), f"Expected production mode, got: {core._is_production}"
             # In production, _require_redis_for_sessions should be True
             # It defaults to str(_is_production) which is "True", and "True".lower() == "true"
-            assert core._require_redis_for_sessions is True, (
-                f"Expected Redis required for sessions in production, got: {core._require_redis_for_sessions}"
-            )
+            assert (
+                core._require_redis_for_sessions is True
+            ), f"Expected Redis required for sessions in production, got: {core._require_redis_for_sessions}"
 
             # ASSERTION: SessionManager created without fallback
             # Note: Can't directly test fallback_enabled without inspecting private var
