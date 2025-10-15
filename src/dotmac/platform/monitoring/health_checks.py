@@ -335,6 +335,65 @@ class HealthChecker:
                 required=False,
             )
 
+    def check_radius_server(self) -> ServiceHealth:
+        """Check FreeRADIUS server connectivity and health."""
+        import os
+        import socket
+
+        radius_host = os.getenv("RADIUS_SERVER_HOST", "localhost")
+        radius_port = int(os.getenv("RADIUS_AUTH_PORT", "1812"))
+        status_port = int(os.getenv("RADIUS_STATUS_PORT", "18120"))
+
+        # First check if the authentication port is listening
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                sock.settimeout(2)
+                # Try to connect to UDP port
+                sock.connect((radius_host, radius_port))
+                auth_reachable = True
+        except (socket.timeout, socket.error, OSError) as e:
+            logger.warning(f"RADIUS auth port unreachable: {e}")
+            auth_reachable = False
+
+        # Check HTTP status server if available
+        status_reachable = False
+        status_message = ""
+
+        try:
+            with httpx.Client(timeout=5.0) as client:
+                response = client.get(f"http://{radius_host}:{status_port}/")
+                if response.status_code == 200:
+                    status_reachable = True
+                    status_message = "Status server OK"
+                else:
+                    status_message = f"Status server returned {response.status_code}"
+        except Exception as e:
+            logger.debug(f"RADIUS status server check failed: {e}")
+            status_message = "Status server unavailable"
+
+        # Determine overall health
+        if auth_reachable and status_reachable:
+            return ServiceHealth(
+                name="radius_server",
+                status=ServiceStatus.HEALTHY,
+                message=f"RADIUS server healthy at {radius_host}:{radius_port}, {status_message}",
+                required=False,
+            )
+        elif auth_reachable:
+            return ServiceHealth(
+                name="radius_server",
+                status=ServiceStatus.HEALTHY,
+                message=f"RADIUS auth port reachable at {radius_host}:{radius_port}, {status_message}",
+                required=False,
+            )
+        else:
+            return ServiceHealth(
+                name="radius_server",
+                status=ServiceStatus.DEGRADED,
+                message=f"RADIUS server unreachable at {radius_host}:{radius_port}",
+                required=False,
+            )
+
     def run_all_checks(self) -> tuple[bool, list[ServiceHealth]]:
         """
         Run all health checks.
@@ -349,6 +408,7 @@ class HealthChecker:
             self.check_storage(),  # Re-enabled with proper guards
             self.check_celery_broker(),
             self.check_observability(),
+            self.check_radius_server(),
         ]
 
         # Check if all required services are healthy

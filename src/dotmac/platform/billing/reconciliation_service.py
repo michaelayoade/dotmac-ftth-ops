@@ -264,9 +264,7 @@ class ReconciliationService:
                     ManualPayment.bank_account_id == reconciliation.bank_account_id,
                     ManualPayment.payment_date >= reconciliation.period_start,
                     ManualPayment.payment_date <= reconciliation.period_end,
-                    or_(
-                        ManualPayment.reconciled == False, ManualPayment.reconciled.is_(None)
-                    ),  # noqa: E712
+                    or_(ManualPayment.reconciled == False, ManualPayment.reconciled.is_(None)),  # noqa: E712
                 )
             )
         )

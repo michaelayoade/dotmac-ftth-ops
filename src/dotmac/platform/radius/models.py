@@ -5,7 +5,7 @@ SQLAlchemy models for FreeRADIUS database tables.
 These tables are used by FreeRADIUS for authentication, authorization, and accounting.
 """
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     TIMESTAMP,
@@ -16,15 +16,33 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    TypeDecorator,
     func,
 )
-from sqlalchemy.dialects.postgresql import INET
+from sqlalchemy.dialects.postgresql import INET as PostgreSQL_INET
 from sqlalchemy.orm import relationship
 
 from dotmac.platform.db import Base
 
+
+class INET(TypeDecorator):
+    """
+    Cross-database INET type.
+
+    Uses PostgreSQL INET for PostgreSQL, falls back to String(45) for other databases.
+    String(45) accommodates both IPv4 (15 chars) and IPv6 (39 chars) addresses.
+    """
+
+    impl = String(45)
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect: Any) -> Any:
+        if dialect.name == "postgresql":
+            return dialect.type_descriptor(PostgreSQL_INET())
+        return dialect.type_descriptor(String(45))
+
 if TYPE_CHECKING:
-    from dotmac.platform.subscribers.models import Subscriber
+    pass
 
 
 class RadCheck(Base):

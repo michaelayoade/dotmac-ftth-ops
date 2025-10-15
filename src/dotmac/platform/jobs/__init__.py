@@ -20,6 +20,7 @@ from dotmac.platform.jobs.models import (
     JobType,
     ScheduledJob,
 )
+from dotmac.platform.jobs.scheduler_service import SchedulerService
 from dotmac.platform.jobs.schemas import (
     JobCancelResponse,
     JobCreate,
@@ -30,7 +31,6 @@ from dotmac.platform.jobs.schemas import (
     JobSummary,
     JobUpdate,
 )
-from dotmac.platform.jobs.scheduler_service import SchedulerService
 from dotmac.platform.jobs.service import JobService
 
 __all__ = [

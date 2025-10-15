@@ -6,7 +6,7 @@ Redis-backed rate limiting with sliding window algorithm.
 
 import hashlib
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -91,7 +91,8 @@ class RateLimitService:
     ) -> str:
         """Generate Redis key for rate limit tracking."""
         # Use hash to keep key length reasonable
-        id_hash = hashlib.md5(identifier.encode()).hexdigest()[:12]
+        # MD5 used for identifier hashing, not security
+        id_hash = hashlib.md5(identifier.encode(), usedforsecurity=False).hexdigest()[:12]  # nosec B324
         return f"ratelimit:{tenant_id}:{scope.value}:{id_hash}:{rule_id}"
 
     async def check_rate_limit(
@@ -184,9 +185,7 @@ class RateLimitService:
 
             await self._increment_counter(tenant_id, rule, identifier)
 
-    async def _get_applicable_rules(
-        self, tenant_id: str, endpoint: str
-    ) -> list[RateLimitRule]:
+    async def _get_applicable_rules(self, tenant_id: str, endpoint: str) -> list[RateLimitRule]:
         """Get rate limit rules applicable to endpoint."""
         stmt = (
             select(RateLimitRule)
@@ -262,7 +261,7 @@ class RateLimitService:
         key = self._generate_key(tenant_id, rule.scope, identifier, str(rule.id))
 
         # Use Redis sorted set for sliding window
-        now = datetime.now(timezone.utc).timestamp()
+        now = datetime.now(UTC).timestamp()
         window_start = now - rule.window_seconds
 
         # Remove old entries outside window
@@ -283,7 +282,7 @@ class RateLimitService:
         redis = await self._get_redis()
         key = self._generate_key(tenant_id, rule.scope, identifier, str(rule.id))
 
-        now = datetime.now(timezone.utc).timestamp()
+        now = datetime.now(UTC).timestamp()
 
         # Add current request to sorted set
         await redis.zadd(key, {str(now): now})
@@ -343,10 +342,11 @@ class RateLimitService:
         """Get current rate limit status for debugging."""
         rules = await self._get_applicable_rules(tenant_id, endpoint)
 
-        status = {
+        limits: list[dict[str, Any]] = []
+        status: dict[str, Any] = {
             "endpoint": endpoint,
             "rules_applied": len(rules),
-            "limits": [],
+            "limits": limits,
         }
 
         for rule in rules:
@@ -360,15 +360,17 @@ class RateLimitService:
 
             is_allowed, current_count = await self._check_limit(tenant_id, rule, identifier)
 
-            status["limits"].append({
-                "rule_name": rule.name,
-                "scope": rule.scope.value,
-                "current_count": current_count,
-                "limit": rule.max_requests,
-                "window": rule.window.value,
-                "is_allowed": is_allowed,
-                "remaining": max(0, rule.max_requests - current_count),
-            })
+            limits.append(
+                {
+                    "rule_name": rule.name,
+                    "scope": rule.scope.value,
+                    "current_count": current_count,
+                    "limit": rule.max_requests,
+                    "window": rule.window.value,
+                    "is_allowed": is_allowed,
+                    "remaining": max(0, rule.max_requests - current_count),
+                }
+            )
 
         return status
 

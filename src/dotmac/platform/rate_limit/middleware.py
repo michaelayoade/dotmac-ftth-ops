@@ -9,10 +9,10 @@ from typing import Callable
 import structlog
 from fastapi import Request, Response, status
 from fastapi.responses import JSONResponse
-from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
 from dotmac.platform.database import get_async_session
-from dotmac.platform.rate_limit.service import RateLimitExceeded, RateLimitService
+from dotmac.platform.rate_limit.service import RateLimitService
 
 logger = structlog.get_logger(__name__)
 
@@ -20,7 +20,9 @@ logger = structlog.get_logger(__name__)
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Middleware to enforce rate limiting on all requests."""
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         """Process request with rate limiting."""
         # Skip rate limiting for health/metrics endpoints
         if request.url.path in ["/health", "/ready", "/metrics"]:
@@ -90,6 +92,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 # Add rate limit headers
                 if rule_applied:
                     remaining = max(0, rule_applied.max_requests - current_count - 1)
+                    retry_after = rule_applied.window_seconds
                     response.headers["X-RateLimit-Limit"] = str(rule_applied.max_requests)
                     response.headers["X-RateLimit-Remaining"] = str(remaining)
                     response.headers["X-RateLimit-Reset"] = str(retry_after)

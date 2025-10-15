@@ -4,7 +4,11 @@ Real-Time Infrastructure Module
 Provides WebSocket and Server-Sent Events (SSE) for real-time updates.
 """
 
-from dotmac.platform.realtime.publishers import EventPublisher, publish_job_update, publish_onu_online
+from dotmac.platform.realtime.publishers import (
+    EventPublisher,
+    publish_job_update,
+    publish_onu_online,
+)
 from dotmac.platform.realtime.schemas import (
     AlertEvent,
     AlertSeverity,

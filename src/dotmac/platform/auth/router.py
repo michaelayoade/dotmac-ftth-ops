@@ -1108,7 +1108,6 @@ async def logout(
             return {"message": "Logout completed"}
 
         if user_id:
-
             # Revoke the access token
             if token:
                 await jwt_service.revoke_token(token)
@@ -1603,6 +1602,18 @@ async def get_current_user_endpoint(
                 detail="User not found",
             )
 
+        backup_codes_remaining = 0
+        if getattr(user, "mfa_enabled", False):
+            try:
+                backup_codes_remaining = await mfa_service.get_remaining_backup_codes_count(
+                    user_id=user.id,
+                    session=session,
+                )
+            except Exception as exc:  # pragma: no cover - defensive logging
+                logger.warning(
+                    "Failed to fetch remaining backup codes", user_id=str(user.id), error=str(exc)
+                )
+
         return {
             "id": str(user.id),
             "username": user.username,
@@ -1619,6 +1630,8 @@ async def get_current_user_endpoint(
             "roles": user.roles or [],
             "is_active": user.is_active,
             "tenant_id": user.tenant_id,
+            "mfa_enabled": bool(getattr(user, "mfa_enabled", False)),
+            "mfa_backup_codes_remaining": backup_codes_remaining,
         }
     except HTTPException:
         raise
@@ -2920,7 +2933,9 @@ async def request_phone_verification(
         if redis_client:
             # Store code in Redis with 10-minute expiry
             await redis_client.setex(
-                f"phone_verify:{user_info.user_id}", 600, verification_code  # 10 minutes
+                f"phone_verify:{user_info.user_id}",
+                600,
+                verification_code,  # 10 minutes
             )
         else:
             # Fallback - store in session manager's fallback store
@@ -2973,8 +2988,7 @@ async def request_phone_verification(
             )
 
         message_body = (
-            f"Your DotMac verification code is {verification_code}. "
-            "It will expire in 10 minutes."
+            f"Your DotMac verification code is {verification_code}. It will expire in 10 minutes."
         )
 
         send_result: dict[str, Any]

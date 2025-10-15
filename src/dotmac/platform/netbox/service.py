@@ -11,6 +11,18 @@ import structlog
 
 from dotmac.platform.netbox.client import NetBoxClient
 from dotmac.platform.netbox.schemas import (
+    CableCreate,
+    CableResponse,
+    CableUpdate,
+    CircuitCreate,
+    CircuitProviderCreate,
+    CircuitProviderResponse,
+    CircuitResponse,
+    CircuitTerminationCreate,
+    CircuitTerminationResponse,
+    CircuitTypeCreate,
+    CircuitTypeResponse,
+    CircuitUpdate,
     DeviceCreate,
     DeviceResponse,
     DeviceUpdate,
@@ -26,6 +38,9 @@ from dotmac.platform.netbox.schemas import (
     SiteCreate,
     SiteResponse,
     TenantCreate,
+    VLANCreate,
+    VLANResponse,
+    VLANUpdate,
     VRFCreate,
     VRFResponse,
 )
@@ -338,6 +353,345 @@ class NetBoxService:
         """Create interface"""
         interface_data = await self.client.create_interface(data.model_dump(exclude_none=True))
         return InterfaceResponse(**interface_data)
+
+    # =========================================================================
+    # VLAN Operations
+    # =========================================================================
+
+    async def list_vlans(
+        self,
+        tenant: str | None = None,
+        site: str | None = None,
+        vid: int | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[VLANResponse]:
+        """List VLANs"""
+        response = await self.client.get_vlans(
+            tenant=tenant,
+            site=site,
+            vid=vid,
+            limit=limit,
+            offset=offset,
+        )
+
+        return [VLANResponse(**vlan) for vlan in response.get("results", [])]
+
+    async def get_vlan(self, vlan_id: int) -> VLANResponse | None:
+        """Get VLAN by ID"""
+        try:
+            vlan_data = await self.client.get_vlan(vlan_id)
+            return VLANResponse(**vlan_data)
+        except Exception as e:
+            logger.warning("netbox.get_vlan.not_found", vlan_id=vlan_id, error=str(e))
+            return None
+
+    async def create_vlan(self, data: VLANCreate) -> VLANResponse:
+        """Create VLAN"""
+        vlan_data = await self.client.create_vlan(data.model_dump(exclude_none=True))
+        return VLANResponse(**vlan_data)
+
+    async def update_vlan(self, vlan_id: int, data: VLANUpdate) -> VLANResponse | None:
+        """Update VLAN"""
+        try:
+            vlan_data = await self.client.update_vlan(vlan_id, data.model_dump(exclude_none=True))
+            return VLANResponse(**vlan_data)
+        except Exception as e:
+            logger.error("netbox.update_vlan.failed", vlan_id=vlan_id, error=str(e))
+            return None
+
+    async def delete_vlan(self, vlan_id: int) -> bool:
+        """Delete VLAN"""
+        try:
+            await self.client.delete_vlan(vlan_id)
+            return True
+        except Exception as e:
+            logger.error("netbox.delete_vlan.failed", vlan_id=vlan_id, error=str(e))
+            return False
+
+    # =========================================================================
+    # Cable Operations
+    # =========================================================================
+
+    async def list_cables(
+        self,
+        tenant: str | None = None,
+        site: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[CableResponse]:
+        """List cables"""
+        response = await self.client.get_cables(
+            tenant=tenant,
+            site=site,
+            limit=limit,
+            offset=offset,
+        )
+
+        return [CableResponse(**cable) for cable in response.get("results", [])]
+
+    async def get_cable(self, cable_id: int) -> CableResponse | None:
+        """Get cable by ID"""
+        try:
+            cable_data = await self.client.get_cable(cable_id)
+            return CableResponse(**cable_data)
+        except Exception as e:
+            logger.warning("netbox.get_cable.not_found", cable_id=cable_id, error=str(e))
+            return None
+
+    async def create_cable(self, data: CableCreate) -> CableResponse:
+        """Create cable"""
+        cable_data = await self.client.create_cable(data.model_dump(exclude_none=True))
+        return CableResponse(**cable_data)
+
+    async def update_cable(self, cable_id: int, data: CableUpdate) -> CableResponse | None:
+        """Update cable"""
+        try:
+            cable_data = await self.client.update_cable(
+                cable_id, data.model_dump(exclude_none=True)
+            )
+            return CableResponse(**cable_data)
+        except Exception as e:
+            logger.error("netbox.update_cable.failed", cable_id=cable_id, error=str(e))
+            return None
+
+    async def delete_cable(self, cable_id: int) -> bool:
+        """Delete cable"""
+        try:
+            await self.client.delete_cable(cable_id)
+            return True
+        except Exception as e:
+            logger.error("netbox.delete_cable.failed", cable_id=cable_id, error=str(e))
+            return False
+
+    # =========================================================================
+    # Circuit Operations
+    # =========================================================================
+
+    async def list_circuit_providers(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[CircuitProviderResponse]:
+        """List circuit providers"""
+        response = await self.client.get_circuit_providers(limit=limit, offset=offset)
+
+        return [CircuitProviderResponse(**provider) for provider in response.get("results", [])]
+
+    async def get_circuit_provider(self, provider_id: int) -> CircuitProviderResponse | None:
+        """Get circuit provider by ID"""
+        try:
+            provider_data = await self.client.get_circuit_provider(provider_id)
+            return CircuitProviderResponse(**provider_data)
+        except Exception as e:
+            logger.warning("netbox.get_circuit_provider.not_found", provider_id=provider_id, error=str(e))
+            return None
+
+    async def create_circuit_provider(
+        self, data: CircuitProviderCreate
+    ) -> CircuitProviderResponse:
+        """Create circuit provider"""
+        provider_data = await self.client.create_circuit_provider(
+            data.model_dump(exclude_none=True)
+        )
+        return CircuitProviderResponse(**provider_data)
+
+    async def list_circuit_types(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[CircuitTypeResponse]:
+        """List circuit types"""
+        response = await self.client.get_circuit_types(limit=limit, offset=offset)
+
+        return [CircuitTypeResponse(**ctype) for ctype in response.get("results", [])]
+
+    async def create_circuit_type(self, data: CircuitTypeCreate) -> CircuitTypeResponse:
+        """Create circuit type"""
+        type_data = await self.client.create_circuit_type(data.model_dump(exclude_none=True))
+        return CircuitTypeResponse(**type_data)
+
+    async def list_circuits(
+        self,
+        tenant: str | None = None,
+        provider: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[CircuitResponse]:
+        """List circuits"""
+        response = await self.client.get_circuits(
+            tenant=tenant,
+            provider=provider,
+            limit=limit,
+            offset=offset,
+        )
+
+        return [CircuitResponse(**circuit) for circuit in response.get("results", [])]
+
+    async def get_circuit(self, circuit_id: int) -> CircuitResponse | None:
+        """Get circuit by ID"""
+        try:
+            circuit_data = await self.client.get_circuit(circuit_id)
+            return CircuitResponse(**circuit_data)
+        except Exception as e:
+            logger.warning("netbox.get_circuit.not_found", circuit_id=circuit_id, error=str(e))
+            return None
+
+    async def create_circuit(self, data: CircuitCreate) -> CircuitResponse:
+        """Create circuit"""
+        circuit_data = await self.client.create_circuit(data.model_dump(exclude_none=True))
+        return CircuitResponse(**circuit_data)
+
+    async def update_circuit(self, circuit_id: int, data: CircuitUpdate) -> CircuitResponse | None:
+        """Update circuit"""
+        try:
+            circuit_data = await self.client.update_circuit(
+                circuit_id, data.model_dump(exclude_none=True)
+            )
+            return CircuitResponse(**circuit_data)
+        except Exception as e:
+            logger.error("netbox.update_circuit.failed", circuit_id=circuit_id, error=str(e))
+            return None
+
+    async def delete_circuit(self, circuit_id: int) -> bool:
+        """Delete circuit"""
+        try:
+            await self.client.delete_circuit(circuit_id)
+            return True
+        except Exception as e:
+            logger.error("netbox.delete_circuit.failed", circuit_id=circuit_id, error=str(e))
+            return False
+
+    async def list_circuit_terminations(
+        self,
+        circuit_id: int | None = None,
+        site: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> list[CircuitTerminationResponse]:
+        """List circuit terminations"""
+        response = await self.client.get_circuit_terminations(
+            circuit_id=circuit_id,
+            site=site,
+            limit=limit,
+            offset=offset,
+        )
+
+        return [
+            CircuitTerminationResponse(**term) for term in response.get("results", [])
+        ]
+
+    async def create_circuit_termination(
+        self, data: CircuitTerminationCreate
+    ) -> CircuitTerminationResponse:
+        """Create circuit termination"""
+        term_data = await self.client.create_circuit_termination(
+            data.model_dump(exclude_none=True)
+        )
+        return CircuitTerminationResponse(**term_data)
+
+    # =========================================================================
+    # IP Cleanup Operations
+    # =========================================================================
+
+    async def cleanup_subscriber_ips(
+        self,
+        subscriber_id: str,
+        tenant_netbox_id: int,
+    ) -> int:
+        """
+        Clean up IP addresses assigned to a subscriber on service termination.
+
+        This method:
+        1. Finds all IP addresses assigned to the subscriber
+        2. Updates status to 'deprecated' or deletes based on policy
+        3. Returns count of cleaned up IPs
+
+        Args:
+            subscriber_id: Subscriber ID (UUID string)
+            tenant_netbox_id: NetBox tenant ID
+
+        Returns:
+            Count of IP addresses cleaned up
+
+        Raises:
+            Exception: If NetBox API calls fail
+        """
+        logger.info(
+            "netbox.cleanup_subscriber_ips_start",
+            subscriber_id=subscriber_id,
+            tenant=tenant_netbox_id,
+        )
+
+        try:
+            # Find all IPs assigned to this subscriber
+            existing_ips_response = await self.client._netbox_request(
+                "GET",
+                "ipam/ip-addresses/",
+                params={
+                    "tenant_id": tenant_netbox_id,
+                    "description": f"Subscriber: {subscriber_id}",
+                },
+            )
+            existing_ips = existing_ips_response.get("results", [])
+
+            cleaned_count = 0
+            for ip in existing_ips:
+                ip_id = ip["id"]
+                ip_address = ip["address"]
+
+                try:
+                    # Option 1: Mark as deprecated (keeps history)
+                    await self.client.update_ip_address(
+                        ip_id,
+                        {
+                            "status": "deprecated",
+                            "description": f"[TERMINATED] {ip.get('description', '')}",
+                        },
+                    )
+                    cleaned_count += 1
+
+                    logger.info(
+                        "netbox.ip_deprecated",
+                        subscriber_id=subscriber_id,
+                        ip_address=ip_address,
+                        netbox_ip_id=ip_id,
+                    )
+
+                    # Option 2: Delete completely (uncomment if preferred)
+                    # await self.client.delete_ip_address(ip_id)
+                    # logger.info(
+                    #     "netbox.ip_deleted",
+                    #     subscriber_id=subscriber_id,
+                    #     ip_address=ip_address,
+                    #     netbox_ip_id=ip_id,
+                    # )
+
+                except Exception as e:
+                    logger.error(
+                        "netbox.cleanup_ip_failed",
+                        ip_id=ip_id,
+                        ip_address=ip_address,
+                        error=str(e),
+                    )
+                    continue
+
+            logger.info(
+                "netbox.cleanup_subscriber_ips_complete",
+                subscriber_id=subscriber_id,
+                cleaned_count=cleaned_count,
+            )
+
+            return cleaned_count
+
+        except Exception as e:
+            logger.error(
+                "netbox.cleanup_subscriber_ips_failed",
+                subscriber_id=subscriber_id,
+                error=str(e),
+                exc_info=True,
+            )
+            return 0
 
     # =========================================================================
     # Utility Methods

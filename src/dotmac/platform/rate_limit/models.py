@@ -10,8 +10,9 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
-from sqlalchemy.dialects.postgresql import JSON, TIMESTAMP, UUID as PostgresUUID
 from sqlalchemy.dialects.postgresql import ENUM as SQLEnum
+from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from dotmac.platform.db import AuditMixin, Base, SoftDeleteMixin, TenantMixin, TimestampMixin

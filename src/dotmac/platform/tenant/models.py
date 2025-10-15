@@ -11,8 +11,11 @@ Provides comprehensive tenant management with:
 
 from datetime import UTC, datetime
 from enum import Enum as PyEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
+
+if TYPE_CHECKING:
+    from dotmac.platform.radius.models import NAS, RadCheck
 
 from sqlalchemy import (
     JSON,
@@ -136,6 +139,13 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin, AuditMixin):
     )
     invitations: Mapped[list["TenantInvitation"]] = relationship(
         "TenantInvitation", back_populates="tenant", cascade="all, delete-orphan"
+    )
+    # RADIUS relationships (lazy="dynamic" to avoid loading all records)
+    radius_checks: Mapped[list["RadCheck"]] = relationship(
+        "RadCheck", back_populates="tenant", lazy="dynamic", cascade="all, delete-orphan"
+    )
+    nas_devices: Mapped[list["NAS"]] = relationship(
+        "NAS", back_populates="tenant", lazy="dynamic", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:
@@ -349,8 +359,7 @@ class DomainVerificationAttempt(Base, TimestampMixin):
 
     def __repr__(self) -> str:
         return (
-            f"<DomainVerificationAttempt(id={self.id}, domain={self.domain}, "
-            f"status={self.status})>"
+            f"<DomainVerificationAttempt(id={self.id}, domain={self.domain}, status={self.status})>"
         )
 
     @property

@@ -18,24 +18,32 @@ from httpx import AsyncClient
 class TestBSSPhase1RouterRegistration:
     """Test that all BSS Phase 1 routers are registered."""
 
-    async def test_crm_router_registered(self, authenticated_client: AsyncClient, auth_headers: dict):
+    async def test_crm_router_registered(
+        self, authenticated_client: AsyncClient, auth_headers: dict
+    ):
         """Test CRM router is registered."""
         # Note: CRM router requires database tables, so we skip endpoint testing
         # The API documentation test verifies all CRM endpoints are registered
         pass
 
-    async def test_jobs_router_registered(self, authenticated_client: AsyncClient, auth_headers: dict):
+    async def test_jobs_router_registered(
+        self, authenticated_client: AsyncClient, auth_headers: dict
+    ):
         """Test Jobs router is registered."""
         response = await authenticated_client.get("/api/v1/jobs", headers=auth_headers)
         assert response.status_code != 404, "Jobs endpoint should be registered"
 
-    async def test_billing_router_registered(self, authenticated_client: AsyncClient, auth_headers: dict):
+    async def test_billing_router_registered(
+        self, authenticated_client: AsyncClient, auth_headers: dict
+    ):
         """Test Billing router is registered."""
         # Note: Billing router is dynamically loaded, so we skip detailed tests
         # The API documentation test will verify all billing endpoints exist
         pass
 
-    async def test_dunning_router_registered(self, authenticated_client: AsyncClient, auth_headers: dict):
+    async def test_dunning_router_registered(
+        self, authenticated_client: AsyncClient, auth_headers: dict
+    ):
         """Test Dunning router is registered."""
         # Test campaigns endpoint
         response = await authenticated_client.get(
@@ -44,7 +52,9 @@ class TestBSSPhase1RouterRegistration:
         assert response.status_code != 404, "Dunning campaigns endpoint should be registered"
 
         # Test stats endpoint
-        response = await authenticated_client.get("/api/v1/billing/dunning/stats", headers=auth_headers)
+        response = await authenticated_client.get(
+            "/api/v1/billing/dunning/stats", headers=auth_headers
+        )
         assert response.status_code != 404, "Dunning stats endpoint should be registered"
 
 
@@ -109,7 +119,9 @@ class TestCRMSmoke:
 
     async def test_list_site_surveys(self, authenticated_client: AsyncClient, auth_headers: dict):
         """Test listing site surveys."""
-        response = await authenticated_client.get("/api/v1/crm/crm/site-surveys", headers=auth_headers)
+        response = await authenticated_client.get(
+            "/api/v1/crm/crm/site-surveys", headers=auth_headers
+        )
         assert response.status_code in [200, 401]
 
         if response.status_code == 200:
@@ -164,7 +176,9 @@ class TestJobsSmoke:
     async def test_job_statistics(self, authenticated_client: AsyncClient, auth_headers: dict):
         """Test getting job statistics."""
         try:
-            response = await authenticated_client.get("/api/v1/jobs/statistics", headers=auth_headers)
+            response = await authenticated_client.get(
+                "/api/v1/jobs/statistics", headers=auth_headers
+            )
             assert response.status_code in [200, 401, 500]  # 500 OK if DB tables missing
 
             if response.status_code == 200:
@@ -255,7 +269,9 @@ class TestDunningSmoke:
 
     async def test_dunning_statistics(self, authenticated_client: AsyncClient, auth_headers: dict):
         """Test getting dunning statistics."""
-        response = await authenticated_client.get("/api/v1/billing/dunning/stats", headers=auth_headers)
+        response = await authenticated_client.get(
+            "/api/v1/billing/dunning/stats", headers=auth_headers
+        )
         assert response.status_code in [200, 401]
 
         if response.status_code == 200:
@@ -358,7 +374,9 @@ class TestBSSPhase1Integration:
 
             # 3. Get job - may fail with validation errors
             if response.status_code == 200:
-                response = await authenticated_client.get(f"/api/v1/jobs/{job_id}", headers=auth_headers)
+                response = await authenticated_client.get(
+                    f"/api/v1/jobs/{job_id}", headers=auth_headers
+                )
                 if response.status_code == 200:
                     job = response.json()
                     assert job["status"] in ["pending", "running"]
@@ -405,7 +423,7 @@ class TestBSSPhase1Acceptance:
                     403,
                     500,
                 ], f"Endpoint {endpoint} returned unexpected status {response.status_code}"
-            except Exception as e:
+            except Exception:
                 # If we get an exception, the endpoint exists but may have DB issues
                 # This is acceptable for smoke tests - we just verify the route is registered
                 pass
@@ -425,11 +443,7 @@ class TestBSSPhase1Acceptance:
         assert any("/jobs" in path for path in paths), "Jobs endpoints not in OpenAPI spec"
 
         # Check for Billing endpoints
-        assert any(
-            "/billing/" in path for path in paths
-        ), "Billing endpoints not in OpenAPI spec"
+        assert any("/billing/" in path for path in paths), "Billing endpoints not in OpenAPI spec"
 
         # Check for Dunning endpoints
-        assert any(
-            "/dunning/" in path for path in paths
-        ), "Dunning endpoints not in OpenAPI spec"
+        assert any("/dunning/" in path for path in paths), "Dunning endpoints not in OpenAPI spec"

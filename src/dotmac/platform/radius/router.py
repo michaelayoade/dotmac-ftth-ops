@@ -5,6 +5,7 @@ FastAPI endpoints for RADIUS subscriber management, session tracking,
 and accounting operations.
 """
 
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.db import get_session_dependency
-from dotmac.platform.tenant.dependencies import TenantAdminAccess
 from dotmac.platform.radius.schemas import (
     BandwidthProfileCreate,
     BandwidthProfileResponse,
@@ -31,6 +31,7 @@ from dotmac.platform.radius.schemas import (
     RADIUSUsageResponse,
 )
 from dotmac.platform.radius.service import RADIUSService
+from dotmac.platform.tenant.dependencies import TenantAdminAccess
 
 router = APIRouter(prefix="/api/v1/radius", tags=["radius"])
 
@@ -65,7 +66,7 @@ async def create_subscriber(
     data: RADIUSSubscriberCreate,
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.write")),
-):
+) -> RADIUSSubscriberResponse:
     """Create RADIUS subscriber with authentication and bandwidth profile"""
     try:
         return await service.create_subscriber(data)
@@ -88,7 +89,7 @@ async def get_subscriber(
     username: str,
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.read")),
-):
+) -> RADIUSSubscriberResponse:
     """Get RADIUS subscriber by username"""
     subscriber = await service.get_subscriber(username)
     if not subscriber:
@@ -110,9 +111,10 @@ async def list_subscribers(
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of records"),
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.read")),
-):
+) -> list[RADIUSSubscriberResponse]:
     """List RADIUS subscribers with pagination"""
-    return await service.list_subscribers(skip=skip, limit=limit)
+    result = await service.list_subscribers(skip=skip, limit=limit)
+    return cast(list[RADIUSSubscriberResponse], result)
 
 
 @router.patch(
@@ -126,7 +128,7 @@ async def update_subscriber(
     data: RADIUSSubscriberUpdate,
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.write")),
-):
+) -> RADIUSSubscriberResponse:
     """Update RADIUS subscriber"""
     try:
         subscriber = await service.update_subscriber(username, data)
@@ -155,7 +157,7 @@ async def delete_subscriber(
     username: str,
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.write")),
-):
+) -> None:
     """Delete RADIUS subscriber"""
     deleted = await service.delete_subscriber(username)
     if not deleted:
@@ -176,7 +178,7 @@ async def enable_subscriber(
     username: str,
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.write")),
-):
+) -> RADIUSSubscriberResponse:
     """Enable RADIUS subscriber"""
     try:
         subscriber = await service.enable_subscriber(username)
@@ -203,7 +205,7 @@ async def disable_subscriber(
     username: str,
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.write")),
-):
+) -> RADIUSSubscriberResponse:
     """Disable RADIUS subscriber"""
     try:
         subscriber = await service.disable_subscriber(username)
@@ -235,9 +237,10 @@ async def get_active_sessions(
     username: str | None = Query(None, description="Filter by username"),
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.read")),
-):
+) -> list[RADIUSSessionResponse]:
     """Get active RADIUS sessions"""
-    return await service.get_active_sessions(username=username)
+    result = await service.get_active_sessions(username=username)
+    return cast(list[RADIUSSessionResponse], result)
 
 
 @router.get(
@@ -253,14 +256,15 @@ async def get_subscriber_sessions(
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of records"),
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.read")),
-):
+) -> list[RADIUSSessionResponse]:
     """Get sessions for a subscriber"""
-    return await service.get_subscriber_sessions(
+    result = await service.get_subscriber_sessions(
         subscriber_id=subscriber_id,
         active_only=active_only,
         skip=skip,
         limit=limit,
     )
+    return cast(list[RADIUSSessionResponse], result)
 
 
 @router.post(
@@ -273,7 +277,7 @@ async def disconnect_session(
     data: RADIUSSessionDisconnect,
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.sessions.manage")),
-):
+) -> dict[str, Any]:
     """
     Disconnect RADIUS session using RFC 5176 CoA/DM.
 
@@ -292,11 +296,11 @@ async def disconnect_session(
     """
     result = await service.disconnect_session(
         username=data.username,
-        session_id=data.session_id,
-        nas_ip=data.nas_ip,
+        session_id=data.acctsessionid,
+        nas_ip=data.nasipaddress,
     )
 
-    return result
+    return cast(dict[str, Any], result)
 
 
 # =============================================================================
@@ -314,7 +318,7 @@ async def get_usage_stats(
     query: RADIUSUsageQuery,
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.read")),
-):
+) -> RADIUSUsageResponse:
     """Get usage statistics for subscriber or tenant"""
     try:
         return await service.get_usage_stats(query)
@@ -341,7 +345,7 @@ async def create_nas(
     data: NASCreate,
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.write")),
-):
+) -> NASResponse:
     """Create NAS device"""
     try:
         return await service.create_nas(data)
@@ -364,7 +368,7 @@ async def get_nas(
     nas_id: int,
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.read")),
-):
+) -> NASResponse:
     """Get NAS device by ID"""
     nas = await service.get_nas(nas_id)
     if not nas:
@@ -386,9 +390,10 @@ async def list_nas_devices(
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of records"),
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.read")),
-):
+) -> list[NASResponse]:
     """List NAS devices"""
-    return await service.list_nas_devices(skip=skip, limit=limit)
+    result = await service.list_nas_devices(skip=skip, limit=limit)
+    return cast(list[NASResponse], result)
 
 
 @router.patch(
@@ -402,7 +407,7 @@ async def update_nas(
     data: NASUpdate,
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.write")),
-):
+) -> NASResponse:
     """Update NAS device"""
     try:
         nas = await service.update_nas(nas_id, data)
@@ -431,7 +436,7 @@ async def delete_nas(
     nas_id: int,
     service: RADIUSService = Depends(get_radius_service),
     _: UserInfo = Depends(require_permission("isp.radius.write")),
-):
+) -> None:
     """Delete NAS device"""
     deleted = await service.delete_nas(nas_id)
     if not deleted:
@@ -458,7 +463,7 @@ async def create_bandwidth_profile(
     data: BandwidthProfileCreate,
     service: RADIUSService = Depends(get_radius_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> BandwidthProfileResponse:
     """Create bandwidth profile"""
     try:
         return await service.create_bandwidth_profile(data)
@@ -481,7 +486,7 @@ async def get_bandwidth_profile(
     profile_id: str,
     service: RADIUSService = Depends(get_radius_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> BandwidthProfileResponse:
     """Get bandwidth profile by ID"""
     profile = await service.get_bandwidth_profile(profile_id)
     if not profile:
@@ -503,9 +508,10 @@ async def list_bandwidth_profiles(
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of records"),
     service: RADIUSService = Depends(get_radius_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> list[BandwidthProfileResponse]:
     """List bandwidth profiles"""
-    return await service.list_bandwidth_profiles(skip=skip, limit=limit)
+    result = await service.list_bandwidth_profiles(skip=skip, limit=limit)
+    return cast(list[BandwidthProfileResponse], result)
 
 
 @router.patch(
@@ -519,7 +525,7 @@ async def update_bandwidth_profile(
     data: BandwidthProfileUpdate,
     service: RADIUSService = Depends(get_radius_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> BandwidthProfileResponse:
     """Update bandwidth profile"""
     try:
         profile = await service.update_bandwidth_profile(profile_id, data)
@@ -548,7 +554,7 @@ async def delete_bandwidth_profile(
     profile_id: str,
     service: RADIUSService = Depends(get_radius_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> None:
     """Delete bandwidth profile"""
     deleted = await service.delete_bandwidth_profile(profile_id)
     if not deleted:
@@ -574,7 +580,7 @@ async def test_authentication(
     data: RADIUSAuthTest,
     service: RADIUSService = Depends(get_radius_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> RADIUSAuthTestResponse:
     """
     Test RADIUS authentication
 
@@ -615,3 +621,221 @@ async def test_authentication(
         attributes=attributes,
         response_time_ms=round((time.time() - start_time) * 1000, 2),
     )
+
+
+# =============================================================================
+# RADIUS Server Health Monitoring
+# =============================================================================
+
+
+@router.get(
+    "/health",
+    summary="RADIUS Server Health",
+    description="Check FreeRADIUS server health and connectivity",
+)
+async def get_radius_health(
+    service: RADIUSService = Depends(get_radius_service),
+    _: UserInfo = Depends(require_permission("isp.radius.read")),
+) -> dict[str, Any]:
+    """
+    Get comprehensive RADIUS server health status.
+
+    Checks:
+    - FreeRADIUS server connectivity
+    - Database connectivity
+    - Active sessions count
+    - NAS devices count
+    - Recent authentication failures
+    """
+    import os
+    import socket
+    import time
+
+    health_data: dict[str, Any] = {
+        "timestamp": time.time(),
+        "status": "healthy",
+        "checks": {},
+    }
+
+    # Check RADIUS server connectivity
+    radius_host = os.getenv("RADIUS_SERVER_HOST", "localhost")
+    radius_port = int(os.getenv("RADIUS_AUTH_PORT", "1812"))
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.settimeout(2)
+            sock.connect((radius_host, radius_port))
+            health_data["checks"]["radius_connectivity"] = {
+                "status": "healthy",
+                "message": f"RADIUS server reachable at {radius_host}:{radius_port}",
+            }
+    except Exception as e:
+        health_data["status"] = "degraded"
+        health_data["checks"]["radius_connectivity"] = {
+            "status": "unhealthy",
+            "message": f"RADIUS server unreachable: {str(e)}",
+        }
+
+    # Check database connectivity via session count
+    try:
+        active_sessions = await service.get_active_sessions()
+        health_data["checks"]["database"] = {
+            "status": "healthy",
+            "message": "Database accessible",
+            "active_sessions": len(active_sessions),
+        }
+    except Exception as e:
+        health_data["status"] = "degraded"
+        health_data["checks"]["database"] = {
+            "status": "unhealthy",
+            "message": f"Database error: {str(e)}",
+        }
+
+    # Get NAS devices count
+    try:
+        nas_devices = await service.list_nas_devices()
+        health_data["checks"]["nas_devices"] = {
+            "status": "healthy",
+            "count": len(nas_devices),
+        }
+    except Exception as e:
+        health_data["checks"]["nas_devices"] = {
+            "status": "degraded",
+            "message": f"Failed to query NAS devices: {str(e)}",
+        }
+
+    # Check recent authentication failures (last 5 minutes)
+    try:
+        from datetime import datetime, timedelta
+        from sqlalchemy import and_, func, select
+        from dotmac.platform.radius.models import RadPostAuth
+
+        five_minutes_ago = datetime.utcnow() - timedelta(minutes=5)
+
+        stmt = select(func.count()).select_from(RadPostAuth).where(
+            and_(
+                RadPostAuth.tenant_id == service.tenant_id,
+                RadPostAuth.authdate >= five_minutes_ago,
+                RadPostAuth.reply == "Access-Reject",
+            )
+        )
+
+        result = await service.session.execute(stmt)
+        failure_count = result.scalar() or 0
+
+        health_data["checks"]["authentication"] = {
+            "status": "healthy" if failure_count < 100 else "degraded",
+            "recent_failures": failure_count,
+            "window_minutes": 5,
+        }
+
+        if failure_count >= 100:
+            health_data["status"] = "degraded"
+
+    except Exception as e:
+        health_data["checks"]["authentication"] = {
+            "status": "degraded",
+            "message": f"Failed to query auth failures: {str(e)}",
+        }
+
+    return health_data
+
+
+# =============================================================================
+# RADIUS Attribute Dictionary
+# =============================================================================
+
+
+@router.get(
+    "/attributes/standard",
+    summary="List Standard RADIUS Attributes",
+    description="Get list of standard RADIUS attributes (RFC 2865, 2866, etc.)",
+)
+async def list_standard_attributes(
+    _: UserInfo = Depends(require_permission("isp.radius.read")),
+) -> dict[str, Any]:
+    """
+    List all standard RADIUS attributes.
+
+    Returns attributes from RFCs including:
+    - RFC 2865: RADIUS base attributes
+    - RFC 2866: RADIUS accounting
+    - RFC 3162: RADIUS IPv6 support
+    """
+    from dotmac.platform.radius.attributes import registry
+
+    return {
+        "attributes": registry.list_standard_attributes(),
+        "total": len(registry.standard_attrs),
+    }
+
+
+@router.get(
+    "/attributes/vendor",
+    summary="List Vendor-Specific RADIUS Attributes",
+    description="Get list of vendor-specific RADIUS attributes (VSAs)",
+)
+async def list_vendor_attributes(
+    vendor_id: int | None = Query(None, description="Filter by vendor ID"),
+    _: UserInfo = Depends(require_permission("isp.radius.read")),
+) -> dict[str, Any]:
+    """
+    List vendor-specific RADIUS attributes.
+
+    Includes VSAs for:
+    - Mikrotik (14988): Rate limiting, address lists
+    - Cisco (9): AVPair, account info
+    - WISPr (14122): Hotspot/captive portal
+    """
+    from dotmac.platform.radius.attributes import registry
+
+    attrs = registry.list_vendor_attributes(vendor_id)
+    return {
+        "attributes": attrs,
+        "total": len(attrs),
+        "vendor_id": vendor_id,
+    }
+
+
+@router.get(
+    "/attributes/check-items",
+    summary="List RADIUS Check Attributes",
+    description="Get attributes that can be used in radcheck table",
+)
+async def list_check_attributes(
+    _: UserInfo = Depends(require_permission("isp.radius.read")),
+) -> dict[str, Any]:
+    """
+    List RADIUS check attributes.
+
+    These are attributes that can be used in the radcheck table
+    for authentication and authorization checks.
+    """
+    from dotmac.platform.radius.attributes import registry
+
+    return {
+        "attributes": registry.list_check_items(),
+        "total": len([a for a in registry.standard_attrs.values() if a.check_item]),
+    }
+
+
+@router.get(
+    "/attributes/reply-items",
+    summary="List RADIUS Reply Attributes",
+    description="Get attributes that can be used in radreply table",
+)
+async def list_reply_attributes(
+    _: UserInfo = Depends(require_permission("isp.radius.read")),
+) -> dict[str, Any]:
+    """
+    List RADIUS reply attributes.
+
+    These are attributes that can be used in the radreply table
+    for sending authorization responses to users.
+    """
+    from dotmac.platform.radius.attributes import registry
+
+    return {
+        "attributes": registry.list_reply_items(),
+        "total": len([a for a in registry.standard_attrs.values() if a.reply_item]),
+    }

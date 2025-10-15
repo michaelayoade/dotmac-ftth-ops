@@ -8,13 +8,13 @@ import hashlib
 import json
 import pickle
 import zlib
-from datetime import datetime, timedelta, timezone
-from typing import Any, Callable, TypeVar
+from datetime import UTC, datetime
+from typing import Any, TypedDict, TypeVar
 
 import structlog
 from redis.asyncio import Redis
 
-from dotmac.platform.cache.models import CacheNamespace, CachePattern, CacheStrategy
+from dotmac.platform.cache.models import CacheNamespace
 from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
@@ -25,10 +25,18 @@ T = TypeVar("T")
 class CacheService:
     """Service for caching with Redis backend."""
 
+    class NamespaceStats(TypedDict):
+        hits: int
+        misses: int
+        sets: int
+        deletes: int
+        total_hit_latency: float
+        total_miss_latency: float
+
     def __init__(self, redis: Redis | None = None):
         """Initialize cache service."""
         self.redis = redis
-        self._local_stats: dict[str, dict[str, int]] = {}
+        self._local_stats: dict[str, CacheService.NamespaceStats] = {}
 
     async def _get_redis(self) -> Redis:
         """Get Redis connection."""
@@ -59,7 +67,8 @@ class CacheService:
     def _hash_key(self, key: str) -> str:
         """Hash long keys to keep them reasonable length."""
         if len(key) > 200:
-            return hashlib.md5(key.encode()).hexdigest()
+            # MD5 used for cache key generation, not security
+            return hashlib.md5(key.encode(), usedforsecurity=False).hexdigest()  # nosec B324
         return key
 
     async def get(
@@ -85,11 +94,11 @@ class CacheService:
         cache_key = self._generate_key(namespace, self._hash_key(key), tenant_id)
 
         try:
-            start_time = datetime.now(timezone.utc)
+            start_time = datetime.now(UTC)
 
             value = await redis.get(cache_key)
 
-            latency = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
+            latency = (datetime.now(UTC) - start_time).total_seconds() * 1000
 
             if value is None:
                 self._record_miss(namespace, latency)
@@ -320,7 +329,7 @@ class CacheService:
             values = await redis.mget(cache_keys)
 
             result = {}
-            for key, value in zip(keys, values):
+            for key, value in zip(keys, values, strict=False):
                 if value is not None:
                     result[key] = self._deserialize(value)
                     self._record_hit(namespace, 0)
@@ -414,22 +423,23 @@ class CacheService:
             # Try JSON first
             return json.loads(value.decode("utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError):
-            # Fall back to pickle
-            return pickle.loads(value)
+            # Fall back to pickle for internal cache data only
+            # This is safe because Redis is internal and not exposed to external users
+            return pickle.loads(value)  # nosec B301 - internal cache only
 
     def _record_hit(self, namespace: CacheNamespace | str, latency_ms: float) -> None:
         """Record cache hit for statistics."""
         ns = namespace.value if isinstance(namespace, CacheNamespace) else namespace
 
         if ns not in self._local_stats:
-            self._local_stats[ns] = {
-                "hits": 0,
-                "misses": 0,
-                "sets": 0,
-                "deletes": 0,
-                "total_hit_latency": 0,
-                "total_miss_latency": 0,
-            }
+            self._local_stats[ns] = CacheService.NamespaceStats(
+                hits=0,
+                misses=0,
+                sets=0,
+                deletes=0,
+                total_hit_latency=0.0,
+                total_miss_latency=0.0,
+            )
 
         self._local_stats[ns]["hits"] += 1
         self._local_stats[ns]["total_hit_latency"] += latency_ms
@@ -439,14 +449,14 @@ class CacheService:
         ns = namespace.value if isinstance(namespace, CacheNamespace) else namespace
 
         if ns not in self._local_stats:
-            self._local_stats[ns] = {
-                "hits": 0,
-                "misses": 0,
-                "sets": 0,
-                "deletes": 0,
-                "total_hit_latency": 0,
-                "total_miss_latency": 0,
-            }
+            self._local_stats[ns] = CacheService.NamespaceStats(
+                hits=0,
+                misses=0,
+                sets=0,
+                deletes=0,
+                total_hit_latency=0.0,
+                total_miss_latency=0.0,
+            )
 
         self._local_stats[ns]["misses"] += 1
         self._local_stats[ns]["total_miss_latency"] += latency_ms
@@ -456,14 +466,14 @@ class CacheService:
         ns = namespace.value if isinstance(namespace, CacheNamespace) else namespace
 
         if ns not in self._local_stats:
-            self._local_stats[ns] = {
-                "hits": 0,
-                "misses": 0,
-                "sets": 0,
-                "deletes": 0,
-                "total_hit_latency": 0,
-                "total_miss_latency": 0,
-            }
+            self._local_stats[ns] = CacheService.NamespaceStats(
+                hits=0,
+                misses=0,
+                sets=0,
+                deletes=0,
+                total_hit_latency=0.0,
+                total_miss_latency=0.0,
+            )
 
         self._local_stats[ns]["sets"] += count
 
@@ -491,9 +501,7 @@ class CacheService:
             total_requests = data["hits"] + data["misses"]
             hit_rate = (data["hits"] / total_requests * 100) if total_requests > 0 else 0
 
-            avg_hit_latency = (
-                data["total_hit_latency"] / data["hits"] if data["hits"] > 0 else 0
-            )
+            avg_hit_latency = data["total_hit_latency"] / data["hits"] if data["hits"] > 0 else 0
             avg_miss_latency = (
                 data["total_miss_latency"] / data["misses"] if data["misses"] > 0 else 0
             )

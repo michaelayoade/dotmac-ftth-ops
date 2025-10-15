@@ -260,11 +260,11 @@ class SecurityAudit:
 
     def run_audit(self) -> int:
         """Run complete security audit."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("DotMac Platform Security Audit")
         print(f"Environment: {self.environment.upper()}")
         print(f"Timestamp: {datetime.now(UTC).isoformat()}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         # Run all checks
         self.check_environment_variables()
@@ -286,9 +286,9 @@ class SecurityAudit:
 
     def print_results(self) -> None:
         """Print audit results."""
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print("AUDIT RESULTS")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         # Critical issues
         critical_issues = [i for i in self.issues if i["severity"] == "critical"]
@@ -329,14 +329,14 @@ class SecurityAudit:
             print()
 
         # Summary
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print("SUMMARY:")
         print(f"  Critical Issues: {len(critical_issues)}")
         print(f"  High Issues: {len(high_issues)}")
         print(f"  Medium Issues: {len(medium_issues)}")
         print(f"  Warnings: {len(self.warnings)}")
         print(f"  Passed: {len(self.passed)}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         if critical_issues or high_issues:
             print("❌ AUDIT FAILED - Critical or high severity issues found")

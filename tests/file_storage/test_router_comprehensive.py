@@ -78,7 +78,6 @@ class TestFileUploadEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from fastapi import UploadFile
 
             from dotmac.platform.file_storage.router import upload_file
@@ -117,7 +116,6 @@ class TestFileUploadEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from fastapi import UploadFile
 
             from dotmac.platform.file_storage.router import upload_file
@@ -148,7 +146,6 @@ class TestFileUploadEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from fastapi import UploadFile
 
             from dotmac.platform.file_storage.router import upload_file
@@ -179,7 +176,6 @@ class TestFileUploadEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from fastapi import UploadFile
 
             from dotmac.platform.file_storage.router import upload_file
@@ -210,7 +206,6 @@ class TestFileUploadEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from fastapi import UploadFile
 
             from dotmac.platform.file_storage.router import upload_file
@@ -244,7 +239,6 @@ class TestFileDownloadEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import download_file
 
             response = await download_file(
@@ -265,7 +259,6 @@ class TestFileDownloadEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import download_file
 
             with pytest.raises(HTTPException) as exc_info:
@@ -287,7 +280,6 @@ class TestFileDownloadEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import download_file
 
             response = await download_file(
@@ -307,7 +299,6 @@ class TestFileDownloadEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import download_file
 
             with pytest.raises(HTTPException) as exc_info:
@@ -329,7 +320,6 @@ class TestFileDeleteEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import delete_file
 
             result = await delete_file(
@@ -350,7 +340,6 @@ class TestFileDeleteEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import delete_file
 
             with pytest.raises(HTTPException) as exc_info:
@@ -370,7 +359,6 @@ class TestFileDeleteEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import delete_file
 
             with pytest.raises(HTTPException) as exc_info:
@@ -408,7 +396,6 @@ class TestListFilesEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import list_files
 
             result = await list_files(
@@ -428,7 +415,6 @@ class TestListFilesEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import list_files
 
             await list_files(
@@ -447,7 +433,6 @@ class TestListFilesEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import list_files
 
             result = await list_files(
@@ -471,7 +456,6 @@ class TestListFilesEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import list_files
 
             with pytest.raises(HTTPException) as exc_info:
@@ -497,7 +481,6 @@ class TestGetFileMetadataEndpoint:
                 return_value="tenant-123",
             ),
         ):
-
             from dotmac.platform.file_storage.router import get_file_metadata
 
             result = await get_file_metadata(
@@ -516,7 +499,6 @@ class TestGetFileMetadataEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import get_file_metadata
 
             with pytest.raises(HTTPException) as exc_info:
@@ -538,7 +520,6 @@ class TestGetFileMetadataEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import get_file_metadata
 
             with pytest.raises(HTTPException) as exc_info:
@@ -560,7 +541,6 @@ class TestBatchOperationEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import batch_operation
 
             operations_request = FileOperationRequest(
@@ -590,7 +570,6 @@ class TestBatchOperationEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import batch_operation
 
             operations_request = FileOperationRequest(
@@ -613,7 +592,6 @@ class TestBatchOperationEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import batch_operation
 
             operations_request = FileOperationRequest(
@@ -636,7 +614,6 @@ class TestBatchOperationEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import batch_operation
 
             operations_request = FileOperationRequest(
@@ -659,7 +636,6 @@ class TestBatchOperationEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import batch_operation
 
             operations_request = FileOperationRequest(
@@ -685,7 +661,6 @@ class TestBatchOperationEndpoint:
             patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
             patch("dotmac.platform.file_storage.router.get_current_user", return_value=mock_user),
         ):
-
             from dotmac.platform.file_storage.router import batch_operation
 
             operations_request = FileOperationRequest(

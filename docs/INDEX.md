@@ -7,7 +7,7 @@
 ### Essential Documentation (Root)
 - **[README.md](../README.md)** - Project overview and getting started
 - **[CONTRIBUTING.md](../CONTRIBUTING.md)** - Contribution guidelines
-- **[CLAUDE.md](../CLAUDE.md)** - Claude AI development guidelines
+- **[CLAUDE_OLD.md](../CLAUDE_OLD.md)** - Legacy Claude AI development guidelines (archived)
 
 ---
 

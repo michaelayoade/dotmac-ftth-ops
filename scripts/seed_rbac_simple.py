@@ -3,6 +3,7 @@
 Simple RBAC Seed Script using raw SQL
 Avoids complex SQLAlchemy relationship issues
 """
+
 import sys
 from datetime import UTC, datetime
 from pathlib import Path

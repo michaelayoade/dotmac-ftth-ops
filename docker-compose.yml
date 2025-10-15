@@ -144,6 +144,32 @@ services:
     profiles:
       - storage
 
+  # WebSocket Control Workers
+  control-workers:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dotmac-control-workers
+    command: python -m dotmac.platform.realtime.control_workers
+    environment:
+      DATABASE_URL: postgresql://dotmac_user:change-me-in-production@postgres:5432/dotmac
+      REDIS_URL: redis://redis:6379/0
+      LOG_LEVEL: INFO
+      PYTHONPATH: /app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - workers
+
 volumes:
   postgres_data:
   redis_data:

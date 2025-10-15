@@ -4,7 +4,6 @@ Tests for RADIUS API Router
 Tests FastAPI endpoints for RADIUS management.
 """
 
-
 import pytest
 from fastapi import status
 
@@ -249,8 +248,8 @@ class TestRADIUSRouter:
         # Create multiple NAS devices
         for i in range(3):
             payload = {
-                "nasname": f"192.168.1.{i+1}",
-                "shortname": f"router{i+1:02d}",
+                "nasname": f"192.168.1.{i + 1}",
+                "shortname": f"router{i + 1:02d}",
                 "type": "mikrotik",
                 "secret": f"Secret{i}123!",
             }
@@ -310,7 +309,7 @@ class TestRADIUSRouter:
         # Create multiple profiles
         for i in range(3):
             payload = {
-                "name": f"{(i+1)*10} Mbps Plan",
+                "name": f"{(i + 1) * 10} Mbps Plan",
                 "download_rate_kbps": (i + 1) * 10000,
                 "upload_rate_kbps": (i + 1) * 2000,
             }

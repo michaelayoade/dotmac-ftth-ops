@@ -10,8 +10,9 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
-from sqlalchemy.dialects.postgresql import JSON, TIMESTAMP, UUID as PostgresUUID
 from sqlalchemy.dialects.postgresql import ENUM as SQLEnum
+from sqlalchemy.dialects.postgresql import JSON, TIMESTAMP
+from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dotmac.platform.db import AuditMixin, Base, SoftDeleteMixin, TenantMixin, TimestampMixin
@@ -113,7 +114,9 @@ class DiagnosticRun(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMix
 
     # Detailed results (JSON)
     results: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
-    recommendations: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
+    recommendations: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSON, nullable=False, default=list
+    )
 
     # Additional metadata (renamed to avoid SQLAlchemy reserved name)
     diagnostic_metadata: Mapped[dict[str, Any]] = mapped_column(

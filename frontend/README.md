@@ -56,26 +56,15 @@ pnpm start              # Production server
 
 ### All Core Features Working ✅
 
-**Infrastructure**
-- ✅ Health monitoring with auto-refresh every 30s
-- ✅ Feature flags with real-time toggle
-- ✅ Logs viewer with filtering and search (NEW) 🆕
-- ✅ Observability dashboard with traces and metrics (NEW) 🆕
-- ✅ Build system stable (no errors)
-- ✅ Authentication secured (HttpOnly cookies)
-
-**Security & Access Control**
-- ✅ RBAC roles management (React Query powered)
-- ✅ RBAC permissions system with category filtering
-- ✅ User management with role assignment
-- ✅ Vault secrets management with masking
+**Network Operations (NEW)**
+- ✅ ISP network dashboard surfacing subscribers, provisioning backlog, RADIUS sessions, and NetBox health
+- ✅ Subscriber workspace with live RADIUS session drilldowns + enable/disable actions
+- ✅ Network inventory workspace with NetBox site list and topology map
+- ✅ Automation workspace tracking provisioning workflows, scheduled jobs, and job chains (run-now controls)
 
 **Business Operations**
-- ✅ Customer management (full CRUD)
-- ✅ Analytics dashboard with metrics
-- ✅ Billing subscription plans
-- ✅ Payment processing (cash, check, bank transfer, mobile money)
-- ✅ Subscription lifecycle (create, pause, cancel, change plan)
+- ✅ Customer & billing management remains available for BSS teams
+- ✅ Analytics and payment flows untouched for shared BSS/OSS usage
 
 ### Technical Excellence ✅
 

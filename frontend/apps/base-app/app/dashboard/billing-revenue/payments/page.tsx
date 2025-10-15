@@ -55,6 +55,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { apiClient } from '@/lib/api/client';
+import { useCustomer } from '@/hooks/useCustomers';
 
 interface Payment {
   id: string;
@@ -79,6 +80,7 @@ interface Payment {
 
 export default function PaymentsPage() {
   const { toast } = useToast();
+  const { getCustomer } = useCustomer();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -134,21 +136,54 @@ export default function PaymentsPage() {
         throw new Error('Failed to fetch payments');
       }
 
+      // Extract unique customer IDs
+      const uniqueCustomerIds = [...new Set(response.data.payments.map(p => p.customer_id))];
+
+      // Fetch customer data for all unique customer IDs
+      const customerDataMap = new Map<string, { name: string; email: string }>();
+
+      await Promise.allSettled(
+        uniqueCustomerIds.map(async (customerId) => {
+          try {
+            const customerData = await getCustomer(customerId);
+            if (customerData?.data) {
+              customerDataMap.set(customerId, {
+                name: customerData.data.name || `Customer ${customerId.substring(0, 8)}`,
+                email: customerData.data.email || `customer-${customerId.substring(0, 8)}@example.com`,
+              });
+            }
+          } catch (error) {
+            // If customer fetch fails, use fallback
+            customerDataMap.set(customerId, {
+              name: `Customer ${customerId.substring(0, 8)}`,
+              email: `customer-${customerId.substring(0, 8)}@example.com`,
+            });
+          }
+        })
+      );
+
       // Transform API data to frontend Payment interface
-      const transformedPayments: Payment[] = response.data.payments.map(p => ({
-        id: p.payment_id,
-        amount: p.amount,
-        currency: p.currency,
-        status: p.status as Payment['status'],
-        customer_name: `Customer ${p.customer_id.substring(0, 8)}`, // TODO: Fetch customer name
-        customer_email: `customer-${p.customer_id.substring(0, 8)}@example.com`, // TODO: Fetch customer email
-        payment_method: p.provider,
-        payment_method_type: p.payment_method_type as Payment['payment_method_type'],
-        description: `Payment via ${p.provider}`,
-        created_at: p.created_at,
-        processed_at: p.processed_at,
-        failure_reason: p.failure_reason,
-      }));
+      const transformedPayments: Payment[] = response.data.payments.map(p => {
+        const customerData = customerDataMap.get(p.customer_id) || {
+          name: `Customer ${p.customer_id.substring(0, 8)}`,
+          email: `customer-${p.customer_id.substring(0, 8)}@example.com`,
+        };
+
+        return {
+          id: p.payment_id,
+          amount: p.amount,
+          currency: p.currency,
+          status: p.status as Payment['status'],
+          customer_name: customerData.name,
+          customer_email: customerData.email,
+          payment_method: p.provider,
+          payment_method_type: p.payment_method_type as Payment['payment_method_type'],
+          description: `Payment via ${p.provider}`,
+          created_at: p.created_at,
+          processed_at: p.processed_at,
+          failure_reason: p.failure_reason,
+        };
+      });
 
       // Apply client-side filters
       let filteredData = transformedPayments;
@@ -205,7 +240,7 @@ export default function PaymentsPage() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, dateRange, searchQuery, toast]);
+  }, [statusFilter, dateRange, searchQuery, toast, getCustomer]);
 
   useEffect(() => {
     fetchPayments();

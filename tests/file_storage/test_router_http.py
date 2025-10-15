@@ -117,7 +117,6 @@ async def test_upload_file_success(file_storage_app: FastAPI, mock_storage_servi
         patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
         patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-123"),
     ):
-
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             # Create file to upload
@@ -154,7 +153,6 @@ async def test_upload_file_with_path(file_storage_app: FastAPI, mock_storage_ser
         patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
         patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-123"),
     ):
-
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             file_content = b"test file"
@@ -187,7 +185,6 @@ async def test_upload_file_too_large(file_storage_app: FastAPI, mock_storage_ser
         patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
         patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-123"),
     ):
-
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             # Create file larger than 100MB
@@ -219,7 +216,6 @@ async def test_download_file_success(file_storage_app: FastAPI, mock_storage_ser
         patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
         patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-123"),
     ):
-
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.get(
@@ -251,7 +247,6 @@ async def test_download_file_not_found(file_storage_app: FastAPI, mock_storage_s
         patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
         patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-123"),
     ):
-
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.get(
@@ -278,7 +273,6 @@ async def test_list_files(file_storage_app: FastAPI, mock_storage_service, test_
         patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
         patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-123"),
     ):
-
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.get(
@@ -310,7 +304,6 @@ async def test_list_files_with_path_filter(
         patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
         patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-123"),
     ):
-
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.get(
@@ -337,7 +330,6 @@ async def test_delete_file_success(file_storage_app: FastAPI, mock_storage_servi
         patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
         patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-123"),
     ):
-
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.delete(
@@ -370,7 +362,6 @@ async def test_delete_file_not_found(file_storage_app: FastAPI, mock_storage_ser
         patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
         patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-123"),
     ):
-
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.delete(
@@ -398,7 +389,6 @@ async def test_get_file_metadata(file_storage_app: FastAPI, mock_storage_service
         patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
         patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-123"),
     ):
-
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.get(
@@ -435,7 +425,6 @@ async def test_get_file_metadata_not_found(
         patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
         patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-123"),
     ):
-
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.get(
@@ -474,7 +463,6 @@ async def test_upload_unnamed_file(file_storage_app: FastAPI, mock_storage_servi
         patch("dotmac.platform.file_storage.router.storage_service", mock_storage_service),
         patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-123"),
     ):
-
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             # Upload without filename

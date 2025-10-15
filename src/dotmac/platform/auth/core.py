@@ -1016,7 +1016,12 @@ def configure_auth(
     redis_url: str | None = None,
 ) -> None:
     """Configure auth services."""
-    global JWT_SECRET, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, REDIS_URL
+    global \
+        JWT_SECRET, \
+        JWT_ALGORITHM, \
+        ACCESS_TOKEN_EXPIRE_MINUTES, \
+        REFRESH_TOKEN_EXPIRE_DAYS, \
+        REDIS_URL
     global jwt_service, session_manager, oauth_service, api_key_service
 
     # Dynamic configuration requires "constant" reassignment

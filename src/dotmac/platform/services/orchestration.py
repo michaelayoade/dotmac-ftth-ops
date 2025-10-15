@@ -6,16 +6,15 @@ Handles end-to-end provisioning across CRM, BSS, OSS, and network systems.
 """
 
 from datetime import datetime
-from decimal import Decimal
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.core.exceptions import NotFoundError, ValidationError
-from dotmac.platform.crm.models import Lead, LeadStatus, Quote, QuoteStatus
+from dotmac.platform.crm.models import LeadStatus, QuoteStatus
 from dotmac.platform.crm.service import LeadService, QuoteService
 from dotmac.platform.customer_management.models import Customer, CustomerStatus
 from dotmac.platform.customer_management.service import CustomerService
@@ -340,8 +339,8 @@ class OrchestrationService:
                     notification_type=NotificationType.SUBSCRIBER_PROVISIONED,
                     title=f"Service Activated: {service_plan}",
                     message=f"Your internet service ({username}) has been successfully provisioned and activated. "
-                            f"Your connection speed is {download_speed_kbps//1000} Mbps down / {upload_speed_kbps//1000} Mbps up."
-                            + (f"\nIP Address: {ip_allocation.get('address')}" if ip_allocation else ""),
+                    f"Your connection speed is {download_speed_kbps // 1000} Mbps down / {upload_speed_kbps // 1000} Mbps up."
+                    + (f"\nIP Address: {ip_allocation.get('address')}" if ip_allocation else ""),
                     priority=NotificationPriority.HIGH,
                     action_url=f"/dashboard/services/{subscriber_id}",
                     action_label="View Service Details",
@@ -597,7 +596,9 @@ class OrchestrationService:
             raise NotFoundError(f"Subscriber {subscriber_id} not found")
 
         if subscriber.status != SubscriberStatus.SUSPENDED:
-            raise ValidationError(f"Subscriber must be suspended to reactivate, not {subscriber.status}")
+            raise ValidationError(
+                f"Subscriber must be suspended to reactivate, not {subscriber.status}"
+            )
 
         # Restore RADIUS authentication
         stmt = select(RadCheck).where(

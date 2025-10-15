@@ -2,6 +2,7 @@
 """
 Create RBAC tables directly and seed data
 """
+
 import sys
 from datetime import UTC, datetime
 from pathlib import Path

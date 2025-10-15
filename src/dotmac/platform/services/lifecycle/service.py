@@ -11,6 +11,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import attributes
 
 from dotmac.platform.services.lifecycle.models import (
     LifecycleEvent,
@@ -883,7 +884,8 @@ class LifecycleOrchestrationService:
             .group_by(ServiceInstance.status)
         )
 
-        status_map = dict(status_counts)
+        status_rows = status_counts.all()
+        status_map: dict[ServiceStatus, int] = {status: int(count) for status, count in status_rows}
 
         # Count by type
         type_counts = await self.session.execute(
@@ -976,6 +978,301 @@ class LifecycleOrchestrationService:
         if service_type in [ServiceType.FIBER_INTERNET, ServiceType.TRIPLE_PLAY]:
             return base_steps + 2  # Additional steps for complex services
         return base_steps
+
+    # ==========================================
+    # Workflow Rollback
+    # ==========================================
+
+    async def rollback_provisioning_workflow(
+        self,
+        service_instance_id: UUID,
+        tenant_id: str,
+        rollback_reason: str,
+        user_id: UUID | None = None,
+    ) -> dict[str, Any]:
+        """
+        Rollback a failed provisioning workflow.
+
+        This method reverses changes made during provisioning, including:
+        - Releasing allocated network resources (IP, VLAN)
+        - Removing equipment configurations
+        - Cleaning up external system entries (RADIUS, etc.)
+        - Marking service instance as rolled back
+
+        Args:
+            service_instance_id: Service instance ID
+            tenant_id: Tenant identifier
+            rollback_reason: Reason for rollback
+            user_id: User initiating rollback
+
+        Returns:
+            dict with rollback results
+        """
+        # Get service instance
+        service = await self.get_service_instance(service_instance_id, tenant_id)
+        if not service:
+            return {
+                "success": False,
+                "error": "Service instance not found",
+                "service_instance_id": str(service_instance_id),
+            }
+
+        # Get workflow
+        result = await self.session.execute(
+            select(ProvisioningWorkflow).where(
+                and_(
+                    ProvisioningWorkflow.tenant_id == tenant_id,
+                    ProvisioningWorkflow.service_instance_id == service_instance_id,
+                    ProvisioningWorkflow.status == ProvisioningStatus.FAILED,
+                )
+            )
+        )
+        workflow = result.scalar_one_or_none()
+        if not workflow:
+            return {
+                "success": False,
+                "error": "No failed workflow found for rollback",
+                "service_instance_id": str(service_instance_id),
+            }
+
+        start_time = datetime.now(UTC)
+        rollback_steps = []
+        rollback_errors = []
+
+        try:
+            # Mark workflow as rolling back
+            workflow.status = ProvisioningStatus.ROLLED_BACK
+            workflow.rollback_required = True
+
+            # Step 1: Release IP address
+            if service.ip_address:
+                try:
+                    service.ip_address = None
+                    rollback_steps.append("ip_address_released")
+                except Exception as e:
+                    rollback_errors.append(f"IP release failed: {str(e)}")
+
+            # Step 2: Release VLAN
+            if service.vlan_id:
+                try:
+                    service.vlan_id = None
+                    rollback_steps.append("vlan_released")
+                except Exception as e:
+                    rollback_errors.append(f"VLAN release failed: {str(e)}")
+
+            # Step 3: Remove external service ID
+            if service.external_service_id:
+                try:
+                    service.external_service_id = None
+                    rollback_steps.append("external_service_removed")
+                except Exception as e:
+                    rollback_errors.append(f"External service removal failed: {str(e)}")
+
+            # Step 4: Clear equipment assignments
+            if service.equipment_assigned:
+                try:
+                    service.equipment_assigned = []
+                    rollback_steps.append("equipment_cleared")
+                except Exception as e:
+                    rollback_errors.append(f"Equipment clear failed: {str(e)}")
+
+            # Step 5: Reset service status
+            previous_status = service.status
+            service.status = ServiceStatus.FAILED
+            service.provisioning_status = ProvisioningStatus.ROLLED_BACK
+            service.service_metadata.update(
+                {
+                    "rollback_reason": rollback_reason,
+                    "rollback_timestamp": datetime.now(UTC).isoformat(),
+                    "rollback_steps": rollback_steps,
+                    "rollback_errors": rollback_errors,
+                }
+            )
+            attributes.flag_modified(service, "service_metadata")
+
+            # Mark workflow rollback as completed
+            workflow.rollback_completed = True
+
+            # Create lifecycle event
+            await self._create_lifecycle_event(
+                tenant_id=tenant_id,
+                service_instance_id=service_instance_id,
+                event_type=LifecycleEventType.PROVISION_FAILED,
+                previous_status=previous_status,
+                new_status=ServiceStatus.FAILED,
+                description=f"Provisioning rolled back: {rollback_reason}",
+                triggered_by_user_id=user_id,
+                triggered_by_system="rollback_system" if not user_id else None,
+                duration_seconds=(datetime.now(UTC) - start_time).total_seconds(),
+                event_data={
+                    "rollback_reason": rollback_reason,
+                    "rollback_steps": rollback_steps,
+                    "rollback_errors": rollback_errors,
+                },
+            )
+
+            await self.session.commit()
+
+            return {
+                "success": True,
+                "service_instance_id": str(service_instance_id),
+                "workflow_id": workflow.workflow_id,
+                "rollback_steps": rollback_steps,
+                "rollback_errors": rollback_errors,
+                "duration_seconds": (datetime.now(UTC) - start_time).total_seconds(),
+            }
+
+        except Exception as e:
+            await self.session.rollback()
+            return {
+                "success": False,
+                "error": str(e),
+                "service_instance_id": str(service_instance_id),
+                "rollback_steps": rollback_steps,
+                "rollback_errors": rollback_errors,
+            }
+
+    async def get_failed_workflows_for_rollback(
+        self, tenant_id: str, limit: int = 50
+    ) -> list[ProvisioningWorkflow]:
+        """
+        Get failed workflows that require rollback.
+
+        Args:
+            tenant_id: Tenant identifier
+            limit: Maximum number of workflows to return
+
+        Returns:
+            List of failed workflows
+        """
+        result = await self.session.execute(
+            select(ProvisioningWorkflow)
+            .where(
+                and_(
+                    ProvisioningWorkflow.tenant_id == tenant_id,
+                    ProvisioningWorkflow.status == ProvisioningStatus.FAILED,
+                    ProvisioningWorkflow.rollback_completed == False,
+                )
+            )
+            .order_by(ProvisioningWorkflow.created_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    # ==========================================
+    # Scheduled Workflow Execution
+    # ==========================================
+
+    async def schedule_service_activation(
+        self,
+        service_instance_id: UUID,
+        tenant_id: str,
+        activation_datetime: datetime,
+        user_id: UUID | None = None,
+    ) -> dict[str, Any]:
+        """
+        Schedule a service for future activation.
+
+        Creates a scheduled job that will automatically activate the service
+        at the specified datetime.
+
+        Args:
+            service_instance_id: Service instance ID
+            tenant_id: Tenant identifier
+            activation_datetime: When to activate the service
+            user_id: User scheduling the activation
+
+        Returns:
+            dict with scheduling details
+        """
+        # Get service instance
+        service = await self.get_service_instance(service_instance_id, tenant_id)
+        if not service:
+            return {
+                "success": False,
+                "error": "Service instance not found",
+                "service_instance_id": str(service_instance_id),
+            }
+
+        # Validate service status
+        if service.status != ServiceStatus.PROVISIONING:
+            return {
+                "success": False,
+                "error": f"Cannot schedule activation for service in {service.status.value} status",
+                "service_instance_id": str(service_instance_id),
+            }
+
+        # Update service metadata with scheduled activation
+        service.service_metadata.update(
+            {
+                "scheduled_activation_datetime": activation_datetime.isoformat(),
+                "activation_scheduled_by": str(user_id) if user_id else None,
+                "activation_scheduled_at": datetime.now(UTC).isoformat(),
+            }
+        )
+        attributes.flag_modified(service, "service_metadata")
+
+        # Create lifecycle event
+        await self._create_lifecycle_event(
+            tenant_id=tenant_id,
+            service_instance_id=service_instance_id,
+            event_type=LifecycleEventType.ACTIVATION_REQUESTED,
+            description=f"Service activation scheduled for {activation_datetime.isoformat()}",
+            triggered_by_user_id=user_id,
+            event_data={
+                "scheduled_activation_datetime": activation_datetime.isoformat(),
+            },
+        )
+
+        await self.session.commit()
+
+        return {
+            "success": True,
+            "service_instance_id": str(service_instance_id),
+            "service_identifier": service.service_identifier,
+            "scheduled_activation_datetime": activation_datetime.isoformat(),
+            "message": f"Service activation scheduled for {activation_datetime.isoformat()}",
+        }
+
+    async def get_services_due_for_activation(
+        self, tenant_id: str | None = None
+    ) -> list[ServiceInstance]:
+        """
+        Get services that are due for scheduled activation.
+
+        Args:
+            tenant_id: Optional tenant filter
+
+        Returns:
+            List of service instances due for activation
+        """
+        from sqlalchemy import or_
+
+        now = datetime.now(UTC)
+
+        query = select(ServiceInstance).where(
+            and_(
+                ServiceInstance.status == ServiceStatus.PROVISIONING,
+                ServiceInstance.deleted_at.is_(None),
+            )
+        )
+
+        if tenant_id:
+            query = query.where(ServiceInstance.tenant_id == tenant_id)
+
+        result = await self.session.execute(query)
+        services = list(result.scalars().all())
+
+        # Filter services with scheduled activation
+        due_services = []
+        for service in services:
+            scheduled_time_str = service.service_metadata.get("scheduled_activation_datetime")
+            if scheduled_time_str:
+                scheduled_time = datetime.fromisoformat(scheduled_time_str)
+                if scheduled_time <= now:
+                    due_services.append(service)
+
+        return due_services
 
     async def _create_lifecycle_event(
         self,

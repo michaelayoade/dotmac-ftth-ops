@@ -169,7 +169,9 @@ class ManualPayment(Base, TenantMixin, TimestampMixin, AuditMixin):
 
     # Status
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="pending"  # pending, verified, reconciled, failed
+        String(20),
+        nullable=False,
+        default="pending",  # pending, verified, reconciled, failed
     )
     reconciled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     reconciled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -326,7 +328,9 @@ class PaymentReconciliation(Base, TenantMixin, TimestampMixin):
 
     # Status
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="in_progress"  # in_progress, completed, approved
+        String(20),
+        nullable=False,
+        default="in_progress",  # in_progress, completed, approved
     )
 
     # Approval

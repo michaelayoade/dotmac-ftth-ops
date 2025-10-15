@@ -37,6 +37,63 @@ class ServiceEndpointSettings(BaseModel):
     max_retries: int = Field(2, ge=0, description="Number of automatic retries for requests")
 
 
+class ObservabilitySettings(BaseModel):
+    """Observability settings for logging, tracing, and metrics."""
+
+    model_config = ConfigDict()
+
+    # Logging configuration
+    log_level: str = Field("INFO", description="Log level")
+    log_format: str = Field(
+        "json",
+        description="Log format (json or text)",
+    )
+    enable_structured_logging: bool = Field(True, description="Enable structured logging")
+    enable_correlation_ids: bool = Field(True, description="Enable correlation IDs")
+    correlation_id_header: str = Field(
+        "X-Correlation-ID", description="Header name for correlation IDs"
+    )
+
+    # Tracing configuration
+    enable_tracing: bool = Field(True, description="Enable distributed tracing")
+    tracing_sample_rate: float = Field(1.0, description="Tracing sample rate (0.0-1.0)")
+
+    # Metrics configuration
+    enable_metrics: bool = Field(True, description="Enable metrics collection")
+    metrics_port: int = Field(9090, description="Metrics port")
+
+    # OpenTelemetry configuration
+    otel_enabled: bool = Field(True, description="Enable OpenTelemetry")
+    otel_endpoint: str | None = Field(
+        "http://localhost:4318/v1/traces",
+        description="OTLP endpoint (default: local OTEL collector)",
+    )
+    otel_service_name: str = Field("dotmac-platform", description="Service name")
+    otel_resource_attributes: dict[str, str] = Field(
+        default_factory=dict, description="Resource attributes"
+    )
+    otel_instrument_celery: bool = Field(
+        True, description="Enable Celery instrumentation when OTEL is enabled"
+    )
+    otel_instrument_fastapi: bool = Field(
+        True, description="Enable FastAPI instrumentation when OTEL is enabled"
+    )
+    otel_instrument_sqlalchemy: bool = Field(
+        True, description="Enable SQLAlchemy instrumentation when OTEL is enabled"
+    )
+    otel_instrument_requests: bool = Field(
+        True, description="Enable Requests instrumentation when OTEL is enabled"
+    )
+
+    # Prometheus metrics endpoint
+    prometheus_enabled: bool = Field(True, description="Enable Prometheus metrics")
+    prometheus_port: int = Field(8001, description="Prometheus metrics port")
+
+
+def _default_observability_settings() -> ObservabilitySettings:
+    return ObservabilitySettings.model_validate({})
+
+
 class OSSSettings(BaseModel):
     """Operational support system integrations per service."""
 
@@ -49,6 +106,8 @@ class OSSSettings(BaseModel):
             password=os.getenv("VOLTHA_PASSWORD"),
             api_token=os.getenv("VOLTHA_TOKEN"),
             verify_ssl=os.getenv("VOLTHA_VERIFY_SSL", "true").lower() not in {"false", "0"},
+            timeout_seconds=float(os.getenv("VOLTHA_TIMEOUT_SECONDS", "30")),
+            max_retries=int(os.getenv("VOLTHA_MAX_RETRIES", "3")),
         ),
         description="VOLTHA PON controller configuration",
     )
@@ -57,7 +116,10 @@ class OSSSettings(BaseModel):
             url=os.getenv("GENIEACS_URL", "http://localhost:7557"),
             username=os.getenv("GENIEACS_USERNAME"),
             password=os.getenv("GENIEACS_PASSWORD"),
+            api_token=os.getenv("GENIEACS_API_TOKEN"),
             verify_ssl=os.getenv("GENIEACS_VERIFY_SSL", "true").lower() not in {"false", "0"},
+            timeout_seconds=float(os.getenv("GENIEACS_TIMEOUT_SECONDS", "30")),
+            max_retries=int(os.getenv("GENIEACS_MAX_RETRIES", "3")),
         ),
         description="GenieACS TR-069 controller configuration",
     )
@@ -65,7 +127,11 @@ class OSSSettings(BaseModel):
         default_factory=lambda: ServiceEndpointSettings(
             url=os.getenv("NETBOX_URL", "http://localhost:8080"),
             api_token=os.getenv("NETBOX_API_TOKEN"),
+            username=os.getenv("NETBOX_USERNAME"),
+            password=os.getenv("NETBOX_PASSWORD"),
             verify_ssl=os.getenv("NETBOX_VERIFY_SSL", "true").lower() not in {"false", "0"},
+            timeout_seconds=float(os.getenv("NETBOX_TIMEOUT_SECONDS", "30")),
+            max_retries=int(os.getenv("NETBOX_MAX_RETRIES", "3")),
         ),
         description="NetBox IPAM/DCIM configuration",
     )
@@ -76,6 +142,8 @@ class OSSSettings(BaseModel):
             password=os.getenv("AWX_PASSWORD"),
             api_token=os.getenv("AWX_TOKEN"),
             verify_ssl=os.getenv("AWX_VERIFY_SSL", "true").lower() not in {"false", "0"},
+            timeout_seconds=float(os.getenv("AWX_TIMEOUT_SECONDS", "30")),
+            max_retries=int(os.getenv("AWX_MAX_RETRIES", "2")),
         ),
         description="Ansible AWX automation configuration",
     )
@@ -118,16 +186,14 @@ class Settings(BaseSettings):
     testing: bool = Field(False, description="Testing mode")
 
     # Server configuration
-    host: str = Field(
-        "0.0.0.0", description="Server host"
-    )  # nosec B104 - Production deployments use proxy
+    host: str = Field("0.0.0.0", description="Server host")  # nosec B104 - Production deployments use proxy
     port: int = Field(8000, description="Server port")
     workers: int = Field(4, description="Number of worker processes")
     reload: bool = Field(False, description="Auto-reload on changes")
 
     # Security
     secret_key: str = Field(
-        "change-me-in-production", description="Secret key for signing (use Vault in production)"
+        "", description="Secret key for signing (MUST load from Vault in production)"
     )
     # SECURITY: Changed default from ["*"] to empty list
     # Production MUST set TRUSTED_HOSTS explicitly or startup will fail
@@ -242,7 +308,7 @@ class Settings(BaseSettings):
 
         model_config = ConfigDict()
 
-        secret_key: str = Field("change-me", description="JWT secret key")
+        secret_key: str = Field("", description="JWT secret key (load from Vault in production)")
         algorithm: str = Field("HS256", description="JWT algorithm")
         access_token_expire_minutes: int = Field(30, description="Access token expiration")
         refresh_token_expire_days: int = Field(30, description="Refresh token expiration")
@@ -252,7 +318,7 @@ class Settings(BaseSettings):
         @property
         def is_secure(self) -> bool:
             """Check if JWT secret is secure (not the default)."""
-            return self.secret_key != "change-me" and len(self.secret_key) >= 32
+            return self.secret_key != "" and self.secret_key != "change-me" and len(self.secret_key) >= 32
 
     jwt: JWTSettings = JWTSettings()  # type: ignore[call-arg]
 
@@ -267,15 +333,52 @@ class Settings(BaseSettings):
         - JWT secret is secure (not default)
         - Trusted hosts are explicitly configured
         - Redis is configured (not localhost) - REQUIRED for session management
+        - Vault is enabled for secrets management
+        - All critical secrets are loaded from Vault
         """
         if self.environment == Environment.PRODUCTION:
-            if not self.jwt.is_secure:
+            # Vault must be enabled in production
+            if not self.vault.enabled:
                 raise ValueError(
-                    "SECURITY ERROR: JWT_SECRET_KEY must be set to a secure value in production. "
-                    "The default 'change-me' is not allowed. "
-                    "Generate a secure secret with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+                    "SECURITY ERROR: Vault/OpenBao MUST be enabled in production. "
+                    "Set VAULT__ENABLED=true and configure VAULT__ADDR, VAULT__TOKEN. "
+                    "See docs/VAULT_SECRETS_MIGRATION.md for setup instructions."
                 )
 
+            # JWT secret must be loaded and secure
+            if not self.jwt.is_secure:
+                raise ValueError(
+                    "SECURITY ERROR: JWT_SECRET_KEY must be loaded from Vault in production. "
+                    "Path: auth/jwt_secret. Run migration script to populate Vault."
+                )
+
+            # Application secret key must be loaded
+            if not self.secret_key or len(self.secret_key) < 32:
+                raise ValueError(
+                    "SECURITY ERROR: SECRET_KEY must be loaded from Vault in production. "
+                    "Path: app/secret_key. Run migration script to populate Vault."
+                )
+
+            # Database password must be loaded
+            if not self.database.password:
+                raise ValueError(
+                    "SECURITY ERROR: DATABASE_PASSWORD must be loaded from Vault in production. "
+                    "Path: database/password. Run migration script to populate Vault."
+                )
+
+            # Storage credentials must be loaded (if storage enabled)
+            if self.storage.enabled and self.storage.provider != "local":
+                if not self.storage.secret_key:
+                    raise ValueError(
+                        "SECURITY ERROR: STORAGE_SECRET_KEY must be loaded from Vault in production. "
+                        "Path: storage/secret_key. Run migration script to populate Vault."
+                    )
+
+            # RADIUS secret must be loaded (if RADIUS is used)
+            # Note: Only validate if RADIUS service is actually initialized
+            # This is checked in radius/service.py to avoid false positives
+
+            # Trusted hosts must be configured
             if not self.trusted_hosts or self.trusted_hosts == ["*"]:
                 raise ValueError(
                     "SECURITY ERROR: TRUSTED_HOSTS must be explicitly configured in production. "
@@ -414,61 +517,13 @@ class Settings(BaseSettings):
     # Observability & Monitoring
     # ============================================================
 
-    class ObservabilitySettings(BaseModel):
-        """Observability configuration."""
-
-        model_config = ConfigDict()
-
-        # Logging
-        log_level: LogLevel = Field(LogLevel.INFO, description="Log level")
-        log_format: str = Field("json", description="Log format (json or text)")
-        enable_structured_logging: bool = Field(True, description="Enable structured logging")
-        enable_correlation_ids: bool = Field(True, description="Enable correlation IDs")
-        correlation_id_header: str = Field("X-Correlation-ID", description="Correlation ID header")
-
-        # Tracing
-        enable_tracing: bool = Field(True, description="Enable distributed tracing")
-        tracing_sample_rate: float = Field(1.0, description="Tracing sample rate (0.0-1.0)")
-
-        # Metrics
-        enable_metrics: bool = Field(True, description="Enable metrics collection")
-        metrics_port: int = Field(9090, description="Metrics port")
-
-        # OpenTelemetry
-        otel_enabled: bool = Field(True, description="Enable OpenTelemetry")
-        otel_endpoint: str | None = Field(
-            "http://localhost:4318/v1/traces",
-            description="OTLP endpoint (default: local OTEL collector)",
-        )
-        otel_service_name: str = Field("dotmac-platform", description="Service name")
-        otel_resource_attributes: dict[str, str] = Field(
-            default_factory=dict, description="Resource attributes"
-        )
-        # Instrumentation toggles
-        otel_instrument_celery: bool = Field(
-            True, description="Enable Celery instrumentation when OTEL is enabled"
-        )
-        otel_instrument_fastapi: bool = Field(
-            True, description="Enable FastAPI instrumentation when OTEL is enabled"
-        )
-        otel_instrument_sqlalchemy: bool = Field(
-            True, description="Enable SQLAlchemy instrumentation when OTEL is enabled"
-        )
-        otel_instrument_requests: bool = Field(
-            True, description="Enable Requests instrumentation when OTEL is enabled"
-        )
-
-        # Prometheus metrics endpoint
-        prometheus_enabled: bool = Field(True, description="Enable Prometheus metrics")
-        prometheus_port: int = Field(8001, description="Prometheus metrics port")
-
-    observability: ObservabilitySettings = ObservabilitySettings()  # type: ignore[call-arg]
+    observability: ObservabilitySettings = Field(default_factory=_default_observability_settings)
 
     # ============================================================
     # OSS / External Integrations
     # ============================================================
 
-    oss: OSSSettings = Field(default_factory=OSSSettings)  # type: ignore[call-arg]
+    oss: OSSSettings = Field(default_factory=OSSSettings)
 
     # ============================================================
     # Billing Configuration
@@ -623,8 +678,8 @@ class Settings(BaseSettings):
         enabled: bool = Field(True, description="Enable MinIO storage")
         endpoint: str = Field("localhost:9000", description="MinIO endpoint")
         region: str = Field("us-east-1", description="MinIO region")
-        access_key: str = Field("minioadmin", description="MinIO access key")
-        secret_key: str = Field("minioadmin123", description="MinIO secret key")
+        access_key: str = Field("", description="MinIO access key (load from Vault in production)")
+        secret_key: str = Field("", description="MinIO secret key (load from Vault in production)")
         bucket: str = Field("dotmac", description="Default bucket")
         use_ssl: bool = Field(False, description="Use SSL")
 
@@ -635,6 +690,77 @@ class Settings(BaseSettings):
         )
 
     storage: StorageSettings = StorageSettings()  # type: ignore[call-arg]
+
+    # ============================================================
+    # Billing & Payment Integration
+    # ============================================================
+
+    class BillingSettings(BaseModel):
+        """Billing and payment gateway configuration."""
+
+        model_config = ConfigDict()
+
+        # Stripe configuration
+        stripe_api_key: str = Field("", description="Stripe API key (secret)")
+        stripe_webhook_secret: str = Field("", description="Stripe webhook secret")
+        stripe_publishable_key: str = Field("", description="Stripe publishable key")
+
+        # PayPal configuration
+        paypal_client_id: str = Field("", description="PayPal client ID")
+        paypal_client_secret: str = Field("", description="PayPal client secret")
+        paypal_webhook_id: str = Field("", description="PayPal webhook ID")
+
+        # Tax service configuration
+        avalara_api_key: str = Field("", description="Avalara API key")
+        taxjar_api_token: str = Field("", description="TaxJar API token")
+
+    billing: BillingSettings = BillingSettings()  # type: ignore[call-arg]
+
+    # ============================================================
+    # Webhooks
+    # ============================================================
+
+    class WebhookSettings(BaseModel):
+        """Webhook configuration."""
+
+        model_config = ConfigDict()
+
+        signing_secret: str = Field("", description="Webhook signing secret for verification")
+        retry_attempts: int = Field(3, description="Number of retry attempts for failed webhooks")
+        timeout_seconds: int = Field(30, description="Webhook request timeout")
+
+    webhooks: WebhookSettings = WebhookSettings()  # type: ignore[call-arg]
+
+    # ============================================================
+    # RADIUS Server
+    # ============================================================
+
+    class RADIUSSettings(BaseModel):
+        """RADIUS server configuration."""
+
+        model_config = ConfigDict()
+
+        secret: str = Field("", description="RADIUS shared secret (load from Vault in production)")
+        auth_port: int = Field(1812, description="RADIUS authentication port")
+        acct_port: int = Field(1813, description="RADIUS accounting port")
+        nas_identifier: str = Field("dotmac-platform", description="NAS identifier")
+
+    radius: RADIUSSettings = RADIUSSettings()  # type: ignore[call-arg]
+
+    # ============================================================
+    # Search & Indexing
+    # ============================================================
+
+    class SearchSettings(BaseModel):
+        """Search and indexing configuration."""
+
+        model_config = ConfigDict()
+
+        meilisearch_api_key: str = Field("", description="MeiliSearch API key")
+        meilisearch_url: str = Field("http://localhost:7700", description="MeiliSearch URL")
+        meilisearch_index_prefix: str = Field("dotmac_", description="Index name prefix")
+
+    search: SearchSettings = SearchSettings()  # type: ignore[call-arg]
 
     # ============================================================
     # Feature Flags
@@ -711,11 +837,14 @@ class Settings(BaseSettings):
     @field_validator("secret_key")
     def validate_secret_key(cls, v: str, info: Any) -> str:
         """Validate secret key."""
-        if (
-            v == "change-me-in-production"
-            and info.data.get("environment") == Environment.PRODUCTION
-        ):
-            raise ValueError("Secret key must be changed in production")
+        if info.data.get("environment") == Environment.PRODUCTION:
+            if not v or v in ("", "change-me-in-production", "change-me"):
+                raise ValueError(
+                    "SECRET_KEY must be loaded from Vault in production. "
+                    "Ensure VAULT_ENABLED=true and secrets are migrated."
+                )
+            if len(v) < 32:
+                raise ValueError("SECRET_KEY must be at least 32 characters in production")
         return v
 
     @property

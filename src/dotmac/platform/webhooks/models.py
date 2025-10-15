@@ -204,7 +204,7 @@ class WebhookSubscriptionCreate(BaseModel):
         invalid_events = [evt for evt in v if evt not in valid_events]
         if invalid_events:
             raise ValueError(
-                f"Invalid event types: {invalid_events}. " f"Valid events: {sorted(valid_events)}"
+                f"Invalid event types: {invalid_events}. Valid events: {sorted(valid_events)}"
             )
         return v
 

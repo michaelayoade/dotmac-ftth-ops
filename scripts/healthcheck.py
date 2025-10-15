@@ -3,6 +3,7 @@
 Health check script for Docker containers.
 Returns exit code 0 if healthy, 1 if unhealthy.
 """
+
 import asyncio
 import json
 import os

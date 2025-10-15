@@ -345,12 +345,7 @@ class TestPerformanceAndLimits:
     async def test_query_with_complex_filters(self, test_client, auth_headers):
         """Test endpoint with multiple complex filters."""
         response = test_client.get(
-            "/api/v1/tenants?"
-            "status=active&"
-            "plan_type=enterprise&"
-            "search=test&"
-            "page=1&"
-            "page_size=50",
+            "/api/v1/tenants?status=active&plan_type=enterprise&search=test&page=1&page_size=50",
             headers=auth_headers,
         )
 

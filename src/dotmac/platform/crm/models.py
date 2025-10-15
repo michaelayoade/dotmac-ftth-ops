@@ -12,7 +12,6 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import (
     JSON,
-    Boolean,
     DateTime,
     ForeignKey,
     Index,
@@ -284,7 +283,9 @@ class Lead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
         parts = [self.service_address_line1]
         if self.service_address_line2:
             parts.append(self.service_address_line2)
-        parts.append(f"{self.service_city}, {self.service_state_province} {self.service_postal_code}")
+        parts.append(
+            f"{self.service_city}, {self.service_state_province} {self.service_postal_code}"
+        )
         return ", ".join(parts)
 
 

@@ -75,7 +75,7 @@ class SecretsManagerFactory:
         if backend == "vault":
             if not settings.features.secrets_vault:
                 raise ValueError(
-                    "Vault secrets backend not enabled. " "Set FEATURES__SECRETS_VAULT=true"
+                    "Vault secrets backend not enabled. Set FEATURES__SECRETS_VAULT=true"
                 )
 
             DependencyChecker.require_feature_dependency("secrets_vault")

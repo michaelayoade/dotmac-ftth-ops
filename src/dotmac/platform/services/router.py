@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import get_current_user
-from dotmac.platform.core.database import get_db
+from dotmac.platform.database import get_async_session as get_db
 from dotmac.platform.core.exceptions import NotFoundError, ValidationError
 from dotmac.platform.services.orchestration import OrchestrationService
 from dotmac.platform.services.tasks import (
@@ -131,7 +131,9 @@ async def convert_lead_to_customer(
     except (NotFoundError, ValidationError) as e:
         await db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST if isinstance(e, ValidationError) else status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST
+            if isinstance(e, ValidationError)
+            else status.HTTP_404_NOT_FOUND,
             detail=str(e),
         )
     except Exception as e:
@@ -160,7 +162,11 @@ async def convert_lead_to_customer_background(
     return {"task_id": task.id, "status": "processing", "message": "Lead conversion started"}
 
 
-@router.post("/subscribers/provision", response_model=ProvisionSubscriberResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/subscribers/provision",
+    response_model=ProvisionSubscriberResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def provision_subscriber(
     request: ProvisionSubscriberRequest,
     db: AsyncSession = Depends(get_db),
@@ -203,13 +209,17 @@ async def provision_subscriber(
             customer_id=result["customer"].id,
             username=result["subscriber"].username,
             status=result["subscriber"].status.value,
-            ip_address=result["ip_allocation"].get("address") if result.get("ip_allocation") else None,
+            ip_address=result["ip_allocation"].get("address")
+            if result.get("ip_allocation")
+            else None,
             provisioning_date=result["provisioning_date"].isoformat(),
         )
     except (NotFoundError, ValidationError) as e:
         await db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST if isinstance(e, ValidationError) else status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST
+            if isinstance(e, ValidationError)
+            else status.HTTP_404_NOT_FOUND,
             detail=str(e),
         )
     except Exception as e:
@@ -242,10 +252,16 @@ async def provision_subscriber_background(
         user_id=str(current_user.id),
     )
 
-    return {"task_id": task.id, "status": "processing", "message": "Subscriber provisioning started"}
+    return {
+        "task_id": task.id,
+        "status": "processing",
+        "message": "Subscriber provisioning started",
+    }
 
 
-@router.post("/subscribers/{subscriber_id}/deprovision", response_model=DeprovisionSubscriberResponse)
+@router.post(
+    "/subscribers/{subscriber_id}/deprovision", response_model=DeprovisionSubscriberResponse
+)
 async def deprovision_subscriber(
     subscriber_id: str,
     request: DeprovisionSubscriberRequest,
@@ -307,7 +323,11 @@ async def deprovision_subscriber_background(
         user_id=str(current_user.id),
     )
 
-    return {"task_id": task.id, "status": "processing", "message": "Subscriber deprovisioning started"}
+    return {
+        "task_id": task.id,
+        "status": "processing",
+        "message": "Subscriber deprovisioning started",
+    }
 
 
 @router.post("/subscribers/{subscriber_id}/suspend", response_model=SuspendSubscriberResponse)
@@ -381,7 +401,9 @@ async def reactivate_subscriber(
     except (NotFoundError, ValidationError) as e:
         await db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST if isinstance(e, ValidationError) else status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST
+            if isinstance(e, ValidationError)
+            else status.HTTP_404_NOT_FOUND,
             detail=str(e),
         )
     except Exception as e:

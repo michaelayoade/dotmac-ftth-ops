@@ -6,11 +6,12 @@ Real-time bidirectional communication for sessions, jobs, and campaigns.
 
 import asyncio
 import json
-from typing import Any
+from typing import Any, cast
 
 import structlog
 from fastapi import WebSocket, WebSocketDisconnect
 from redis.asyncio import Redis
+from redis.asyncio.client import PubSub
 
 logger = structlog.get_logger(__name__)
 
@@ -22,8 +23,8 @@ class WebSocketConnection:
         self.websocket = websocket
         self.tenant_id = tenant_id
         self.redis = redis
-        self.pubsub = None
-        self.listen_task = None
+        self.pubsub: PubSub | None = None
+        self.listen_task: asyncio.Task[None] | None = None
 
     async def accept(self) -> None:
         """Accept WebSocket connection."""
@@ -43,7 +44,10 @@ class WebSocketConnection:
 
     async def receive_json(self) -> dict[str, Any]:
         """Receive JSON message from client."""
-        return await self.websocket.receive_json()
+        data = await self.websocket.receive_json()
+        if not isinstance(data, dict):
+            raise TypeError("Expected JSON object from websocket")
+        return cast(dict[str, Any], data)
 
     async def subscribe_to_channel(self, channel: str) -> None:
         """
@@ -75,6 +79,9 @@ class WebSocketConnection:
 
     async def _listen_to_redis(self, channel: str) -> None:
         """Listen to Redis pub/sub and forward to WebSocket."""
+        if self.pubsub is None:
+            return
+
         try:
             async for message in self.pubsub.listen():
                 if message["type"] == "message":
@@ -173,9 +180,7 @@ async def handle_sessions_ws(websocket: WebSocket, tenant_id: str, redis: Redis)
         await connection.close()
 
 
-async def handle_job_ws(
-    websocket: WebSocket, job_id: str, tenant_id: str, redis: Redis
-) -> None:
+async def handle_job_ws(websocket: WebSocket, job_id: str, tenant_id: str, redis: Redis) -> None:
     """
     WebSocket handler for job progress updates.
 
@@ -203,12 +208,29 @@ async def handle_job_ws(
                     await connection.send_json({"type": "pong"})
 
                 elif data.get("type") == "cancel_job":
-                    # TODO: Implement job cancellation
+                    # Publish cancel command to job control channel
+                    # Background workers listen to this channel and execute the cancellation
                     await connection.send_json(
                         {
                             "type": "cancel_requested",
                             "job_id": job_id,
                         }
+                    )
+                    await redis.publish(
+                        f"{tenant_id}:job:control",
+                        json.dumps(
+                            {
+                                "action": "cancel",
+                                "job_id": job_id,
+                                "tenant_id": tenant_id,
+                                "user_id": "system",  # Non-authenticated WebSocket
+                            }
+                        ),
+                    )
+                    logger.info(
+                        "websocket.job_cancel_requested",
+                        job_id=job_id,
+                        tenant_id=tenant_id,
                     )
 
             except WebSocketDisconnect:
@@ -260,12 +282,55 @@ async def handle_campaign_ws(
                     await connection.send_json({"type": "pong"})
 
                 elif data.get("type") == "pause_campaign":
-                    # TODO: Implement campaign pause
+                    # Publish pause command to campaign control channel
+                    # Background workers listen to this channel and pause campaign execution
                     await connection.send_json(
                         {
                             "type": "pause_requested",
                             "campaign_id": campaign_id,
                         }
+                    )
+                    await redis.publish(
+                        f"{tenant_id}:campaign:control",
+                        json.dumps(
+                            {
+                                "action": "pause",
+                                "campaign_id": campaign_id,
+                                "tenant_id": tenant_id,
+                                "user_id": "system",  # Non-authenticated WebSocket
+                            }
+                        ),
+                    )
+                    logger.info(
+                        "websocket.campaign_pause_requested",
+                        campaign_id=campaign_id,
+                        tenant_id=tenant_id,
+                    )
+
+                elif data.get("type") == "resume_campaign":
+                    # Publish resume command to campaign control channel
+                    # Background workers listen to this channel and resume campaign execution
+                    await connection.send_json(
+                        {
+                            "type": "resume_requested",
+                            "campaign_id": campaign_id,
+                        }
+                    )
+                    await redis.publish(
+                        f"{tenant_id}:campaign:control",
+                        json.dumps(
+                            {
+                                "action": "resume",
+                                "campaign_id": campaign_id,
+                                "tenant_id": tenant_id,
+                                "user_id": "system",  # Non-authenticated WebSocket
+                            }
+                        ),
+                    )
+                    logger.info(
+                        "websocket.campaign_resume_requested",
+                        campaign_id=campaign_id,
+                        tenant_id=tenant_id,
                     )
 
             except WebSocketDisconnect:

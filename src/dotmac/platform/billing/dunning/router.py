@@ -98,10 +98,7 @@ async def list_campaigns(
         skip=skip,
         limit=limit,
     )
-    return [
-        DunningCampaignResponse.model_validate(c).model_dump(mode="json")
-        for c in campaigns
-    ]
+    return [DunningCampaignResponse.model_validate(c).model_dump(mode="json") for c in campaigns]
 
 
 @router.get("/campaigns/{campaign_id}", response_model=DunningCampaignResponse)
@@ -317,10 +314,7 @@ async def list_executions(
         limit=limit,
     )
 
-    return [
-        DunningExecutionResponse.model_validate(e).model_dump(mode="json")
-        for e in executions
-    ]
+    return [DunningExecutionResponse.model_validate(e).model_dump(mode="json") for e in executions]
 
 
 @router.get("/executions/{execution_id}", response_model=DunningExecutionResponse)
@@ -422,10 +416,7 @@ async def get_execution_logs(
         )
 
     logs = await service.get_execution_logs(execution_id=execution_id, tenant_id=tenant_id)
-    return [
-        DunningActionLogResponse.model_validate(log).model_dump(mode="json")
-        for log in logs
-    ]
+    return [DunningActionLogResponse.model_validate(log).model_dump(mode="json") for log in logs]
 
 
 # Statistics & Monitoring
@@ -472,7 +463,4 @@ async def get_pending_actions(
     """
     service = DunningService(db_session)
     executions = await service.get_pending_actions(tenant_id=tenant_id, limit=limit)
-    return [
-        DunningExecutionResponse.model_validate(e).model_dump(mode="json")
-        for e in executions
-    ]
+    return [DunningExecutionResponse.model_validate(e).model_dump(mode="json") for e in executions]

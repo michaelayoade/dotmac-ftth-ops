@@ -42,16 +42,25 @@ class RADIUSService:
         self.repository = RADIUSRepository(session)
 
         # Initialize CoA client for session disconnection
+        # Non-sensitive configuration from env vars
         self.radius_server = os.getenv("RADIUS_SERVER_HOST", "localhost")
         self.coa_port = int(os.getenv("RADIUS_COA_PORT", "3799"))
-        self.radius_secret = os.getenv("RADIUS_SECRET", "testing123")
         self.use_http_coa = os.getenv("RADIUS_COA_USE_HTTP", "false").lower() == "true"
         self.http_coa_url = os.getenv("RADIUS_COA_HTTP_URL", None)
 
-        if self.use_http_coa and self.http_coa_url:
-            self.coa_client: CoAClient | CoAClientHTTP = CoAClientHTTP(
-                api_url=self.http_coa_url
+        # RADIUS secret from Vault (Pure Vault mode in production)
+        from dotmac.platform.settings import settings
+        self.radius_secret = settings.radius.secret
+
+        # Production validation
+        if settings.is_production and not self.radius_secret:
+            raise ValueError(
+                "RADIUS_SECRET must be loaded from Vault in production. "
+                "Ensure VAULT_ENABLED=true and secret is migrated to vault path: radius/secret"
             )
+
+        if self.use_http_coa and self.http_coa_url:
+            self.coa_client: CoAClient | CoAClientHTTP = CoAClientHTTP(api_url=self.http_coa_url)
         else:
             self.coa_client = CoAClient(
                 radius_server=self.radius_server,
@@ -247,7 +256,7 @@ class RADIUSService:
 
         await self.session.commit()
 
-        return deleted_check
+        return bool(deleted_check)
 
     async def enable_subscriber(self, username: str) -> None:
         """Enable RADIUS access for subscriber"""
@@ -318,9 +327,7 @@ class RADIUSService:
     # Session Management
     # =========================================================================
 
-    async def get_active_sessions(
-        self, username: str | None = None
-    ) -> list[RADIUSSessionResponse]:
+    async def get_active_sessions(self, username: str | None = None) -> list[RADIUSSessionResponse]:
         """Get active RADIUS sessions"""
         sessions = await self.repository.get_active_sessions(self.tenant_id, username)
 
@@ -558,7 +565,7 @@ class RADIUSService:
         """Delete NAS device"""
         deleted = await self.repository.delete_nas(self.tenant_id, nas_id)
         await self.session.commit()
-        return deleted
+        return bool(deleted)
 
     async def list_nas_devices(self, skip: int = 0, limit: int = 100) -> list[NASResponse]:
         """List NAS devices"""

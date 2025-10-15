@@ -10,7 +10,8 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, String, Text
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import JSON, UUID as PostgresUUID
+from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from dotmac.platform.db import Base, SoftDeleteMixin, TenantMixin, TimestampMixin
@@ -104,9 +105,7 @@ class Notification(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
     )
 
     # Recipient
-    user_id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True), nullable=False, index=True
-    )
+    user_id: Mapped[UUID] = mapped_column(PostgresUUID(as_uuid=True), nullable=False, index=True)
 
     # Notification details
     type: Mapped[NotificationType] = mapped_column(
@@ -128,12 +127,8 @@ class Notification(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
     action_label: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Related entities
-    related_entity_type: Mapped[str | None] = mapped_column(
-        String(100), nullable=True, index=True
-    )
-    related_entity_id: Mapped[str | None] = mapped_column(
-        String(255), nullable=True, index=True
-    )
+    related_entity_type: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    related_entity_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
 
     # Status tracking
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
@@ -182,12 +177,8 @@ class NotificationPreference(Base, TimestampMixin, TenantMixin):
 
     # Quiet hours
     quiet_hours_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    quiet_hours_start: Mapped[str | None] = mapped_column(
-        String(5), nullable=True
-    )  # Format: HH:MM
-    quiet_hours_end: Mapped[str | None] = mapped_column(
-        String(5), nullable=True
-    )  # Format: HH:MM
+    quiet_hours_start: Mapped[str | None] = mapped_column(String(5), nullable=True)  # Format: HH:MM
+    quiet_hours_end: Mapped[str | None] = mapped_column(String(5), nullable=True)  # Format: HH:MM
     quiet_hours_timezone: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Per-type preferences (JSON structure)

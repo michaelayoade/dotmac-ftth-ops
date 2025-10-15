@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
-from typing import Iterable
+from collections.abc import Iterable
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.models import Permission, PermissionCategory, Role
-
 
 ISP_PERMISSIONS: tuple[tuple[str, str, PermissionCategory], ...] = (
     ("isp.radius.read", "View RADIUS subscribers and sessions", PermissionCategory.SECURITY),

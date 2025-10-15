@@ -63,6 +63,7 @@ from dotmac.platform.core.exceptions import (
     DotMacError,
     DuplicateEntityError,
     EntityNotFoundError,
+    NotFoundError,
     RepositoryError,
     ValidationError,
 )
@@ -115,6 +116,7 @@ __all__ = [
     "BusinessRuleError",
     "RepositoryError",
     "EntityNotFoundError",
+    "NotFoundError",
     "DuplicateEntityError",
     # Models
     "BaseModel",

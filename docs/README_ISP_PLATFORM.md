@@ -3,11 +3,13 @@
 **Project:** DotMac ISP Operations Platform
 **Version:** 1.0
 **Date:** 2025-10-14
-**Status:** Planning & Design Phase
+**Status:** Historical reference (superseded by current implementation)
 
 ---
 
 ## 🎯 Project Overview
+
+> **Note:** This document captures the original planning assumptions from October 2025. Many OSS components are now implemented; keep using it for historical context only.
 
 Transform the DotMac Platform Services into a comprehensive **ISP Operations Platform** supporting:
 - **FTTH (Fiber-to-the-Home)** - GPON/XGS-PON networks

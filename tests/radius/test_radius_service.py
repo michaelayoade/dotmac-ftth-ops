@@ -4,7 +4,6 @@ Tests for RADIUS Service Layer
 Tests business logic for RADIUS operations.
 """
 
-
 import pytest
 
 from dotmac.platform.radius.schemas import (

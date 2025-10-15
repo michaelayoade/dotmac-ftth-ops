@@ -5,7 +5,7 @@ Network troubleshooting and diagnostic operations for ISP services.
 """
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from dotmac.platform.genieacs.service import GenieACSService
     from dotmac.platform.netbox.service import NetBoxService
     from dotmac.platform.radius.service import RADIUSService
-    from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
+    from dotmac.platform.subscribers.models import Subscriber
     from dotmac.platform.voltha.service import VOLTHAService
 
 logger = structlog.get_logger(__name__)
@@ -47,24 +47,28 @@ class DiagnosticsService:
         # Import at runtime to avoid circular imports
         if radius_service is None:
             from dotmac.platform.radius.service import RADIUSService
+
             self.radius_service = RADIUSService(db)
         else:
             self.radius_service = radius_service
 
         if netbox_service is None:
             from dotmac.platform.netbox.service import NetBoxService
+
             self.netbox_service = NetBoxService()
         else:
             self.netbox_service = netbox_service
 
         if voltha_service is None:
             from dotmac.platform.voltha.service import VOLTHAService
+
             self.voltha_service = VOLTHAService()
         else:
             self.voltha_service = voltha_service
 
         if genieacs_service is None:
             from dotmac.platform.genieacs.service import GenieACSService
+
             self.genieacs_service = GenieACSService()
         else:
             self.genieacs_service = genieacs_service
@@ -134,10 +138,14 @@ class DiagnosticsService:
             diagnostic.severity = severity
 
         if status == DiagnosticStatus.RUNNING and diagnostic.started_at is None:
-            diagnostic.started_at = datetime.now(timezone.utc)
+            diagnostic.started_at = datetime.now(UTC)
 
-        if status in (DiagnosticStatus.COMPLETED, DiagnosticStatus.FAILED, DiagnosticStatus.TIMEOUT):
-            diagnostic.completed_at = datetime.now(timezone.utc)
+        if status in (
+            DiagnosticStatus.COMPLETED,
+            DiagnosticStatus.FAILED,
+            DiagnosticStatus.TIMEOUT,
+        ):
+            diagnostic.completed_at = datetime.now(UTC)
             if diagnostic.started_at:
                 delta = diagnostic.completed_at - diagnostic.started_at
                 diagnostic.duration_ms = int(delta.total_seconds() * 1000)
@@ -202,11 +210,13 @@ class DiagnosticsService:
             if subscriber.status != SubscriberStatus.ACTIVE:
                 results["status"] = "inactive"
                 results["checks"]["subscriber_active"] = False
-                recommendations.append({
-                    "severity": "error",
-                    "message": f"Subscriber status is {subscriber.status.value}, expected active",
-                    "action": "Activate subscriber to restore service",
-                })
+                recommendations.append(
+                    {
+                        "severity": "error",
+                        "message": f"Subscriber status is {subscriber.status.value}, expected active",
+                        "action": "Activate subscriber to restore service",
+                    }
+                )
                 severity = DiagnosticSeverity.ERROR
             else:
                 results["status"] = "online"
@@ -215,16 +225,20 @@ class DiagnosticsService:
 
             # Check RADIUS authentication
             try:
-                radius_check = await self.radius_service.get_subscriber_auth(tenant_id, subscriber_id)
+                radius_check = await self.radius_service.get_subscriber_auth(
+                    tenant_id, subscriber_id
+                )
                 if radius_check:
                     results["checks"]["radius_auth"] = True
                 else:
                     results["checks"]["radius_auth"] = False
-                    recommendations.append({
-                        "severity": "error",
-                        "message": "RADIUS authentication not configured",
-                        "action": "Create RADIUS authentication entry",
-                    })
+                    recommendations.append(
+                        {
+                            "severity": "error",
+                            "message": "RADIUS authentication not configured",
+                            "action": "Create RADIUS authentication entry",
+                        }
+                    )
                     severity = DiagnosticSeverity.ERROR
             except Exception as e:
                 logger.warning("RADIUS check failed", error=str(e))
@@ -236,33 +250,41 @@ class DiagnosticsService:
                 results["ip_address"] = str(subscriber.static_ipv4)
             else:
                 results["checks"]["ip_allocated"] = False
-                recommendations.append({
-                    "severity": "warning",
-                    "message": "No static IP allocated",
-                    "action": "Allocate static IP from NetBox",
-                })
+                recommendations.append(
+                    {
+                        "severity": "warning",
+                        "message": "No static IP allocated",
+                        "action": "Allocate static IP from NetBox",
+                    }
+                )
                 if severity == DiagnosticSeverity.INFO:
                     severity = DiagnosticSeverity.WARNING
 
             # Check last online
             if subscriber.last_online:
-                delta = datetime.now(timezone.utc) - subscriber.last_online.replace(tzinfo=timezone.utc)
+                delta = datetime.now(UTC) - subscriber.last_online.replace(
+                    tzinfo=UTC
+                )
                 results["last_seen_seconds"] = int(delta.total_seconds())
                 results["last_seen_hours"] = delta.total_seconds() / 3600
 
                 if delta.total_seconds() > 86400:  # 24 hours
-                    recommendations.append({
-                        "severity": "warning",
-                        "message": f"Subscriber last seen {delta.days} days ago",
-                        "action": "Check physical connectivity and CPE status",
-                    })
+                    recommendations.append(
+                        {
+                            "severity": "warning",
+                            "message": f"Subscriber last seen {delta.days} days ago",
+                            "action": "Check physical connectivity and CPE status",
+                        }
+                    )
             else:
                 results["last_seen_seconds"] = None
-                recommendations.append({
-                    "severity": "info",
-                    "message": "Subscriber has never connected",
-                    "action": "Verify installation and configuration",
-                })
+                recommendations.append(
+                    {
+                        "severity": "info",
+                        "message": "Subscriber has never connected",
+                        "action": "Verify installation and configuration",
+                    }
+                )
 
             success = all(results["checks"].values())
 
@@ -315,18 +337,22 @@ class DiagnosticsService:
 
             # Check for issues
             if len(sessions) == 0:
-                recommendations.append({
-                    "severity": "warning",
-                    "message": "No active RADIUS sessions",
-                    "action": "Subscriber may be offline or unable to authenticate",
-                })
+                recommendations.append(
+                    {
+                        "severity": "warning",
+                        "message": "No active RADIUS sessions",
+                        "action": "Subscriber may be offline or unable to authenticate",
+                    }
+                )
                 severity = DiagnosticSeverity.WARNING
             elif len(sessions) > subscriber.simultaneous_use:
-                recommendations.append({
-                    "severity": "error",
-                    "message": f"Too many concurrent sessions ({len(sessions)} > {subscriber.simultaneous_use})",
-                    "action": "Check for credential sharing or increase simultaneous_use limit",
-                })
+                recommendations.append(
+                    {
+                        "severity": "error",
+                        "message": f"Too many concurrent sessions ({len(sessions)} > {subscriber.simultaneous_use})",
+                        "action": "Check for credential sharing or increase simultaneous_use limit",
+                    }
+                )
                 severity = DiagnosticSeverity.ERROR
             else:
                 severity = DiagnosticSeverity.INFO
@@ -387,18 +413,22 @@ class DiagnosticsService:
             signal_level = onu_status.get("optical_signal_level")
             if signal_level is not None:
                 if signal_level < -28:
-                    recommendations.append({
-                        "severity": "critical",
-                        "message": f"Very weak optical signal ({signal_level} dBm)",
-                        "action": "Check fiber connection and splitter losses",
-                    })
+                    recommendations.append(
+                        {
+                            "severity": "critical",
+                            "message": f"Very weak optical signal ({signal_level} dBm)",
+                            "action": "Check fiber connection and splitter losses",
+                        }
+                    )
                     severity = DiagnosticSeverity.CRITICAL
                 elif signal_level < -25:
-                    recommendations.append({
-                        "severity": "warning",
-                        "message": f"Weak optical signal ({signal_level} dBm)",
-                        "action": "Monitor signal quality",
-                    })
+                    recommendations.append(
+                        {
+                            "severity": "warning",
+                            "message": f"Weak optical signal ({signal_level} dBm)",
+                            "action": "Monitor signal quality",
+                        }
+                    )
                     severity = DiagnosticSeverity.WARNING
                 else:
                     severity = DiagnosticSeverity.INFO
@@ -407,11 +437,13 @@ class DiagnosticsService:
 
             # Check operational state
             if onu_status.get("operational_state") != "active":
-                recommendations.append({
-                    "severity": "error",
-                    "message": f"ONU not operational (state: {onu_status.get('operational_state')})",
-                    "action": "Check ONU power and fiber connection",
-                })
+                recommendations.append(
+                    {
+                        "severity": "error",
+                        "message": f"ONU not operational (state: {onu_status.get('operational_state')})",
+                        "action": "Check ONU power and fiber connection",
+                    }
+                )
                 severity = DiagnosticSeverity.ERROR
 
             success = onu_status.get("operational_state") == "active" and (
@@ -477,35 +509,41 @@ class DiagnosticsService:
             if last_inform:
                 try:
                     last_inform_dt = datetime.fromisoformat(last_inform)
-                    delta = datetime.now(timezone.utc) - last_inform_dt.replace(tzinfo=timezone.utc)
+                    delta = datetime.now(UTC) - last_inform_dt.replace(tzinfo=UTC)
                     results["last_inform_seconds"] = int(delta.total_seconds())
 
                     if delta.total_seconds() > 3600:  # 1 hour
-                        recommendations.append({
-                            "severity": "warning",
-                            "message": f"CPE last contacted server {int(delta.total_seconds() / 60)} minutes ago",
-                            "action": "Check CPE connectivity",
-                        })
+                        recommendations.append(
+                            {
+                                "severity": "warning",
+                                "message": f"CPE last contacted server {int(delta.total_seconds() / 60)} minutes ago",
+                                "action": "Check CPE connectivity",
+                            }
+                        )
                         severity = DiagnosticSeverity.WARNING
                     else:
                         severity = DiagnosticSeverity.INFO
                 except Exception:
                     severity = DiagnosticSeverity.WARNING
             else:
-                recommendations.append({
-                    "severity": "error",
-                    "message": "CPE has never contacted server",
-                    "action": "Verify CPE configuration and internet connectivity",
-                })
+                recommendations.append(
+                    {
+                        "severity": "error",
+                        "message": "CPE has never contacted server",
+                        "action": "Verify CPE configuration and internet connectivity",
+                    }
+                )
                 severity = DiagnosticSeverity.ERROR
 
             # Check firmware
             if cpe_status.get("firmware_outdated"):
-                recommendations.append({
-                    "severity": "info",
-                    "message": "CPE firmware is outdated",
-                    "action": "Schedule firmware upgrade",
-                })
+                recommendations.append(
+                    {
+                        "severity": "info",
+                        "message": "CPE firmware is outdated",
+                        "action": "Schedule firmware upgrade",
+                    }
+                )
 
             success = cpe_status.get("status") == "online"
 
@@ -559,31 +597,39 @@ class DiagnosticsService:
                 results["netbox_vrf"] = netbox_ip.get("vrf")
 
                 # Verify consistency
-                if subscriber.static_ipv4 and str(subscriber.static_ipv4) != netbox_ip.get("address"):
-                    recommendations.append({
-                        "severity": "error",
-                        "message": "IP mismatch between subscriber and NetBox",
-                        "action": f"Update subscriber IP to {netbox_ip.get('address')} or fix NetBox",
-                    })
+                if subscriber.static_ipv4 and str(subscriber.static_ipv4) != netbox_ip.get(
+                    "address"
+                ):
+                    recommendations.append(
+                        {
+                            "severity": "error",
+                            "message": "IP mismatch between subscriber and NetBox",
+                            "action": f"Update subscriber IP to {netbox_ip.get('address')} or fix NetBox",
+                        }
+                    )
                     severity = DiagnosticSeverity.ERROR
                     success = False
                 else:
                     severity = DiagnosticSeverity.INFO
                     success = True
             elif subscriber.static_ipv4:
-                recommendations.append({
-                    "severity": "warning",
-                    "message": "IP configured but not tracked in NetBox",
-                    "action": "Create NetBox IP allocation record",
-                })
+                recommendations.append(
+                    {
+                        "severity": "warning",
+                        "message": "IP configured but not tracked in NetBox",
+                        "action": "Create NetBox IP allocation record",
+                    }
+                )
                 severity = DiagnosticSeverity.WARNING
                 success = False
             else:
-                recommendations.append({
-                    "severity": "info",
-                    "message": "No static IP allocated",
-                    "action": "Allocate IP if required for service",
-                })
+                recommendations.append(
+                    {
+                        "severity": "info",
+                        "message": "No static IP allocated",
+                        "action": "Allocate IP if required for service",
+                    }
+                )
                 severity = DiagnosticSeverity.INFO
                 success = True
 
@@ -717,7 +763,9 @@ class DiagnosticsService:
                     results["checks"][check_name] = {
                         "status": "passed" if check_result.success else "failed",
                         "summary": check_result.summary,
-                        "severity": check_result.severity.value if check_result.severity else "info",
+                        "severity": check_result.severity.value
+                        if check_result.severity
+                        else "info",
                     }
                     if check_result.success:
                         results["checks_passed"] += 1

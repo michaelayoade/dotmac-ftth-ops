@@ -11,7 +11,7 @@ from httpx import AsyncClient
 
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 from dotmac.platform.tenant.models import TenantInvitationStatus, TenantPlanType, TenantStatus
-from dotmac.platform.tenant.service import TenantService, TenantNotFoundError
+from dotmac.platform.tenant.service import TenantNotFoundError, TenantService
 from dotmac.platform.tenant.usage_billing_integration import (
     TenantUsageBillingIntegration,
 )
@@ -452,8 +452,6 @@ def mock_tenant_service() -> AsyncMock:
         """Mock create invitation."""
         from uuid import uuid4
 
-        from src.dotmac.platform.tenant.models import TenantInvitationStatus
-
         invitation_id = str(uuid4())
         invitation = SimpleNamespace(
             id=invitation_id,
@@ -482,27 +480,19 @@ def mock_tenant_service() -> AsyncMock:
 
     async def mock_accept_invitation(token):
         """Mock accept invitation."""
-        from src.dotmac.platform.tenant.models import TenantInvitationStatus
-
         for inv in invitations:
             if inv.token == token:
                 inv.status = TenantInvitationStatus.ACCEPTED
                 inv.accepted_at = datetime.now(UTC)
                 return inv
-        from src.dotmac.platform.tenant.service import TenantNotFoundError
-
         raise TenantNotFoundError("Invitation not found")
 
     async def mock_revoke_invitation(invitation_id):
         """Mock revoke invitation."""
-        from src.dotmac.platform.tenant.models import TenantInvitationStatus
-
         for inv in invitations:
             if inv.id == invitation_id:
                 inv.status = TenantInvitationStatus.REVOKED
                 return inv
-        from src.dotmac.platform.tenant.service import TenantNotFoundError
-
         raise TenantNotFoundError("Invitation not found")
 
     service.create_invitation = AsyncMock(side_effect=mock_create_invitation)
@@ -662,8 +652,6 @@ def sample_tenant() -> Mock:
     """Create a sample mock tenant for testing."""
     from decimal import Decimal
 
-    from src.dotmac.platform.tenant.models import TenantStatus
-
     return SimpleNamespace(
         id="tenant-123",
         name="Test Organization",
@@ -704,8 +692,8 @@ async def client(
     app = FastAPI()
 
     # Import and setup dependencies
-    from src.dotmac.platform.database import get_async_session
-    from src.dotmac.platform.tenant.usage_billing_router import (
+    from dotmac.platform.database import get_async_session
+    from dotmac.platform.tenant.usage_billing_router import (
         get_subscription_service,
         get_tenant_service,
         get_usage_billing_integration,
@@ -749,12 +737,16 @@ async def authenticated_client(
     from dotmac.platform.auth.core import UserInfo, get_current_user
     from dotmac.platform.database import get_async_session
     from dotmac.platform.tenant import router as tenant_router
-    from dotmac.platform.tenant.router import get_tenant_service as get_tenant_service_main
-    from dotmac.platform.tenant.dependencies import get_tenant_service as get_tenant_service_dependency
+    from dotmac.platform.tenant.dependencies import (
+        get_tenant_service as get_tenant_service_dependency,
+    )
     from dotmac.platform.tenant.onboarding_router import (
         get_user_service_dependency,
+    )
+    from dotmac.platform.tenant.onboarding_router import (
         router as onboarding_router,
     )
+    from dotmac.platform.tenant.router import get_tenant_service as get_tenant_service_main
     from dotmac.platform.tenant.usage_billing_router import (
         get_subscription_service,
         get_usage_billing_integration,

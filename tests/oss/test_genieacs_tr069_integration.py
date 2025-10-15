@@ -11,7 +11,6 @@ Tests complete TR-069/CWMP workflows including:
 """
 
 from datetime import UTC, datetime, timedelta
-from uuid import uuid4
 
 import pytest
 
@@ -105,7 +104,12 @@ class TestGenieACSParameterConfiguration:
     """Test TR-069 parameter configuration."""
 
     async def test_configure_wifi_parameters(
-        self, async_session, test_tenant_id, mock_genieacs_client, sample_cpe_device, sample_tr069_parameters
+        self,
+        async_session,
+        test_tenant_id,
+        mock_genieacs_client,
+        sample_cpe_device,
+        sample_tr069_parameters,
     ):
         """Test configuring WiFi parameters."""
         from dotmac.platform.genieacs.schemas import SetParametersRequest
@@ -227,7 +231,12 @@ class TestGenieACSFirmwareManagement:
     """Test firmware upgrades via TR-069."""
 
     async def test_trigger_firmware_upgrade(
-        self, async_session, test_tenant_id, mock_genieacs_client, sample_cpe_device, sample_firmware_upgrade
+        self,
+        async_session,
+        test_tenant_id,
+        mock_genieacs_client,
+        sample_cpe_device,
+        sample_firmware_upgrade,
     ):
         """Test triggering firmware upgrade on device."""
         from dotmac.platform.genieacs.schemas import FirmwareUpgradeRequest
@@ -276,9 +285,7 @@ class TestGenieACSFirmwareManagement:
         task_id = await service.schedule_firmware_upgrade(upgrade_request)
         assert task_id is not None
 
-    async def test_bulk_firmware_upgrade(
-        self, async_session, test_tenant_id, mock_genieacs_client
-    ):
+    async def test_bulk_firmware_upgrade(self, async_session, test_tenant_id, mock_genieacs_client):
         """Test upgrading firmware on multiple devices."""
         from dotmac.platform.genieacs.schemas import BulkFirmwareUpgradeRequest
         from dotmac.platform.genieacs.service import GenieACSService
@@ -407,9 +414,7 @@ class TestGenieACSDiagnostics:
 class TestGenieACSBulkOperations:
     """Test bulk operations on multiple CPE devices."""
 
-    async def test_bulk_parameter_update(
-        self, async_session, test_tenant_id, mock_genieacs_client
-    ):
+    async def test_bulk_parameter_update(self, async_session, test_tenant_id, mock_genieacs_client):
         """Test updating parameters on multiple devices."""
         from dotmac.platform.genieacs.schemas import BulkSetParametersRequest
         from dotmac.platform.genieacs.service import GenieACSService
@@ -443,9 +448,7 @@ class TestGenieACSBulkOperations:
         assert len(task_ids) == 5
         assert all(task_id is not None for task_id in task_ids)
 
-    async def test_bulk_reboot(
-        self, async_session, test_tenant_id, mock_genieacs_client
-    ):
+    async def test_bulk_reboot(self, async_session, test_tenant_id, mock_genieacs_client):
         """Test rebooting multiple devices."""
         from dotmac.platform.genieacs.schemas import BulkOperationRequest
         from dotmac.platform.genieacs.service import GenieACSService
@@ -476,9 +479,7 @@ class TestGenieACSBulkOperations:
 
         assert len(task_ids) == 5
 
-    async def test_bulk_factory_reset(
-        self, async_session, test_tenant_id, mock_genieacs_client
-    ):
+    async def test_bulk_factory_reset(self, async_session, test_tenant_id, mock_genieacs_client):
         """Test factory reset on multiple devices."""
         from dotmac.platform.genieacs.schemas import BulkOperationRequest
         from dotmac.platform.genieacs.service import GenieACSService
@@ -538,7 +539,9 @@ class TestGenieACSServiceIntegration:
             "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username": f"customer_{sample_service_provisioning_request['subscription_id']}",
             "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.NATEnabled": True,
             # WiFi Configuration (if managed WiFi enabled)
-            "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Enable": service_config.get("managed_wifi", False),
+            "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Enable": service_config.get(
+                "managed_wifi", False
+            ),
             "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID": f"ISP-Customer-{sample_service_provisioning_request['subscription_id'][-4:]}",
             "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Standard": "ac",
             # Management

@@ -89,7 +89,7 @@ class TestInvoiceServiceRetrieval:
                     setattr(inv, attr, getattr(mock_invoice_entity, attr))
             # Override specific fields
             inv.invoice_id = str(uuid4())
-            inv.invoice_number = f"INV-2024-00000{i+1}"
+            inv.invoice_number = f"INV-2024-00000{i + 1}"
             inv.total_amount = 10000 * (i + 1)
             inv.issue_date = datetime.now(UTC) - timedelta(days=i)
             return inv

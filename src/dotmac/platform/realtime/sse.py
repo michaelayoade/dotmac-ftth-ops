@@ -6,10 +6,11 @@ Real-time one-way event streaming for ONU status, alerts, and tickets.
 
 import asyncio
 import json
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import structlog
 from redis.asyncio import Redis
+from redis.asyncio.client import PubSub
 from sse_starlette.sse import EventSourceResponse
 
 logger = structlog.get_logger(__name__)
@@ -21,7 +22,7 @@ class SSEStream:
     def __init__(self, redis: Redis, tenant_id: str):
         self.redis = redis
         self.tenant_id = tenant_id
-        self.pubsub = None
+        self.pubsub: PubSub | None = None
 
     async def subscribe(self, channel: str) -> AsyncGenerator[dict, None]:
         """
@@ -122,14 +123,31 @@ class SubscriberStream(SSEStream):
             yield event
 
 
+class RADIUSSessionStream(SSEStream):
+    """SSE stream for RADIUS session events."""
+
+    async def stream(self) -> AsyncGenerator[dict, None]:
+        """
+        Stream RADIUS session events for tenant.
+
+        Events include:
+        - Session start (authentication)
+        - Session stop (disconnection)
+        - Session interim-update (accounting updates)
+        - Session timeout warnings
+        - Bandwidth changes
+        """
+        channel = f"radius_sessions:{self.tenant_id}"
+        async for event in self.subscribe(channel):
+            yield event
+
+
 # =============================================================================
 # SSE Stream Factory Functions
 # =============================================================================
 
 
-async def create_onu_status_stream(
-    redis: Redis, tenant_id: str
-) -> EventSourceResponse:
+async def create_onu_status_stream(redis: Redis, tenant_id: str) -> EventSourceResponse:
     """
     Create SSE stream for ONU status updates.
 
@@ -174,9 +192,7 @@ async def create_ticket_stream(redis: Redis, tenant_id: str) -> EventSourceRespo
     return EventSourceResponse(stream.stream())
 
 
-async def create_subscriber_stream(
-    redis: Redis, tenant_id: str
-) -> EventSourceResponse:
+async def create_subscriber_stream(redis: Redis, tenant_id: str) -> EventSourceResponse:
     """
     Create SSE stream for subscriber events.
 
@@ -188,4 +204,19 @@ async def create_subscriber_stream(
         EventSourceResponse for SSE streaming
     """
     stream = SubscriberStream(redis, tenant_id)
+    return EventSourceResponse(stream.stream())
+
+
+async def create_radius_session_stream(redis: Redis, tenant_id: str) -> EventSourceResponse:
+    """
+    Create SSE stream for RADIUS session events.
+
+    Args:
+        redis: Redis client
+        tenant_id: Tenant ID
+
+    Returns:
+        EventSourceResponse for SSE streaming
+    """
+    stream = RADIUSSessionStream(redis, tenant_id)
     return EventSourceResponse(stream.stream())

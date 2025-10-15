@@ -149,7 +149,12 @@ def upgrade() -> None:
             comment="Service plan/product ID",
         ),
         # Status
-        sa.Column("status", postgresql.ENUM(name="servicestatus", create_type=False), nullable=False, comment="Current status"),
+        sa.Column(
+            "status",
+            postgresql.ENUM(name="servicestatus", create_type=False),
+            nullable=False,
+            comment="Current status",
+        ),
         sa.Column(
             "provisioning_status",
             postgresql.ENUM(name="provisioningstatus", create_type=False),
@@ -378,7 +383,12 @@ def upgrade() -> None:
             nullable=True,
             comment="Previous status",
         ),
-        sa.Column("new_status", postgresql.ENUM(name="servicestatus", create_type=False), nullable=True, comment="New status"),
+        sa.Column(
+            "new_status",
+            postgresql.ENUM(name="servicestatus", create_type=False),
+            nullable=True,
+            comment="New status",
+        ),
         # Event details
         sa.Column("description", sa.Text(), nullable=True, comment="Event description"),
         # Success tracking

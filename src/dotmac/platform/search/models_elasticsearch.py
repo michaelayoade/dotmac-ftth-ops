@@ -4,7 +4,6 @@ Search Models.
 Elasticsearch index mappings and search models.
 """
 
-from datetime import datetime
 from enum import Enum
 from typing import Any
 

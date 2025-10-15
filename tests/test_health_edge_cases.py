@@ -300,7 +300,6 @@ class TestHealthCheckerEdgeCases:
             patch.object(health_checker, "check_celery_broker") as mock_celery,
             patch.object(health_checker, "check_observability") as mock_obs,
         ):
-
             # Mock return values
             mock_db.return_value = ServiceHealth("database", ServiceStatus.HEALTHY, required=True)
             mock_redis.return_value = ServiceHealth("redis", ServiceStatus.HEALTHY, required=True)
@@ -339,7 +338,6 @@ class TestHealthCheckerEdgeCases:
             patch.object(health_checker, "check_celery_broker") as mock_celery,
             patch.object(health_checker, "check_observability") as mock_obs,
         ):
-
             # Mock return values
             mock_db.return_value = ServiceHealth("database", ServiceStatus.HEALTHY, required=True)
             mock_redis.return_value = ServiceHealth("redis", ServiceStatus.HEALTHY, required=True)

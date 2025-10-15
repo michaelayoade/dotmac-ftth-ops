@@ -23,26 +23,122 @@ logger = logging.getLogger(__name__)
 
 
 # Mapping of settings fields to Vault paths
+# This mapping defines how application settings are loaded from Vault/OpenBao
+# Format: "settings.path": "vault/path"
 SECRETS_MAPPING = {
-    # Application secrets
+    # ============================================================
+    # Core Application Secrets (RESTRICTED)
+    # ============================================================
     "secret_key": "app/secret_key",
-    # Database credentials
+
+    # ============================================================
+    # Database Credentials (RESTRICTED)
+    # ============================================================
     "database.password": "database/password",
     "database.username": "database/username",
-    # Redis credentials
+
+    # ============================================================
+    # Redis Credentials (CONFIDENTIAL)
+    # ============================================================
     "redis.password": "redis/password",
-    # JWT secrets
+
+    # ============================================================
+    # Authentication & JWT (RESTRICTED)
+    # ============================================================
     "jwt.secret_key": "auth/jwt_secret",
-    # Email/SMTP credentials
+
+    # ============================================================
+    # Email/SMTP Credentials (CONFIDENTIAL)
+    # ============================================================
     "email.smtp_password": "smtp/password",
     "email.smtp_user": "smtp/username",
-    # Storage credentials (S3/MinIO)
+
+    # ============================================================
+    # Object Storage Credentials (S3/MinIO) (RESTRICTED)
+    # ============================================================
     "storage.access_key": "storage/access_key",
     "storage.secret_key": "storage/secret_key",
+
+    # ============================================================
+    # Payment Gateway Credentials (RESTRICTED)
+    # ============================================================
+    "billing.stripe_api_key": "billing/stripe/api_key",
+    "billing.stripe_webhook_secret": "billing/stripe/webhook_secret",
+    "billing.stripe_publishable_key": "billing/stripe/publishable_key",
+    "billing.paypal_client_id": "billing/paypal/client_id",
+    "billing.paypal_client_secret": "billing/paypal/client_secret",
+    "billing.paypal_webhook_id": "billing/paypal/webhook_id",
+
+    # ============================================================
+    # Tax Service API Keys (CONFIDENTIAL)
+    # ============================================================
+    "billing.avalara_api_key": "billing/avalara/api_key",
+    "billing.taxjar_api_token": "billing/taxjar/api_token",
+
+    # ============================================================
+    # OSS Integration Credentials (CONFIDENTIAL)
+    # ============================================================
+    # VOLTHA (PON Controller)
+    "oss.voltha.password": "oss/voltha/password",
+    "oss.voltha.api_token": "oss/voltha/token",
+
+    # GenieACS (TR-069 ACS)
+    "oss.genieacs.password": "oss/genieacs/password",
+    "oss.genieacs.api_token": "oss/genieacs/token",
+
+    # NetBox (IPAM/DCIM)
+    "oss.netbox.api_token": "oss/netbox/token",
+    "oss.netbox.password": "oss/netbox/password",
+
+    # Ansible AWX (Automation)
+    "oss.ansible.password": "oss/awx/password",
+    "oss.ansible.api_token": "oss/awx/token",
+
+    # ============================================================
+    # Network Service Credentials (RESTRICTED)
+    # ============================================================
+    "radius.secret": "radius/secret",
+
+    # ============================================================
+    # Webhook Security (CONFIDENTIAL)
+    # ============================================================
+    "webhooks.signing_secret": "webhooks/signing_secret",
+
+    # ============================================================
+    # Search/Indexing (CONFIDENTIAL)
+    # ============================================================
+    "search.meilisearch_api_key": "search/meilisearch/api_key",
+
+    # ============================================================
+    # Vault Management (RESTRICTED)
+    # ============================================================
     # Vault token (for token renewal)
     "vault.token": "vault/token",
-    # Observability
+
+    # ============================================================
+    # Observability & Monitoring (CONFIDENTIAL)
+    # ============================================================
     "observability.sentry_dsn": "observability/sentry_dsn",
+}
+
+# Additional Vault paths for secrets not directly mapped to settings
+# These are used by specific services and loaded on-demand
+ADDITIONAL_VAULT_PATHS = {
+    # Platform admin credentials (loaded during bootstrap)
+    "platform_admin_email": "auth/platform_admin/email",
+    "platform_admin_password": "auth/platform_admin/password",
+
+    # Encryption keys (loaded by encryption services)
+    "wireguard_encryption_key": "wireguard/encryption_key",
+    "dotmac_encryption_key": "app/encryption_key",
+    "dotmac_jwt_secret_key": "auth/jwt_secret_key",
+
+    # Vault AppRole authentication (for initial auth)
+    "vault_secret_id": "vault/secret_id",
+    "vault_role_id": "vault/role_id",
+
+    # WireGuard server private keys are stored dynamically at:
+    # wireguard/servers/{public_key}/private-key
 }
 
 

@@ -28,8 +28,8 @@ from dotmac.platform.db import AsyncSessionLocal
 from dotmac.platform.tenant.models import Tenant
 from dotmac.platform.tenant.oss_config import (
     OSSService,
-    update_service_config,
     reset_service_config,
+    update_service_config,
 )
 
 
@@ -141,7 +141,9 @@ async def main() -> None:
                 await update_service_config(session, tenant.id, service, overrides)
                 print(f"✅ Applied overrides for {tenant.slug} -> {service.value}")
             elif not args.config_file:
-                raise SystemExit("❌ Provide --set or --clear when using --service without --config-file")
+                raise SystemExit(
+                    "❌ Provide --set or --clear when using --service without --config-file"
+                )
 
     print("🎉 Done")
 

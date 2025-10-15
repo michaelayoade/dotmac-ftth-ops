@@ -10,8 +10,9 @@ settings (keyed by ``oss.<service>``) and fall back to global defaults in
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 from pydantic import BaseModel, ValidationError
 from sqlalchemy import select

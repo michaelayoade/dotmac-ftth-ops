@@ -9,7 +9,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -473,9 +473,7 @@ class QuoteService:
         limit: int = 100,
     ) -> list[Quote]:
         """List quotes with filters."""
-        stmt = select(Quote).where(
-            and_(Quote.tenant_id == tenant_id, Quote.deleted_at.is_(None))
-        )
+        stmt = select(Quote).where(and_(Quote.tenant_id == tenant_id, Quote.deleted_at.is_(None)))
 
         if lead_id:
             stmt = stmt.where(Quote.lead_id == lead_id)
@@ -582,9 +580,7 @@ class SiteSurveyService:
         survey = await self.get_survey(tenant_id, survey_id)
 
         if survey.status != SiteSurveyStatus.SCHEDULED:
-            raise ValidationError(
-                f"Survey {survey_id} cannot be started in {survey.status} status"
-            )
+            raise ValidationError(f"Survey {survey_id} cannot be started in {survey.status} status")
 
         survey.status = SiteSurveyStatus.IN_PROGRESS
         survey.updated_by_id = updated_by_id

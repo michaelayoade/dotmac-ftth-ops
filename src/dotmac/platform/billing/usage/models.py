@@ -190,7 +190,7 @@ class UsageRecord(Base, TimestampMixin, TenantMixin, AuditMixin):
     def __repr__(self) -> str:
         return (
             f"<UsageRecord(id={self.id}, type={self.usage_type}, "
-            f"qty={self.quantity} {self.unit}, amount=${self.total_amount/100:.2f})>"
+            f"qty={self.quantity} {self.unit}, amount=${self.total_amount / 100:.2f})>"
         )
 
 
@@ -294,7 +294,7 @@ class UsageAggregate(Base, TimestampMixin, TenantMixin):
     def __repr__(self) -> str:
         return (
             f"<UsageAggregate(type={self.usage_type}, period={self.period_type}, "
-            f"qty={self.total_quantity}, amount=${self.total_amount/100:.2f})>"
+            f"qty={self.total_quantity}, amount=${self.total_amount / 100:.2f})>"
         )
 
 

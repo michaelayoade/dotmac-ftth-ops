@@ -270,7 +270,7 @@ class TestFileDownloadE2E:
     async def test_download_binary_file(self, async_client, auth_headers, mock_storage_service):
         """Test downloading binary files."""
         file_id = str(uuid4())
-        image_bytes = b"\xFF\xD8\xFF" + b"\x00" * 100  # JPEG header + data
+        image_bytes = b"\xff\xd8\xff" + b"\x00" * 100  # JPEG header + data
         metadata = {
             "file_name": "image.jpg",
             "content_type": "image/jpeg",

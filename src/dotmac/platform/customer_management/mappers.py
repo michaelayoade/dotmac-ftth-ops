@@ -330,7 +330,7 @@ class CustomerMapper:
 
     @staticmethod
     def batch_validate(
-        rows: list[dict[str, Any]]
+        rows: list[dict[str, Any]],
     ) -> tuple[list[CustomerImportSchema], list[dict[str, Any]]]:
         """
         Validate multiple rows of import data.

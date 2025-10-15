@@ -8,9 +8,6 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from dotmac.platform.jobs.models import JobStatus, JobType
-
-
 # =============================================================================
 # Job Request Schemas
 # =============================================================================

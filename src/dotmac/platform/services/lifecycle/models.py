@@ -412,8 +412,8 @@ class ServiceInstance(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
         comment="Whether customer notification has been sent",
     )
 
-    # Flexible metadata
-    metadata: Mapped[dict[str, Any]] = mapped_column(
+    # Flexible metadata (renamed from 'metadata' to avoid SQLAlchemy reserved name conflict)
+    service_metadata: Mapped[dict[str, Any]] = mapped_column(
         JSON,
         default=dict,
         nullable=False,

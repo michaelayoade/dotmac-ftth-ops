@@ -3,6 +3,7 @@
 Seed script for RBAC permissions and roles
 Run after migration: python scripts/seed_rbac.py
 """
+
 import sys
 from pathlib import Path
 from uuid import uuid4

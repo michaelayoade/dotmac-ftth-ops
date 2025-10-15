@@ -6,10 +6,9 @@ const require = createRequire(import.meta.url);
 const nextConfig = {
   reactStrictMode: true,
   // Server Actions are enabled by default in Next.js 14+
-  // TODO: Enable instrumentation hook once @dotmac/headless exports telemetry
-  // experimental: {
-  //   instrumentationHook: true,
-  // },
+  experimental: {
+    instrumentationHook: true,
+  },
   images: {
     domains: ['images.unsplash.com'],
   },

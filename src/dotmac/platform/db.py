@@ -53,7 +53,7 @@ def get_database_url() -> str:
     port = settings.database.port
     database = settings.database.database
 
-    return f"postgresql://{username}:{password}" f"@{host}:{port}/{database}"
+    return f"postgresql://{username}:{password}@{host}:{port}/{database}"
 
 
 def get_async_database_url() -> str:

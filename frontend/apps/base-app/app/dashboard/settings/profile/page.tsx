@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -84,12 +85,27 @@ export default function ProfileSettingsPage() {
   const verifyPhone = useVerifyPhone();
   const deleteAccount = useDeleteAccount();
   const exportData = useExportData();
+  const enable2FA = useEnable2FA();
+  const verify2FA = useVerify2FA();
+  const disable2FA = useDisable2FA();
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
   const [isSetup2FAOpen, setIsSetup2FAOpen] = useState(false);
+  const [isDisable2FAOpen, setIsDisable2FAOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [mfaEnabled, setMfaEnabled] = useState<boolean>(Boolean(user?.mfa_enabled));
+  const [twoFactorSetup, setTwoFactorSetup] = useState({
+    step: 'password' as 'password' | 'verify',
+    password: '',
+    token: '',
+    qrCode: '',
+    secret: '',
+    backupCodes: [] as string[],
+    provisioningUri: '',
+  });
+  const [disable2FAForm, setDisable2FAForm] = useState({ password: '', token: '' });
 
   // Form states
   const [formData, setFormData] = useState({
@@ -127,6 +143,30 @@ export default function ProfileSettingsPage() {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    setMfaEnabled(Boolean(user?.mfa_enabled));
+  }, [user?.mfa_enabled]);
+
+  useEffect(() => {
+    if (!isSetup2FAOpen) {
+      setTwoFactorSetup({
+        step: 'password',
+        password: '',
+        token: '',
+        qrCode: '',
+        secret: '',
+        backupCodes: [],
+        provisioningUri: '',
+      });
+    }
+  }, [isSetup2FAOpen]);
+
+  useEffect(() => {
+    if (!isDisable2FAOpen) {
+      setDisable2FAForm({ password: '', token: '' });
+    }
+  }, [isDisable2FAOpen]);
 
   const handleSaveProfile = async () => {
     setIsLoading(true);
@@ -195,18 +235,130 @@ export default function ProfileSettingsPage() {
   };
 
   const handleEnable2FA = () => {
+    setTwoFactorSetup({
+      step: 'password',
+      password: '',
+      token: '',
+      qrCode: '',
+      secret: '',
+      backupCodes: [],
+      provisioningUri: '',
+    });
     setIsSetup2FAOpen(true);
   };
 
-  const handleComplete2FASetup = () => {
-    // TODO: Implement 2FA setup with API
-    setIsSetup2FAOpen(false);
-    toast({ title: 'Success', description: 'Two-factor authentication enabled' });
+  const handleGenerate2FASetup = async () => {
+    const password = twoFactorSetup.password.trim();
+    if (!password) {
+      toast({
+        title: 'Password required',
+        description: 'Enter your current password to continue.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const data = await enable2FA.mutateAsync({ password });
+      setTwoFactorSetup((prev) => ({
+        ...prev,
+        step: 'verify',
+        qrCode: data.qr_code,
+        secret: data.secret,
+        backupCodes: data.backup_codes,
+        provisioningUri: data.provisioning_uri,
+        token: '',
+        password,
+      }));
+      toast({
+        title: 'Verification required',
+        description: 'Scan the QR code and enter the code from your authenticator app.',
+      });
+    } catch (error) {
+      logger.error('Failed to initiate 2FA setup', error instanceof Error ? error : new Error(String(error)));
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Unable to start 2FA setup',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleComplete2FASetup = async () => {
+    if (twoFactorSetup.token.trim().length !== 6) {
+      toast({
+        title: 'Invalid code',
+        description: 'Enter the 6-digit code from your authenticator app.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await verify2FA.mutateAsync({ token: twoFactorSetup.token.trim() });
+      toast({ title: 'Success', description: 'Two-factor authentication enabled' });
+      setMfaEnabled(true);
+      setIsSetup2FAOpen(false);
+      await refreshUser();
+    } catch (error) {
+      logger.error('Failed to verify 2FA', error instanceof Error ? error : new Error(String(error)));
+      toast({
+        title: 'Verification failed',
+        description: error instanceof Error ? error.message : 'Invalid verification code',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDisable2FA = () => {
-    // TODO: Implement 2FA disable with API
-    toast({ title: 'Success', description: 'Two-factor authentication disabled' });
+    setDisable2FAForm({ password: '', token: '' });
+    setIsDisable2FAOpen(true);
+  };
+
+  const handleConfirmDisable2FA = async () => {
+    if (!disable2FAForm.password || disable2FAForm.token.trim().length !== 6) {
+      toast({
+        title: 'Incomplete form',
+        description: 'Enter your password and a valid 6-digit code.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      await disable2FA.mutateAsync({
+        password: disable2FAForm.password,
+        token: disable2FAForm.token.trim(),
+      });
+      toast({ title: 'Success', description: 'Two-factor authentication disabled' });
+      setMfaEnabled(false);
+      setIsDisable2FAOpen(false);
+      await refreshUser();
+    } catch (error) {
+      logger.error('Failed to disable 2FA', error instanceof Error ? error : new Error(String(error)));
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Unable to disable 2FA',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleCopyBackupCodes = async () => {
+    if (!twoFactorSetup.backupCodes.length || typeof navigator === 'undefined' || !navigator.clipboard) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(twoFactorSetup.backupCodes.join('\n'));
+      toast({ title: 'Copied', description: 'Backup codes copied to clipboard' });
+    } catch (error) {
+      logger.error('Failed to copy backup codes', error instanceof Error ? error : new Error(String(error)));
+      toast({
+        title: 'Copy failed',
+        description: 'Unable to copy backup codes. Copy them manually instead.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleVerifyPhone = async () => {
@@ -518,21 +670,37 @@ export default function ProfileSettingsPage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full bg-muted`}>
-                    <Shield className={`h-5 w-5 text-muted-foreground`} />
+                  <div
+                    className={`p-2 rounded-full ${
+                      mfaEnabled
+                        ? 'bg-emerald-100 dark:bg-emerald-950/20'
+                        : 'bg-muted'
+                    }`}
+                  >
+                    <Shield
+                      className={`h-5 w-5 ${
+                        mfaEnabled ? 'text-emerald-500' : 'text-muted-foreground'
+                      }`}
+                    />
                   </div>
                   <div>
                     <p className="font-medium">
-                      2FA is not enabled
+                      {mfaEnabled ? '2FA is enabled' : '2FA is not enabled'}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Secure your account with two-factor authentication
+                      {mfaEnabled
+                        ? `Backup codes remaining: ${user?.mfa_backup_codes_remaining ?? 0}`
+                        : 'Secure your account with two-factor authentication'}
                     </p>
                   </div>
                 </div>
-                <Button onClick={handleEnable2FA}>
-                  Enable 2FA
-                </Button>
+                {mfaEnabled ? (
+                  <Button variant="outline" onClick={handleDisable2FA}>
+                    Disable 2FA
+                  </Button>
+                ) : (
+                  <Button onClick={handleEnable2FA}>Enable 2FA</Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -781,37 +949,187 @@ export default function ProfileSettingsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 2FA Setup Dialog */}
-      <Dialog open={isSetup2FAOpen} onOpenChange={setIsSetup2FAOpen}>
+      {/* Disable 2FA Dialog */}
+      <Dialog open={isDisable2FAOpen} onOpenChange={setIsDisable2FAOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Enable Two-Factor Authentication</DialogTitle>
+            <DialogTitle>Disable Two-Factor Authentication</DialogTitle>
             <DialogDescription>
-              Scan this QR code with your authenticator app
+              Enter your password and a code from your authenticator app to disable 2FA.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="bg-card p-4 rounded-lg flex justify-center">
-              <div className="h-48 w-48 bg-muted rounded flex items-center justify-center">
-                <span className="text-muted-foreground">QR Code</span>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="disable-2fa-password">Current password</Label>
+              <Input
+                id="disable-2fa-password"
+                type="password"
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                value={disable2FAForm.password}
+                onChange={(e) =>
+                  setDisable2FAForm((prev) => ({ ...prev, password: e.target.value }))
+                }
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="2fa-code">Enter verification code</Label>
+              <Label htmlFor="disable-2fa-token">Authenticator code</Label>
               <Input
-                id="2fa-code"
+                id="disable-2fa-token"
                 placeholder="000000"
+                inputMode="numeric"
                 maxLength={6}
+                value={disable2FAForm.token}
+                onChange={(e) =>
+                  setDisable2FAForm((prev) => ({
+                    ...prev,
+                    token: e.target.value.replace(/\D/g, '').slice(0, 6),
+                  }))
+                }
               />
             </div>
           </div>
           <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDisable2FAOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDisable2FA}
+              disabled={
+                disable2FA.isPending ||
+                !disable2FAForm.password ||
+                disable2FAForm.token.length !== 6
+              }
+            >
+              {disable2FA.isPending ? 'Disabling…' : 'Disable 2FA'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 2FA Setup Dialog */}
+      <Dialog open={isSetup2FAOpen} onOpenChange={setIsSetup2FAOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {twoFactorSetup.step === 'password'
+                ? 'Enable Two-Factor Authentication'
+                : 'Verify Two-Factor Authentication'}
+            </DialogTitle>
+            <DialogDescription>
+              {twoFactorSetup.step === 'password'
+                ? 'Enter your password to generate a QR code for your authenticator app.'
+                : 'Scan the QR code and enter the 6-digit code from your authenticator app.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {twoFactorSetup.step === 'password' ? (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="2fa-password">Current password</Label>
+                <Input
+                  id="2fa-password"
+                  type="password"
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  value={twoFactorSetup.password}
+                  onChange={(e) =>
+                    setTwoFactorSetup((prev) => ({ ...prev, password: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              <div className="bg-card p-4 rounded-lg flex justify-center">
+                {twoFactorSetup.qrCode ? (
+                  <Image
+                    unoptimized
+                    src={twoFactorSetup.qrCode}
+                    alt="2FA QR code"
+                    width={192}
+                    height={192}
+                    className="h-48 w-48"
+                  />
+                ) : (
+                  <div className="h-48 w-48 bg-muted rounded flex items-center justify-center">
+                    <span className="text-muted-foreground">QR Code unavailable</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Manual entry key</Label>
+                <code className="block rounded bg-muted px-3 py-2 text-sm">
+                  {twoFactorSetup.secret || '—'}
+                </code>
+                {twoFactorSetup.provisioningUri && (
+                  <p className="text-xs text-muted-foreground break-all">
+                    {twoFactorSetup.provisioningUri}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  If you cannot scan the QR code, enter this key manually in your authenticator app.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Backup codes</Label>
+                <div className="grid grid-cols-2 gap-2 rounded border border-border/60 bg-card/40 p-3 text-sm font-mono">
+                  {twoFactorSetup.backupCodes.map((code) => (
+                    <span key={code}>{code}</span>
+                  ))}
+                </div>
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm" onClick={handleCopyBackupCodes}>
+                    Copy backup codes
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Store these backup codes securely. They will not be shown again.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="2fa-code">Verification code</Label>
+                <Input
+                  id="2fa-code"
+                  placeholder="000000"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={twoFactorSetup.token}
+                  onChange={(e) =>
+                    setTwoFactorSetup((prev) => ({
+                      ...prev,
+                      token: e.target.value.replace(/\D/g, '').slice(0, 6),
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
             <Button variant="outline" onClick={() => setIsSetup2FAOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleComplete2FASetup}>
-              Enable 2FA
-            </Button>
+            {twoFactorSetup.step === 'password' ? (
+              <Button
+                onClick={handleGenerate2FASetup}
+                disabled={!twoFactorSetup.password || enable2FA.isPending}
+              >
+                {enable2FA.isPending ? 'Generating…' : 'Continue'}
+              </Button>
+            ) : (
+              <Button
+                onClick={handleComplete2FASetup}
+                disabled={twoFactorSetup.token.length !== 6 || verify2FA.isPending}
+              >
+                {verify2FA.isPending ? 'Enabling…' : 'Enable 2FA'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

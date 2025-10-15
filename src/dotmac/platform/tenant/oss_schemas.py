@@ -31,4 +31,3 @@ class OSSServiceConfigUpdate(BaseModel):
     max_retries: int | None = Field(
         None, ge=0, description="Override automatic retry count (null to clear)"
     )
-

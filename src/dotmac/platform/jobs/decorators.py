@@ -6,18 +6,29 @@ Decorators for easy background job creation and management.
 
 import asyncio
 import functools
-from datetime import UTC, datetime, timedelta
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from datetime import UTC, datetime
+from typing import Any, TypedDict, TypeVar
 from uuid import uuid4
 
 import structlog
-from celery import Celery
 
 from dotmac.platform.jobs.models import JobPriority, JobStatus
 
 logger = structlog.get_logger(__name__)
 
 T = TypeVar("T")
+
+
+class ScheduledJobConfig(TypedDict):
+    cron_expression: str | None
+    interval_seconds: int | None
+    name: str
+    description: str
+    priority: JobPriority
+    max_retries: int
+    max_concurrent_runs: int
+    job_type: str
 
 
 def background_job(
@@ -122,8 +133,9 @@ def background_job(
                 # Mark as failed
                 if track_progress and tenant_id:
                     async for session in get_async_session():
-                        from dotmac.platform.jobs.models import Job
                         import traceback
+
+                        from dotmac.platform.jobs.models import Job
 
                         job = await session.get(Job, job_id)
                         if job:
@@ -197,9 +209,9 @@ def scheduled_job(
     if cron and interval_seconds:
         raise ValueError("Cannot specify both cron and interval_seconds")
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         # Store scheduling metadata on function
-        func._scheduled_job_config = {
+        config: ScheduledJobConfig = {
             "cron_expression": cron,
             "interval_seconds": interval_seconds,
             "name": name or func.__name__,
@@ -209,6 +221,7 @@ def scheduled_job(
             "max_concurrent_runs": max_concurrent_runs,
             "job_type": func.__name__,
         }
+        setattr(func, "_scheduled_job_config", config)
 
         logger.info(
             "scheduled_job.registered",

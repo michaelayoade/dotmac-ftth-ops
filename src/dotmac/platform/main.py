@@ -17,10 +17,11 @@ from starlette.responses import Response
 
 from dotmac.platform.audit import AuditContextMiddleware
 from dotmac.platform.auth.exceptions import AuthError, get_http_status
+from dotmac.platform.auth.isp_permissions import ensure_isp_rbac
 from dotmac.platform.core.rate_limiting import get_limiter
 from dotmac.platform.db import AsyncSessionLocal, init_db
-from dotmac.platform.auth.isp_permissions import ensure_isp_rbac
 from dotmac.platform.monitoring.health_checks import HealthChecker, ensure_infrastructure_running
+from dotmac.platform.redis_client import init_redis, shutdown_redis
 from dotmac.platform.routers import get_api_info, register_routers
 from dotmac.platform.secrets import load_secrets_from_vault_sync
 from dotmac.platform.settings import settings
@@ -54,8 +55,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except ValueError as e:
         # Setup basic logging to capture security validation failure
         import structlog
+
         logger = structlog.get_logger(__name__)
-        logger.critical("security.validation.failed", error=str(e), environment=settings.environment)
+        logger.critical(
+            "security.validation.failed", error=str(e), environment=settings.environment
+        )
         raise RuntimeError(str(e)) from e
 
     # Setup telemetry first to enable structured logging
@@ -94,7 +98,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         "service.startup.services_check",
         version=settings.app_version,
         all_healthy=all_healthy,
-        emoji="🚀"
+        emoji="🚀",
     )
 
     failed_services = [c.name for c in checks if c.required and not c.is_healthy]
@@ -102,14 +106,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         logger.error(
             "service.startup.required_services_unavailable",
             failed_services=failed_services,
-            emoji="❌"
+            emoji="❌",
         )
     elif not all_healthy:
         optional_failed = [c.name for c in checks if not c.required and not c.is_healthy]
         logger.warning(
             "service.startup.optional_services_unavailable",
             optional_failed_services=optional_failed,
-            emoji="⚠️"
+            emoji="⚠️",
         )
     else:
         logger.info("service.startup.all_services_healthy", emoji="✅")
@@ -152,6 +156,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         if settings.environment == "production":
             raise
 
+    # Initialize Redis
+    try:
+        await init_redis()
+        logger.info("redis.init.success", emoji="✅")
+    except Exception as e:
+        logger.error("redis.init.failed", error=str(e), emoji="❌")
+        # Continue in development, fail in production if Redis is critical
+        # Allow graceful degradation for features that can work without Redis
+        if settings.environment == "production":
+            logger.warning("redis.production.unavailable", emoji="⚠️")
+
     # Seed ISP RBAC permissions/roles after database init
     try:
         async with AsyncSessionLocal() as session:
@@ -169,7 +184,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Shutdown with structured logging
     logger.info("service.shutdown.begin", emoji="👋")
 
-    # Cleanup resources here if needed
+    # Cleanup Redis connections
+    try:
+        await shutdown_redis()
+        logger.info("redis.shutdown.success", emoji="✅")
+    except Exception as e:
+        logger.error("redis.shutdown.failed", error=str(e), emoji="❌")
 
     logger.info("service.shutdown.complete", emoji="✅")
 

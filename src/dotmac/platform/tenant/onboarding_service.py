@@ -12,7 +12,7 @@ import structlog
 
 from dotmac.platform.user_management.service import UserService
 
-from .models import TenantStatus
+from .models import Tenant, TenantStatus
 from .onboarding_schemas import TenantOnboardingRequest
 from .schemas import TenantSettingCreate, TenantUpdate
 from .service import (
@@ -113,9 +113,10 @@ class TenantOnboardingService:
 
         # Optionally activate tenant
         if payload.options.activate_tenant and tenant.status != TenantStatus.ACTIVE:
+            status_update = TenantUpdate.model_validate({"status": TenantStatus.ACTIVE})
             tenant = await self.tenant_service.update_tenant(
                 tenant.id,
-                TenantUpdate(status=TenantStatus.ACTIVE),
+                status_update,
                 updated_by=initiated_by,
             )
             logs.append("Tenant status updated to ACTIVE as part of onboarding.")
@@ -189,7 +190,7 @@ class TenantOnboardingService:
         payload: TenantOnboardingRequest,
         initiated_by: str | None,
         logs: list[str],
-    ):
+    ) -> Tenant | None:
         """Create or load the tenant targeted by onboarding."""
         if payload.tenant_id:
             tenant = await self.tenant_service.get_tenant(payload.tenant_id)

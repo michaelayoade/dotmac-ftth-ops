@@ -177,33 +177,38 @@ class BillingConfig(BaseModel):
 
     @classmethod
     def from_env(cls) -> "BillingConfig":
-        """Create configuration from environment variables"""
+        """Create configuration from settings (loaded from Vault in production)"""
 
         config_dict: dict[str, Any] = {}
 
-        # Stripe configuration
-        if os.getenv("STRIPE_API_KEY"):
+        # Import settings (secrets loaded from Vault in production)
+        from dotmac.platform.settings import settings
+
+        # Stripe configuration (Pure Vault mode - settings.billing loaded from Vault)
+        # In production: secrets come from Vault only
+        # In dev/test: can use env vars as convenience (settings allows override)
+        if settings.billing.stripe_api_key:
             config_dict["stripe"] = StripeConfig(
-                api_key=os.getenv("STRIPE_API_KEY", ""),
-                webhook_secret=os.getenv("STRIPE_WEBHOOK_SECRET"),
-                publishable_key=os.getenv("STRIPE_PUBLISHABLE_KEY"),
+                api_key=settings.billing.stripe_api_key,
+                webhook_secret=settings.billing.stripe_webhook_secret or None,
+                publishable_key=settings.billing.stripe_publishable_key or None,
             )
 
-        # PayPal configuration
-        if os.getenv("PAYPAL_CLIENT_ID"):
+        # PayPal configuration (Pure Vault mode)
+        if settings.billing.paypal_client_id:
             config_dict["paypal"] = PayPalConfig(
-                client_id=os.getenv("PAYPAL_CLIENT_ID", ""),
-                client_secret=os.getenv("PAYPAL_CLIENT_SECRET", ""),
-                webhook_id=os.getenv("PAYPAL_WEBHOOK_ID"),
-                environment=os.getenv("PAYPAL_ENVIRONMENT", "sandbox"),
+                client_id=settings.billing.paypal_client_id,
+                client_secret=settings.billing.paypal_client_secret or "",
+                webhook_id=settings.billing.paypal_webhook_id or None,
+                environment=os.getenv("PAYPAL_ENVIRONMENT", "sandbox"),  # Non-sensitive config
             )
 
-        # Tax configuration
+        # Tax configuration (Pure Vault mode)
         tax_config = TaxConfig(
-            provider=os.getenv("TAX_PROVIDER"),
-            avalara_api_key=os.getenv("AVALARA_API_KEY"),
-            avalara_company_code=os.getenv("AVALARA_COMPANY_CODE"),
-            taxjar_api_token=os.getenv("TAXJAR_API_TOKEN"),
+            provider=os.getenv("TAX_PROVIDER"),  # Non-sensitive config
+            avalara_api_key=settings.billing.avalara_api_key or None,
+            avalara_company_code=os.getenv("AVALARA_COMPANY_CODE"),  # Non-sensitive config
+            taxjar_api_token=settings.billing.taxjar_api_token or None,
             default_tax_rate=float(os.getenv("DEFAULT_TAX_RATE", "0.0")),
         )
         config_dict["tax"] = tax_config
@@ -238,13 +243,13 @@ class BillingConfig(BaseModel):
         )
         config_dict["payment"] = payment_config
 
-        # Webhook configuration
-        if os.getenv("WEBHOOK_ENDPOINT_URL") and os.getenv("WEBHOOK_SIGNING_SECRET"):
+        # Webhook configuration (Pure Vault mode - signing_secret from Vault)
+        if os.getenv("WEBHOOK_ENDPOINT_URL") and settings.webhooks.signing_secret:
             config_dict["webhook"] = WebhookConfig(
-                endpoint_base_url=os.getenv("WEBHOOK_ENDPOINT_URL", ""),
-                signing_secret=os.getenv("WEBHOOK_SIGNING_SECRET", ""),
-                retry_attempts=int(os.getenv("WEBHOOK_RETRY_ATTEMPTS", "3")),
-                timeout_seconds=int(os.getenv("WEBHOOK_TIMEOUT_SECONDS", "30")),
+                endpoint_base_url=os.getenv("WEBHOOK_ENDPOINT_URL", ""),  # Non-sensitive config
+                signing_secret=settings.webhooks.signing_secret,  # From Vault
+                retry_attempts=settings.webhooks.retry_attempts,
+                timeout_seconds=settings.webhooks.timeout_seconds,
             )
 
         # Feature flags

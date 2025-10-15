@@ -486,6 +486,14 @@ ROUTER_CONFIGS = [
         requires_auth=True,
     ),
     RouterConfig(
+        module_path="dotmac.platform.wireguard.router",
+        router_name="router",
+        prefix="/api/v1",
+        tags=["WireGuard VPN"],
+        description="WireGuard VPN server and peer management",
+        requires_auth=True,
+    ),
+    RouterConfig(
         module_path="dotmac.platform.crm.router",
         router_name="router",
         prefix="/api/v1/crm",

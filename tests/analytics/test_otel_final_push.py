@@ -94,7 +94,6 @@ class TestOtelCollectorAdvanced:
             patch("dotmac.platform.analytics.otel_collector.metrics") as mock_metrics,
             patch("dotmac.platform.analytics.otel_collector.Resource") as mock_resource,
         ):
-
             mock_settings.observability.otel_enabled = True
 
             collector = create_otel_collector(

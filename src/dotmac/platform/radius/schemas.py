@@ -94,6 +94,43 @@ class RADIUSSessionDisconnect(BaseModel):
     nasipaddress: str | None = Field(None, description="NAS IP address")
     acctsessionid: str | None = Field(None, description="Session ID to disconnect")
 
+    @field_validator("username", "nasipaddress", "acctsessionid")
+    @classmethod
+    def prevent_radius_injection(cls, v: str | None) -> str | None:
+        """
+        Prevent RADIUS attribute injection attacks.
+
+        SECURITY: This validator prevents injection of additional RADIUS attributes
+        via newline/carriage return characters. Without this validation, an attacker
+        could inject arbitrary attributes like Filter-Id to bypass bandwidth limits.
+
+        Example attack: username = 'victim"\\nFilter-Id = "unlimited"\\nUser-Name = "admin'
+        """
+        if v is None:
+            return v
+
+        # Check for newline injection (primary attack vector)
+        if '\n' in v or '\r' in v:
+            raise ValueError(
+                "Input cannot contain newline or carriage return characters. "
+                "These can be used to inject additional RADIUS attributes."
+            )
+
+        # Check for null bytes (secondary attack vector)
+        if '\x00' in v:
+            raise ValueError("Input cannot contain null bytes")
+
+        # Additional safety: validate character set for RADIUS-safe values
+        # Allow: alphanumeric, @, ., _, -, :, / (common in usernames, IPs, session IDs)
+        import re
+        if not re.match(r'^[a-zA-Z0-9@._\-:/]+$', v):
+            raise ValueError(
+                "Input contains invalid characters. "
+                "Only alphanumeric characters and @._-:/ are allowed for RADIUS attributes."
+            )
+
+        return v
+
 
 # ============================================================================
 # RADIUS Accounting Schemas

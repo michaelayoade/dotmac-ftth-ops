@@ -495,7 +495,7 @@ def generate_html_report(report: dict[str, Any]) -> str:
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Import Report - {report['job_id'][:8]}</title>
+    <title>Import Report - {report["job_id"][:8]}</title>
     <style>
         body {{ font-family: Arial, sans-serif; margin: 20px; }}
         h1 {{ color: #333; }}
@@ -509,26 +509,26 @@ def generate_html_report(report: dict[str, Any]) -> str:
 </head>
 <body>
     <h1>Import Job Report</h1>
-    <p><strong>Job ID:</strong> {report['job_id']}</p>
-    <p><strong>Type:</strong> {report['job_type']}</p>
-    <p><strong>Status:</strong> {report['status']}</p>
+    <p><strong>Job ID:</strong> {report["job_id"]}</p>
+    <p><strong>Type:</strong> {report["job_type"]}</p>
+    <p><strong>Status:</strong> {report["status"]}</p>
 
     <h2>File Information</h2>
     <table>
         <tr><th>Property</th><th>Value</th></tr>
-        <tr><td>Name</td><td>{report['file_info']['name']}</td></tr>
-        <tr><td>Size</td><td>{report['file_info']['size'] / 1024 / 1024:.2f} MB</td></tr>
-        <tr><td>Format</td><td>{report['file_info']['format'].upper()}</td></tr>
+        <tr><td>Name</td><td>{report["file_info"]["name"]}</td></tr>
+        <tr><td>Size</td><td>{report["file_info"]["size"] / 1024 / 1024:.2f} MB</td></tr>
+        <tr><td>Format</td><td>{report["file_info"]["format"].upper()}</td></tr>
     </table>
 
     <h2>Processing Metrics</h2>
     <table>
         <tr><th>Metric</th><th>Value</th></tr>
-        <tr><td>Total Records</td><td>{report['metrics']['total_records']:,}</td></tr>
-        <tr><td>Processed</td><td>{report['metrics']['processed_records']:,}</td></tr>
-        <tr><td class="success">Successful</td><td>{report['metrics']['successful_records']:,}</td></tr>
-        <tr><td class="error">Failed</td><td>{report['metrics']['failed_records']:,}</td></tr>
-        <tr><td>Success Rate</td><td>{report['metrics']['success_rate']:.1f}%</td></tr>
+        <tr><td>Total Records</td><td>{report["metrics"]["total_records"]:,}</td></tr>
+        <tr><td>Processed</td><td>{report["metrics"]["processed_records"]:,}</td></tr>
+        <tr><td class="success">Successful</td><td>{report["metrics"]["successful_records"]:,}</td></tr>
+        <tr><td class="error">Failed</td><td>{report["metrics"]["failed_records"]:,}</td></tr>
+        <tr><td>Success Rate</td><td>{report["metrics"]["success_rate"]:.1f}%</td></tr>
     </table>
 """
 

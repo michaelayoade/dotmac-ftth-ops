@@ -559,3 +559,169 @@ def perform_health_checks_task(self: Task) -> dict[str, Any]:
 
     result: dict[str, Any] = _run_async(_perform_health_checks())
     return result
+
+
+@celery_app.task(name="lifecycle.process_scheduled_activations", bind=True)
+def process_scheduled_activations_task(self: Task) -> dict[str, Any]:
+    """
+    Process services scheduled for activation.
+
+    Runs periodically to find and activate services that are due.
+
+    Returns:
+        dict with processing results
+    """
+
+    async def _process_scheduled_activations() -> dict[str, Any]:
+        processed = 0
+        successful = 0
+        failed = 0
+
+        async with get_async_session_context() as session:
+            service = LifecycleOrchestrationService(session)
+
+            # Find services due for activation
+            due_services = await service.get_services_due_for_activation()
+
+            for service_instance in due_services:
+                processed += 1
+
+                try:
+                    # Execute activation
+                    previous_status = service_instance.status
+                    service_instance.status = ServiceStatus.ACTIVE
+                    service_instance.activated_at = datetime.now(UTC)
+
+                    # Clear scheduled activation metadata
+                    if "scheduled_activation_datetime" in service_instance.service_metadata:
+                        del service_instance.service_metadata["scheduled_activation_datetime"]
+                        from sqlalchemy.orm import attributes
+                        attributes.flag_modified(service_instance, "service_metadata")
+
+                    await service._create_lifecycle_event(
+                        tenant_id=service_instance.tenant_id,
+                        service_instance_id=service_instance.id,
+                        event_type=LifecycleEventType.ACTIVATION_COMPLETED,
+                        previous_status=previous_status,
+                        new_status=ServiceStatus.ACTIVE,
+                        description="Scheduled activation executed",
+                        triggered_by_system="scheduler",
+                    )
+
+                    await session.commit()
+                    successful += 1
+
+                except Exception:
+                    failed += 1
+                    # Log error but continue processing
+
+            return {
+                "processed": processed,
+                "successful": successful,
+                "failed": failed,
+            }
+
+    result: dict[str, Any] = _run_async(_process_scheduled_activations())
+    return result
+
+
+@celery_app.task(name="lifecycle.rollback_failed_workflows", bind=True)
+def rollback_failed_workflows_task(self: Task, tenant_id: str | None = None) -> dict[str, Any]:
+    """
+    Automatically rollback failed provisioning workflows.
+
+    Runs periodically to clean up failed workflows.
+
+    Args:
+        tenant_id: Optional tenant filter
+
+    Returns:
+        dict with rollback results
+    """
+
+    async def _rollback_workflows() -> dict[str, Any]:
+        processed = 0
+        successful = 0
+        failed = 0
+        rollback_details = []
+
+        async with get_async_session_context() as session:
+            service_obj = LifecycleOrchestrationService(session)
+
+            # Find all tenants if not specified
+            if tenant_id:
+                tenants = [tenant_id]
+            else:
+                # Get all unique tenants with failed workflows
+                from sqlalchemy import select
+
+                from dotmac.platform.services.lifecycle.models import ProvisioningWorkflow
+
+                result = await session.execute(
+                    select(ProvisioningWorkflow.tenant_id)
+                    .where(
+                        ProvisioningWorkflow.status == ProvisioningStatus.FAILED,
+                        ProvisioningWorkflow.rollback_completed == False,
+                    )
+                    .distinct()
+                )
+                tenants = [row[0] for row in result.all()]
+
+            # Process each tenant
+            for tid in tenants:
+                failed_workflows = await service_obj.get_failed_workflows_for_rollback(
+                    tenant_id=tid, limit=10
+                )
+
+                for workflow in failed_workflows:
+                    processed += 1
+
+                    try:
+                        # Execute rollback
+                        rollback_result = await service_obj.rollback_provisioning_workflow(
+                            service_instance_id=workflow.service_instance_id,
+                            tenant_id=tid,
+                            rollback_reason="Automatic rollback of failed provisioning",
+                            user_id=None,
+                        )
+
+                        if rollback_result["success"]:
+                            successful += 1
+                            rollback_details.append(
+                                {
+                                    "service_instance_id": str(workflow.service_instance_id),
+                                    "workflow_id": workflow.workflow_id,
+                                    "status": "success",
+                                }
+                            )
+                        else:
+                            failed += 1
+                            rollback_details.append(
+                                {
+                                    "service_instance_id": str(workflow.service_instance_id),
+                                    "workflow_id": workflow.workflow_id,
+                                    "status": "failed",
+                                    "error": rollback_result.get("error"),
+                                }
+                            )
+
+                    except Exception as e:
+                        failed += 1
+                        rollback_details.append(
+                            {
+                                "service_instance_id": str(workflow.service_instance_id),
+                                "workflow_id": workflow.workflow_id,
+                                "status": "error",
+                                "error": str(e),
+                            }
+                        )
+
+            return {
+                "processed": processed,
+                "successful": successful,
+                "failed": failed,
+                "rollback_details": rollback_details,
+            }
+
+    result: dict[str, Any] = _run_async(_rollback_workflows())
+    return result

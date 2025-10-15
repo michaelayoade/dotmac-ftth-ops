@@ -179,7 +179,11 @@ def upgrade() -> None:
         "dunning_action_logs",
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("execution_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("action_type", postgresql.ENUM(name="dunningactiontype", create_type=False), nullable=False),
+        sa.Column(
+            "action_type",
+            postgresql.ENUM(name="dunningactiontype", create_type=False),
+            nullable=False,
+        ),
         sa.Column(
             "action_config",
             postgresql.JSON(astext_type=sa.Text()),

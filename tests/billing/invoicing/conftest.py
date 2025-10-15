@@ -148,7 +148,7 @@ def mock_invoice_entity(sample_tenant_id, sample_customer_id):
         line_item = MagicMock(spec=InvoiceLineItemEntity)
         line_item.line_item_id = str(uuid4())
         line_item.invoice_id = entity.invoice_id
-        line_item.description = f"Item {i+1}"
+        line_item.description = f"Item {i + 1}"
         line_item.quantity = 2 if i == 0 else 1
         line_item.unit_price = 5000 if i == 0 else 7500
         line_item.total_price = 10000 if i == 0 else 7500

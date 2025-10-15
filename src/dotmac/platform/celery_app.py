@@ -23,6 +23,7 @@ celery_app = Celery(
         "dotmac.platform.communications.task_service",
         "dotmac.platform.billing.dunning.tasks",
         "dotmac.platform.services.lifecycle.tasks",
+        "dotmac.platform.genieacs.tasks",
     ],  # Auto-discover task modules
 )
 
@@ -130,6 +131,15 @@ def setup_periodic_tasks(sender: Any, **kwargs: Any) -> None:
         name="lifecycle-perform-health-checks",
     )
 
+    # GenieACS - Check scheduled firmware upgrades every minute
+    from dotmac.platform.genieacs.tasks import check_scheduled_upgrades
+
+    sender.add_periodic_task(
+        60.0,  # 1 minute
+        check_scheduled_upgrades.s(),
+        name="genieacs-check-scheduled-upgrades",
+    )
+
     logger = structlog.get_logger(__name__)
     logger.info(
         "celery.worker.configured",
@@ -142,6 +152,7 @@ def setup_periodic_tasks(sender: Any, **kwargs: Any) -> None:
             "lifecycle-process-scheduled-terminations",
             "lifecycle-process-auto-resume",
             "lifecycle-perform-health-checks",
+            "genieacs-check-scheduled-upgrades",
         ],
     )
 

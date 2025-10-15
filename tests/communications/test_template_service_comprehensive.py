@@ -328,7 +328,8 @@ class TestStringTemplateRendering:
 
         with pytest.raises(ValueError) as exc_info:
             service.render_string_template(
-                subject_template="Hello {{ name }", data={}  # Syntax error
+                subject_template="Hello {{ name }",
+                data={},  # Syntax error
             )
 
         assert "Template rendering error" in str(exc_info.value)

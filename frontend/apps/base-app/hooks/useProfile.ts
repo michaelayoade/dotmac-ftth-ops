@@ -146,8 +146,6 @@ export interface Disable2FAData {
  * Hook to enable 2FA
  */
 export function useEnable2FA() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (data: Enable2FAData) => {
       logger.info('Enabling 2FA');

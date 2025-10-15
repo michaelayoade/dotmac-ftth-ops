@@ -3,6 +3,7 @@
 Create Admin User Script
 Creates an admin user with proper roles and permissions for testing
 """
+
 import sys
 from datetime import UTC, datetime
 from pathlib import Path

@@ -9,59 +9,57 @@ This script:
 4. Verifies the full integration
 """
 
-import asyncio
-import sys
 import os
+import sys
 from datetime import datetime
-from uuid import uuid4
 
 # Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
-os.environ.setdefault('DATABASE_URL', 'postgresql://dotmac_user:change-me-in-production@localhost:5432/dotmac')
-os.environ.setdefault('NETBOX_URL', 'http://localhost:8080')
-os.environ.setdefault('NETBOX_API_TOKEN', '0123456789abcdef0123456789abcdef01234567')
+os.environ.setdefault(
+    "DATABASE_URL", "postgresql://dotmac_user:change-me-in-production@localhost:5432/dotmac"
+)
+os.environ.setdefault("NETBOX_URL", "http://localhost:8080")
+os.environ.setdefault("NETBOX_API_TOKEN", "0123456789abcdef0123456789abcdef01234567")
 
+import requests
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-import requests
 
 # Database setup
-DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
 
 # NetBox setup
-NETBOX_URL = os.getenv('NETBOX_URL')
-NETBOX_TOKEN = os.getenv('NETBOX_API_TOKEN')
+NETBOX_URL = os.getenv("NETBOX_URL")
+NETBOX_TOKEN = os.getenv("NETBOX_API_TOKEN")
+
 
 def get_netbox_headers():
-    return {
-        "Authorization": f"Token {NETBOX_TOKEN}",
-        "Content-Type": "application/json"
-    }
+    return {"Authorization": f"Token {NETBOX_TOKEN}", "Content-Type": "application/json"}
+
 
 def allocate_ip_from_netbox(tenant_id: int, service_type: str = "fiber_internet"):
     """Allocate next available IP from NetBox for a tenant."""
     # Get IP ranges for tenant
     response = requests.get(
-        f"{NETBOX_URL}/api/ipam/ip-ranges/?tenant_id={tenant_id}",
-        headers=get_netbox_headers()
+        f"{NETBOX_URL}/api/ipam/ip-ranges/?tenant_id={tenant_id}", headers=get_netbox_headers()
     )
     response.raise_for_status()
-    ranges = response.json()['results']
+    ranges = response.json()["results"]
 
     if not ranges:
         raise ValueError(f"No IP ranges found for tenant {tenant_id}")
 
     # Use first range (FTTH range)
     ip_range = ranges[0]
-    range_id = ip_range['id']
+    range_id = ip_range["id"]
 
     # Get next available IP
     response = requests.get(
         f"{NETBOX_URL}/api/ipam/ip-ranges/{range_id}/available-ips/?limit=1",
-        headers=get_netbox_headers()
+        headers=get_netbox_headers(),
     )
     response.raise_for_status()
     available_ips = response.json()
@@ -69,7 +67,7 @@ def allocate_ip_from_netbox(tenant_id: int, service_type: str = "fiber_internet"
     if not available_ips:
         raise ValueError(f"No available IPs in range {range_id}")
 
-    next_ip = available_ips[0]['address']
+    next_ip = available_ips[0]["address"]
 
     # Allocate the IP
     response = requests.post(
@@ -79,13 +77,14 @@ def allocate_ip_from_netbox(tenant_id: int, service_type: str = "fiber_internet"
             "address": next_ip,
             "tenant": tenant_id,
             "status": "active",
-            "description": f"Auto-allocated for subscriber test"
-        }
+            "description": "Auto-allocated for subscriber test",
+        },
     )
     response.raise_for_status()
 
     # Return just the IP without /32
-    return next_ip.replace('/32', '')
+    return next_ip.replace("/32", "")
+
 
 def create_subscriber(session, tenant_id: str, username: str, password: str, ip_address: str):
     """Create subscriber in database."""
@@ -112,16 +111,20 @@ def create_subscriber(session, tenant_id: str, username: str, password: str, ip_
         RETURNING id, username, static_ipv4, status
     """)
 
-    result = session.execute(query, {
-        'id': subscriber_id,
-        'tenant_id': tenant_id,
-        'username': username,
-        'password': password,
-        'static_ipv4': ip_address
-    })
+    result = session.execute(
+        query,
+        {
+            "id": subscriber_id,
+            "tenant_id": tenant_id,
+            "username": username,
+            "password": password,
+            "static_ipv4": ip_address,
+        },
+    )
     session.commit()
 
     return result.fetchone()
+
 
 def create_radius_auth(session, subscriber_id: str, username: str, password: str):
     """Create RADIUS authentication entries."""
@@ -135,11 +138,9 @@ def create_radius_auth(session, subscriber_id: str, username: str, password: str
         ON CONFLICT DO NOTHING
     """)
 
-    session.execute(query, {
-        'subscriber_id': subscriber_id,
-        'username': username,
-        'password': password
-    })
+    session.execute(
+        query, {"subscriber_id": subscriber_id, "username": username, "password": password}
+    )
 
     # Insert radreply (authorization - IP assignment)
     query = text("""
@@ -151,13 +152,17 @@ def create_radius_auth(session, subscriber_id: str, username: str, password: str
         ON CONFLICT DO NOTHING
     """)
 
-    session.execute(query, {
-        'subscriber_id': subscriber_id,
-        'username': username,
-        'ip_address': '0.0.0.0'  # Will use static IP from subscriber table
-    })
+    session.execute(
+        query,
+        {
+            "subscriber_id": subscriber_id,
+            "username": username,
+            "ip_address": "0.0.0.0",  # Will use static IP from subscriber table
+        },
+    )
 
     session.commit()
+
 
 def main():
     print("=" * 70)
@@ -169,12 +174,12 @@ def main():
 
     try:
         # Test parameters
-        tenant_id_db = 'demo-alpha'
+        tenant_id_db = "demo-alpha"
         tenant_id_netbox = 1  # NetBox tenant ID for Demo ISP Alpha
         username = f"test.user.{int(datetime.now().timestamp())}"
         password = "testpass123"
 
-        print(f"1. Testing with:")
+        print("1. Testing with:")
         print(f"   - Tenant (DB): {tenant_id_db}")
         print(f"   - Tenant (NetBox): {tenant_id_netbox}")
         print(f"   - Username: {username}")
@@ -189,7 +194,7 @@ def main():
         # Step 2: Create subscriber
         print("3. Creating subscriber in database...")
         subscriber = create_subscriber(session, tenant_id_db, username, password, ip_address)
-        print(f"   ✓ Subscriber created:")
+        print("   ✓ Subscriber created:")
         print(f"     - ID: {subscriber.id}")
         print(f"     - Username: {subscriber.username}")
         print(f"     - IP: {subscriber.static_ipv4}")
@@ -199,17 +204,17 @@ def main():
         # Step 3: Create RADIUS auth entries
         print("4. Creating RADIUS authentication entries...")
         create_radius_auth(session, subscriber.id, username, password)
-        print(f"   ✓ RADIUS entries created")
+        print("   ✓ RADIUS entries created")
         print()
 
         # Step 4: Verify subscriber
         print("5. Verifying subscriber in database...")
         query = text("SELECT * FROM subscribers WHERE username = :username")
-        result = session.execute(query, {'username': username})
+        result = session.execute(query, {"username": username})
         subscriber_data = result.fetchone()
 
         if subscriber_data:
-            print(f"   ✓ Subscriber verified in database")
+            print("   ✓ Subscriber verified in database")
             print(f"     - ID: {subscriber_data.id}")
             print(f"     - Username: {subscriber_data.username}")
             print(f"     - IP: {subscriber_data.static_ipv4}")
@@ -218,40 +223,40 @@ def main():
             print(f"     - Download Speed: {subscriber_data.download_speed_kbps} kbps")
             print(f"     - Upload Speed: {subscriber_data.upload_speed_kbps} kbps")
         else:
-            print(f"   ✗ Subscriber NOT found in database")
+            print("   ✗ Subscriber NOT found in database")
         print()
 
         # Step 5: Verify RADIUS entries
         print("6. Verifying RADIUS entries...")
         query = text("SELECT * FROM radcheck WHERE username = :username")
-        result = session.execute(query, {'username': username})
+        result = session.execute(query, {"username": username})
         radcheck_data = result.fetchone()
 
         if radcheck_data:
-            print(f"   ✓ RADIUS authentication entry verified")
+            print("   ✓ RADIUS authentication entry verified")
             print(f"     - Attribute: {radcheck_data.attribute}")
             print(f"     - Operator: {radcheck_data.op}")
         else:
-            print(f"   ✗ RADIUS authentication entry NOT found")
+            print("   ✗ RADIUS authentication entry NOT found")
         print()
 
         # Step 6: Verify IP in NetBox
         print("7. Verifying IP allocation in NetBox...")
         response = requests.get(
             f"{NETBOX_URL}/api/ipam/ip-addresses/?address={ip_address}",
-            headers=get_netbox_headers()
+            headers=get_netbox_headers(),
         )
-        netbox_ips = response.json()['results']
+        netbox_ips = response.json()["results"]
 
         if netbox_ips:
             netbox_ip = netbox_ips[0]
-            print(f"   ✓ IP verified in NetBox")
+            print("   ✓ IP verified in NetBox")
             print(f"     - Address: {netbox_ip['address']}")
             print(f"     - Status: {netbox_ip['status']['label']}")
             print(f"     - Tenant: {netbox_ip['tenant']['name']}")
             print(f"     - Description: {netbox_ip['description']}")
         else:
-            print(f"   ✗ IP NOT found in NetBox")
+            print("   ✗ IP NOT found in NetBox")
         print()
 
         print("=" * 70)
@@ -263,8 +268,8 @@ def main():
         print(f"  - Username: {username}")
         print(f"  - Password: {password}")
         print(f"  - IP Address: {ip_address}")
-        print(f"  - Service Type: fiber_internet")
-        print(f"  - Status: active")
+        print("  - Service Type: fiber_internet")
+        print("  - Status: active")
         print()
         print("Next steps:")
         print("  - Test RADIUS authentication with this subscriber")
@@ -275,12 +280,14 @@ def main():
     except Exception as e:
         print(f"✗ Error: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
     finally:
         session.close()
 
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

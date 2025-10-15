@@ -1,5 +1,7 @@
 """Search service for business entities."""
 
+from typing import cast
+
 from .factory import create_search_backend_from_env
 from .interfaces import SearchBackend, SearchQuery, SearchResponse, SearchResult
 from .service import (
@@ -9,13 +11,16 @@ from .service import (
 )
 
 # Elasticsearch backend (optional, imported if available)
-try:
-    from .elasticsearch_backend import ElasticsearchBackend
+ElasticsearchBackend: type[SearchBackend] | None = None
+_HAS_ELASTICSEARCH = False
 
-    _HAS_ELASTICSEARCH = True
+try:
+    from .elasticsearch_backend import ElasticsearchBackend as _ImportedElasticsearchBackend
 except ImportError:
-    ElasticsearchBackend = None
-    _HAS_ELASTICSEARCH = False
+    pass
+else:
+    ElasticsearchBackend = cast(type[SearchBackend], _ImportedElasticsearchBackend)
+    _HAS_ELASTICSEARCH = True
 
 __all__ = [
     "SearchService",

@@ -6,9 +6,10 @@ Create Date: 2025-01-15 14:00:00.000000
 
 """
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "a1b2c3d4e5f6"
@@ -67,7 +68,6 @@ def upgrade() -> None:
         "subscribers",
         # Primary key
         sa.Column("id", sa.String(255), primary_key=True, nullable=False),
-
         # Tenant isolation
         sa.Column(
             "tenant_id",
@@ -76,7 +76,6 @@ def upgrade() -> None:
             nullable=False,
             index=True,
         ),
-
         # Links to Customer and User
         sa.Column(
             "customer_id",
@@ -92,12 +91,10 @@ def upgrade() -> None:
             nullable=True,
             index=True,
         ),
-
         # Subscriber identification
         sa.Column("username", sa.String(64), nullable=False, index=True),
         sa.Column("password", sa.String(255), nullable=False),
         sa.Column("subscriber_number", sa.String(50), nullable=True, index=True),
-
         # Service status
         sa.Column(
             "status",
@@ -113,7 +110,6 @@ def upgrade() -> None:
             server_default="fiber_internet",
             index=True,
         ),
-
         # Service details
         # Note: bandwidth_profile_id is a string reference to RADIUS bandwidth profile
         # Foreign key constraint will be added by the add_radius_tables migration
@@ -124,48 +120,39 @@ def upgrade() -> None:
         ),
         sa.Column("download_speed_kbps", sa.Integer, nullable=True),
         sa.Column("upload_speed_kbps", sa.Integer, nullable=True),
-
         # Network assignments
         sa.Column("static_ipv4", postgresql.INET, nullable=True),
         sa.Column("ipv6_prefix", sa.String(50), nullable=True),
         sa.Column("vlan_id", sa.Integer, nullable=True),
         sa.Column("nas_identifier", sa.String(128), nullable=True, index=True),
-
         # Device assignments
         sa.Column("onu_serial", sa.String(50), nullable=True, index=True),
         sa.Column("cpe_mac_address", sa.String(17), nullable=True, index=True),
         sa.Column("device_metadata", postgresql.JSON, nullable=False, server_default="{}"),
-
         # Service location
         sa.Column("service_address", sa.String(500), nullable=True),
         sa.Column("service_coordinates", postgresql.JSON, nullable=False, server_default="{}"),
         sa.Column("site_id", sa.String(100), nullable=True, index=True),
-
         # Service dates
         sa.Column("activation_date", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("suspension_date", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("termination_date", sa.TIMESTAMP(timezone=True), nullable=True),
-
         # Session limits
         sa.Column("session_timeout", sa.Integer, nullable=True),
         sa.Column("idle_timeout", sa.Integer, nullable=True),
         sa.Column("simultaneous_use", sa.Integer, nullable=False, server_default="1"),
-
         # Usage tracking
         sa.Column("last_online", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("total_sessions", sa.Integer, nullable=False, server_default="0"),
         sa.Column("total_upload_bytes", sa.BigInteger, nullable=False, server_default="0"),
         sa.Column("total_download_bytes", sa.BigInteger, nullable=False, server_default="0"),
-
         # External system references
         sa.Column("netbox_ip_id", sa.Integer, nullable=True),
         sa.Column("voltha_onu_id", sa.String(100), nullable=True),
         sa.Column("genieacs_device_id", sa.String(100), nullable=True),
-
         # Custom fields
         sa.Column("metadata", postgresql.JSON, nullable=False, server_default="{}"),
         sa.Column("notes", sa.Text, nullable=True),
-
         # Timestamps
         sa.Column(
             "created_at",
@@ -179,10 +166,8 @@ def upgrade() -> None:
             nullable=False,
             server_default=sa.text("CURRENT_TIMESTAMP"),
         ),
-
         # Soft delete
         sa.Column("deleted_at", sa.TIMESTAMP(timezone=True), nullable=True),
-
         # Audit fields
         sa.Column("created_by_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("updated_by_id", postgresql.UUID(as_uuid=True), nullable=True),

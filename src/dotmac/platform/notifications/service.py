@@ -9,14 +9,13 @@ from typing import Any
 from uuid import UUID
 
 import structlog
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.communications.email_service import EmailMessage, get_email_service
-from dotmac.platform.communications.models import CommunicationType
+from dotmac.platform.communications.email_service import EmailMessage
 from dotmac.platform.communications.task_service import queue_email
 from dotmac.platform.communications.template_service import TemplateService
-from dotmac.platform.core.exceptions import NotFoundError, ValidationError
+from dotmac.platform.core.exceptions import NotFoundError
 from dotmac.platform.notifications.models import (
     Notification,
     NotificationChannel,
@@ -148,18 +147,26 @@ class NotificationService:
 
         # Render templates using TemplateService
         # Create temporary in-memory templates for rendering
-        from jinja2 import Environment, DictLoader
+        from jinja2 import DictLoader, Environment, select_autoescape
 
-        env = Environment(loader=DictLoader({
-            'title': template.title_template,
-            'message': template.message_template,
-            'action_url': template.action_url_template or '',
-        }))
+        env = Environment(
+            loader=DictLoader(
+                {
+                    "title": template.title_template,
+                    "message": template.message_template,
+                    "action_url": template.action_url_template or "",
+                }
+            ),
+            autoescape=select_autoescape(
+                enabled_extensions=('html', 'xml'),
+                default_for_string=True,
+            )
+        )
 
-        title = env.get_template('title').render(**variables)
-        message = env.get_template('message').render(**variables)
+        title = env.get_template("title").render(**variables)
+        message = env.get_template("message").render(**variables)
         action_url = (
-            env.get_template('action_url').render(**variables)
+            env.get_template("action_url").render(**variables)
             if template.action_url_template
             else None
         )
@@ -304,9 +311,7 @@ class NotificationService:
 
         return notification
 
-    async def get_user_preferences(
-        self, tenant_id: str, user_id: UUID
-    ) -> NotificationPreference:
+    async def get_user_preferences(self, tenant_id: str, user_id: UUID) -> NotificationPreference:
         """Get or create user notification preferences."""
         stmt = select(NotificationPreference).where(
             and_(
@@ -478,7 +483,10 @@ class NotificationService:
         user = result.scalar_one_or_none()
 
         if not user or not user.email:
-            logger.warning("Cannot send email notification - user has no email", user_id=str(notification.user_id))
+            logger.warning(
+                "Cannot send email notification - user has no email",
+                user_id=str(notification.user_id),
+            )
             return
 
         # Queue email for async delivery
@@ -492,7 +500,9 @@ class NotificationService:
         # Use communications service to send
         queue_email(email_message)
 
-        logger.info("Email notification queued", notification_id=str(notification.id), email=user.email)
+        logger.info(
+            "Email notification queued", notification_id=str(notification.id), email=user.email
+        )
 
     async def _send_sms(self, notification: Notification) -> None:
         """Send notification via SMS (placeholder)."""

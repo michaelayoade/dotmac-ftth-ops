@@ -31,26 +31,23 @@ class ElasticsearchBackend(SearchBackend):
         Args:
             es_url: Elasticsearch URL (defaults to settings.elasticsearch_url)
         """
-        self.es_url = es_url or getattr(
-            settings, "elasticsearch_url", "http://localhost:9200"
-        )
+        default_url = getattr(settings, "elasticsearch_url", "http://localhost:9200")
+        self.es_url: str = str(es_url or default_url)
         self.client: AsyncElasticsearch | None = None
 
     async def _get_client(self) -> AsyncElasticsearch:
         """Get or create Elasticsearch client."""
         if self.client is None:
-            self.client = AsyncElasticsearch([self.es_url])
+            self.client = AsyncElasticsearch(hosts=[self.es_url])
         return self.client
 
-    async def close(self):
+    async def close(self) -> None:
         """Close Elasticsearch client."""
         if self.client:
             await self.client.close()
             self.client = None
 
-    async def create_index(
-        self, index_name: str, mappings: dict[str, Any] | None = None
-    ) -> bool:
+    async def create_index(self, index_name: str, mappings: dict[str, Any] | None = None) -> bool:
         """Create an index."""
         client = await self._get_client()
 
@@ -103,9 +100,7 @@ class ElasticsearchBackend(SearchBackend):
             logger.error("Failed to delete index", error=str(e), index=index_name)
             return False
 
-    async def index(
-        self, index_name: str, doc_id: str, document: dict[str, Any]
-    ) -> bool:
+    async def index(self, index_name: str, doc_id: str, document: dict[str, Any]) -> bool:
         """Index a document."""
         client = await self._get_client()
 
@@ -140,9 +135,7 @@ class ElasticsearchBackend(SearchBackend):
             )
             return False
 
-    async def update(
-        self, index_name: str, doc_id: str, document: dict[str, Any]
-    ) -> bool:
+    async def update(self, index_name: str, doc_id: str, document: dict[str, Any]) -> bool:
         """Update a document."""
         client = await self._get_client()
 
@@ -193,9 +186,7 @@ class ElasticsearchBackend(SearchBackend):
             )
             return False
 
-    async def bulk_index(
-        self, index_name: str, documents: list[dict[str, Any]]
-    ) -> int:
+    async def bulk_index(self, index_name: str, documents: list[dict[str, Any]]) -> int:
         """Bulk index documents."""
         client = await self._get_client()
 
@@ -215,9 +206,7 @@ class ElasticsearchBackend(SearchBackend):
 
         try:
             response = await client.bulk(operations=operations, refresh="wait_for")
-            successful = sum(
-                1 for item in response["items"] if item["index"]["status"] < 300
-            )
+            successful = sum(1 for item in response["items"] if item["index"]["status"] < 300)
 
             logger.info(
                 "Bulk index completed",
@@ -298,23 +287,27 @@ class ElasticsearchBackend(SearchBackend):
         # Search type specific query
         if query.search_type == SearchType.FULL_TEXT:
             if query.fields:
-                must_clauses.append({
-                    "multi_match": {
-                        "query": query.query,
-                        "fields": query.fields,
-                        "type": "best_fields",
-                        "fuzziness": "AUTO",
+                must_clauses.append(
+                    {
+                        "multi_match": {
+                            "query": query.query,
+                            "fields": query.fields,
+                            "type": "best_fields",
+                            "fuzziness": "AUTO",
+                        }
                     }
-                })
+                )
             else:
-                must_clauses.append({
-                    "multi_match": {
-                        "query": query.query,
-                        "fields": ["search_text", "name^2", "title^2", "description"],
-                        "type": "best_fields",
-                        "fuzziness": "AUTO",
+                must_clauses.append(
+                    {
+                        "multi_match": {
+                            "query": query.query,
+                            "fields": ["search_text", "name^2", "title^2", "description"],
+                            "type": "best_fields",
+                            "fuzziness": "AUTO",
+                        }
                     }
-                })
+                )
 
         elif query.search_type == SearchType.EXACT:
             if query.fields:
@@ -331,21 +324,25 @@ class ElasticsearchBackend(SearchBackend):
                 must_clauses.append({"prefix": {"search_text": query.query}})
 
         elif query.search_type == SearchType.FUZZY:
-            must_clauses.append({
-                "fuzzy": {
-                    "search_text": {
-                        "value": query.query,
-                        "fuzziness": "AUTO",
+            must_clauses.append(
+                {
+                    "fuzzy": {
+                        "search_text": {
+                            "value": query.query,
+                            "fuzziness": "AUTO",
+                        }
                     }
                 }
-            })
+            )
 
         # Add filters
         for filter_spec in query.filters:
             if filter_spec.operator == "eq":
                 must_clauses.append({"term": {filter_spec.field: filter_spec.value}})
             elif filter_spec.operator == "ne":
-                must_clauses.append({"bool": {"must_not": [{"term": {filter_spec.field: filter_spec.value}}]}})
+                must_clauses.append(
+                    {"bool": {"must_not": [{"term": {filter_spec.field: filter_spec.value}}]}}
+                )
             elif filter_spec.operator == "in":
                 must_clauses.append({"terms": {filter_spec.field: filter_spec.value}})
             elif filter_spec.operator == "gt":

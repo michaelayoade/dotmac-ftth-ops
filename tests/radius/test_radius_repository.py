@@ -4,7 +4,6 @@ Tests for RADIUS Repository Layer
 Tests database operations for RADIUS entities.
 """
 
-
 import pytest
 
 from dotmac.platform.radius.repository import RADIUSRepository

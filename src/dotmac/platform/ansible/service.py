@@ -1,6 +1,5 @@
 """Ansible/AWX Service Layer"""
 
-
 import structlog
 
 from dotmac.platform.ansible.client import AWXClient

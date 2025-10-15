@@ -10,7 +10,7 @@ from uuid import UUID
 import structlog
 from celery import shared_task
 
-from dotmac.platform.core.database import get_async_session
+from dotmac.platform.database import get_async_session
 from dotmac.platform.services.orchestration import OrchestrationService
 
 logger = structlog.get_logger(__name__)
@@ -242,7 +242,5 @@ def convert_lead_to_customer_async(
         return result
 
     except Exception as e:
-        logger.error(
-            "Async lead conversion failed", task_id=self.request.id, error=str(e)
-        )
+        logger.error("Async lead conversion failed", task_id=self.request.id, error=str(e))
         raise

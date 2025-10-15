@@ -4,6 +4,7 @@ Rate Limit Management Router.
 API endpoints for managing rate limit rules.
 """
 
+from datetime import UTC
 from typing import Any
 from uuid import UUID
 
@@ -294,9 +295,9 @@ async def delete_rate_limit_rule(
             status_code=status.HTTP_404_NOT_FOUND, detail="Rate limit rule not found"
         )
 
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    rule.deleted_at = datetime.now(timezone.utc)
+    rule.deleted_at = datetime.now(UTC)
     await db.commit()
 
 
@@ -310,7 +311,7 @@ async def get_rate_limit_status(
     endpoint: str = Query(..., description="Endpoint path"),
     db: AsyncSession = Depends(get_async_session),
     current_user: User = Depends(get_current_user),
-) -> dict[str, Any]:
+) -> RateLimitStatusResponse:
     """Get rate limit status."""
     service = RateLimitService(db)
 
@@ -320,7 +321,7 @@ async def get_rate_limit_status(
         user_id=current_user.id,
     )
 
-    return status_data
+    return RateLimitStatusResponse.model_validate(status_data)
 
 
 @router.post(
@@ -398,16 +399,16 @@ async def get_rate_limit_analytics(
     current_user: User = Depends(get_current_user),
 ) -> dict[str, Any]:
     """Get rate limit analytics."""
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = datetime.now(UTC) - timedelta(hours=hours)
 
     # Total violations
     total_stmt = select(func.count(RateLimitLog.id)).where(
         RateLimitLog.tenant_id == current_user.tenant_id, RateLimitLog.created_at >= since
     )
     total_result = await db.execute(total_stmt)
-    total_violations = total_result.scalar()
+    total_violations = int(total_result.scalar() or 0)
 
     # Blocked vs allowed
     blocked_stmt = select(func.count(RateLimitLog.id)).where(
@@ -416,7 +417,7 @@ async def get_rate_limit_analytics(
         RateLimitLog.was_blocked.is_(True),
     )
     blocked_result = await db.execute(blocked_stmt)
-    blocked_count = blocked_result.scalar()
+    blocked_count = int(blocked_result.scalar() or 0)
 
     # Top violators by IP
     top_ips_stmt = (
@@ -450,7 +451,7 @@ async def get_rate_limit_analytics(
         "period_hours": hours,
         "total_violations": total_violations,
         "blocked_requests": blocked_count,
-        "allowed_requests": total_violations - blocked_count,
+        "allowed_requests": max(0, total_violations - blocked_count),
         "top_violators_by_ip": top_ips,
         "top_violated_endpoints": top_endpoints,
     }

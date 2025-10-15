@@ -15,7 +15,6 @@ from decimal import Decimal
 from uuid import uuid4
 
 import pytest
-from dotmac.platform.customers.models import Customer
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -34,6 +33,7 @@ from dotmac.platform.billing.usage.models import (
     UsageRecord,
     UsageType,
 )
+from dotmac.platform.customer_management.models import Customer
 from dotmac.platform.ticketing.models import Ticket, TicketStatus, TicketType
 
 
@@ -213,7 +213,8 @@ class TestEnhancedTicketingSmoke:
         # Query breached SLA tickets
         result = await async_session.execute(
             select(Ticket).where(
-                Ticket.tenant_id == tenant_id, Ticket.sla_breached == True  # noqa: E712
+                Ticket.tenant_id == tenant_id,
+                Ticket.sla_breached == True,  # noqa: E712
             )
         )
         breached_tickets = result.scalars().all()

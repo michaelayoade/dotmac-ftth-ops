@@ -13,6 +13,8 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.tenant.oss_config import OSSService, update_service_config
+
 from ..auth.core import UserInfo, get_current_user
 from ..database import get_async_session
 from .models import TenantInvitationStatus, TenantPlanType, TenantStatus
@@ -39,7 +41,6 @@ from .service import (
     TenantNotFoundError,
     TenantService,
 )
-from dotmac.platform.tenant.oss_config import OSSService, update_service_config
 
 logger = structlog.get_logger(__name__)
 

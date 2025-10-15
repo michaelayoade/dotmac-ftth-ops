@@ -425,7 +425,10 @@ async def _send_dunning_email(
 
     except Exception as e:
         logger.error(
-            "dunning.email.failed", execution_id=execution.id, error=str(e), error_type=type(e).__name__
+            "dunning.email.failed",
+            execution_id=execution.id,
+            error=str(e),
+            error_type=type(e).__name__,
         )
         return {
             "status": "failed",
@@ -503,7 +506,10 @@ async def _send_dunning_sms(
 
     except Exception as e:
         logger.error(
-            "dunning.sms.failed", execution_id=execution.id, error=str(e), error_type=type(e).__name__
+            "dunning.sms.failed",
+            execution_id=execution.id,
+            error=str(e),
+            error_type=type(e).__name__,
         )
         return {
             "status": "failed",
@@ -742,7 +748,9 @@ async def _trigger_webhook(
                 "outstanding_amount": str(execution.outstanding_amount),
                 "recovered_amount": str(execution.recovered_amount),
                 "current_step": execution.current_step,
-                "status": execution.status.value if hasattr(execution.status, "value") else str(execution.status),
+                "status": execution.status.value
+                if hasattr(execution.status, "value")
+                else str(execution.status),
                 "tenant_id": execution.tenant_id,
             },
             "metadata": action_config.get("metadata", {}),
@@ -762,7 +770,9 @@ async def _trigger_webhook(
             import json
 
             payload_bytes = json.dumps(payload).encode("utf-8")
-            signature = hmac.new(webhook_secret.encode("utf-8"), payload_bytes, hashlib.sha256).hexdigest()
+            signature = hmac.new(
+                webhook_secret.encode("utf-8"), payload_bytes, hashlib.sha256
+            ).hexdigest()
             headers["X-Webhook-Signature"] = signature
 
         # Send webhook with timeout and retry

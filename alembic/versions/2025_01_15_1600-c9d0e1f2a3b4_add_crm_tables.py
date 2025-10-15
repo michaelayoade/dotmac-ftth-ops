@@ -6,9 +6,10 @@ Create Date: 2025-01-15 16:00:00.000000
 
 """
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "c9d0e1f2a3b4"
@@ -58,10 +59,28 @@ def upgrade() -> None:
     op.create_table(
         "leads",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("tenant_id", sa.String(255), sa.ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "tenant_id",
+            sa.String(255),
+            sa.ForeignKey("tenants.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("lead_number", sa.String(50), nullable=False, index=True),
-        sa.Column("status", postgresql.ENUM(name="leadstatus", create_type=False), nullable=False, server_default="new", index=True),
-        sa.Column("source", postgresql.ENUM(name="leadsource", create_type=False), nullable=False, server_default="website", index=True),
+        sa.Column(
+            "status",
+            postgresql.ENUM(name="leadstatus", create_type=False),
+            nullable=False,
+            server_default="new",
+            index=True,
+        ),
+        sa.Column(
+            "source",
+            postgresql.ENUM(name="leadsource", create_type=False),
+            nullable=False,
+            server_default="website",
+            index=True,
+        ),
         sa.Column("priority", sa.Integer, nullable=False, server_default="3"),
         sa.Column("first_name", sa.String(100), nullable=False),
         sa.Column("last_name", sa.String(100), nullable=False),
@@ -75,27 +94,57 @@ def upgrade() -> None:
         sa.Column("service_postal_code", sa.String(20), nullable=False),
         sa.Column("service_country", sa.String(2), nullable=False, server_default="US"),
         sa.Column("service_coordinates", postgresql.JSON, nullable=False, server_default="{}"),
-        sa.Column("is_serviceable", postgresql.ENUM(name="serviceability", create_type=False), nullable=True),
+        sa.Column(
+            "is_serviceable",
+            postgresql.ENUM(name="serviceability", create_type=False),
+            nullable=True,
+        ),
         sa.Column("serviceability_checked_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("serviceability_notes", sa.Text, nullable=True),
         sa.Column("interested_service_types", postgresql.JSON, nullable=False, server_default="[]"),
         sa.Column("desired_bandwidth", sa.String(50), nullable=True),
         sa.Column("estimated_monthly_budget", sa.Numeric(10, 2), nullable=True),
         sa.Column("desired_installation_date", sa.TIMESTAMP(timezone=True), nullable=True),
-        sa.Column("assigned_to_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("partner_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("partners.id", ondelete="SET NULL"), nullable=True, index=True),
+        sa.Column(
+            "assigned_to_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("users.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
+        sa.Column(
+            "partner_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("partners.id", ondelete="SET NULL"),
+            nullable=True,
+            index=True,
+        ),
         sa.Column("qualified_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("disqualified_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("disqualification_reason", sa.Text, nullable=True),
         sa.Column("converted_at", sa.TIMESTAMP(timezone=True), nullable=True),
-        sa.Column("converted_to_customer_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("customers.id", ondelete="SET NULL"), nullable=True),
+        sa.Column(
+            "converted_to_customer_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("customers.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
         sa.Column("first_contact_date", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("last_contact_date", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("expected_close_date", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("metadata", postgresql.JSON, nullable=False, server_default="{}"),
         sa.Column("notes", sa.Text, nullable=True),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
         sa.Column("deleted_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("created_by_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("updated_by_id", postgresql.UUID(as_uuid=True), nullable=True),
@@ -109,10 +158,28 @@ def upgrade() -> None:
     op.create_table(
         "quotes",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("tenant_id", sa.String(255), sa.ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "tenant_id",
+            sa.String(255),
+            sa.ForeignKey("tenants.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("quote_number", sa.String(50), nullable=False, index=True),
-        sa.Column("status", postgresql.ENUM(name="quotestatus", create_type=False), nullable=False, server_default="draft", index=True),
-        sa.Column("lead_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("leads.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "status",
+            postgresql.ENUM(name="quotestatus", create_type=False),
+            nullable=False,
+            server_default="draft",
+            index=True,
+        ),
+        sa.Column(
+            "lead_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("leads.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("service_plan_name", sa.String(200), nullable=False),
         sa.Column("bandwidth", sa.String(50), nullable=False),
         sa.Column("monthly_recurring_charge", sa.Numeric(10, 2), nullable=False),
@@ -134,8 +201,18 @@ def upgrade() -> None:
         sa.Column("line_items", postgresql.JSON, nullable=False, server_default="[]"),
         sa.Column("metadata", postgresql.JSON, nullable=False, server_default="{}"),
         sa.Column("notes", sa.Text, nullable=True),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
         sa.Column("deleted_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("created_by_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("updated_by_id", postgresql.UUID(as_uuid=True), nullable=True),
@@ -148,35 +225,76 @@ def upgrade() -> None:
     op.create_table(
         "site_surveys",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("tenant_id", sa.String(255), sa.ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "tenant_id",
+            sa.String(255),
+            sa.ForeignKey("tenants.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("survey_number", sa.String(50), nullable=False, index=True),
-        sa.Column("status", postgresql.ENUM(name="sitesurveystatus", create_type=False), nullable=False, server_default="scheduled", index=True),
-        sa.Column("lead_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("leads.id", ondelete="CASCADE"), nullable=False, index=True),
+        sa.Column(
+            "status",
+            postgresql.ENUM(name="sitesurveystatus", create_type=False),
+            nullable=False,
+            server_default="scheduled",
+            index=True,
+        ),
+        sa.Column(
+            "lead_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("leads.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         sa.Column("scheduled_date", sa.TIMESTAMP(timezone=True), nullable=False),
         sa.Column("completed_date", sa.TIMESTAMP(timezone=True), nullable=True),
-        sa.Column("technician_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="SET NULL"), nullable=True),
-        sa.Column("serviceability", postgresql.ENUM(name="serviceability", create_type=False), nullable=True),
+        sa.Column(
+            "technician_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("users.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
+        sa.Column(
+            "serviceability",
+            postgresql.ENUM(name="serviceability", create_type=False),
+            nullable=True,
+        ),
         sa.Column("nearest_fiber_distance_meters", sa.Integer, nullable=True),
         sa.Column("requires_fiber_extension", sa.Boolean, nullable=False, server_default="false"),
         sa.Column("fiber_extension_cost", sa.Numeric(10, 2), nullable=True),
         sa.Column("nearest_olt_id", sa.String(100), nullable=True),
         sa.Column("available_pon_ports", sa.Integer, nullable=True),
         sa.Column("estimated_installation_time_hours", sa.Integer, nullable=True),
-        sa.Column("special_equipment_required", postgresql.JSON, nullable=False, server_default="[]"),
+        sa.Column(
+            "special_equipment_required", postgresql.JSON, nullable=False, server_default="[]"
+        ),
         sa.Column("installation_complexity", sa.String(20), nullable=True),
         sa.Column("photos", postgresql.JSON, nullable=False, server_default="[]"),
         sa.Column("recommendations", sa.Text, nullable=True),
         sa.Column("obstacles", sa.Text, nullable=True),
         sa.Column("metadata", postgresql.JSON, nullable=False, server_default="{}"),
         sa.Column("notes", sa.Text, nullable=True),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
         sa.Column("deleted_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("created_by_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("updated_by_id", postgresql.UUID(as_uuid=True), nullable=True),
     )
 
-    op.create_unique_constraint("uq_survey_tenant_number", "site_surveys", ["tenant_id", "survey_number"])
+    op.create_unique_constraint(
+        "uq_survey_tenant_number", "site_surveys", ["tenant_id", "survey_number"]
+    )
     op.create_index("ix_survey_scheduled", "site_surveys", ["scheduled_date"])
     op.create_index("ix_survey_technician", "site_surveys", ["technician_id"])
 

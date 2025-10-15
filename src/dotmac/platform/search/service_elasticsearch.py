@@ -5,7 +5,6 @@ Service for indexing and searching documents in Elasticsearch.
 """
 
 from typing import Any
-from uuid import UUID
 
 import structlog
 from elasticsearch import AsyncElasticsearch, NotFoundError
@@ -54,7 +53,7 @@ class SearchService:
         """
         return f"{self._index_prefix}_{entity_type.value}_{tenant_id}"
 
-    async def close(self):
+    async def close(self) -> None:
         """Close Elasticsearch client."""
         if self.es:
             await self.es.close()
@@ -63,9 +62,7 @@ class SearchService:
     # Index Management
     # =========================================================================
 
-    async def create_index(
-        self, entity_type: SearchableEntity, tenant_id: str
-    ) -> bool:
+    async def create_index(self, entity_type: SearchableEntity, tenant_id: str) -> bool:
         """
         Create an index for an entity type.
 
@@ -113,9 +110,7 @@ class SearchService:
         logger.info("Index created", index=index_name, entity_type=entity_type)
         return True
 
-    async def delete_index(
-        self, entity_type: SearchableEntity, tenant_id: str
-    ) -> bool:
+    async def delete_index(self, entity_type: SearchableEntity, tenant_id: str) -> bool:
         """Delete an index."""
         es = await self._get_client()
         index_name = self._get_index_name(entity_type, tenant_id)
@@ -128,9 +123,7 @@ class SearchService:
             logger.warning("Index not found", index=index_name)
             return False
 
-    async def refresh_index(
-        self, entity_type: SearchableEntity, tenant_id: str
-    ) -> None:
+    async def refresh_index(self, entity_type: SearchableEntity, tenant_id: str) -> None:
         """Refresh an index to make recent changes searchable."""
         es = await self._get_client()
         index_name = self._get_index_name(entity_type, tenant_id)
@@ -322,11 +315,7 @@ class SearchService:
         # Build highlight
         es_highlight = None
         if search_query.highlight and search_query.query:
-            es_highlight = {
-                "fields": {
-                    "*": {"fragment_size": 150, "number_of_fragments": 3}
-                }
-            }
+            es_highlight = {"fields": {"*": {"fragment_size": 150, "number_of_fragments": 3}}}
 
         try:
             response = await es.search(
@@ -376,31 +365,32 @@ class SearchService:
 
     def _build_query(self, search_query: SearchQuery, tenant_id: str) -> dict[str, Any]:
         """Build Elasticsearch query from SearchQuery."""
-        must_clauses = [{"term": {"tenant_id": tenant_id}}]  # Tenant isolation
+        must_clauses: list[dict[str, Any]] = [{"term": {"tenant_id": tenant_id}}]
+        must_not_clauses: list[dict[str, Any]] = []
 
         # Full-text search
         if search_query.query:
-            must_clauses.append({
-                "multi_match": {
-                    "query": search_query.query,
-                    "fields": ["search_text", "name^2", "email", "description"],
-                    "type": "best_fields",
-                    "fuzziness": "AUTO",
+            must_clauses.append(
+                {
+                    "multi_match": {
+                        "query": search_query.query,
+                        "fields": ["search_text", "name^2", "email", "description"],
+                        "type": "best_fields",
+                        "fuzziness": "AUTO",
+                    }
                 }
-            })
+            )
 
         # Field filters
         for filter_spec in search_query.filters:
             if filter_spec.operator == SearchOperator.NOT:
-                if "must_not" not in locals():
-                    must_not_clauses = []
                 must_not_clauses.append({"term": {filter_spec.field: filter_spec.value}})
             else:
                 must_clauses.append({"term": {filter_spec.field: filter_spec.value}})
 
         query = {"bool": {"must": must_clauses}}
 
-        if "must_not_clauses" in locals():
+        if must_not_clauses:
             query["bool"]["must_not"] = must_not_clauses
 
         return query
@@ -456,10 +446,10 @@ class SearchService:
                     }
                 },
                 size=size,
-                _source=[field],
+                source={"includes": [field]},
             )
 
-            suggestions = []
+            suggestions: list[SearchSuggestion] = []
             for hit in response["hits"]["hits"]:
                 suggestions.append(
                     SearchSuggestion(
@@ -500,11 +490,7 @@ class SearchService:
             response = await es.search(
                 index=index_name,
                 query={"term": {"tenant_id": tenant_id}},
-                aggs={
-                    "field_agg": {
-                        "terms": {"field": field, "size": size}
-                    }
-                },
+                aggs={"field_agg": {"terms": {"field": field, "size": size}}},
                 size=0,  # We only want aggregations
             )
 

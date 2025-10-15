@@ -1,7 +1,7 @@
 """Initial schema from models
 
 Revision ID: 51aa0da58b97
-Revises: 
+Revises:
 Create Date: 2025-10-07 08:06:36.558765
 
 """

@@ -4,6 +4,8 @@ Notifications Module.
 User notification system with multi-channel delivery support.
 """
 
+# Import event listeners to register them with the event bus
+from dotmac.platform.notifications import event_listeners  # noqa: F401
 from dotmac.platform.notifications.models import (
     Notification,
     NotificationChannel,
@@ -13,9 +15,6 @@ from dotmac.platform.notifications.models import (
     NotificationType,
 )
 from dotmac.platform.notifications.service import NotificationService
-
-# Import event listeners to register them with the event bus
-from dotmac.platform.notifications import event_listeners  # noqa: F401
 
 __all__ = [
     # Models

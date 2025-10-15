@@ -13,11 +13,9 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import create_engine, event
+from dotmac.platform.base_model import Base
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
-
-from dotmac.platform.base_model import Base
 
 
 @pytest.fixture(scope="function")

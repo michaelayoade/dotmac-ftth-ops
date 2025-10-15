@@ -5,3 +5,4 @@ export * from './billing';
 export * from './auth';
 export * from './common';
 export * from './utils';
+export * from './oss';

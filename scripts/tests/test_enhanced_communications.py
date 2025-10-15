@@ -131,7 +131,6 @@ async def test_celery_integration():
 
         # Try to import the bulk email task
         try:
-
             print("✅ Bulk email task imported successfully")
         except Exception as e:
             print(f"⚠️  Bulk email task import issue (expected in test): {e}")

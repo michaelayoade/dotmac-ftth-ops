@@ -304,3 +304,193 @@ class DeviceStatsResponse(BaseModel):
     offline_devices: int
     manufacturers: dict[str, int] = Field(default_factory=dict)
     models: dict[str, int] = Field(default_factory=dict)
+
+
+# ============================================================================
+# Scheduled Firmware Upgrade Schemas
+# ============================================================================
+
+
+class FirmwareUpgradeSchedule(BaseModel):
+    """Scheduled firmware upgrade"""
+
+    schedule_id: str | None = Field(None, description="Schedule ID (auto-generated)")
+    name: str = Field(..., min_length=1, description="Schedule name")
+    description: str | None = Field(None, description="Schedule description")
+    firmware_file: str = Field(..., description="Firmware file name on GenieACS")
+    file_type: str = Field(
+        default="1 Firmware Upgrade Image", description="TR-069 file type"
+    )
+    device_filter: dict[str, Any] = Field(
+        ..., description="Device filter query (MongoDB-style)"
+    )
+    scheduled_at: datetime = Field(..., description="Scheduled execution time")
+    timezone: str = Field(default="UTC", description="Timezone for scheduled_at")
+    max_concurrent: int = Field(
+        default=10, ge=1, le=100, description="Maximum concurrent upgrades"
+    )
+    status: str = Field(
+        default="pending", description="Status: pending, running, completed, failed, cancelled"
+    )
+    created_at: datetime | None = Field(None, description="Creation timestamp")
+    started_at: datetime | None = Field(None, description="Execution start time")
+    completed_at: datetime | None = Field(None, description="Completion time")
+
+    model_config = {"from_attributes": True}
+
+
+class FirmwareUpgradeResult(BaseModel):
+    """Firmware upgrade result for a device"""
+
+    device_id: str
+    status: str  # success, failed, pending, in_progress
+    error_message: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class FirmwareUpgradeScheduleResponse(BaseModel):
+    """Firmware upgrade schedule response"""
+
+    schedule: FirmwareUpgradeSchedule
+    total_devices: int
+    completed_devices: int
+    failed_devices: int
+    pending_devices: int
+    results: list[FirmwareUpgradeResult] = Field(default_factory=list)
+
+
+class FirmwareUpgradeScheduleCreate(BaseModel):
+    """Create firmware upgrade schedule"""
+
+    name: str = Field(..., min_length=1, description="Schedule name")
+    description: str | None = Field(None, description="Schedule description")
+    firmware_file: str = Field(..., description="Firmware file name on GenieACS")
+    file_type: str = Field(
+        default="1 Firmware Upgrade Image", description="TR-069 file type"
+    )
+    device_filter: dict[str, Any] = Field(
+        ...,
+        description="Device filter query (e.g., {'manufacturer': 'Huawei', 'model': 'HG8245H'})",
+    )
+    scheduled_at: datetime = Field(..., description="Scheduled execution time (ISO 8601)")
+    timezone: str = Field(default="UTC", description="Timezone")
+    max_concurrent: int = Field(
+        default=10, ge=1, le=100, description="Maximum concurrent upgrades"
+    )
+
+
+class FirmwareUpgradeScheduleList(BaseModel):
+    """List of firmware upgrade schedules"""
+
+    schedules: list[FirmwareUpgradeSchedule]
+    total: int
+
+
+# ============================================================================
+# Mass CPE Configuration Schemas
+# ============================================================================
+
+
+class MassConfigFilter(BaseModel):
+    """Device filter for mass configuration"""
+
+    query: dict[str, Any] = Field(..., description="MongoDB-style query filter")
+    expected_count: int | None = Field(None, description="Expected device count (for validation)")
+
+
+class MassWiFiConfig(BaseModel):
+    """Mass WiFi configuration"""
+
+    ssid: str | None = Field(None, min_length=1, max_length=32, description="New SSID")
+    password: str | None = Field(None, min_length=8, description="New password")
+    security_mode: str | None = Field(None, description="Security mode")
+    channel: int | None = Field(None, ge=1, le=13, description="WiFi channel")
+    enabled: bool | None = Field(None, description="Enable/disable WiFi")
+
+
+class MassLANConfig(BaseModel):
+    """Mass LAN configuration"""
+
+    dhcp_enabled: bool | None = Field(None, description="Enable/disable DHCP server")
+    dhcp_start: str | None = Field(None, description="DHCP pool start")
+    dhcp_end: str | None = Field(None, description="DHCP pool end")
+
+
+class MassWANConfig(BaseModel):
+    """Mass WAN configuration"""
+
+    connection_type: str | None = Field(None, description="Connection type")
+    vlan_id: int | None = Field(None, ge=1, le=4094, description="VLAN ID")
+
+
+class MassConfigRequest(BaseModel):
+    """Mass CPE configuration request"""
+
+    name: str = Field(..., min_length=1, description="Configuration job name")
+    description: str | None = Field(None, description="Job description")
+    device_filter: MassConfigFilter = Field(..., description="Device filter")
+    wifi: MassWiFiConfig | None = Field(None, description="WiFi changes")
+    lan: MassLANConfig | None = Field(None, description="LAN changes")
+    wan: MassWANConfig | None = Field(None, description="WAN changes")
+    custom_parameters: dict[str, Any] | None = Field(
+        None, description="Custom TR-069 parameters to set"
+    )
+    max_concurrent: int = Field(
+        default=10, ge=1, le=100, description="Maximum concurrent configuration tasks"
+    )
+    dry_run: bool = Field(
+        default=False, description="Preview changes without applying them"
+    )
+
+
+class MassConfigResult(BaseModel):
+    """Mass configuration result for a device"""
+
+    device_id: str
+    status: str  # success, failed, pending, in_progress, skipped
+    parameters_changed: dict[str, Any] = Field(default_factory=dict)
+    error_message: str | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class MassConfigJob(BaseModel):
+    """Mass configuration job"""
+
+    job_id: str
+    name: str
+    description: str | None = None
+    device_filter: dict[str, Any]
+    total_devices: int
+    completed_devices: int = 0
+    failed_devices: int = 0
+    pending_devices: int = 0
+    status: str = "pending"  # pending, running, completed, failed, cancelled
+    dry_run: bool = False
+    created_at: datetime
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class MassConfigResponse(BaseModel):
+    """Mass configuration response"""
+
+    job: MassConfigJob
+    preview: list[str] | None = Field(
+        None, description="Device IDs that will be affected (dry run)"
+    )
+    results: list[MassConfigResult] = Field(default_factory=list)
+
+
+class MassConfigJobList(BaseModel):
+    """List of mass configuration jobs"""
+
+    jobs: list[MassConfigJob]
+    total: int

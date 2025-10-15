@@ -177,6 +177,21 @@ try:
     except ImportError:
         pass
 
+    try:
+        from dotmac.platform.services.lifecycle import models as lifecycle_models  # noqa: F401
+    except ImportError:
+        pass
+
+    try:
+        from dotmac.platform.subscribers import models as subscriber_models  # noqa: F401
+    except ImportError:
+        pass
+
+    try:
+        from dotmac.platform.radius import models as radius_models  # noqa: F401
+    except ImportError:
+        pass
+
     HAS_DATABASE_BASE = True
 except ImportError:
     HAS_DATABASE_BASE = False

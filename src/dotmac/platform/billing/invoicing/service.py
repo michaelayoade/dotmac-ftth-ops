@@ -631,10 +631,10 @@ Please find your invoice details below:
 
 Invoice Number: {invoice.invoice_number}
 Amount Due: {invoice.currency} {invoice.total_amount}
-Due Date: {invoice.due_date.strftime('%Y-%m-%d') if invoice.due_date else 'N/A'}
+Due Date: {invoice.due_date.strftime("%Y-%m-%d") if invoice.due_date else "N/A"}
 Status: {invoice.status.value}
 
-{f'Notes: {invoice.notes}' if invoice.notes else ''}
+{f"Notes: {invoice.notes}" if invoice.notes else ""}
 
 Thank you for your business!
 
@@ -645,9 +645,9 @@ Best regards,
             html_content = f"""
 <h2>Invoice {invoice.invoice_number}</h2>
 <p><strong>Amount Due:</strong> {invoice.currency} {invoice.total_amount}</p>
-<p><strong>Due Date:</strong> {invoice.due_date.strftime('%Y-%m-%d') if invoice.due_date else 'N/A'}</p>
+<p><strong>Due Date:</strong> {invoice.due_date.strftime("%Y-%m-%d") if invoice.due_date else "N/A"}</p>
 <p><strong>Status:</strong> {invoice.status.value}</p>
-{f'<p><strong>Notes:</strong> {invoice.notes}</p>' if invoice.notes else ''}
+{f"<p><strong>Notes:</strong> {invoice.notes}</p>" if invoice.notes else ""}
 <p>Thank you for your business!</p>
 """.strip()
 
@@ -971,15 +971,15 @@ Best regards,
                     <div style="background-color: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 5px;">
                         <h3>Invoice Details:</h3>
                         <p><strong>Invoice Number:</strong> {invoice.invoice_number}</p>
-                        <p><strong>Issue Date:</strong> {invoice.issue_date.strftime('%B %d, %Y')}</p>
-                        <p><strong>Due Date:</strong> {invoice.due_date.strftime('%B %d, %Y')}</p>
+                        <p><strong>Issue Date:</strong> {invoice.issue_date.strftime("%B %d, %Y")}</p>
+                        <p><strong>Due Date:</strong> {invoice.due_date.strftime("%B %d, %Y")}</p>
                         <p><strong>Amount Due:</strong> {amount_display}</p>
                     </div>
 
                     <p>You can view and download your invoice at:</p>
                     <p><a href="{invoice_url}" style="color: #007bff;">{invoice_url}</a></p>
 
-                    {f'<p><strong>Notes:</strong> {invoice.notes}</p>' if invoice.notes else ''}
+                    {f"<p><strong>Notes:</strong> {invoice.notes}</p>" if invoice.notes else ""}
 
                     <p>If you have any questions about this invoice, please don't hesitate to contact our support team.</p>
 
@@ -1002,14 +1002,14 @@ Your invoice has been finalized and is ready for your review.
 
 Invoice Details:
 - Invoice Number: {invoice.invoice_number}
-- Issue Date: {invoice.issue_date.strftime('%B %d, %Y')}
-- Due Date: {invoice.due_date.strftime('%B %d, %Y')}
+- Issue Date: {invoice.issue_date.strftime("%B %d, %Y")}
+- Due Date: {invoice.due_date.strftime("%B %d, %Y")}
 - Amount Due: {amount_display}
 
 You can view and download your invoice at:
 {invoice_url}
 
-{f'Notes: {invoice.notes}' if invoice.notes else ''}
+{f"Notes: {invoice.notes}" if invoice.notes else ""}
 
 If you have any questions about this invoice, please don't hesitate to contact our support team.
 

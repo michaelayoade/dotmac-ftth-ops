@@ -307,7 +307,6 @@ class TestObservabilityManagerLifecycle:
                 return_value=mock_meter_provider,
             ),
         ):
-
             manager._initialized = True
             manager.shutdown()
 
@@ -332,7 +331,6 @@ class TestObservabilityManagerLifecycle:
                 return_value=mock_provider,
             ),
         ):
-
             manager._initialized = True
             # Should not raise exception
             manager.shutdown()
@@ -356,7 +354,6 @@ class TestObservabilityManagerLifecycle:
                 return_value=MagicMock(),
             ),
         ):
-
             manager._initialized = True
             # Should not raise exception
             manager.shutdown()

@@ -10,9 +10,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.db import get_session_dependency
 from dotmac.platform.core.exceptions import EntityNotFoundError, ValidationError
 from dotmac.platform.crm.models import LeadSource, LeadStatus, QuoteStatus, SiteSurveyStatus
 from dotmac.platform.crm.schemas import (
@@ -31,6 +29,7 @@ from dotmac.platform.crm.schemas import (
     SiteSurveyScheduleRequest,
 )
 from dotmac.platform.crm.service import LeadService, QuoteService, SiteSurveyService
+from dotmac.platform.db import get_session_dependency
 from dotmac.platform.user_management.models import User
 
 router = APIRouter(prefix="/crm", tags=["CRM"])

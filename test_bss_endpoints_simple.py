@@ -26,7 +26,9 @@ def log_test(test_name: str, status: str, details: str = ""):
         test_results["errors"].append(f"{test_name}: {details}")
 
 
-async def test_endpoint(client: httpx.AsyncClient, endpoint: str, method: str = "GET", name: str = ""):
+async def test_endpoint(
+    client: httpx.AsyncClient, endpoint: str, method: str = "GET", name: str = ""
+):
     """Test a single endpoint and check if it responds."""
     test_name = name or f"{method} {endpoint}"
     try:
@@ -44,7 +46,7 @@ async def test_endpoint(client: httpx.AsyncClient, endpoint: str, method: str = 
                 200: "OK",
                 201: "Created",
                 401: "Auth required (expected)",
-                422: "Validation (expected for empty POST)"
+                422: "Validation (expected for empty POST)",
             }.get(response.status_code, str(response.status_code))
             log_test(test_name, "PASS", status_msg)
         else:
@@ -80,8 +82,12 @@ async def main():
         print("\n=== Billing Endpoints ===\n")
         await test_endpoint(client, "/api/v1/billing/invoices", "GET", "Billing: List invoices")
         await test_endpoint(client, "/api/v1/billing/payments", "GET", "Billing: List payments")
-        await test_endpoint(client, "/api/v1/billing/catalog/products", "GET", "Billing: Get catalog")
-        await test_endpoint(client, "/api/v1/billing/subscriptions", "GET", "Billing: List subscriptions")
+        await test_endpoint(
+            client, "/api/v1/billing/catalog/products", "GET", "Billing: Get catalog"
+        )
+        await test_endpoint(
+            client, "/api/v1/billing/subscriptions", "GET", "Billing: List subscriptions"
+        )
 
     # Print summary
     print("\n" + "=" * 70)

@@ -8,7 +8,6 @@ import os
 from typing import Any, cast
 from urllib.parse import urljoin
 
-import httpx
 import structlog
 
 from dotmac.platform.core.http_client import RobustHTTPClient
@@ -34,7 +33,6 @@ class NetBoxClient(RobustHTTPClient):
         "delete": 30.0,
         "allocate": 30.0,
     }
-
 
     def __init__(
         self,
@@ -295,6 +293,186 @@ class NetBoxClient(RobustHTTPClient):
     async def create_interface(self, data: dict[str, Any]) -> dict[str, Any]:
         """Create new interface"""
         response = await self._netbox_request("POST", "dcim/interfaces/", json=data)
+        return cast(dict[str, Any], response)
+
+    # =========================================================================
+    # VLAN Operations
+    # =========================================================================
+
+    async def get_vlans(
+        self,
+        tenant: str | None = None,
+        site: str | None = None,
+        vid: int | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        """Get VLANs"""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if tenant:
+            params["tenant"] = tenant
+        if site:
+            params["site"] = site
+        if vid:
+            params["vid"] = vid
+
+        response = await self._netbox_request("GET", "ipam/vlans/", params=params)
+        return cast(dict[str, Any], response)
+
+    async def get_vlan(self, vlan_id: int) -> dict[str, Any]:
+        """Get single VLAN by ID"""
+        response = await self._netbox_request("GET", f"ipam/vlans/{vlan_id}/")
+        return cast(dict[str, Any], response)
+
+    async def create_vlan(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Create new VLAN"""
+        response = await self._netbox_request("POST", "ipam/vlans/", json=data)
+        return cast(dict[str, Any], response)
+
+    async def update_vlan(self, vlan_id: int, data: dict[str, Any]) -> dict[str, Any]:
+        """Update VLAN"""
+        response = await self._netbox_request("PATCH", f"ipam/vlans/{vlan_id}/", json=data)
+        return cast(dict[str, Any], response)
+
+    async def delete_vlan(self, vlan_id: int) -> None:
+        """Delete VLAN"""
+        await self._netbox_request("DELETE", f"ipam/vlans/{vlan_id}/")
+
+    # =========================================================================
+    # Cable Operations
+    # =========================================================================
+
+    async def get_cables(
+        self,
+        tenant: str | None = None,
+        site: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        """Get cables"""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if tenant:
+            params["tenant"] = tenant
+        if site:
+            params["site"] = site
+
+        response = await self._netbox_request("GET", "dcim/cables/", params=params)
+        return cast(dict[str, Any], response)
+
+    async def get_cable(self, cable_id: int) -> dict[str, Any]:
+        """Get single cable by ID"""
+        response = await self._netbox_request("GET", f"dcim/cables/{cable_id}/")
+        return cast(dict[str, Any], response)
+
+    async def create_cable(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Create new cable"""
+        response = await self._netbox_request("POST", "dcim/cables/", json=data)
+        return cast(dict[str, Any], response)
+
+    async def update_cable(self, cable_id: int, data: dict[str, Any]) -> dict[str, Any]:
+        """Update cable"""
+        response = await self._netbox_request("PATCH", f"dcim/cables/{cable_id}/", json=data)
+        return cast(dict[str, Any], response)
+
+    async def delete_cable(self, cable_id: int) -> None:
+        """Delete cable"""
+        await self._netbox_request("DELETE", f"dcim/cables/{cable_id}/")
+
+    # =========================================================================
+    # Circuit Operations
+    # =========================================================================
+
+    async def get_circuit_providers(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        """Get circuit providers"""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        response = await self._netbox_request("GET", "circuits/providers/", params=params)
+        return cast(dict[str, Any], response)
+
+    async def get_circuit_provider(self, provider_id: int) -> dict[str, Any]:
+        """Get single circuit provider by ID"""
+        response = await self._netbox_request("GET", f"circuits/providers/{provider_id}/")
+        return cast(dict[str, Any], response)
+
+    async def create_circuit_provider(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Create new circuit provider"""
+        response = await self._netbox_request("POST", "circuits/providers/", json=data)
+        return cast(dict[str, Any], response)
+
+    async def get_circuit_types(
+        self,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        """Get circuit types"""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        response = await self._netbox_request("GET", "circuits/circuit-types/", params=params)
+        return cast(dict[str, Any], response)
+
+    async def create_circuit_type(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Create new circuit type"""
+        response = await self._netbox_request("POST", "circuits/circuit-types/", json=data)
+        return cast(dict[str, Any], response)
+
+    async def get_circuits(
+        self,
+        tenant: str | None = None,
+        provider: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        """Get circuits"""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if tenant:
+            params["tenant"] = tenant
+        if provider:
+            params["provider"] = provider
+
+        response = await self._netbox_request("GET", "circuits/circuits/", params=params)
+        return cast(dict[str, Any], response)
+
+    async def get_circuit(self, circuit_id: int) -> dict[str, Any]:
+        """Get single circuit by ID"""
+        response = await self._netbox_request("GET", f"circuits/circuits/{circuit_id}/")
+        return cast(dict[str, Any], response)
+
+    async def create_circuit(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Create new circuit"""
+        response = await self._netbox_request("POST", "circuits/circuits/", json=data)
+        return cast(dict[str, Any], response)
+
+    async def update_circuit(self, circuit_id: int, data: dict[str, Any]) -> dict[str, Any]:
+        """Update circuit"""
+        response = await self._netbox_request("PATCH", f"circuits/circuits/{circuit_id}/", json=data)
+        return cast(dict[str, Any], response)
+
+    async def delete_circuit(self, circuit_id: int) -> None:
+        """Delete circuit"""
+        await self._netbox_request("DELETE", f"circuits/circuits/{circuit_id}/")
+
+    async def get_circuit_terminations(
+        self,
+        circuit_id: int | None = None,
+        site: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        """Get circuit terminations"""
+        params: dict[str, Any] = {"limit": limit, "offset": offset}
+        if circuit_id:
+            params["circuit_id"] = circuit_id
+        if site:
+            params["site"] = site
+
+        response = await self._netbox_request("GET", "circuits/circuit-terminations/", params=params)
+        return cast(dict[str, Any], response)
+
+    async def create_circuit_termination(self, data: dict[str, Any]) -> dict[str, Any]:
+        """Create new circuit termination"""
+        response = await self._netbox_request("POST", "circuits/circuit-terminations/", json=data)
         return cast(dict[str, Any], response)
 
     # =========================================================================

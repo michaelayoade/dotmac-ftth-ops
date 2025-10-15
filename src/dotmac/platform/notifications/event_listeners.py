@@ -9,10 +9,9 @@ from uuid import UUID
 
 import structlog
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.database import get_async_session
 from dotmac.platform.customer_management.models import Customer
+from dotmac.platform.database import get_async_session
 from dotmac.platform.events import subscribe
 from dotmac.platform.notifications.models import NotificationPriority, NotificationType
 from dotmac.platform.notifications.service import NotificationService
@@ -36,8 +35,7 @@ async def on_invoice_created(event_data: dict[str, Any]) -> None:
 
             # Get customer to find user_id
             stmt = select(Customer).where(
-                Customer.tenant_id == tenant_id,
-                Customer.id == UUID(customer_id)
+                Customer.tenant_id == tenant_id, Customer.id == UUID(customer_id)
             )
             result = await session.execute(stmt)
             customer = result.scalar_one_or_none()
@@ -76,8 +74,7 @@ async def on_invoice_finalized(event_data: dict[str, Any]) -> None:
             due_date = event_data["payload"].get("due_date")
 
             stmt = select(Customer).where(
-                Customer.tenant_id == tenant_id,
-                Customer.id == UUID(customer_id)
+                Customer.tenant_id == tenant_id, Customer.id == UUID(customer_id)
             )
             result = await session.execute(stmt)
             customer = result.scalar_one_or_none()
@@ -117,8 +114,7 @@ async def on_payment_received(event_data: dict[str, Any]) -> None:
             payment_method = event_data["payload"].get("payment_method", "card")
 
             stmt = select(Customer).where(
-                Customer.tenant_id == tenant_id,
-                Customer.id == UUID(customer_id)
+                Customer.tenant_id == tenant_id, Customer.id == UUID(customer_id)
             )
             result = await session.execute(stmt)
             customer = result.scalar_one_or_none()
@@ -156,8 +152,7 @@ async def on_payment_failed(event_data: dict[str, Any]) -> None:
             error_message = event_data["payload"].get("error_message", "Payment declined")
 
             stmt = select(Customer).where(
-                Customer.tenant_id == tenant_id,
-                Customer.id == UUID(customer_id)
+                Customer.tenant_id == tenant_id, Customer.id == UUID(customer_id)
             )
             result = await session.execute(stmt)
             customer = result.scalar_one_or_none()
@@ -195,8 +190,7 @@ async def on_subscription_renewed(event_data: dict[str, Any]) -> None:
             next_billing_date = event_data["payload"].get("next_billing_date")
 
             stmt = select(Customer).where(
-                Customer.tenant_id == tenant_id,
-                Customer.id == UUID(customer_id)
+                Customer.tenant_id == tenant_id, Customer.id == UUID(customer_id)
             )
             result = await session.execute(stmt)
             customer = result.scalar_one_or_none()
@@ -235,8 +229,7 @@ async def on_dunning_reminder(event_data: dict[str, Any]) -> None:
             days_overdue = event_data["payload"].get("days_overdue", 0)
 
             stmt = select(Customer).where(
-                Customer.tenant_id == tenant_id,
-                Customer.id == UUID(customer_id)
+                Customer.tenant_id == tenant_id, Customer.id == UUID(customer_id)
             )
             result = await session.execute(stmt)
             customer = result.scalar_one_or_none()
@@ -274,8 +267,7 @@ async def on_dunning_suspension_warning(event_data: dict[str, Any]) -> None:
             amount_due = event_data["payload"].get("amount_due")
 
             stmt = select(Customer).where(
-                Customer.tenant_id == tenant_id,
-                Customer.id == UUID(customer_id)
+                Customer.tenant_id == tenant_id, Customer.id == UUID(customer_id)
             )
             result = await session.execute(stmt)
             customer = result.scalar_one_or_none()
@@ -316,8 +308,7 @@ async def on_ticket_created(event_data: dict[str, Any]) -> None:
 
             if customer_id:
                 stmt = select(Customer).where(
-                    Customer.tenant_id == tenant_id,
-                    Customer.id == UUID(customer_id)
+                    Customer.tenant_id == tenant_id, Customer.id == UUID(customer_id)
                 )
                 result = await session.execute(stmt)
                 customer = result.scalar_one_or_none()
@@ -364,7 +355,7 @@ async def on_ticket_assigned(event_data: dict[str, Any]) -> None:
                     action_url=f"/dashboard/support/tickets/{event_data['payload']['ticket_id']}",
                     action_label="View Ticket",
                     related_entity_type="ticket",
-                    related_entity_id=event_data['payload']['ticket_id'],
+                    related_entity_id=event_data["payload"]["ticket_id"],
                 )
                 await session.commit()
                 logger.info("Ticket assigned notification sent", ticket_number=ticket_number)
@@ -386,8 +377,7 @@ async def on_ticket_resolved(event_data: dict[str, Any]) -> None:
 
             if customer_id:
                 stmt = select(Customer).where(
-                    Customer.tenant_id == tenant_id,
-                    Customer.id == UUID(customer_id)
+                    Customer.tenant_id == tenant_id, Customer.id == UUID(customer_id)
                 )
                 result = await session.execute(stmt)
                 customer = result.scalar_one_or_none()

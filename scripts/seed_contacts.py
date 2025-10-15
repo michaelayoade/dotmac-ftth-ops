@@ -5,6 +5,7 @@ Seed script for Contacts system
 Seeds sample contacts, labels, and custom fields for testing.
 Run after migration: python scripts/seed_contacts.py
 """
+
 import sys
 from pathlib import Path
 from uuid import uuid4

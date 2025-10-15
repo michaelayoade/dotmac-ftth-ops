@@ -14,7 +14,7 @@ BASE_URL = "http://localhost:8000"
 
 def print_response(response, description):
     """Pretty print API response."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"📍 {description}")
     print(f"🔗 {response.request.method} {response.url}")
     print(f"📊 Status: {response.status_code}")

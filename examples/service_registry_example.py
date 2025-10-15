@@ -95,13 +95,13 @@ async def example_load_balancing():
             name="web-app",
             address="127.0.0.1",
             port=port,
-            service_id=f"web-app-{i+1}",
+            service_id=f"web-app-{i + 1}",
             tags=["web", "frontend"],
             meta={"instance": str(i + 1)},
             health_check="/health",
         )
         instance_ids.append(service_id)
-        print(f"Registered web-app instance {i+1} on port {port}")
+        print(f"Registered web-app instance {i + 1} on port {port}")
 
     # Discover all instances for load balancing
     web_instances = await discover_services("web-app")

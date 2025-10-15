@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Reset and recreate the database."""
+
 import os
 
 import psycopg2

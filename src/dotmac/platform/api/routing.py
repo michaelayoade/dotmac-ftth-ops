@@ -114,7 +114,7 @@ class RouteRegistry:
         for existing in self.routes:
             if existing.pattern == route.pattern and existing.method == route.method:
                 raise ValueError(
-                    f"Route conflict: {route.method} {route.pattern} " f"already registered"
+                    f"Route conflict: {route.method} {route.pattern} already registered"
                 )
 
         self.routes.append(route)

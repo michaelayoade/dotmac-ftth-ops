@@ -6,7 +6,6 @@ Tests CRM, Jobs, and Billing routers to ensure they work end-to-end.
 
 import asyncio
 import sys
-from datetime import datetime
 from uuid import uuid4
 
 import httpx
@@ -80,7 +79,11 @@ async def test_crm_endpoints(tenant_id: str, user_id: str):
             elif response.status_code == 401:
                 log_test("CRM: List leads", "PASS", "Requires authentication (expected)")
             else:
-                log_test("CRM: List leads", "FAIL", f"Status {response.status_code}: {response.text[:200]}")
+                log_test(
+                    "CRM: List leads",
+                    "FAIL",
+                    f"Status {response.status_code}: {response.text[:200]}",
+                )
         except Exception as e:
             log_test("CRM: List leads", "FAIL", f"Error: {str(e)}")
 
@@ -95,10 +98,10 @@ async def test_crm_endpoints(tenant_id: str, user_id: str):
                 "city": "Test City",
                 "state": "TS",
                 "postal_code": "12345",
-                "country": "US"
+                "country": "US",
             },
             "service_type": "fiber_internet",
-            "source": "website"
+            "source": "website",
         }
 
         try:
@@ -112,7 +115,11 @@ async def test_crm_endpoints(tenant_id: str, user_id: str):
             elif response.status_code == 422:
                 log_test("CRM: Create lead", "FAIL", f"Validation error: {response.json()}")
             else:
-                log_test("CRM: Create lead", "FAIL", f"Status {response.status_code}: {response.text[:200]}")
+                log_test(
+                    "CRM: Create lead",
+                    "FAIL",
+                    f"Status {response.status_code}: {response.text[:200]}",
+                )
         except Exception as e:
             log_test("CRM: Create lead", "FAIL", f"Error: {str(e)}")
 
@@ -125,7 +132,11 @@ async def test_crm_endpoints(tenant_id: str, user_id: str):
             elif response.status_code == 401:
                 log_test("CRM: List quotes", "PASS", "Requires authentication (expected)")
             else:
-                log_test("CRM: List quotes", "FAIL", f"Status {response.status_code}: {response.text[:200]}")
+                log_test(
+                    "CRM: List quotes",
+                    "FAIL",
+                    f"Status {response.status_code}: {response.text[:200]}",
+                )
         except Exception as e:
             log_test("CRM: List quotes", "FAIL", f"Error: {str(e)}")
 
@@ -138,7 +149,11 @@ async def test_crm_endpoints(tenant_id: str, user_id: str):
             elif response.status_code == 401:
                 log_test("CRM: List site surveys", "PASS", "Requires authentication (expected)")
             else:
-                log_test("CRM: List site surveys", "FAIL", f"Status {response.status_code}: {response.text[:200]}")
+                log_test(
+                    "CRM: List site surveys",
+                    "FAIL",
+                    f"Status {response.status_code}: {response.text[:200]}",
+                )
         except Exception as e:
             log_test("CRM: List site surveys", "FAIL", f"Error: {str(e)}")
 
@@ -157,7 +172,11 @@ async def test_jobs_endpoints():
             elif response.status_code == 401:
                 log_test("Jobs: List jobs", "PASS", "Requires authentication (expected)")
             else:
-                log_test("Jobs: List jobs", "FAIL", f"Status {response.status_code}: {response.text[:200]}")
+                log_test(
+                    "Jobs: List jobs",
+                    "FAIL",
+                    f"Status {response.status_code}: {response.text[:200]}",
+                )
         except Exception as e:
             log_test("Jobs: List jobs", "FAIL", f"Error: {str(e)}")
 
@@ -166,7 +185,7 @@ async def test_jobs_endpoints():
             "job_type": "data_import",
             "title": "Test Data Import",
             "description": "Testing job creation",
-            "items_total": 100
+            "items_total": 100,
         }
 
         try:
@@ -180,7 +199,11 @@ async def test_jobs_endpoints():
             elif response.status_code == 422:
                 log_test("Jobs: Create job", "FAIL", f"Validation error: {response.json()}")
             else:
-                log_test("Jobs: Create job", "FAIL", f"Status {response.status_code}: {response.text[:200]}")
+                log_test(
+                    "Jobs: Create job",
+                    "FAIL",
+                    f"Status {response.status_code}: {response.text[:200]}",
+                )
         except Exception as e:
             log_test("Jobs: Create job", "FAIL", f"Error: {str(e)}")
 
@@ -199,7 +222,11 @@ async def test_billing_endpoints():
             elif response.status_code == 401:
                 log_test("Billing: List invoices", "PASS", "Requires authentication (expected)")
             else:
-                log_test("Billing: List invoices", "FAIL", f"Status {response.status_code}: {response.text[:200]}")
+                log_test(
+                    "Billing: List invoices",
+                    "FAIL",
+                    f"Status {response.status_code}: {response.text[:200]}",
+                )
         except Exception as e:
             log_test("Billing: List invoices", "FAIL", f"Error: {str(e)}")
 
@@ -212,7 +239,11 @@ async def test_billing_endpoints():
             elif response.status_code == 401:
                 log_test("Billing: List payments", "PASS", "Requires authentication (expected)")
             else:
-                log_test("Billing: List payments", "FAIL", f"Status {response.status_code}: {response.text[:200]}")
+                log_test(
+                    "Billing: List payments",
+                    "FAIL",
+                    f"Status {response.status_code}: {response.text[:200]}",
+                )
         except Exception as e:
             log_test("Billing: List payments", "FAIL", f"Error: {str(e)}")
 
@@ -225,7 +256,11 @@ async def test_billing_endpoints():
             elif response.status_code == 401:
                 log_test("Billing: Get catalog", "PASS", "Requires authentication (expected)")
             else:
-                log_test("Billing: Get catalog", "FAIL", f"Status {response.status_code}: {response.text[:200]}")
+                log_test(
+                    "Billing: Get catalog",
+                    "FAIL",
+                    f"Status {response.status_code}: {response.text[:200]}",
+                )
         except Exception as e:
             log_test("Billing: Get catalog", "FAIL", f"Error: {str(e)}")
 
@@ -234,11 +269,21 @@ async def test_billing_endpoints():
             response = await client.get(f"{API_BASE_URL}/api/v1/billing/subscriptions")
             if response.status_code == 200:
                 subscriptions = response.json()
-                log_test("Billing: List subscriptions", "PASS", f"Found {len(subscriptions)} subscriptions")
+                log_test(
+                    "Billing: List subscriptions",
+                    "PASS",
+                    f"Found {len(subscriptions)} subscriptions",
+                )
             elif response.status_code == 401:
-                log_test("Billing: List subscriptions", "PASS", "Requires authentication (expected)")
+                log_test(
+                    "Billing: List subscriptions", "PASS", "Requires authentication (expected)"
+                )
             else:
-                log_test("Billing: List subscriptions", "FAIL", f"Status {response.status_code}: {response.text[:200]}")
+                log_test(
+                    "Billing: List subscriptions",
+                    "FAIL",
+                    f"Status {response.status_code}: {response.text[:200]}",
+                )
         except Exception as e:
             log_test("Billing: List subscriptions", "FAIL", f"Error: {str(e)}")
 

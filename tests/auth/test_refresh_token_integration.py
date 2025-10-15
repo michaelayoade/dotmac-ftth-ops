@@ -81,7 +81,8 @@ class TestRefreshTokenIntegration:
 
         # Create refresh token - should only have essential claims
         refresh_token = jwt_service.create_refresh_token(
-            subject=user_id, additional_claims={"extra": "data"}  # This might be included
+            subject=user_id,
+            additional_claims={"extra": "data"},  # This might be included
         )
 
         # Verify refresh token has minimal but essential claims

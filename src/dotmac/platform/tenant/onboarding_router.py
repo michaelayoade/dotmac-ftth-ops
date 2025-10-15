@@ -52,15 +52,9 @@ def _to_tenant_response(tenant: object) -> TenantResponse:
         getattr(tenant, "status_is_active", getattr(tenant, "is_active", False))
     )
     response.trial_expired = bool(getattr(tenant, "trial_expired", False))
-    response.has_exceeded_user_limit = bool(
-        getattr(tenant, "has_exceeded_user_limit", False)
-    )
-    response.has_exceeded_api_limit = bool(
-        getattr(tenant, "has_exceeded_api_limit", False)
-    )
-    response.has_exceeded_storage_limit = bool(
-        getattr(tenant, "has_exceeded_storage_limit", False)
-    )
+    response.has_exceeded_user_limit = bool(getattr(tenant, "has_exceeded_user_limit", False))
+    response.has_exceeded_api_limit = bool(getattr(tenant, "has_exceeded_api_limit", False))
+    response.has_exceeded_storage_limit = bool(getattr(tenant, "has_exceeded_storage_limit", False))
 
     return response
 

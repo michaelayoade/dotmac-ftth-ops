@@ -385,7 +385,7 @@ make db-reset-seed
 
 ## Related Documentation
 
-- `CLAUDE.md` - Testing guidelines
+- `CLAUDE_OLD.md` - Legacy testing guidelines (historical reference)
 - `FIXTURE_DOCUMENTATION.md` - Test fixtures
 - `scripts/seed_data.py` - Main seed script
 - `.gitignore` - Excluded files (includes *.db, *.sqlite)

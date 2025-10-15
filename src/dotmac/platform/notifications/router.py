@@ -11,8 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import get_current_user
+from dotmac.platform.core.exceptions import NotFoundError
 from dotmac.platform.database import get_async_session as get_db
-from dotmac.platform.exceptions import NotFoundError, ValidationError
 from dotmac.platform.notifications.models import NotificationPriority, NotificationType
 from dotmac.platform.notifications.schemas import (
     NotificationCreateRequest,
@@ -125,7 +125,9 @@ async def create_notification(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/from-template", response_model=NotificationResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/from-template", response_model=NotificationResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_notification_from_template(
     request: NotificationFromTemplateRequest,
     db: AsyncSession = Depends(get_db),

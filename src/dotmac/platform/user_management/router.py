@@ -96,7 +96,7 @@ class UserListResponse(BaseModel):
 
 
 async def get_user_service(
-    session: Annotated[AsyncSession, Depends(get_session_dependency)]
+    session: Annotated[AsyncSession, Depends(get_session_dependency)],
 ) -> UserService:
     """Get user service with database session."""
     return UserService(session)

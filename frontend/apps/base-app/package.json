@@ -41,6 +41,8 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.0.0",
+    "@dotmac/primitives": "workspace:*",
+    "framer-motion": "^11.0.0",
     "lucide-react": "^0.378.0",
     "next": "^14.2.25",
     "next-themes": "^0.3.0",

@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.db import get_session_dependency
-from dotmac.platform.jobs.models import Job
 from dotmac.platform.jobs.schemas import (
     JobCancelResponse,
     JobCreate,
@@ -22,6 +21,7 @@ from dotmac.platform.jobs.schemas import (
     JobUpdate,
 )
 from dotmac.platform.jobs.service import JobService
+from dotmac.platform.redis_client import get_redis_client
 
 router = APIRouter(prefix="/api/v1/jobs", tags=["jobs"])
 
@@ -33,10 +33,10 @@ router = APIRouter(prefix="/api/v1/jobs", tags=["jobs"])
 
 async def get_job_service(
     session: AsyncSession = Depends(get_session_dependency),
+    redis: Redis = Depends(get_redis_client),
 ) -> JobService:
     """Get job service instance."""
-    # TODO: Inject Redis client when available
-    return JobService(session, redis_client=None)
+    return JobService(session, redis_client=redis)
 
 
 # =============================================================================
@@ -55,7 +55,7 @@ async def create_job(
     job_data: JobCreate,
     service: JobService = Depends(get_job_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> JobResponse:
     """
     Create a new async job.
 
@@ -89,7 +89,7 @@ async def get_job(
     job_id: str,
     service: JobService = Depends(get_job_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> JobResponse:
     """
     Get detailed information about a specific job.
 
@@ -117,7 +117,7 @@ async def list_jobs(
     page_size: int = Query(50, ge=1, le=100, description="Items per page"),
     service: JobService = Depends(get_job_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> JobListResponse:
     """
     List all jobs for the current tenant with optional filtering.
 
@@ -150,7 +150,7 @@ async def update_job_progress(
     update_data: JobUpdate,
     service: JobService = Depends(get_job_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> JobResponse:
     """
     Update job progress.
 
@@ -190,7 +190,7 @@ async def cancel_job(
     job_id: str,
     service: JobService = Depends(get_job_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> JobCancelResponse:
     """
     Cancel a job that is pending or running.
 
@@ -227,7 +227,7 @@ async def retry_failed_items(
     job_id: str,
     service: JobService = Depends(get_job_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> JobRetryResponse:
     """
     Retry failed items from a previous job.
 
@@ -269,7 +269,7 @@ async def retry_failed_items(
 async def get_job_statistics(
     service: JobService = Depends(get_job_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> JobStatistics:
     """
     Get job statistics for the current tenant.
 

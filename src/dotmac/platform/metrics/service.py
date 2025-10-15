@@ -5,45 +5,31 @@ Computes and caches ISP operational metrics and KPIs.
 """
 
 import asyncio
-import json
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 
 import structlog
+from redis.asyncio import Redis
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.billing.core.models import Invoice
-from dotmac.platform.customer_management.models import Customer, CustomerStatus
+from dotmac.platform.billing.core.entities import InvoiceEntity
+from dotmac.platform.billing.core.enums import InvoiceStatus
 from dotmac.platform.metrics.schemas import (
-    AgentPerformance,
-    CollectionsMetrics,
     DailyActivation,
     DashboardMetrics,
-    NetworkAlert,
-    NetworkCapacity,
-    NetworkDeviceHealth,
-    NetworkHealthMetrics,
     NetworkMetrics,
-    NetworkUptimeMetrics,
-    RevenueByPlan,
-    RevenueKPIs,
     RevenueMetrics,
-    RevenueTrend,
-    SLAMetric,
-    SignalQualityBand,
     SubscriberByPlan,
     SubscriberByStatus,
     SubscriberKPIs,
     SubscriberMetrics,
-    SupportKPIs,
     SupportMetrics,
-    TicketCategory,
-    TicketPriority,
-    TicketVolume,
 )
 from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
-from dotmac.platform.ticketing.models import Ticket, TicketPriority as TicketPriorityEnum, TicketStatus
+from dotmac.platform.ticketing.models import (
+    Ticket,
+    TicketStatus,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -51,7 +37,7 @@ logger = structlog.get_logger(__name__)
 class MetricsService:
     """Service for computing and caching ISP metrics."""
 
-    def __init__(self, session: AsyncSession, redis_client=None):
+    def __init__(self, session: AsyncSession, redis_client: Redis | None = None):
         self.session = session
         self.redis = redis_client
         self.cache_ttl = 300  # 5 minutes
@@ -73,7 +59,12 @@ class MetricsService:
         logger.info("metrics.dashboard.computing", tenant_id=tenant_id)
 
         # Compute metrics in parallel
-        subscriber_metrics, network_metrics, support_metrics, revenue_metrics = await asyncio.gather(
+        (
+            subscriber_metrics,
+            network_metrics,
+            support_metrics,
+            revenue_metrics,
+        ) = await asyncio.gather(
             self._get_subscriber_metrics(tenant_id),
             self._get_network_metrics(tenant_id),
             self._get_support_metrics(tenant_id),
@@ -104,7 +95,10 @@ class MetricsService:
             .group_by(Subscriber.status)
         )
         result = await self.session.execute(stmt)
-        status_counts = dict(result.all())
+        status_rows = result.all()
+        status_counts: dict[SubscriberStatus, int] = {
+            status: int(count) for status, count in status_rows
+        }
 
         total = sum(status_counts.values())
         active = status_counts.get(SubscriberStatus.ACTIVE, 0)
@@ -113,7 +107,9 @@ class MetricsService:
         disconnected = status_counts.get(SubscriberStatus.DISCONNECTED, 0)
 
         # Calculate growth this month
-        first_day_of_month = datetime.now(UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        first_day_of_month = datetime.now(UTC).replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
         new_this_month_stmt = select(func.count(Subscriber.id)).where(
             Subscriber.tenant_id == tenant_id,
             Subscriber.activation_date >= first_day_of_month,
@@ -132,8 +128,8 @@ class MetricsService:
         growth = new_this_month - churned_this_month
         churn_rate = (churned_this_month / total * 100) if total > 0 else 0.0
 
-        # Calculate ARPU (placeholder - would integrate with billing)
-        arpu = 85.50  # TODO: Calculate from billing data
+        # Calculate ARPU from billing data
+        arpu = await self._calculate_arpu(tenant_id, active)
 
         return SubscriberMetrics(
             total=total,
@@ -171,7 +167,9 @@ class MetricsService:
         olts_online = 12
         pon_ports_total = 192
         pon_ports_utilized = min(onu_count, pon_ports_total)
-        utilization_percent = (pon_ports_utilized / pon_ports_total * 100) if pon_ports_total > 0 else 0.0
+        utilization_percent = (
+            (pon_ports_utilized / pon_ports_total * 100) if pon_ports_total > 0 else 0.0
+        )
         avg_signal_dbm = -23.5
         degraded_onus = 12  # Signal < -28 dBm
 
@@ -237,33 +235,29 @@ class MetricsService:
         )
         active_subscribers = await self.session.scalar(active_subscribers_stmt) or 0
 
-        # Estimate MRR (would integrate with billing subscriptions)
-        arpu = 85.50
+        # Calculate ARPU from billing data and derive MRR/ARR
+        arpu = await self._calculate_arpu(tenant_id, active_subscribers)
         mrr = active_subscribers * arpu
         arr = mrr * 12
 
         # Calculate outstanding AR from overdue invoices
-        overdue_stmt = (
-            select(func.sum(Invoice.amount_due))
-            .where(
-                Invoice.tenant_id == tenant_id,
-                Invoice.status == "unpaid",
-                Invoice.due_date < datetime.now(UTC),
-            )
+        overdue_stmt = select(func.sum(InvoiceEntity.total_amount)).where(
+            InvoiceEntity.tenant_id == tenant_id,
+            InvoiceEntity.status == InvoiceStatus.OPEN,
+            InvoiceEntity.due_date < datetime.now(UTC),
         )
-        outstanding_ar = float(await self.session.scalar(overdue_stmt) or 0)
+        outstanding_ar_minor_units = await self.session.scalar(overdue_stmt) or 0
+        outstanding_ar = float(outstanding_ar_minor_units) / 100.0
 
         # Calculate overdue >30 days
         thirty_days_ago = datetime.now(UTC) - timedelta(days=30)
-        overdue_30_stmt = (
-            select(func.sum(Invoice.amount_due))
-            .where(
-                Invoice.tenant_id == tenant_id,
-                Invoice.status == "unpaid",
-                Invoice.due_date < thirty_days_ago,
-            )
+        overdue_30_stmt = select(func.sum(InvoiceEntity.total_amount)).where(
+            InvoiceEntity.tenant_id == tenant_id,
+            InvoiceEntity.status == InvoiceStatus.OPEN,
+            InvoiceEntity.due_date < thirty_days_ago,
         )
-        overdue_30_days = float(await self.session.scalar(overdue_30_stmt) or 0)
+        overdue_30_minor_units = await self.session.scalar(overdue_30_stmt) or 0
+        overdue_30_days = float(overdue_30_minor_units) / 100.0
 
         return RevenueMetrics(
             mrr=round(mrr, 2),
@@ -271,6 +265,36 @@ class MetricsService:
             outstanding_ar=round(outstanding_ar, 2),
             overdue_30_days=round(overdue_30_days, 2),
         )
+
+    async def _calculate_arpu(self, tenant_id: str, active_subscribers: int) -> float:
+        """
+        Calculate Average Revenue Per User (ARPU) from billing data.
+
+        ARPU = Total revenue from paid invoices in last 30 days / Active subscribers
+
+        Returns 0.0 if there are no active subscribers or no revenue data.
+        """
+        if active_subscribers == 0:
+            return 0.0
+
+        # Get revenue from paid invoices in the last 30 days
+        thirty_days_ago = datetime.now(UTC) - timedelta(days=30)
+
+        # Sum total amount from paid invoices in last 30 days
+        revenue_stmt = select(func.sum(InvoiceEntity.total_amount)).where(
+            InvoiceEntity.tenant_id == tenant_id,
+            InvoiceEntity.status == InvoiceStatus.PAID,
+            InvoiceEntity.paid_at >= thirty_days_ago,
+        )
+        total_revenue_minor_units = await self.session.scalar(revenue_stmt) or 0
+
+        # Convert from minor units (cents) to major units (dollars)
+        total_revenue = float(total_revenue_minor_units) / 100.0
+
+        # Calculate ARPU
+        arpu = total_revenue / active_subscribers if active_subscribers > 0 else 0.0
+
+        return round(arpu, 2)
 
     async def get_subscriber_kpis(self, tenant_id: str, period_days: int = 30) -> SubscriberKPIs:
         """Get detailed subscriber KPIs with trends."""
@@ -308,7 +332,9 @@ class MetricsService:
         churned_subscribers = await self.session.scalar(churned_stmt) or 0
 
         net_growth = new_subscribers - churned_subscribers
-        churn_rate = (churned_subscribers / total_subscribers * 100) if total_subscribers > 0 else 0.0
+        churn_rate = (
+            (churned_subscribers / total_subscribers * 100) if total_subscribers > 0 else 0.0
+        )
 
         # Subscribers by plan (placeholder)
         subscriber_by_plan = [
@@ -324,20 +350,27 @@ class MetricsService:
             .group_by(Subscriber.status)
         )
         status_result = await self.session.execute(status_stmt)
-        status_counts = dict(status_result.all())
+        status_rows = status_result.all()
+        status_counts: dict[SubscriberStatus, int] = {
+            status: int(count) for status, count in status_rows
+        }
 
         subscriber_by_status = [
             SubscriberByStatus(
                 status=status.value,
                 count=count,
-                percentage=round(count / total_subscribers * 100, 1) if total_subscribers > 0 else 0.0,
+                percentage=round(count / total_subscribers * 100, 1)
+                if total_subscribers > 0
+                else 0.0,
             )
             for status, count in status_counts.items()
         ]
 
         # Daily activations (placeholder)
         daily_activations = [
-            DailyActivation(date=(datetime.now(UTC) - timedelta(days=i)).strftime("%Y-%m-%d"), count=2 + (i % 3))
+            DailyActivation(
+                date=(datetime.now(UTC) - timedelta(days=i)).strftime("%Y-%m-%d"), count=2 + (i % 3)
+            )
             for i in range(30)
         ][::-1]  # Reverse to oldest first
 

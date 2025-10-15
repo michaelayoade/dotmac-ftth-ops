@@ -8,7 +8,7 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import get_current_user
@@ -298,7 +298,8 @@ async def get_diagnostic_run(
 
     if not diagnostic:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Diagnostic run {diagnostic_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Diagnostic run {diagnostic_id} not found",
         )
 
     return diagnostic

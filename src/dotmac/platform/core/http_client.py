@@ -11,7 +11,7 @@ from urllib.parse import urljoin
 
 import httpx
 import structlog
-from pybreaker import CircuitBreaker, CircuitBreakerError
+from pybreaker import CircuitBreaker, CircuitBreakerError, CircuitBreakerListener
 from tenacity import (
     AsyncRetrying,
     RetryError,
@@ -142,24 +142,34 @@ class RobustHTTPClient:
 
         self.circuit_breaker = self._circuit_breakers[breaker_key]
 
-    def _circuit_breaker_listener(self):
+    class _CircuitBreakerListener(CircuitBreakerListener):
+        def __init__(
+            self,
+            service_name: str,
+            tenant_id: str | None,
+            log: structlog.BoundLogger,
+        ) -> None:
+            self._service_name = service_name
+            self._tenant_id = tenant_id
+            self._log = log
+
+        def state_change(self, breaker: CircuitBreaker, old_state: Any, new_state: Any) -> None:
+            self._log.warning(
+                "circuit_breaker.state_change",
+                service=self._service_name,
+                tenant_id=self._tenant_id,
+                old_state=str(old_state),
+                new_state=str(new_state),
+                failure_count=breaker.fail_counter,
+            )
+
+    def _circuit_breaker_listener(self) -> "RobustHTTPClient._CircuitBreakerListener":
         """Create circuit breaker event listener for logging."""
-        service_name = self.service_name
-        tenant_id = self.tenant_id
-        log = self.logger
-
-        class Listener:
-            def state_change(self, breaker, old_state, new_state):
-                log.warning(
-                    "circuit_breaker.state_change",
-                    service=service_name,
-                    tenant_id=tenant_id,
-                    old_state=str(old_state),
-                    new_state=str(new_state),
-                    failure_count=breaker.fail_counter,
-                )
-
-        return Listener()
+        return RobustHTTPClient._CircuitBreakerListener(
+            service_name=self.service_name,
+            tenant_id=self.tenant_id,
+            log=self.logger,
+        )
 
     async def request(
         self,
@@ -203,7 +213,8 @@ class RobustHTTPClient:
         # Wrap in circuit breaker
         try:
             if retry:
-                result = await self._request_with_retry(
+                result = await self.circuit_breaker.call_async(
+                    self._request_with_retry,
                     method=method,
                     url=url,
                     params=params,
@@ -211,7 +222,8 @@ class RobustHTTPClient:
                     timeout=request_timeout,
                 )
             else:
-                result = await self._request_once(
+                result = await self.circuit_breaker.call_async(
+                    self._request_once,
                     method=method,
                     url=url,
                     params=params,
@@ -263,7 +275,6 @@ class RobustHTTPClient:
             )
             raise
 
-    @CircuitBreaker
     async def _request_with_retry(
         self,
         method: str,
@@ -316,7 +327,7 @@ class RobustHTTPClient:
                         attempt=attempt,
                     )
                     if attempt < self.max_retries:
-                        await asyncio.sleep(min(2 ** attempt * 0.5, 5.0))
+                        await asyncio.sleep(min(2**attempt * 0.5, 5.0))
                         raise httpx.NetworkError(f"Server error: {response.status_code}")
 
                 # Retry on 429 (rate limit)
@@ -365,7 +376,7 @@ class RobustHTTPClient:
 
         return response.json()
 
-    async def close(self):
+    async def close(self) -> None:
         """Close HTTP client and cleanup resources."""
         pool_key = f"{self.service_name}:{self.tenant_id or 'default'}:{self.base_url}"
         if pool_key in self._client_pool:
@@ -374,7 +385,7 @@ class RobustHTTPClient:
             self.logger.debug("http_client.closed", pool_key=pool_key)
 
     @classmethod
-    async def close_all(cls):
+    async def close_all(cls) -> None:
         """Close all pooled HTTP clients."""
         for key, client in list(cls._client_pool.items()):
             await client.aclose()
@@ -382,7 +393,7 @@ class RobustHTTPClient:
         cls._client_pool.clear()
         cls._circuit_breakers.clear()
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Cleanup on deletion."""
         # Note: Cannot await in __del__, so we just log
         # Resources will be cleaned up when event loop closes

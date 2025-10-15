@@ -4,8 +4,9 @@ Rate Limiting Decorators.
 Decorators for fine-grained rate limiting on specific endpoints.
 """
 
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable
+from typing import Any
 
 from fastapi import HTTPException, Request, status
 
@@ -66,8 +67,9 @@ def rate_limit(
                 service = RateLimitService(db)
 
                 # Create temporary rule for this decorator
-                from dotmac.platform.rate_limit.models import RateLimitRule
                 from uuid import uuid4
+
+                from dotmac.platform.rate_limit.models import RateLimitRule
 
                 temp_rule = RateLimitRule(
                     id=uuid4(),
@@ -180,7 +182,9 @@ def rate_limit_per_day(max_requests: int = 10000) -> Callable:
     )
 
 
-def rate_limit_per_ip(max_requests: int = 100, window: RateLimitWindow = RateLimitWindow.MINUTE) -> Callable:
+def rate_limit_per_ip(
+    max_requests: int = 100, window: RateLimitWindow = RateLimitWindow.MINUTE
+) -> Callable:
     """Rate limit per IP address."""
     return rate_limit(
         max_requests=max_requests,

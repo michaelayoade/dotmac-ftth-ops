@@ -6,13 +6,13 @@ Service for managing scheduled jobs, job chains, and retry logic.
 
 import asyncio
 from datetime import UTC, datetime, timedelta
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 import structlog
-from croniter import croniter
+from croniter import croniter  # type: ignore[import-untyped]
 from redis.asyncio import Redis
-from sqlalchemy import and_, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.jobs.models import (
@@ -116,9 +116,7 @@ class SchedulerService:
 
         return scheduled_job
 
-    async def get_scheduled_job(
-        self, scheduled_job_id: str, tenant_id: str
-    ) -> ScheduledJob | None:
+    async def get_scheduled_job(self, scheduled_job_id: str, tenant_id: str) -> ScheduledJob | None:
         """Get scheduled job by ID."""
         stmt = select(ScheduledJob).where(
             ScheduledJob.id == scheduled_job_id, ScheduledJob.tenant_id == tenant_id
@@ -218,13 +216,9 @@ class SchedulerService:
         self, scheduled_job_id: str, tenant_id: str, is_active: bool
     ) -> ScheduledJob | None:
         """Toggle scheduled job active status."""
-        return await self.update_scheduled_job(
-            scheduled_job_id, tenant_id, is_active=is_active
-        )
+        return await self.update_scheduled_job(scheduled_job_id, tenant_id, is_active=is_active)
 
-    async def delete_scheduled_job(
-        self, scheduled_job_id: str, tenant_id: str
-    ) -> bool:
+    async def delete_scheduled_job(self, scheduled_job_id: str, tenant_id: str) -> bool:
         """Delete a scheduled job."""
         scheduled_job = await self.get_scheduled_job(scheduled_job_id, tenant_id)
         if not scheduled_job:
@@ -314,9 +308,7 @@ class SchedulerService:
 
         return job
 
-    async def update_scheduled_job_stats(
-        self, scheduled_job_id: str, success: bool
-    ) -> None:
+    async def update_scheduled_job_stats(self, scheduled_job_id: str, success: bool) -> None:
         """Update scheduled job statistics after execution."""
         stmt = select(ScheduledJob).where(ScheduledJob.id == scheduled_job_id)
         result = await self.session.execute(stmt)
@@ -392,13 +384,9 @@ class SchedulerService:
 
         return job_chain
 
-    async def get_job_chain(
-        self, chain_id: str, tenant_id: str
-    ) -> JobChain | None:
+    async def get_job_chain(self, chain_id: str, tenant_id: str) -> JobChain | None:
         """Get job chain by ID."""
-        stmt = select(JobChain).where(
-            JobChain.id == chain_id, JobChain.tenant_id == tenant_id
-        )
+        stmt = select(JobChain).where(JobChain.id == chain_id, JobChain.tenant_id == tenant_id)
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -440,9 +428,7 @@ class SchedulerService:
             chain.error_message = str(e)
             chain.completed_at = datetime.now(UTC)
 
-            logger.error(
-                "job_chain.failed", chain_id=chain_id, error=str(e), exc_info=True
-            )
+            logger.error("job_chain.failed", chain_id=chain_id, error=str(e), exc_info=True)
 
         await self.session.commit()
         await self.session.refresh(chain)
@@ -451,7 +437,7 @@ class SchedulerService:
 
     async def _execute_sequential_chain(self, chain: JobChain) -> None:
         """Execute job chain sequentially."""
-        results = {}
+        results: dict[str, dict[str, Any]] = {}
 
         for i, job_def in enumerate(chain.chain_definition):
             chain.current_step = i
@@ -499,14 +485,14 @@ class SchedulerService:
         results_list = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Aggregate results
-        results = {}
+        results: dict[str, dict[str, Any]] = {}
         for i, result in enumerate(results_list):
             if isinstance(result, Exception):
                 results[f"step_{i}"] = {"error": str(result)}
                 if chain.stop_on_failure:
                     raise result
             else:
-                results[f"step_{i}"] = result
+                results[f"step_{i}"] = cast(dict[str, Any], result)
 
         chain.results = results
         chain.current_step = chain.total_steps
@@ -546,9 +532,7 @@ class SchedulerService:
                 if job.status == JobStatus.COMPLETED.value:
                     return job.result or {}
                 else:
-                    raise RuntimeError(
-                        f"Job {job.id} failed: {job.error_message}"
-                    )
+                    raise RuntimeError(f"Job {job.id} failed: {job.error_message}")
 
             # Check timeout
             elapsed = (datetime.now(UTC) - start_time).total_seconds()
@@ -567,7 +551,8 @@ class SchedulerService:
 
         if cron_expression:
             cron = croniter(cron_expression, now)
-            return cron.get_next(datetime)
+            next_run = cast(datetime, cron.get_next(datetime))
+            return next_run
         elif interval_seconds:
             return now + timedelta(seconds=interval_seconds)
         else:

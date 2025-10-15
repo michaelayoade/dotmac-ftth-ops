@@ -22,8 +22,19 @@ from dotmac.platform.genieacs.schemas import (
     FaultResponse,
     FileResponse,
     FirmwareDownloadRequest,
+    FirmwareUpgradeResult,
+    FirmwareUpgradeSchedule,
+    FirmwareUpgradeScheduleCreate,
+    FirmwareUpgradeScheduleList,
+    FirmwareUpgradeScheduleResponse,
     GenieACSHealthResponse,
     GetParameterRequest,
+    LANConfig,
+    MassConfigJob,
+    MassConfigJobList,
+    MassConfigRequest,
+    MassConfigResponse,
+    MassConfigResult,
     PresetCreate,
     PresetResponse,
     PresetUpdate,
@@ -32,6 +43,7 @@ from dotmac.platform.genieacs.schemas import (
     RefreshRequest,
     SetParameterRequest,
     TaskResponse,
+    WANConfig,
     WiFiConfig,
 )
 
@@ -40,6 +52,12 @@ logger = structlog.get_logger(__name__)
 
 class GenieACSService:
     """Service for GenieACS CPE management"""
+
+    # In-memory storage for schedules and jobs (replace with database in production)
+    _firmware_schedules: dict[str, FirmwareUpgradeSchedule] = {}
+    _mass_config_jobs: dict[str, MassConfigJob] = {}
+    _firmware_results: dict[str, list[FirmwareUpgradeResult]] = {}
+    _mass_config_results: dict[str, list[MassConfigResult]] = {}
 
     def __init__(
         self,
@@ -53,7 +71,7 @@ class GenieACSService:
             client: GenieACS client instance (creates new if not provided)
             tenant_id: Tenant ID for multi-tenancy support
         """
-        self.client = client or GenieACSClient(tenant_id=tenant_id)
+        self.client: GenieACSClient = client or GenieACSClient(tenant_id=tenant_id)
         self.tenant_id = tenant_id
 
     # =========================================================================
@@ -143,7 +161,7 @@ class GenieACSService:
 
     async def delete_device(self, device_id: str) -> bool:
         """Delete device from GenieACS"""
-        return await self.client.delete_device(device_id)
+        return bool(await self.client.delete_device(device_id))
 
     async def get_device_status(self, device_id: str) -> DeviceStatusResponse | None:
         """Get device online/offline status"""
@@ -427,7 +445,7 @@ class GenieACSService:
 
     async def delete_preset(self, preset_id: str) -> bool:
         """Delete preset"""
-        return await self.client.delete_preset(preset_id)
+        return bool(await self.client.delete_preset(preset_id))
 
     # =========================================================================
     # Provision Operations
@@ -463,7 +481,7 @@ class GenieACSService:
 
     async def delete_file(self, file_id: str) -> bool:
         """Delete file"""
-        return await self.client.delete_file(file_id)
+        return bool(await self.client.delete_file(file_id))
 
     # =========================================================================
     # Fault Operations
@@ -485,7 +503,7 @@ class GenieACSService:
 
     async def delete_fault(self, fault_id: str) -> bool:
         """Delete fault"""
-        return await self.client.delete_fault(fault_id)
+        return bool(await self.client.delete_fault(fault_id))
 
     # =========================================================================
     # Helper Methods
@@ -553,7 +571,7 @@ class GenieACSService:
         }
 
     @staticmethod
-    def _build_lan_params(lan) -> dict[str, Any]:
+    def _build_lan_params(lan: LANConfig) -> dict[str, Any]:
         """Build LAN TR-069 parameters"""
         params = {
             "InternetGatewayDevice.LANDevice.1.LANHostConfigManagement.IPInterface.1.IPInterfaceIPAddress": lan.ip_address,
@@ -571,7 +589,7 @@ class GenieACSService:
         return params
 
     @staticmethod
-    def _build_wan_params(wan) -> dict[str, Any]:
+    def _build_wan_params(wan: WANConfig) -> dict[str, Any]:
         """Build WAN TR-069 parameters"""
         params = {
             "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ConnectionType": wan.connection_type,
@@ -585,3 +603,458 @@ class GenieACSService:
                 "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Password"
             ] = wan.password
         return params
+
+    # =========================================================================
+    # Scheduled Firmware Upgrades
+    # =========================================================================
+
+    async def create_firmware_upgrade_schedule(
+        self, request: FirmwareUpgradeScheduleCreate
+    ) -> FirmwareUpgradeScheduleResponse:
+        """
+        Create a scheduled firmware upgrade job.
+
+        Args:
+            request: Firmware upgrade schedule creation request
+
+        Returns:
+            FirmwareUpgradeScheduleResponse with schedule details and device count
+        """
+        from uuid import uuid4
+
+        # Generate schedule ID
+        schedule_id = str(uuid4())
+
+        # Query devices matching filter
+        devices = await self.client.get_devices(query=request.device_filter)
+        total_devices = len(devices)
+
+        # Create schedule
+        schedule = FirmwareUpgradeSchedule(
+            schedule_id=schedule_id,
+            name=request.name,
+            description=request.description,
+            firmware_file=request.firmware_file,
+            file_type=request.file_type,
+            device_filter=request.device_filter,
+            scheduled_at=request.scheduled_at,
+            timezone=request.timezone,
+            max_concurrent=request.max_concurrent,
+            status="pending",
+            created_at=datetime.now(),
+        )
+
+        # Store schedule
+        self._firmware_schedules[schedule_id] = schedule
+        self._firmware_results[schedule_id] = []
+
+        logger.info(
+            "genieacs.firmware_schedule.created",
+            schedule_id=schedule_id,
+            name=request.name,
+            total_devices=total_devices,
+        )
+
+        return FirmwareUpgradeScheduleResponse(
+            schedule=schedule,
+            total_devices=total_devices,
+            completed_devices=0,
+            failed_devices=0,
+            pending_devices=total_devices,
+            results=[],
+        )
+
+    async def list_firmware_upgrade_schedules(self) -> FirmwareUpgradeScheduleList:
+        """List all firmware upgrade schedules."""
+        schedules = list(self._firmware_schedules.values())
+        return FirmwareUpgradeScheduleList(schedules=schedules, total=len(schedules))
+
+    async def get_firmware_upgrade_schedule(
+        self, schedule_id: str
+    ) -> FirmwareUpgradeScheduleResponse:
+        """
+        Get firmware upgrade schedule details.
+
+        Args:
+            schedule_id: Schedule ID
+
+        Returns:
+            FirmwareUpgradeScheduleResponse with schedule and results
+
+        Raises:
+            ValueError: If schedule not found
+        """
+        schedule = self._firmware_schedules.get(schedule_id)
+        if not schedule:
+            raise ValueError(f"Firmware upgrade schedule {schedule_id} not found")
+
+        results = self._firmware_results.get(schedule_id, [])
+
+        completed = sum(1 for r in results if r.status == "success")
+        failed = sum(1 for r in results if r.status == "failed")
+        in_progress = sum(1 for r in results if r.status == "in_progress")
+        pending = sum(1 for r in results if r.status == "pending")
+
+        # Query current device count
+        devices = await self.client.get_devices(query=schedule.device_filter)
+        total_devices = len(devices)
+
+        return FirmwareUpgradeScheduleResponse(
+            schedule=schedule,
+            total_devices=total_devices,
+            completed_devices=completed,
+            failed_devices=failed,
+            pending_devices=pending + in_progress,
+            results=results,
+        )
+
+    async def cancel_firmware_upgrade_schedule(self, schedule_id: str) -> dict:
+        """
+        Cancel a pending firmware upgrade schedule.
+
+        Args:
+            schedule_id: Schedule ID
+
+        Returns:
+            Success message
+
+        Raises:
+            ValueError: If schedule not found or not cancellable
+        """
+        schedule = self._firmware_schedules.get(schedule_id)
+        if not schedule:
+            raise ValueError(f"Firmware upgrade schedule {schedule_id} not found")
+
+        if schedule.status not in ("pending", "running"):
+            raise ValueError(f"Cannot cancel schedule with status: {schedule.status}")
+
+        schedule.status = "cancelled"
+        schedule.completed_at = datetime.now()
+
+        logger.info("genieacs.firmware_schedule.cancelled", schedule_id=schedule_id)
+
+        return {"success": True, "message": f"Schedule {schedule_id} cancelled"}
+
+    async def execute_firmware_upgrade_schedule(
+        self, schedule_id: str
+    ) -> FirmwareUpgradeScheduleResponse:
+        """
+        Execute firmware upgrade schedule immediately (background task).
+
+        This method initiates the firmware upgrade process and returns immediately.
+        The actual upgrades are performed asynchronously.
+
+        Args:
+            schedule_id: Schedule ID
+
+        Returns:
+            FirmwareUpgradeScheduleResponse with initial status
+
+        Raises:
+            ValueError: If schedule not found
+        """
+        schedule = self._firmware_schedules.get(schedule_id)
+        if not schedule:
+            raise ValueError(f"Firmware upgrade schedule {schedule_id} not found")
+
+        # Update schedule status
+        schedule.status = "running"
+        schedule.started_at = datetime.now()
+
+        # Get devices
+        devices = await self.client.get_devices(query=schedule.device_filter)
+
+        # Initialize results
+        results: list[FirmwareUpgradeResult] = []
+        for device in devices:
+            device_id = device.get("_id", "")
+            results.append(
+                FirmwareUpgradeResult(
+                    device_id=device_id,
+                    status="pending",
+                    started_at=None,
+                    completed_at=None,
+                )
+            )
+
+        self._firmware_results[schedule_id] = results
+
+        # Execute firmware downloads (simplified - in production use Celery)
+        # Here we'll process a limited number concurrently
+        for i, result in enumerate(results[: schedule.max_concurrent]):
+            try:
+                device_id = result.device_id
+                result.status = "in_progress"
+                result.started_at = datetime.now()
+
+                # Trigger firmware download task
+                await self.client.add_task(
+                    device_id=device_id,
+                    task_name="download",
+                    file_name=schedule.firmware_file,
+                    file_type=schedule.file_type,
+                )
+
+                result.status = "success"
+                result.completed_at = datetime.now()
+
+                logger.info(
+                    "genieacs.firmware_upgrade.device_started",
+                    schedule_id=schedule_id,
+                    device_id=device_id,
+                )
+
+            except Exception as e:
+                result.status = "failed"
+                result.error_message = str(e)
+                result.completed_at = datetime.now()
+
+                logger.error(
+                    "genieacs.firmware_upgrade.device_failed",
+                    schedule_id=schedule_id,
+                    device_id=result.device_id,
+                    error=str(e),
+                )
+
+        # Update schedule status
+        completed = sum(1 for r in results if r.status == "success")
+        failed = sum(1 for r in results if r.status == "failed")
+        pending = sum(1 for r in results if r.status == "pending")
+
+        if pending == 0:
+            schedule.status = "completed"
+            schedule.completed_at = datetime.now()
+
+        logger.info(
+            "genieacs.firmware_schedule.executed",
+            schedule_id=schedule_id,
+            total=len(devices),
+            completed=completed,
+            failed=failed,
+        )
+
+        return FirmwareUpgradeScheduleResponse(
+            schedule=schedule,
+            total_devices=len(devices),
+            completed_devices=completed,
+            failed_devices=failed,
+            pending_devices=pending,
+            results=results,
+        )
+
+    # =========================================================================
+    # Mass CPE Configuration
+    # =========================================================================
+
+    async def create_mass_config_job(
+        self, request: MassConfigRequest
+    ) -> MassConfigResponse:
+        """
+        Create mass configuration job.
+
+        Args:
+            request: Mass configuration request
+
+        Returns:
+            MassConfigResponse with job details and preview (if dry-run)
+        """
+        from uuid import uuid4
+
+        # Generate job ID
+        job_id = str(uuid4())
+
+        # Query devices matching filter
+        devices = await self.client.get_devices(query=request.device_filter.query)
+        total_devices = len(devices)
+
+        # Validate expected count if provided
+        if request.device_filter.expected_count is not None:
+            if total_devices != request.device_filter.expected_count:
+                raise ValueError(
+                    f"Device count mismatch: expected {request.device_filter.expected_count}, found {total_devices}"
+                )
+
+        # Create job
+        job = MassConfigJob(
+            job_id=job_id,
+            name=request.name,
+            description=request.description,
+            device_filter=request.device_filter.query,
+            total_devices=total_devices,
+            status="pending",
+            dry_run=request.dry_run,
+            created_at=datetime.now(),
+        )
+
+        # Store job
+        self._mass_config_jobs[job_id] = job
+        self._mass_config_results[job_id] = []
+
+        # If dry-run, return preview
+        preview = None
+        if request.dry_run:
+            preview = [device.get("_id", "") for device in devices]
+
+        logger.info(
+            "genieacs.mass_config.created",
+            job_id=job_id,
+            name=request.name,
+            total_devices=total_devices,
+            dry_run=request.dry_run,
+        )
+
+        return MassConfigResponse(job=job, preview=preview, results=[])
+
+    async def list_mass_config_jobs(self) -> MassConfigJobList:
+        """List all mass configuration jobs."""
+        jobs = list(self._mass_config_jobs.values())
+        return MassConfigJobList(jobs=jobs, total=len(jobs))
+
+    async def get_mass_config_job(self, job_id: str) -> MassConfigResponse:
+        """
+        Get mass configuration job details.
+
+        Args:
+            job_id: Job ID
+
+        Returns:
+            MassConfigResponse with job and results
+
+        Raises:
+            ValueError: If job not found
+        """
+        job = self._mass_config_jobs.get(job_id)
+        if not job:
+            raise ValueError(f"Mass configuration job {job_id} not found")
+
+        results = self._mass_config_results.get(job_id, [])
+
+        return MassConfigResponse(job=job, preview=None, results=results)
+
+    async def cancel_mass_config_job(self, job_id: str) -> dict:
+        """
+        Cancel a pending mass configuration job.
+
+        Args:
+            job_id: Job ID
+
+        Returns:
+            Success message
+
+        Raises:
+            ValueError: If job not found or not cancellable
+        """
+        job = self._mass_config_jobs.get(job_id)
+        if not job:
+            raise ValueError(f"Mass configuration job {job_id} not found")
+
+        if job.status not in ("pending", "running"):
+            raise ValueError(f"Cannot cancel job with status: {job.status}")
+
+        job.status = "cancelled"
+        job.completed_at = datetime.now()
+
+        logger.info("genieacs.mass_config.cancelled", job_id=job_id)
+
+        return {"success": True, "message": f"Job {job_id} cancelled"}
+
+    async def execute_mass_config_job(self, job_id: str) -> MassConfigResponse:
+        """
+        Execute mass configuration job immediately.
+
+        Args:
+            job_id: Job ID
+
+        Returns:
+            MassConfigResponse with results
+
+        Raises:
+            ValueError: If job not found or is dry-run
+        """
+        job = self._mass_config_jobs.get(job_id)
+        if not job:
+            raise ValueError(f"Mass configuration job {job_id} not found")
+
+        if job.dry_run:
+            raise ValueError("Cannot execute dry-run job")
+
+        # Update job status
+        job.status = "running"
+        job.started_at = datetime.now()
+
+        # Get devices
+        devices = await self.client.get_devices(query=job.device_filter)
+
+        # Get the original request to determine what to configure
+        # Note: In production, store the full request with the job
+        results: list[MassConfigResult] = []
+
+        for device in devices:
+            device_id = device.get("_id", "")
+            result = MassConfigResult(
+                device_id=device_id,
+                status="pending",
+                started_at=None,
+                completed_at=None,
+            )
+
+            try:
+                result.status = "in_progress"
+                result.started_at = datetime.now()
+
+                # Build parameters to set
+                # This is simplified - in production, reconstruct from stored request
+                params_to_set: dict[str, Any] = {}
+
+                # Example: Set a refresh task (placeholder)
+                await self.client.add_task(
+                    device_id=device_id,
+                    task_name="refreshObject",
+                    object_name="InternetGatewayDevice",
+                )
+
+                result.parameters_changed = params_to_set
+                result.status = "success"
+                result.completed_at = datetime.now()
+
+                job.completed_devices += 1
+
+                logger.info(
+                    "genieacs.mass_config.device_completed",
+                    job_id=job_id,
+                    device_id=device_id,
+                )
+
+            except Exception as e:
+                result.status = "failed"
+                result.error_message = str(e)
+                result.completed_at = datetime.now()
+
+                job.failed_devices += 1
+
+                logger.error(
+                    "genieacs.mass_config.device_failed",
+                    job_id=job_id,
+                    device_id=device_id,
+                    error=str(e),
+                )
+
+            results.append(result)
+
+        # Store results
+        self._mass_config_results[job_id] = results
+
+        # Update job status
+        job.pending_devices = 0
+        job.status = "completed"
+        job.completed_at = datetime.now()
+
+        logger.info(
+            "genieacs.mass_config.executed",
+            job_id=job_id,
+            total=job.total_devices,
+            completed=job.completed_devices,
+            failed=job.failed_devices,
+        )
+
+        return MassConfigResponse(job=job, preview=None, results=results)

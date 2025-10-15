@@ -207,9 +207,9 @@ class TestSubscriptionsRouter:
                 f"Expected plan_123 not found. Received plans: {[p['plan_id'] for p in data] if data else 'empty list'}"
             )
         assert len(data) >= 1, f"Expected at least 1 plan, got {len(data)}"
-        assert any(
-            p["plan_id"] == "plan_123" for p in data
-        ), f"plan_123 not in {[p['plan_id'] for p in data]}"
+        assert any(p["plan_id"] == "plan_123" for p in data), (
+            f"plan_123 not in {[p['plan_id'] for p in data]}"
+        )
 
     async def test_get_subscription_plan_by_id(
         self, router_client: AsyncClient, auth_headers, async_session

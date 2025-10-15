@@ -12,7 +12,6 @@ Tests complete end-to-end service lifecycle workflows integrating:
 - Service termination and resource cleanup
 """
 
-from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -224,9 +223,12 @@ class TestServiceModificationWorkflows:
         sample_bandwidth_profile,
     ):
         """Test upgrading service bandwidth (100 Mbps -> 500 Mbps)."""
-        from dotmac.platform.radius.schemas import BandwidthProfileCreate, RADIUSSubscriberCreate
+        from dotmac.platform.radius.schemas import BandwidthProfileCreate
         from dotmac.platform.radius.service import RADIUSService
-        from dotmac.platform.services.lifecycle.schemas import ServiceModificationRequest, ServiceProvisionRequest
+        from dotmac.platform.services.lifecycle.schemas import (
+            ServiceModificationRequest,
+            ServiceProvisionRequest,
+        )
         from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
         lifecycle_service = LifecycleOrchestrationService(async_session)
@@ -260,7 +262,10 @@ class TestServiceModificationWorkflows:
 
         # Modify service
         modification_request = ServiceModificationRequest(
-            service_config={"bandwidth_profile": "500mbps", "bandwidth_profile_id": str(new_profile.id)},
+            service_config={
+                "bandwidth_profile": "500mbps",
+                "bandwidth_profile_id": str(new_profile.id),
+            },
             reason="Customer upgrade request",
         )
 
@@ -293,7 +298,10 @@ class TestServiceModificationWorkflows:
         """Test enabling managed WiFi on existing service."""
         from dotmac.platform.genieacs.schemas import SetParametersRequest
         from dotmac.platform.genieacs.service import GenieACSService
-        from dotmac.platform.services.lifecycle.schemas import ServiceModificationRequest, ServiceProvisionRequest
+        from dotmac.platform.services.lifecycle.schemas import (
+            ServiceModificationRequest,
+            ServiceProvisionRequest,
+        )
         from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
         lifecycle_service = LifecycleOrchestrationService(async_session)
@@ -323,7 +331,7 @@ class TestServiceModificationWorkflows:
         # Enable managed WiFi
         wifi_config = {
             "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Enable": True,
-            "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID": f"ISP-Premium-WiFi",
+            "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID": "ISP-Premium-WiFi",
             "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey": "SecurePassword123",
             "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.Standard": "ax",
         }
@@ -368,7 +376,10 @@ class TestServiceSuspensionWorkflows:
         """Test suspending service due to non-payment."""
         from dotmac.platform.radius.schemas import RADIUSSubscriberCreate
         from dotmac.platform.radius.service import RADIUSService
-        from dotmac.platform.services.lifecycle.schemas import ServiceProvisionRequest, ServiceSuspensionRequest
+        from dotmac.platform.services.lifecycle.schemas import (
+            ServiceProvisionRequest,
+            ServiceSuspensionRequest,
+        )
         from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
         lifecycle_service = LifecycleOrchestrationService(async_session)
@@ -446,7 +457,10 @@ class TestServiceSuspensionWorkflows:
         """Test resuming suspended service after payment received."""
         from dotmac.platform.radius.schemas import RADIUSSubscriberCreate
         from dotmac.platform.radius.service import RADIUSService
-        from dotmac.platform.services.lifecycle.schemas import ServiceProvisionRequest, ServiceSuspensionRequest
+        from dotmac.platform.services.lifecycle.schemas import (
+            ServiceProvisionRequest,
+            ServiceSuspensionRequest,
+        )
         from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
         lifecycle_service = LifecycleOrchestrationService(async_session)
@@ -540,7 +554,10 @@ class TestServiceTerminationWorkflows:
         from dotmac.platform.netbox.service import NetBoxService
         from dotmac.platform.radius.schemas import RADIUSSubscriberCreate
         from dotmac.platform.radius.service import RADIUSService
-        from dotmac.platform.services.lifecycle.schemas import ServiceProvisionRequest, ServiceTerminationRequest
+        from dotmac.platform.services.lifecycle.schemas import (
+            ServiceProvisionRequest,
+            ServiceTerminationRequest,
+        )
         from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
         lifecycle_service = LifecycleOrchestrationService(async_session)
@@ -649,7 +666,7 @@ class TestServiceLifecycleHealthChecks:
         for i in range(5):
             provision_request = ServiceProvisionRequest(
                 customer_id=test_customer_id,
-                service_name=f"Service {i+1}",
+                service_name=f"Service {i + 1}",
                 service_type="fiber_internet",
                 subscription_id=f"sub_health_{i:03d}",
                 service_config={},
@@ -750,7 +767,10 @@ class TestBulkServiceOperations:
         test_customer_id,
     ):
         """Test suspending multiple services at once."""
-        from dotmac.platform.services.lifecycle.schemas import BulkServiceOperationRequest, ServiceProvisionRequest
+        from dotmac.platform.services.lifecycle.schemas import (
+            BulkServiceOperationRequest,
+            ServiceProvisionRequest,
+        )
         from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
         lifecycle_service = LifecycleOrchestrationService(async_session)
@@ -760,7 +780,7 @@ class TestBulkServiceOperations:
         for i in range(5):
             provision_request = ServiceProvisionRequest(
                 customer_id=test_customer_id,
-                service_name=f"Service {i+1}",
+                service_name=f"Service {i + 1}",
                 service_type="fiber_internet",
                 subscription_id=f"sub_bulk_{i:03d}",
                 service_config={},

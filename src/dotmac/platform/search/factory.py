@@ -114,7 +114,7 @@ class SearchBackendFactory:
         # Validate MeiliSearch backend is enabled
         if backend_type == "meilisearch" and not settings.features.search_enabled:
             raise ValueError(
-                "MeiliSearch backend selected but not enabled. " "Set FEATURES__SEARCH_ENABLED=true"
+                "MeiliSearch backend selected but not enabled. Set FEATURES__SEARCH_ENABLED=true"
             )
 
         # Check dependencies before creating

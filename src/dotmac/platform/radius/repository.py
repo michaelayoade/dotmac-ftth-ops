@@ -6,6 +6,7 @@ Handles all database operations for RADIUS tables.
 """
 
 from datetime import datetime
+from typing import Any
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -238,13 +239,29 @@ class RADIUSRepository:
         result = await self.session.execute(query)
         row = result.first()
 
+        if row is None:
+            return {
+                "total_sessions": 0,
+                "total_session_time": 0,
+                "total_input_octets": 0,
+                "total_output_octets": 0,
+                "total_bytes": 0,
+                "active_sessions": 0,
+            }
+
+        total_sessions = int(row.total_sessions or 0)
+        total_session_time = int(row.total_session_time or 0)
+        total_input_octets = int(row.total_input_octets or 0)
+        total_output_octets = int(row.total_output_octets or 0)
+        active_sessions = int(row.active_sessions or 0)
+
         return {
-            "total_sessions": row.total_sessions or 0,
-            "total_session_time": row.total_session_time or 0,
-            "total_input_octets": row.total_input_octets or 0,
-            "total_output_octets": row.total_output_octets or 0,
-            "total_bytes": (row.total_input_octets or 0) + (row.total_output_octets or 0),
-            "active_sessions": row.active_sessions or 0,
+            "total_sessions": total_sessions,
+            "total_session_time": total_session_time,
+            "total_input_octets": total_input_octets,
+            "total_output_octets": total_output_octets,
+            "total_bytes": total_input_octets + total_output_octets,
+            "active_sessions": active_sessions,
         }
 
     # =========================================================================
@@ -298,7 +315,7 @@ class RADIUSRepository:
         )
         return list(result.scalars().all())
 
-    async def update_nas(self, nas: NAS, **updates) -> NAS:
+    async def update_nas(self, nas: NAS, **updates: Any) -> NAS:
         """Update NAS device"""
         for key, value in updates.items():
             if value is not None and hasattr(nas, key):
@@ -373,7 +390,7 @@ class RADIUSRepository:
         return list(result.scalars().all())
 
     async def update_bandwidth_profile(
-        self, profile: RadiusBandwidthProfile, **updates
+        self, profile: RadiusBandwidthProfile, **updates: Any
     ) -> RadiusBandwidthProfile:
         """Update bandwidth profile"""
         for key, value in updates.items():

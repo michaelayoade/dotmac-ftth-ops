@@ -6,13 +6,14 @@ Create Date: 2025-01-15 17:00:00.000000
 
 """
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
+from alembic import op
+
 # revision identifiers, used by Alembic.
 revision = "e1f2g3h4i5j6"
-down_revision = "5c5350bfe3f7"
+down_revision = "5a517bdd0997"
 branch_labels = None
 depends_on = None
 
@@ -46,10 +47,33 @@ def upgrade() -> None:
     op.create_table(
         "notifications",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("tenant_id", sa.String(255), sa.ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("type", postgresql.ENUM(name="notificationtype", create_type=False), nullable=False, index=True),
-        sa.Column("priority", postgresql.ENUM(name="notificationpriority", create_type=False), nullable=False, server_default="medium", index=True),
+        sa.Column(
+            "tenant_id",
+            sa.String(255),
+            sa.ForeignKey("tenants.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+        sa.Column(
+            "user_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("users.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+        sa.Column(
+            "type",
+            postgresql.ENUM(name="notificationtype", create_type=False),
+            nullable=False,
+            index=True,
+        ),
+        sa.Column(
+            "priority",
+            postgresql.ENUM(name="notificationpriority", create_type=False),
+            nullable=False,
+            server_default="medium",
+            index=True,
+        ),
         sa.Column("title", sa.String(500), nullable=False),
         sa.Column("message", sa.Text, nullable=False),
         sa.Column("action_url", sa.String(1000), nullable=True),
@@ -68,22 +92,49 @@ def upgrade() -> None:
         sa.Column("push_sent", sa.Boolean, nullable=False, server_default="false"),
         sa.Column("push_sent_at", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("metadata", postgresql.JSON, nullable=False, server_default="{}"),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
         sa.Column("deleted_at", sa.TIMESTAMP(timezone=True), nullable=True),
     )
 
     # Create indexes for notifications
-    op.create_index("ix_notification_user_unread", "notifications", ["tenant_id", "user_id", "is_read"])
-    op.create_index("ix_notification_user_priority", "notifications", ["tenant_id", "user_id", "priority"])
+    op.create_index(
+        "ix_notification_user_unread", "notifications", ["tenant_id", "user_id", "is_read"]
+    )
+    op.create_index(
+        "ix_notification_user_priority", "notifications", ["tenant_id", "user_id", "priority"]
+    )
     op.create_index("ix_notification_created", "notifications", ["created_at"])
 
     # Create notification_preferences table
     op.create_table(
         "notification_preferences",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("tenant_id", sa.String(255), sa.ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("user_id", postgresql.UUID(as_uuid=True), sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True, index=True),
+        sa.Column(
+            "tenant_id",
+            sa.String(255),
+            sa.ForeignKey("tenants.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+        sa.Column(
+            "user_id",
+            postgresql.UUID(as_uuid=True),
+            sa.ForeignKey("users.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
+            index=True,
+        ),
         sa.Column("enabled", sa.Boolean, nullable=False, server_default="true"),
         sa.Column("email_enabled", sa.Boolean, nullable=False, server_default="true"),
         sa.Column("sms_enabled", sa.Boolean, nullable=False, server_default="false"),
@@ -93,19 +144,46 @@ def upgrade() -> None:
         sa.Column("quiet_hours_end", sa.String(5), nullable=True),
         sa.Column("quiet_hours_timezone", sa.String(50), nullable=True),
         sa.Column("type_preferences", postgresql.JSON, nullable=False, server_default="{}"),
-        sa.Column("minimum_priority", postgresql.ENUM(name="notificationpriority", create_type=False), nullable=False, server_default="low"),
+        sa.Column(
+            "minimum_priority",
+            postgresql.ENUM(name="notificationpriority", create_type=False),
+            nullable=False,
+            server_default="low",
+        ),
         sa.Column("email_digest_enabled", sa.Boolean, nullable=False, server_default="false"),
         sa.Column("email_digest_frequency", sa.String(20), nullable=True),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
     )
 
     # Create notification_templates table
     op.create_table(
         "notification_templates",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
-        sa.Column("tenant_id", sa.String(255), sa.ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True),
-        sa.Column("type", postgresql.ENUM(name="notificationtype", create_type=False), nullable=False, unique=True, index=True),
+        sa.Column(
+            "tenant_id",
+            sa.String(255),
+            sa.ForeignKey("tenants.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
+        sa.Column(
+            "type",
+            postgresql.ENUM(name="notificationtype", create_type=False),
+            nullable=False,
+            unique=True,
+            index=True,
+        ),
         sa.Column("name", sa.String(255), nullable=False),
         sa.Column("description", sa.Text, nullable=True),
         sa.Column("title_template", sa.String(500), nullable=False),
@@ -116,12 +194,27 @@ def upgrade() -> None:
         sa.Column("sms_template", sa.String(160), nullable=True),
         sa.Column("push_title_template", sa.String(100), nullable=True),
         sa.Column("push_body_template", sa.String(200), nullable=True),
-        sa.Column("default_priority", postgresql.ENUM(name="notificationpriority", create_type=False), nullable=False, server_default="medium"),
+        sa.Column(
+            "default_priority",
+            postgresql.ENUM(name="notificationpriority", create_type=False),
+            nullable=False,
+            server_default="medium",
+        ),
         sa.Column("default_channels", postgresql.JSON, nullable=False, server_default="[]"),
         sa.Column("is_active", sa.Boolean, nullable=False, server_default="true"),
         sa.Column("required_variables", postgresql.JSON, nullable=False, server_default="[]"),
-        sa.Column("created_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
-        sa.Column("updated_at", sa.TIMESTAMP(timezone=True), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
+        sa.Column(
+            "created_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.TIMESTAMP(timezone=True),
+            nullable=False,
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+        ),
     )
 
 

@@ -16,6 +16,7 @@ from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.jobs.models import JobExecutionMode, JobPriority
 from dotmac.platform.jobs.scheduler_service import SchedulerService
+from dotmac.platform.redis_client import get_redis_client
 
 router = APIRouter(prefix="/api/v1/jobs/scheduler", tags=["job-scheduler"])
 
@@ -89,9 +90,7 @@ class JobChainCreate(BaseModel):
     """Schema for creating a job chain."""
 
     name: str = Field(..., description="Chain name")
-    chain_definition: list[dict[str, Any]] = Field(
-        ..., description="List of job definitions"
-    )
+    chain_definition: list[dict[str, Any]] = Field(..., description="List of job definitions")
     execution_mode: JobExecutionMode = Field(
         JobExecutionMode.SEQUENTIAL, description="Sequential or parallel"
     )
@@ -133,10 +132,10 @@ class JobChainResponse(BaseModel):
 
 async def get_scheduler_service(
     session: AsyncSession = Depends(get_session_dependency),
+    redis: Redis = Depends(get_redis_client),
 ) -> SchedulerService:
     """Get scheduler service instance."""
-    # TODO: Inject Redis client when available
-    return SchedulerService(session, redis_client=None)
+    return SchedulerService(session, redis_client=redis)
 
 
 # =============================================================================
@@ -155,7 +154,7 @@ async def create_scheduled_job(
     job_data: ScheduledJobCreate,
     service: SchedulerService = Depends(get_scheduler_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> ScheduledJobResponse:
     """
     Create a new scheduled job.
 
@@ -207,7 +206,7 @@ async def list_scheduled_jobs(
     page_size: int = Query(50, ge=1, le=100, description="Items per page"),
     service: SchedulerService = Depends(get_scheduler_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> list[ScheduledJobResponse]:
     """
     List scheduled jobs for the current tenant.
 
@@ -236,11 +235,9 @@ async def get_scheduled_job(
     scheduled_job_id: str,
     service: SchedulerService = Depends(get_scheduler_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> ScheduledJobResponse:
     """Get detailed information about a scheduled job."""
-    scheduled_job = await service.get_scheduled_job(
-        scheduled_job_id, current_user.tenant_id
-    )
+    scheduled_job = await service.get_scheduled_job(scheduled_job_id, current_user.tenant_id)
 
     if not scheduled_job:
         raise HTTPException(
@@ -262,7 +259,7 @@ async def update_scheduled_job(
     updates: ScheduledJobUpdate,
     service: SchedulerService = Depends(get_scheduler_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> ScheduledJobResponse:
     """
     Update scheduled job configuration.
 
@@ -294,7 +291,7 @@ async def toggle_scheduled_job(
     is_active: bool = Query(..., description="Active status"),
     service: SchedulerService = Depends(get_scheduler_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> ScheduledJobResponse:
     """Toggle scheduled job active status."""
     scheduled_job = await service.toggle_scheduled_job(
         scheduled_job_id, current_user.tenant_id, is_active
@@ -319,11 +316,9 @@ async def delete_scheduled_job(
     scheduled_job_id: str,
     service: SchedulerService = Depends(get_scheduler_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> None:
     """Delete a scheduled job permanently."""
-    deleted = await service.delete_scheduled_job(
-        scheduled_job_id, current_user.tenant_id
-    )
+    deleted = await service.delete_scheduled_job(scheduled_job_id, current_user.tenant_id)
 
     if not deleted:
         raise HTTPException(
@@ -350,7 +345,7 @@ async def create_job_chain(
     chain_data: JobChainCreate,
     service: SchedulerService = Depends(get_scheduler_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> JobChainResponse:
     """
     Create a new job chain.
 
@@ -407,7 +402,7 @@ async def get_job_chain(
     chain_id: str,
     service: SchedulerService = Depends(get_scheduler_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> JobChainResponse:
     """Get detailed information about a job chain including progress and results."""
     job_chain = await service.get_job_chain(chain_id, current_user.tenant_id)
 
@@ -430,7 +425,7 @@ async def execute_job_chain(
     chain_id: str,
     service: SchedulerService = Depends(get_scheduler_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> JobChainResponse:
     """
     Execute a job chain.
 

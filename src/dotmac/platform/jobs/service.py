@@ -362,7 +362,8 @@ class JobService:
             .group_by(Job.status)
         )
         result = await self.session.execute(status_counts_stmt)
-        status_counts = dict(result.all())
+        status_rows = result.all()
+        status_counts: dict[str, int] = {status: int(count) for status, count in status_rows}
 
         total_jobs = sum(status_counts.values())
         pending = status_counts.get(JobStatus.PENDING.value, 0)
@@ -372,33 +373,27 @@ class JobService:
         cancelled = status_counts.get(JobStatus.CANCELLED.value, 0)
 
         # Calculate average duration for completed jobs
-        avg_duration_stmt = (
-            select(
-                func.avg(
-                    func.extract(
-                        "epoch",
-                        Job.completed_at - Job.started_at,
-                    )
+        avg_duration_stmt = select(
+            func.avg(
+                func.extract(
+                    "epoch",
+                    Job.completed_at - Job.started_at,
                 )
             )
-            .where(
-                Job.tenant_id == tenant_id,
-                Job.status == JobStatus.COMPLETED.value,
-                Job.started_at.isnot(None),
-                Job.completed_at.isnot(None),
-            )
+        ).where(
+            Job.tenant_id == tenant_id,
+            Job.status == JobStatus.COMPLETED.value,
+            Job.started_at.isnot(None),
+            Job.completed_at.isnot(None),
         )
         avg_duration = await self.session.scalar(avg_duration_stmt)
 
         # Sum items processed
-        items_stmt = (
-            select(
-                func.sum(Job.items_processed),
-                func.sum(Job.items_succeeded),
-                func.sum(Job.items_failed),
-            )
-            .where(Job.tenant_id == tenant_id)
-        )
+        items_stmt = select(
+            func.sum(Job.items_processed),
+            func.sum(Job.items_succeeded),
+            func.sum(Job.items_failed),
+        ).where(Job.tenant_id == tenant_id)
         result = await self.session.execute(items_stmt)
         items_row = result.one()
         total_processed = items_row[0] or 0

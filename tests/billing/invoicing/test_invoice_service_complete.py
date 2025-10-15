@@ -106,7 +106,7 @@ class TestInvoiceNumberGeneration:
         current_year = datetime.now(UTC).year
         # Mock existing invoice from previous year
         last_invoice = MagicMock()
-        last_invoice.invoice_number = f"INV-{current_year-1}-000999"
+        last_invoice.invoice_number = f"INV-{current_year - 1}-000999"
 
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None  # No invoices for current year

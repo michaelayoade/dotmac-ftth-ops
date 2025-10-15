@@ -5,6 +5,7 @@ FastAPI endpoints for ISP metrics and KPIs.
 """
 
 from fastapi import APIRouter, Depends, Query
+from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
@@ -12,6 +13,7 @@ from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.metrics.schemas import DashboardMetrics, SubscriberKPIs
 from dotmac.platform.metrics.service import MetricsService
+from dotmac.platform.redis_client import get_redis_client
 
 router = APIRouter(prefix="/api/v1/metrics", tags=["metrics"])
 
@@ -23,10 +25,10 @@ router = APIRouter(prefix="/api/v1/metrics", tags=["metrics"])
 
 async def get_metrics_service(
     session: AsyncSession = Depends(get_session_dependency),
+    redis: Redis = Depends(get_redis_client),
 ) -> MetricsService:
     """Get metrics service instance with Redis caching."""
-    # TODO: Inject Redis client when available
-    return MetricsService(session, redis_client=None)
+    return MetricsService(session, redis_client=redis)
 
 
 # =============================================================================
@@ -43,7 +45,7 @@ async def get_metrics_service(
 async def get_dashboard_metrics(
     service: MetricsService = Depends(get_metrics_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> DashboardMetrics:
     """
     Get ISP dashboard metrics including:
     - Subscriber counts and growth
@@ -66,7 +68,7 @@ async def get_subscriber_kpis(
     period: int = Query(30, ge=1, le=365, description="Period in days"),
     service: MetricsService = Depends(get_metrics_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> SubscriberKPIs:
     """
     Get detailed subscriber KPIs including:
     - Total, active, new, churned counts
@@ -88,7 +90,7 @@ async def get_subscriber_kpis(
 async def invalidate_metrics_cache(
     service: MetricsService = Depends(get_metrics_service),
     current_user: UserInfo = Depends(get_current_user),
-):
+) -> dict[str, str]:
     """
     Invalidate all cached metrics for the current tenant.
 

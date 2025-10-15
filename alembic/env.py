@@ -100,6 +100,12 @@ try:
 except ImportError:
     pass
 
+# WireGuard VPN
+try:
+    from dotmac.platform.wireguard.models import *
+except ImportError:
+    pass
+
 # Use Base.metadata for autogeneration
 target_metadata = Base.metadata
 

@@ -528,7 +528,10 @@ class ServiceMesh:
         )
 
         if not endpoint:
-            raise EntityNotFoundError(f"No endpoints available for service: {destination_service}")
+            raise EntityNotFoundError(
+                entity_type="ServiceEndpoint",
+                entity_id=destination_service,
+            )
 
         # Create service call record
         service_call = ServiceCall(

@@ -5,8 +5,8 @@ Provides interface to GenieACS REST API for TR-069/CWMP device management.
 """
 
 import os
-from typing import Any
-from urllib.parse import quote, urljoin
+from typing import Any, cast
+from urllib.parse import quote
 
 import httpx
 import structlog
@@ -34,7 +34,6 @@ class GenieACSClient(RobustHTTPClient):
         "task": 60.0,
         "provision": 60.0,
     }
-
 
     def __init__(
         self,
@@ -126,7 +125,7 @@ class GenieACSClient(RobustHTTPClient):
         Returns:
             List of device objects
         """
-        params = {"skip": skip, "limit": limit}
+        params: dict[str, Any] = {"skip": skip, "limit": limit}
 
         if query:
             import json
@@ -152,7 +151,8 @@ class GenieACSClient(RobustHTTPClient):
         try:
             # URL encode device ID
             encoded_id = quote(device_id, safe="")
-            return await self._genieacs_request("GET", f"devices/{encoded_id}")
+            response = await self._genieacs_request("GET", f"devices/{encoded_id}")
+            return cast(dict[str, Any], response)
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -226,7 +226,8 @@ class GenieACSClient(RobustHTTPClient):
         if task_data:
             payload.update(task_data)
 
-        return await self._genieacs_request("POST", endpoint, json=payload)
+        response = await self._genieacs_request("POST", endpoint, json=payload)
+        return cast(dict[str, Any], response)
 
     async def refresh_device(
         self,
@@ -361,7 +362,8 @@ class GenieACSClient(RobustHTTPClient):
         """Get preset by ID"""
         try:
             encoded_id = quote(preset_id, safe="")
-            return await self._genieacs_request("GET", f"presets/{encoded_id}")
+            response = await self._genieacs_request("GET", f"presets/{encoded_id}")
+            return cast(dict[str, Any], response)
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -369,12 +371,14 @@ class GenieACSClient(RobustHTTPClient):
 
     async def create_preset(self, preset_data: dict[str, Any]) -> dict[str, Any]:
         """Create preset"""
-        return await self._genieacs_request("POST", "presets", json=preset_data)
+        response = await self._genieacs_request("POST", "presets", json=preset_data)
+        return cast(dict[str, Any], response)
 
     async def update_preset(self, preset_id: str, preset_data: dict[str, Any]) -> dict[str, Any]:
         """Update preset"""
         encoded_id = quote(preset_id, safe="")
-        return await self._genieacs_request("PUT", f"presets/{encoded_id}", json=preset_data)
+        response = await self._genieacs_request("PUT", f"presets/{encoded_id}", json=preset_data)
+        return cast(dict[str, Any], response)
 
     async def delete_preset(self, preset_id: str) -> bool:
         """Delete preset"""
@@ -399,7 +403,8 @@ class GenieACSClient(RobustHTTPClient):
         """Get provision by ID"""
         try:
             encoded_id = quote(provision_id, safe="")
-            return await self._genieacs_request("GET", f"provisions/{encoded_id}")
+            response = await self._genieacs_request("GET", f"provisions/{encoded_id}")
+            return cast(dict[str, Any], response)
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -418,7 +423,8 @@ class GenieACSClient(RobustHTTPClient):
         """Get file by ID"""
         try:
             encoded_id = quote(file_id, safe="")
-            return await self._genieacs_request("GET", f"files/{encoded_id}")
+            response = await self._genieacs_request("GET", f"files/{encoded_id}")
+            return cast(dict[str, Any], response)
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -455,7 +461,7 @@ class GenieACSClient(RobustHTTPClient):
         Returns:
             List of faults
         """
-        params = {"skip": skip, "limit": limit}
+        params: dict[str, Any] = {"skip": skip, "limit": limit}
 
         if device_id:
             import json

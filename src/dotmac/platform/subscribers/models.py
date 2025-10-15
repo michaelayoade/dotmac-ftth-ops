@@ -6,24 +6,22 @@ A Subscriber is the network-level representation of a service connection,
 which may be linked to a Customer (billing entity) but tracks different concerns.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
     JSON,
-    Boolean,
     DateTime,
     ForeignKey,
     Index,
-    Numeric,
     String,
     Text,
     UniqueConstraint,
 )
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import INET, UUID as PostgresUUID
+from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dotmac.platform.db import (
@@ -33,10 +31,11 @@ from dotmac.platform.db import (
     TenantMixin,
     TimestampMixin,
 )
+from dotmac.platform.radius.models import INET  # Cross-database INET type
 from dotmac.platform.services.lifecycle.models import ServiceType
 
 if TYPE_CHECKING:
-    from dotmac.platform.customer_management.models import Customer
+    pass
 
 
 class SubscriberStatus(str, Enum):
@@ -122,7 +121,7 @@ class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
     )
     service_type: Mapped[ServiceType] = mapped_column(
         SQLEnum(ServiceType),
-        default=ServiceType.RESIDENTIAL_INTERNET,
+        default=ServiceType.FIBER_INTERNET,
         nullable=False,
         index=True,
     )
@@ -303,9 +302,7 @@ class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
     # Indexes and constraints
     __table_args__ = (
         UniqueConstraint("tenant_id", "username", name="uq_subscriber_tenant_username"),
-        UniqueConstraint(
-            "tenant_id", "subscriber_number", name="uq_subscriber_tenant_number"
-        ),
+        UniqueConstraint("tenant_id", "subscriber_number", name="uq_subscriber_tenant_number"),
         Index("ix_subscriber_status", "tenant_id", "status"),
         Index("ix_subscriber_service_type", "tenant_id", "service_type"),
         Index("ix_subscriber_customer", "customer_id"),

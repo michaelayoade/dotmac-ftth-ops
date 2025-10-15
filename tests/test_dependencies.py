@@ -393,8 +393,8 @@ class TestFeatureDependencyIntegration:
                 assert len(packages) > 0, f"Feature {feature} has empty package string"
             elif isinstance(packages, list):
                 assert len(packages) > 0, f"Feature {feature} has empty package list"
-                assert all(
-                    isinstance(pkg, str) for pkg in packages
-                ), f"Feature {feature} has non-string packages"
+                assert all(isinstance(pkg, str) for pkg in packages), (
+                    f"Feature {feature} has non-string packages"
+                )
             else:
                 assert False, f"Feature {feature} packages must be string or list"

@@ -110,9 +110,9 @@ def sample_customers():
         customer = Customer(
             id=uuid4(),
             tenant_id="test-tenant",
-            customer_number=f"CUST-{i+1:03d}",
-            email=f"customer{i+1}@example.com",
-            first_name=f"Customer{i+1}",
+            customer_number=f"CUST-{i + 1:03d}",
+            email=f"customer{i + 1}@example.com",
+            first_name=f"Customer{i + 1}",
             last_name="Test",
             phone=f"+123456789{i}",
             status=CustomerStatus.ACTIVE,

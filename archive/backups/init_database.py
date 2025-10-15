@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Initialize database with tables and test data."""
+
 import os
 from uuid import uuid4
 

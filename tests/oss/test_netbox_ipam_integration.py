@@ -10,8 +10,6 @@ Tests complete IPAM workflows including:
 - IP address reclamation
 """
 
-from datetime import UTC, datetime
-from uuid import uuid4
 
 import pytest
 
@@ -93,16 +91,12 @@ class TestNetBoxIPAddressManagement:
             tags=["fiber", "premium"],
         )
 
-        updated_ip = await service.update_ip(
-            ip_id=ip_allocation["id"], data=update_request
-        )
+        updated_ip = await service.update_ip(ip_id=ip_allocation["id"], data=update_request)
 
         assert updated_ip["dns_name"] == "updated-cust001.isp.com"
         assert "premium" in updated_ip.get("tags", [])
 
-    async def test_release_ip_address(
-        self, async_session, test_tenant_id, mock_netbox_client
-    ):
+    async def test_release_ip_address(self, async_session, test_tenant_id, mock_netbox_client):
         """Test releasing IP address back to pool."""
         from dotmac.platform.netbox.schemas import IPAllocationRequest
         from dotmac.platform.netbox.service import NetBoxService
@@ -169,9 +163,7 @@ class TestNetBoxPrefixManagement:
         assert prefix["is_pool"] is True
         assert prefix["status"] == "active"
 
-    async def test_get_available_prefixes(
-        self, async_session, test_tenant_id, mock_netbox_client
-    ):
+    async def test_get_available_prefixes(self, async_session, test_tenant_id, mock_netbox_client):
         """Test retrieving available prefixes from parent."""
         from dotmac.platform.netbox.service import NetBoxService
 
@@ -273,7 +265,12 @@ class TestNetBoxVLANManagement:
         assert vlan["status"] == "active"
 
     async def test_assign_vlan_to_interface(
-        self, async_session, test_tenant_id, mock_netbox_client, sample_vlan_assignment, sample_device_interface
+        self,
+        async_session,
+        test_tenant_id,
+        mock_netbox_client,
+        sample_vlan_assignment,
+        sample_device_interface,
     ):
         """Test assigning VLAN to device interface."""
         from dotmac.platform.netbox.service import NetBoxService
@@ -295,9 +292,7 @@ class TestNetBoxVLANManagement:
         assert assigned_interface["untagged_vlan"] == vlan["id"]
         assert assigned_interface["mode"] == "access"
 
-    async def test_get_available_vlans(
-        self, async_session, test_tenant_id, mock_netbox_client
-    ):
+    async def test_get_available_vlans(self, async_session, test_tenant_id, mock_netbox_client):
         """Test getting available VLAN IDs."""
         from dotmac.platform.netbox.service import NetBoxService
 
@@ -365,7 +360,12 @@ class TestNetBoxDeviceInterfaces:
         assert ip_allocation["address"] == "10.0.1.1/24"
 
     async def test_configure_interface_for_customer(
-        self, async_session, test_tenant_id, mock_netbox_client, sample_device_interface, sample_vlan_assignment
+        self,
+        async_session,
+        test_tenant_id,
+        mock_netbox_client,
+        sample_device_interface,
+        sample_vlan_assignment,
     ):
         """Test complete interface configuration for customer."""
         from dotmac.platform.netbox.service import NetBoxService
@@ -542,9 +542,7 @@ class TestNetBoxReporting:
         assert report["total_allocated_ips"] >= 25
         assert report["overall_utilization_percent"] >= 0
 
-    async def test_get_vlan_usage_report(
-        self, async_session, test_tenant_id, mock_netbox_client
-    ):
+    async def test_get_vlan_usage_report(self, async_session, test_tenant_id, mock_netbox_client):
         """Test generating VLAN usage report."""
         from dotmac.platform.netbox.service import NetBoxService
 
@@ -577,7 +575,7 @@ class TestNetBoxReporting:
         for i in range(10):
             await service.create_interface(
                 device="olt-01",
-                name=f"eth1/1/{i+1}",
+                name=f"eth1/1/{i + 1}",
                 type="1000base-x-sfp",
                 enabled=i < 7,  # 7 enabled, 3 disabled
             )

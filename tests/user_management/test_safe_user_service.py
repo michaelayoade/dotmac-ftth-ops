@@ -254,7 +254,8 @@ class TestUserServiceSecurityImprovement:
 
         # Admin operation: get all users across all tenants
         users, total = await service.list_users(
-            tenant_id=None, require_tenant=False  # Explicit admin override
+            tenant_id=None,
+            require_tenant=False,  # Explicit admin override
         )
 
         # Should work for admin operations

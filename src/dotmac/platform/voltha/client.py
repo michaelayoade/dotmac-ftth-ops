@@ -6,7 +6,7 @@ Note: VOLTHA primarily uses gRPC, but also provides REST API for common operatio
 """
 
 import os
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urljoin
 
 import httpx
@@ -131,9 +131,10 @@ class VOLTHAClient(RobustHTTPClient):
     async def get_logical_device(self, device_id: str) -> dict[str, Any] | None:
         """Get logical device by ID"""
         try:
-            return await self._voltha_request(
+            response = await self._voltha_request(
                 "GET", f"logical_devices/{device_id}", timeout=self.TIMEOUTS["get"]
             )
+            return cast(dict[str, Any], response)
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -168,9 +169,10 @@ class VOLTHAClient(RobustHTTPClient):
     async def get_device(self, device_id: str) -> dict[str, Any] | None:
         """Get physical device by ID"""
         try:
-            return await self._voltha_request(
+            response = await self._voltha_request(
                 "GET", f"devices/{device_id}", timeout=self.TIMEOUTS["get"]
             )
+            return cast(dict[str, Any], response)
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -178,15 +180,17 @@ class VOLTHAClient(RobustHTTPClient):
 
     async def enable_device(self, device_id: str) -> dict[str, Any]:
         """Enable device"""
-        return await self._voltha_request(
+        response = await self._voltha_request(
             "POST", f"devices/{device_id}/enable", timeout=self.TIMEOUTS["enable"]
         )
+        return cast(dict[str, Any], response)
 
     async def disable_device(self, device_id: str) -> dict[str, Any]:
         """Disable device"""
-        return await self._voltha_request(
+        response = await self._voltha_request(
             "POST", f"devices/{device_id}/disable", timeout=self.TIMEOUTS["disable"]
         )
+        return cast(dict[str, Any], response)
 
     async def delete_device(self, device_id: str) -> bool:
         """Delete device"""
@@ -201,9 +205,10 @@ class VOLTHAClient(RobustHTTPClient):
 
     async def reboot_device(self, device_id: str) -> dict[str, Any]:
         """Reboot device"""
-        return await self._voltha_request(
+        response = await self._voltha_request(
             "POST", f"devices/{device_id}/reboot", timeout=self.TIMEOUTS["reboot"]
         )
+        return cast(dict[str, Any], response)
 
     async def get_device_ports(self, device_id: str) -> list[dict[str, Any]]:
         """Get ports for device"""
@@ -236,7 +241,9 @@ class VOLTHAClient(RobustHTTPClient):
     async def health_check(self) -> dict[str, Any]:
         """Check VOLTHA health"""
         try:
-            response = await self._voltha_request("GET", "health", timeout=self.TIMEOUTS["health_check"])
+            response = await self._voltha_request(
+                "GET", "health", timeout=self.TIMEOUTS["health_check"]
+            )
             return response if isinstance(response, dict) else {"state": "HEALTHY"}
         except Exception as e:
             self.logger.error("voltha.health_check.failed", error=str(e))

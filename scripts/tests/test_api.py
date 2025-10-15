@@ -13,7 +13,7 @@ BASE_URL = "http://localhost:8000"
 def test_endpoint(method, path, description, data=None, headers=None):
     """Test an endpoint and print results."""
     url = f"{BASE_URL}{path}"
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Testing: {description}")
     print(f"Method: {method.upper()} {path}")
 

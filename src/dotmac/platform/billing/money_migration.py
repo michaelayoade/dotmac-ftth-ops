@@ -5,9 +5,10 @@ Provides seamless conversion between the existing invoice system (using integers
 for cents) and the new Money-based system with proper currency handling.
 """
 
-import structlog
 from decimal import Decimal
 from typing import Any, cast
+
+import structlog
 
 from dotmac.platform.billing.core.models import Invoice as LegacyInvoice
 from dotmac.platform.billing.core.models import InvoiceLineItem as LegacyLineItem

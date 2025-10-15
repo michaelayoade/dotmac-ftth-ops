@@ -215,7 +215,9 @@ def upgrade() -> None:
             nullable=True,
             comment="Customer-level aggregate",
         ),
-        sa.Column("usage_type", postgresql.ENUM(name="usagetype", create_type=False), nullable=False),
+        sa.Column(
+            "usage_type", postgresql.ENUM(name="usagetype", create_type=False), nullable=False
+        ),
         # Time period
         sa.Column("period_start", sa.DateTime(timezone=True), nullable=False),
         sa.Column("period_end", sa.DateTime(timezone=True), nullable=False),

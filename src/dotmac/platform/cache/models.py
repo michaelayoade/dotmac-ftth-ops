@@ -10,8 +10,9 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
-from sqlalchemy.dialects.postgresql import JSON, TIMESTAMP, UUID as PostgresUUID
 from sqlalchemy.dialects.postgresql import ENUM as SQLEnum
+from sqlalchemy.dialects.postgresql import JSON, TIMESTAMP
+from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from dotmac.platform.db import Base, TenantMixin, TimestampMixin
@@ -99,13 +100,13 @@ class CacheConfig(Base, TimestampMixin, TenantMixin):
     default_ttl_seconds: Mapped[int] = mapped_column(
         Integer, nullable=False, default=3600
     )  # 1 hour
-    max_ttl_seconds: Mapped[int] = mapped_column(
-        Integer, nullable=False, default=86400
-    )  # 24 hours
+    max_ttl_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=86400)  # 24 hours
 
     # Size limits
     max_key_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=512)
-    max_value_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False, default=1048576)  # 1MB
+    max_value_size_bytes: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=1048576
+    )  # 1MB
 
     # Behavior
     compress_values: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
@@ -149,7 +150,9 @@ class CacheStatistics(Base, TimestampMixin, TenantMixin):
     cache_key_pattern: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Time period
-    period_start: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False, index=True)
+    period_start: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, index=True
+    )
     period_end: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
 
     # Hit/Miss stats

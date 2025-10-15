@@ -4,8 +4,6 @@ Real-Time Event Publishers
 Redis pub/sub publishers for broadcasting real-time events.
 """
 
-import json
-from typing import Any
 
 import structlog
 from redis.asyncio import Redis
@@ -61,8 +59,11 @@ class EventPublisher:
 
     async def publish_session(self, event: RADIUSSessionEvent) -> None:
         """Publish RADIUS session event."""
-        channel = f"sessions:{event.tenant_id}"
-        await self.publish_event(channel, event)
+        # Publish to both general sessions and RADIUS-specific channel
+        sessions_channel = f"sessions:{event.tenant_id}"
+        radius_channel = f"radius_sessions:{event.tenant_id}"
+        await self.publish_event(sessions_channel, event)
+        await self.publish_event(radius_channel, event)
 
     async def publish_job_progress(self, event: JobProgressEvent) -> None:
         """Publish job progress event."""
@@ -169,3 +170,95 @@ async def publish_job_update(
         error_message=error_message,
     )
     await publisher.publish_job_progress(event)
+
+
+async def publish_radius_session_start(
+    redis: Redis,
+    tenant_id: str,
+    username: str,
+    session_id: str,
+    nas_ip: str,
+    framed_ip: str | None = None,
+    subscriber_id: str | None = None,
+    bandwidth_profile: str | None = None,
+) -> None:
+    """Convenience function to publish RADIUS session start event."""
+    from datetime import datetime
+
+    from dotmac.platform.realtime.schemas import EventType, RADIUSSessionEvent
+
+    publisher = EventPublisher(redis)
+    event = RADIUSSessionEvent(
+        event_type=EventType.SESSION_START,
+        tenant_id=tenant_id,
+        timestamp=datetime.utcnow(),
+        username=username,
+        session_id=session_id,
+        nas_ip=nas_ip,
+        framed_ip=framed_ip,
+        subscriber_id=subscriber_id,
+        bandwidth_profile=bandwidth_profile,
+    )
+    await publisher.publish_session(event)
+
+
+async def publish_radius_session_stop(
+    redis: Redis,
+    tenant_id: str,
+    username: str,
+    session_id: str,
+    nas_ip: str,
+    terminate_cause: str | None = None,
+    session_time: int | None = None,
+    input_octets: int | None = None,
+    output_octets: int | None = None,
+) -> None:
+    """Convenience function to publish RADIUS session stop event."""
+    from datetime import datetime
+
+    from dotmac.platform.realtime.schemas import EventType, RADIUSSessionEvent
+
+    publisher = EventPublisher(redis)
+    event = RADIUSSessionEvent(
+        event_type=EventType.SESSION_STOP,
+        tenant_id=tenant_id,
+        timestamp=datetime.utcnow(),
+        username=username,
+        session_id=session_id,
+        nas_ip=nas_ip,
+        terminate_cause=terminate_cause,
+        session_time=session_time,
+        input_octets=input_octets,
+        output_octets=output_octets,
+    )
+    await publisher.publish_session(event)
+
+
+async def publish_radius_session_update(
+    redis: Redis,
+    tenant_id: str,
+    username: str,
+    session_id: str,
+    nas_ip: str,
+    session_time: int | None = None,
+    input_octets: int | None = None,
+    output_octets: int | None = None,
+) -> None:
+    """Convenience function to publish RADIUS session interim-update event."""
+    from datetime import datetime
+
+    from dotmac.platform.realtime.schemas import EventType, RADIUSSessionEvent
+
+    publisher = EventPublisher(redis)
+    event = RADIUSSessionEvent(
+        event_type=EventType.SESSION_UPDATE,
+        tenant_id=tenant_id,
+        timestamp=datetime.utcnow(),
+        username=username,
+        session_id=session_id,
+        nas_ip=nas_ip,
+        session_time=session_time,
+        input_octets=input_octets,
+        output_octets=output_octets,
+    )
+    await publisher.publish_session(event)

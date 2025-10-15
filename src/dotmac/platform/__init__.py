@@ -172,7 +172,6 @@ def _initialize_available_services() -> None:
 
     # Check if secrets service is available
     if importlib.util.find_spec("dotmac.platform.secrets"):
-
         # Note: There's no initialize_secrets_service function in the current secrets module
         # The secrets module provides VaultClient, SymmetricEncryptionService, etc.
         _initialized_services.add("secrets")

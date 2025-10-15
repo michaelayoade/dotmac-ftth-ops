@@ -48,7 +48,7 @@ class OnboardingAdminUserCreate(BaseModel):
     )
 
     @model_validator(mode="after")
-    def ensure_password(self) -> "OnboardingAdminUserCreate":
+    def ensure_password(self) -> OnboardingAdminUserCreate:
         """Ensure a password is provided or auto-generation is enabled."""
         if self.password is None and not self.generate_password:
             raise ValueError("password is required when generate_password is false")
@@ -114,7 +114,7 @@ class TenantOnboardingRequest(BaseModel):
     )
 
     @model_validator(mode="after")
-    def validate_target(self) -> "TenantOnboardingRequest":
+    def validate_target(self) -> TenantOnboardingRequest:
         """Ensure either tenant data or tenant_id is provided, but not both."""
         if not self.tenant and not self.tenant_id:
             raise ValueError("Provide either tenant payload or tenant_id for onboarding.")

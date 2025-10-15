@@ -6,7 +6,7 @@ Provides interface to AWX REST API for automation workflows.
 
 import asyncio
 import os
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urljoin
 
 import httpx
@@ -29,16 +29,19 @@ class AWXClient:
         max_retries: int = 2,
     ):
         """Initialize AWX client"""
-        self.base_url = base_url or os.getenv("AWX_URL", "http://localhost:80")
+        base_url_value: str = (
+            base_url if base_url is not None else os.getenv("AWX_URL", "http://localhost:80")
+        )
         self.username = username or os.getenv("AWX_USERNAME", "admin")
         self.password = password or os.getenv("AWX_PASSWORD", "password")
         self.token = token or os.getenv("AWX_TOKEN", "")
         self.verify_ssl = verify_ssl
 
-        if not self.base_url.endswith("/"):
-            self.base_url += "/"
+        if not base_url_value.endswith("/"):
+            base_url_value = f"{base_url_value}/"
 
-        self.api_base = urljoin(self.base_url, "api/v2/")
+        self.base_url: str = base_url_value
+        self.api_base: str = urljoin(self.base_url, "api/v2/")
 
         self.headers = {
             "Accept": "application/json",
@@ -92,13 +95,13 @@ class AWXClient:
             except httpx.HTTPStatusError as exc:
                 if exc.response.status_code >= 500 and attempt < self.max_retries:
                     last_error = exc
-                    await asyncio.sleep(min(2 ** attempt * 0.5, 5.0))
+                    await asyncio.sleep(min(2**attempt * 0.5, 5.0))
                     continue
                 raise
             except httpx.RequestError as exc:
                 last_error = exc
                 if attempt < self.max_retries:
-                    await asyncio.sleep(min(2 ** attempt * 0.5, 5.0))
+                    await asyncio.sleep(min(2**attempt * 0.5, 5.0))
                     continue
                 raise
 
@@ -111,12 +114,14 @@ class AWXClient:
     async def get_job_templates(self) -> list[dict[str, Any]]:
         """Get all job templates"""
         response = await self._request("GET", "job_templates/")
-        return response.get("results", [])
+        response_dict = cast(dict[str, Any], response)
+        return cast(list[dict[str, Any]], response_dict.get("results", []))
 
     async def get_job_template(self, template_id: int) -> dict[str, Any] | None:
         """Get job template by ID"""
         try:
-            return await self._request("GET", f"job_templates/{template_id}/")
+            response = await self._request("GET", f"job_templates/{template_id}/")
+            return cast(dict[str, Any], response)
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -130,18 +135,21 @@ class AWXClient:
         if extra_vars:
             payload["extra_vars"] = extra_vars
 
-        return await self._request("POST", f"job_templates/{template_id}/launch/", json=payload)
+        response = await self._request("POST", f"job_templates/{template_id}/launch/", json=payload)
+        return cast(dict[str, Any], response)
 
     # Jobs
     async def get_jobs(self, limit: int = 100) -> list[dict[str, Any]]:
         """Get all jobs"""
         response = await self._request("GET", "jobs/", params={"page_size": limit})
-        return response.get("results", [])
+        response_dict = cast(dict[str, Any], response)
+        return cast(list[dict[str, Any]], response_dict.get("results", []))
 
     async def get_job(self, job_id: int) -> dict[str, Any] | None:
         """Get job by ID"""
         try:
-            return await self._request("GET", f"jobs/{job_id}/")
+            response = await self._request("GET", f"jobs/{job_id}/")
+            return cast(dict[str, Any], response)
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
@@ -149,13 +157,15 @@ class AWXClient:
 
     async def cancel_job(self, job_id: int) -> dict[str, Any]:
         """Cancel running job"""
-        return await self._request("POST", f"jobs/{job_id}/cancel/")
+        response = await self._request("POST", f"jobs/{job_id}/cancel/")
+        return cast(dict[str, Any], response)
 
     # Inventories
     async def get_inventories(self) -> list[dict[str, Any]]:
         """Get all inventories"""
         response = await self._request("GET", "inventories/")
-        return response.get("results", [])
+        response_dict = cast(dict[str, Any], response)
+        return cast(list[dict[str, Any]], response_dict.get("results", []))
 
     # Health check
     async def ping(self) -> bool:

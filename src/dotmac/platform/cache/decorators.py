@@ -9,7 +9,8 @@ import functools
 import hashlib
 import inspect
 import json
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 import structlog
 
@@ -302,8 +303,9 @@ def _generate_cache_key(
                 key_parts.append(f"{param_name}:{param_value}")
             else:
                 # Hash complex objects
+                # MD5 used for cache key generation, not security
                 value_str = json.dumps(param_value, sort_keys=True, default=str)
-                value_hash = hashlib.md5(value_str.encode()).hexdigest()[:8]
+                value_hash = hashlib.md5(value_str.encode(), usedforsecurity=False).hexdigest()[:8]  # nosec B324
                 key_parts.append(f"{param_name}:{value_hash}")
         except Exception:
             # Skip unpicklable objects

@@ -9,7 +9,17 @@ from datetime import UTC, datetime
 from enum import Enum
 from uuid import uuid4
 
-from sqlalchemy import CheckConstraint, ForeignKey, Index, JSON, Integer, String, Text, func
+from sqlalchemy import (
+    JSON,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -179,6 +189,7 @@ class Job(Base):
         comment="Delay in seconds before retry",
     )
     next_retry_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
         comment="Scheduled time for next retry",
     )
@@ -223,16 +234,20 @@ class Job(Base):
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
     )
     started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
     )
     completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
     )
     cancelled_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
     )
 
@@ -289,6 +304,8 @@ class Job(Base):
         """Calculate job duration in seconds."""
         if not self.started_at:
             return None
+
+        # Use UTC time consistently (timezone-aware)
         end_time = self.completed_at or self.cancelled_at or datetime.now(UTC)
         return int((end_time - self.started_at).total_seconds())
 
@@ -385,9 +402,11 @@ class ScheduledJob(Base):
 
     # Execution tracking
     last_run_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
     )
     next_run_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
         index=True,
     )
@@ -415,10 +434,12 @@ class ScheduledJob(Base):
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
     )
     updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
     )
 
@@ -540,9 +561,11 @@ class JobChain(Base):
 
     # Timing
     started_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
     )
     completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
     )
 
@@ -565,6 +588,7 @@ class JobChain(Base):
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
     )
@@ -591,5 +615,7 @@ class JobChain(Base):
         """Calculate chain duration in seconds."""
         if not self.started_at:
             return None
+
+        # Use UTC time consistently (timezone-aware)
         end_time = self.completed_at or datetime.now(UTC)
         return int((end_time - self.started_at).total_seconds())

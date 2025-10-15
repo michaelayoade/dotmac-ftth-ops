@@ -245,7 +245,8 @@ class TestMetricRegistry:
         )
 
         metric = CounterMetric(
-            name="api_requests", attributes={"endpoint": "/api/users"}  # Missing method
+            name="api_requests",
+            attributes={"endpoint": "/api/users"},  # Missing method
         )
 
         assert registry.validate(metric) is False

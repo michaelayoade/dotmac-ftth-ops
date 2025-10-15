@@ -331,9 +331,9 @@ async def create_platform_admin(db: AsyncSession, roles: dict[str, Role]) -> Use
 
     await db.commit()
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("✅ Platform Administrator Created Successfully!")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Email:    {admin_email}")
     print("Username: platformadmin")
 
@@ -345,7 +345,7 @@ async def create_platform_admin(db: AsyncSession, roles: dict[str, Role]) -> Use
     else:
         print("Password: <from PLATFORM_ADMIN_PASSWORD env var>")
 
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     return platform_admin
 
@@ -362,11 +362,11 @@ async def update_default_user_role_config() -> None:
 
 async def bootstrap_platform() -> None:
     """Main bootstrap function."""
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print("🚀 DotMac Platform Bootstrap")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
     print(f"Environment: {settings.environment}")
-    print(f"{'='*60}\n")
+    print(f"{'=' * 60}\n")
 
     async with AsyncSessionLocal() as db:
         try:
@@ -382,15 +382,15 @@ async def bootstrap_platform() -> None:
             # Step 4: Update config
             await update_default_user_role_config()
 
-            print(f"\n{'='*60}")
+            print(f"\n{'=' * 60}")
             print("✅ Bootstrap Complete!")
-            print(f"{'='*60}\n")
+            print(f"{'=' * 60}\n")
             print("Next steps:")
             print("1. Start the backend: make dev-backend")
             print("2. Login with platform admin credentials")
             print("3. Create tenants and invite users")
             print("4. Users who register get 'admin' role for their tenant")
-            print(f"{'='*60}\n")
+            print(f"{'=' * 60}\n")
 
         except Exception as e:
             print(f"\n❌ Bootstrap failed: {e}")
