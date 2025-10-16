@@ -10,6 +10,7 @@ from strawberry.fastapi import BaseContext
 
 from dotmac.platform.auth.core import UserInfo, jwt_service
 from dotmac.platform.db import AsyncSessionLocal
+from dotmac.platform.graphql.loaders import DataLoaderRegistry
 
 
 @strawberry.type
@@ -26,6 +27,7 @@ class Context(BaseContext):
     request: Request
     db: AsyncSession
     current_user: UserInfo | None = None
+    loaders: DataLoaderRegistry
 
     def __init__(
         self,
@@ -38,6 +40,7 @@ class Context(BaseContext):
         self.request = request
         self.db = db
         self.current_user = current_user
+        self.loaders = DataLoaderRegistry(db)
         self._background_tasks: BackgroundTasks | None = None
         self._close_registered = False
         self._session_closed = False

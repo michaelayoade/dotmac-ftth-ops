@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useRBAC } from '@/contexts/RBACContext';
 import { useSystemHealth } from '@/hooks/useOperations';
 import { useServiceInstances, useServiceStatistics } from '@/hooks/useServiceLifecycle';
-import { useRadiusSessions, useRadiusSubscribers } from '@/hooks/useRadius';
+// TEMPORARILY DISABLED: import { useRADIUSSessions, useRADIUSSubscribers } from '@/hooks/useRADIUS';
 import { useNetboxHealth, useNetboxSites } from '@/hooks/useNetworkInventory';
 import { getCurrentUser, logout as logoutUser } from '@/lib/auth';
 import { platformConfig } from '@/lib/config';
@@ -52,13 +52,12 @@ export default function DashboardPage() {
     enabled: hasLifecycleAccess,
   });
 
-  const { data: radiusSubscribers, isLoading: subscribersLoading } = useRadiusSubscribers({
-    limit: 5,
-    enabled: hasRadiusAccess,
-  });
-  const { data: activeSessions, isLoading: sessionsLoading } = useRadiusSessions({
-    enabled: hasRadiusAccess,
-  });
+  // TEMPORARILY DISABLED: const { data: radiusSubscribers, isLoading: subscribersLoading } = useRADIUSSubscribers(0, 5);
+  // TEMPORARILY DISABLED: const { data: activeSessions, isLoading: sessionsLoading } = useRADIUSSessions();
+  const radiusSubscribers: any[] = [];
+  const activeSessions: any[] = [];
+  const subscribersLoading = false;
+  const sessionsLoading = false;
 
   const { data: netboxHealth } = useNetboxHealth({
     enabled: hasNetworkAccess,

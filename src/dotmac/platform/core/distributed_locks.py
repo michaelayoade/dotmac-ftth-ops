@@ -17,10 +17,10 @@ from dotmac.platform.settings import settings
 logger = structlog.get_logger(__name__)
 
 # Global Redis client
-_redis_client: redis.Redis[Any] | None = None
+_redis_client: Any = None  # redis.Redis - generic syntax incompatible with Python 3.13
 
 
-async def get_redis_client() -> redis.Redis[Any]:
+async def get_redis_client() -> Any:
     """Get Redis client for locks."""
     global _redis_client
     if _redis_client is None:

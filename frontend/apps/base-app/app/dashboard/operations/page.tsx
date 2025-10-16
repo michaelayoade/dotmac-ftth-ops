@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   Users,
@@ -11,12 +11,13 @@ import {
   ArrowUpRight,
   AlertCircle,
   Clock,
-  Package
+  Package,
+  RefreshCw
 } from 'lucide-react';
-import { useCustomers } from '@/hooks/useCustomers';
-import { metricsService, type OperationsMetrics } from '@/lib/services/metrics-service';
+import { useCustomerListGraphQL, useCustomerMetricsGraphQL } from '@/hooks/useCustomersGraphQL';
 import { AlertBanner } from '@/components/alerts/AlertBanner';
 import { MetricCardEnhanced } from '@/components/ui/metric-card-enhanced';
+import { Button } from '@/components/ui/button';
 
 interface MetricCardProps {
   title: string;
@@ -135,150 +136,150 @@ function RecentActivity({ items }: { items: RecentActivityItem[] }) {
 }
 
 export default function OperationsPage() {
-  const [metrics, setMetrics] = useState<OperationsMetrics | null>(null);
-  const [recentActivity, setRecentActivity] = useState<RecentActivityItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Fetch customer metrics using GraphQL
+  const {
+    metrics: customerMetrics,
+    isLoading: metricsLoading,
+    error: metricsError,
+    refetch: refetchMetrics,
+  } = useCustomerMetricsGraphQL({
+    pollInterval: 60000, // Refresh every 60 seconds
+  });
 
-  useEffect(() => {
-    fetchOperationsData();
-    // Refresh metrics every 60 seconds
-    const interval = setInterval(fetchOperationsData, 60000);
-    return () => clearInterval(interval);
-  }, []);
+  // Fetch recent customers for activity
+  const {
+    customers: recentCustomers,
+    isLoading: customersLoading,
+    refetch: refetchCustomers,
+  } = useCustomerListGraphQL({
+    limit: 5,
+    pollInterval: 60000,
+  });
 
-  const fetchOperationsData = async () => {
-    try {
-      setLoading(true);
+  // Transform customer data into recent activity
+  const recentActivity: RecentActivityItem[] = [];
 
-      // Fetch operations metrics from the metrics service
-      const operationsMetrics = await metricsService.getOperationsMetrics();
-      setMetrics(operationsMetrics);
+  // Add customer activity from metrics
+  if (customerMetrics?.newCustomers) {
+    recentActivity.push({
+      id: 'cust-new',
+      type: 'customer',
+      title: `${customerMetrics.newCustomers} new customers`,
+      description: 'Registered this month',
+      timestamp: 'This month',
+      icon: Users
+    });
+  }
 
-      // Transform activity data into recent activity items
-      const activities: RecentActivityItem[] = [];
-
-      // Add customer activity
-      if (operationsMetrics.customers.newThisMonth > 0) {
-        activities.push({
-          id: 'cust-new',
-          type: 'customer',
-          title: `${operationsMetrics.customers.newThisMonth} new customers`,
-          description: 'Registered this month',
-          timestamp: 'This month',
-          icon: Users
-        });
-      }
-
-      // Add communication activity
-      if (operationsMetrics.communications.sentToday > 0) {
-        activities.push({
-          id: 'comm-sent',
-          type: 'communication',
-          title: `${operationsMetrics.communications.sentToday} messages sent`,
-          description: `${operationsMetrics.communications.deliveryRate}% delivery rate`,
-          timestamp: 'Today',
-          icon: Mail
-        });
-      }
-
-      // Add file activity
-      if (operationsMetrics.files.uploadsToday > 0) {
-        activities.push({
-          id: 'file-upload',
-          type: 'file',
-          title: `${operationsMetrics.files.uploadsToday} files uploaded`,
-          description: `${operationsMetrics.files.downloadsToday} downloads today`,
-          timestamp: 'Today',
-          icon: FileText
-        });
-      }
-
-      // Add system activity
-      if (operationsMetrics.activity.eventsPerHour > 0) {
-        activities.push({
-          id: 'sys-activity',
-          type: 'customer',
-          title: `${operationsMetrics.activity.eventsPerHour} events/hour`,
-          description: `${operationsMetrics.activity.activeUsers} active users`,
-          timestamp: 'Current',
-          icon: Activity
-        });
-      }
-
-      setRecentActivity(activities);
-    } catch (error) {
-      console.error('Failed to fetch operations data:', error);
-    } finally {
-      setLoading(false);
+  // Add recent customer activity
+  recentCustomers.forEach((customer, idx) => {
+    if (idx < 3) {
+      recentActivity.push({
+        id: `cust-${customer.id}`,
+        type: 'customer',
+        title: customer.name,
+        description: customer.email,
+        timestamp: 'Recent',
+        icon: Users
+      });
     }
+  });
+
+  const loading = metricsLoading || customersLoading;
+
+  const handleRefresh = () => {
+    refetchMetrics();
+    refetchCustomers();
   };
 
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Operations</h1>
-        <p className="mt-2 text-muted-foreground">
-          Manage customer lifecycle, communications, and file distribution
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Operations</h1>
+          <p className="mt-2 text-muted-foreground">
+            Manage customer lifecycle, communications, and file distribution
+          </p>
+        </div>
+        <Button variant="outline" onClick={handleRefresh} disabled={loading}>
+          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       {/* Alert Banner - Shows operations-related alerts */}
       <AlertBanner category="system" maxAlerts={3} />
 
+      {/* Error State */}
+      {metricsError && (
+        <div className="p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-sm text-red-600 dark:text-red-400">
+            Failed to load operations metrics. Please try refreshing.
+          </p>
+        </div>
+      )}
+
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCardEnhanced
           title="Total Customers"
-          value={metrics?.customers.total || 0}
+          value={customerMetrics?.totalCustomers || 0}
           subtitle="Active accounts"
           icon={Users}
           trend={{
-            value: metrics?.customers.growthRate || 0,
-            isPositive: (metrics?.customers.growthRate || 0) > 0
+            value: customerMetrics?.customerGrowthRate || 0,
+            isPositive: (customerMetrics?.customerGrowthRate || 0) > 0
           }}
           href="/dashboard/operations/customers"
           emptyStateMessage="No customers registered yet"
         />
         <MetricCardEnhanced
-          title="Communications Sent"
-          value={metrics?.communications.totalSent || 0}
-          subtitle={`${metrics?.communications.sentToday || 0} sent today`}
-          icon={Mail}
+          title="Active Customers"
+          value={customerMetrics?.activeCustomers || 0}
+          subtitle={`${customerMetrics?.newCustomers || 0} new this month`}
+          icon={Activity}
           trend={{
-            value: metrics?.communications.deliveryRate || 0,
+            value: customerMetrics?.retentionRate || 0,
             isPositive: true
           }}
           href="/dashboard/operations/communications"
           emptyStateMessage="No communications sent"
         />
         <MetricCardEnhanced
-          title="Files Distributed"
-          value={metrics?.files.totalFiles || 0}
-          subtitle={`${((metrics?.files.totalSize || 0) / (1024 * 1024 * 1024)).toFixed(2)} GB total`}
-          icon={FileText}
-          href="/dashboard/operations/files"
-          emptyStateMessage="No files uploaded"
+          title="Churn Rate"
+          value={`${(customerMetrics?.churnRate || 0).toFixed(1)}%`}
+          subtitle="Last 30 days"
+          icon={TrendingUp}
+          trend={{
+            value: customerMetrics?.churnRate || 0,
+            isPositive: false
+          }}
+          emptyStateMessage="No churn data"
         />
         <MetricCardEnhanced
-          title="System Activity"
-          value={`${metrics?.activity.eventsPerHour || 0}/hr`}
-          subtitle={`${metrics?.activity.activeUsers || 0} active users`}
-          icon={Activity}
-          emptyStateMessage="No activity tracked"
+          title="Retention Rate"
+          value={`${(customerMetrics?.retentionRate || 0).toFixed(1)}%`}
+          subtitle="Last 30 days"
+          icon={Users}
+          trend={{
+            value: customerMetrics?.retentionRate || 0,
+            isPositive: true
+          }}
+          emptyStateMessage="No retention data"
         />
       </div>
 
       {/* Churn Risk Alert */}
-      {metrics?.customers.churnRisk && metrics.customers.churnRisk > 0 && (
+      {customerMetrics?.churnedCustomers && customerMetrics.churnedCustomers > 0 && (
         <div className="rounded-lg border border-orange-900/20 bg-orange-950/20 p-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-orange-400 mt-0.5" />
             <div className="flex-1">
               <p className="font-medium text-orange-400">Attention Required</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {metrics.customers.churnRisk} customers at risk of churning.
-                <Link href="/dashboard/operations/customers?filter=at-risk" className="ml-2 text-orange-400 hover:text-orange-300">
+                {customerMetrics.churnedCustomers} customers churned recently.
+                <Link href="/dashboard/operations/customers" className="ml-2 text-orange-400 hover:text-orange-300">
                   View customers →
                 </Link>
               </p>

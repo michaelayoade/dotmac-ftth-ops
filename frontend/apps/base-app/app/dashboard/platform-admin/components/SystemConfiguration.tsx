@@ -5,14 +5,45 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/components/ui/use-toast"
-import { Settings, Database, Trash2, CheckCircle2 } from "lucide-react"
+import { Settings, Database, Trash2, CheckCircle2, Edit, Save, Loader2, AlertCircle, Clock } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { platformAdminService, type SystemConfig } from "@/lib/services/platform-admin-service"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Separator } from "@/components/ui/separator"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  useSettingsCategories,
+  useCategorySettings,
+  useUpdateCategorySettings,
+  formatLastUpdated,
+  maskSensitiveValue,
+  type SettingsCategory as SettingsCategoryType,
+  type SettingField,
+} from "@/hooks/useSettings"
 
 export function SystemConfiguration() {
   const [config, setConfig] = useState<SystemConfig | null>(null)
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+
+  // Settings management state
+  const [activeTab, setActiveTab] = useState<"overview" | "settings">("overview")
+  const [selectedCategory, setSelectedCategory] = useState<SettingsCategoryType>("jwt")
+  const [formData, setFormData] = useState<Record<string, any>>({})
+
+  // Fetch categories and settings
+  const { data: categoriesData, isLoading: isLoadingCategories } = useSettingsCategories()
+  const categories = categoriesData ?? []
+
+  const { data: categorySettings, isLoading: isLoadingSettings } = useCategorySettings(
+    selectedCategory,
+    false
+  )
+
+  const updateSettings = useUpdateCategorySettings()
 
   const fetchSystemConfig = useCallback(async () => {
     try {
@@ -47,6 +78,154 @@ export function SystemConfiguration() {
     }
   }, [fetchSystemConfig, toast])
 
+  // Settings management handlers
+  const handleCategoryChange = (category: SettingsCategoryType) => {
+    setSelectedCategory(category)
+    setFormData({})
+  }
+
+  const getFieldValue = (field: SettingField): any => {
+    if (formData[field.name] !== undefined) {
+      return formData[field.name]
+    }
+    return field.value
+  }
+
+  const handleFieldChange = (fieldName: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [fieldName]: value }))
+  }
+
+  const handleSave = async () => {
+    if (Object.keys(formData).length === 0) {
+      return
+    }
+
+    await updateSettings.mutateAsync({
+      category: selectedCategory,
+      data: {
+        updates: formData,
+        validate_only: false,
+        reason: "Updated via platform admin settings",
+      },
+    })
+
+    setFormData({})
+  }
+
+  const renderField = (field: SettingField) => {
+    const value = getFieldValue(field)
+
+    // Boolean fields
+    if (field.type === "bool" || field.type === "boolean") {
+      return (
+        <div
+          key={field.name}
+          className="flex items-start justify-between gap-4 rounded-lg border border-border bg-card px-4 py-3"
+        >
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-foreground">
+              {field.name}
+              {field.required && <span className="text-destructive ml-1">*</span>}
+              {field.sensitive && (
+                <Badge variant="outline" className="ml-2 text-xs">
+                  Sensitive
+                </Badge>
+              )}
+            </p>
+            {field.description && (
+              <p className="text-xs text-muted-foreground mt-1">{field.description}</p>
+            )}
+          </div>
+          <Switch
+            checked={Boolean(value)}
+            onCheckedChange={(checked) => handleFieldChange(field.name, checked)}
+            aria-label={`Toggle ${field.name}`}
+          />
+        </div>
+      )
+    }
+
+    // Number fields
+    if (field.type === "int" || field.type === "float" || field.type === "number") {
+      return (
+        <div key={field.name} className="space-y-2">
+          <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">
+            {field.name}
+            {field.required && <span className="text-destructive ml-1">*</span>}
+            {field.sensitive && (
+              <Badge variant="outline" className="ml-2 text-xs">
+                Sensitive
+              </Badge>
+            )}
+          </Label>
+          <Input
+            id={field.name}
+            type="number"
+            value={value ?? ""}
+            onChange={(e) => handleFieldChange(field.name, parseFloat(e.target.value))}
+            placeholder={field.default !== null ? String(field.default) : undefined}
+          />
+          {field.description && (
+            <p className="text-xs text-muted-foreground">{field.description}</p>
+          )}
+        </div>
+      )
+    }
+
+    // Long text fields
+    if (field.type === "text" || (field.description && field.description.length > 100)) {
+      return (
+        <div key={field.name} className="space-y-2">
+          <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">
+            {field.name}
+            {field.required && <span className="text-destructive ml-1">*</span>}
+            {field.sensitive && (
+              <Badge variant="outline" className="ml-2 text-xs">
+                Sensitive
+              </Badge>
+            )}
+          </Label>
+          <Textarea
+            id={field.name}
+            rows={4}
+            value={field.sensitive ? maskSensitiveValue(value, true) : value ?? ""}
+            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+            placeholder={field.default !== null ? String(field.default) : undefined}
+            readOnly={field.sensitive && !value}
+          />
+          {field.description && (
+            <p className="text-xs text-muted-foreground">{field.description}</p>
+          )}
+        </div>
+      )
+    }
+
+    // Default: string input
+    return (
+      <div key={field.name} className="space-y-2">
+        <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">
+          {field.name}
+          {field.required && <span className="text-destructive ml-1">*</span>}
+          {field.sensitive && (
+            <Badge variant="outline" className="ml-2 text-xs">
+              Sensitive
+            </Badge>
+          )}
+        </Label>
+        <Input
+          id={field.name}
+          type={field.sensitive ? "password" : "text"}
+          value={field.sensitive ? maskSensitiveValue(value, true) : value ?? ""}
+          onChange={(e) => handleFieldChange(field.name, e.target.value)}
+          placeholder={field.default !== null ? String(field.default) : undefined}
+        />
+        {field.description && (
+          <p className="text-xs text-muted-foreground">{field.description}</p>
+        )}
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <Card>
@@ -67,7 +246,21 @@ export function SystemConfiguration() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "settings")}>
+        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            System Overview
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Edit className="h-4 w-4" />
+            Settings Management
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-4 mt-6">
       {/* Configuration Info */}
       <Card>
         <CardHeader>
@@ -178,6 +371,132 @@ export function SystemConfiguration() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        {/* Settings Management Tab */}
+        <TabsContent value="settings" className="space-y-4 mt-6">
+          {isLoadingCategories && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2 text-sm text-muted-foreground">Loading categories...</span>
+            </div>
+          )}
+
+          {!isLoadingCategories && categories.length > 0 && (
+            <Tabs
+              value={selectedCategory}
+              onValueChange={(value) => handleCategoryChange(value as SettingsCategoryType)}
+            >
+              <TabsList className="w-full flex-wrap h-auto">
+                {categories.map((cat) => (
+                  <TabsTrigger key={cat.category} value={cat.category} className="flex items-center gap-2">
+                    <Settings className="h-3 w-3" />
+                    {cat.display_name}
+                    {cat.has_sensitive_fields && (
+                      <Badge variant="secondary" className="ml-1 text-xs">
+                        Sensitive
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              {categories.map((cat) => (
+                <TabsContent key={cat.category} value={cat.category}>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                        <Settings className="h-5 w-5 text-primary" />
+                        {cat.display_name}
+                      </CardTitle>
+                      <CardDescription>
+                        {cat.description}
+                        {categorySettings?.last_updated && (
+                          <span className="flex items-center gap-1 mt-2">
+                            <Clock className="h-3 w-3" />
+                            Last updated: {formatLastUpdated(categorySettings.last_updated)}
+                            {categorySettings.updated_by && ` by ${categorySettings.updated_by}`}
+                          </span>
+                        )}
+                      </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="space-y-6">
+                      {isLoadingSettings && (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                          <span className="ml-2 text-sm text-muted-foreground">Loading settings...</span>
+                        </div>
+                      )}
+
+                      {!isLoadingSettings && categorySettings && (
+                        <>
+                          {categorySettings.fields.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-8">
+                              No configurable settings in this category.
+                            </p>
+                          ) : (
+                            <>
+                              <div className="space-y-4">{categorySettings.fields.map(renderField)}</div>
+
+                              {cat.restart_required && Object.keys(formData).length > 0 && (
+                                <Alert>
+                                  <AlertCircle className="h-4 w-4" />
+                                  <AlertDescription>
+                                    Changes to this category may require a service restart to take effect.
+                                  </AlertDescription>
+                                </Alert>
+                              )}
+
+                              <div className="flex gap-2 pt-4">
+                                <Button
+                                  className="gap-2"
+                                  onClick={handleSave}
+                                  disabled={updateSettings.isPending || Object.keys(formData).length === 0}
+                                >
+                                  {updateSettings.isPending ? (
+                                    <>
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                      Saving...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Save className="h-4 w-4" />
+                                      Save {cat.display_name} settings
+                                    </>
+                                  )}
+                                </Button>
+
+                                {Object.keys(formData).length > 0 && (
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => setFormData({})}
+                                    disabled={updateSettings.isPending}
+                                  >
+                                    Cancel
+                                  </Button>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              ))}
+            </Tabs>
+          )}
+
+          {!isLoadingCategories && categories.length === 0 && (
+            <Card>
+              <CardContent className="py-10 text-center">
+                <p className="text-sm text-muted-foreground">No settings categories available.</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

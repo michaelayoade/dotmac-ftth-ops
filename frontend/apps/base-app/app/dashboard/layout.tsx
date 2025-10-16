@@ -34,7 +34,12 @@ import {
   Building2,
   Handshake,
   LifeBuoy,
-  LayoutDashboard
+  LayoutDashboard,
+  Wifi,
+  MapPin,
+  Network as NetworkIcon,
+  AlertTriangle,
+  Cable
 } from 'lucide-react';
 import { TenantSelector } from '@/components/tenant-selector';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -43,6 +48,10 @@ import { logger } from '@/lib/logger';
 import { Can } from '@/components/auth/PermissionGuard';
 import { useRBAC } from '@/contexts/RBACContext';
 import { useBranding } from '@/hooks/useBranding';
+import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { ConnectionStatusIndicator } from '@/components/realtime/ConnectionStatusIndicator';
+import { RealtimeAlerts } from '@/components/realtime/RealtimeAlerts';
+import { GlobalCommandPalette } from '@/components/global-command-palette';
 
 interface NavItem {
   name: string;
@@ -85,7 +94,21 @@ const sections: NavSection[] = [
     href: '/dashboard/network',
     permission: 'isp.ipam.read',
     items: [
-      { name: 'Overview', href: '/dashboard/network', icon: LayoutDashboard, permission: 'isp.ipam.read' },
+      { name: 'Inventory', href: '/dashboard/network', icon: Database, permission: 'isp.ipam.read' },
+      { name: 'Fiber Infrastructure', href: '/dashboard/network/fiber', icon: Cable, permission: 'isp.ipam.read' },
+      { name: 'Monitoring', href: '/dashboard/network-monitoring', icon: Activity },
+      { name: 'Faults', href: '/dashboard/network/faults', icon: AlertTriangle, permission: 'faults.alarms.read' },
+      { name: 'IPAM', href: '/dashboard/ipam', icon: NetworkIcon, permission: 'isp.ipam.read' },
+      { name: 'DCIM', href: '/dashboard/dcim', icon: MapPin, permission: 'isp.ipam.read' },
+    ],
+  },
+  {
+    id: 'wireless',
+    label: 'Wireless',
+    icon: Wifi,
+    href: '/dashboard/wireless',
+    items: [
+      { name: 'Overview', href: '/dashboard/wireless', icon: LayoutDashboard },
     ],
   },
   {
@@ -95,6 +118,40 @@ const sections: NavSection[] = [
     href: '/dashboard/automation',
     items: [
       { name: 'Overview', href: '/dashboard/automation', icon: LayoutDashboard },
+    ],
+  },
+  {
+    id: 'orchestration',
+    label: 'Orchestration',
+    icon: Activity,
+    href: '/dashboard/orchestration',
+    items: [
+      { name: 'Workflow Monitor', href: '/dashboard/orchestration', icon: Activity },
+      { name: 'Workflow History', href: '/dashboard/orchestration/history', icon: FileText },
+      { name: 'Analytics', href: '/dashboard/orchestration/analytics', icon: BarChart3 },
+    ],
+  },
+  {
+    id: 'support',
+    label: 'Support',
+    icon: LifeBuoy,
+    href: '/dashboard/support',
+    items: [
+      { name: 'Tickets', href: '/dashboard/support', icon: LifeBuoy },
+      { name: 'New Ticket', href: '/dashboard/support/new', icon: FileText },
+    ],
+  },
+  {
+    id: 'crm',
+    label: 'Sales CRM',
+    icon: Handshake,
+    href: '/dashboard/crm',
+    permission: ['customers.read'],
+    items: [
+      { name: 'Overview', href: '/dashboard/crm', icon: LayoutDashboard, permission: 'customers.read' },
+      { name: 'Leads', href: '/dashboard/crm/leads', icon: Users, permission: 'customers.read' },
+      { name: 'Quotes', href: '/dashboard/crm/quotes', icon: FileText, permission: 'customers.read' },
+      { name: 'Site Surveys', href: '/dashboard/crm/site-surveys', icon: Activity, permission: 'customers.read' },
     ],
   },
   {
@@ -332,9 +389,14 @@ export default function DashboardLayout({
             </div>
           </div>
 
-          {/* Right side - Tenant selector, Theme toggle and User menu */}
+          {/* Right side - Tenant selector, Notifications, Theme toggle and User menu */}
           <div className="flex items-center gap-4">
             <TenantSelector />
+            <NotificationCenter
+              maxNotifications={5}
+              refreshInterval={30000}
+              viewAllUrl="/dashboard/notifications"
+            />
             <ThemeToggle />
             <div className="relative">
               <button
@@ -520,6 +582,15 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+
+      {/* Real-time connection status indicator */}
+      <ConnectionStatusIndicator position="bottom-right" />
+
+      {/* Real-time alerts notifications */}
+      <RealtimeAlerts minSeverity="warning" />
+
+      {/* Global Command Palette (⌘K) */}
+      <GlobalCommandPalette />
 
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (

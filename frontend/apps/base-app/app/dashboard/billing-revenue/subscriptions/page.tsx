@@ -53,6 +53,11 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import {
+  useSubscriptionListGraphQL,
+  useSubscriptionMetricsGraphQL,
+} from '@/hooks/useSubscriptionsGraphQL';
+import { SubscriptionStatusEnum } from '@/lib/graphql/generated';
 
 interface Subscription {
   id: string;
@@ -76,169 +81,66 @@ interface Subscription {
 
 export default function SubscriptionsPage() {
   const { toast } = useToast();
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [billingCycleFilter, setBillingCycleFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<SubscriptionStatusEnum | undefined>(undefined);
   const [showNewSubscriptionDialog, setShowNewSubscriptionDialog] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
 
-  // Metrics
-  const [metrics, setMetrics] = useState({
-    total: 0,
-    active: 0,
-    mrr: 0,
-    churnRate: 0,
-    growthRate: 0,
+  // Fetch subscriptions using GraphQL
+  const {
+    subscriptions: graphqlSubscriptions,
+    total,
+    isLoading: subscriptionsLoading,
+    error: subscriptionsError,
+    refetch: refetchSubscriptions,
+  } = useSubscriptionListGraphQL({
+    pageSize: 100,
+    status: statusFilter,
+    search: searchQuery || undefined,
+    includeCustomer: true,
+    includePlan: true,
+    pollInterval: 30000, // Auto-refresh every 30 seconds
   });
 
-  const fetchSubscriptions = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Simulated data - replace with actual API call
-      const mockData: Subscription[] = [
-        {
-          id: 'sub-001',
-          customer_name: 'Acme Corp',
-          customer_email: 'billing@acme.com',
-          plan_name: 'Professional',
-          plan_id: 'plan-pro',
-          status: 'active',
-          amount: 99.99,
-          currency: 'USD',
-          billing_cycle: 'monthly',
-          current_period_start: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-          current_period_end: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-          cancel_at_period_end: false,
-          created_at: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
-          next_billing_date: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-          payment_method: 'Visa **** 1234',
-          mrr: 99.99,
-        },
-        {
-          id: 'sub-002',
-          customer_name: 'TechStart Inc',
-          customer_email: 'admin@techstart.io',
-          plan_name: 'Enterprise',
-          plan_id: 'plan-ent',
-          status: 'active',
-          amount: 499.99,
-          currency: 'USD',
-          billing_cycle: 'annual',
-          current_period_start: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(),
-          current_period_end: new Date(Date.now() + 185 * 24 * 60 * 60 * 1000).toISOString(),
-          cancel_at_period_end: false,
-          created_at: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
-          next_billing_date: new Date(Date.now() + 185 * 24 * 60 * 60 * 1000).toISOString(),
-          payment_method: 'ACH Transfer',
-          mrr: 41.67,
-        },
-        {
-          id: 'sub-003',
-          customer_name: 'Small Biz LLC',
-          customer_email: 'owner@smallbiz.com',
-          plan_name: 'Starter',
-          plan_id: 'plan-starter',
-          status: 'trialing',
-          amount: 29.99,
-          currency: 'USD',
-          billing_cycle: 'monthly',
-          trial_end: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          cancel_at_period_end: false,
-          created_at: new Date().toISOString(),
-          next_billing_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          payment_method: 'Not set',
-          mrr: 0,
-        },
-        {
-          id: 'sub-004',
-          customer_name: 'Global Trade Co',
-          customer_email: 'finance@globaltrade.com',
-          plan_name: 'Professional',
-          plan_id: 'plan-pro',
-          status: 'past_due',
-          amount: 99.99,
-          currency: 'USD',
-          billing_cycle: 'monthly',
-          current_period_start: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString(),
-          current_period_end: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          cancel_at_period_end: false,
-          created_at: new Date(Date.now() - 200 * 24 * 60 * 60 * 1000).toISOString(),
-          next_billing_date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          payment_method: 'MasterCard **** 5678',
-          mrr: 99.99,
-        },
-        {
-          id: 'sub-005',
-          customer_name: 'Design Studio',
-          customer_email: 'team@designstudio.com',
-          plan_name: 'Professional',
-          plan_id: 'plan-pro',
-          status: 'cancelled',
-          amount: 99.99,
-          currency: 'USD',
-          billing_cycle: 'monthly',
-          current_period_start: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
-          current_period_end: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          cancel_at_period_end: true,
-          created_at: new Date(Date.now() - 150 * 24 * 60 * 60 * 1000).toISOString(),
-          next_billing_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          payment_method: 'Visa **** 9012',
-          mrr: 0,
-        },
-      ];
+  // Fetch subscription metrics
+  const {
+    metrics: metricsData,
+    isLoading: metricsLoading,
+    refetch: refetchMetrics,
+  } = useSubscriptionMetricsGraphQL({
+    pollInterval: 60000, // Refresh metrics every minute
+  });
 
-      // Apply filters
-      let filteredData = mockData;
+  // Transform GraphQL subscriptions data
+  const subscriptions: Subscription[] = graphqlSubscriptions.map(sub => ({
+    id: sub.id,
+    customer_name: sub.customer?.name || 'Unknown Customer',
+    customer_email: sub.customer?.email || '',
+    plan_name: sub.plan?.name || 'Unknown Plan',
+    plan_id: sub.planId,
+    status: sub.status.toLowerCase() as Subscription['status'],
+    amount: sub.plan?.price || 0,
+    currency: sub.plan?.currency || 'USD',
+    billing_cycle: (sub.plan?.billingCycle as Subscription['billing_cycle']) || 'monthly',
+    current_period_start: sub.currentPeriodStart,
+    current_period_end: sub.currentPeriodEnd,
+    trial_end: sub.trialEnd || undefined,
+    cancel_at_period_end: false, // Would need to add this field to GraphQL schema
+    created_at: sub.createdAt,
+    next_billing_date: sub.currentPeriodEnd,
+    payment_method: 'Card on file',
+    mrr: sub.plan?.billingCycle === 'monthly' ? (sub.plan?.price || 0) : 0,
+  }));
 
-      if (statusFilter !== 'all') {
-        filteredData = filteredData.filter(sub => sub.status === statusFilter);
-      }
-
-      if (billingCycleFilter !== 'all') {
-        filteredData = filteredData.filter(sub => sub.billing_cycle === billingCycleFilter);
-      }
-
-      if (searchQuery) {
-        filteredData = filteredData.filter(sub =>
-          sub.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          sub.customer_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          sub.plan_name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
-
-      setSubscriptions(filteredData);
-
-      // Calculate metrics
-      const activeSubscriptions = mockData.filter(s => s.status === 'active');
-      const totalMRR = activeSubscriptions.reduce((sum, s) => sum + s.mrr, 0);
-
-      setMetrics({
-        total: mockData.length,
-        active: activeSubscriptions.length,
-        mrr: totalMRR,
-        churnRate: 5.2, // Mock value
-        growthRate: 12.5, // Mock value
-      });
-
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch subscriptions',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter, billingCycleFilter, searchQuery, toast]);
-
-  useEffect(() => {
-    fetchSubscriptions();
-  }, [fetchSubscriptions]);
+  // Metrics from GraphQL
+  const metrics = {
+    total: metricsData?.totalSubscriptions || 0,
+    active: metricsData?.activeSubscriptions || 0,
+    mrr: metricsData?.monthlyRecurringRevenue || 0,
+    churnRate: metricsData?.churnRate || 0,
+    growthRate: metricsData?.growthRate || 0,
+  };
 
   const handlePauseSubscription = async (subscription: Subscription) => {
     try {
@@ -247,7 +149,7 @@ export default function SubscriptionsPage() {
         title: 'Success',
         description: `Subscription ${subscription.id} has been paused`,
       });
-      fetchSubscriptions();
+      refetchSubscriptions();
     } catch (error) {
       toast({
         title: 'Error',
@@ -268,7 +170,7 @@ export default function SubscriptionsPage() {
         title: 'Success',
         description: `Subscription ${subscription.id} will be cancelled at the end of the billing period`,
       });
-      fetchSubscriptions();
+      refetchSubscriptions();
     } catch (error) {
       toast({
         title: 'Error',
@@ -387,36 +289,34 @@ export default function SubscriptionsPage() {
                 />
               </div>
               <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                value={statusFilter || 'all'}
+                onChange={(e) => setStatusFilter(e.target.value === 'all' ? undefined : e.target.value as SubscriptionStatusEnum)}
                 className="h-10 w-[150px] rounded-md border border-border bg-card px-3 text-sm text-foreground"
               >
                 <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="trialing">Trial</option>
-                <option value="past_due">Past Due</option>
-                <option value="paused">Paused</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="ACTIVE">Active</option>
+                <option value="TRIALING">Trial</option>
+                <option value="PAST_DUE">Past Due</option>
+                <option value="PAUSED">Paused</option>
+                <option value="CANCELED">Cancelled</option>
               </select>
-              <select
-                value={billingCycleFilter}
-                onChange={(e) => setBillingCycleFilter(e.target.value)}
-                className="h-10 w-[150px] rounded-md border border-border bg-card px-3 text-sm text-foreground"
-              >
-                <option value="all">All Cycles</option>
-                <option value="monthly">Monthly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="annual">Annual</option>
-              </select>
-              <Button variant="outline" onClick={fetchSubscriptions}>
+              <Button variant="outline" onClick={() => refetchSubscriptions()}>
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {subscriptionsLoading ? (
             <div className="text-center py-8">Loading subscriptions...</div>
+          ) : subscriptionsError ? (
+            <div className="text-center py-8 text-destructive">
+              Failed to load subscriptions. Please try again.
+              <Button variant="outline" className="mt-4" onClick={() => refetchSubscriptions()}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry
+              </Button>
+            </div>
           ) : subscriptions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No subscriptions found. Create your first subscription to get started.

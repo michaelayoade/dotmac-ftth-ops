@@ -144,3 +144,82 @@ export function useResumeService(): UseMutationResult<void, Error, LifecycleOper
     },
   });
 }
+
+interface ProvisionServiceVariables {
+  payload: Record<string, unknown>;
+}
+
+export function useProvisionService(): UseMutationResult<{ service_instance_id: string }, Error, ProvisionServiceVariables> {
+  const queryClient = useQueryClient();
+  return useMutation<{ service_instance_id: string }, Error, ProvisionServiceVariables>({
+    mutationFn: async ({ payload }) => {
+      const response = await apiClient.post<{ service_instance_id: string }>('/api/v1/services/lifecycle/services/provision', payload);
+      return extractDataOrThrow(response);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['services', 'instances'] }),
+        queryClient.invalidateQueries({ queryKey: ['services', 'statistics'] }),
+      ]);
+    },
+  });
+}
+
+export function useActivateService(): UseMutationResult<void, Error, LifecycleOperationVariables> {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, LifecycleOperationVariables>({
+    mutationFn: async ({ serviceId, payload }) => {
+      await apiClient.post(`/api/v1/services/lifecycle/services/${serviceId}/activate`, payload ?? {});
+    },
+    onSuccess: async (_, { serviceId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['services', 'instances'] }),
+        queryClient.invalidateQueries({ queryKey: ['services', 'instance', serviceId] }),
+        queryClient.invalidateQueries({ queryKey: ['services', 'statistics'] }),
+      ]);
+    },
+  });
+}
+
+export function useTerminateService(): UseMutationResult<void, Error, LifecycleOperationVariables> {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, LifecycleOperationVariables>({
+    mutationFn: async ({ serviceId, payload }) => {
+      await apiClient.post(`/api/v1/services/lifecycle/services/${serviceId}/terminate`, payload ?? {});
+    },
+    onSuccess: async (_, { serviceId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['services', 'instances'] }),
+        queryClient.invalidateQueries({ queryKey: ['services', 'instance', serviceId] }),
+        queryClient.invalidateQueries({ queryKey: ['services', 'statistics'] }),
+      ]);
+    },
+  });
+}
+
+export function useModifyService(): UseMutationResult<void, Error, LifecycleOperationVariables> {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, LifecycleOperationVariables>({
+    mutationFn: async ({ serviceId, payload }) => {
+      await apiClient.patch(`/api/v1/services/lifecycle/services/${serviceId}`, payload ?? {});
+    },
+    onSuccess: async (_, { serviceId }) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['services', 'instances'] }),
+        queryClient.invalidateQueries({ queryKey: ['services', 'instance', serviceId] }),
+      ]);
+    },
+  });
+}
+
+export function useHealthCheckService(): UseMutationResult<void, Error, LifecycleOperationVariables> {
+  const queryClient = useQueryClient();
+  return useMutation<void, Error, LifecycleOperationVariables>({
+    mutationFn: async ({ serviceId, payload }) => {
+      await apiClient.post(`/api/v1/services/lifecycle/services/${serviceId}/health-check`, payload ?? {});
+    },
+    onSuccess: async (_, { serviceId }) => {
+      await queryClient.invalidateQueries({ queryKey: ['services', 'instance', serviceId] });
+    },
+  });
+}

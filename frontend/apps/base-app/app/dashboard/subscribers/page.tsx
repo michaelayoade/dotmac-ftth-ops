@@ -1,362 +1,519 @@
+/**
+ * Subscribers Management Page
+ *
+ * Main page for viewing and managing ISP subscribers
+ */
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { useRBAC } from '@/contexts/RBACContext';
-import { useRadiusSessions, useRadiusSubscribers, useToggleSubscriber } from '@/hooks/useRadius';
-import { useServiceInstances } from '@/hooks/useServiceLifecycle';
-import { platformConfig } from '@/lib/config';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useRBAC } from '@/contexts/RBACContext';
+import {
+  useSubscribers,
+  useSubscriberStatistics,
+  useSubscriberOperations,
+  type Subscriber,
+  type SubscriberStatus,
+  type ConnectionType,
+} from '@/hooks/useSubscribers';
+import { SubscriberList } from '@/components/subscribers/SubscriberList';
+import { SubscriberDetailModal } from '@/components/subscribers/SubscriberDetailModal';
+import { AddSubscriberModal } from '@/components/subscribers/AddSubscriberModal';
+import {
+  Users,
+  UserCheck,
+  UserX,
+  UserPlus as UserClock,
+  TrendingUp,
+  TrendingDown,
+  Plus,
+  Download,
+  Filter,
+  X,
+} from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { logger } from '@/lib/logger';
 
+// ============================================================================
+// Main Component
+// ============================================================================
+
 export default function SubscribersPage() {
   const { hasPermission } = useRBAC();
-  const [search, setSearch] = useState('');
-  const radiusEnabled = platformConfig.features.enableRadius && hasPermission('isp.radius.read');
-  const [selectedSubscriberId, setSelectedSubscriberId] = useState<number | null>(null);
-  const [subscriberDialogOpen, setSubscriberDialogOpen] = useState(false);
-
   const { toast } = useToast();
 
-  const { data: subscribers, isLoading } = useRadiusSubscribers({
-    limit: 50,
-    enabled: radiusEnabled,
-  });
+  // Permissions
+  const canView = hasPermission('customers.read');
+  const canCreate = hasPermission('customers.create');
+  const canUpdate = hasPermission('customers.update');
+  const canDelete = hasPermission('customers.delete');
 
-  const { data: sessions } = useRadiusSessions({
-    enabled: radiusEnabled,
-  });
+  // State
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<SubscriberStatus | 'all'>('all');
+  const [connectionTypeFilter, setConnectionTypeFilter] = useState<ConnectionType | 'all'>('all');
+  const [selectedSubscriber, setSelectedSubscriber] = useState<Subscriber | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const { data: activeServices } = useServiceInstances({
-    status: 'active',
-    limit: 20,
-  });
+  // Build query params
+  const queryParams = useMemo(() => {
+    const params: any = {
+      search: search || undefined,
+      status: statusFilter !== 'all' ? [statusFilter] : undefined,
+      connection_type: connectionTypeFilter !== 'all' ? [connectionTypeFilter] : undefined,
+      limit: 100,
+      sort_by: 'created_at',
+      sort_order: 'desc' as const,
+    };
+    return params;
+  }, [search, statusFilter, connectionTypeFilter]);
 
-  const toggleSubscriber = useToggleSubscriber();
+  // Data fetching
+  const { subscribers, total, isLoading, error, refetch } = useSubscribers(queryParams);
+  const { statistics, isLoading: statsLoading } = useSubscriberStatistics();
+  const {
+    suspendSubscriber,
+    activateSubscriber,
+    terminateSubscriber,
+    deleteSubscriber,
+    isLoading: operationLoading,
+  } = useSubscriberOperations();
 
-  const filteredSubscribers = (subscribers ?? []).filter(subscriber =>
-    subscriber.username.toLowerCase().includes(search.trim().toLowerCase())
-  );
+  // Handlers
+  const handleViewSubscriber = (subscriber: Subscriber) => {
+    setSelectedSubscriber(subscriber);
+    setIsDetailModalOpen(true);
+  };
 
-  const selectedSubscriber = subscribers?.find(subscriber => subscriber.id === selectedSubscriberId) ?? null;
-  const selectedSessions = selectedSubscriber
-    ? (sessions ?? []).filter(session => session.username === selectedSubscriber.username)
-    : [];
+  const handleCloseDetail = () => {
+    setIsDetailModalOpen(false);
+    setSelectedSubscriber(null);
+  };
 
-  if (!radiusEnabled) {
+  const handleSuspend = async (subscriber: Subscriber) => {
+    try {
+      const success = await suspendSubscriber(subscriber.id, 'Suspended by operator');
+      if (success) {
+        toast({
+          title: 'Subscriber Suspended',
+          description: `${subscriber.first_name} ${subscriber.last_name} has been suspended.`,
+        });
+        refetch();
+        if (selectedSubscriber?.id === subscriber.id) {
+          setIsDetailModalOpen(false);
+          setSelectedSubscriber(null);
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to suspend subscriber', error instanceof Error ? error : new Error(String(error)));
+      toast({
+        title: 'Suspension Failed',
+        description: 'Unable to suspend subscriber. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleActivate = async (subscriber: Subscriber) => {
+    try {
+      const success = await activateSubscriber(subscriber.id);
+      if (success) {
+        toast({
+          title: 'Subscriber Activated',
+          description: `${subscriber.first_name} ${subscriber.last_name} has been activated.`,
+        });
+        refetch();
+        if (selectedSubscriber?.id === subscriber.id) {
+          setIsDetailModalOpen(false);
+          setSelectedSubscriber(null);
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to activate subscriber', error instanceof Error ? error : new Error(String(error)));
+      toast({
+        title: 'Activation Failed',
+        description: 'Unable to activate subscriber. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleTerminate = async (subscriber: Subscriber) => {
+    try {
+      const success = await terminateSubscriber(subscriber.id, 'Terminated by operator');
+      if (success) {
+        toast({
+          title: 'Subscriber Terminated',
+          description: `${subscriber.first_name} ${subscriber.last_name} has been terminated.`,
+        });
+        refetch();
+        if (selectedSubscriber?.id === subscriber.id) {
+          setIsDetailModalOpen(false);
+          setSelectedSubscriber(null);
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to terminate subscriber', error instanceof Error ? error : new Error(String(error)));
+      toast({
+        title: 'Termination Failed',
+        description: 'Unable to terminate subscriber. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDelete = async (subscriber: Subscriber) => {
+    if (!confirm(`Are you sure you want to delete ${subscriber.first_name} ${subscriber.last_name}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const success = await deleteSubscriber(subscriber.id);
+      if (success) {
+        toast({
+          title: 'Subscriber Deleted',
+          description: `${subscriber.first_name} ${subscriber.last_name} has been deleted.`,
+        });
+        refetch();
+        if (selectedSubscriber?.id === subscriber.id) {
+          setIsDetailModalOpen(false);
+          setSelectedSubscriber(null);
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to delete subscriber', error instanceof Error ? error : new Error(String(error)));
+      toast({
+        title: 'Deletion Failed',
+        description: 'Unable to delete subscriber. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExport = () => {
+    try {
+      const dataStr = JSON.stringify(subscribers, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `subscribers-${new Date().toISOString()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: 'Export Complete',
+        description: `Exported ${subscribers.length} subscribers.`,
+      });
+    } catch (error) {
+      logger.error('Failed to export subscribers', error instanceof Error ? error : new Error(String(error)));
+      toast({
+        title: 'Export Failed',
+        description: 'Unable to export subscribers.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('all');
+    setConnectionTypeFilter('all');
+  };
+
+  const hasActiveFilters = search || statusFilter !== 'all' || connectionTypeFilter !== 'all';
+
+  // Permission check
+  if (!canView) {
     return (
-      <main className="max-w-6xl mx-auto px-6 py-12 space-y-8">
+      <main className="max-w-7xl mx-auto px-6 py-12 space-y-8">
         <Card>
           <CardHeader>
             <CardTitle>Subscribers</CardTitle>
             <CardDescription>
-              Access to RADIUS subscriber records requires the <code>isp.radius.read</code> permission.
+              You don't have permission to view subscribers. Contact your administrator for access.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Contact a platform administrator to grant ISP operator privileges, or enable the feature flag{' '}
-              <code>NEXT_PUBLIC_ENABLE_RADIUS</code>.
-            </p>
-          </CardContent>
         </Card>
       </main>
     );
   }
 
   return (
-    <main className="max-w-6xl mx-auto px-6 py-12 space-y-8">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold text-foreground">Subscriber directory</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage broadband subscriber credentials, service assignments, and active RADIUS sessions.
-        </p>
+    <main className="max-w-7xl mx-auto px-6 py-12 space-y-8">
+      {/* Header */}
+      <header className="flex items-start justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">Subscribers</h1>
+          <p className="text-muted-foreground">
+            Manage ISP subscribers, service plans, and network connectivity
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {canCreate && (
+            <Button onClick={() => setIsAddModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Subscriber
+            </Button>
+          )}
+          <Button variant="outline" onClick={handleExport} disabled={subscribers.length === 0}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+        </div>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* Statistics Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Tracked subscribers</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Subscribers</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-foreground">{subscribers?.length ?? 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">In FreeRADIUS for this tenant</p>
+            <div className="text-2xl font-bold">
+              {statsLoading ? '...' : statistics?.total_subscribers.toLocaleString() || '0'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              All subscriber accounts
+            </p>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active sessions</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active</CardTitle>
+            <UserCheck className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-foreground">{sessions?.length ?? 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">PPP sessions currently authenticated</p>
+            <div className="text-2xl font-bold">
+              {statsLoading ? '...' : statistics?.active_subscribers.toLocaleString() || '0'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Currently active services
+            </p>
           </CardContent>
         </Card>
+
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active services</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Suspended</CardTitle>
+            <UserX className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-semibold text-foreground">{activeServices?.length ?? 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Service instances in ACTIVE status</p>
+            <div className="text-2xl font-bold">
+              {statsLoading ? '...' : statistics?.suspended_subscribers.toLocaleString() || '0'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Temporarily suspended
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">New This Month</CardTitle>
+            <TrendingUp className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {statsLoading ? '...' : statistics?.new_this_month.toLocaleString() || '0'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Recent sign-ups
+            </p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Additional Stats Row */}
+      {statistics && (
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Activation</CardTitle>
+              <UserClock className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {statistics.pending_subscribers.toLocaleString()}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Awaiting service activation
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Churn This Month</CardTitle>
+              <TrendingDown className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {statistics.churn_this_month.toLocaleString()}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Subscriber cancellations
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Uptime</CardTitle>
+              <UserCheck className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {statistics.average_uptime.toFixed(1)}%
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Network availability
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>RADIUS subscribers</CardTitle>
-          <CardDescription>Search and review subscriber credentials and profile settings.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Input
-            value={search}
-            onChange={event => setSearch(event.target.value)}
-            placeholder="Search by username"
-            className="max-w-sm"
-          />
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Username</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Framed IP</TableHead>
-                  <TableHead>Bandwidth Profile</TableHead>
-                  <TableHead>Created</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      Loading subscribers…
-                    </TableCell>
-                  </TableRow>
-                )}
-                {!isLoading && filteredSubscribers.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      No subscribers match your search.
-                    </TableCell>
-                  </TableRow>
-                )}
-                {filteredSubscribers.map(subscriber => (
-                  <TableRow
-                    key={subscriber.id}
-                    className="cursor-pointer hover:bg-accent/30"
-                    onClick={() => {
-                      setSelectedSubscriberId(subscriber.id);
-                      setSubscriberDialogOpen(true);
-                    }}
-                  >
-                    <TableCell className="font-medium text-foreground">{subscriber.username}</TableCell>
-                    <TableCell>
-                      <Badge variant={subscriber.enabled ? 'outline' : 'secondary'}>
-                        {subscriber.enabled ? 'Enabled' : 'Disabled'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{subscriber.framed_ip_address ?? '—'}</TableCell>
-                    <TableCell>{subscriber.bandwidth_profile_id ?? '—'}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {new Date(subscriber.created_at).toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Subscriber List</CardTitle>
+              <CardDescription>
+                Search and filter subscribers by status, connection type, or location
+              </CardDescription>
+            </div>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="h-4 w-4 mr-2" />
+                Clear Filters
+              </Button>
+            )}
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Active RADIUS sessions</CardTitle>
-          <CardDescription>Live authentication sessions with usage counters.</CardDescription>
         </CardHeader>
-        <CardContent className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Username</TableHead>
-                <TableHead>NAS IP</TableHead>
-                <TableHead>Session ID</TableHead>
-                <TableHead>Uptime (s)</TableHead>
-                <TableHead>Down / Up (MB)</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(sessions ?? []).slice(0, 20).map(session => (
-                <TableRow key={session.radacctid}>
-                  <TableCell className="font-medium text-foreground">{session.username}</TableCell>
-                  <TableCell>{session.nasipaddress}</TableCell>
-                  <TableCell className="font-mono text-xs">{session.acctsessionid}</TableCell>
-                  <TableCell>{session.acctsessiontime ?? 0}</TableCell>
-                  <TableCell>
-                    {((session.acctinputoctets ?? 0) / (1024 * 1024)).toFixed(2)}/
-                    {((session.acctoutputoctets ?? 0) / (1024 * 1024)).toFixed(2)}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {!(sessions?.length ?? 0) && (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    No active sessions at the moment.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Dialog open={subscriberDialogOpen} onOpenChange={setSubscriberDialogOpen}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Subscriber details</DialogTitle>
-            <DialogDescription>
-              Detailed information for <code>{selectedSubscriber?.username ?? '—'}</code>
-            </DialogDescription>
-          </DialogHeader>
-          {selectedSubscriber ? (
-            <div className="space-y-4 text-sm">
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Subscriber ID</span>
-                  <span className="font-medium text-foreground">{selectedSubscriber.subscriber_id}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Status</span>
-                  <Badge variant={selectedSubscriber.enabled ? 'outline' : 'secondary'}>
-                    {selectedSubscriber.enabled ? 'Enabled' : 'Disabled'}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Bandwidth profile</span>
-                  <span className="font-medium text-foreground">
-                    {selectedSubscriber.bandwidth_profile_id ?? '—'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Framed IP address</span>
-                  <span className="font-medium text-foreground">
-                    {selectedSubscriber.framed_ip_address ?? '—'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Created</span>
-                  <span>{new Date(selectedSubscriber.created_at).toLocaleString()}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Updated</span>
-                  <span>{new Date(selectedSubscriber.updated_at).toLocaleString()}</span>
-                </div>
+        <CardContent>
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <Input
+                  placeholder="Search by name, email, phone, or address..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full"
+                />
               </div>
+              <div className="flex gap-2">
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value) => setStatusFilter(value as SubscriberStatus | 'all')}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="terminated">Terminated</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Recent sessions
-                </p>
-                {selectedSessions.length ? (
-                  <div className="max-h-48 overflow-y-auto rounded border border-border/60">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-xs">NAS</TableHead>
-                          <TableHead className="text-xs">Session ID</TableHead>
-                          <TableHead className="text-xs">Start</TableHead>
-                          <TableHead className="text-xs">Duration (s)</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {selectedSessions.map(session => (
-                          <TableRow key={session.radacctid}>
-                            <TableCell className="text-xs">{session.nasipaddress}</TableCell>
-                            <TableCell className="text-xs font-mono">{session.acctsessionid}</TableCell>
-                            <TableCell className="text-xs">
-                              {session.acctstarttime ? new Date(session.acctstarttime).toLocaleString() : '—'}
-                            </TableCell>
-                            <TableCell className="text-xs">{session.acctsessiontime ?? 0}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground">No sessions recorded for this subscriber.</p>
-                )}
+                <Select
+                  value={connectionTypeFilter}
+                  onValueChange={(value) => setConnectionTypeFilter(value as ConnectionType | 'all')}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="ftth">FTTH</SelectItem>
+                    <SelectItem value="fttb">FTTB</SelectItem>
+                    <SelectItem value="wireless">Wireless</SelectItem>
+                    <SelectItem value="hybrid">Hybrid</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">Select a subscriber to view details.</p>
-          )}
-          <DialogFooter className="flex items-center justify-between">
-            <div className="text-xs text-muted-foreground">
-              Actions apply immediately via RADIUS API.
-            </div>
-            <div className="flex gap-2">
-              {selectedSubscriber?.enabled ? (
-                <Button
-                  variant="destructive"
-                  disabled={toggleSubscriber.isPending}
-                  onClick={async () => {
-                    if (!selectedSubscriber) return;
-                    try {
-                      await toggleSubscriber.mutateAsync({ username: selectedSubscriber.username, action: 'disable' });
-                      toast({ title: 'Subscriber disabled', description: `${selectedSubscriber.username} access revoked.` });
-                    } catch (error) {
-                      logger.error('Failed to disable subscriber', error instanceof Error ? error : new Error(String(error)));
-                      toast({
-                        title: 'Disable failed',
-                        description: 'Unable to disable subscriber. Check logs for details.',
-                        variant: 'destructive',
-                      });
-                    }
-                  }}
-                >
-                  Disable access
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  disabled={toggleSubscriber.isPending}
-                  onClick={async () => {
-                    if (!selectedSubscriber) return;
-                    try {
-                      await toggleSubscriber.mutateAsync({ username: selectedSubscriber.username, action: 'enable' });
-                      toast({ title: 'Subscriber enabled', description: `${selectedSubscriber.username} access restored.` });
-                    } catch (error) {
-                      logger.error('Failed to enable subscriber', error instanceof Error ? error : new Error(String(error)));
-                      toast({
-                        title: 'Enable failed',
-                        description: 'Unable to enable subscriber. Check logs for details.',
-                        variant: 'destructive',
-                      });
-                    }
-                  }}
-                >
-                  Enable access
-                </Button>
-              )}
-              <Button variant="outline" onClick={() => setSubscriberDialogOpen(false)}>
-                Close
+
+            {hasActiveFilters && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Filter className="h-4 w-4" />
+                <span>
+                  Showing {subscribers.length} of {total} subscribers
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Subscriber List */}
+          {error ? (
+            <div className="text-center py-12">
+              <p className="text-destructive mb-2">Failed to load subscribers</p>
+              <Button variant="outline" onClick={() => refetch()}>
+                Retry
               </Button>
             </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          ) : (
+            <SubscriberList
+              subscribers={subscribers}
+              isLoading={isLoading}
+              onView={handleViewSubscriber}
+              onEdit={canUpdate ? handleViewSubscriber : undefined}
+              onDelete={canDelete ? handleDelete : undefined}
+              onSuspend={canUpdate ? handleSuspend : undefined}
+              onActivate={canUpdate ? handleActivate : undefined}
+              onRowClick={handleViewSubscriber}
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Modals */}
+      <SubscriberDetailModal
+        subscriber={selectedSubscriber}
+        open={isDetailModalOpen}
+        onClose={handleCloseDetail}
+        onUpdate={() => {
+          refetch();
+          handleCloseDetail();
+        }}
+        onSuspend={canUpdate ? handleSuspend : undefined}
+        onActivate={canUpdate ? handleActivate : undefined}
+        onTerminate={canUpdate ? handleTerminate : undefined}
+      />
+
+      <AddSubscriberModal
+        open={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={(subscriberId) => {
+          setIsAddModalOpen(false);
+          refetch();
+          toast({
+            title: 'Subscriber Created',
+            description: 'New subscriber has been added successfully.',
+          });
+        }}
+      />
     </main>
   );
 }

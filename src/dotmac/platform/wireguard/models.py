@@ -11,7 +11,6 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -84,12 +83,12 @@ class WireGuardServer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
         comment="UDP listen port",
     )
     server_ipv4: Mapped[str] = mapped_column(
-        INET,
+        String(45),  # Sufficient for CIDR notation (xxx.xxx.xxx.xxx/xx)
         nullable=False,
         comment="Server VPN IPv4 address (e.g., 10.8.0.1/24)",
     )
     server_ipv6: Mapped[str | None] = mapped_column(
-        INET,
+        String(45),  # Sufficient for IPv6 CIDR notation
         nullable=True,
         comment="Server VPN IPv6 address (optional)",
     )
@@ -289,12 +288,12 @@ class WireGuardPeer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMix
 
     # Network allocation
     peer_ipv4: Mapped[str] = mapped_column(
-        INET,
+        String(45),  # Sufficient for CIDR notation
         nullable=False,
         comment="Peer VPN IPv4 address (e.g., 10.8.0.2/32)",
     )
     peer_ipv6: Mapped[str | None] = mapped_column(
-        INET,
+        String(45),  # Sufficient for IPv6 CIDR notation
         nullable=True,
         comment="Peer VPN IPv6 address (optional)",
     )

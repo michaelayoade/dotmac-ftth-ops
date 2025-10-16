@@ -1279,6 +1279,22 @@ class Settings(BaseSettings):
         db_postgresql: bool = Field(True, description="Enable PostgreSQL support")
         db_sqlite: bool = Field(True, description="Enable SQLite support for dev/test")
 
+        # OSS/BSS Domain Features
+        graphql_enabled: bool = Field(True, description="Enable GraphQL API")
+        analytics_enabled: bool = Field(True, description="Enable analytics features")
+        banking_enabled: bool = Field(True, description="Enable banking integrations")
+        payments_enabled: bool = Field(True, description="Enable payment processing")
+        radius_enabled: bool = Field(True, description="Enable RADIUS AAA")
+        network_enabled: bool = Field(True, description="Enable network management")
+        automation_enabled: bool = Field(True, description="Enable automation workflows")
+        wireless_enabled: bool = Field(True, description="Enable wireless infrastructure")
+        fiber_enabled: bool = Field(True, description="Enable fiber infrastructure")
+        orchestration_enabled: bool = Field(True, description="Enable service orchestration")
+        dunning_enabled: bool = Field(True, description="Enable dunning workflows")
+        ticketing_enabled: bool = Field(True, description="Enable ticketing system")
+        crm_enabled: bool = Field(True, description="Enable CRM features")
+        notification_enabled: bool = Field(True, description="Enable notification center")
+
     features: FeatureFlags = FeatureFlags()  # type: ignore[call-arg]
 
     # ============================================================

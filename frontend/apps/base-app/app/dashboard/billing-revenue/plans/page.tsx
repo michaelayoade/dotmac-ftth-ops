@@ -55,7 +55,8 @@ import {
   EyeOff,
   Loader2,
 } from 'lucide-react';
-import { useBillingPlans, type BillingPlan } from '@/hooks/useBillingPlans';
+import { useBillingPlans as useBillingPlansGraphQL } from '@/hooks/useBillingGraphQL';
+import type { SubscriptionPlan } from '@/hooks/useBillingGraphQL';
 
 interface PlanFeature {
   id: string;
@@ -99,20 +100,24 @@ const defaultFeatures: PlanFeature[] = [
 
 export default function PlansPage() {
   const { toast } = useToast();
+
+  // Fetch plans using GraphQL with real-time updates
   const {
-    plans: backendPlans,
-    products,
-    loading: plansLoading,
-    error,
-    createPlan,
-    updatePlan,
-    deletePlan
-  } = useBillingPlans();
+    data: plansData,
+    isLoading: plansLoading,
+    error: plansError,
+    refetch: refetchPlans,
+  } = useBillingPlansGraphQL(
+    {
+      pageSize: 100, // Get all plans
+      isActive: undefined, // Show both active and inactive
+    },
+    true
+  );
 
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'quarterly' | 'annual'>('monthly');
   const [showNewPlanDialog, setShowNewPlanDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [selectedBackendPlan, setSelectedBackendPlan] = useState<BillingPlan | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [newPlanData, setNewPlanData] = useState({
     product_id: '',
@@ -130,24 +135,24 @@ export default function PlansPage() {
     trial_days: 14,
   });
 
-  // Use backend plans directly - no mock fallback data
-  const plans: Plan[] = backendPlans.map(plan => ({
-    id: plan.plan_id,
-    name: plan.name || plan.display_name || 'Unknown Plan',
+  // Transform GraphQL plans data to component format
+  const plans: Plan[] = (plansData?.plans || []).map(plan => ({
+    id: plan.id,
+    name: plan.name,
     description: plan.description || '',
-    price_monthly: plan.billing_interval === 'monthly' ? plan.price_amount / 100 : 0,
-    price_annual: plan.billing_interval === 'annual' ? plan.price_amount / 100 : 0,
-    currency: plan.currency || 'USD',
-    status: plan.is_active ? 'active' : 'inactive',
+    price_monthly: plan.billingCycle === 'monthly' ? plan.price : 0,
+    price_annual: plan.billingCycle === 'annual' ? plan.price : 0,
+    currency: plan.currency,
+    status: plan.isActive ? 'active' : 'inactive' as 'active' | 'inactive' | 'archived',
     tier: (plan.name?.toLowerCase() as 'starter' | 'professional' | 'enterprise' | 'custom') || 'custom',
     features: [],
     popular: false,
-    trial_days: plan.trial_days || 0,
+    trial_days: plan.trialDays || 0,
     max_users: 0,
     storage_gb: 0,
     api_calls: 0,
-    created_at: plan.created_at,
-    updated_at: plan.updated_at,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
     subscriber_count: 0,
     mrr: 0,
   }));
@@ -252,11 +257,33 @@ export default function PlansPage() {
           <h1 className="text-3xl font-bold">Pricing Plans</h1>
           <p className="text-muted-foreground">Manage your subscription tiers and pricing</p>
         </div>
-        <Button onClick={() => setShowNewPlanDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Plan
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => refetchPlans()}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
+          <Button onClick={() => setShowNewPlanDialog(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Plan
+          </Button>
+        </div>
       </div>
+
+      {/* Error State */}
+      {plansError && (
+        <Card className="border-red-500">
+          <CardHeader>
+            <CardTitle className="text-red-600">Error Loading Plans</CardTitle>
+            <CardDescription>{plansError.message || 'Failed to load billing plans'}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={() => refetchPlans()}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -321,9 +348,31 @@ export default function PlansPage() {
         </div>
       </div>
 
+      {/* Loading State */}
+      {plansLoading && (
+        <div className="text-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+          <p className="mt-4 text-muted-foreground">Loading pricing plans...</p>
+        </div>
+      )}
+
       {/* Pricing Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {plans.map((plan) => (
+      {!plansLoading && !plansError && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {plans.length === 0 ? (
+            <div className="col-span-3 text-center py-12">
+              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No pricing plans found</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Create your first pricing plan to get started
+              </p>
+              <Button onClick={() => setShowNewPlanDialog(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Plan
+              </Button>
+            </div>
+          ) : (
+            plans.map((plan) => (
           <Card key={plan.id} className={`relative ${plan.popular ? 'border-purple-500 dark:border-purple-400 border-2' : ''}`}>
             {plan.popular && (
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
@@ -431,8 +480,10 @@ export default function PlansPage() {
               )}
             </CardFooter>
           </Card>
-        ))}
-      </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* New Plan Dialog */}
       <Dialog open={showNewPlanDialog} onOpenChange={setShowNewPlanDialog}>

@@ -14,6 +14,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.auth.rbac_dependencies import (
+    require_customer_impersonate,
+    require_customer_manage_status,
+    require_customer_reset_password,
+)
 from dotmac.platform.customer_management.schemas import (
     CustomerActivityCreate,
     CustomerActivityResponse,
@@ -537,3 +542,269 @@ async def get_customer_metrics(
         customers_by_type=metrics.get("customers_by_type", {}),
         top_segments=top_segments,
     )
+
+
+# ============================================================================
+# Admin/Support Quick Actions
+# ============================================================================
+
+
+@router.post("/{customer_id}/impersonate")
+async def impersonate_customer(
+    customer_id: UUID,
+    service: Annotated[CustomerService, Depends(get_customer_service)],
+    current_user: Annotated[UserInfo, Depends(require_customer_impersonate)],
+) -> dict[str, Any]:
+    """
+    Generate an impersonation token for a customer.
+
+    Allows admin/support staff to access the customer portal as the customer.
+    Requires 'customer.impersonate' permission.
+
+    Returns a temporary access token scoped to the customer's permissions.
+    """
+    from dotmac.platform.auth.core import jwt_service
+    from dotmac.platform.audit import ActivitySeverity, ActivityType, log_user_activity
+
+    try:
+        # Get the customer
+        customer = await service.get_customer(customer_id)
+        if not customer:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Customer {customer_id} not found",
+            )
+
+        # Check if customer is active
+        if customer.status not in ["active", "prospect"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Cannot impersonate customer with status: {customer.status}",
+            )
+
+        # Generate impersonation token (1 hour expiry)
+        token_data = {
+            "sub": str(customer.id),
+            "email": customer.email,
+            "impersonated_by": str(current_user.user_id),
+            "impersonation": True,
+        }
+        access_token = jwt_service.create_access_token(
+            data=token_data,
+            expires_minutes=60,  # 1 hour for impersonation
+        )
+
+        # Log the impersonation action
+        await log_user_activity(
+            session=service.session,
+            user_id=current_user.user_id,
+            tenant_id=current_user.tenant_id,
+            activity_type=ActivityType.USER_IMPERSONATION,
+            severity=ActivitySeverity.MEDIUM,
+            description=f"Admin {current_user.username} impersonated customer {customer.email}",
+            metadata_={
+                "customer_id": str(customer.id),
+                "customer_email": customer.email,
+                "admin_user_id": str(current_user.user_id),
+            },
+        )
+
+        logger.info(
+            "Customer impersonation token generated",
+            customer_id=str(customer.id),
+            admin_id=str(current_user.user_id),
+        )
+
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "expires_in": 3600,
+            "customer_email": customer.email,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Failed to generate impersonation token", error=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to generate impersonation token",
+        ) from exc
+
+
+@router.patch("/{customer_id}/status")
+async def update_customer_status(
+    customer_id: UUID,
+    status_update: dict[str, str],
+    service: Annotated[CustomerService, Depends(get_customer_service)],
+    current_user: Annotated[UserInfo, Depends(require_customer_manage_status)],
+) -> CustomerResponse:
+    """
+    Update customer status.
+
+    Allows quick status changes for support staff.
+    Requires 'customer.manage_status' permission.
+
+    Valid statuses: active, inactive, suspended, churned, archived
+    """
+    from dotmac.platform.audit import ActivitySeverity, ActivityType, log_user_activity
+
+    try:
+        # Get the customer
+        customer = await service.get_customer(customer_id)
+        if not customer:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Customer {customer_id} not found",
+            )
+
+        new_status = status_update.get("status")
+        if not new_status:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Status field is required",
+            )
+
+        # Validate status
+        valid_statuses = ["prospect", "active", "inactive", "suspended", "churned", "archived"]
+        if new_status not in valid_statuses:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}",
+            )
+
+        old_status = customer.status
+
+        # Update customer status using the service's update method
+        from dotmac.platform.customer_management.schemas import CustomerUpdate
+
+        update_data = CustomerUpdate(status=new_status)
+        updated_customer = await service.update_customer(customer_id, update_data)
+
+        # Log the status change
+        await log_user_activity(
+            session=service.session,
+            user_id=current_user.user_id,
+            tenant_id=current_user.tenant_id,
+            activity_type=ActivityType.CUSTOMER_STATUS_CHANGE,
+            severity=ActivitySeverity.MEDIUM,
+            description=f"Customer status changed from {old_status} to {new_status}",
+            metadata_={
+                "customer_id": str(customer.id),
+                "customer_email": customer.email,
+                "old_status": old_status,
+                "new_status": new_status,
+                "changed_by": str(current_user.user_id),
+            },
+        )
+
+        # TODO: Trigger service lifecycle events based on status
+        # - If suspended: suspend services, send notification
+        # - If reactivated: reactivate services, send welcome back notification
+
+        logger.info(
+            "Customer status updated",
+            customer_id=str(customer.id),
+            old_status=old_status,
+            new_status=new_status,
+            admin_id=str(current_user.user_id),
+        )
+
+        return _convert_customer_to_response(updated_customer)
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Failed to update customer status", error=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update customer status",
+        ) from exc
+
+
+@router.post("/{customer_id}/reset-password")
+async def admin_reset_customer_password(
+    customer_id: UUID,
+    service: Annotated[CustomerService, Depends(get_customer_service)],
+    current_user: Annotated[UserInfo, Depends(require_customer_reset_password)],
+) -> dict[str, str]:
+    """
+    Admin-initiated password reset for a customer.
+
+    Sends a password reset email to the customer.
+    Requires 'customer.reset_password' permission.
+    """
+    from dotmac.platform.audit import ActivitySeverity, ActivityType, log_user_activity
+    from dotmac.platform.auth.email_service import get_auth_email_service
+
+    try:
+        # Get the customer
+        customer = await service.get_customer(customer_id)
+        if not customer:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Customer {customer_id} not found",
+            )
+
+        # Check if customer has an email
+        if not customer.email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Customer does not have an email address",
+            )
+
+        # Send password reset email
+        email_service = get_auth_email_service()
+        customer_name = (
+            customer.display_name
+            or f"{customer.first_name} {customer.last_name}".strip()
+            or customer.email
+        )
+
+        try:
+            response, reset_token = await email_service.send_password_reset_email(
+                email=customer.email,
+                user_name=customer_name,
+            )
+        except Exception as e:
+            logger.error("Failed to send password reset email", error=str(e))
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send password reset email",
+            )
+
+        # Log the admin-initiated password reset
+        await log_user_activity(
+            session=service.session,
+            user_id=current_user.user_id,
+            tenant_id=current_user.tenant_id,
+            activity_type=ActivityType.PASSWORD_RESET_ADMIN,
+            severity=ActivitySeverity.MEDIUM,
+            description=f"Admin {current_user.username} initiated password reset for customer {customer.email}",
+            metadata_={
+                "customer_id": str(customer.id),
+                "customer_email": customer.email,
+                "admin_user_id": str(current_user.user_id),
+            },
+        )
+
+        logger.info(
+            "Admin-initiated password reset",
+            customer_id=str(customer.id),
+            customer_email=customer.email,
+            admin_id=str(current_user.user_id),
+        )
+
+        return {
+            "message": f"Password reset email sent to {customer.email}",
+            "email": customer.email,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Failed to reset customer password", error=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to reset customer password",
+        ) from exc

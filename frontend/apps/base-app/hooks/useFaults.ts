@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from '@/lib/api/client';
 
 // ============================================================================
 // Types
@@ -309,5 +309,65 @@ export function useSLACompliance(days: number = 30) {
     isLoading,
     error,
     refetch: fetchCompliance,
+  };
+}
+
+/**
+ * Hook to fetch alarm details (history, notes, etc.)
+ */
+export function useAlarmDetails(alarmId: string | null) {
+  const [history, setHistory] = useState<any[]>([]);
+  const [notes, setNotes] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchDetails = useCallback(async () => {
+    if (!alarmId) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Fetch history and notes in parallel
+      const [historyResponse, notesResponse] = await Promise.all([
+        apiClient.get(`/api/v1/faults/alarms/${alarmId}/history`),
+        apiClient.get(`/api/v1/faults/alarms/${alarmId}/notes`),
+      ]);
+
+      setHistory(historyResponse.data || []);
+      setNotes(notesResponse.data || []);
+    } catch (err) {
+      setError(err as Error);
+      console.error('Failed to fetch alarm details:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [alarmId]);
+
+  useEffect(() => {
+    fetchDetails();
+  }, [fetchDetails]);
+
+  const addNote = useCallback(async (content: string) => {
+    if (!alarmId) return false;
+
+    try {
+      await apiClient.post(`/api/v1/faults/alarms/${alarmId}/notes`, { content });
+      await fetchDetails(); // Refresh notes
+      return true;
+    } catch (err) {
+      setError(err as Error);
+      console.error('Failed to add note:', err);
+      return false;
+    }
+  }, [alarmId, fetchDetails]);
+
+  return {
+    history,
+    notes,
+    isLoading,
+    error,
+    refetch: fetchDetails,
+    addNote,
   };
 }

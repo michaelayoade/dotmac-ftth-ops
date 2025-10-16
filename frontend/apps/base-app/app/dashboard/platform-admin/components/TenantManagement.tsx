@@ -39,9 +39,11 @@ import {
   ChevronRight,
   Eye,
   Key,
+  Plus,
   Search,
   Users,
 } from "lucide-react";
+import { TenantOnboardingWizard } from "@/components/tenant/TenantOnboardingWizard";
 
 interface PaginationState {
   page: number;
@@ -79,6 +81,7 @@ export function TenantManagement() {
   const [impersonationDuration, setImpersonationDuration] = useState(60);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailTenant, setDetailTenant] = useState<Tenant | null>(null);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   const { toast } = useToast();
   const queryParams = useMemo(
@@ -170,14 +173,22 @@ export function TenantManagement() {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="space-y-2 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <CardTitle>Tenant Management</CardTitle>
-            <CardDescription>
-              Search, filter, and act on tenants across the platform.
-            </CardDescription>
+        <CardHeader className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Tenant Management</CardTitle>
+              <CardDescription>
+                Search, filter, and act on tenants across the platform.
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">{total} tenants</Badge>
+              <Button onClick={() => setIsOnboardingOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Tenant
+              </Button>
+            </div>
           </div>
-          <Badge variant="outline">{total} tenants</Badge>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -494,6 +505,18 @@ export function TenantManagement() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Tenant Onboarding Wizard */}
+      <TenantOnboardingWizard
+        open={isOnboardingOpen}
+        onOpenChange={setIsOnboardingOpen}
+        onSuccess={() => {
+          toast({
+            title: "Success",
+            description: "Tenant has been onboarded successfully",
+          });
+        }}
+      />
     </div>
   );
 }

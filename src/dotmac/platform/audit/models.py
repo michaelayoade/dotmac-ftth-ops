@@ -24,6 +24,8 @@ class ActivityType(str, Enum):
     USER_CREATED = "user.created"
     USER_UPDATED = "user.updated"
     USER_DELETED = "user.deleted"
+    USER_IMPERSONATION = "user.impersonation"
+    PASSWORD_RESET_ADMIN = "user.password_reset_admin"
 
     # RBAC activities
     ROLE_CREATED = "rbac.role.created"
@@ -47,6 +49,9 @@ class ActivityType(str, Enum):
     FILE_UPLOADED = "file.uploaded"
     FILE_DOWNLOADED = "file.downloaded"
     FILE_DELETED = "file.deleted"
+
+    # Customer activities
+    CUSTOMER_STATUS_CHANGE = "customer.status_change"
 
     # API activities
     API_REQUEST = "api.request"

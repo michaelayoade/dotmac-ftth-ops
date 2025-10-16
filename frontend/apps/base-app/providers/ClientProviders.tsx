@@ -12,6 +12,7 @@ import { RBACProvider } from '@/contexts/RBACContext';
 import { AuthProvider } from '@/hooks/useAuth';
 import { ToastContainer } from '@/components/ui/toast';
 import { BrandingProvider } from '@/providers/BrandingProvider';
+import { ApolloProvider } from '@/lib/graphql/ApolloProvider';
 
 export function ClientProviders({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -34,17 +35,19 @@ export function ClientProviders({ children }: { children: ReactNode }) {
     <MSWProvider>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <QueryClientProvider client={queryClient}>
-          <TenantProvider>
-            <AuthProvider>
-              {shouldWrapWithRBAC ? (
-                <RBACProvider>
-                  {appProviders}
-                </RBACProvider>
-              ) : (
-                appProviders
-              )}
-            </AuthProvider>
-          </TenantProvider>
+          <ApolloProvider>
+            <TenantProvider>
+              <AuthProvider>
+                {shouldWrapWithRBAC ? (
+                  <RBACProvider>
+                    {appProviders}
+                  </RBACProvider>
+                ) : (
+                  appProviders
+                )}
+              </AuthProvider>
+            </TenantProvider>
+          </ApolloProvider>
         </QueryClientProvider>
       </ThemeProvider>
     </MSWProvider>

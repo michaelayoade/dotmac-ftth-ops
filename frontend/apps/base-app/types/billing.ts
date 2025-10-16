@@ -325,3 +325,73 @@ export interface BillingMetrics {
     totalProcessed: Money;
   };
 }
+
+// Receipt types
+export interface ReceiptLineItem {
+  line_item_id: string;
+  description: string;
+  quantity: number;
+  unit_price: number; // in minor units
+  total_price: number; // in minor units
+  tax_rate: number; // percentage
+  tax_amount: number; // in minor units
+  product_id?: string;
+  sku?: string;
+  extra_data?: Record<string, any>;
+}
+
+export interface Receipt extends BaseEntitySnake, WithMetadata {
+  receipt_id: string;
+  receipt_number: string;
+
+  // References
+  payment_id?: string;
+  invoice_id?: string;
+  customer_id: CustomerID;
+
+  // Receipt details
+  issue_date: DateString;
+  currency: string; // 3-letter currency code
+
+  // Amounts (in minor units)
+  subtotal: number;
+  tax_amount: number;
+  total_amount: number;
+
+  // Payment information
+  payment_method: string;
+  payment_status: string;
+
+  // Line items
+  line_items: ReceiptLineItem[];
+
+  // Customer information
+  customer_name: string;
+  customer_email: string;
+  billing_address?: Record<string, string>;
+
+  // Content
+  notes?: string;
+
+  // Receipt generation
+  pdf_url?: string;
+  html_content?: string;
+
+  // Delivery
+  sent_at?: DateString;
+  delivery_method?: string;
+
+  // Metadata
+  extra_data?: Record<string, any>;
+}
+
+export interface ReceiptSearchParams {
+  customer_id?: CustomerID;
+  payment_id?: string;
+  invoice_id?: string;
+  from_date?: DateString;
+  to_date?: DateString;
+  page?: number;
+  limit?: number;
+  offset?: number;
+}

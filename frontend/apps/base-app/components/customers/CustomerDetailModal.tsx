@@ -15,12 +15,22 @@ import {
   Building,
   User,
   Clock,
-  Tag
+  Tag,
+  Wifi,
+  Globe,
+  Router,
+  Ticket,
+  FileText,
 } from 'lucide-react';
 import { Customer } from '@/types';
 import { useCustomer, useCustomerActivities, useCustomerNotes } from '@/hooks/useCustomers';
 import { CustomerActivities } from './CustomerActivities';
 import { CustomerNotes } from './CustomerNotes';
+import { CustomerSubscriptions } from './CustomerSubscriptions';
+import { CustomerNetwork } from './CustomerNetwork';
+import { CustomerDevices } from './CustomerDevices';
+import { CustomerTickets } from './CustomerTickets';
+import { CustomerBilling } from './CustomerBilling';
 
 interface CustomerDetailModalProps {
   customer: Customer;
@@ -313,6 +323,11 @@ export function CustomerDetailModal({ customer, onClose, onEdit, onDelete }: Cus
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: User },
+    { id: 'subscriptions', label: 'Subscriptions', icon: Wifi },
+    { id: 'network', label: 'Network', icon: Globe },
+    { id: 'devices', label: 'Devices', icon: Router },
+    { id: 'tickets', label: 'Tickets', icon: Ticket },
+    { id: 'billing', label: 'Billing', icon: FileText },
     { id: 'activities', label: 'Activities', icon: Activity },
     { id: 'notes', label: 'Notes', icon: MessageSquare },
   ];
@@ -382,6 +397,11 @@ export function CustomerDetailModal({ customer, onClose, onEdit, onDelete }: Cus
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           {activeTab === 'overview' && <CustomerOverview customer={detailedCustomer} />}
+          {activeTab === 'subscriptions' && <CustomerSubscriptions customerId={detailedCustomer.id} />}
+          {activeTab === 'network' && <CustomerNetwork customerId={detailedCustomer.id} />}
+          {activeTab === 'devices' && <CustomerDevices customerId={detailedCustomer.id} />}
+          {activeTab === 'tickets' && <CustomerTickets customerId={detailedCustomer.id} />}
+          {activeTab === 'billing' && <CustomerBilling customerId={detailedCustomer.id} />}
           {activeTab === 'activities' && <CustomerActivities customerId={detailedCustomer.id} />}
           {activeTab === 'notes' && <CustomerNotes customerId={detailedCustomer.id} />}
         </div>

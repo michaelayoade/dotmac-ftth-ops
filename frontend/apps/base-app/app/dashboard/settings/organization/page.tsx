@@ -60,6 +60,7 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { useTenant } from '@/lib/contexts/tenant-context';
 import { tenantService, Tenant, TenantInvitation, TenantStats } from '@/lib/services/tenant-service';
+import { DomainVerificationCard } from '@/components/tenant/DomainVerificationCard';
 
 export default function OrganizationSettingsPage() {
   const { toast } = useToast();
@@ -877,6 +878,9 @@ export default function OrganizationSettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Domain Verification */}
+          {currentTenant && <DomainVerificationCard tenantId={currentTenant.id} />}
         </TabsContent>
       </Tabs>
 

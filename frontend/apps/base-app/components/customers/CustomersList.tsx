@@ -10,9 +10,17 @@ import {
   Trash2,
   MoreHorizontal,
   Building,
-  User
+  User,
+  LogIn,
+  UserX,
+  UserCheck,
+  Key,
+  ExternalLink,
+  Zap,
 } from 'lucide-react';
 import { Customer } from '@/types';
+import { useToast } from '@/components/ui/use-toast';
+import { platformConfig } from '@/lib/config';
 
 interface CustomersListProps {
   customers: Customer[];
@@ -93,12 +101,124 @@ interface CustomerRowProps {
 
 function CustomerRow({ customer, onSelect, onEdit, onDelete }: CustomerRowProps) {
   const [showActions, setShowActions] = useState(false);
+  const { toast } = useToast();
 
   const customerName = customer.display_name ||
     `${customer.first_name}${customer.middle_name ? ` ${customer.middle_name}` : ''} ${customer.last_name}`;
 
   const customerIcon = customer.customer_type === 'individual' ? User : Building;
   const IconComponent = customerIcon;
+
+  const handleLoginAsCustomer = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowActions(false);
+
+    try {
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/customers/${customer.id}/impersonate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to generate login token');
+
+      const data = await response.json();
+
+      // Store the impersonation token
+      localStorage.setItem('customer_access_token', data.access_token);
+
+      // Open customer portal in new tab
+      window.open('/customer-portal', '_blank');
+
+      toast({
+        title: 'Logged in as Customer',
+        description: `You are now viewing the portal as ${customerName}`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Login Failed',
+        description: error instanceof Error ? error.message : 'Failed to login as customer',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSuspendCustomer = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowActions(false);
+
+    const newStatus = customer.status === 'suspended' ? 'active' : 'suspended';
+
+    try {
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/customers/${customer.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) throw new Error('Failed to update customer status');
+
+      toast({
+        title: newStatus === 'suspended' ? 'Customer Suspended' : 'Customer Reactivated',
+        description: `${customerName} has been ${newStatus === 'suspended' ? 'suspended' : 'reactivated'} successfully`,
+      });
+
+      // Refresh the customer list
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: 'Action Failed',
+        description: error instanceof Error ? error.message : 'Failed to update customer status',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleResetPassword = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowActions(false);
+
+    try {
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/customers/${customer.id}/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) throw new Error('Failed to send reset password email');
+
+      toast({
+        title: 'Password Reset Email Sent',
+        description: `A password reset link has been sent to ${customer.email}`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Reset Failed',
+        description: error instanceof Error ? error.message : 'Failed to send password reset email',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleViewPortal = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowActions(false);
+
+    // Open customer portal directly (without impersonation, just for viewing the UI)
+    window.open('/customer-portal', '_blank');
+
+    toast({
+      title: 'Customer Portal Opened',
+      description: 'Viewing customer portal interface in new tab',
+    });
+  };
 
   return (
     <tr
@@ -202,8 +322,59 @@ function CustomerRow({ customer, onSelect, onEdit, onDelete }: CustomerRowProps)
           </button>
 
           {showActions && (
-            <div className="absolute right-0 mt-2 w-48 bg-slate-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+            <div className="absolute right-0 mt-2 w-56 bg-slate-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-10 max-h-96 overflow-y-auto">
               <div className="py-1">
+                {/* Quick Actions Section */}
+                <div className="px-3 py-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Quick Actions
+                </div>
+                <button
+                  onClick={handleLoginAsCustomer}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-blue-400 hover:bg-slate-700 w-full text-left"
+                >
+                  <LogIn className="h-4 w-4" />
+                  Login as Customer
+                </button>
+                <button
+                  onClick={handleViewPortal}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 w-full text-left"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  View Customer Portal
+                </button>
+                <button
+                  onClick={handleSuspendCustomer}
+                  className={`flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-700 w-full text-left ${
+                    customer.status === 'suspended' ? 'text-green-400' : 'text-orange-400'
+                  }`}
+                >
+                  {customer.status === 'suspended' ? (
+                    <>
+                      <UserCheck className="h-4 w-4" />
+                      Reactivate Customer
+                    </>
+                  ) : (
+                    <>
+                      <UserX className="h-4 w-4" />
+                      Suspend Customer
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={handleResetPassword}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 w-full text-left"
+                >
+                  <Key className="h-4 w-4" />
+                  Reset Password
+                </button>
+
+                {/* Divider */}
+                <div className="border-t border-slate-700 my-1"></div>
+
+                {/* Standard Actions */}
+                <div className="px-3 py-1 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  Manage
+                </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -229,17 +400,20 @@ function CustomerRow({ customer, onSelect, onEdit, onDelete }: CustomerRowProps)
                   </button>
                 )}
                 {onDelete && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(customer);
-                      setShowActions(false);
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-slate-700 w-full text-left"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete Customer
-                  </button>
+                  <>
+                    <div className="border-t border-slate-700 my-1"></div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(customer);
+                        setShowActions(false);
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-slate-700 w-full text-left"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete Customer
+                    </button>
+                  </>
                 )}
               </div>
             </div>

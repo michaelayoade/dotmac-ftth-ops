@@ -37,6 +37,14 @@ class RouterConfig:
 # Define router configurations
 ROUTER_CONFIGS = [
     RouterConfig(
+        module_path="dotmac.platform.config.router",
+        router_name="router",
+        prefix="/api/v1",
+        tags=["Platform"],
+        requires_auth=False,  # Public platform config
+        description="Platform configuration and health endpoints",
+    ),
+    RouterConfig(
         module_path="dotmac.platform.auth.router",
         router_name="auth_router",
         prefix="/api/v1/auth",
@@ -424,9 +432,17 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.ticketing.router",
         router_name="router",
-        prefix="/api/v1/ticketing",
+        prefix="/api/v1/tickets",
         tags=["Ticketing"],
         description="Cross-organization ticketing workflows",
+        requires_auth=True,
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.wireless.router",
+        router_name="router",
+        prefix="/api/v1/wireless",
+        tags=["Wireless Infrastructure"],
+        description="Wireless network infrastructure management (APs, radios, coverage zones)",
         requires_auth=True,
     ),
     RouterConfig(
@@ -598,6 +614,14 @@ ROUTER_CONFIGS = [
         requires_auth=True,
     ),
     RouterConfig(
+        module_path="dotmac.platform.services.internet_plans.router",
+        router_name="router",
+        prefix="",  # Router has its own prefix
+        tags=["ISP - Internet Plans"],
+        description="ISP internet service plan management with validation and testing",
+        requires_auth=True,
+    ),
+    RouterConfig(
         module_path="dotmac.platform.notifications.router",
         router_name="router",
         prefix="/api/v1",
@@ -697,20 +721,15 @@ def register_routers(app: FastAPI) -> None:
         from dotmac.platform.graphql.context import Context
         from dotmac.platform.graphql.schema import schema
 
-        # Type-safe context getter
-        async def get_context(request: Any) -> Context:
-            return await Context.get_context(request)
-
+        # GraphQLRouter with explicit path
+        # Using default context (will be available via info.context.request)
         graphql_app = GraphQLRouter(
             schema,
-            context_getter=cast(Any, get_context),
+            path="/api/v1/graphql",
         )
 
-        app.include_router(
-            graphql_app,
-            prefix="/api/v1/graphql",
-            tags=["GraphQL"],
-        )
+        # Add router directly without prefix
+        app.include_router(graphql_app)
 
         logger.info("✅ GraphQL endpoint registered at /api/v1/graphql")
         registered_count += 1

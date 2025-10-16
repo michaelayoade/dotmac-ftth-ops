@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Download, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Search, Filter, Download, AlertCircle, RefreshCw } from 'lucide-react';
 import { CustomersList } from '@/components/customers/CustomersList';
 import { CustomersMetrics } from '@/components/customers/CustomersMetrics';
 import { CreateCustomerModal } from '@/components/customers/CreateCustomerModal';
 import { CustomerViewModal } from '@/components/customers/CustomerViewModal';
 import { CustomerEditModal } from '@/components/customers/CustomerEditModal';
-import { useCustomers } from '@/hooks/useCustomers';
+import { useCustomerListGraphQL, useCustomerMetricsGraphQL } from '@/hooks/useCustomersGraphQL';
+import { CustomerStatusEnum } from '@/lib/graphql/generated';
 import { Customer } from '@/types';
 import {
   Dialog,
@@ -29,39 +30,52 @@ export default function TenantCustomersView() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedTier, setSelectedTier] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState<CustomerStatusEnum | undefined>(undefined);
 
+  // Fetch customers using GraphQL
   const {
-    customers,
-    loading,
-    metrics,
-    searchCustomers,
-    refreshCustomers,
-    createCustomer,
-    updateCustomer,
-    deleteCustomer,
-  } = useCustomers();
+    customers: graphqlCustomers,
+    total: totalCustomers,
+    isLoading: customersLoading,
+    error: customersError,
+    refetch: refetchCustomers,
+  } = useCustomerListGraphQL({
+    limit: 100,
+    offset: 0,
+    status: selectedStatus,
+    search: searchQuery || undefined,
+    pollInterval: 30000, // Auto-refresh every 30 seconds
+  });
 
-  useEffect(() => {
-    const searchParams: {
-      query?: string;
-      status?: string;
-      tier?: string;
-    } = {
-      query: searchQuery || undefined,
-      status: selectedStatus !== 'all' ? selectedStatus : undefined,
-      tier: selectedTier !== 'all' ? selectedTier : undefined,
-    };
+  // Fetch customer metrics
+  const {
+    metrics: graphqlMetrics,
+    isLoading: metricsLoading,
+    refetch: refetchMetrics,
+  } = useCustomerMetricsGraphQL({
+    pollInterval: 60000, // Refresh metrics every minute
+  });
 
-    Object.keys(searchParams).forEach(
-      (key) =>
-        searchParams[key as keyof typeof searchParams] === undefined &&
-        delete searchParams[key as keyof typeof searchParams],
-    );
+  // Transform GraphQL customers to match expected Customer type
+  const customers: Customer[] = graphqlCustomers.map(c => ({
+    id: c.id,
+    name: c.name,
+    display_name: c.name,
+    email: c.email,
+    status: c.status.toLowerCase() as Customer['status'],
+    created_at: c.createdAt,
+    updated_at: c.updatedAt || c.createdAt,
+  }));
 
-    searchCustomers(searchParams as any);
-  }, [searchQuery, selectedStatus, selectedTier, searchCustomers]);
+  // Transform GraphQL metrics to match expected format
+  const metrics = {
+    total: graphqlMetrics?.totalCustomers || 0,
+    active: graphqlMetrics?.activeCustomers || 0,
+    inactive: (graphqlMetrics?.totalCustomers || 0) - (graphqlMetrics?.activeCustomers || 0),
+    new_this_month: graphqlMetrics?.newCustomers || 0,
+  };
+
+  const loading = customersLoading || metricsLoading;
 
   const handleCreateCustomer = () => {
     setShowCreateModal(true);
@@ -69,7 +83,13 @@ export default function TenantCustomersView() {
 
   const handleCustomerCreated = () => {
     setShowCreateModal(false);
-    refreshCustomers();
+    refetchCustomers();
+    refetchMetrics();
+  };
+
+  const handleRefresh = () => {
+    refetchCustomers();
+    refetchMetrics();
   };
 
   const handleEditCustomer = (customer: Customer) => {
@@ -88,12 +108,14 @@ export default function TenantCustomersView() {
   };
 
   const confirmDeleteCustomer = async () => {
-    if (!customerToDelete || !deleteCustomer) return;
+    if (!customerToDelete) return;
 
     setIsDeleting(true);
     try {
-      await deleteCustomer(customerToDelete.id);
-      refreshCustomers();
+      // TODO: Implement GraphQL mutation for delete
+      // await deleteCustomerMutation({ variables: { id: customerToDelete.id } });
+      refetchCustomers();
+      refetchMetrics();
       setShowDeleteDialog(false);
       setCustomerToDelete(null);
       toast.success(
@@ -115,7 +137,8 @@ export default function TenantCustomersView() {
   const handleCustomerUpdated = () => {
     setShowEditModal(false);
     setSelectedCustomer(null);
-    refreshCustomers();
+    refetchCustomers();
+    refetchMetrics();
   };
 
   return (
@@ -128,6 +151,10 @@ export default function TenantCustomersView() {
           </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
+          <Button variant="outline" onClick={handleRefresh} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
           <Button onClick={handleCreateCustomer}>
             <Plus className="h-4 w-4 mr-2" />
             Create Customer

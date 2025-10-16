@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { EnhancedDataTable, BulkAction } from '@/components/ui/EnhancedDataTable';
 import { createSortableHeader } from '@/components/ui/data-table';
 import { UniversalChart } from '@dotmac/primitives';
+import { AlarmDetailModal } from '@/components/faults/AlarmDetailModal';
 import {
   CheckCircle,
   X,
@@ -19,7 +20,14 @@ import {
 } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 import { useRBAC } from '@/contexts/RBACContext';
-import { useAlarms, useAlarmStatistics, useAlarmOperations, Alarm as AlarmType } from '@/hooks/useFaults';
+import {
+  useAlarms,
+  useAlarmStatistics,
+  useAlarmOperations,
+  Alarm as AlarmType,
+  AlarmSeverity,
+  AlarmStatus
+} from '@/hooks/useFaults';
 
 // ============================================================================
 // Types
@@ -122,6 +130,8 @@ const mockSLAData: SLAComplianceData[] = Array.from({ length: 30 }, (_, i) => ({
 export default function FaultManagementPage() {
   const { hasPermission } = useRBAC();
   const [selectedTimeRange, setSelectedTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
+  const [selectedAlarm, setSelectedAlarm] = useState<Alarm | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const hasFaultAccess = hasPermission('faults.alarms.read');
 
@@ -525,12 +535,25 @@ export default function FaultManagementPage() {
               },
             ]}
             onRowClick={(alarm) => {
-              console.log('View alarm details:', alarm);
-              // TODO: Open alarm detail modal
+              setSelectedAlarm(alarm);
+              setIsDetailModalOpen(true);
             }}
           />
         </CardContent>
       </Card>
+
+      {/* Alarm Detail Modal */}
+      <AlarmDetailModal
+        alarm={selectedAlarm}
+        open={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedAlarm(null);
+        }}
+        onUpdate={() => {
+          refetchAlarms();
+        }}
+      />
     </main>
   );
 }

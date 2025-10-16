@@ -106,6 +106,12 @@ try:
 except ImportError:
     pass
 
+# Wireless Infrastructure
+try:
+    from dotmac.platform.wireless.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
 # Use Base.metadata for autogeneration
 target_metadata = Base.metadata
 

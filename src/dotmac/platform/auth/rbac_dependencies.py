@@ -254,6 +254,9 @@ require_customer_update = require_permission("customer.update")
 require_customer_delete = require_permission("customer.delete")
 require_customer_export = require_permission("customer.export")
 require_customer_import = require_permission("customer.import")
+require_customer_impersonate = require_permission("customer.impersonate")
+require_customer_manage_status = require_permission("customer.manage_status")
+require_customer_reset_password = require_permission("customer.reset_password")
 
 # Ticket Management
 require_ticket_read = require_any_permission(

@@ -1,566 +1,380 @@
 /**
- * Usage Billing API Integration Hooks
+ * React Query hooks for Usage Billing Management
  *
- * Custom React hooks for interacting with usage billing APIs.
- * Provides data fetching, statistics, and operations for metered services.
+ * Provides hooks for:
+ * - Fetching usage records and aggregates
+ * - Managing usage records (CRUD)
+ * - Tracking usage statistics
+ * - Billing operations (mark billed, exclude)
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import {
+  usageBillingService,
+  type UsageAggregate,
+  type UsageAggregateFilters,
+  type UsageChartData,
+  type UsageChartFilters,
+  type UsageRecord,
+  type UsageRecordCreate,
+  type UsageRecordFilters,
+  type UsageRecordUpdate,
+  type UsageStatistics,
+} from '@/lib/services/usage-billing-service';
 
-// ============================================================================
-// Types
-// ============================================================================
+// Re-export types for convenience
+export type {
+  BilledStatus,
+  UsageAggregate,
+  UsageChartData,
+  UsageRecord,
+  UsageRecordCreate,
+  UsageRecordUpdate,
+  UsageStatistics,
+  UsageType,
+} from '@/lib/services/usage-billing-service';
 
-export type UsageType =
-  | 'data_transfer'
-  | 'voice_minutes'
-  | 'sms_count'
-  | 'bandwidth_gb'
-  | 'overage_gb'
-  | 'static_ip'
-  | 'equipment_rental'
-  | 'installation_fee'
-  | 'custom';
+// ============================================
+// Query Keys
+// ============================================
 
-export type BilledStatus = 'pending' | 'billed' | 'error' | 'excluded';
-
-export interface UsageRecord {
-  id: string;
-  tenant_id: string;
-  subscription_id: string;
-  customer_id: string;
-  customer_name?: string;
-  usage_type: UsageType;
-  quantity: number;
-  unit: string;
-  unit_price: number; // in cents
-  total_amount: number; // in cents
-  currency: string;
-  period_start: string;
-  period_end: string;
-  billed_status: BilledStatus;
-  invoice_id?: string;
-  billed_at?: string;
-  source_system: string;
-  source_record_id?: string;
-  description?: string;
-  device_id?: string;
-  service_location?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface UsageAggregate {
-  id: string;
-  tenant_id: string;
-  subscription_id?: string;
-  customer_id?: string;
-  usage_type: UsageType;
-  period_start: string;
-  period_end: string;
-  period_type: 'hourly' | 'daily' | 'monthly';
-  total_quantity: number;
-  total_amount: number; // in cents
-  record_count: number;
-  min_quantity?: number;
-  max_quantity?: number;
-}
-
-export interface UsageSummary {
-  usage_type: UsageType;
-  total_quantity: number;
-  total_amount: number; // in cents
-  currency: string;
-  record_count: number;
-  period_start: string;
-  period_end: string;
-}
-
-export interface UsageStats {
-  total_records: number;
-  total_amount: number; // in cents
-  pending_amount: number; // in cents
-  billed_amount: number; // in cents
-  by_type: Record<string, UsageSummary>;
-  period_start: string;
-  period_end: string;
-}
-
-export interface UsageQueryParams {
-  customer_id?: string;
-  subscription_id?: string;
-  usage_type?: UsageType;
-  billed_status?: BilledStatus;
-  period_start?: string;
-  period_end?: string;
-  limit?: number;
-  offset?: number;
-}
-
-// ============================================================================
-// API Client Configuration
-// ============================================================================
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-// Simple API client (replace with your actual API client)
-const apiClient = {
-  get: async (url: string) => {
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        // Add authentication headers here
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
-    }
-    return response.json();
-  },
-  post: async (url: string, data?: any) => {
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Add authentication headers here
-      },
-      body: data ? JSON.stringify(data) : undefined,
-    });
-    if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
-    }
-    return response.json();
-  },
-  put: async (url: string, data?: any) => {
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        // Add authentication headers here
-      },
-      body: data ? JSON.stringify(data) : undefined,
-    });
-    if (!response.ok) {
-      throw new Error(`API error: ${response.statusText}`);
-    }
-    return response.json();
-  },
+export const usageKeys = {
+  all: ['usage'] as const,
+  records: () => [...usageKeys.all, 'records'] as const,
+  record: (filters: UsageRecordFilters) => [...usageKeys.records(), filters] as const,
+  recordDetail: (id: string) => [...usageKeys.records(), id] as const,
+  aggregates: () => [...usageKeys.all, 'aggregates'] as const,
+  aggregate: (filters: UsageAggregateFilters) => [...usageKeys.aggregates(), filters] as const,
+  statistics: (periodStart?: string, periodEnd?: string) =>
+    [...usageKeys.all, 'statistics', periodStart, periodEnd] as const,
+  chartData: (filters: UsageChartFilters) => [...usageKeys.all, 'chart', filters] as const,
 };
 
-// ============================================================================
-// Hook: useUsageRecords
-// ============================================================================
+// ============================================
+// Usage Records Query Hooks
+// ============================================
 
 /**
- * Fetch usage records with optional filtering
+ * Hook to fetch usage records
  *
- * @example
- * const { records, isLoading, error, refetch } = useUsageRecords({
- *   customer_id: 'cust-123',
- *   billed_status: 'pending',
- *   limit: 100,
- * });
+ * @param filters - Record filters
+ * @returns Usage records with loading and error states
  */
-export function useUsageRecords(params?: UsageQueryParams) {
-  const [records, setRecords] = useState<UsageRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchRecords = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      // Build query string
-      const queryParams = new URLSearchParams();
-      if (params?.customer_id) queryParams.append('customer_id', params.customer_id);
-      if (params?.subscription_id) queryParams.append('subscription_id', params.subscription_id);
-      if (params?.usage_type) queryParams.append('usage_type', params.usage_type);
-      if (params?.billed_status) queryParams.append('billed_status', params.billed_status);
-      if (params?.period_start) queryParams.append('period_start', params.period_start);
-      if (params?.period_end) queryParams.append('period_end', params.period_end);
-      if (params?.limit) queryParams.append('limit', params.limit.toString());
-      if (params?.offset) queryParams.append('offset', params.offset.toString());
-
-      const endpoint = `/api/v1/billing/usage/records?${queryParams.toString()}`;
-      const response = await apiClient.get(endpoint);
-
-      if (response.usage_records) {
-        setRecords(response.usage_records as UsageRecord[]);
-      }
-    } catch (err) {
-      setError(err as Error);
-      console.error('Failed to fetch usage records:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [params]);
-
-  useEffect(() => {
-    fetchRecords();
-  }, [fetchRecords]);
-
-  return {
-    records,
-    isLoading,
-    error,
-    refetch: fetchRecords,
-  };
+export function useUsageRecords(filters: UsageRecordFilters = {}) {
+  return useQuery<UsageRecord[], Error>({
+    queryKey: usageKeys.record(filters),
+    queryFn: () => usageBillingService.listUsageRecords(filters),
+    staleTime: 30000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
 }
 
-// ============================================================================
-// Hook: useUsageStatistics
-// ============================================================================
-
 /**
- * Fetch usage statistics for a time period
+ * Hook to fetch single usage record
  *
- * @example
- * const { statistics, isLoading } = useUsageStatistics({
- *   period_start: '2025-01-01T00:00:00Z',
- *   period_end: '2025-01-31T23:59:59Z',
- * });
+ * @param recordId - Record UUID
+ * @returns Usage record details with loading and error states
  */
-export function useUsageStatistics(params?: { period_start?: string; period_end?: string }) {
-  const [statistics, setStatistics] = useState<UsageStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchStatistics = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const queryParams = new URLSearchParams();
-      if (params?.period_start) queryParams.append('period_start', params.period_start);
-      if (params?.period_end) queryParams.append('period_end', params.period_end);
-
-      const endpoint = `/api/v1/billing/usage/statistics?${queryParams.toString()}`;
-      const response = await apiClient.get(endpoint);
-
-      if (response) {
-        setStatistics(response as UsageStats);
-      }
-    } catch (err) {
-      setError(err as Error);
-      console.error('Failed to fetch usage statistics:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [params]);
-
-  useEffect(() => {
-    fetchStatistics();
-  }, [fetchStatistics]);
-
-  return {
-    statistics,
-    isLoading,
-    error,
-    refetch: fetchStatistics,
-  };
+export function useUsageRecord(recordId: string | null) {
+  return useQuery<UsageRecord, Error>({
+    queryKey: usageKeys.recordDetail(recordId!),
+    queryFn: () => usageBillingService.getUsageRecord(recordId!),
+    enabled: !!recordId,
+    staleTime: 30000,
+    gcTime: 5 * 60 * 1000,
+  });
 }
 
-// ============================================================================
-// Hook: useUsageAggregates
-// ============================================================================
+// ============================================
+// Usage Records Mutation Hooks
+// ============================================
 
 /**
- * Fetch pre-aggregated usage data for reporting
+ * Hook to create usage record
  *
- * @example
- * const { aggregates, isLoading } = useUsageAggregates({
- *   period_type: 'daily',
- *   usage_type: 'data_transfer',
- *   period_start: '2025-01-01T00:00:00Z',
- *   period_end: '2025-01-31T23:59:59Z',
- * });
+ * @param options - Mutation options
+ * @returns Mutation result
  */
-export function useUsageAggregates(params?: {
-  period_type?: 'hourly' | 'daily' | 'monthly';
-  usage_type?: UsageType;
-  customer_id?: string;
-  subscription_id?: string;
-  period_start?: string;
-  period_end?: string;
+export function useCreateUsageRecord(options?: {
+  onSuccess?: (record: UsageRecord) => void;
+  onError?: (error: Error) => void;
 }) {
-  const [aggregates, setAggregates] = useState<UsageAggregate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchAggregates = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  return useMutation<UsageRecord, Error, UsageRecordCreate>({
+    mutationFn: (data) => usageBillingService.createUsageRecord(data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: usageKeys.records() });
+      queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
+      queryClient.invalidateQueries({ queryKey: usageKeys.aggregates() });
 
-      const queryParams = new URLSearchParams();
-      if (params?.period_type) queryParams.append('period_type', params.period_type);
-      if (params?.usage_type) queryParams.append('usage_type', params.usage_type);
-      if (params?.customer_id) queryParams.append('customer_id', params.customer_id);
-      if (params?.subscription_id) queryParams.append('subscription_id', params.subscription_id);
-      if (params?.period_start) queryParams.append('period_start', params.period_start);
-      if (params?.period_end) queryParams.append('period_end', params.period_end);
+      toast.success('Usage record created successfully');
 
-      const endpoint = `/api/v1/billing/usage/aggregates?${queryParams.toString()}`;
-      const response = await apiClient.get(endpoint);
+      options?.onSuccess?.(data);
+    },
+    onError: (error) => {
+      toast.error('Failed to create usage record', {
+        description: error.message,
+      });
 
-      if (response.aggregates) {
-        setAggregates(response.aggregates as UsageAggregate[]);
-      }
-    } catch (err) {
-      setError(err as Error);
-      console.error('Failed to fetch usage aggregates:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [params]);
-
-  useEffect(() => {
-    fetchAggregates();
-  }, [fetchAggregates]);
-
-  return {
-    aggregates,
-    isLoading,
-    error,
-    refetch: fetchAggregates,
-  };
+      options?.onError?.(error);
+    },
+  });
 }
 
-// ============================================================================
-// Hook: useUsageOperations
-// ============================================================================
+/**
+ * Hook to create multiple usage records
+ *
+ * @param options - Mutation options
+ * @returns Mutation result
+ */
+export function useCreateUsageRecordsBulk(options?: {
+  onSuccess?: (records: UsageRecord[]) => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation<UsageRecord[], Error, UsageRecordCreate[]>({
+    mutationFn: (records) => usageBillingService.createUsageRecordsBulk(records),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: usageKeys.records() });
+      queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
+      queryClient.invalidateQueries({ queryKey: usageKeys.aggregates() });
+
+      toast.success(`${data.length} usage records created successfully`);
+
+      options?.onSuccess?.(data);
+    },
+    onError: (error) => {
+      toast.error('Failed to create usage records', {
+        description: error.message,
+      });
+
+      options?.onError?.(error);
+    },
+  });
+}
 
 /**
- * Perform operations on usage records (mark as billed, exclude, etc.)
+ * Hook to update usage record
  *
- * @example
- * const { markAsBilled, excludeFromBilling, isLoading } = useUsageOperations();
- * await markAsBilled(['usage-1', 'usage-2'], 'inv-123');
+ * @param options - Mutation options
+ * @returns Mutation result
+ */
+export function useUpdateUsageRecord(options?: {
+  onSuccess?: (record: UsageRecord) => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation<UsageRecord, Error, { recordId: string; data: UsageRecordUpdate }>({
+    mutationFn: ({ recordId, data }) =>
+      usageBillingService.updateUsageRecord(recordId, data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: usageKeys.records() });
+      queryClient.invalidateQueries({ queryKey: usageKeys.recordDetail(data.id) });
+      queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
+
+      toast.success('Usage record updated successfully');
+
+      options?.onSuccess?.(data);
+    },
+    onError: (error) => {
+      toast.error('Failed to update usage record', {
+        description: error.message,
+      });
+
+      options?.onError?.(error);
+    },
+  });
+}
+
+/**
+ * Hook to delete usage record
+ *
+ * @param options - Mutation options
+ * @returns Mutation result
+ */
+export function useDeleteUsageRecord(options?: {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: (recordId) => usageBillingService.deleteUsageRecord(recordId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: usageKeys.records() });
+      queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
+      queryClient.invalidateQueries({ queryKey: usageKeys.aggregates() });
+
+      toast.success('Usage record deleted successfully');
+
+      options?.onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error('Failed to delete usage record', {
+        description: error.message,
+      });
+
+      options?.onError?.(error);
+    },
+  });
+}
+
+/**
+ * Hook to mark usage records as billed
+ *
+ * @param options - Mutation options
+ * @returns Mutation result
+ */
+export function useMarkUsageRecordsAsBilled(options?: {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, { recordIds: string[]; invoiceId: string }>({
+    mutationFn: ({ recordIds, invoiceId }) =>
+      usageBillingService.markUsageRecordsAsBilled(recordIds, invoiceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: usageKeys.records() });
+      queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
+
+      toast.success('Usage records marked as billed');
+
+      options?.onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error('Failed to mark usage records as billed', {
+        description: error.message,
+      });
+
+      options?.onError?.(error);
+    },
+  });
+}
+
+/**
+ * Hook to exclude usage records from billing
+ *
+ * @param options - Mutation options
+ * @returns Mutation result
+ */
+export function useExcludeUsageRecordsFromBilling(options?: {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}) {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, string[]>({
+    mutationFn: (recordIds) =>
+      usageBillingService.excludeUsageRecordsFromBilling(recordIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: usageKeys.records() });
+      queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
+
+      toast.success('Usage records excluded from billing');
+
+      options?.onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error('Failed to exclude usage records from billing', {
+        description: error.message,
+      });
+
+      options?.onError?.(error);
+    },
+  });
+}
+
+// ============================================
+// Usage Aggregates Query Hooks
+// ============================================
+
+/**
+ * Hook to fetch usage aggregates
+ *
+ * @param filters - Aggregate filters
+ * @returns Usage aggregates with loading and error states
+ */
+export function useUsageAggregates(filters: UsageAggregateFilters = {}) {
+  return useQuery<UsageAggregate[], Error>({
+    queryKey: usageKeys.aggregate(filters),
+    queryFn: () => usageBillingService.listUsageAggregates(filters),
+    staleTime: 60000, // 1 minute
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
+
+// ============================================
+// Statistics Hooks
+// ============================================
+
+/**
+ * Hook to fetch usage statistics
+ *
+ * @param periodStart - Period start date (optional)
+ * @param periodEnd - Period end date (optional)
+ * @returns Usage statistics with loading and error states
+ */
+export function useUsageStatistics(periodStart?: string, periodEnd?: string) {
+  return useQuery<UsageStatistics, Error>({
+    queryKey: usageKeys.statistics(periodStart, periodEnd),
+    queryFn: () => usageBillingService.getUsageStatistics(periodStart, periodEnd),
+    staleTime: 60000, // 1 minute
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
+
+/**
+ * Hook to fetch usage chart data
+ *
+ * @param filters - Chart data filters
+ * @returns Chart data with loading and error states
+ */
+export function useUsageChartData(filters: UsageChartFilters) {
+  return useQuery<UsageChartData[], Error>({
+    queryKey: usageKeys.chartData(filters),
+    queryFn: () => usageBillingService.getUsageChartData(filters),
+    staleTime: 60000, // 1 minute
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
+
+// ============================================
+// Combined Operations Hook
+// ============================================
+
+/**
+ * Hook that combines all usage operations
+ *
+ * @returns All operation hooks
  */
 export function useUsageOperations() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-
-  /**
-   * Mark usage records as billed and associate with invoice
-   */
-  const markAsBilled = useCallback(async (usageIds: string[], invoiceId: string) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const promises = usageIds.map(id =>
-        apiClient.put(`/api/v1/billing/usage/records/${id}`, {
-          billed_status: 'billed',
-          invoice_id: invoiceId,
-          billed_at: new Date().toISOString(),
-        })
-      );
-
-      await Promise.all(promises);
-      return true;
-    } catch (err) {
-      setError(err as Error);
-      console.error('Failed to mark usage as billed:', err);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  /**
-   * Exclude usage records from billing
-   */
-  const excludeFromBilling = useCallback(async (usageIds: string[]) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const promises = usageIds.map(id =>
-        apiClient.put(`/api/v1/billing/usage/records/${id}`, {
-          billed_status: 'excluded',
-        })
-      );
-
-      await Promise.all(promises);
-      return true;
-    } catch (err) {
-      setError(err as Error);
-      console.error('Failed to exclude usage from billing:', err);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  /**
-   * Mark usage records as pending (undo billed/excluded)
-   */
-  const markAsPending = useCallback(async (usageIds: string[]) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const promises = usageIds.map(id =>
-        apiClient.put(`/api/v1/billing/usage/records/${id}`, {
-          billed_status: 'pending',
-          invoice_id: null,
-          billed_at: null,
-        })
-      );
-
-      await Promise.all(promises);
-      return true;
-    } catch (err) {
-      setError(err as Error);
-      console.error('Failed to mark usage as pending:', err);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  /**
-   * Create a new usage record
-   */
-  const createUsageRecord = useCallback(async (data: Partial<UsageRecord>) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await apiClient.post('/api/v1/billing/usage/records', data);
-      return response as UsageRecord;
-    } catch (err) {
-      setError(err as Error);
-      console.error('Failed to create usage record:', err);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  /**
-   * Bulk create usage records
-   */
-  const bulkCreateUsageRecords = useCallback(async (records: Partial<UsageRecord>[]) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await apiClient.post('/api/v1/billing/usage/records/bulk', {
-        records,
-      });
-      return response.created_count as number;
-    } catch (err) {
-      setError(err as Error);
-      console.error('Failed to bulk create usage records:', err);
-      return 0;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const markAsBilled = useMarkUsageRecordsAsBilled();
+  const excludeFromBilling = useExcludeUsageRecordsFromBilling();
 
   return {
-    markAsBilled,
-    excludeFromBilling,
-    markAsPending,
-    createUsageRecord,
-    bulkCreateUsageRecords,
-    isLoading,
-    error,
-  };
-}
-
-// ============================================================================
-// Hook: useUsageChartData
-// ============================================================================
-
-/**
- * Fetch and format usage data for charts
- *
- * @example
- * const { chartData, isLoading } = useUsageChartData({
- *   period_type: 'daily',
- *   days: 30,
- * });
- */
-export function useUsageChartData(params?: {
-  period_type?: 'hourly' | 'daily' | 'monthly';
-  days?: number;
-  usage_types?: UsageType[];
-}) {
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
-  const fetchChartData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      // Calculate period
-      const days = params?.days || 7;
-      const period_end = new Date();
-      const period_start = new Date(Date.now() - days * 86400000);
-
-      const queryParams = new URLSearchParams({
-        period_type: params?.period_type || 'daily',
-        period_start: period_start.toISOString(),
-        period_end: period_end.toISOString(),
-      });
-
-      const endpoint = `/api/v1/billing/usage/aggregates?${queryParams.toString()}`;
-      const response = await apiClient.get(endpoint);
-
-      if (response.aggregates) {
-        // Transform aggregates into chart-friendly format
-        const aggregates = response.aggregates as UsageAggregate[];
-
-        // Group by period
-        const grouped = aggregates.reduce((acc: any, agg) => {
-          const date = new Date(agg.period_start).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-          });
-
-          if (!acc[date]) {
-            acc[date] = { date };
-          }
-
-          acc[date][agg.usage_type] = agg.total_quantity;
-
-          return acc;
-        }, {});
-
-        setChartData(Object.values(grouped));
+    markAsBilled: async (recordIds: string[], invoiceId: string) => {
+      try {
+        await markAsBilled.mutateAsync({ recordIds, invoiceId });
+        return true;
+      } catch (error) {
+        console.error('Failed to mark usage records as billed:', error);
+        return false;
       }
-    } catch (err) {
-      setError(err as Error);
-      console.error('Failed to fetch usage chart data:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [params]);
-
-  useEffect(() => {
-    fetchChartData();
-  }, [fetchChartData]);
-
-  return {
-    chartData,
-    isLoading,
-    error,
-    refetch: fetchChartData,
+    },
+    excludeFromBilling: async (recordIds: string[]) => {
+      try {
+        await excludeFromBilling.mutateAsync(recordIds);
+        return true;
+      } catch (error) {
+        console.error('Failed to exclude usage records from billing:', error);
+        return false;
+      }
+    },
+    isLoading: markAsBilled.isPending || excludeFromBilling.isPending,
   };
 }
-
-// Export all hooks
-export default {
-  useUsageRecords,
-  useUsageStatistics,
-  useUsageAggregates,
-  useUsageOperations,
-  useUsageChartData,
-};

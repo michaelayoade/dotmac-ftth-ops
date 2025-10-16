@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EnhancedDataTable, BulkAction } from '@/components/ui/EnhancedDataTable';
 import { createSortableHeader } from '@/components/ui/data-table';
-import { UniversalChart } from '@dotmac/primitives/charts';
+import { UniversalChart } from '@dotmac/primitives';
 import {
   Activity,
   Download,
@@ -153,11 +153,11 @@ export default function UsageBillingPage() {
   const hasBillingAccess = hasPermission('billing.read');
 
   // API Hooks
-  const { records: apiRecords, isLoading: recordsLoading, error: recordsError, refetch } = useUsageRecords({
+  const { data: apiRecords = [], isLoading: recordsLoading, error: recordsError, refetch } = useUsageRecords({
     limit: 100,
   });
-  const { statistics: apiStatistics, isLoading: statsLoading } = useUsageStatistics();
-  const { chartData: apiChartData, isLoading: chartLoading } = useUsageChartData({
+  const { data: apiStatistics, isLoading: statsLoading } = useUsageStatistics();
+  const { data: apiChartData = [], isLoading: chartLoading } = useUsageChartData({
     period_type: 'daily',
     days: 7,
   });
