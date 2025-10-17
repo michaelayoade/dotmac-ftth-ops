@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Update - {{ company_name }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .update-box {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+        .comparison-table th {
+            background: #f3f4f6;
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            border-bottom: 2px solid #d1d5db;
+        }
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: center;
+        }
+        .comparison-table td:first-child {
+            text-align: left;
+            font-weight: 600;
+            color: #6b7280;
+        }
+        .old-value {
+            color: #9ca3af;
+            text-decoration: line-through;
+        }
+        .new-value {
+            color: #059669;
+            font-weight: 700;
+        }
+        .button {
+            display: inline-block;
+            background: #f59e0b;
+            color: #ffffff;
+            padding: 14px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background: #d97706;
+        }
+        .feature-list {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .feature-item {
+            padding: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+        .feature-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: 600;
+        }
+        .feature-added {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .feature-removed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #f59e0b;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 Subscription Updated</h1>
+        </div>
+
+        <div class="content">
+            <h2>Hi {{ customer_name }},</h2>
+
+            <p>Your subscription has been successfully updated. Here's a summary of the changes to your plan.</p>
+
+            <div class="update-box">
+                <h3 style="margin-top: 0;">
+                    {% if update_type == 'upgrade' %}
+                    ⬆️ Plan Upgraded
+                    {% elif update_type == 'downgrade' %}
+                    ⬇️ Plan Changed
+                    {% else %}
+                    🔄 Subscription Modified
+                    {% endif %}
+                </h3>
+                <p style="font-size: 18px; margin: 10px 0;">
+                    <span class="old-value">{{ old_plan_name }}</span>
+                    <span style="margin: 0 10px;">→</span>
+                    <span class="new-value">{{ new_plan_name }}</span>
+                </p>
+                <p style="margin-bottom: 0; color: #92400e; font-size: 14px;">
+                    Effective: {{ effective_date }}
+                </p>
+            </div>
+
+            <h3>Plan Comparison</h3>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">Feature</th>
+                        <th>Previous</th>
+                        <th>New</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Monthly Price</td>
+                        <td>{{ currency_symbol }}{{ old_monthly_price }}</td>
+                        <td><strong>{{ currency_symbol }}{{ new_monthly_price }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Bandwidth</td>
+                        <td>{{ old_bandwidth_mbps }} Mbps</td>
+                        <td><strong>{{ new_bandwidth_mbps }} Mbps</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Devices</td>
+                        <td>{{ old_device_limit }}</td>
+                        <td><strong>{{ new_device_limit }}</strong></td>
+                    </tr>
+                    {% if old_data_limit or new_data_limit %}
+                    <tr>
+                        <td>Data Limit</td>
+                        <td>{{ old_data_limit or 'Unlimited' }}</td>
+                        <td><strong>{{ new_data_limit or 'Unlimited' }}</strong></td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <td>Support Level</td>
+                        <td>{{ old_support_level }}</td>
+                        <td><strong>{{ new_support_level }}</strong></td>
+                    </tr>
+                    {% if old_sla or new_sla %}
+                    <tr>
+                        <td>SLA Uptime</td>
+                        <td>{{ old_sla or 'Standard' }}</td>
+                        <td><strong>{{ new_sla or 'Standard' }}</strong></td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+
+            {% if features_added or features_removed %}
+            <h3>Feature Changes</h3>
+
+            {% if features_added %}
+            <div class="feature-list">
+                <h4 style="margin-top: 0; color: #059669;">✨ New Features Added</h4>
+                {% for feature in features_added %}
+                <div class="feature-item">
+                    <div class="feature-icon feature-added">+</div>
+                    <div>
+                        <strong>{{ feature.name }}</strong>
+                        {% if feature.description %}
+                        <br><small style="color: #6b7280;">{{ feature.description }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if features_removed %}
+            <div class="feature-list">
+                <h4 style="margin-top: 0; color: #dc2626;">⚠️ Features No Longer Available</h4>
+                {% for feature in features_removed %}
+                <div class="feature-item">
+                    <div class="feature-icon feature-removed">-</div>
+                    <div>
+                        <strong>{{ feature.name }}</strong>
+                        {% if feature.alternative %}
+                        <br><small style="color: #6b7280;">Alternative: {{ feature.alternative }}</small>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <h3>Billing Impact</h3>
+            <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+                {% if proration_credit and proration_credit > 0 %}
+                <p>✅ <strong>Credit Applied:</strong> You'll receive a prorated credit of <strong>{{ currency_symbol }}{{ proration_credit }}</strong> for your previous plan.</p>
+                {% endif %}
+
+                {% if proration_charge and proration_charge > 0 %}
+                <p>💳 <strong>Prorated Charge:</strong> A one-time charge of <strong>{{ currency_symbol }}{{ proration_charge }}</strong> will be applied for the upgraded features.</p>
+                {% endif %}
+
+                <p><strong>Next Billing Date:</strong> {{ next_billing_date }}</p>
+                <p><strong>Next Billing Amount:</strong> {{ currency_symbol }}{{ next_billing_amount }}</p>
+
+                {% if billing_cycle_changed %}
+                <p style="color: #d97706;"><strong>Note:</strong> Your billing cycle has changed from {{ old_billing_cycle }} to {{ new_billing_cycle }}.</p>
+                {% endif %}
+            </div>
+
+            <center>
+                <a href="{{ subscription_url }}" class="button">View Subscription Details</a>
+            </center>
+
+            {% if update_type == 'upgrade' %}
+            <div style="background: #d1fae5; padding: 20px; border-radius: 8px; border-left: 4px solid #10b981; margin: 25px 0;">
+                <h3 style="margin-top: 0; color: #065f46;">🎉 Enjoy Your Upgrade!</h3>
+                <p>Your upgraded features are now active and ready to use. Here's what you can do:</p>
+                <ul style="margin-bottom: 0;">
+                    {% for action in upgrade_actions %}
+                    <li>{{ action }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if update_type == 'downgrade' %}
+            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 25px 0;">
+                <h3 style="margin-top: 0; color: #92400e;">📋 Important Information</h3>
+                <p>Your plan has been changed. Please note:</p>
+                <ul style="margin-bottom: 0;">
+                    <li>Your new plan limits will take effect on {{ effective_date }}</li>
+                    {% if features_removed %}
+                    <li>Some features will no longer be available after the effective date</li>
+                    {% endif %}
+                    <li>You can upgrade again at any time from your account dashboard</li>
+                </ul>
+            </div>
+            {% endif %}
+
+            <h3>What Happens Next?</h3>
+            <ol>
+                <li>
+                    <strong>Immediate Effect</strong><br>
+                    {% if immediate_activation %}
+                    Your new plan features are active now
+                    {% else %}
+                    Changes will take effect on {{ effective_date }}
+                    {% endif %}
+                </li>
+                <li>
+                    <strong>Billing Update</strong><br>
+                    Your next invoice will reflect the new subscription price
+                </li>
+                <li>
+                    <strong>Service Continuity</strong><br>
+                    No interruption to your service during the transition
+                </li>
+                {% if configuration_required %}
+                <li>
+                    <strong>Configuration</strong><br>
+                    Some new features may require setup - check your <a href="{{ portal_url }}/settings">settings page</a>
+                </li>
+                {% endif %}
+            </ol>
+
+            <h3>Need to Make Changes?</h3>
+            <p>You can modify your subscription at any time:</p>
+            <ul>
+                <li><a href="{{ subscription_url }}">View and manage your subscription</a></li>
+                <li><a href="{{ plans_url }}">Compare all available plans</a></li>
+                <li><a href="{{ addons_url }}">Add optional features</a></li>
+                <li><a href="{{ portal_url }}/billing">Update payment method</a></li>
+            </ul>
+
+            <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 25px 0;">
+                <h3 style="margin-top: 0; color: #1e40af;">💡 Subscription Tips</h3>
+                <ul style="margin-bottom: 0;">
+                    <li>Enable AutoPay to avoid service interruptions</li>
+                    <li>Set up usage alerts to monitor your consumption</li>
+                    <li>Check out our add-ons for additional features</li>
+                    <li>Refer friends and earn credits toward your subscription</li>
+                </ul>
+            </div>
+
+            <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+                <strong>Questions About Your Subscription?</strong><br>
+                Our team is here to help:<br><br>
+                📞 Phone: {{ support_phone }}<br>
+                📧 Email: <a href="mailto:{{ billing_email }}">{{ billing_email }}</a><br>
+                💬 Live Chat: <a href="{{ portal_url }}/support">Available 24/7</a>
+            </div>
+
+            <p>Thank you for choosing {{ company_name }}. We're committed to providing you with the best service possible!</p>
+
+            <p>Best regards,<br>
+            <strong>The {{ company_name }} Team</strong></p>
+        </div>
+
+        <div class="footer">
+            <p>{{ company_name }} | {{ company_address }}</p>
+            <p>
+                <a href="{{ subscription_url }}">Manage Subscription</a> |
+                <a href="{{ plans_url }}">View Plans</a> |
+                <a href="{{ portal_url }}/billing">Billing</a>
+            </p>
+            <p>© {{ current_year }} {{ company_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -14,6 +14,7 @@ from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.core.exceptions import EntityNotFoundError, ValidationError
 from dotmac.platform.crm.models import LeadSource, LeadStatus, QuoteStatus, SiteSurveyStatus
 from dotmac.platform.crm.schemas import (
+    LeadConvertToCustomerRequest,
     LeadCreateRequest,
     LeadDisqualifyRequest,
     LeadResponse,
@@ -248,6 +249,107 @@ async def update_lead_serviceability(
     except EntityNotFoundError as e:
         await db.rollback()
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.post("/leads/{lead_id}/convert-to-customer", response_model=LeadResponse)
+async def convert_lead_to_customer(
+    lead_id: UUID,
+    conversion_data: LeadConvertToCustomerRequest,
+    db: AsyncSession = Depends(get_session_dependency),
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Convert a qualified lead to a customer.
+
+    This endpoint creates a new customer from lead data and marks the lead as converted.
+    The lead data is used as defaults, with any fields in the request overriding them.
+    """
+    from dotmac.platform.customer_management.models import Customer, CustomerStatus, CustomerTier, CustomerType
+    from dotmac.platform.customer_management.service import CustomerService
+
+    lead_service = LeadService(db)
+    customer_service = CustomerService(db)
+
+    try:
+        # Get the lead
+        lead = await lead_service.get_lead(current_user.tenant_id, lead_id)
+
+        # Check if already converted
+        if lead.converted_to_customer_id:
+            raise ValidationError(f"Lead {lead_id} already converted to customer {lead.converted_to_customer_id}")
+
+        # Build customer data using lead info as defaults, with overrides from request
+        customer_data = {
+            "tenant_id": current_user.tenant_id,
+            "first_name": conversion_data.first_name or lead.first_name,
+            "last_name": conversion_data.last_name or lead.last_name,
+            "middle_name": conversion_data.middle_name,
+            "company_name": conversion_data.company_name or lead.company_name,
+            "email": conversion_data.email or lead.email,
+            "phone": conversion_data.phone or lead.phone,
+            "mobile": conversion_data.mobile,
+            "customer_type": CustomerType(conversion_data.customer_type),
+            "tier": CustomerTier(conversion_data.tier),
+            "status": CustomerStatus.ACTIVE,
+            # Billing address (defaults to service address if not provided)
+            "address_line1": conversion_data.address_line1 or lead.service_address_line1,
+            "address_line2": conversion_data.address_line2 or lead.service_address_line2,
+            "city": conversion_data.city or lead.service_city,
+            "state_province": conversion_data.state_province or lead.service_state_province,
+            "postal_code": conversion_data.postal_code or lead.service_postal_code,
+            "country": conversion_data.country or lead.service_country,
+            # ISP service info
+            "service_address_line1": conversion_data.service_address_line1 or lead.service_address_line1,
+            "service_address_line2": conversion_data.service_address_line2 or lead.service_address_line2,
+            "service_city": conversion_data.service_city or lead.service_city,
+            "service_state_province": conversion_data.service_state_province or lead.service_state_province,
+            "service_postal_code": conversion_data.service_postal_code or lead.service_postal_code,
+            "service_country": conversion_data.service_country or lead.service_country,
+            "service_coordinates": conversion_data.service_coordinates or lead.service_coordinates,
+            "installation_status": conversion_data.installation_status or "pending",
+            "scheduled_installation_date": conversion_data.scheduled_installation_date or lead.desired_installation_date,
+            "installation_notes": conversion_data.installation_notes,
+            "connection_type": conversion_data.connection_type,
+            "service_plan_speed": conversion_data.service_plan_speed or lead.desired_bandwidth,
+            # Metadata
+            "metadata": {
+                **lead.metadata,
+                **conversion_data.metadata,
+                "converted_from_lead_id": str(lead_id),
+                "lead_source": lead.source.value,
+                "lead_number": lead.lead_number,
+            },
+            "notes": conversion_data.notes or lead.notes,
+        }
+
+        # Create customer
+        customer = await customer_service.create_customer(**customer_data)
+
+        # Update lead with conversion info
+        lead = await lead_service.convert_to_customer(
+            tenant_id=current_user.tenant_id,
+            lead_id=lead_id,
+            customer=customer,
+            updated_by_id=current_user.id,
+        )
+
+        await db.commit()
+        await db.refresh(lead)
+
+        return lead
+
+    except EntityNotFoundError as e:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except ValidationError as e:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to convert lead to customer: {str(e)}"
+        )
 
 
 @router.delete("/leads/{lead_id}", status_code=status.HTTP_204_NO_CONTENT)

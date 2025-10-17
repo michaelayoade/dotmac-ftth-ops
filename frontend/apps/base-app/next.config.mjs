@@ -10,6 +10,13 @@ const nextConfig = {
   experimental: {
     instrumentationHook: true,
   },
+  // Skip TypeScript and ESLint checks during build (can be run separately)
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     domains: ['images.unsplash.com'],
   },

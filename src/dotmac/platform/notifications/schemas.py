@@ -131,3 +131,40 @@ class NotificationFromTemplateRequest(BaseModel):  # BaseModel resolves to Any i
     user_id: UUID
     type: NotificationType
     variables: dict[str, Any] = Field(default_factory=lambda: {})
+
+
+# Team Notification Schemas
+class TeamNotificationRequest(BaseModel):  # BaseModel resolves to Any in isolation
+    """Request schema for notifying a team of users."""
+
+    model_config = ConfigDict()
+
+    team_members: list[UUID] | None = Field(
+        None, description="Specific list of user IDs to notify"
+    )
+    role_filter: str | None = Field(
+        None, description="Role name to filter users (e.g., 'admin', 'support_agent')"
+    )
+    notification_type: NotificationType = NotificationType.SYSTEM_ALERT
+    title: str = Field(..., min_length=1, max_length=500)
+    message: str = Field(..., min_length=1)
+    priority: NotificationPriority = NotificationPriority.MEDIUM
+    action_url: str | None = Field(None, max_length=1000)
+    action_label: str | None = Field(None, max_length=100)
+    related_entity_type: str | None = Field(None, max_length=100)
+    related_entity_id: str | None = Field(None, max_length=255)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
+    auto_send: bool = True
+
+
+class TeamNotificationResponse(BaseModel):  # BaseModel resolves to Any in isolation
+    """Response schema for team notification."""
+
+    model_config = ConfigDict()
+
+    notifications_created: int
+    target_count: int
+    team_members: list[UUID] | None = None
+    role_filter: str | None = None
+    notification_type: str
+    priority: str

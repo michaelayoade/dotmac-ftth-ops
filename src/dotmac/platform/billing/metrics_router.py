@@ -28,8 +28,8 @@ from dotmac.platform.db import get_session_dependency
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(tags=["Billing Metrics"])
-customer_metrics_router = APIRouter(tags=["Customer Metrics"])
+router = APIRouter()
+customer_metrics_router = APIRouter()
 
 
 # ============================================================================

@@ -31,6 +31,7 @@ export default function TenantCustomersView() {
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<CustomerStatusEnum | undefined>(undefined);
+  const [selectedTier, setSelectedTier] = useState<string>('all');
 
   // Fetch customers using GraphQL
   const {
@@ -223,8 +224,6 @@ export default function TenantCustomersView() {
         <CreateCustomerModal
           onClose={() => setShowCreateModal(false)}
           onCustomerCreated={handleCustomerCreated}
-          createCustomer={createCustomer}
-          updateCustomer={updateCustomer}
         />
       )}
 
@@ -233,7 +232,6 @@ export default function TenantCustomersView() {
           customer={selectedCustomer}
           onClose={() => setShowEditModal(false)}
           onCustomerUpdated={handleCustomerUpdated}
-          updateCustomer={updateCustomer}
         />
       )}
 

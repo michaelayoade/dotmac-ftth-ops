@@ -351,6 +351,7 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin): 
         ),
         Index("ix_customer_installation_status", "tenant_id", "installation_status"),
         Index("ix_customer_connection_type", "tenant_id", "connection_type"),
+        {"extend_existing": True},
     )
 
     @property
@@ -400,7 +401,10 @@ class CustomerSegment(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # ty
     # Relationships
     customers = relationship("Customer", back_populates="segment")
 
-    __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_tenant_segment_name"),)
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "name", name="uq_tenant_segment_name"),
+        {"extend_existing": True},
+    )
 
 
 class CustomerActivity(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
@@ -447,7 +451,10 @@ class CustomerActivity(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     # Relationships
     customer = relationship("Customer", back_populates="activities")
 
-    __table_args__ = (Index("ix_activity_customer_time", "customer_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_activity_customer_time", "customer_id", "created_at"),
+        {"extend_existing": True},
+    )
 
 
 class CustomerNote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type: ignore[misc]
@@ -491,7 +498,10 @@ class CustomerNote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type:
     # Relationships
     customer = relationship("Customer", back_populates="notes")
 
-    __table_args__ = (Index("ix_note_customer_created", "customer_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_note_customer_created", "customer_id", "created_at"),
+        {"extend_existing": True},
+    )
 
 
 class CustomerTag(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
@@ -520,6 +530,7 @@ class CustomerTag(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     __table_args__ = (
         UniqueConstraint("customer_id", "tag_name", name="uq_customer_tag"),
         Index("ix_tag_name_category", "tag_name", "tag_category"),
+        {"extend_existing": True},
     )
 
 
@@ -594,4 +605,5 @@ class CustomerContactLink(Base, TimestampMixin, TenantMixin):  # type: ignore[mi
         UniqueConstraint("customer_id", "contact_id", "role", name="uq_customer_contact_role"),
         Index("ix_customer_contact_customer", "customer_id", "role"),
         Index("ix_customer_contact_contact", "contact_id", "role"),
+        {"extend_existing": True},
     )

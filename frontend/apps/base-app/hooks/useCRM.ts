@@ -488,11 +488,9 @@ export function useLeads(options: UseLeadsOptions = {}) {
     []
   );
 
-  const convertToCustomer = useCallback(async (id: string, quoteId: string): Promise<any> => {
+  const convertToCustomer = useCallback(async (id: string, conversionData?: Record<string, any>): Promise<any> => {
     try {
-      const response = await apiClient.post(`/api/v1/crm/leads/${id}/convert`, {
-        accepted_quote_id: quoteId,
-      });
+      const response = await apiClient.post(`/api/v1/crm/leads/${id}/convert-to-customer`, conversionData || {});
       if (response.data) {
         // Update lead status to 'won'
         setLeads((prev) =>
@@ -501,8 +499,8 @@ export function useLeads(options: UseLeadsOptions = {}) {
               ? {
                   ...l,
                   status: 'won' as LeadStatus,
-                  converted_at: new Date().toISOString(),
-                  converted_to_customer_id: response.data.customer_id,
+                  converted_at: response.data.converted_at || new Date().toISOString(),
+                  converted_to_customer_id: response.data.converted_to_customer_id,
                 }
               : l
           )

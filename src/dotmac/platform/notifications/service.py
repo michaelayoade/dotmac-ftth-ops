@@ -514,6 +514,147 @@ class NotificationService:
         # TODO: Integrate with push provider (Firebase, OneSignal, etc.)
         logger.info("Push notification (placeholder)", notification_id=str(notification.id))
 
+    async def notify_team(
+        self,
+        tenant_id: str,
+        team_members: list[UUID] | None = None,
+        role_filter: str | None = None,
+        notification_type: NotificationType = NotificationType.SYSTEM_ALERT,
+        title: str = "",
+        message: str = "",
+        priority: NotificationPriority = NotificationPriority.MEDIUM,
+        action_url: str | None = None,
+        action_label: str | None = None,
+        related_entity_type: str | None = None,
+        related_entity_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        auto_send: bool = True,
+    ) -> list[Notification]:
+        """
+        Send notifications to a team of users.
+
+        Supports two modes:
+        1. Specific team members: Pass list of user UUIDs
+        2. Role-based: Pass role_filter to notify all users with that role
+
+        Args:
+            tenant_id: Tenant identifier
+            team_members: Specific list of user IDs to notify (optional)
+            role_filter: Role name to filter users (optional, e.g., "admin", "support_agent")
+            notification_type: Type of notification
+            title: Notification title
+            message: Notification message
+            priority: Priority level
+            action_url: Optional action URL
+            action_label: Optional action button label
+            related_entity_type: Type of related entity
+            related_entity_id: ID of related entity
+            metadata: Additional metadata
+            auto_send: Automatically send via configured channels
+
+        Returns:
+            List of created notifications (one per team member)
+
+        Raises:
+            ValueError: If neither team_members nor role_filter is provided
+        """
+        from dotmac.platform.user_management.models import User
+
+        logger.info(
+            "Notifying team",
+            tenant_id=tenant_id,
+            team_size=len(team_members) if team_members else "role-based",
+            role_filter=role_filter,
+            type=notification_type.value,
+        )
+
+        # Determine target users
+        target_users: list[UUID] = []
+
+        if team_members:
+            # Use explicitly provided team members
+            target_users = team_members
+        elif role_filter:
+            # Query users by role
+            stmt = select(User).where(
+                and_(
+                    User.tenant_id == tenant_id,
+                    User.is_active == True,  # noqa: E712
+                    User.deleted_at.is_(None),
+                )
+            )
+
+            result = await self.db.execute(stmt)
+            users = result.scalars().all()
+
+            # Filter by role (roles is JSON array)
+            target_users = [
+                user.id
+                for user in users
+                if role_filter in (user.roles or [])
+            ]
+
+            logger.info(
+                "Role-based team notification",
+                role=role_filter,
+                matching_users=len(target_users),
+            )
+        else:
+            raise ValueError("Either team_members or role_filter must be provided")
+
+        if not target_users:
+            logger.warning(
+                "No users found for team notification",
+                tenant_id=tenant_id,
+                role_filter=role_filter,
+            )
+            return []
+
+        # Create notification for each team member
+        notifications: list[Notification] = []
+
+        # Add team context to metadata
+        team_metadata = metadata or {}
+        team_metadata.update({
+            "team_notification": True,
+            "team_size": len(target_users),
+            "role_filter": role_filter,
+        })
+
+        for user_id in target_users:
+            try:
+                notification = await self.create_notification(
+                    tenant_id=tenant_id,
+                    user_id=user_id,
+                    notification_type=notification_type,
+                    title=title,
+                    message=message,
+                    priority=priority,
+                    action_url=action_url,
+                    action_label=action_label,
+                    related_entity_type=related_entity_type,
+                    related_entity_id=related_entity_id,
+                    metadata=team_metadata,
+                    auto_send=auto_send,
+                )
+                notifications.append(notification)
+            except Exception as e:
+                logger.error(
+                    "Failed to notify team member",
+                    user_id=str(user_id),
+                    error=str(e),
+                )
+                # Continue with other team members
+
+        logger.info(
+            "Team notification complete",
+            tenant_id=tenant_id,
+            notifications_created=len(notifications),
+            target_count=len(target_users),
+        )
+
+        return notifications
+
     def _render_html_email(self, notification: Notification) -> str:
         """Render HTML email for notification."""
         action_button = ""

@@ -112,6 +112,12 @@ try:
 except ImportError:
     pass
 
+# Licensing Framework
+try:
+    from dotmac.platform.licensing.framework import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
 # Use Base.metadata for autogeneration
 target_metadata = Base.metadata
 

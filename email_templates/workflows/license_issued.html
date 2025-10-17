@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>License Issued - {{ product_name }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .license-box {
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .license-key {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: #059669;
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            word-break: break-all;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .info-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .info-table td:first-child {
+            font-weight: 600;
+            color: #6b7280;
+            width: 40%;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-trial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .features-list {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .features-list h3 {
+            margin-top: 0;
+            color: #10b981;
+        }
+        .features-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .features-list li {
+            margin: 8px 0;
+        }
+        .button {
+            display: inline-block;
+            background: #10b981;
+            color: #ffffff;
+            padding: 14px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background: #059669;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #10b981;
+            text-decoration: none;
+        }
+        .warning-box {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 License Issued Successfully</h1>
+        </div>
+
+        <div class="content">
+            <h2>Hi {{ customer_name }},</h2>
+
+            <p>Great news! Your service license has been successfully issued and is now active.</p>
+
+            <div class="license-box">
+                <h3 style="margin-top: 0;">Your License Key</h3>
+                <div class="license-key">{{ license_key }}</div>
+                <p style="margin-bottom: 0; font-size: 14px; color: #6b7280;">
+                    Keep this license key secure. You'll need it to activate your service.
+                </p>
+            </div>
+
+            <h3>License Details</h3>
+            <table class="info-table">
+                <tr>
+                    <td>Product</td>
+                    <td><strong>{{ product_name }}</strong></td>
+                </tr>
+                <tr>
+                    <td>License Type</td>
+                    <td>{{ license_type }}</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td>
+                        {% if trial_period_days %}
+                        <span class="status-badge status-trial">Trial ({{ trial_period_days }} days)</span>
+                        {% else %}
+                        <span class="status-badge status-active">Active</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Issue Date</td>
+                    <td>{{ issue_date }}</td>
+                </tr>
+                <tr>
+                    <td>Expiry Date</td>
+                    <td>{{ expiry_date }}</td>
+                </tr>
+                <tr>
+                    <td>Auto-Renewal</td>
+                    <td>{{ 'Enabled' if auto_renewal else 'Disabled' }}</td>
+                </tr>
+                <tr>
+                    <td>Max Activations</td>
+                    <td>{{ max_activations }} device(s)</td>
+                </tr>
+            </table>
+
+            {% if features %}
+            <div class="features-list">
+                <h3>Included Features</h3>
+                <ul>
+                    {% for feature in features %}
+                    <li>
+                        <strong>{{ feature.feature_name }}</strong>
+                        {% if feature.limit_value %}
+                        - {{ feature.limit_value }} {{ feature.limit_type }}
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if trial_period_days %}
+            <div class="warning-box">
+                <strong>Trial Period Notice</strong><br>
+                Your license is currently in trial mode for {{ trial_period_days }} days. After the trial period ends on {{ trial_end_date }}, you'll need to activate a paid subscription to continue using the service.
+            </div>
+            {% endif %}
+
+            <center>
+                <a href="{{ activation_url }}" class="button">Activate Your Service</a>
+            </center>
+
+            <h3>Next Steps</h3>
+            <ol>
+                <li>Click the activation button above to complete your service setup</li>
+                <li>Follow the on-screen instructions to configure your service</li>
+                <li>Your service will be available immediately after activation</li>
+                {% if installation_required %}
+                <li>Schedule an installation appointment for physical setup</li>
+                {% endif %}
+            </ol>
+
+            <h3>Important Information</h3>
+            <ul>
+                <li>Store your license key in a secure location</li>
+                <li>Do not share your license key with others</li>
+                <li>You can view and manage your license at any time in the customer portal</li>
+                {% if auto_renewal %}
+                <li>Your license will automatically renew on {{ expiry_date }}</li>
+                {% else %}
+                <li>Remember to renew your license before {{ expiry_date }} to avoid service interruption</li>
+                {% endif %}
+            </ul>
+
+            <div class="info-table" style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+                <strong>Need Help?</strong><br>
+                If you have any questions about your license or need assistance with activation:<br><br>
+                📞 Phone: {{ support_phone }}<br>
+                📧 Email: <a href="mailto:{{ support_email }}">{{ support_email }}</a><br>
+                💬 Live Chat: <a href="{{ portal_url }}/support">{{ portal_url }}/support</a>
+            </div>
+
+            <p>Thank you for choosing {{ company_name }}!</p>
+
+            <p>Best regards,<br>
+            <strong>The {{ company_name }} Team</strong></p>
+        </div>
+
+        <div class="footer">
+            <p>{{ company_name }} | {{ company_address }}</p>
+            <p>
+                <a href="{{ portal_url }}/licenses">View License Details</a> |
+                <a href="{{ terms_url }}">Terms of Service</a>
+            </p>
+            <p>© {{ current_year }} {{ company_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -486,6 +486,153 @@ class QuoteService:
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
 
+    async def create_renewal_quote(
+        self,
+        tenant_id: str,
+        customer_id: UUID,
+        subscription_data: dict[str, Any],
+        valid_days: int = 30,
+        discount_percentage: Decimal | None = None,
+        notes: str | None = None,
+        created_by_id: UUID | None = None,
+    ) -> Quote:
+        """
+        Create a renewal quote for an existing customer.
+
+        This is similar to create_quote but for customers instead of leads.
+        Used for subscription renewals or service plan changes.
+
+        Args:
+            tenant_id: Tenant identifier
+            customer_id: Customer identifier
+            subscription_data: Dict containing subscription/plan details
+            valid_days: Quote validity period
+            discount_percentage: Optional renewal discount (e.g., Decimal("10") for 10% off)
+            notes: Additional notes
+            created_by_id: User who created the quote
+
+        Returns:
+            Created renewal quote
+        """
+        # Verify customer exists
+        from dotmac.platform.customer_management.models import Customer
+
+        customer_stmt = select(Customer).where(
+            and_(Customer.tenant_id == tenant_id, Customer.id == customer_id)
+        )
+        customer_result = await self.db.execute(customer_stmt)
+        customer = customer_result.scalar_one_or_none()
+
+        if not customer:
+            raise EntityNotFoundError(f"Customer {customer_id} not found")
+
+        # Extract subscription details
+        service_plan_name = subscription_data.get("plan_name", "Subscription Renewal")
+        bandwidth = subscription_data.get("bandwidth", subscription_data.get("service_plan_speed", "N/A"))
+        monthly_recurring_charge = Decimal(str(subscription_data.get("amount", subscription_data.get("renewal_price", "0"))))
+        billing_cycle = subscription_data.get("billing_cycle", "monthly")
+        contract_term_months = subscription_data.get("contract_term_months", 12)
+
+        # Apply renewal discount if specified
+        if discount_percentage and discount_percentage > 0:
+            discount_amount = monthly_recurring_charge * (discount_percentage / Decimal("100"))
+            monthly_recurring_charge = monthly_recurring_charge - discount_amount
+
+        # Generate quote number
+        quote_number = await self._generate_quote_number(tenant_id)
+
+        # No installation/equipment/activation fees for renewals
+        total_upfront_cost = Decimal("0.00")
+
+        # Set validity period
+        valid_until = datetime.utcnow() + timedelta(days=valid_days)
+
+        # Create line items for renewal
+        line_items = [
+            {
+                "description": f"{service_plan_name} - {billing_cycle.title()} Renewal",
+                "quantity": 1,
+                "unit_price": float(monthly_recurring_charge),
+                "total": float(monthly_recurring_charge),
+            }
+        ]
+
+        if discount_percentage:
+            line_items.append(
+                {
+                    "description": f"Renewal Discount ({discount_percentage}%)",
+                    "quantity": 1,
+                    "unit_price": float(-discount_amount),
+                    "total": float(-discount_amount),
+                }
+            )
+
+        # Build metadata
+        metadata = {
+            "renewal": True,
+            "customer_id": str(customer_id),
+            "subscription_id": subscription_data.get("subscription_id"),
+            "original_price": str(subscription_data.get("amount", subscription_data.get("renewal_price", "0"))),
+            "discount_percentage": str(discount_percentage) if discount_percentage else None,
+            "billing_cycle": billing_cycle,
+        }
+
+        # For renewal quotes, we create a temporary "lead" entry or link to customer directly
+        # Since Quote model requires lead_id, we'll need to create a virtual lead
+        # or modify this based on your business logic
+
+        # Option 1: Create a virtual renewal lead
+        lead_service = LeadService(self.db)
+        virtual_lead = await lead_service.create_lead(
+            tenant_id=tenant_id,
+            first_name=customer.first_name,
+            last_name=customer.last_name,
+            email=customer.email,
+            phone=customer.phone,
+            company_name=customer.company_name,
+            service_address_line1=customer.service_address_line1 or customer.address_line1,
+            service_address_line2=customer.service_address_line2 or customer.address_line2,
+            service_city=customer.service_city or customer.city,
+            service_state_province=customer.service_state_province or customer.state_province,
+            service_postal_code=customer.service_postal_code or customer.postal_code,
+            service_country=customer.service_country or customer.country,
+            source=LeadSource.OTHER,
+            priority=2,  # Medium priority for renewals
+            metadata={"renewal": True, "customer_id": str(customer_id)},
+            notes=f"Auto-generated renewal lead for customer {customer_id}",
+            created_by_id=created_by_id,
+        )
+
+        quote = Quote(
+            id=uuid4(),
+            tenant_id=tenant_id,
+            quote_number=quote_number,
+            status=QuoteStatus.DRAFT,
+            lead_id=virtual_lead.id,
+            service_plan_name=service_plan_name,
+            bandwidth=bandwidth,
+            monthly_recurring_charge=monthly_recurring_charge,
+            installation_fee=Decimal("0.00"),
+            equipment_fee=Decimal("0.00"),
+            activation_fee=Decimal("0.00"),
+            total_upfront_cost=total_upfront_cost,
+            contract_term_months=contract_term_months,
+            early_termination_fee=None,
+            promo_discount_months=None,
+            promo_monthly_discount=None,
+            valid_until=valid_until,
+            line_items=line_items,
+            metadata=metadata,
+            notes=notes or f"Renewal quote for existing customer - {discount_percentage}% discount" if discount_percentage else "Renewal quote for existing customer",
+            created_by_id=created_by_id,
+        )
+
+        self.db.add(quote)
+        await self.db.flush()
+        await self.db.refresh(quote)
+
+        return quote
+
     async def _generate_quote_number(self, tenant_id: str) -> str:
         """Generate unique quote number for tenant."""
         stmt = select(func.count(Quote.id)).where(Quote.tenant_id == tenant_id)

@@ -21,6 +21,8 @@ from dotmac.platform.notifications.schemas import (
     NotificationPreferenceResponse,
     NotificationPreferenceUpdateRequest,
     NotificationResponse,
+    TeamNotificationRequest,
+    TeamNotificationResponse,
 )
 from dotmac.platform.notifications.service import NotificationService
 from dotmac.platform.user_management.models import User
@@ -335,3 +337,84 @@ async def get_notification_stats(
         "by_priority": priority_counts,
         "top_types": dict(top_types),
     }
+
+
+# Team Notification Endpoint
+@router.post("/team", response_model=TeamNotificationResponse, status_code=status.HTTP_201_CREATED)
+async def notify_team(
+    request: TeamNotificationRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Any:
+    """
+    Send notifications to a team of users.
+
+    Supports two modes:
+    1. Specific team members: Provide list of user IDs in `team_members`
+    2. Role-based: Provide `role_filter` to notify all users with that role
+
+    At least one of `team_members` or `role_filter` must be provided.
+
+    Example requests:
+
+    1. Notify specific team members:
+    ```json
+    {
+        "team_members": ["uuid1", "uuid2", "uuid3"],
+        "title": "System Maintenance Alert",
+        "message": "Scheduled maintenance tonight at 10 PM",
+        "priority": "high"
+    }
+    ```
+
+    2. Notify by role:
+    ```json
+    {
+        "role_filter": "support_agent",
+        "title": "New Ticket Assigned",
+        "message": "High priority ticket requires attention",
+        "priority": "urgent"
+    }
+    ```
+    """
+    if not current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current user must be associated with a tenant",
+        )
+
+    service = NotificationService(db)
+
+    try:
+        notifications = await service.notify_team(
+            tenant_id=current_user.tenant_id,
+            team_members=request.team_members,
+            role_filter=request.role_filter,
+            notification_type=request.notification_type,
+            title=request.title,
+            message=request.message,
+            priority=request.priority,
+            action_url=request.action_url,
+            action_label=request.action_label,
+            related_entity_type=request.related_entity_type,
+            related_entity_id=request.related_entity_id,
+            metadata=request.metadata,
+            auto_send=request.auto_send,
+        )
+
+        return TeamNotificationResponse(
+            notifications_created=len(notifications),
+            target_count=len(request.team_members) if request.team_members else len(notifications),
+            team_members=request.team_members,
+            role_filter=request.role_filter,
+            notification_type=request.notification_type.value,
+            priority=request.priority.value,
+        )
+
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to send team notifications: {str(e)}",
+        )

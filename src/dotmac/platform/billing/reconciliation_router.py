@@ -30,7 +30,7 @@ from dotmac.platform.db import get_async_session
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/reconciliations", tags=["Billing Reconciliation"])
+router = APIRouter(prefix="/reconciliations")
 
 
 def get_reconciliation_service(

@@ -32,7 +32,7 @@ export default function LoginPage() {
       logger.info('Starting login process', { email: data.email });
 
       const response = await apiClient.post('/auth/login', {
-        email: data.email,
+        username: data.email,  // Backend expects username field
         password: data.password,
       });
       logger.debug('Login response received', { status: response.status });
@@ -80,17 +80,17 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-muted-foreground mb-2">
-              Email
+              Username or Email
             </label>
             <input
               id="email"
-              type="email"
-              autoComplete="email"
+              type="text"
+              autoComplete="username"
               {...register('email')}
               className={`w-full px-3 py-2 bg-accent border ${
                 errors.email ? 'border-red-500' : 'border-border'
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
-              placeholder="user@example.com"
+              placeholder="username or email"
               data-testid="email-input"
             />
             {errors.email && (

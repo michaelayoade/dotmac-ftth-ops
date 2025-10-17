@@ -224,6 +224,14 @@ ROUTER_CONFIGS = [
         description="Billing and payment management",
     ),
     RouterConfig(
+        module_path="dotmac.platform.licensing.router",
+        router_name="router",
+        prefix="",  # Router already has /api/licensing prefix
+        tags=["Licensing"],
+        description="Software licensing, activation, and compliance management",
+        requires_auth=True,
+    ),
+    RouterConfig(
         module_path="dotmac.platform.plugins.router",
         router_name="router",
         prefix="/api/v1/plugins",
@@ -339,6 +347,14 @@ ROUTER_CONFIGS = [
         prefix="/api/v1/billing/dunning",
         tags=["Billing - Dunning"],
         description="Dunning and collections management",
+        requires_auth=True,
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.licensing.router_framework",
+        router_name="router",
+        prefix="/api/v1",
+        tags=["Licensing Framework"],
+        description="Composable licensing with dynamic plan builder",
         requires_auth=True,
     ),
     RouterConfig(
@@ -644,6 +660,38 @@ ROUTER_CONFIGS = [
         tags=["Fault Management"],
         description="Alarm management, SLA monitoring, and maintenance windows",
         requires_auth=True,
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.deployment.router",
+        router_name="router",
+        prefix="/api/v1/deployments",
+        tags=["Deployment Orchestration"],
+        description="Multi-tenant deployment provisioning and lifecycle management",
+        requires_auth=True,
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.workflows.router",
+        router_name="router",
+        prefix="/api/v1",
+        tags=["Workflows"],
+        description="Workflow orchestration and automation",
+        requires_auth=True,
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.sales.router",
+        router_name="router",
+        prefix="/api/v1/orders",
+        tags=["Sales - Orders"],
+        description="Order processing and service activation (authenticated)",
+        requires_auth=True,
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.sales.router",
+        router_name="public_router",
+        prefix="/api/public/orders",
+        tags=["Sales - Public Orders"],
+        description="Public order creation and status checking (no auth required)",
+        requires_auth=False,
     ),
 ]
 

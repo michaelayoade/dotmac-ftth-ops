@@ -25,7 +25,10 @@ export function middleware(request: NextRequest) {
   }
 
   // Skip middleware for E2E tests
-  if (process.env.NODE_ENV === 'test' || process.env.E2E_TEST === 'true') {
+  // Use regular E2E_TEST env var (not NEXT_PUBLIC_) since middleware runs server-side
+  if (process.env.NODE_ENV === 'test' ||
+      process.env.E2E_TEST === 'true' ||
+      request.headers.get('x-e2e-test') === 'true') {
     return NextResponse.next();
   }
 

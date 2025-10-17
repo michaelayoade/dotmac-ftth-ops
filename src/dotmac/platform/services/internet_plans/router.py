@@ -28,7 +28,7 @@ from .schemas import (
 )
 from .service import InternetPlanService
 
-router = APIRouter(prefix="/api/v1/services/internet-plans", tags=["Internet Service Plans"])
+router = APIRouter(prefix="/api/v1/services/internet-plans")
 
 
 # ============================================================================

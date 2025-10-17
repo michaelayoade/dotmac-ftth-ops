@@ -15,6 +15,10 @@ export default defineConfig({
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // Set custom header to bypass authentication in E2E tests
+    extraHTTPHeaders: {
+      'x-e2e-test': 'true',
+    },
   },
 
   // Visual regression testing configuration
@@ -42,7 +46,7 @@ export default defineConfig({
   webServer: {
     command: 'pnpm dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true, // Always reuse existing server
     timeout: 120 * 1000,
   },
 });

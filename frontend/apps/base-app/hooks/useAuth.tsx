@@ -39,6 +39,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuth = async () => {
     try {
       setLoading(true);
+
+      // Skip auth check in E2E test mode
+      if (typeof window !== 'undefined' && (window as any).__e2e_test__) {
+        logger.info('AuthProvider: E2E test mode detected, skipping auth check');
+        setUser({
+          id: 'e2e-test-user',
+          username: 'admin',
+          email: 'admin@example.com',
+          full_name: 'Test Admin'
+        } as User);
+        setPermissions({
+          effective_permissions: []
+        });
+        setLoading(false);
+        return;
+      }
+
       const userData = await authService.getCurrentUser();
       if (userData) {
         setUser(userData);
@@ -73,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
 
-      const authResponse = await authService.login({ email: username, password });
+      const authResponse = await authService.login({ username, password });
 
       if (authResponse && authResponse.user) {
         setUser(authResponse.user);

@@ -19,12 +19,13 @@ import {
   useCustomerActivitiesQuery,
   useCustomerNotesQuery,
   useCustomerDashboardQuery,
-  useCustomerSubscriptionsQuery,
-  useCustomerNetworkInfoQuery,
-  useCustomerDevicesQuery,
-  useCustomerTicketsQuery,
-  useCustomerBillingQuery,
-  useCustomer360ViewQuery,
+  // TODO: Add 360° view queries to customers.graphql
+  // useCustomerSubscriptionsQuery,
+  // useCustomerNetworkInfoQuery,
+  // useCustomerDevicesQuery,
+  // useCustomerTicketsQuery,
+  // useCustomerBillingQuery,
+  // useCustomer360ViewQuery,
   CustomerStatusEnum,
 } from '@/lib/graphql/generated';
 
@@ -271,11 +272,14 @@ export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions
 // ============================================================================
 // Customer 360° View Hooks
 // ============================================================================
+// TODO: These hooks require additional GraphQL queries to be added to customers.graphql
+// Uncomment and implement once the backend queries are available
 
 // ============================================================================
 // Customer Subscriptions Hook
 // ============================================================================
 
+/*
 export interface UseCustomerSubscriptionsOptions {
   customerId: string;
   enabled?: boolean;
@@ -303,7 +307,9 @@ export function useCustomerSubscriptionsGraphQL(options: UseCustomerSubscription
     refetch,
   };
 }
+*/
 
+/*
 // ============================================================================
 // Customer Network Info Hook
 // ============================================================================
@@ -502,6 +508,7 @@ export function useCustomer360ViewGraphQL(options: UseCustomer360ViewOptions) {
     refetch,
   };
 }
+*/
 
 // ============================================================================
 // Export All Hooks
@@ -514,10 +521,11 @@ export const CustomerGraphQLHooks = {
   useCustomerActivitiesGraphQL,
   useCustomerNotesGraphQL,
   useCustomerDashboardGraphQL,
-  useCustomerSubscriptionsGraphQL,
-  useCustomerNetworkInfoGraphQL,
-  useCustomerDevicesGraphQL,
-  useCustomerTicketsGraphQL,
-  useCustomerBillingGraphQL,
-  useCustomer360ViewGraphQL,
+  // 360° view hooks commented out until queries are implemented
+  // useCustomerSubscriptionsGraphQL,
+  // useCustomerNetworkInfoGraphQL,
+  // useCustomerDevicesGraphQL,
+  // useCustomerTicketsGraphQL,
+  // useCustomerBillingGraphQL,
+  // useCustomer360ViewGraphQL,
 };

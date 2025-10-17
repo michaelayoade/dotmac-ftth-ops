@@ -54,6 +54,7 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { useBillingPlans as useBillingPlansGraphQL } from '@/hooks/useBillingGraphQL';
 import type { SubscriptionPlan } from '@/hooks/useBillingGraphQL';

@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends
 
 from ..settings import Settings, get_settings
 
-router = APIRouter(prefix="/platform", tags=["platform"])
+router = APIRouter(prefix="/platform")
 
 
 @router.get("/config")

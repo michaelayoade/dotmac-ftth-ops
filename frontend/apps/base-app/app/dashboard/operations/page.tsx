@@ -1,5 +1,8 @@
 'use client';
 
+// Force dynamic rendering to avoid SSR issues with React Query hooks
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import Link from 'next/link';
 import {
@@ -337,7 +340,7 @@ export default function OperationsPage() {
                     <div>
                       <h3 className="font-semibold text-foreground">Customer Management</h3>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {metrics?.customers.total || 0} total customers • {metrics?.customers.newThisMonth || 0} new this month
+                        {customerMetrics?.totalCustomers || 0} total customers • {customerMetrics?.newCustomers || 0} new this month
                       </p>
                     </div>
                   </div>

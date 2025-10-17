@@ -103,6 +103,59 @@ class LeadServiceabilityUpdateRequest(BaseModel):
     notes: str | None = None
 
 
+class LeadConvertToCustomerRequest(BaseModel):
+    """Request schema for converting lead to customer."""
+
+    model_config = ConfigDict()
+
+    # Customer details (optional overrides from lead)
+    first_name: str | None = Field(None, min_length=1, max_length=100)
+    last_name: str | None = Field(None, min_length=1, max_length=100)
+    middle_name: str | None = Field(None, max_length=100)
+    company_name: str | None = Field(None, max_length=200)
+    email: EmailStr | None = None
+    phone: str | None = Field(None, max_length=30)
+    mobile: str | None = Field(None, max_length=30)
+
+    # Customer type and tier
+    customer_type: str = Field("individual", pattern="^(individual|business)$")
+    tier: str = Field("free", pattern="^(free|bronze|silver|gold|platinum|enterprise)$")
+
+    # Billing address (defaults to lead's address if not provided)
+    address_line1: str | None = Field(None, max_length=200)
+    address_line2: str | None = Field(None, max_length=200)
+    city: str | None = Field(None, max_length=100)
+    state_province: str | None = Field(None, max_length=100)
+    postal_code: str | None = Field(None, max_length=20)
+    country: str | None = Field(None, pattern="^[A-Z]{2}$")
+
+    # ISP service details (defaults to lead's service address)
+    service_address_line1: str | None = Field(None, max_length=200)
+    service_address_line2: str | None = Field(None, max_length=200)
+    service_city: str | None = Field(None, max_length=100)
+    service_state_province: str | None = Field(None, max_length=100)
+    service_postal_code: str | None = Field(None, max_length=20)
+    service_country: str | None = Field(None, pattern="^[A-Z]{2}$")
+    service_coordinates: dict[str, Any] | None = None
+
+    # Installation details
+    installation_status: str | None = Field(None, pattern="^(pending|scheduled|in_progress|completed|failed|canceled)$")
+    scheduled_installation_date: datetime | None = None
+    installation_notes: str | None = None
+
+    # Service configuration
+    connection_type: str | None = Field(None, pattern="^(ftth|wireless|dsl|cable|fiber|hybrid)$")
+    service_plan_speed: str | None = Field(None, max_length=50)
+
+    # Preferences
+    preferred_channel: str = Field("email", pattern="^(email|sms|phone|whatsapp|portal)$")
+    preferred_language: str = Field("en", max_length=10)
+
+    # Additional metadata
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    notes: str | None = None
+
+
 class LeadResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response schema for lead."""
 

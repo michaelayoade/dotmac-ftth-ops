@@ -24,7 +24,7 @@ import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useBankAccounts, useManualPayments } from "@/hooks/useBankAccounts";
 import {
   useStartReconciliation,
-  useReconcilePayment,
+  useAddReconciledPayment,
   useCompleteReconciliation,
 } from "@/hooks/useReconciliation";
 import { Badge } from "@/components/ui/badge";
@@ -67,7 +67,7 @@ export function ReconciliationWizard({
     date_to: setupData.period_end,
   });
   const startReconciliation = useStartReconciliation();
-  const reconcilePayment = useReconcilePayment();
+  const addReconciledPayment = useAddReconciledPayment();
   const completeReconciliation = useCompleteReconciliation();
 
   const handleStartReconciliation = async () => {
@@ -94,9 +94,11 @@ export function ReconciliationWizard({
     try {
       // Reconcile each selected payment
       for (const paymentId of selectedPayments) {
-        await reconcilePayment.mutateAsync({
+        await addReconciledPayment.mutateAsync({
           reconciliationId,
-          paymentId,
+          paymentData: {
+            payment_id: paymentId,
+          },
         });
       }
 

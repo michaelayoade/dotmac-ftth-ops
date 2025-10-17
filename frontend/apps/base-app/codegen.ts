@@ -24,6 +24,9 @@ const config: CodegenConfig = {
         withHOC: false,
         skipTypename: false,
         enumsAsTypes: true,
+        // Disable newer Apollo Client v3.8+ hooks to avoid import errors with v4.0.7
+        addDocBlocks: false,
+        dedupeFragments: true,
         avoidOptionals: {
           field: false,
           inputValue: false,
