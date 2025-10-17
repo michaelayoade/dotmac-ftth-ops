@@ -70,6 +70,7 @@ class NotificationType(str, Enum):
     ACCOUNT_LOCKED = "account_locked"
     TWO_FACTOR_ENABLED = "two_factor_enabled"
     API_KEY_EXPIRING = "api_key_expiring"
+    SYSTEM_ALERT = "system_alert"
 
     # Custom/Generic
     SYSTEM_ANNOUNCEMENT = "system_announcement"
