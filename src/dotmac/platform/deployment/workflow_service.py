@@ -5,7 +5,7 @@ Provides workflow-compatible methods for deployment and provisioning operations.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -36,9 +36,9 @@ class WorkflowDeploymentService:
         deployment_type: str,
         tenant_id: int,
         environment: str = "production",
-        region: Optional[str] = None,
-        config: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        region: str | None = None,
+        config: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Provision a new tenant instance for a customer.
 
@@ -174,7 +174,6 @@ class WorkflowDeploymentService:
             # Create deployment service instance
             # Note: In production, you might need to handle sync/async session conversion
             # For now, we'll create a temporary approach
-            from ..db import get_db
 
             # Get sync session for DeploymentService
             # Since we're in async context, we'll use the async session directly
@@ -193,7 +192,7 @@ class WorkflowDeploymentService:
             )
 
             # Build tenant URL from endpoints
-            tenant_url = "https://tenant-{}.example.com".format(tenant_id_int)
+            tenant_url = f"https://tenant-{tenant_id_int}.example.com"
             if instance.endpoints and "ui" in instance.endpoints:
                 tenant_url = instance.endpoints["ui"]
             elif instance.endpoints and "api" in instance.endpoints:
@@ -240,38 +239,109 @@ class WorkflowDeploymentService:
         customer_id: int | str,
         priority: str,
         scheduled_date: str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Schedule a deployment for an order.
+
+        This method creates a deployment schedule record and queues the deployment
+        job for execution at the specified date/time. It integrates with the
+        DeploymentService scheduling system.
 
         Args:
             order_id: Order ID
             customer_id: Customer ID
-            priority: Priority level (e.g., "high", "normal", "low")
-            scheduled_date: ISO format date/time for deployment
+            priority: Priority level ("high", "normal", "low")
+            scheduled_date: ISO format date/time for deployment (optional, defaults to immediate)
 
         Returns:
-            Dict with deployment_schedule_id, status
+            Dict with deployment_schedule_id, order_id, status, scheduled_date
+
+        Raises:
+            ValueError: If priority is invalid or scheduled_date is malformed
+            RuntimeError: If deployment scheduling fails
         """
+        from datetime import datetime, timedelta
+
         logger.info(
-            f"[STUB] Scheduling deployment for order {order_id}, customer {customer_id}, priority {priority}"
+            "Scheduling deployment for order",
+            order_id=order_id,
+            customer_id=customer_id,
+            priority=priority,
+            scheduled_date=scheduled_date,
         )
 
-        # TODO: Use actual deployment scheduling logic
-        # This would:
-        # 1. Create a deployment schedule record
-        # 2. Queue deployment job
-        # 3. Notify deployment team
-        # 4. Return schedule details
+        try:
+            # Validate priority
+            valid_priorities = ["high", "normal", "low"]
+            if priority not in valid_priorities:
+                raise ValueError(f"Invalid priority: {priority}. Must be one of {valid_priorities}")
 
-        return {
-            "deployment_schedule_id": f"stub-schedule-{order_id}",
-            "order_id": order_id,
-            "customer_id": customer_id,
-            "priority": priority,
-            "scheduled_date": scheduled_date,
-            "status": "scheduled",
-        }
+            # Parse scheduled date or default to 1 hour from now
+            if scheduled_date:
+                try:
+                    scheduled_at = datetime.fromisoformat(scheduled_date.replace("Z", "+00:00"))
+                except ValueError as e:
+                    raise ValueError(f"Invalid scheduled_date format: {e}")
+            else:
+                # Default to 1 hour from now for immediate deployments
+                scheduled_at = datetime.utcnow() + timedelta(hours=1)
+
+            # Validate scheduled time is in the future
+            if scheduled_at <= datetime.utcnow():
+                raise ValueError("scheduled_date must be in the future")
+
+            # Retrieve customer to get tenant_id
+            from dotmac.platform.customer_management.service import CustomerService
+
+            customer_service = CustomerService(self.db)
+            customer = await customer_service.get_customer(int(customer_id))
+            tenant_id = customer.tenant_id
+
+            # Create deployment schedule using DeploymentService
+            # We'll use the 'provision' operation as default for order deployments
+            schedule_result = await self.deployment_service.schedule_deployment(
+                tenant_id=tenant_id,
+                operation="provision",
+                scheduled_at=scheduled_at,
+                provision_request=None,  # Will be populated from order details when executed
+                instance_id=None,
+                triggered_by=None,  # System-triggered
+                metadata={
+                    "order_id": str(order_id),
+                    "customer_id": str(customer_id),
+                    "priority": priority,
+                    "workflow": "deployment_workflow",
+                },
+            )
+
+            logger.info(
+                "Deployment scheduled successfully",
+                schedule_id=schedule_result["schedule_id"],
+                order_id=order_id,
+                scheduled_at=scheduled_at.isoformat(),
+            )
+
+            return {
+                "deployment_schedule_id": schedule_result["schedule_id"],
+                "order_id": str(order_id),
+                "customer_id": str(customer_id),
+                "priority": priority,
+                "scheduled_date": scheduled_at.isoformat(),
+                "status": "scheduled",
+                "schedule_type": schedule_result["schedule_type"],
+            }
+
+        except ValueError:
+            # Re-raise validation errors
+            raise
+        except Exception as e:
+            logger.error(
+                "Failed to schedule deployment",
+                order_id=order_id,
+                customer_id=customer_id,
+                error=str(e),
+            )
+            raise RuntimeError(f"Failed to schedule deployment: {e}") from e
 
     async def provision_partner_tenant(
         self,
@@ -279,11 +349,11 @@ class WorkflowDeploymentService:
         partner_id: int | str,
         license_key: str,
         deployment_type: str,
-        white_label_config: Dict[str, Any] | None = None,
+        white_label_config: dict[str, Any] | None = None,
         tenant_id: int | None = None,
         environment: str = "production",
-        region: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        region: str | None = None,
+    ) -> dict[str, Any]:
         """
         Provision a white-labeled tenant for a partner's customer.
 

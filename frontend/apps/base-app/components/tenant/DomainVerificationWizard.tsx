@@ -518,7 +518,7 @@ export function DomainVerificationWizard({
 
                 <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-4 rounded-lg">
                   <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                    What's Next?
+                    What&apos;s Next?
                   </h4>
                   <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                     <li>• Your domain is now associated with your tenant</li>

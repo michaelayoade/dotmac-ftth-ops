@@ -35,7 +35,7 @@ from .template_service import (
 logger = structlog.get_logger(__name__)
 
 # Create router
-router = APIRouter(tags=["Communications"])
+router = APIRouter(prefix="/api/v1/communications", tags=["Communications"])
 
 
 # === Email Endpoints ===

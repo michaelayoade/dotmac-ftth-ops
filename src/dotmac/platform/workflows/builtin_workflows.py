@@ -4,7 +4,6 @@ Built-in Workflow Definitions
 Pre-configured workflows for common business processes.
 """
 
-from typing import Dict, List
 
 # Workflow: Lead to Customer Onboarding
 LEAD_TO_CUSTOMER_WORKFLOW = {
@@ -485,7 +484,7 @@ TICKET_TO_DEPLOYMENT_WORKFLOW = {
 }
 
 
-def get_all_builtin_workflows() -> List[Dict]:
+def get_all_builtin_workflows() -> list[dict]:
     """
     Get all built-in workflow definitions.
 
@@ -501,7 +500,7 @@ def get_all_builtin_workflows() -> List[Dict]:
     ]
 
 
-def get_workflow_by_name(name: str) -> Dict | None:
+def get_workflow_by_name(name: str) -> dict | None:
     """
     Get a built-in workflow by name.
 

@@ -12,7 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.core.exceptions import (
-    InvalidStateTransitionError,
+    BusinessRuleError,
     ValidationError,
 )
 from dotmac.platform.customer_management.models import Customer
@@ -27,13 +27,13 @@ from dotmac.platform.services.lifecycle.schemas import (
     ServiceModificationRequest,
     ServiceProvisionRequest,
 )
-from dotmac.platform.services.lifecycle.service import LifecycleService
+from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
 
 @pytest.fixture
-async def lifecycle_service(db_session: AsyncSession) -> LifecycleService:
-    """Create LifecycleService instance."""
-    return LifecycleService(db_session)
+async def lifecycle_service(db_session: AsyncSession) -> LifecycleOrchestrationService:
+    """Create LifecycleOrchestrationService instance."""
+    return LifecycleOrchestrationService(db_session)
 
 
 @pytest.fixture
@@ -76,7 +76,7 @@ class TestServiceProvisioning:
     @pytest.mark.asyncio
     async def test_provision_service_success(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -115,7 +115,7 @@ class TestServiceProvisioning:
     @pytest.mark.asyncio
     async def test_provision_service_validation_error(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_customer: Customer,
         db_session: AsyncSession,
@@ -138,7 +138,7 @@ class TestServiceProvisioning:
     @pytest.mark.asyncio
     async def test_provision_service_with_subscription(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -162,7 +162,7 @@ class TestServiceActivation:
     @pytest.mark.asyncio
     async def test_activate_service_success(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -201,7 +201,7 @@ class TestServiceActivation:
     @pytest.mark.asyncio
     async def test_activate_already_active_service(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -217,7 +217,7 @@ class TestServiceActivation:
         assert service.status == ServiceStatus.ACTIVE
 
         # Try to activate again
-        with pytest.raises(InvalidStateTransitionError):
+        with pytest.raises(BusinessRuleError):
             await lifecycle_service.activate_service(
                 service_id=service.id,
                 tenant_id=test_tenant_id,
@@ -230,7 +230,7 @@ class TestServiceSuspension:
     @pytest.mark.asyncio
     async def test_suspend_service_success(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -271,7 +271,7 @@ class TestServiceSuspension:
     @pytest.mark.asyncio
     async def test_suspend_fraud_service(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -298,7 +298,7 @@ class TestServiceSuspension:
     @pytest.mark.asyncio
     async def test_suspend_non_active_service(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -315,7 +315,7 @@ class TestServiceSuspension:
         assert service.status == ServiceStatus.PENDING
 
         # Try to suspend non-active service
-        with pytest.raises(InvalidStateTransitionError):
+        with pytest.raises(BusinessRuleError):
             await lifecycle_service.suspend_service(
                 service_id=service.id,
                 tenant_id=test_tenant_id,
@@ -329,7 +329,7 @@ class TestServiceResumption:
     @pytest.mark.asyncio
     async def test_resume_service_success(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -373,7 +373,7 @@ class TestServiceResumption:
     @pytest.mark.asyncio
     async def test_resume_non_suspended_service(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -389,7 +389,7 @@ class TestServiceResumption:
         assert service.status == ServiceStatus.ACTIVE
 
         # Try to resume active service
-        with pytest.raises(InvalidStateTransitionError):
+        with pytest.raises(BusinessRuleError):
             await lifecycle_service.resume_service(
                 service_id=service.id,
                 tenant_id=test_tenant_id,
@@ -402,7 +402,7 @@ class TestServiceTermination:
     @pytest.mark.asyncio
     async def test_terminate_service_success(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -441,7 +441,7 @@ class TestServiceTermination:
     @pytest.mark.asyncio
     async def test_terminate_suspended_service(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -472,7 +472,7 @@ class TestServiceTermination:
     @pytest.mark.asyncio
     async def test_terminate_already_terminated_service(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -491,7 +491,7 @@ class TestServiceTermination:
         await db_session.commit()
 
         # Try to terminate again
-        with pytest.raises(InvalidStateTransitionError):
+        with pytest.raises(BusinessRuleError):
             await lifecycle_service.terminate_service(
                 service_id=service.id,
                 tenant_id=test_tenant_id,
@@ -505,7 +505,7 @@ class TestServiceModification:
     @pytest.mark.asyncio
     async def test_modify_service_config_success(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -557,7 +557,7 @@ class TestServiceHealthChecks:
     @pytest.mark.asyncio
     async def test_perform_health_check_success(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -597,7 +597,7 @@ class TestBulkOperations:
     @pytest.mark.asyncio
     async def test_bulk_suspend_services(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_customer: Customer,
         db_session: AsyncSession,
@@ -636,7 +636,7 @@ class TestBulkOperations:
     @pytest.mark.asyncio
     async def test_bulk_resume_services(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_customer: Customer,
         db_session: AsyncSession,
@@ -683,7 +683,7 @@ class TestLifecycleEvents:
     @pytest.mark.asyncio
     async def test_lifecycle_events_recorded(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,
@@ -734,7 +734,7 @@ class TestLifecycleEvents:
     @pytest.mark.asyncio
     async def test_get_events_by_type(
         self,
-        lifecycle_service: LifecycleService,
+        lifecycle_service: LifecycleOrchestrationService,
         test_tenant_id: str,
         test_service_provision_request: ServiceProvisionRequest,
         db_session: AsyncSession,

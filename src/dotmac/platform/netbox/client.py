@@ -203,6 +203,147 @@ class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
         )
         return cast(dict[str, Any], response)
 
+    async def allocate_dual_stack_ips(
+        self,
+        ipv4_prefix_id: int,
+        ipv6_prefix_id: int,
+        description: str | None = None,
+        dns_name: str | None = None,
+        tenant: int | None = None,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        """
+        Allocate both IPv4 and IPv6 addresses atomically.
+
+        This method allocates IP addresses from both IPv4 and IPv6 prefixes
+        in a way that ensures both allocations succeed or both fail.
+
+        Args:
+            ipv4_prefix_id: ID of IPv4 prefix to allocate from
+            ipv6_prefix_id: ID of IPv6 prefix to allocate from
+            description: Description for both IP addresses
+            dns_name: DNS name for both IP addresses
+            tenant: Tenant ID for both IP addresses
+
+        Returns:
+            Tuple of (ipv4_response, ipv6_response)
+
+        Raises:
+            Exception: If either allocation fails, both are rolled back
+        """
+        # Prepare allocation data
+        ipv4_data: dict[str, Any] = {}
+        ipv6_data: dict[str, Any] = {}
+
+        if description:
+            ipv4_data["description"] = description
+            ipv6_data["description"] = description
+
+        if dns_name:
+            ipv4_data["dns_name"] = dns_name
+            ipv6_data["dns_name"] = dns_name
+
+        if tenant:
+            ipv4_data["tenant"] = tenant
+            ipv6_data["tenant"] = tenant
+
+        # Try to allocate IPv4 first
+        try:
+            ipv4_response = await self.allocate_ip(ipv4_prefix_id, ipv4_data)
+        except Exception as e:
+            logger.error(
+                "dual_stack_allocation.ipv4_failed",
+                ipv4_prefix_id=ipv4_prefix_id,
+                error=str(e),
+            )
+            raise ValueError(f"Failed to allocate IPv4 address: {e}") from e
+
+        # Try to allocate IPv6
+        try:
+            ipv6_response = await self.allocate_ip(ipv6_prefix_id, ipv6_data)
+        except Exception as e:
+            # IPv6 allocation failed - rollback IPv4
+            logger.error(
+                "dual_stack_allocation.ipv6_failed_rolling_back_ipv4",
+                ipv4_id=ipv4_response.get("id"),
+                ipv6_prefix_id=ipv6_prefix_id,
+                error=str(e),
+            )
+            try:
+                await self.delete_ip_address(ipv4_response["id"])
+            except Exception as rollback_error:
+                logger.error(
+                    "dual_stack_allocation.rollback_failed",
+                    ipv4_id=ipv4_response.get("id"),
+                    rollback_error=str(rollback_error),
+                )
+            raise ValueError(f"Failed to allocate IPv6 address (IPv4 rolled back): {e}") from e
+
+        logger.info(
+            "dual_stack_allocation.success",
+            ipv4_id=ipv4_response.get("id"),
+            ipv4_address=ipv4_response.get("address"),
+            ipv6_id=ipv6_response.get("id"),
+            ipv6_address=ipv6_response.get("address"),
+        )
+
+        return (ipv4_response, ipv6_response)
+
+    async def bulk_allocate_ips(
+        self,
+        prefix_id: int,
+        count: int,
+        description_prefix: str | None = None,
+        tenant: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Allocate multiple IP addresses from a prefix in bulk.
+
+        Args:
+            prefix_id: ID of prefix to allocate from
+            count: Number of IPs to allocate (max 100)
+            description_prefix: Prefix for IP descriptions (e.g., "Server")
+            tenant: Tenant ID for all IPs
+
+        Returns:
+            List of allocated IP address responses
+
+        Raises:
+            ValueError: If count > 100 or allocation fails
+        """
+        if count > 100:
+            raise ValueError("Cannot allocate more than 100 IPs at once")
+
+        allocated_ips = []
+        for i in range(count):
+            data: dict[str, Any] = {}
+
+            if description_prefix:
+                data["description"] = f"{description_prefix}-{i + 1}"
+
+            if tenant:
+                data["tenant"] = tenant
+
+            try:
+                ip_response = await self.allocate_ip(prefix_id, data)
+                allocated_ips.append(ip_response)
+            except Exception as e:
+                logger.error(
+                    "bulk_allocation.failed",
+                    prefix_id=prefix_id,
+                    allocated_count=len(allocated_ips),
+                    target_count=count,
+                    error=str(e),
+                )
+                raise ValueError(f"Bulk allocation failed after {len(allocated_ips)} IPs: {e}") from e
+
+        logger.info(
+            "bulk_allocation.success",
+            prefix_id=prefix_id,
+            count=len(allocated_ips),
+        )
+
+        return allocated_ips
+
     async def get_vrfs(
         self,
         tenant: str | None = None,

@@ -7,7 +7,6 @@ with efficient DataLoader batching to prevent N+1 queries.
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 import strawberry
 
@@ -55,7 +54,7 @@ class InterfaceStats:
 
     interface_name: str
     status: str
-    speed_mbps: Optional[int]
+    speed_mbps: int | None
 
     # Traffic counters
     bytes_in: int
@@ -70,11 +69,11 @@ class InterfaceStats:
     drops_out: int
 
     # Rates (bits per second)
-    rate_in_bps: Optional[float]
-    rate_out_bps: Optional[float]
+    rate_in_bps: float | None
+    rate_out_bps: float | None
 
     # Utilization percentage
-    utilization_percent: Optional[float]
+    utilization_percent: float | None
 
     @classmethod
     def from_model(cls, interface: any) -> "InterfaceStats":
@@ -110,29 +109,29 @@ class DeviceHealth:
     device_name: str
     device_type: DeviceTypeEnum
     status: DeviceStatusEnum
-    ip_address: Optional[str]
-    last_seen: Optional[datetime]
-    uptime_seconds: Optional[int]
+    ip_address: str | None
+    last_seen: datetime | None
+    uptime_seconds: int | None
 
     # Health metrics
-    cpu_usage_percent: Optional[float]
-    memory_usage_percent: Optional[float]
-    temperature_celsius: Optional[float]
-    power_status: Optional[str]
+    cpu_usage_percent: float | None
+    memory_usage_percent: float | None
+    temperature_celsius: float | None
+    power_status: str | None
 
     # Connectivity
-    ping_latency_ms: Optional[float]
-    packet_loss_percent: Optional[float]
+    ping_latency_ms: float | None
+    packet_loss_percent: float | None
 
     # Additional info
-    firmware_version: Optional[str]
-    model: Optional[str]
-    location: Optional[str]
+    firmware_version: str | None
+    model: str | None
+    location: str | None
     tenant_id: str
 
     # Computed properties
     is_healthy: bool
-    uptime_days: Optional[int]
+    uptime_days: int | None
 
     @classmethod
     def from_model(cls, device: any) -> "DeviceHealth":
@@ -193,9 +192,9 @@ class TrafficStats:
     current_rate_out_bps: float
 
     # Peak usage (last 24h)
-    peak_rate_in_bps: Optional[float]
-    peak_rate_out_bps: Optional[float]
-    peak_timestamp: Optional[datetime]
+    peak_rate_in_bps: float | None
+    peak_rate_out_bps: float | None
+    peak_timestamp: datetime | None
 
     # Interface details (conditionally loaded)
     interfaces: list[InterfaceStats] = strawberry.field(default_factory=list)
@@ -247,11 +246,11 @@ class ONUMetrics:
     """ONU-specific optical metrics."""
 
     serial_number: str
-    optical_power_rx_dbm: Optional[float]
-    optical_power_tx_dbm: Optional[float]
-    olt_rx_power_dbm: Optional[float]
-    distance_meters: Optional[int]
-    state: Optional[str]
+    optical_power_rx_dbm: float | None
+    optical_power_tx_dbm: float | None
+    olt_rx_power_dbm: float | None
+    distance_meters: int | None
+    state: str | None
 
     @classmethod
     def from_model(cls, onu: any) -> "ONUMetrics":
@@ -271,12 +270,12 @@ class CPEMetrics:
     """CPE-specific metrics."""
 
     mac_address: str
-    wifi_enabled: Optional[bool]
-    connected_clients: Optional[int]
-    wifi_2ghz_clients: Optional[int]
-    wifi_5ghz_clients: Optional[int]
-    wan_ip: Optional[str]
-    last_inform: Optional[datetime]
+    wifi_enabled: bool | None
+    connected_clients: int | None
+    wifi_2ghz_clients: int | None
+    wifi_5ghz_clients: int | None
+    wan_ip: str | None
+    last_inform: datetime | None
 
     @classmethod
     def from_model(cls, cpe: any) -> "CPEMetrics":
@@ -310,9 +309,9 @@ class DeviceMetrics:
     health: DeviceHealth
 
     # Conditionally loaded via DataLoaders
-    traffic: Optional[TrafficStats] = None
-    onu_metrics: Optional[ONUMetrics] = None
-    cpe_metrics: Optional[CPEMetrics] = None
+    traffic: TrafficStats | None = None
+    onu_metrics: ONUMetrics | None = None
+    cpe_metrics: CPEMetrics | None = None
 
     @classmethod
     def from_model(cls, metrics: any) -> "DeviceMetrics":
@@ -342,24 +341,24 @@ class NetworkAlert:
     severity: AlertSeverityEnum
     title: str
     description: str
-    device_id: Optional[str]
-    device_name: Optional[str]
-    device_type: Optional[DeviceTypeEnum]
+    device_id: str | None
+    device_name: str | None
+    device_type: DeviceTypeEnum | None
 
     # Timing
     triggered_at: datetime
-    acknowledged_at: Optional[datetime]
-    resolved_at: Optional[datetime]
+    acknowledged_at: datetime | None
+    resolved_at: datetime | None
 
     # Status
     is_active: bool
     is_acknowledged: bool
 
     # Context
-    metric_name: Optional[str]
-    threshold_value: Optional[float]
-    current_value: Optional[float]
-    alert_rule_id: Optional[str]
+    metric_name: str | None
+    threshold_value: float | None
+    current_value: float | None
+    alert_rule_id: str | None
 
     # Tenant isolation
     tenant_id: str
@@ -406,8 +405,8 @@ class DeviceTypeSummary:
     online_count: int
     offline_count: int
     degraded_count: int
-    avg_cpu_usage: Optional[float]
-    avg_memory_usage: Optional[float]
+    avg_cpu_usage: float | None
+    avg_memory_usage: float | None
 
     @classmethod
     def from_dict(cls, data: dict) -> "DeviceTypeSummary":
@@ -444,8 +443,8 @@ class NetworkOverview:
     # Traffic summary (bits per second)
     total_bandwidth_in_bps: float
     total_bandwidth_out_bps: float
-    peak_bandwidth_in_bps: Optional[float]
-    peak_bandwidth_out_bps: Optional[float]
+    peak_bandwidth_in_bps: float | None
+    peak_bandwidth_out_bps: float | None
 
     # By device type
     device_type_summary: list[DeviceTypeSummary]

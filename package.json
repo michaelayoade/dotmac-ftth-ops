@@ -15,7 +15,7 @@
     "clean": "pnpm -r run clean"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
+    "@playwright/test": "^1.55.1",
     "prettier": "^3.1.0"
   },
   "engines": {

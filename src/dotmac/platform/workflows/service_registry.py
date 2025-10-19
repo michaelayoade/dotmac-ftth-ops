@@ -5,7 +5,7 @@ Provides dependency injection and service location for workflow steps.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,8 +22,8 @@ class ServiceRegistry:
 
     def __init__(self, db_session: AsyncSession):
         self.db = db_session
-        self._services: Dict[str, Any] = {}
-        self._service_factories: Dict[str, Any] = {}
+        self._services: dict[str, Any] = {}
+        self._service_factories: dict[str, Any] = {}
 
     def register_service(self, name: str, service: Any) -> None:
         """

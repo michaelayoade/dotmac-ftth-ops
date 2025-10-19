@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import { useState } from "react";
 import { useTenant } from "@/lib/contexts/tenant-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

@@ -15,7 +15,7 @@ export function useCampaigns({ active }: UseCampaignsOptions = {}) {
     queryKey: ['campaigns', { active: active ?? null }],
     queryFn: async () => {
       const response = await apiClient.get<DunningCampaign[]>(
-        '/api/v1/billing/dunning/campaigns',
+        '/billing/dunning/campaigns',
         {
           params: active === undefined ? undefined : { is_active: active },
         }

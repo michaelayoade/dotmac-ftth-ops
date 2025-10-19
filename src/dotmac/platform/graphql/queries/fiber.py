@@ -13,17 +13,13 @@ Created: 2025-10-16
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import strawberry
-from sqlalchemy import and_, desc, func, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.types import Info
 
 from dotmac.platform.graphql.types.fiber import (
-    Address,
     CableInstallationType,
-    CableRoute,
     DistributionPoint,
     DistributionPointConnection,
     DistributionPointType,
@@ -34,21 +30,15 @@ from dotmac.platform.graphql.types.fiber import (
     FiberHealthMetrics,
     FiberHealthStatus,
     FiberNetworkAnalytics,
-    FiberStrand,
     FiberType,
-    GeoCoordinate,
     OTDRTestResult,
-    PortAllocation,
     ServiceArea,
     ServiceAreaConnection,
     ServiceAreaType,
-    SpliceConnection,
     SplicePoint,
     SplicePointConnection,
     SpliceStatus,
-    SpliceType,
 )
-
 
 # Note: This is a placeholder implementation showing the query structure.
 # Actual implementation requires integrating with your fiber backend/database models.
@@ -69,11 +59,11 @@ class FiberQueries:
         info: Info,
         limit: int = 50,
         offset: int = 0,
-        status: Optional[FiberCableStatus] = None,
-        fiber_type: Optional[FiberType] = None,
-        installation_type: Optional[CableInstallationType] = None,
-        site_id: Optional[str] = None,
-        search: Optional[str] = None,
+        status: FiberCableStatus | None = None,
+        fiber_type: FiberType | None = None,
+        installation_type: CableInstallationType | None = None,
+        site_id: str | None = None,
+        search: str | None = None,
     ) -> FiberCableConnection:
         """
         Query fiber cables with filtering and pagination.
@@ -141,7 +131,7 @@ class FiberQueries:
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> Optional[FiberCable]:
+    ) -> FiberCable | None:
         """
         Query a single fiber cable by ID.
 
@@ -219,9 +209,9 @@ class FiberQueries:
         info: Info,
         limit: int = 50,
         offset: int = 0,
-        status: Optional[SpliceStatus] = None,
-        cable_id: Optional[str] = None,
-        distribution_point_id: Optional[str] = None,
+        status: SpliceStatus | None = None,
+        cable_id: str | None = None,
+        distribution_point_id: str | None = None,
     ) -> SplicePointConnection:
         """
         Query splice points with filtering and pagination.
@@ -248,7 +238,7 @@ class FiberQueries:
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> Optional[SplicePoint]:
+    ) -> SplicePoint | None:
         """
         Query a single splice point by ID.
 
@@ -289,10 +279,10 @@ class FiberQueries:
         info: Info,
         limit: int = 50,
         offset: int = 0,
-        point_type: Optional[DistributionPointType] = None,
-        status: Optional[FiberCableStatus] = None,
-        site_id: Optional[str] = None,
-        near_capacity: Optional[bool] = None,
+        point_type: DistributionPointType | None = None,
+        status: FiberCableStatus | None = None,
+        site_id: str | None = None,
+        near_capacity: bool | None = None,
     ) -> DistributionPointConnection:
         """
         Query distribution points with filtering and pagination.
@@ -340,7 +330,7 @@ class FiberQueries:
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> Optional[DistributionPoint]:
+    ) -> DistributionPoint | None:
         """
         Query a single distribution point by ID.
 
@@ -381,9 +371,9 @@ class FiberQueries:
         info: Info,
         limit: int = 50,
         offset: int = 0,
-        area_type: Optional[ServiceAreaType] = None,
-        is_serviceable: Optional[bool] = None,
-        construction_status: Optional[str] = None,
+        area_type: ServiceAreaType | None = None,
+        is_serviceable: bool | None = None,
+        construction_status: str | None = None,
     ) -> ServiceAreaConnection:
         """
         Query service areas with filtering and pagination.
@@ -410,7 +400,7 @@ class FiberQueries:
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> Optional[ServiceArea]:
+    ) -> ServiceArea | None:
         """
         Query a single service area by ID.
 
@@ -449,8 +439,8 @@ class FiberQueries:
     async def fiber_health_metrics(
         self,
         info: Info,
-        cable_id: Optional[str] = None,
-        health_status: Optional[FiberHealthStatus] = None,
+        cable_id: str | None = None,
+        health_status: FiberHealthStatus | None = None,
     ) -> list[FiberHealthMetrics]:
         """
         Query fiber health metrics for cables.
@@ -476,7 +466,7 @@ class FiberQueries:
         self,
         info: Info,
         cable_id: str,
-        strand_id: Optional[int] = None,
+        strand_id: int | None = None,
         limit: int = 10,
     ) -> list[OTDRTestResult]:
         """

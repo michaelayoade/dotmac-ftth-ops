@@ -7,7 +7,7 @@ Provides workflow-compatible methods for partner management operations.
 import logging
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Dict
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select
@@ -39,7 +39,7 @@ class PartnerService:
         partner_id: int | str,
         requested_licenses: int,
         tenant_id: str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Check if partner has sufficient license quota.
 
@@ -181,8 +181,8 @@ class PartnerService:
         invoice_id: str | None = None,
         tenant_id: str | None = None,
         currency: str = "USD",
-        metadata: Dict[str, Any] | None = None,
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Record a commission event for a partner.
 

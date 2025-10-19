@@ -5,7 +5,7 @@ Comprehensive validation and testing logic for internet service plans.
 Tests plan configurations against various usage scenarios.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 

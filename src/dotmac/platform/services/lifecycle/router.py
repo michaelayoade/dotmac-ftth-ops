@@ -13,9 +13,10 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.auth.dependencies import get_current_tenant_id, get_current_user
-from dotmac.platform.auth.models import UserInfo
+from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.db import get_async_session
+from dotmac.platform.tenant import get_current_tenant_id
 from dotmac.platform.services.lifecycle.models import (
     LifecycleEventType,
     ServiceStatus,

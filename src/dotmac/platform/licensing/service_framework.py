@@ -10,30 +10,29 @@ Provides business logic for:
 """
 
 from datetime import datetime, timedelta
-from typing import Any, Optional
 from uuid import UUID, uuid4
 
-from sqlalchemy import select, and_, or_, func
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from dotmac.platform.licensing.framework import (
-    FeatureModule,
-    ModuleCapability,
-    QuotaDefinition,
-    ServicePlan,
-    PlanModule,
-    PlanQuotaAllocation,
-    TenantSubscription,
-    SubscriptionModule,
-    SubscriptionQuotaUsage,
-    FeatureUsageLog,
-    SubscriptionEvent,
-    ModuleCategory,
-    PricingModel,
-    SubscriptionStatus,
     BillingCycle,
     EventType,
+    FeatureModule,
+    FeatureUsageLog,
+    ModuleCapability,
+    ModuleCategory,
+    PlanModule,
+    PlanQuotaAllocation,
+    PricingModel,
+    QuotaDefinition,
+    ServicePlan,
+    SubscriptionEvent,
+    SubscriptionModule,
+    SubscriptionQuotaUsage,
+    SubscriptionStatus,
+    TenantSubscription,
 )
 
 
@@ -196,7 +195,7 @@ class LicensingFrameworkService:
         pricing_model: PricingModel,
         overage_rate: float | None = None,
         is_metered: bool = False,
-        reset_period: Optional[str] = None,
+        reset_period: str | None = None,
     ) -> QuotaDefinition:
         """Create a new reusable quota definition."""
         quota = QuotaDefinition(
@@ -420,7 +419,7 @@ class LicensingFrameworkService:
                         and_(
                             PlanModule.plan_id == plan_id,
                             PlanModule.module_id == module_id,
-                            PlanModule.is_optional_addon == True,
+                            PlanModule.is_optional_addon,
                         )
                     )
                 )
@@ -461,8 +460,8 @@ class LicensingFrameworkService:
         start_trial: bool,
         addon_module_ids: list[UUID] = None,
         custom_config: dict = None,
-        stripe_customer_id: Optional[str] = None,
-        stripe_subscription_id: Optional[str] = None,
+        stripe_customer_id: str | None = None,
+        stripe_subscription_id: str | None = None,
     ) -> TenantSubscription:
         """Subscribe tenant to a service plan."""
         # Load plan with all relationships
@@ -538,7 +537,7 @@ class LicensingFrameworkService:
                         and_(
                             PlanModule.plan_id == plan_id,
                             PlanModule.module_id == module_id,
-                            PlanModule.is_optional_addon == True,
+                            PlanModule.is_optional_addon,
                         )
                     )
                 )
@@ -591,7 +590,7 @@ class LicensingFrameworkService:
         await self.db.refresh(subscription)
         return subscription
 
-    def _calculate_quota_period_end(self, start: datetime, reset_period: Optional[str]) -> Optional[datetime]:
+    def _calculate_quota_period_end(self, start: datetime, reset_period: str | None) -> datetime | None:
         """Calculate when quota period ends based on reset period."""
         if not reset_period:
             return None  # No reset = lifetime quota
@@ -619,7 +618,7 @@ class LicensingFrameworkService:
         self,
         subscription_id: UUID,
         module_id: UUID,
-        activated_by: Optional[UUID] = None,
+        activated_by: UUID | None = None,
     ) -> SubscriptionModule:
         """Add an optional add-on module to existing subscription."""
         # Load subscription with plan
@@ -640,7 +639,7 @@ class LicensingFrameworkService:
                 and_(
                     PlanModule.plan_id == subscription.plan_id,
                     PlanModule.module_id == module_id,
-                    PlanModule.is_optional_addon == True,
+                    PlanModule.is_optional_addon,
                 )
             )
         )
@@ -704,7 +703,7 @@ class LicensingFrameworkService:
         self,
         subscription_id: UUID,
         module_id: UUID,
-        deactivated_by: Optional[UUID] = None,
+        deactivated_by: UUID | None = None,
     ) -> None:
         """Remove an add-on module from subscription."""
         result = await self.db.execute(
@@ -748,7 +747,7 @@ class LicensingFrameworkService:
         self,
         tenant_id: UUID,
         module_code: str,
-        capability_code: Optional[str] = None,
+        capability_code: str | None = None,
     ) -> bool:
         """Check if tenant has access to a specific feature module or capability."""
         # Get active subscription
@@ -784,7 +783,7 @@ class LicensingFrameworkService:
                 and_(
                     SubscriptionModule.subscription_id == subscription.id,
                     SubscriptionModule.module_id == module.id,
-                    SubscriptionModule.is_enabled == True,
+                    SubscriptionModule.is_enabled,
                 )
             )
         )
@@ -803,7 +802,7 @@ class LicensingFrameworkService:
                     and_(
                         ModuleCapability.module_id == module.id,
                         ModuleCapability.capability_code == capability_code,
-                        ModuleCapability.is_active == True,
+                        ModuleCapability.is_active,
                     )
                 )
             )

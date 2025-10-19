@@ -7,7 +7,12 @@ Request and response schemas for GenieACS TR-069/CWMP operations.
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from dotmac.platform.core.ip_validation import (
+    IPv4AddressValidator,
+    IPv6AddressValidator,
+)
 
 # ============================================================================
 # Device Schemas
@@ -270,11 +275,47 @@ class LANConfig(BaseModel):  # BaseModel resolves to Any in isolation
 
     model_config = ConfigDict()
 
-    ip_address: str = Field(..., description="LAN IP address")
-    subnet_mask: str = Field(..., description="Subnet mask")
+    # IPv4 LAN configuration
+    ipv4_address: str | None = Field(None, description="LAN IPv4 address")
+    subnet_mask: str | None = Field(None, description="IPv4 subnet mask")
+
+    # IPv6 LAN configuration
+    ipv6_address: str | None = Field(None, description="LAN IPv6 address")
+    ipv6_prefix_length: int | None = Field(None, ge=1, le=128, description="IPv6 prefix length")
+
+    # DHCP configuration (IPv4)
     dhcp_enabled: bool = Field(default=True, description="Enable DHCP server")
-    dhcp_start: str | None = Field(None, description="DHCP pool start")
-    dhcp_end: str | None = Field(None, description="DHCP pool end")
+    dhcp_start: str | None = Field(None, description="DHCP pool start (IPv4)")
+    dhcp_end: str | None = Field(None, description="DHCP pool end (IPv4)")
+
+    # DHCPv6 configuration
+    dhcpv6_enabled: bool = Field(default=False, description="Enable DHCPv6 server")
+
+    # Backward compatibility
+    ip_address: str | None = Field(None, description="[DEPRECATED] Use ipv4_address instead")
+
+    @field_validator("ipv4_address")
+    @classmethod
+    def validate_ipv4(cls, v: str | None) -> str | None:
+        """Validate IPv4 address"""
+        return IPv4AddressValidator.validate(v)
+
+    @field_validator("ipv6_address")
+    @classmethod
+    def validate_ipv6(cls, v: str | None) -> str | None:
+        """Validate IPv6 address"""
+        return IPv6AddressValidator.validate(v)
+
+    @field_validator("dhcp_start", "dhcp_end")
+    @classmethod
+    def validate_dhcp_ips(cls, v: str | None) -> str | None:
+        """Validate DHCP pool IPs"""
+        return IPv4AddressValidator.validate(v)
+
+    def model_post_init(self, __context) -> None:
+        """Handle backward compatibility for ip_address"""
+        if self.ip_address and not self.ipv4_address:
+            self.ipv4_address = self.ip_address
 
 
 class WANConfig(BaseModel):  # BaseModel resolves to Any in isolation
@@ -282,10 +323,40 @@ class WANConfig(BaseModel):  # BaseModel resolves to Any in isolation
 
     model_config = ConfigDict()
 
-    connection_type: str = Field(..., description="Connection type (DHCP, PPPoE, Static)")
-    username: str | None = Field(None, description="PPPoE username")
-    password: str | None = Field(None, description="PPPoE password")
+    # Connection type
+    connection_type: str = Field(..., description="Connection type (DHCP, PPPoE, Static, DHCPv6, PPPoEv6)")
+
+    # PPPoE credentials (IPv4/IPv6)
+    username: str | None = Field(None, description="PPPoE/PPPoEv6 username")
+    password: str | None = Field(None, description="PPPoE/PPPoEv6 password")
+
+    # VLAN configuration
     vlan_id: int | None = Field(None, ge=1, le=4094, description="VLAN ID")
+
+    # Static IPv4 configuration
+    static_ipv4: str | None = Field(None, description="Static IPv4 address")
+    static_ipv4_gateway: str | None = Field(None, description="Static IPv4 gateway")
+    static_ipv4_netmask: str | None = Field(None, description="Static IPv4 netmask")
+
+    # Static IPv6 configuration
+    static_ipv6: str | None = Field(None, description="Static IPv6 address")
+    static_ipv6_gateway: str | None = Field(None, description="Static IPv6 gateway")
+    static_ipv6_prefix_length: int | None = Field(None, ge=1, le=128, description="Static IPv6 prefix length")
+
+    # IPv6 prefix delegation
+    ipv6_pd_enabled: bool = Field(default=True, description="Enable IPv6 prefix delegation")
+
+    @field_validator("static_ipv4", "static_ipv4_gateway", "static_ipv4_netmask")
+    @classmethod
+    def validate_static_ipv4(cls, v: str | None) -> str | None:
+        """Validate static IPv4 addresses"""
+        return IPv4AddressValidator.validate(v)
+
+    @field_validator("static_ipv6", "static_ipv6_gateway")
+    @classmethod
+    def validate_static_ipv6(cls, v: str | None) -> str | None:
+        """Validate static IPv6 addresses"""
+        return IPv6AddressValidator.validate(v)
 
 
 class CPEConfigRequest(BaseModel):  # BaseModel resolves to Any in isolation
@@ -454,9 +525,39 @@ class MassLANConfig(BaseModel):  # BaseModel resolves to Any in isolation
 
     model_config = ConfigDict()
 
-    dhcp_enabled: bool | None = Field(None, description="Enable/disable DHCP server")
-    dhcp_start: str | None = Field(None, description="DHCP pool start")
-    dhcp_end: str | None = Field(None, description="DHCP pool end")
+    # IPv4 LAN configuration
+    ipv4_address: str | None = Field(None, description="LAN IPv4 address")
+    subnet_mask: str | None = Field(None, description="IPv4 subnet mask")
+
+    # IPv6 LAN configuration
+    ipv6_address: str | None = Field(None, description="LAN IPv6 address")
+    ipv6_prefix_length: int | None = Field(None, ge=1, le=128, description="IPv6 prefix length")
+
+    # DHCP configuration
+    dhcp_enabled: bool | None = Field(None, description="Enable/disable DHCP server (IPv4)")
+    dhcp_start: str | None = Field(None, description="DHCP pool start (IPv4)")
+    dhcp_end: str | None = Field(None, description="DHCP pool end (IPv4)")
+
+    # DHCPv6 configuration
+    dhcpv6_enabled: bool | None = Field(None, description="Enable/disable DHCPv6 server")
+
+    @field_validator("ipv4_address")
+    @classmethod
+    def validate_ipv4(cls, v: str | None) -> str | None:
+        """Validate IPv4 address"""
+        return IPv4AddressValidator.validate(v)
+
+    @field_validator("ipv6_address")
+    @classmethod
+    def validate_ipv6(cls, v: str | None) -> str | None:
+        """Validate IPv6 address"""
+        return IPv6AddressValidator.validate(v)
+
+    @field_validator("dhcp_start", "dhcp_end")
+    @classmethod
+    def validate_dhcp_ips(cls, v: str | None) -> str | None:
+        """Validate DHCP pool IPs"""
+        return IPv4AddressValidator.validate(v)
 
 
 class MassWANConfig(BaseModel):  # BaseModel resolves to Any in isolation
@@ -464,8 +565,33 @@ class MassWANConfig(BaseModel):  # BaseModel resolves to Any in isolation
 
     model_config = ConfigDict()
 
-    connection_type: str | None = Field(None, description="Connection type")
+    connection_type: str | None = Field(None, description="Connection type (DHCP, PPPoE, Static, DHCPv6, PPPoEv6)")
     vlan_id: int | None = Field(None, ge=1, le=4094, description="VLAN ID")
+
+    # Static IPv4 configuration
+    static_ipv4: str | None = Field(None, description="Static IPv4 address")
+    static_ipv4_gateway: str | None = Field(None, description="Static IPv4 gateway")
+    static_ipv4_netmask: str | None = Field(None, description="Static IPv4 netmask")
+
+    # Static IPv6 configuration
+    static_ipv6: str | None = Field(None, description="Static IPv6 address")
+    static_ipv6_gateway: str | None = Field(None, description="Static IPv6 gateway")
+    static_ipv6_prefix_length: int | None = Field(None, ge=1, le=128, description="Static IPv6 prefix length")
+
+    # IPv6 prefix delegation
+    ipv6_pd_enabled: bool | None = Field(None, description="Enable/disable IPv6 prefix delegation")
+
+    @field_validator("static_ipv4", "static_ipv4_gateway", "static_ipv4_netmask")
+    @classmethod
+    def validate_static_ipv4(cls, v: str | None) -> str | None:
+        """Validate static IPv4 addresses"""
+        return IPv4AddressValidator.validate(v)
+
+    @field_validator("static_ipv6", "static_ipv6_gateway")
+    @classmethod
+    def validate_static_ipv6(cls, v: str | None) -> str | None:
+        """Validate static IPv6 addresses"""
+        return IPv6AddressValidator.validate(v)
 
 
 class MassConfigRequest(BaseModel):  # BaseModel resolves to Any in isolation

@@ -5,13 +5,23 @@ Data models for order processing and service activation.
 """
 
 import enum
-from datetime import datetime
-from typing import Optional
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, JSON, Numeric, String, Text
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    Text,
+)
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
 
-from ..core.models import Base, TimestampMixin
+from ..db import Base, TimestampMixin
 
 
 class OrderStatus(str, enum.Enum):
@@ -96,12 +106,12 @@ class Order(Base, TimestampMixin):
     billing_cycle = Column(String(20))  # monthly, annual, etc.
 
     # Processing metadata
-    tenant_id = Column(Integer, ForeignKey("tenant.id"), index=True)
+    tenant_id = Column(String(255), ForeignKey("tenants.id"), index=True)
     deployment_instance_id = Column(Integer, ForeignKey("deployment_instances.id"))
     processing_started_at = Column(DateTime)
     processing_completed_at = Column(DateTime)
     approved_at = Column(DateTime)
-    approved_by = Column(Integer, ForeignKey("user.id"))
+    approved_by = Column(PGUUID(as_uuid=True), ForeignKey("users.id"))
 
     # External references
     external_order_id = Column(String(255), index=True)  # From external CRM/ecommerce
@@ -119,7 +129,7 @@ class Order(Base, TimestampMixin):
     utm_medium = Column(String(100))
     utm_campaign = Column(String(100))
     notes = Column(Text)
-    metadata = Column(JSON)
+    extra_metadata = Column(JSON)
 
     # Relationships
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
@@ -168,7 +178,7 @@ class OrderItem(Base, TimestampMixin):
     # Metadata
     product_id = Column(String(100))  # External product ID
     sku = Column(String(100))
-    metadata = Column(JSON)
+    extra_metadata = Column(JSON)
 
     # Relationships
     order = relationship("Order", back_populates="items")
@@ -188,7 +198,7 @@ class ServiceActivation(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True)
     order_id = Column(Integer, ForeignKey("orders.id"), nullable=False, index=True)
-    tenant_id = Column(Integer, ForeignKey("tenant.id"), nullable=False, index=True)
+    tenant_id = Column(String(255), ForeignKey("tenants.id"), nullable=False, index=True)
 
     # Service details
     service_code = Column(String(100), nullable=False, index=True)
@@ -219,7 +229,7 @@ class ServiceActivation(Base, TimestampMixin):
     sequence_number = Column(Integer, default=0)
 
     # Metadata
-    activated_by = Column(Integer, ForeignKey("user.id"))
+    activated_by = Column(PGUUID(as_uuid=True), ForeignKey("users.id"))
     notes = Column(Text)
 
     # Relationships

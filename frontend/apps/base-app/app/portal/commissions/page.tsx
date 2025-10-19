@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import { usePartnerCommissions } from "@/hooks/usePartnerPortal";
 import { DollarSign, Clock, CheckCircle, AlertCircle, XCircle } from "lucide-react";
 

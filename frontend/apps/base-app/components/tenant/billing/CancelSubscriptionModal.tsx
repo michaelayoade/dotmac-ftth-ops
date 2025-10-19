@@ -154,7 +154,7 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
                   <label htmlFor="at_period_end" className="flex-1 cursor-pointer">
                     <div className="font-medium">Cancel at period end (Recommended)</div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      You'll retain access until {format(new Date(subscription.current_period_end), 'MMM d, yyyy')}.
+                      You&apos;ll retain access until {format(new Date(subscription.current_period_end), 'MMM d, yyyy')}.
                       No refund will be issued.
                     </div>
                   </label>
@@ -273,9 +273,9 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
               </AlertDescription>
             </Alert>
 
-            {/* What You'll Lose */}
+            {/* What You&apos;ll Lose */}
             <div className="space-y-2">
-              <p className="text-sm font-medium">After cancellation, you'll lose access to:</p>
+              <p className="text-sm font-medium">After cancellation, you&apos;ll lose access to:</p>
               <ul className="text-sm text-muted-foreground space-y-1 ml-5 list-disc">
                 <li>All subscription features and resources</li>
                 <li>Active add-ons and integrations</li>

@@ -25,13 +25,16 @@ def app():
 @pytest.fixture
 def client(app, async_db_session):
     """Create test client with database dependency."""
+    # Use a platform admin to see all logs across tenants
+    # (for backward compatibility with existing tests)
     mock_user = UserInfo(
         user_id=str(uuid4()),
         username="testuser",
         email="test@example.com",
-        tenant_id="test-tenant",
-        roles=["admin"],
-        permissions=[],
+        tenant_id=None,  # Platform admins have no tenant
+        roles=["platform_admin"],
+        permissions=["*"],
+        is_platform_admin=True,  # Can see all tenants
     )
 
     app.dependency_overrides[get_session_dependency] = lambda: async_db_session

@@ -5,9 +5,8 @@ Data models for workflow orchestration and execution tracking.
 """
 
 import enum
-from typing import Optional
 
-from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import JSON, Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from ..db import Base, TimestampMixin
@@ -78,7 +77,7 @@ class WorkflowExecution(Base, TimestampMixin):
     # Trigger information
     trigger_type = Column(String(50))  # "manual", "event", "scheduled", "api"
     trigger_source = Column(String(255))  # Event name, user ID, or API endpoint
-    tenant_id = Column(Integer, ForeignKey("tenant.id"), index=True)
+    tenant_id = Column(String(255), ForeignKey("tenants.id"), index=True)
 
     # Relationships
     workflow = relationship("Workflow", back_populates="executions")

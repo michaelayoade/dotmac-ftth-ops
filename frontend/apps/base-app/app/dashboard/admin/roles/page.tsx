@@ -52,7 +52,7 @@ export default function RolesManagementPage() {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get<Role[]>('/api/v1/auth/rbac/roles');
+      const response = await apiClient.get<Role[]>('/auth/rbac/roles');
       if (response.data) {
         setRoles(response.data);
       }
@@ -66,7 +66,7 @@ export default function RolesManagementPage() {
 
   const fetchPermissions = async () => {
     try {
-      const response = await apiClient.get<Permission[]>('/api/v1/auth/rbac/permissions');
+      const response = await apiClient.get<Permission[]>('/auth/rbac/permissions');
       if (response.data) {
         setPermissions(response.data);
       }
@@ -86,7 +86,7 @@ export default function RolesManagementPage() {
     }
 
     try {
-      await apiClient.delete(`/api/v1/auth/rbac/roles/${role.name}`);
+      await apiClient.delete(`/auth/rbac/roles/${role.name}`);
       toast.success('Role deleted successfully');
       fetchRoles();
     } catch (error) {

@@ -5,11 +5,9 @@ Provides efficient network monitoring queries with conditional loading of traffi
 and alerts via DataLoaders to prevent N+1 queries.
 """
 
-from typing import Optional
 
 import strawberry
 import structlog
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.graphql.context import Context
 from dotmac.platform.graphql.types.network import (
@@ -78,9 +76,9 @@ class NetworkQueries:
         info: strawberry.Info[Context],
         page: int = 1,
         page_size: int = 20,
-        device_type: Optional[DeviceTypeEnum] = None,
-        status: Optional[DeviceStatusEnum] = None,
-        search: Optional[str] = None,
+        device_type: DeviceTypeEnum | None = None,
+        status: DeviceStatusEnum | None = None,
+        search: str | None = None,
         include_traffic: bool = False,
         include_alerts: bool = False,
     ) -> DeviceConnection:
@@ -150,7 +148,7 @@ class NetworkQueries:
         if include_traffic and paginated_devices:
             device_ids = [d.device_id for d in paginated_devices]
             traffic_loader = info.context.loaders.get_device_traffic_loader()
-            traffic_list = await traffic_loader.load_many(device_ids)
+            _ = await traffic_loader.load_many(device_ids)
 
             # Note: Traffic data would be attached to a more comprehensive DeviceMetrics type
             # For now, this demonstrates the batching pattern
@@ -159,7 +157,7 @@ class NetworkQueries:
         if include_alerts and paginated_devices:
             device_ids = [d.device_id for d in paginated_devices]
             alerts_loader = info.context.loaders.get_device_alerts_loader()
-            alerts_lists = await alerts_loader.load_many(device_ids)
+            _ = await alerts_loader.load_many(device_ids)
 
             # Alerts would be attached to device objects in a more comprehensive implementation
 
@@ -178,7 +176,7 @@ class NetworkQueries:
         info: strawberry.Info[Context],
         device_id: str,
         device_type: DeviceTypeEnum,
-    ) -> Optional[DeviceHealth]:
+    ) -> DeviceHealth | None:
         """
         Get health status for a specific device.
 
@@ -222,7 +220,7 @@ class NetworkQueries:
         device_id: str,
         device_type: DeviceTypeEnum,
         include_interfaces: bool = False,
-    ) -> Optional[TrafficStats]:
+    ) -> TrafficStats | None:
         """
         Get traffic and bandwidth statistics for a device.
 
@@ -267,7 +265,7 @@ class NetworkQueries:
         device_id: str,
         device_type: DeviceTypeEnum,
         include_interfaces: bool = False,
-    ) -> Optional[DeviceMetrics]:
+    ) -> DeviceMetrics | None:
         """
         Get comprehensive metrics for a device.
 
@@ -314,10 +312,10 @@ class NetworkQueries:
         info: strawberry.Info[Context],
         page: int = 1,
         page_size: int = 50,
-        severity: Optional[AlertSeverityEnum] = None,
+        severity: AlertSeverityEnum | None = None,
         active_only: bool = True,
-        device_id: Optional[str] = None,
-        device_type: Optional[DeviceTypeEnum] = None,
+        device_id: str | None = None,
+        device_type: DeviceTypeEnum | None = None,
     ) -> AlertConnection:
         """
         List network monitoring alerts with filtering.
@@ -396,7 +394,7 @@ class NetworkQueries:
         self,
         info: strawberry.Info[Context],
         alert_id: str,
-    ) -> Optional[NetworkAlert]:
+    ) -> NetworkAlert | None:
         """
         Get a specific alert by ID.
 

@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { usePartner, useCheckLicenseQuota } from "@/hooks/usePartners";
@@ -312,7 +315,7 @@ export default function PartnerDetailPage() {
             <div className="bg-accent p-6 rounded-lg border border-border">
               <h3 className="text-lg font-semibold text-foreground mb-4">License Quota Check</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Check partner's available license quota before allocating licenses
+                Check partner&apos;s available license quota before allocating licenses
               </p>
 
               <div className="flex gap-4 items-end">

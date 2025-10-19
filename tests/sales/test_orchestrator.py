@@ -35,28 +35,30 @@ class TestActivationOrchestrator:
         orchestrator: ActivationOrchestrator,
         sample_order: Order,
         sample_deployment_template,
+        sample_tenant,
     ):
         """Test that service activations are created"""
         activations = orchestrator.activate_order_services(
-            sample_order, tenant_id=1, user_id=1
+            sample_order, tenant_id=sample_tenant.id, user_id=None
         )
 
         assert len(activations) == len(sample_order.selected_services)
 
         for activation in activations:
             assert activation.order_id == sample_order.id
-            assert activation.tenant_id == 1
-            assert activation.activated_by == 1
+            assert activation.tenant_id == sample_tenant.id
+            assert activation.activated_by is None
 
     def test_activate_order_services_sequences_correctly(
         self,
         db: Session,
         orchestrator: ActivationOrchestrator,
         sample_order: Order,
+        sample_tenant,
     ):
         """Test that services are sequenced correctly"""
         activations = orchestrator.activate_order_services(
-            sample_order, tenant_id=1
+            sample_order, tenant_id=sample_tenant.id
         )
 
         # Verify sequence numbers
@@ -68,10 +70,11 @@ class TestActivationOrchestrator:
         db: Session,
         orchestrator: ActivationOrchestrator,
         sample_order: Order,
+        sample_tenant,
     ):
         """Test that service activations are executed"""
         activations = orchestrator.activate_order_services(
-            sample_order, tenant_id=1
+            sample_order, tenant_id=sample_tenant.id
         )
 
         # All should be completed (mocked activation always succeeds)
@@ -86,12 +89,13 @@ class TestActivationOrchestrator:
         db: Session,
         orchestrator: ActivationOrchestrator,
         sample_order: Order,
+        sample_tenant,
     ):
         """Test successful service activation"""
         activation = create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             service_code="test-service",
             activation_status=ActivationStatus.PENDING,
         )
@@ -110,13 +114,14 @@ class TestActivationOrchestrator:
         db: Session,
         orchestrator: ActivationOrchestrator,
         sample_order: Order,
+        sample_tenant,
         mock_event_bus,
     ):
         """Test that service.activated event is published"""
         activation = create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             activation_status=ActivationStatus.PENDING,
         )
 
@@ -132,13 +137,14 @@ class TestActivationOrchestrator:
         db: Session,
         orchestrator: ActivationOrchestrator,
         sample_order: Order,
+        sample_tenant,
         mock_event_bus,
     ):
         """Test activation failure handling"""
         activation = create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             service_code="failing-service",
             activation_status=ActivationStatus.PENDING,
         )
@@ -169,12 +175,13 @@ class TestActivationOrchestrator:
         db: Session,
         orchestrator: ActivationOrchestrator,
         sample_order: Order,
+        sample_tenant,
     ):
         """Test that service activation returns data"""
         activation = create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             service_code="test-service",
         )
 
@@ -191,20 +198,21 @@ class TestActivationOrchestrator:
         db: Session,
         orchestrator: ActivationOrchestrator,
         sample_order: Order,
+        sample_tenant,
     ):
         """Test activation progress with pending services"""
         # Create activations
         create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             service_code="service1",
             activation_status=ActivationStatus.PENDING,
         )
         create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             service_code="service2",
             activation_status=ActivationStatus.PENDING,
         )
@@ -224,19 +232,20 @@ class TestActivationOrchestrator:
         db: Session,
         orchestrator: ActivationOrchestrator,
         sample_order: Order,
+        sample_tenant,
     ):
         """Test activation progress with services in progress"""
         create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             service_code="service1",
             activation_status=ActivationStatus.COMPLETED,
         )
         create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             service_code="service2",
             activation_status=ActivationStatus.IN_PROGRESS,
         )
@@ -254,19 +263,20 @@ class TestActivationOrchestrator:
         db: Session,
         orchestrator: ActivationOrchestrator,
         sample_order: Order,
+        sample_tenant,
     ):
         """Test activation progress with all completed"""
         create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             service_code="service1",
             activation_status=ActivationStatus.COMPLETED,
         )
         create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             service_code="service2",
             activation_status=ActivationStatus.COMPLETED,
         )
@@ -283,19 +293,20 @@ class TestActivationOrchestrator:
         db: Session,
         orchestrator: ActivationOrchestrator,
         sample_order: Order,
+        sample_tenant,
     ):
         """Test activation progress with failures"""
         create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             service_code="service1",
             activation_status=ActivationStatus.COMPLETED,
         )
         create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             service_code="service2",
             activation_status=ActivationStatus.FAILED,
         )
@@ -392,14 +403,15 @@ class TestActivationOrchestrator:
         self,
         db: Session,
         orchestrator: ActivationOrchestrator,
-        sample_order: Order,
     ):
         """Test retrieving workflow when none exists"""
-        # No workflow created
-        workflow = orchestrator._get_workflow_for_order(sample_order)
+        # Create order with a template_id that has no workflow (999)
+        order = create_order(db, deployment_template_id=999, order_number="ORD-TEST-NOWF-0001")
+
+        workflow = orchestrator._get_workflow_for_order(order)
 
         # Should return None if no workflow matches
-        assert workflow is None or workflow.deployment_template_id != sample_order.deployment_template_id
+        assert workflow is None
 
 
 class TestActivationSequencing:
@@ -418,11 +430,13 @@ class TestActivationSequencing:
         self,
         db: Session,
         orchestrator: ActivationOrchestrator,
+        sample_tenant,
     ):
         """Test that services are activated in order"""
         # Create order with multiple services
         order = create_order(
             db,
+            order_number="ORD-TEST-SEQ-0001",
             selected_services=[
                 {"service_code": "base-service", "name": "Base"},
                 {"service_code": "dependent-service", "name": "Dependent"},
@@ -430,7 +444,7 @@ class TestActivationSequencing:
             ],
         )
 
-        activations = orchestrator.activate_order_services(order, tenant_id=1)
+        activations = orchestrator.activate_order_services(order, tenant_id=sample_tenant.id)
 
         # Verify sequence
         assert len(activations) == 3
@@ -446,17 +460,19 @@ class TestActivationSequencing:
         self,
         db: Session,
         orchestrator: ActivationOrchestrator,
+        sample_tenant,
     ):
         """Test that activation timestamps show sequential execution"""
         order = create_order(
             db,
+            order_number="ORD-TEST-TS-0001",
             selected_services=[
                 {"service_code": "service1", "name": "Service 1"},
                 {"service_code": "service2", "name": "Service 2"},
             ],
         )
 
-        activations = orchestrator.activate_order_services(order, tenant_id=1)
+        activations = orchestrator.activate_order_services(order, tenant_id=sample_tenant.id)
 
         # Verify timestamps exist
         assert all(a.started_at is not None for a in activations)

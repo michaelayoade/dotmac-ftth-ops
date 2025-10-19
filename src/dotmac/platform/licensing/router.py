@@ -11,16 +11,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..auth.core import UserInfo
 from ..auth.dependencies import get_current_user
 from ..db import get_async_session
-from ..models import User
 from .models import (
     Activation,
-    ComplianceAudit,
-    ComplianceViolation,
     License,
     LicenseOrder,
     LicenseTemplate,
+    OrderStatus,
 )
 from .schemas import (
     ActivationCreate,
@@ -28,14 +27,9 @@ from .schemas import (
     ActivationResponse,
     ActivationValidation,
     ActivationValidationResponse,
-    ComplianceAuditCreate,
-    ComplianceAuditResponse,
-    ComplianceStatus,
-    ComplianceViolationResponse,
     DeviceBlacklist,
     EmergencyCodeRequest,
     EmergencyCodeResponse,
-    ExpiryAlert,
     IntegrityCheckRequest,
     IntegrityCheckResponse,
     LicenseCreate,
@@ -55,12 +49,8 @@ from .schemas import (
     OfflineActivationResponse,
     OrderApproval,
     OrderCancellation,
-    ReportRequest,
-    ReportResponse,
     SuspiciousActivityReport,
     SuspiciousActivityResponse,
-    UtilizationStats,
-    ViolationResolution,
 )
 from .service import LicensingService
 
@@ -71,13 +61,13 @@ router = APIRouter(prefix="/api/licensing", tags=["Licensing"])
 
 def get_licensing_service(
     session: Annotated[AsyncSession, Depends(get_async_session)],
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[UserInfo, Depends(get_current_user)],
 ) -> LicensingService:
     """Dependency for licensing service."""
     return LicensingService(
         session=session,
         tenant_id=current_user.tenant_id,
-        user_id=current_user.id,
+        user_id=current_user.user_id,
     )
 
 
@@ -353,8 +343,8 @@ async def validate_activation(
 @router.post("/activations/{activation_id}/deactivate", response_model=dict[str, ActivationResponse])
 async def deactivate_license(
     activation_id: str,
-    data: dict[str, str] | None = None,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
+    data: dict[str, str] | None = None,
 ):
     """Deactivate a license activation."""
     try:
@@ -742,7 +732,7 @@ async def generate_emergency_code(
 ):
     """Generate emergency override code."""
     import secrets
-    from datetime import timedelta
+    from datetime import UTC, datetime, timedelta
 
     emergency_code = secrets.token_hex(8).upper()
     valid_until = datetime.now(UTC) + timedelta(hours=24)

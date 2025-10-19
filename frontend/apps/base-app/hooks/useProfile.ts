@@ -67,7 +67,7 @@ export function useChangePassword() {
 
       // Use the new change-password endpoint
       const response = await apiClient.post<{ message: string }>(
-        '/api/v1/auth/change-password',
+        '/auth/change-password',
         data
       );
 
@@ -97,7 +97,7 @@ export function useVerifyPhone() {
       logger.info('Verifying phone number');
 
       const response = await apiClient.post<{ message: string }>(
-        '/api/v1/auth/verify-phone',
+        '/auth/verify-phone',
         { phone }
       );
 
@@ -146,7 +146,7 @@ export function useEnable2FA() {
       logger.info('Enabling 2FA');
 
       const response = await apiClient.post<Enable2FAResponse>(
-        '/api/v1/auth/2fa/enable',
+        '/auth/2fa/enable',
         data
       );
 
@@ -176,7 +176,7 @@ export function useVerify2FA() {
       logger.info('Verifying 2FA token');
 
       const response = await apiClient.post<{ message: string; mfa_enabled: boolean }>(
-        '/api/v1/auth/2fa/verify',
+        '/auth/2fa/verify',
         data
       );
 
@@ -207,7 +207,7 @@ export function useDisable2FA() {
       logger.info('Disabling 2FA');
 
       const response = await apiClient.post<{ message: string; mfa_enabled: boolean }>(
-        '/api/v1/auth/2fa/disable',
+        '/auth/2fa/disable',
         data
       );
 
@@ -262,7 +262,7 @@ export function useDeleteAccount() {
       logger.warn('Deleting account');
 
       const response = await apiClient.delete<{ message: string }>(
-        '/api/v1/auth/me',
+        '/auth/me',
         {
           headers: { 'X-Password': data.password }
         }
@@ -293,7 +293,7 @@ export function useExportData() {
     mutationFn: async () => {
       logger.info('Exporting user data');
 
-      const response = await apiClient.get<any>('/api/v1/auth/me/export');
+      const response = await apiClient.get<any>('/auth/me/export');
 
       if (response.status < 200 || response.status >= 300) {
         throw new Error('Failed to export data');
@@ -330,7 +330,7 @@ export function useListSessions() {
       logger.info('Fetching active sessions');
 
       const response = await apiClient.get<{ sessions: Session[]; total: number }>(
-        '/api/v1/auth/me/sessions'
+        '/auth/me/sessions'
       );
 
       if (response.status < 200 || response.status >= 300) {
@@ -354,7 +354,7 @@ export function useRevokeSession() {
       logger.info('Revoking session', { sessionId });
 
       const response = await apiClient.delete<{ message: string }>(
-        `/api/v1/auth/me/sessions/${sessionId}`
+        `/auth/me/sessions/${sessionId}`
       );
 
       if (response.status < 200 || response.status >= 300) {
@@ -384,7 +384,7 @@ export function useRevokeAllSessions() {
       logger.info('Revoking all sessions');
 
       const response = await apiClient.delete<{ message: string; sessions_revoked: number }>(
-        '/api/v1/auth/me/sessions'
+        '/auth/me/sessions'
       );
 
       if (response.status < 200 || response.status >= 300) {

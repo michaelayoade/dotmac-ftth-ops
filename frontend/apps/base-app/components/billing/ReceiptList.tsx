@@ -61,7 +61,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
         queryParams.set('customer_id', customerId);
       }
 
-      const endpoint = `/api/v1/billing/receipts${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const endpoint = `/billing/receipts${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const response = await apiClient.get(endpoint);
       if (response.data) {
         const data = response.data as { receipts?: Receipt[] };
@@ -86,7 +86,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
   const handleDownloadPDF = async (receipt: Receipt) => {
     try {
       const response = await apiClient.get(
-        `/api/v1/billing/receipts/${receipt.receipt_id}/pdf`,
+        `/billing/receipts/${receipt.receipt_id}/pdf`,
         { responseType: 'blob' }
       );
 
@@ -107,12 +107,12 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
 
   // View receipt HTML
   const handleViewReceipt = (receipt: Receipt) => {
-    window.open(`/api/v1/billing/receipts/${receipt.receipt_id}/html`, '_blank');
+    window.open(`/billing/receipts/${receipt.receipt_id}/html`, '_blank');
   };
 
   // Print receipt
   const handlePrintReceipt = (receipt: Receipt) => {
-    const printWindow = window.open(`/api/v1/billing/receipts/${receipt.receipt_id}/html`, '_blank');
+    const printWindow = window.open(`/billing/receipts/${receipt.receipt_id}/html`, '_blank');
     if (printWindow) {
       printWindow.onload = () => {
         printWindow.print();
@@ -123,7 +123,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
   // Email receipt
   const handleEmailReceipt = async (receipt: Receipt) => {
     try {
-      await apiClient.post(`/api/v1/billing/receipts/${receipt.receipt_id}/email`);
+      await apiClient.post(`/billing/receipts/${receipt.receipt_id}/email`);
       alert(`Receipt ${receipt.receipt_number} sent to ${receipt.customer_email}`);
     } catch (err) {
       console.error('Failed to email receipt:', err);
@@ -136,7 +136,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
     setBulkLoading(true);
     try {
       const receiptIds = selected.map(r => r.receipt_id);
-      const response = await apiClient.post('/api/v1/billing/receipts/bulk-download',
+      const response = await apiClient.post('/billing/receipts/bulk-download',
         { receipt_ids: receiptIds },
         { responseType: 'blob' }
       );
@@ -162,7 +162,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
     setBulkLoading(true);
     try {
       const receiptIds = selected.map(r => r.receipt_id);
-      await apiClient.post('/api/v1/billing/receipts/bulk-email', { receipt_ids: receiptIds });
+      await apiClient.post('/billing/receipts/bulk-email', { receipt_ids: receiptIds });
       alert(`Successfully sent ${receiptIds.length} receipt(s)`);
     } catch (err) {
       console.error('Failed to email receipts:', err);

@@ -320,10 +320,10 @@ def require_cryptography() -> Any:
 
 # Re-export common FastAPI dependencies for routers
 from .auth.core import get_current_user  # noqa: E402, F401
-from .db import get_async_session, get_db  # noqa: E402, F401
 
 # Re-export service factory dependencies
 from .communications.email_service import get_email_service  # noqa: E402, F401
+from .db import get_async_session, get_db  # noqa: E402, F401
 from .events.dependencies import get_event_bus_dependency as get_event_bus  # noqa: E402, F401
 from .tenant.dependencies import get_tenant_service  # noqa: E402, F401
 
@@ -336,7 +336,6 @@ def get_deployment_service(db=None):
     This is a re-export wrapper for the deployment service factory.
     Import the actual factory from deployment.router for full functionality.
     """
-    from sqlalchemy.orm import Session
 
     from .deployment.service import DeploymentService
 

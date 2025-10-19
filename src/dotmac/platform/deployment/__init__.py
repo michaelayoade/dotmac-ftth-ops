@@ -10,16 +10,16 @@ and hybrid environments with support for:
 """
 
 from .models import (
-    DeploymentTemplate,
-    DeploymentInstance,
+    DeploymentBackend,
     DeploymentExecution,
     DeploymentHealth,
-    DeploymentBackend,
+    DeploymentInstance,
     DeploymentState,
+    DeploymentTemplate,
     DeploymentType,
 )
-from .service import DeploymentService
 from .registry import DeploymentRegistry
+from .service import DeploymentService
 
 __all__ = [
     "DeploymentTemplate",

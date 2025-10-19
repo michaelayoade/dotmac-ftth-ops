@@ -5,11 +5,13 @@ Test fixtures for Sales-to-Activation Automation tests
 import pytest
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, Generator
 from unittest.mock import Mock
 
-from sqlalchemy.orm import Session
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
 
+from dotmac.platform.db import Base
 from dotmac.platform.sales.models import (
     ActivationStatus,
     ActivationWorkflow,
@@ -77,25 +79,102 @@ def mock_event_bus():
 
 
 @pytest.fixture
-def sample_deployment_template(db: Session) -> DeploymentTemplate:
-    """Create a sample deployment template"""
-    template = DeploymentTemplate(
-        name="standard-cloud",
-        description="Standard cloud deployment",
-        backend=DeploymentBackend.KUBERNETES,
-        helm_chart="dotmac/platform",
-        chart_version="1.0.0",
-        default_region="us-east-1",
-        resource_cpu_default=4,
-        resource_memory_default=16,
-        resource_storage_default=100,
-        is_active=True,
-        is_default=True,
-    )
-    db.add(template)
-    db.commit()
-    db.refresh(template)
-    return template
+def client(test_client):
+    """Provide sync test client for API tests"""
+    return test_client
+
+
+# Use the global db_engine and db_session fixtures from tests/conftest.py
+# They already create tables for all models including sales and deployment
+
+@pytest.fixture
+def db(db_session):
+    """Alias for db_session to match test expectations"""
+    # Clean up service_activations table before each test to prevent pollution
+    from sqlalchemy.exc import DatabaseError
+    from dotmac.platform.sales.models import ServiceActivation
+
+    try:
+        db_session.query(ServiceActivation).filter(
+            ServiceActivation.order_id.isnot(None)  # Delete all test-created activations
+        ).delete(synchronize_session=False)
+        db_session.commit()
+    except DatabaseError:
+        # Table doesn't exist yet or other DB error, skip cleanup
+        db_session.rollback()
+
+    yield db_session
+
+    # Clean up after test
+    try:
+        db_session.query(ServiceActivation).filter(
+            ServiceActivation.order_id.isnot(None)
+        ).delete(synchronize_session=False)
+        db_session.commit()
+    except DatabaseError:
+        # Table doesn't exist or other DB error, skip cleanup
+        db_session.rollback()
+
+
+@pytest.fixture(scope="session")
+def sample_tenant(db_engine):
+    """Create a sample tenant for testing (session-scoped)"""
+    from dotmac.platform.tenant.models import Tenant, TenantStatus, TenantPlanType, BillingCycle
+    from sqlalchemy.orm import sessionmaker
+    from dotmac.platform.db import Base
+
+    # Ensure all tables are created before attempting to insert data
+    Base.metadata.create_all(db_engine, checkfirst=True)
+
+    SessionLocal = sessionmaker(bind=db_engine)
+    session = SessionLocal()
+    try:
+        tenant = Tenant(
+            id="test-tenant-123",
+            name="Test ISP Company",
+            slug="test-isp",
+            status=TenantStatus.ACTIVE,
+            plan_type=TenantPlanType.ENTERPRISE,
+            billing_cycle=BillingCycle.MONTHLY,
+            email="admin@test-isp.com",
+        )
+        session.add(tenant)
+        session.commit()
+        session.refresh(tenant)
+        return tenant
+    finally:
+        session.close()
+
+
+@pytest.fixture(scope="session")
+def sample_deployment_template(db_engine) -> DeploymentTemplate:
+    """Create a sample deployment template (session-scoped)"""
+    from dotmac.platform.deployment.models import DeploymentType
+    from sqlalchemy.orm import sessionmaker
+
+    SessionLocal = sessionmaker(bind=db_engine)
+    session = SessionLocal()
+    try:
+        template = DeploymentTemplate(
+            name="standard-cloud",
+            display_name="Standard Cloud Deployment",
+            description="Standard cloud deployment",
+            backend=DeploymentBackend.KUBERNETES,
+            deployment_type=DeploymentType.CLOUD_DEDICATED,
+            version="1.0.0",
+            helm_chart_url="https://charts.dotmac.io/platform",
+            helm_chart_version="1.0.0",
+            cpu_cores=4,
+            memory_gb=16,
+            storage_gb=100,
+            is_active=True,
+        )
+        session.add(template)
+        session.commit()
+        session.refresh(template)
+        return template
+    finally:
+        session.close()
 
 
 @pytest.fixture
@@ -141,43 +220,52 @@ def sample_quick_order() -> QuickOrderRequest:
     )
 
 
-@pytest.fixture
-def sample_order(db: Session, sample_deployment_template: DeploymentTemplate) -> Order:
-    """Create a sample order"""
-    order = Order(
-        order_number="ORD-20251016-1001",
-        order_type=OrderType.NEW_TENANT,
-        status=OrderStatus.DRAFT,
-        customer_email="admin@example.com",
-        customer_name="John Smith",
-        customer_phone="+1-555-0100",
-        company_name="Example ISP Inc.",
-        organization_slug="example-isp",
-        deployment_template_id=sample_deployment_template.id,
-        deployment_region="us-east-1",
-        selected_services=[
-            {
-                "service_code": "subscriber-provisioning",
-                "name": "Subscriber Management",
-                "quantity": 1,
-            },
-            {
-                "service_code": "billing-invoicing",
-                "name": "Billing & Invoicing",
-                "quantity": 1,
-            },
-        ],
-        currency="USD",
-        subtotal=Decimal("248.00"),
-        tax_amount=Decimal("0.00"),
-        total_amount=Decimal("248.00"),
-        billing_cycle="monthly",
-        source="public_api",
-    )
-    db.add(order)
-    db.commit()
-    db.refresh(order)
-    return order
+@pytest.fixture(scope="session")
+def sample_order(db_engine, sample_deployment_template: DeploymentTemplate, sample_tenant) -> Order:
+    """Create a sample order (session-scoped to avoid duplicate key errors)"""
+    from sqlalchemy.orm import sessionmaker
+    # Ensure sample_tenant is created first (triggers db setup)
+    _ = sample_tenant
+
+    SessionLocal = sessionmaker(bind=db_engine)
+    session = SessionLocal()
+    try:
+        order = Order(
+            order_number="ORD-20251016-1001",
+            order_type=OrderType.NEW_TENANT,
+            status=OrderStatus.DRAFT,
+            customer_email="admin@example.com",
+            customer_name="John Smith",
+            customer_phone="+1-555-0100",
+            company_name="Example ISP Inc.",
+            organization_slug="example-isp",
+            deployment_template_id=sample_deployment_template.id,
+            deployment_region="us-east-1",
+            selected_services=[
+                {
+                    "service_code": "subscriber-provisioning",
+                    "name": "Subscriber Management",
+                    "quantity": 1,
+                },
+                {
+                    "service_code": "billing-invoicing",
+                    "name": "Billing & Invoicing",
+                    "quantity": 1,
+                },
+            ],
+            currency="USD",
+            subtotal=Decimal("248.00"),
+            tax_amount=Decimal("0.00"),
+            total_amount=Decimal("248.00"),
+            billing_cycle="monthly",
+            source="public_api",
+        )
+        session.add(order)
+        session.commit()
+        session.refresh(order)
+        return order
+    finally:
+        session.close()
 
 
 @pytest.fixture
@@ -215,13 +303,13 @@ def sample_order_items(db: Session, sample_order: Order) -> list[OrderItem]:
 
 @pytest.fixture
 def sample_service_activations(
-    db: Session, sample_order: Order
+    db: Session, sample_order: Order, sample_tenant
 ) -> list[ServiceActivation]:
     """Create sample service activations"""
     activations = [
         ServiceActivation(
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             service_code="subscriber-provisioning",
             service_name="Subscriber Management",
             activation_status=ActivationStatus.COMPLETED,
@@ -233,7 +321,7 @@ def sample_service_activations(
         ),
         ServiceActivation(
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=sample_tenant.id,
             service_code="billing-invoicing",
             service_name="Billing & Invoicing",
             activation_status=ActivationStatus.IN_PROGRESS,

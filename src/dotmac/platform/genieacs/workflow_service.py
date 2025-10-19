@@ -5,7 +5,7 @@ Provides workflow-compatible methods for CPE device provisioning (ISP).
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,8 +31,8 @@ class GenieACSService:
         wifi_ssid: str | None = None,
         wifi_password: str | None = None,
         management_url: str | None = None,
-        additional_params: Dict[str, Any] | None = None,
-    ) -> Dict[str, Any]:
+        additional_params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Provision a CPE device via GenieACS TR-069/CWMP.
 
@@ -70,6 +70,7 @@ class GenieACSService:
             ValueError: If device not found or configuration invalid
         """
         from datetime import UTC, datetime
+
         from .client import GenieACSClient
         from .service import GenieACSService
 
@@ -82,7 +83,7 @@ class GenieACSService:
 
         # Initialize GenieACS client and service
         genieacs_client = GenieACSClient(tenant_id=tenant_id)
-        genieacs_service = GenieACSService(client=genieacs_client, tenant_id=tenant_id)
+        _ = GenieACSService(client=genieacs_client, tenant_id=tenant_id)
 
         try:
             # Find device by serial number
@@ -152,7 +153,7 @@ class GenieACSService:
                 logger.warning(f"Failed to apply template tag: {e}")
 
             # Build parameter configuration
-            params_to_set: Dict[str, Any] = {}
+            params_to_set: dict[str, Any] = {}
 
             # Configure WiFi if provided
             if wifi_ssid:
@@ -173,7 +174,7 @@ class GenieACSService:
             # Apply parameter changes if any
             if params_to_set:
                 try:
-                    task_result = await genieacs_client.set_parameter_values(
+                    await genieacs_client.set_parameter_values(
                         device_id,
                         params_to_set
                     )

@@ -8,7 +8,6 @@ via DataLoaders to prevent N+1 queries.
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 import strawberry
 
@@ -46,12 +45,12 @@ class SubscriptionPlan:
     plan_id: str
     product_id: str
     name: str
-    description: Optional[str]
+    description: str | None
     billing_cycle: BillingCycleEnum
     price: Decimal
     currency: str
-    setup_fee: Optional[Decimal]
-    trial_days: Optional[int]
+    setup_fee: Decimal | None
+    trial_days: int | None
     is_active: bool
     created_at: datetime
     updated_at: datetime
@@ -97,9 +96,9 @@ class SubscriptionCustomer:
 
     id: strawberry.ID
     customer_id: str
-    name: Optional[str]
+    name: str | None
     email: str
-    phone: Optional[str]
+    phone: str | None
     created_at: datetime
 
     @classmethod
@@ -126,7 +125,7 @@ class SubscriptionInvoice:
     currency: str
     status: str
     due_date: datetime
-    paid_at: Optional[datetime]
+    paid_at: datetime | None
     created_at: datetime
 
     @classmethod
@@ -169,16 +168,16 @@ class Subscription:
     status: SubscriptionStatusEnum
 
     # Trial information
-    trial_end: Optional[datetime]
+    trial_end: datetime | None
     is_in_trial: bool
 
     # Cancellation
     cancel_at_period_end: bool
-    canceled_at: Optional[datetime]
-    ended_at: Optional[datetime]
+    canceled_at: datetime | None
+    ended_at: datetime | None
 
     # Pricing
-    custom_price: Optional[Decimal]
+    custom_price: Decimal | None
 
     # Usage tracking (for hybrid plans)
     usage_records: strawberry.scalars.JSON
@@ -193,8 +192,8 @@ class Subscription:
     is_past_due: bool
 
     # Relationships (conditionally loaded via DataLoaders)
-    customer: Optional[SubscriptionCustomer] = None
-    plan: Optional[SubscriptionPlan] = None
+    customer: SubscriptionCustomer | None = None
+    plan: SubscriptionPlan | None = None
     recent_invoices: list[SubscriptionInvoice] = strawberry.field(default_factory=list)
 
     @classmethod
@@ -308,7 +307,7 @@ class Product:
     product_id: str
     sku: str
     name: str
-    description: Optional[str]
+    description: str | None
     category: str
     product_type: ProductTypeEnum
     base_price: Decimal

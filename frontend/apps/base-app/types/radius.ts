@@ -12,6 +12,9 @@ export interface RADIUSSubscriberCreate {
   password: string;
   bandwidth_profile_id?: string | null;
   framed_ip_address?: string | null;
+  framed_ipv6_prefix?: string | null; // IPv6 prefix (e.g., "2001:db8::/64")
+  framed_ipv6_address?: string | null; // IPv6 address (e.g., "2001:db8::1/128")
+  delegated_ipv6_prefix?: string | null; // DHCPv6 PD prefix
   session_timeout?: number | null;
   idle_timeout?: number | null;
 }
@@ -20,6 +23,9 @@ export interface RADIUSSubscriberUpdate {
   password?: string | null;
   bandwidth_profile_id?: string | null;
   framed_ip_address?: string | null;
+  framed_ipv6_prefix?: string | null;
+  framed_ipv6_address?: string | null;
+  delegated_ipv6_prefix?: string | null;
   session_timeout?: number | null;
   idle_timeout?: number | null;
   enabled?: boolean | null;
@@ -32,6 +38,9 @@ export interface RADIUSSubscriberResponse {
   username: string;
   bandwidth_profile_id?: string | null;
   framed_ip_address?: string | null;
+  framed_ipv6_prefix?: string | null;
+  framed_ipv6_address?: string | null;
+  delegated_ipv6_prefix?: string | null;
   session_timeout?: number | null;
   idle_timeout?: number | null;
   enabled: boolean;
@@ -51,6 +60,9 @@ export interface RADIUSSessionResponse {
   acctsessionid: string;
   nasipaddress: string;
   framedipaddress?: string | null;
+  framedipv6address?: string | null; // IPv6 address assigned in session
+  framedipv6prefix?: string | null; // IPv6 prefix assigned in session
+  delegatedipv6prefix?: string | null; // Delegated IPv6 prefix
   acctstarttime?: string | null;
   acctsessiontime?: number | null; // Seconds
   acctinputoctets?: number | null; // Bytes downloaded

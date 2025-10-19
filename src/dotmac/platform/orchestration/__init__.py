@@ -14,12 +14,17 @@ Key Features:
 """
 
 from .models import (
-    Workflow,
-    WorkflowStep,
+    OrchestrationWorkflow,
+    OrchestrationWorkflowStep,
     WorkflowStatus,
     WorkflowStepStatus,
     WorkflowType,
 )
+
+# Backwards compatibility exports for legacy imports
+Workflow = OrchestrationWorkflow
+WorkflowStep = OrchestrationWorkflowStep
+from .saga import SagaOrchestrator
 from .schemas import (
     ProvisionSubscriberRequest,
     ProvisionSubscriberResponse,
@@ -27,10 +32,11 @@ from .schemas import (
     WorkflowStepResponse,
 )
 from .service import OrchestrationService
-from .saga import SagaOrchestrator
 
 __all__ = [
     # Models
+    "OrchestrationWorkflow",
+    "OrchestrationWorkflowStep",
     "Workflow",
     "WorkflowStep",
     "WorkflowStatus",

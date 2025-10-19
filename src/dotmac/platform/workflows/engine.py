@@ -6,11 +6,11 @@ Core execution engine for orchestrating multi-step workflows across modules.
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import StepStatus, Workflow, WorkflowExecution, WorkflowStep, WorkflowStatus
+from .models import StepStatus, Workflow, WorkflowExecution, WorkflowStatus, WorkflowStep
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +41,8 @@ class WorkflowEngine:
     def __init__(
         self,
         db_session: AsyncSession,
-        event_publisher: Optional[Any] = None,
-        service_registry: Optional[Any] = None,
+        event_publisher: Any | None = None,
+        service_registry: Any | None = None,
     ):
         self.db = db_session
         self.event_publisher = event_publisher
@@ -51,10 +51,10 @@ class WorkflowEngine:
     async def execute_workflow(
         self,
         workflow: Workflow,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         trigger_type: str = "manual",
-        trigger_source: Optional[str] = None,
-        tenant_id: Optional[int] = None,
+        trigger_source: str | None = None,
+        tenant_id: int | None = None,
     ) -> WorkflowExecution:
         """
         Execute a workflow with the given context.
@@ -147,9 +147,9 @@ class WorkflowEngine:
     async def _execute_steps(
         self,
         execution: WorkflowExecution,
-        definition: Dict[str, Any],
-        context: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        definition: dict[str, Any],
+        context: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         Execute workflow steps sequentially.
 
@@ -204,8 +204,8 @@ class WorkflowEngine:
     async def _execute_step_with_retry(
         self,
         step: WorkflowStep,
-        step_def: Dict[str, Any],
-        context: Dict[str, Any],
+        step_def: dict[str, Any],
+        context: dict[str, Any],
     ) -> Any:
         """
         Execute a single step with retry logic.
@@ -277,8 +277,8 @@ class WorkflowEngine:
 
     async def _execute_step(
         self,
-        step_def: Dict[str, Any],
-        context: Dict[str, Any],
+        step_def: dict[str, Any],
+        context: dict[str, Any],
     ) -> Any:
         """
         Execute a single workflow step based on its type.
@@ -308,8 +308,8 @@ class WorkflowEngine:
 
     async def _execute_service_call(
         self,
-        step_def: Dict[str, Any],
-        context: Dict[str, Any],
+        step_def: dict[str, Any],
+        context: dict[str, Any],
     ) -> Any:
         """
         Execute a service call step (call another module/service).
@@ -344,8 +344,8 @@ class WorkflowEngine:
 
     def _execute_transform(
         self,
-        step_def: Dict[str, Any],
-        context: Dict[str, Any],
+        step_def: dict[str, Any],
+        context: dict[str, Any],
     ) -> Any:
         """
         Execute a data transformation step.
@@ -376,8 +376,8 @@ class WorkflowEngine:
 
     def _execute_condition(
         self,
-        step_def: Dict[str, Any],
-        context: Dict[str, Any],
+        step_def: dict[str, Any],
+        context: dict[str, Any],
     ) -> bool:
         """
         Execute a conditional step.
@@ -394,8 +394,8 @@ class WorkflowEngine:
 
     async def _execute_wait(
         self,
-        step_def: Dict[str, Any],
-        context: Dict[str, Any],
+        step_def: dict[str, Any],
+        context: dict[str, Any],
     ) -> None:
         """
         Execute a wait/delay step.
@@ -413,7 +413,7 @@ class WorkflowEngine:
     def _resolve_params(
         self,
         params: Any,
-        context: Dict[str, Any],
+        context: dict[str, Any],
     ) -> Any:
         """
         Resolve parameter values from context using template syntax.
@@ -442,7 +442,7 @@ class WorkflowEngine:
         else:
             return params
 
-    def _get_nested_value(self, obj: Dict[str, Any], path: str) -> Any:
+    def _get_nested_value(self, obj: dict[str, Any], path: str) -> Any:
         """
         Get nested value from dict using dot notation.
 
@@ -466,8 +466,8 @@ class WorkflowEngine:
 
     def _evaluate_condition(
         self,
-        condition: Dict[str, Any],
-        context: Dict[str, Any],
+        condition: dict[str, Any],
+        context: dict[str, Any],
     ) -> bool:
         """
         Evaluate a conditional expression.

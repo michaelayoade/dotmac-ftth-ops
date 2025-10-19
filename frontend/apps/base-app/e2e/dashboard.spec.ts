@@ -3,7 +3,7 @@ import { test, expect, Page } from '@playwright/test';
 // Helper to login before tests
 async function loginAsUser(page: Page, username = 'admin', password = 'admin123') {
   await page.goto('/login');
-  await page.fill('[data-testid="username-input"]', username);
+  await page.fill('[data-testid="email-input"]', username);
   await page.fill('[data-testid="password-input"]', password);
   await page.click('[data-testid="submit-button"]');
   await page.waitForURL(/.*dashboard/);
@@ -17,7 +17,7 @@ test.describe('Dashboard Critical Flows', () => {
 
   test('should display dashboard overview', async ({ page }) => {
     // Check main dashboard elements
-    await expect(page.locator('h1')).toContainText('DotMac Platform Dashboard');
+    await expect(page.locator('h1')).toContainText('Network Operations Center');
     await expect(page.locator('text=User Profile')).toBeVisible();
     await expect(page.locator('text=API Status')).toBeVisible();
     await expect(page.locator('text=Quick Actions')).toBeVisible();

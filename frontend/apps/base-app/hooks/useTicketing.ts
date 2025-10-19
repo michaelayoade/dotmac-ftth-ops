@@ -134,7 +134,7 @@ export function useTickets(options: UseTicketsOptions = {}) {
       const params: Record<string, any> = {};
       if (status) params.status = status;
 
-      const response = await apiClient.get<TicketSummary[]>('/api/v1/tickets', { params });
+      const response = await apiClient.get<TicketSummary[]>('/tickets', { params });
       setTickets(response.data);
       setError(null);
     } catch (err: any) {
@@ -185,7 +185,7 @@ export function useTicket(ticketId: string | null, autoRefresh = false) {
 
     try {
       setLoading(true);
-      const response = await apiClient.get<TicketDetail>(`/api/v1/tickets/${ticketId}`);
+      const response = await apiClient.get<TicketDetail>(`/tickets/${ticketId}`);
       setTicket(response.data);
       setError(null);
     } catch (err: any) {
@@ -232,7 +232,7 @@ export function useCreateTicket() {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiClient.post<TicketDetail>('/api/v1/tickets', data);
+      const response = await apiClient.post<TicketDetail>('/tickets', data);
       return response.data;
     } catch (err: any) {
       console.error('Failed to create ticket:', err);
@@ -262,7 +262,7 @@ export function useUpdateTicket() {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiClient.patch<TicketDetail>(`/api/v1/tickets/${ticketId}`, data);
+      const response = await apiClient.patch<TicketDetail>(`/tickets/${ticketId}`, data);
       return response.data;
     } catch (err: any) {
       console.error('Failed to update ticket:', err);
@@ -293,7 +293,7 @@ export function useAddMessage() {
       setLoading(true);
       setError(null);
       const response = await apiClient.post<TicketDetail>(
-        `/api/v1/tickets/${ticketId}/messages`,
+        `/tickets/${ticketId}/messages`,
         data
       );
       return response.data;
@@ -340,7 +340,7 @@ export function useTicketStats() {
       setLoading(true);
 
       // Since there's no stats endpoint, we'll calculate from tickets
-      const response = await apiClient.get<TicketSummary[]>('/api/v1/tickets');
+      const response = await apiClient.get<TicketSummary[]>('/tickets');
       const tickets = response.data;
 
       const stats: TicketStats = {

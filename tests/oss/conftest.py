@@ -13,7 +13,7 @@ from typing import Any
 from uuid import uuid4
 
 import pytest
-from dotmac.platform.base_model import Base
+from dotmac.platform.db import Base
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
@@ -21,6 +21,27 @@ from sqlalchemy.pool import StaticPool
 @pytest.fixture(scope="function")
 async def async_session():
     """Create an async database session for testing."""
+    # Import OSS-related models to ensure they're registered with Base.metadata
+    try:
+        from dotmac.platform.radius import models as radius_models  # noqa: F401
+    except ImportError:
+        pass
+
+    try:
+        from dotmac.platform.services.lifecycle import models as lifecycle_models  # noqa: F401
+    except ImportError:
+        pass
+
+    try:
+        from dotmac.platform.fault_management import models as fault_models  # noqa: F401
+    except ImportError:
+        pass
+
+    try:
+        from dotmac.platform.customer_management import models as customer_models  # noqa: F401
+    except ImportError:
+        pass
+
     engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -29,6 +50,8 @@ async def async_session():
     )
 
     async with engine.begin() as conn:
+        # Drop all tables first to avoid index collision
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

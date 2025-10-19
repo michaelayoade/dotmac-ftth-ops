@@ -7,11 +7,10 @@ Provides fast lookups and state management.
 
 import logging
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from .models import (
     DeploymentExecution,
@@ -20,7 +19,6 @@ from .models import (
     DeploymentState,
     DeploymentTemplate,
 )
-from .schemas import DeploymentInstanceResponse
 
 logger = logging.getLogger(__name__)
 
@@ -44,11 +42,11 @@ class DeploymentRegistry:
 
     # Instance Management
 
-    def get_instance(self, instance_id: int) -> Optional[DeploymentInstance]:
+    def get_instance(self, instance_id: int) -> DeploymentInstance | None:
         """Get deployment instance by ID"""
         return self.db.query(DeploymentInstance).filter(DeploymentInstance.id == instance_id).first()
 
-    def get_instance_by_tenant(self, tenant_id: int, environment: str) -> Optional[DeploymentInstance]:
+    def get_instance_by_tenant(self, tenant_id: int, environment: str) -> DeploymentInstance | None:
         """Get deployment instance for tenant and environment"""
         return (
             self.db.query(DeploymentInstance)
@@ -60,12 +58,12 @@ class DeploymentRegistry:
 
     def list_instances(
         self,
-        tenant_id: Optional[int] = None,
-        state: Optional[DeploymentState] = None,
-        environment: Optional[str] = None,
-        region: Optional[str] = None,
-        template_id: Optional[int] = None,
-        health_status: Optional[str] = None,
+        tenant_id: int | None = None,
+        state: DeploymentState | None = None,
+        environment: str | None = None,
+        region: str | None = None,
+        template_id: int | None = None,
+        health_status: str | None = None,
         skip: int = 0,
         limit: int = 100,
     ) -> tuple[list[DeploymentInstance], int]:
@@ -107,7 +105,7 @@ class DeploymentRegistry:
         logger.info(f"Created deployment instance {instance.id} for tenant {instance.tenant_id}")
         return instance
 
-    def update_instance(self, instance_id: int, **updates) -> Optional[DeploymentInstance]:
+    def update_instance(self, instance_id: int, **updates) -> DeploymentInstance | None:
         """Update deployment instance"""
         instance = self.get_instance(instance_id)
         if not instance:
@@ -123,8 +121,8 @@ class DeploymentRegistry:
         return instance
 
     def update_instance_state(
-        self, instance_id: int, state: DeploymentState, reason: Optional[str] = None
-    ) -> Optional[DeploymentInstance]:
+        self, instance_id: int, state: DeploymentState, reason: str | None = None
+    ) -> DeploymentInstance | None:
         """Update instance state"""
         instance = self.get_instance(instance_id)
         if not instance:
@@ -152,16 +150,16 @@ class DeploymentRegistry:
 
     # Template Management
 
-    def get_template(self, template_id: int) -> Optional[DeploymentTemplate]:
+    def get_template(self, template_id: int) -> DeploymentTemplate | None:
         """Get deployment template by ID"""
         return self.db.query(DeploymentTemplate).filter(DeploymentTemplate.id == template_id).first()
 
-    def get_template_by_name(self, name: str) -> Optional[DeploymentTemplate]:
+    def get_template_by_name(self, name: str) -> DeploymentTemplate | None:
         """Get deployment template by name"""
         return self.db.query(DeploymentTemplate).filter(DeploymentTemplate.name == name).first()
 
     def list_templates(
-        self, is_active: Optional[bool] = None, skip: int = 0, limit: int = 100
+        self, is_active: bool | None = None, skip: int = 0, limit: int = 100
     ) -> tuple[list[DeploymentTemplate], int]:
         """List deployment templates"""
         query = self.db.query(DeploymentTemplate)
@@ -182,7 +180,7 @@ class DeploymentRegistry:
         logger.info(f"Created deployment template {template.name}")
         return template
 
-    def update_template(self, template_id: int, **updates) -> Optional[DeploymentTemplate]:
+    def update_template(self, template_id: int, **updates) -> DeploymentTemplate | None:
         """Update deployment template"""
         template = self.get_template(template_id)
         if not template:
@@ -207,11 +205,11 @@ class DeploymentRegistry:
         logger.info(f"Created execution {execution.id} for instance {execution.instance_id}")
         return execution
 
-    def get_execution(self, execution_id: int) -> Optional[DeploymentExecution]:
+    def get_execution(self, execution_id: int) -> DeploymentExecution | None:
         """Get execution by ID"""
         return self.db.query(DeploymentExecution).filter(DeploymentExecution.id == execution_id).first()
 
-    def update_execution(self, execution_id: int, **updates) -> Optional[DeploymentExecution]:
+    def update_execution(self, execution_id: int, **updates) -> DeploymentExecution | None:
         """Update execution record"""
         execution = self.get_execution(execution_id)
         if not execution:
@@ -232,7 +230,7 @@ class DeploymentRegistry:
         return execution
 
     def list_executions(
-        self, instance_id: Optional[int] = None, operation: Optional[str] = None, skip: int = 0, limit: int = 100
+        self, instance_id: int | None = None, operation: str | None = None, skip: int = 0, limit: int = 100
     ) -> tuple[list[DeploymentExecution], int]:
         """List executions with filters"""
         query = self.db.query(DeploymentExecution)
@@ -247,7 +245,7 @@ class DeploymentRegistry:
 
         return executions, total
 
-    def get_latest_execution(self, instance_id: int, operation: Optional[str] = None) -> Optional[DeploymentExecution]:
+    def get_latest_execution(self, instance_id: int, operation: str | None = None) -> DeploymentExecution | None:
         """Get latest execution for instance"""
         query = self.db.query(DeploymentExecution).filter(DeploymentExecution.instance_id == instance_id)
 
@@ -265,7 +263,7 @@ class DeploymentRegistry:
         self.db.refresh(health)
         return health
 
-    def get_latest_health(self, instance_id: int) -> Optional[DeploymentHealth]:
+    def get_latest_health(self, instance_id: int) -> DeploymentHealth | None:
         """Get latest health check for instance"""
         return (
             self.db.query(DeploymentHealth)
@@ -301,7 +299,7 @@ class DeploymentRegistry:
             .all()
         )
 
-    def update_instance_health(self, instance_id: int, health: DeploymentHealth) -> Optional[DeploymentInstance]:
+    def update_instance_health(self, instance_id: int, health: DeploymentHealth) -> DeploymentInstance | None:
         """Update instance health status from health check"""
         instance = self.get_instance(instance_id)
         if not instance:
@@ -324,7 +322,7 @@ class DeploymentRegistry:
 
     # Statistics
 
-    def get_deployment_stats(self, tenant_id: Optional[int] = None) -> dict:
+    def get_deployment_stats(self, tenant_id: int | None = None) -> dict:
         """Get deployment statistics"""
         query = self.db.query(DeploymentInstance)
 
@@ -371,7 +369,7 @@ class DeploymentRegistry:
 
         return [{"template_name": r.name, "display_name": r.display_name, "instances": r.instance_count} for r in results]
 
-    def get_resource_allocation(self, tenant_id: Optional[int] = None) -> dict:
+    def get_resource_allocation(self, tenant_id: int | None = None) -> dict:
         """Get total resource allocation"""
         query = self.db.query(DeploymentInstance).filter(
             DeploymentInstance.state.in_([DeploymentState.ACTIVE, DeploymentState.PROVISIONING])
@@ -392,7 +390,7 @@ class DeploymentRegistry:
 
     # Bulk Operations
 
-    def bulk_update_state(self, instance_ids: list[int], state: DeploymentState, reason: Optional[str] = None) -> int:
+    def bulk_update_state(self, instance_ids: list[int], state: DeploymentState, reason: str | None = None) -> int:
         """Bulk update instance states"""
         updated = (
             self.db.query(DeploymentInstance)
@@ -433,12 +431,12 @@ class AsyncDeploymentRegistry:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_instance(self, instance_id: int) -> Optional[DeploymentInstance]:
+    async def get_instance(self, instance_id: int) -> DeploymentInstance | None:
         """Get deployment instance by ID"""
         result = await self.db.execute(select(DeploymentInstance).where(DeploymentInstance.id == instance_id))
         return result.scalar_one_or_none()
 
-    async def get_instance_by_tenant(self, tenant_id: int, environment: str) -> Optional[DeploymentInstance]:
+    async def get_instance_by_tenant(self, tenant_id: int, environment: str) -> DeploymentInstance | None:
         """Get deployment instance for tenant and environment"""
         result = await self.db.execute(
             select(DeploymentInstance).where(
@@ -456,8 +454,8 @@ class AsyncDeploymentRegistry:
         return instance
 
     async def update_instance_state(
-        self, instance_id: int, state: DeploymentState, reason: Optional[str] = None
-    ) -> Optional[DeploymentInstance]:
+        self, instance_id: int, state: DeploymentState, reason: str | None = None
+    ) -> DeploymentInstance | None:
         """Update instance state"""
         instance = await self.get_instance(instance_id)
         if not instance:

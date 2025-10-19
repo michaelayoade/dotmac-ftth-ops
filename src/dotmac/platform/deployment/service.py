@@ -7,15 +7,21 @@ Coordinates adapters, registry, and business logic.
 
 import logging
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from sqlalchemy.orm import Session
 
-from .adapters.base import DeploymentAdapter, DeploymentResult, ExecutionContext, ExecutionStatus
+from .adapters.base import DeploymentAdapter, ExecutionContext
 from .adapters.factory import AdapterFactory
-from .models import DeploymentBackend, DeploymentExecution, DeploymentHealth, DeploymentInstance, DeploymentState, DeploymentTemplate
+from .models import (
+    DeploymentBackend,
+    DeploymentExecution,
+    DeploymentHealth,
+    DeploymentInstance,
+    DeploymentState,
+)
 from .registry import DeploymentRegistry
-from .schemas import DeploymentInstanceCreate, ProvisionRequest, ScaleRequest, UpgradeRequest
+from .schemas import ProvisionRequest, ScaleRequest, UpgradeRequest
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +34,7 @@ class DeploymentService:
     Coordinates between adapters, registry, and business logic.
     """
 
-    def __init__(self, db: Session, adapter_configs: Optional[dict[DeploymentBackend, dict]] = None):
+    def __init__(self, db: Session, adapter_configs: dict[DeploymentBackend, dict] | None = None):
         """
         Initialize deployment service
 
@@ -81,8 +87,8 @@ class DeploymentService:
         self,
         tenant_id: int,
         request: ProvisionRequest,
-        triggered_by: Optional[int] = None,
-        secrets: Optional[dict[str, Any]] = None,
+        triggered_by: int | None = None,
+        secrets: dict[str, Any] | None = None,
     ) -> tuple[DeploymentInstance, DeploymentExecution]:
         """
         Provision new deployment
@@ -209,8 +215,8 @@ class DeploymentService:
         self,
         instance_id: int,
         request: UpgradeRequest,
-        triggered_by: Optional[int] = None,
-        secrets: Optional[dict[str, Any]] = None,
+        triggered_by: int | None = None,
+        secrets: dict[str, Any] | None = None,
     ) -> DeploymentExecution:
         """
         Upgrade deployment to new version
@@ -325,7 +331,7 @@ class DeploymentService:
             raise
 
     async def scale_deployment(
-        self, instance_id: int, request: ScaleRequest, triggered_by: Optional[int] = None
+        self, instance_id: int, request: ScaleRequest, triggered_by: int | None = None
     ) -> DeploymentExecution:
         """Scale deployment resources"""
         logger.info(f"Scaling deployment {instance_id}")
@@ -397,7 +403,7 @@ class DeploymentService:
             raise
 
     async def suspend_deployment(
-        self, instance_id: int, reason: str, triggered_by: Optional[int] = None
+        self, instance_id: int, reason: str, triggered_by: int | None = None
     ) -> DeploymentExecution:
         """Suspend deployment"""
         logger.info(f"Suspending deployment {instance_id}")
@@ -443,7 +449,7 @@ class DeploymentService:
             raise
 
     async def resume_deployment(
-        self, instance_id: int, reason: str, triggered_by: Optional[int] = None
+        self, instance_id: int, reason: str, triggered_by: int | None = None
     ) -> DeploymentExecution:
         """Resume suspended deployment"""
         logger.info(f"Resuming deployment {instance_id}")
@@ -492,7 +498,7 @@ class DeploymentService:
             raise
 
     async def destroy_deployment(
-        self, instance_id: int, reason: str, backup_data: bool = True, triggered_by: Optional[int] = None
+        self, instance_id: int, reason: str, backup_data: bool = True, triggered_by: int | None = None
     ) -> DeploymentExecution:
         """Destroy deployment"""
         logger.info(f"Destroying deployment {instance_id}")
@@ -541,7 +547,7 @@ class DeploymentService:
             raise
 
     async def rollback_deployment(
-        self, instance_id: int, failed_execution_id: int, triggered_by: Optional[int] = None
+        self, instance_id: int, failed_execution_id: int, triggered_by: int | None = None
     ) -> DeploymentExecution:
         """Rollback deployment to previous version"""
         logger.info(f"Rolling back deployment {instance_id}")
@@ -622,14 +628,14 @@ class DeploymentService:
         tenant_id: int,
         operation: str,
         scheduled_at: datetime,
-        provision_request: Optional[ProvisionRequest] = None,
-        upgrade_request: Optional[UpgradeRequest] = None,
-        scale_request: Optional[ScaleRequest] = None,
-        instance_id: Optional[int] = None,
-        triggered_by: Optional[int] = None,
-        cron_expression: Optional[str] = None,
-        interval_seconds: Optional[int] = None,
-        metadata: Optional[dict[str, Any]] = None,
+        provision_request: ProvisionRequest | None = None,
+        upgrade_request: UpgradeRequest | None = None,
+        scale_request: ScaleRequest | None = None,
+        instance_id: int | None = None,
+        triggered_by: int | None = None,
+        cron_expression: str | None = None,
+        interval_seconds: int | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
         Schedule a deployment operation for future execution.
@@ -659,7 +665,7 @@ class DeploymentService:
         from dotmac.platform.jobs.scheduler_service import SchedulerService
 
         logger.info(
-            f"Scheduling deployment operation",
+            "Scheduling deployment operation",
             tenant_id=tenant_id,
             operation=operation,
             scheduled_at=scheduled_at,
@@ -749,7 +755,7 @@ class DeploymentService:
             )
 
             logger.info(
-                f"Created recurring deployment schedule",
+                "Created recurring deployment schedule",
                 schedule_id=scheduled_job.id,
                 operation=operation,
                 cron=cron_expression,
@@ -791,7 +797,7 @@ class DeploymentService:
 
             # Deactivate after first run by setting flag in parameters
             logger.info(
-                f"Created one-time deployment schedule",
+                "Created one-time deployment schedule",
                 schedule_id=scheduled_job.id,
                 operation=operation,
                 scheduled_at=scheduled_at,

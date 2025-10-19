@@ -5,7 +5,6 @@ Provides types for ISP subscriber management and session tracking.
 """
 
 from datetime import datetime
-from typing import Optional
 
 import strawberry
 
@@ -18,11 +17,11 @@ class Session:
     username: str
     nasipaddress: str
     acctsessionid: str
-    acctsessiontime: Optional[int]
-    acctinputoctets: Optional[int]
-    acctoutputoctets: Optional[int]
-    acctstarttime: Optional[datetime]
-    acctstoptime: Optional[datetime]
+    acctsessiontime: int | None
+    acctinputoctets: int | None
+    acctoutputoctets: int | None
+    acctstarttime: datetime | None
+    acctstoptime: datetime | None
 
 
 @strawberry.type
@@ -33,8 +32,8 @@ class Subscriber:
     subscriber_id: str
     username: str
     enabled: bool
-    framed_ip_address: Optional[str]
-    bandwidth_profile_id: Optional[str]
+    framed_ip_address: str | None
+    bandwidth_profile_id: str | None
     created_at: datetime
     updated_at: datetime
 

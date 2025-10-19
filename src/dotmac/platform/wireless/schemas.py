@@ -10,10 +10,14 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from dotmac.platform.core.ip_validation import (
+    IPv4AddressValidator,
+    IPv6AddressValidator,
+)
 
 from .models import CoverageType, DeviceStatus, DeviceType, Frequency, RadioProtocol
-
 
 # ============================================================================
 # Wireless Device Schemas
@@ -34,10 +38,31 @@ class WirelessDeviceCreate(BaseModel):
     mac_address: str | None = Field(None, pattern=r"^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")
     firmware_version: str | None = None
 
-    # Network
-    ip_address: str | None = None
+    # Network (dual-stack support)
+    management_ipv4: str | None = Field(None, description="Management IPv4 address")
+    management_ipv6: str | None = Field(None, description="Management IPv6 address")
     management_url: str | None = None
     ssid: str | None = Field(None, max_length=32)
+
+    # Backward compatibility
+    ip_address: str | None = Field(None, description="[DEPRECATED] Use management_ipv4 instead")
+
+    @field_validator("management_ipv4")
+    @classmethod
+    def validate_management_ipv4(cls, v: str | None) -> str | None:
+        """Validate management IPv4 address"""
+        return IPv4AddressValidator.validate(v)
+
+    @field_validator("management_ipv6")
+    @classmethod
+    def validate_management_ipv6(cls, v: str | None) -> str | None:
+        """Validate management IPv6 address"""
+        return IPv6AddressValidator.validate(v)
+
+    def model_post_init(self, __context) -> None:
+        """Handle backward compatibility for ip_address"""
+        if self.ip_address and not self.management_ipv4:
+            self.management_ipv4 = self.ip_address
 
     # Location
     latitude: float | None = Field(None, ge=-90, le=90)
@@ -75,9 +100,31 @@ class WirelessDeviceUpdate(BaseModel):
     mac_address: str | None = None
     firmware_version: str | None = None
 
-    ip_address: str | None = None
+    # Network (dual-stack support)
+    management_ipv4: str | None = None
+    management_ipv6: str | None = None
     management_url: str | None = None
     ssid: str | None = None
+
+    # Backward compatibility
+    ip_address: str | None = Field(None, description="[DEPRECATED] Use management_ipv4 instead")
+
+    @field_validator("management_ipv4")
+    @classmethod
+    def validate_management_ipv4(cls, v: str | None) -> str | None:
+        """Validate management IPv4 address"""
+        return IPv4AddressValidator.validate(v)
+
+    @field_validator("management_ipv6")
+    @classmethod
+    def validate_management_ipv6(cls, v: str | None) -> str | None:
+        """Validate management IPv6 address"""
+        return IPv6AddressValidator.validate(v)
+
+    def model_post_init(self, __context) -> None:
+        """Handle backward compatibility for ip_address"""
+        if self.ip_address and not self.management_ipv4:
+            self.management_ipv4 = self.ip_address
 
     latitude: float | None = None
     longitude: float | None = None
@@ -115,9 +162,17 @@ class WirelessDeviceResponse(BaseModel):
     mac_address: str | None = None
     firmware_version: str | None = None
 
-    ip_address: str | None = None
+    # Network (dual-stack support)
+    management_ipv4: str | None = None
+    management_ipv6: str | None = None
     management_url: str | None = None
     ssid: str | None = None
+
+    # Backward compatibility - computed field
+    @property
+    def ip_address(self) -> str | None:
+        """Backward compatibility: return IPv4 management address"""
+        return self.management_ipv4
 
     latitude: float | None = None
     longitude: float | None = None
@@ -398,8 +453,30 @@ class WirelessClientResponse(BaseModel):
     device_id: UUID
 
     mac_address: str
-    ip_address: str | None = None
+
+    # Client IP addresses (dual-stack support)
+    ipv4_address: str | None = Field(None, description="Client IPv4 address")
+    ipv6_address: str | None = Field(None, description="Client IPv6 address")
+
+    # Backward compatibility
+    @property
+    def ip_address(self) -> str | None:
+        """Backward compatibility: return IPv4 address"""
+        return self.ipv4_address
+
     hostname: str | None = None
+
+    @field_validator("ipv4_address")
+    @classmethod
+    def validate_ipv4(cls, v: str | None) -> str | None:
+        """Validate client IPv4 address"""
+        return IPv4AddressValidator.validate(v)
+
+    @field_validator("ipv6_address")
+    @classmethod
+    def validate_ipv6(cls, v: str | None) -> str | None:
+        """Validate client IPv6 address"""
+        return IPv6AddressValidator.validate(v)
 
     ssid: str | None = None
     frequency: Frequency | None = None

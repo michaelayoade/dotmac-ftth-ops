@@ -30,7 +30,7 @@ logger = structlog.get_logger(__name__)
 # Cache TTL (in seconds)
 COMMS_STATS_CACHE_TTL = 300  # 5 minutes
 
-router = APIRouter(tags=["Communications Metrics"])
+router = APIRouter(prefix="/api/v1", tags=["Communications Metrics"])
 
 
 # ============================================================================

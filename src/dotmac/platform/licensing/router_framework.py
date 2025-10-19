@@ -10,7 +10,6 @@ Provides REST endpoints for:
 - Quota tracking and enforcement
 """
 
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -18,59 +17,58 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from dotmac.platform.auth.rbac_dependencies import require_tenant_role, require_platform_admin
+from dotmac.platform.auth.platform_admin import require_platform_admin
+from dotmac.platform.auth.rbac_dependencies import require_any_role
 from dotmac.platform.db import get_async_session
-from dotmac.platform.tenant.dependencies import get_current_tenant
-from dotmac.platform.tenant.models import Tenant
 from dotmac.platform.licensing.framework import (
     FeatureModule,
-    QuotaDefinition,
-    ServicePlan,
-    TenantSubscription,
-    SubscriptionModule,
     PlanModule,
     PlanQuotaAllocation,
-)
-from dotmac.platform.licensing.service_framework import (
-    LicensingFrameworkService,
-    ModuleResolutionError,
-    QuotaExceededError,
-    FeatureNotEntitledError,
+    QuotaDefinition,
+    ServicePlan,
+    SubscriptionModule,
+    TenantSubscription,
 )
 from dotmac.platform.licensing.schemas_framework import (
+    AddAddonRequest,
+    EntitledCapabilitiesResponse,
+    # Entitlement schemas
+    FeatureEntitlementCheck,
+    FeatureEntitlementResponse,
     # Module schemas
     FeatureModuleCreate,
     FeatureModuleResponse,
     FeatureModuleUpdate,
     ModuleCapabilityCreate,
     ModuleCapabilityResponse,
-    # Quota schemas
-    QuotaDefinitionCreate,
-    QuotaDefinitionResponse,
-    QuotaDefinitionUpdate,
-    # Plan schemas
-    ServicePlanCreate,
-    ServicePlanResponse,
-    ServicePlanUpdate,
-    ServicePlanDuplicate,
     PlanPricingResponse,
-    # Subscription schemas
-    SubscriptionCreate,
-    TenantSubscriptionResponse,
-    AddAddonRequest,
-    RemoveAddonRequest,
-    # Entitlement schemas
-    FeatureEntitlementCheck,
-    FeatureEntitlementResponse,
-    EntitledCapabilitiesResponse,
     QuotaCheckRequest,
     QuotaCheckResponse,
     QuotaConsumeRequest,
     QuotaConsumeResponse,
+    # Quota schemas
+    QuotaDefinitionCreate,
+    QuotaDefinitionResponse,
+    QuotaDefinitionUpdate,
     QuotaReleaseRequest,
-    SubscriptionEventResponse,
+    RemoveAddonRequest,
+    # Plan schemas
+    ServicePlanCreate,
+    ServicePlanDuplicate,
+    ServicePlanResponse,
+    ServicePlanUpdate,
+    # Subscription schemas
+    SubscriptionCreate,
+    TenantSubscriptionResponse,
 )
-
+from dotmac.platform.licensing.service_framework import (
+    FeatureNotEntitledError,
+    LicensingFrameworkService,
+    ModuleResolutionError,
+    QuotaExceededError,
+)
+from dotmac.platform.tenant.dependencies import get_current_tenant
+from dotmac.platform.tenant.models import Tenant
 
 router = APIRouter(prefix="/licensing", tags=["Licensing Framework"])
 
@@ -144,7 +142,7 @@ async def create_feature_module(
     response_model=list[FeatureModuleResponse],
 )
 async def list_feature_modules(
-    category: Optional[str] = Query(None),
+    category: str | None = Query(None),
     is_active: bool = Query(True),
     db: AsyncSession = Depends(get_async_session),
 ):
@@ -289,7 +287,7 @@ async def create_quota_definition(
     response_model=list[QuotaDefinitionResponse],
 )
 async def list_quota_definitions(
-    is_metered: Optional[bool] = Query(None),
+    is_metered: bool | None = Query(None),
     is_active: bool = Query(True),
     db: AsyncSession = Depends(get_async_session),
 ):
@@ -421,8 +419,8 @@ async def create_service_plan(
     response_model=list[ServicePlanResponse],
 )
 async def list_service_plans(
-    is_template: Optional[bool] = Query(None),
-    is_public: Optional[bool] = Query(None),
+    is_template: bool | None = Query(None),
+    is_public: bool | None = Query(None),
     is_active: bool = Query(True),
     db: AsyncSession = Depends(get_async_session),
 ):
@@ -556,7 +554,7 @@ async def duplicate_service_plan(
 async def calculate_plan_pricing(
     plan_id: UUID,
     billing_cycle: str = Query("MONTHLY"),
-    addon_modules: Optional[str] = Query(None, description="Comma-separated addon module IDs"),
+    addon_modules: str | None = Query(None, description="Comma-separated addon module IDs"),
     db: AsyncSession = Depends(get_async_session),
 ):
     """Calculate total pricing for a plan including add-ons."""
@@ -675,7 +673,7 @@ async def get_current_subscription(
 @router.post(
     "/subscriptions/current/addons",
     response_model=TenantSubscriptionResponse,
-    dependencies=[Depends(require_tenant_role(["owner", "admin"]))],
+    dependencies=[Depends(require_any_role("owner", "admin"))],
 )
 async def add_addon_to_current_subscription(
     addon_request: AddAddonRequest,
@@ -735,7 +733,7 @@ async def add_addon_to_current_subscription(
 @router.delete(
     "/subscriptions/current/addons",
     response_model=TenantSubscriptionResponse,
-    dependencies=[Depends(require_tenant_role(["owner", "admin"]))],
+    dependencies=[Depends(require_any_role("owner", "admin"))],
 )
 async def remove_addon_from_current_subscription(
     addon_request: RemoveAddonRequest,

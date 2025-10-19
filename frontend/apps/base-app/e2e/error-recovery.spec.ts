@@ -15,7 +15,7 @@ async function loginUser(page: Page, username = 'admin', password = 'admin123') 
   });
 
   await page.goto('/login');
-  await page.fill('[data-testid="username-input"]', username);
+  await page.fill('[data-testid="email-input"]', username);
   await page.fill('[data-testid="password-input"]', password);
   await page.click('[data-testid="submit-button"]');
   await page.waitForTimeout(1000);
@@ -84,7 +84,7 @@ test.describe('Session Expiry Handling', () => {
     });
 
     await page.goto('/login');
-    await page.fill('[data-testid="username-input"]', 'admin');
+    await page.fill('[data-testid="email-input"]', 'admin');
     await page.fill('[data-testid="password-input"]', 'admin123');
     await page.click('[data-testid="submit-button"]');
 
@@ -117,7 +117,7 @@ test.describe('Session Expiry Handling', () => {
     });
 
     await page.goto('/login');
-    await page.fill('[data-testid="username-input"]', 'admin');
+    await page.fill('[data-testid="email-input"]', 'admin');
     await page.fill('[data-testid="password-input"]', 'admin123');
     await page.click('[data-testid="submit-button"]');
 

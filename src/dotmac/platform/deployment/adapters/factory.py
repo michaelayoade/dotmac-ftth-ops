@@ -4,7 +4,6 @@ Adapter Factory
 Factory for creating deployment adapters based on backend type.
 """
 
-from typing import Optional
 
 from ..models import DeploymentBackend
 from .awx import AWXAdapter
@@ -17,7 +16,7 @@ class AdapterFactory:
     """Factory for creating deployment adapters"""
 
     @staticmethod
-    def create_adapter(backend: DeploymentBackend, config: Optional[dict] = None) -> DeploymentAdapter:
+    def create_adapter(backend: DeploymentBackend, config: dict | None = None) -> DeploymentAdapter:
         """
         Create deployment adapter for specified backend
 

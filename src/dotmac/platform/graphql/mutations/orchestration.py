@@ -4,7 +4,6 @@ GraphQL mutations for Orchestration Service.
 Provides mutations for subscriber provisioning and workflow management.
 """
 
-from typing import Optional
 
 import strawberry
 import structlog
@@ -164,10 +163,12 @@ class OrchestrationMutations:
 
         try:
             service = OrchestrationService(db=db, tenant_id=tenant_id)
-            result = await service.retry_workflow(workflow_id)
+            await service.retry_workflow(workflow_id)
 
             # Fetch full workflow model for conversion
-            from dotmac.platform.orchestration.models import Workflow as WorkflowModel
+            from dotmac.platform.orchestration.models import (
+                OrchestrationWorkflow as WorkflowModel,
+            )
 
             workflow_model = (
                 db.query(WorkflowModel)
@@ -217,10 +218,12 @@ class OrchestrationMutations:
 
         try:
             service = OrchestrationService(db=db, tenant_id=tenant_id)
-            result = await service.cancel_workflow(workflow_id)
+            await service.cancel_workflow(workflow_id)
 
             # Fetch full workflow model for conversion
-            from dotmac.platform.orchestration.models import Workflow as WorkflowModel
+            from dotmac.platform.orchestration.models import (
+                OrchestrationWorkflow as WorkflowModel,
+            )
 
             workflow_model = (
                 db.query(WorkflowModel)

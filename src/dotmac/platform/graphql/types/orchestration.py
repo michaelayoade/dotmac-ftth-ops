@@ -6,16 +6,9 @@ Provides GraphQL representations of workflows and related types.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 import strawberry
-
-from dotmac.platform.orchestration.models import (
-    WorkflowStatus as DBWorkflowStatus,
-    WorkflowStepStatus as DBWorkflowStepStatus,
-    WorkflowType as DBWorkflowType,
-)
-
 
 # ============================================================================
 # Enums
@@ -77,12 +70,12 @@ class WorkflowStep:
     step_order: int
     target_system: str
     status: WorkflowStepStatus
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    failed_at: Optional[datetime] = None
-    error_message: Optional[str] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    failed_at: datetime | None = None
+    error_message: str | None = None
     retry_count: int = 0
-    output_data: Optional[str] = None  # JSON as string
+    output_data: str | None = None  # JSON as string
 
     @staticmethod
     def from_model(step: Any) -> "WorkflowStep":
@@ -111,16 +104,16 @@ class Workflow:
     workflow_id: str
     workflow_type: WorkflowType
     status: WorkflowStatus
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    failed_at: Optional[datetime] = None
-    error_message: Optional[str] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    failed_at: datetime | None = None
+    error_message: str | None = None
     retry_count: int = 0
     steps: list[WorkflowStep] = strawberry.field(default_factory=list)
 
     # Duration helpers
     @strawberry.field(description="Workflow duration in seconds")
-    def duration_seconds(self) -> Optional[float]:
+    def duration_seconds(self) -> float | None:
         """Calculate workflow duration."""
         if not self.started_at:
             return None
@@ -174,20 +167,20 @@ class ProvisionSubscriberResult:
     status: WorkflowStatus
 
     # Created resources
-    radius_username: Optional[str] = None
-    ipv4_address: Optional[str] = None
-    vlan_id: Optional[int] = None
-    onu_id: Optional[str] = None
-    cpe_id: Optional[str] = None
-    service_id: Optional[str] = None
+    radius_username: str | None = None
+    ipv4_address: str | None = None
+    vlan_id: int | None = None
+    onu_id: str | None = None
+    cpe_id: str | None = None
+    service_id: str | None = None
 
     # Workflow details
     steps_completed: int
     total_steps: int
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
     created_at: datetime
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
 
     @strawberry.field(description="Is provisioning successful")
     def is_successful(self) -> bool:
@@ -195,7 +188,7 @@ class ProvisionSubscriberResult:
         return self.status == WorkflowStatus.COMPLETED
 
     @strawberry.field(description="Full workflow details")
-    async def workflow(self, info: strawberry.Info) -> Optional[Workflow]:
+    async def workflow(self, info: strawberry.Info) -> Workflow | None:
         """Fetch full workflow details."""
         from dotmac.platform.orchestration.service import OrchestrationService
         from dotmac.platform.tenant.tenant import get_tenant_id
@@ -210,7 +203,9 @@ class ProvisionSubscriberResult:
             return None
 
         # Convert to GraphQL type
-        from dotmac.platform.orchestration.models import Workflow as WorkflowModel
+        from dotmac.platform.orchestration.models import (
+            OrchestrationWorkflow as WorkflowModel,
+        )
 
         workflow_model = (
             db.query(WorkflowModel)
@@ -268,12 +263,12 @@ class ProvisionSubscriberInput:
     """GraphQL input for subscriber provisioning."""
 
     # Customer information
-    customer_id: Optional[str] = None
+    customer_id: str | None = None
     first_name: str
     last_name: str
     email: str
     phone: str
-    secondary_phone: Optional[str] = None
+    secondary_phone: str | None = None
 
     # Service address
     service_address: str
@@ -288,18 +283,18 @@ class ProvisionSubscriberInput:
     connection_type: str
 
     # Network equipment
-    onu_serial: Optional[str] = None
-    onu_mac: Optional[str] = None
-    cpe_mac: Optional[str] = None
+    onu_serial: str | None = None
+    onu_mac: str | None = None
+    cpe_mac: str | None = None
 
     # Network configuration
-    vlan_id: Optional[int] = None
-    ipv4_address: Optional[str] = None
-    ipv6_prefix: Optional[str] = None
+    vlan_id: int | None = None
+    ipv4_address: str | None = None
+    ipv6_prefix: str | None = None
 
     # Installation
-    installation_date: Optional[datetime] = None
-    installation_notes: Optional[str] = None
+    installation_date: datetime | None = None
+    installation_notes: str | None = None
 
     # Options
     auto_activate: bool = True
@@ -310,14 +305,14 @@ class ProvisionSubscriberInput:
     configure_genieacs: bool = True
 
     # Metadata
-    notes: Optional[str] = None
+    notes: str | None = None
 
 
 @strawberry.input(description="Workflow filter input")
 class WorkflowFilterInput:
     """GraphQL input for filtering workflows."""
 
-    workflow_type: Optional[WorkflowType] = None
-    status: Optional[WorkflowStatus] = None
+    workflow_type: WorkflowType | None = None
+    status: WorkflowStatus | None = None
     limit: int = 50
     offset: int = 0

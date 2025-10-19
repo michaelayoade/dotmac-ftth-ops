@@ -7,7 +7,7 @@ Publishes customer-related events to Redis pub/sub for GraphQL subscriptions.
 import json
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import UUID
 
 import structlog
@@ -43,7 +43,7 @@ class CustomerEventPublisher:
             return str(value)
         return value
 
-    def _serialize_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _serialize_dict(self, data: dict[str, Any]) -> dict[str, Any]:
         """Recursively serialize dictionary for JSON."""
         return {k: self._serialize_value(v) for k, v in data.items() if v is not None}
 
@@ -51,7 +51,7 @@ class CustomerEventPublisher:
         self,
         customer_id: str,
         connection_status: str,
-        network_data: Dict[str, Any],
+        network_data: dict[str, Any],
     ) -> None:
         """
         Publish network status update for a customer.
@@ -109,9 +109,9 @@ class CustomerEventPublisher:
         health_status: str,
         is_online: bool,
         change_type: str,
-        previous_value: Optional[str] = None,
-        new_value: Optional[str] = None,
-        metrics: Optional[Dict[str, Any]] = None,
+        previous_value: str | None = None,
+        new_value: str | None = None,
+        metrics: dict[str, Any] | None = None,
     ) -> None:
         """
         Publish device status update.
@@ -170,11 +170,11 @@ class CustomerEventPublisher:
         self,
         customer_id: str,
         action: str,
-        ticket_data: Dict[str, Any],
-        changed_by: Optional[str] = None,
-        changed_by_name: Optional[str] = None,
-        changes: Optional[List[str]] = None,
-        comment: Optional[str] = None,
+        ticket_data: dict[str, Any],
+        changed_by: str | None = None,
+        changed_by_name: str | None = None,
+        changes: list[str] | None = None,
+        comment: str | None = None,
     ) -> None:
         """
         Publish ticket update.
@@ -219,7 +219,7 @@ class CustomerEventPublisher:
     async def publish_activity(
         self,
         customer_id: str,
-        activity_data: Dict[str, Any],
+        activity_data: dict[str, Any],
     ) -> None:
         """
         Publish new customer activity.
@@ -251,9 +251,9 @@ class CustomerEventPublisher:
         self,
         customer_id: str,
         action: str,
-        note_data: Optional[Dict[str, Any]],
+        note_data: dict[str, Any] | None,
         changed_by: str,
-        changed_by_name: Optional[str] = None,
+        changed_by_name: str | None = None,
     ) -> None:
         """
         Publish note update.
@@ -294,7 +294,7 @@ class CustomerEventPublisher:
         self,
         customer_id: str,
         action: str,
-        subscription_data: Dict[str, Any],
+        subscription_data: dict[str, Any],
     ) -> None:
         """
         Publish subscription change notification.
@@ -331,7 +331,7 @@ class CustomerEventPublisher:
         self,
         customer_id: str,
         action: str,
-        billing_data: Dict[str, Any],
+        billing_data: dict[str, Any],
     ) -> None:
         """
         Publish billing update notification.

@@ -28,7 +28,7 @@ from .service import AuditService, log_api_activity
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(tags=["Audit"])
+router = APIRouter(prefix="/api/v1/audit", tags=["Audit"])
 
 
 @router.get("/activities", response_model=AuditActivityList)

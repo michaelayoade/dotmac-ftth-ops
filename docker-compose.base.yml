@@ -1,0 +1,262 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dotmac}
+      POSTGRES_USER: ${POSTGRES_USER:-dotmac_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dotmac_user} -d ${POSTGRES_DB:-dotmac}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: ${REDIS_COMMAND:-redis-server}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  vault:
+    image: ${VAULT_IMAGE:-quay.io/openbao/openbao:latest}
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN_ID:-dev-token-12345}
+      VAULT_DEV_LISTEN_ADDRESS: ${VAULT_DEV_LISTEN_ADDRESS:-0.0.0.0:8200}
+    command: ${VAULT_COMMAND:-server -dev}
+    ports:
+      - "${VAULT_PORT:-8200}:8200"
+    volumes:
+      - vault_data:/vault/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8200/v1/sys/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  app:
+    build:
+      context: .
+      dockerfile: ${APP_DOCKERFILE:-Dockerfile}
+    command: ${APP_COMMAND:-uvicorn dotmac.platform.main:app --host 0.0.0.0 --port 8000}
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+      DATABASE__HOST: ${DATABASE__HOST:-postgres}
+      DATABASE__PORT: ${DATABASE__PORT:-5432}
+      DATABASE__DATABASE: ${DATABASE__DATABASE:-dotmac}
+      DATABASE__USERNAME: ${DATABASE__USERNAME:-dotmac_user}
+      DATABASE__PASSWORD: ${DATABASE__PASSWORD:-change-me}
+      REDIS__HOST: ${REDIS__HOST:-redis}
+      REDIS__PORT: ${REDIS__PORT:-6379}
+      REDIS__DB: ${REDIS__DB:-0}
+      VAULT__ENABLED: ${VAULT__ENABLED:-false}
+      VAULT__URL: ${VAULT__URL:-http://vault:8200}
+      VAULT__TOKEN: ${VAULT__TOKEN:-dev-token-12345}
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-change-me}
+      AUTH__JWT_SECRET_KEY: ${AUTH__JWT_SECRET_KEY:-dev-jwt-secret-change-me}
+      CELERY__BROKER_URL: ${CELERY__BROKER_URL:-redis://redis:6379/2}
+      CELERY__RESULT_BACKEND: ${CELERY__RESULT_BACKEND:-redis://redis:6379/3}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4317}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-dotmac-platform}
+      STORAGE__ENDPOINT: ${STORAGE__ENDPOINT:-minio:9000}
+      STORAGE__ACCESS_KEY: ${STORAGE__ACCESS_KEY:-minioadmin}
+      STORAGE__SECRET_KEY: ${STORAGE__SECRET_KEY:-minioadmin123}
+      REQUIRE_REDIS_SESSIONS: ${REQUIRE_REDIS_SESSIONS:-false}
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - app_logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ${FRONTEND_DOCKERFILE:-Dockerfile}
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://app:8000}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      app:
+        condition: service_started
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: ${CELERY_DOCKERFILE:-Dockerfile}
+    command: ${CELERY_WORKER_COMMAND:-celery -A dotmac.platform.celery_app worker --loglevel=info}
+    environment:
+      CELERY__BROKER_URL: ${CELERY__BROKER_URL:-redis://redis:6379/2}
+      CELERY__RESULT_BACKEND: ${CELERY__RESULT_BACKEND:-redis://redis:6379/3}
+      DATABASE__HOST: ${DATABASE__HOST:-postgres}
+      DATABASE__PORT: ${DATABASE__PORT:-5432}
+      DATABASE__DATABASE: ${DATABASE__DATABASE:-dotmac}
+      DATABASE__USERNAME: ${DATABASE__USERNAME:-dotmac_user}
+      DATABASE__PASSWORD: ${DATABASE__PASSWORD:-change-me}
+      REDIS__HOST: ${REDIS__HOST:-redis}
+      REDIS__PORT: ${REDIS__PORT:-6379}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: ${CELERY_DOCKERFILE:-Dockerfile}
+    command: ${CELERY_BEAT_COMMAND:-celery -A dotmac.platform.celery_app beat --loglevel=info}
+    environment:
+      CELERY__BROKER_URL: ${CELERY__BROKER_URL:-redis://redis:6379/2}
+      CELERY__RESULT_BACKEND: ${CELERY__RESULT_BACKEND:-redis://redis:6379/3}
+      DATABASE__HOST: ${DATABASE__HOST:-postgres}
+      DATABASE__PORT: ${DATABASE__PORT:-5432}
+      DATABASE__DATABASE: ${DATABASE__DATABASE:-dotmac}
+      DATABASE__USERNAME: ${DATABASE__USERNAME:-dotmac_user}
+      DATABASE__PASSWORD: ${DATABASE__PASSWORD:-change-me}
+      REDIS__HOST: ${REDIS__HOST:-redis}
+      REDIS__PORT: ${REDIS__PORT:-6379}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  flower:
+    image: mher/flower:latest
+    command: celery flower --broker=${CELERY__BROKER_URL:-redis://redis:6379/2}
+    environment:
+      CELERY_BROKER_URL: ${CELERY__BROKER_URL:-redis://redis:6379/2}
+      CELERY_RESULT_BACKEND: ${CELERY__RESULT_BACKEND:-redis://redis:6379/3}
+    ports:
+      - "${FLOWER_PORT:-5555}:5555"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  control-workers:
+    build:
+      context: .
+      dockerfile: ${CONTROL_WORKERS_DOCKERFILE:-Dockerfile}
+    command: ${CONTROL_WORKERS_COMMAND:-python -m dotmac.platform.realtime.control_workers}
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://dotmac_user:change-me@postgres:5432/dotmac}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      PYTHONPATH: /app/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "${OTEL_GRPC_PORT:-4317}:4317"
+      - "${OTEL_HTTP_PORT:-4318}:4318"
+      - "${OTEL_HEALTH_PORT:-13133}:13133"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:13133/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - observability
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "${JAEGER_UI_PORT:-16686}:16686"
+      - "${JAEGER_GRPC_PORT:-14250}:14250"
+      - "${JAEGER_HTTP_PORT:-14268}:14268"
+    profiles:
+      - observability
+
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    profiles:
+      - observability
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    ports:
+      - "${GRAFANA_PORT:-3400}:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    profiles:
+      - observability
+
+volumes:
+  postgres_data:
+  redis_data:
+  vault_data:
+  minio_data:
+  app_logs:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  default:
+    name: ${COMPOSE_PROJECT_NAME:-dotmac}-network

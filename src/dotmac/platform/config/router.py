@@ -12,6 +12,9 @@ from ..settings import Settings, get_settings
 
 router = APIRouter(prefix="/platform")
 
+# Separate router for endpoints without /platform prefix
+health_router = APIRouter(prefix="/api/v1", )
+
 
 @router.get("/config")
 async def get_platform_config(
@@ -96,3 +99,20 @@ async def platform_health() -> dict[str, str]:
         dict with status indicator
     """
     return {"status": "healthy"}
+
+
+@health_router.get("/health")
+async def api_health_check(
+    settings: Annotated[Settings, Depends(get_settings)]
+) -> dict[str, Any]:
+    """
+    Health check endpoint at /api/v1/health for frontend compatibility.
+
+    Returns:
+        dict with status, version, and environment info
+    """
+    return {
+        "status": "healthy",
+        "version": settings.app_version,
+        "environment": settings.environment.value,
+    }

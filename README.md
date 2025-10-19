@@ -25,6 +25,28 @@ Built for ISPs, WISPs, and fiber network operators who need:
 
 ## 🏗️ Platform Architecture
 
+### Docker Compose Layout
+
+The stack now uses a shared base file plus environment overlays:
+
+```bash
+# core development stack
+docker compose up -d
+
+# optional profiles (Celery workers, observability, MinIO)
+docker compose --profile celery up -d
+docker compose -f docker-compose.observability.yml up -d
+```
+
+Environment-specific overlays extend `docker-compose.base.yml`:
+
+- Development: `docker-compose.yml`
+- Test/CI: `docker-compose.test.yml`
+- Staging: `docker-compose.staging.yml`
+- Production: `docker-compose.production.yml`
+
+Each overlay automatically pulls in the shared service definitions, so you only override what differs per environment.
+
 ### Business Support Systems (BSS) - 90% Complete
 
 ✅ **Billing & Revenue Management**

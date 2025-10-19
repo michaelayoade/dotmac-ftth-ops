@@ -11,14 +11,9 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
-from dotmac.platform.customer_management.models import (
-    CommunicationChannel,
-    Customer,
-    CustomerStatus,
-    CustomerTier,
-    CustomerType,
-)
-from dotmac.platform.customer_management.service import CustomerService
+
+# NOTE: Customer models are imported inside fixtures to avoid triggering
+# SQLAlchemy mapper configuration errors in router tests
 
 
 @pytest.fixture
@@ -70,6 +65,14 @@ def mock_user():
 @pytest.fixture
 def sample_customer():
     """Create a sample customer with all required fields."""
+    from dotmac.platform.customer_management.models import (
+        CommunicationChannel,
+        Customer,
+        CustomerStatus,
+        CustomerTier,
+        CustomerType,
+    )
+
     return Customer(
         id=uuid4(),
         tenant_id="test-tenant",
@@ -105,6 +108,14 @@ def sample_customer():
 @pytest.fixture
 def sample_customers():
     """Create multiple sample customers for list tests."""
+    from dotmac.platform.customer_management.models import (
+        CommunicationChannel,
+        Customer,
+        CustomerStatus,
+        CustomerTier,
+        CustomerType,
+    )
+
     customers = []
     for i in range(3):
         customer = Customer(
@@ -143,6 +154,8 @@ def sample_customers():
 @pytest.fixture
 def customer_service(mock_session):
     """Create customer service with mocked session."""
+    from dotmac.platform.customer_management.service import CustomerService
+
     return CustomerService(session=mock_session)
 
 
@@ -150,3 +163,60 @@ def customer_service(mock_session):
 def existing_customer(sample_customer):
     """Provide an existing customer for tests."""
     return sample_customer
+"""
+Additional fixtures for Customer Management Router tests.
+"""
+
+import pytest
+from datetime import datetime
+from decimal import Decimal
+from uuid import UUID, uuid4
+from unittest.mock import AsyncMock, MagicMock
+from httpx import AsyncClient, ASGITransport
+from fastapi import FastAPI
+from typing import Any
+
+
+class MockObject:
+    """Helper class to convert dict to object with attributes."""
+    def __init__(self, **kwargs: Any):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+
+@pytest.fixture
+def sample_customer_dict() -> dict[str, Any]:
+    """Sample customer dict for router testing."""
+    customer_id = str(uuid4())
+    return {
+        "id": customer_id,
+        "customer_number": "CUST-2025-001",
+        "tenant_id": "1",
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john.doe@example.com",
+        "phone": "+1-555-0100",
+        "customer_type": "individual",
+        "tier": "standard",
+        "status": "active",
+        "city": "San Francisco",
+        "state_province": "CA",
+        "country": "US",
+        "preferred_channel": "email",
+        "preferred_language": "en",
+        "timezone": "UTC",
+        "opt_in_marketing": False,
+        "opt_in_updates": True,
+        "email_verified": True,
+        "phone_verified": False,
+        "lifetime_value": "1000.00",
+        "average_order_value": "200.00",
+        "total_purchases": 5,
+        "risk_score": 50,
+        "acquisition_date": datetime.utcnow().isoformat(),
+        "tags": [],
+        "metadata_": {},
+        "custom_fields": {},
+        "created_at": datetime.utcnow().isoformat(),
+        "updated_at": datetime.utcnow().isoformat()
+    }

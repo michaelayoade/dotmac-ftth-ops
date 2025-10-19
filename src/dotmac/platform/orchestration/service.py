@@ -5,25 +5,51 @@ High-level service for managing workflows and orchestrations.
 """
 
 import logging
-from datetime import datetime
-from typing import Optional
 from uuid import uuid4
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from .models import Workflow, WorkflowStatus, WorkflowStep, WorkflowStepStatus, WorkflowType
+from .models import (
+    OrchestrationWorkflow,
+    WorkflowStatus,
+    WorkflowStepStatus,
+    WorkflowType,
+)
 from .saga import SagaOrchestrator
 from .schemas import (
+    ActivateServiceRequest,
+    DeprovisionSubscriberRequest,
     ProvisionSubscriberRequest,
     ProvisionSubscriberResponse,
+    SuspendServiceRequest,
     WorkflowListResponse,
     WorkflowResponse,
     WorkflowStatsResponse,
 )
+from .workflows.activate_service import (
+    get_activate_service_workflow,
+)
+from .workflows.activate_service import (
+    register_handlers as register_activate_handlers,
+)
+from .workflows.deprovision_subscriber import (
+    get_deprovision_subscriber_workflow,
+)
+from .workflows.deprovision_subscriber import (
+    register_handlers as register_deprovision_handlers,
+)
 from .workflows.provision_subscriber import (
     get_provision_subscriber_workflow,
+)
+from .workflows.provision_subscriber import (
     register_handlers as register_provision_handlers,
+)
+from .workflows.suspend_service import (
+    get_suspend_service_workflow,
+)
+from .workflows.suspend_service import (
+    register_handlers as register_suspend_handlers,
 )
 
 logger = logging.getLogger(__name__)
@@ -50,12 +76,15 @@ class OrchestrationService:
     def _register_all_handlers(self) -> None:
         """Register all workflow handlers."""
         register_provision_handlers(self.saga)
+        register_deprovision_handlers(self.saga)
+        register_activate_handlers(self.saga)
+        register_suspend_handlers(self.saga)
         logger.info("All workflow handlers registered")
 
     async def provision_subscriber(
         self,
         request: ProvisionSubscriberRequest,
-        initiator_id: Optional[str] = None,
+        initiator_id: str | None = None,
         initiator_type: str = "api",
     ) -> ProvisionSubscriberResponse:
         """
@@ -84,7 +113,7 @@ class OrchestrationService:
         )
 
         # Create workflow record
-        workflow = Workflow(
+        workflow = OrchestrationWorkflow(
             workflow_id=f"wf_{uuid4().hex}",
             workflow_type=WorkflowType.PROVISION_SUBSCRIBER,
             status=WorkflowStatus.PENDING,
@@ -124,9 +153,9 @@ class OrchestrationService:
             # Workflow is already updated by saga orchestrator
             raise
 
-    def _build_provision_response(self, workflow: Workflow) -> ProvisionSubscriberResponse:
+    def _build_provision_response(self, workflow: OrchestrationWorkflow) -> ProvisionSubscriberResponse:
         """Build provisioning response from workflow."""
-        output_data = workflow.output_data or {}
+        _ = workflow.output_data or {}
         context = workflow.context or {}
 
         # Count steps
@@ -154,7 +183,7 @@ class OrchestrationService:
             completed_at=workflow.completed_at,
         )
 
-    async def get_workflow(self, workflow_id: str) -> Optional[WorkflowResponse]:
+    async def get_workflow(self, workflow_id: str) -> WorkflowResponse | None:
         """
         Get workflow by ID.
 
@@ -180,8 +209,8 @@ class OrchestrationService:
 
     async def list_workflows(
         self,
-        workflow_type: Optional[WorkflowType] = None,
-        status: Optional[WorkflowStatus] = None,
+        workflow_type: WorkflowType | None = None,
+        status: WorkflowStatus | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> WorkflowListResponse:
@@ -377,9 +406,232 @@ class OrchestrationService:
             by_status=by_status,
         )
 
+    async def deprovision_subscriber(
+        self,
+        request: DeprovisionSubscriberRequest,
+        initiator_id: str | None = None,
+        initiator_type: str = "api",
+    ) -> WorkflowResponse:
+        """
+        Deprovision a subscriber across all systems atomically.
+
+        This orchestrates the complete deprovisioning process:
+        1. Verify subscriber exists
+        2. Suspend billing service
+        3. Deactivate ONU in VOLTHA
+        4. Unconfigure CPE in GenieACS
+        5. Release IP address in NetBox
+        6. Delete RADIUS account
+        7. Archive subscriber record (soft delete)
+
+        Args:
+            request: Deprovisioning request
+            initiator_id: User/system that initiated the request
+            initiator_type: Type of initiator ('user', 'api', 'system')
+
+        Returns:
+            WorkflowResponse with workflow details
+
+        Raises:
+            Exception: If workflow creation fails
+        """
+        logger.info(
+            f"Starting subscriber deprovisioning workflow "
+            f"(tenant={self.tenant_id}, subscriber_id={request.subscriber_id})"
+        )
+
+        # Create workflow record
+        workflow = OrchestrationWorkflow(
+            workflow_id=f"wf_{uuid4().hex}",
+            workflow_type=WorkflowType.DEPROVISION_SUBSCRIBER,
+            status=WorkflowStatus.PENDING,
+            tenant_id=self.tenant_id,
+            initiator_id=initiator_id,
+            initiator_type=initiator_type,
+            input_data=request.model_dump(),
+            context={},
+        )
+
+        self.db.add(workflow)
+        self.db.commit()
+        self.db.refresh(workflow)
+
+        logger.info(f"Created workflow: {workflow.workflow_id}")
+
+        # Get workflow definition
+        workflow_definition = get_deprovision_subscriber_workflow()
+
+        # Execute workflow via Saga orchestrator
+        try:
+            workflow = await self.saga.execute_workflow(
+                workflow=workflow,
+                workflow_definition=workflow_definition,
+                context={},
+            )
+
+            logger.info(
+                f"Workflow {workflow.workflow_id} completed with status: {workflow.status}"
+            )
+            return WorkflowResponse.model_validate(workflow)
+
+        except Exception as e:
+            logger.exception(f"Workflow {workflow.workflow_id} failed: {e}")
+            # Workflow is already updated by saga orchestrator
+            raise
+
+    async def activate_service(
+        self,
+        request: ActivateServiceRequest,
+        initiator_id: str | None = None,
+        initiator_type: str = "api",
+    ) -> WorkflowResponse:
+        """
+        Activate a subscriber service across all systems atomically.
+
+        This orchestrates the complete activation process:
+        1. Verify subscriber exists and can be activated
+        2. Activate billing service
+        3. Enable RADIUS authentication
+        4. Activate ONU in VOLTHA
+        5. Enable CPE in GenieACS
+        6. Update subscriber status to active
+
+        Args:
+            request: Activation request
+            initiator_id: User/system that initiated the request
+            initiator_type: Type of initiator ('user', 'api', 'system')
+
+        Returns:
+            WorkflowResponse with workflow details
+
+        Raises:
+            Exception: If workflow creation fails
+        """
+        logger.info(
+            f"Starting service activation workflow "
+            f"(tenant={self.tenant_id}, subscriber_id={request.subscriber_id})"
+        )
+
+        # Create workflow record
+        workflow = OrchestrationWorkflow(
+            workflow_id=f"wf_{uuid4().hex}",
+            workflow_type=WorkflowType.ACTIVATE_SERVICE,
+            status=WorkflowStatus.PENDING,
+            tenant_id=self.tenant_id,
+            initiator_id=initiator_id,
+            initiator_type=initiator_type,
+            input_data=request.model_dump(),
+            context={},
+        )
+
+        self.db.add(workflow)
+        self.db.commit()
+        self.db.refresh(workflow)
+
+        logger.info(f"Created workflow: {workflow.workflow_id}")
+
+        # Get workflow definition
+        workflow_definition = get_activate_service_workflow()
+
+        # Execute workflow via Saga orchestrator
+        try:
+            workflow = await self.saga.execute_workflow(
+                workflow=workflow,
+                workflow_definition=workflow_definition,
+                context={},
+            )
+
+            logger.info(
+                f"Workflow {workflow.workflow_id} completed with status: {workflow.status}"
+            )
+            return WorkflowResponse.model_validate(workflow)
+
+        except Exception as e:
+            logger.exception(f"Workflow {workflow.workflow_id} failed: {e}")
+            # Workflow is already updated by saga orchestrator
+            raise
+
+    async def suspend_service(
+        self,
+        request: SuspendServiceRequest,
+        initiator_id: str | None = None,
+        initiator_type: str = "api",
+    ) -> WorkflowResponse:
+        """
+        Suspend a subscriber service across all systems atomically.
+
+        This orchestrates the complete suspension process:
+        1. Verify subscriber exists and can be suspended
+        2. Suspend billing service
+        3. Disable RADIUS authentication
+        4. Disable ONU in VOLTHA
+        5. Disable CPE in GenieACS
+        6. Update subscriber status to suspended
+
+        Args:
+            request: Suspension request
+            initiator_id: User/system that initiated the request
+            initiator_type: Type of initiator ('user', 'api', 'system')
+
+        Returns:
+            WorkflowResponse with workflow details
+
+        Raises:
+            Exception: If workflow creation fails
+        """
+        logger.info(
+            f"Starting service suspension workflow "
+            f"(tenant={self.tenant_id}, subscriber_id={request.subscriber_id})"
+        )
+
+        # Create workflow record
+        workflow = OrchestrationWorkflow(
+            workflow_id=f"wf_{uuid4().hex}",
+            workflow_type=WorkflowType.SUSPEND_SERVICE,
+            status=WorkflowStatus.PENDING,
+            tenant_id=self.tenant_id,
+            initiator_id=initiator_id,
+            initiator_type=initiator_type,
+            input_data=request.model_dump(),
+            context={},
+        )
+
+        self.db.add(workflow)
+        self.db.commit()
+        self.db.refresh(workflow)
+
+        logger.info(f"Created workflow: {workflow.workflow_id}")
+
+        # Get workflow definition
+        workflow_definition = get_suspend_service_workflow()
+
+        # Execute workflow via Saga orchestrator
+        try:
+            workflow = await self.saga.execute_workflow(
+                workflow=workflow,
+                workflow_definition=workflow_definition,
+                context={},
+            )
+
+            logger.info(
+                f"Workflow {workflow.workflow_id} completed with status: {workflow.status}"
+            )
+            return WorkflowResponse.model_validate(workflow)
+
+        except Exception as e:
+            logger.exception(f"Workflow {workflow.workflow_id} failed: {e}")
+            # Workflow is already updated by saga orchestrator
+            raise
+
     def _get_workflow_definition(self, workflow_type: WorkflowType):
         """Get workflow definition by type."""
         if workflow_type == WorkflowType.PROVISION_SUBSCRIBER:
             return get_provision_subscriber_workflow()
+        elif workflow_type == WorkflowType.DEPROVISION_SUBSCRIBER:
+            return get_deprovision_subscriber_workflow()
+        elif workflow_type == WorkflowType.ACTIVATE_SERVICE:
+            return get_activate_service_workflow()
+        elif workflow_type == WorkflowType.SUSPEND_SERVICE:
+            return get_suspend_service_workflow()
         # Add other workflow types here
         return None

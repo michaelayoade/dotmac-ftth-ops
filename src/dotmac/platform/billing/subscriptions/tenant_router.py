@@ -5,8 +5,6 @@ Provides self-service endpoints for tenant admins to manage their subscriptions,
 upgrade/downgrade plans, and cancel subscriptions without operator intervention.
 """
 
-from datetime import UTC, datetime
-from typing import Any
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -22,7 +20,6 @@ from ..exceptions import PlanNotFoundError, SubscriptionNotFoundError
 from .models import (
     PlanChangeRequest,
     ProrationPreview,
-    ProrationResult,
     SubscriptionCancelRequest,
     SubscriptionPlanResponse,
     SubscriptionResponse,

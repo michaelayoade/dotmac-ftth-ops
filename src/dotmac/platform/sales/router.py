@@ -4,13 +4,11 @@ Sales Order API Router
 Public and internal APIs for order processing and service activation.
 """
 
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from ..auth.core import get_current_user
-from ..auth.models import User
+from ..auth.core import UserInfo
 from ..auth.rbac_dependencies import require_permissions
 from ..communications.email_service import EmailService
 from ..db import get_db
@@ -38,12 +36,11 @@ from .schemas import (
 )
 from .service import ActivationOrchestrator, OrderProcessingService
 
-
 # Public router (no authentication required)
-public_router = APIRouter()
+public_router = APIRouter(prefix="/api/public/orders", )
 
 # Internal router (authentication required)
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/orders", )
 
 
 def get_order_service(
@@ -134,7 +131,7 @@ def create_quick_order(
     ```
     """
     # Map quick order to full order request
-    from .schemas import BillingAddress, ServiceSelection
+    from .schemas import ServiceSelection
 
     # Package service mappings
     package_services = {
@@ -194,7 +191,7 @@ def create_quick_order(
 @public_router.get("/{order_number}/status", response_model=OrderStatusResponse)
 def get_public_order_status(
     order_number: str,
-    db: Session = Depends(get_db),
+    service: OrderProcessingService = Depends(get_order_service),
 ) -> OrderStatusResponse:
     """
     Get order status by order number (Public API)
@@ -213,7 +210,7 @@ def get_public_order_status(
     6. `activating` - Activating services
     7. `active` - Complete! Services ready to use
     """
-    order = db.query(Order).filter(Order.order_number == order_number).first()
+    order = service.get_order_by_number(order_number)
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -259,38 +256,35 @@ def get_public_order_status(
 
 @router.get("", response_model=list[OrderResponse])
 def list_orders(
-    status: Optional[OrderStatus] = Query(None, description="Filter by status"),
-    customer_email: Optional[str] = Query(None, description="Filter by customer email"),
+    status: OrderStatus | None = Query(None, description="Filter by status"),
+    customer_email: str | None = Query(None, description="Filter by customer email"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
-    current_user: User = Depends(require_permissions(["order.read"])),
-    db: Session = Depends(get_db),
+    current_user: UserInfo = Depends(require_permissions("order.read")),
+    service: OrderProcessingService = Depends(get_order_service),
 ) -> list[OrderResponse]:
     """
     List orders (Internal API)
 
     Query and filter orders. Requires `order.read` permission.
     """
-    query = db.query(Order)
-
-    if status:
-        query = query.filter(Order.status == status)
-
-    if customer_email:
-        query = query.filter(Order.customer_email == customer_email)
-
-    orders = query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
+    orders = service.list_orders(
+        status=status,
+        customer_email=customer_email,
+        skip=skip,
+        limit=limit
+    )
     return [OrderResponse.model_validate(o) for o in orders]
 
 
 @router.get("/{order_id}", response_model=OrderResponse)
 def get_order(
     order_id: int,
-    current_user: User = Depends(require_permissions(["order.read"])),
-    db: Session = Depends(get_db),
+    current_user: UserInfo = Depends(require_permissions("order.read")),
+    service: OrderProcessingService = Depends(get_order_service),
 ) -> OrderResponse:
     """Get order by ID (Internal API)"""
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = service.get_order(order_id)
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -304,7 +298,7 @@ def get_order(
 async def submit_order(
     order_id: int,
     submit_request: OrderSubmit,
-    current_user: User = Depends(require_permissions(["order.submit"])),
+    current_user: UserInfo = Depends(require_permissions("order.submit")),
     service: OrderProcessingService = Depends(get_order_service),
 ) -> OrderResponse:
     """
@@ -318,7 +312,7 @@ async def submit_order(
     order = await service.submit_order(
         order_id=order_id,
         submit_request=submit_request,
-        user_id=current_user.id,
+        user_id=current_user.user_id,
     )
     return OrderResponse.model_validate(order)
 
@@ -326,7 +320,7 @@ async def submit_order(
 @router.post("/{order_id}/process", response_model=OrderResponse)
 async def process_order(
     order_id: int,
-    current_user: User = Depends(require_permissions(["order.process"])),
+    current_user: UserInfo = Depends(require_permissions("order.process")),
     service: OrderProcessingService = Depends(get_order_service),
 ) -> OrderResponse:
     """
@@ -341,7 +335,7 @@ async def process_order(
 
     Requires `order.process` permission.
     """
-    order = await service.process_order(order_id=order_id, user_id=current_user.id)
+    order = await service.process_order(order_id=order_id, user_id=current_user.user_id)
     return OrderResponse.model_validate(order)
 
 
@@ -349,8 +343,8 @@ async def process_order(
 def update_order_status(
     order_id: int,
     status_update: OrderStatusUpdate,
-    current_user: User = Depends(require_permissions(["order.update"])),
-    db: Session = Depends(get_db),
+    current_user: UserInfo = Depends(require_permissions("order.update")),
+    service: OrderProcessingService = Depends(get_order_service),
 ) -> OrderResponse:
     """
     Update order status (Internal API)
@@ -359,28 +353,25 @@ def update_order_status(
 
     Requires `order.update` permission.
     """
-    order = db.query(Order).filter(Order.id == order_id).first()
-    if not order:
+    try:
+        order = service.update_order_status(
+            order_id=order_id,
+            status=status_update.status,
+            status_message=status_update.status_message
+        )
+        return OrderResponse.model_validate(order)
+    except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Order {order_id} not found"
+            detail=str(e)
         )
-
-    order.status = status_update.status
-    if status_update.status_message:
-        order.status_message = status_update.status_message
-
-    db.commit()
-    db.refresh(order)
-
-    return OrderResponse.model_validate(order)
 
 
 @router.delete("/{order_id}")
 def cancel_order(
     order_id: int,
-    current_user: User = Depends(require_permissions(["order.delete"])),
-    db: Session = Depends(get_db),
+    current_user: UserInfo = Depends(require_permissions("order.delete")),
+    service: OrderProcessingService = Depends(get_order_service),
 ) -> dict:
     """
     Cancel order (Internal API)
@@ -389,23 +380,21 @@ def cancel_order(
 
     Requires `order.delete` permission.
     """
-    order = db.query(Order).filter(Order.id == order_id).first()
-    if not order:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Order {order_id} not found"
-        )
-
-    if order.status not in [OrderStatus.DRAFT, OrderStatus.SUBMITTED]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Cannot cancel order in {order.status} state"
-        )
-
-    order.status = OrderStatus.CANCELLED
-    db.commit()
-
-    return {"success": True, "message": f"Order {order.order_number} cancelled"}
+    try:
+        order = service.cancel_order(order_id)
+        return {"success": True, "message": f"Order {order.order_number} cancelled"}
+    except ValueError as e:
+        error_msg = str(e)
+        if "not found" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=error_msg
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_msg
+            )
 
 
 # ============================================================================
@@ -416,8 +405,9 @@ def cancel_order(
 @router.get("/{order_id}/activations", response_model=list[ServiceActivationResponse])
 def list_order_activations(
     order_id: int,
-    current_user: User = Depends(require_permissions(["order.read"])),
-    db: Session = Depends(get_db),
+    current_user: UserInfo = Depends(require_permissions("order.read")),
+    order_service: OrderProcessingService = Depends(get_order_service),
+    orchestrator: ActivationOrchestrator = Depends(get_activation_orchestrator),
 ) -> list[ServiceActivationResponse]:
     """
     List service activations for order (Internal API)
@@ -426,26 +416,23 @@ def list_order_activations(
     status of each service activation.
     """
     # Verify order exists
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = order_service.get_order(order_id)
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Order {order_id} not found"
         )
 
-    activations = db.query(ServiceActivation).filter(
-        ServiceActivation.order_id == order_id
-    ).order_by(ServiceActivation.sequence_number).all()
-
+    activations = orchestrator.get_service_activations(order_id)
     return [ServiceActivationResponse.model_validate(a) for a in activations]
 
 
 @router.get("/{order_id}/activations/progress", response_model=ActivationProgress)
 def get_activation_progress(
     order_id: int,
-    current_user: User = Depends(require_permissions(["order.read"])),
+    current_user: UserInfo = Depends(require_permissions("order.read")),
+    order_service: OrderProcessingService = Depends(get_order_service),
     orchestrator: ActivationOrchestrator = Depends(get_activation_orchestrator),
-    db: Session = Depends(get_db),
 ) -> ActivationProgress:
     """
     Get activation progress for order (Internal API)
@@ -454,7 +441,7 @@ def get_activation_progress(
     have been activated, are in progress, or failed.
     """
     # Verify order exists
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = order_service.get_order(order_id)
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -483,9 +470,9 @@ def get_activation_progress(
 @router.post("/{order_id}/activations/retry")
 def retry_failed_activations(
     order_id: int,
-    current_user: User = Depends(require_permissions(["order.process"])),
+    current_user: UserInfo = Depends(require_permissions("order.process")),
+    order_service: OrderProcessingService = Depends(get_order_service),
     orchestrator: ActivationOrchestrator = Depends(get_activation_orchestrator),
-    db: Session = Depends(get_db),
 ) -> dict:
     """
     Retry failed service activations (Internal API)
@@ -495,36 +482,14 @@ def retry_failed_activations(
     Requires `order.process` permission.
     """
     # Verify order exists
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = order_service.get_order(order_id)
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Order {order_id} not found"
         )
 
-    # Get failed activations
-    failed_activations = db.query(ServiceActivation).filter(
-        ServiceActivation.order_id == order_id,
-        ServiceActivation.activation_status == "failed",
-    ).all()
-
-    if not failed_activations:
-        return {"success": True, "message": "No failed activations to retry"}
-
-    # Retry each failed activation
-    retried = []
-    for activation in failed_activations:
-        if activation.retry_count < activation.max_retries:
-            activation.activation_status = "pending"
-            retried.append(activation.service_code)
-
-    db.commit()
-
-    return {
-        "success": True,
-        "message": f"Retrying {len(retried)} failed activations",
-        "services": retried,
-    }
+    return orchestrator.retry_failed_activations(order_id)
 
 
 # ============================================================================
@@ -534,8 +499,8 @@ def retry_failed_activations(
 
 @router.get("/stats/summary")
 def get_order_statistics(
-    current_user: User = Depends(require_permissions(["order.read"])),
-    db: Session = Depends(get_db),
+    current_user: UserInfo = Depends(require_permissions("order.read")),
+    service: OrderProcessingService = Depends(get_order_service),
 ) -> dict:
     """
     Get order statistics (Internal API)
@@ -546,40 +511,4 @@ def get_order_statistics(
     - Average processing time
     - Success rate
     """
-    from sqlalchemy import func
-
-    # Orders by status
-    status_counts = db.query(
-        Order.status,
-        func.count(Order.id).label("count")
-    ).group_by(Order.status).all()
-
-    # Revenue totals
-    revenue = db.query(
-        func.sum(Order.total_amount).label("total"),
-        func.avg(Order.total_amount).label("average"),
-    ).filter(Order.status == OrderStatus.ACTIVE).first()
-
-    # Success rate
-    total_processed = db.query(func.count(Order.id)).filter(
-        Order.status.in_([OrderStatus.ACTIVE, OrderStatus.FAILED])
-    ).scalar()
-
-    successful = db.query(func.count(Order.id)).filter(
-        Order.status == OrderStatus.ACTIVE
-    ).scalar()
-
-    success_rate = (successful / total_processed * 100) if total_processed > 0 else 0
-
-    return {
-        "orders_by_status": {
-            status.value: count for status, count in status_counts
-        },
-        "revenue": {
-            "total": float(revenue.total or 0),
-            "average": float(revenue.average or 0),
-        },
-        "success_rate": round(success_rate, 2),
-        "total_processed": total_processed,
-        "successful": successful,
-    }
+    return service.get_order_statistics()

@@ -7,7 +7,7 @@ Handles deployment to on-premises infrastructure using AWX Tower and Ansible.
 import asyncio
 import json
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import aiohttp
 
@@ -22,7 +22,7 @@ class AWXAdapter(DeploymentAdapter):
     for automation and Ansible playbooks for configuration.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize AWX adapter
 
@@ -272,7 +272,7 @@ class AWXAdapter(DeploymentAdapter):
             )
 
     async def _launch_job_template(
-        self, template_name: str, extra_vars: dict[str, Any], inventory_id: Optional[int] = None
+        self, template_name: str, extra_vars: dict[str, Any], inventory_id: int | None = None
     ) -> dict[str, Any]:
         """Launch AWX job template"""
         template = await self._get_job_template(template_name)
@@ -322,7 +322,7 @@ class AWXAdapter(DeploymentAdapter):
         return extra_vars.get("endpoints", {})
 
     async def _api_request(
-        self, method: str, path: str, json: Optional[dict] = None, params: Optional[dict] = None
+        self, method: str, path: str, json: dict | None = None, params: dict | None = None
     ) -> dict[str, Any] | str:
         """Make AWX API request"""
         url = f"{self.awx_url}{path}"

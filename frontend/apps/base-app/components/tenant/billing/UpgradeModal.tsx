@@ -169,7 +169,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
           {/* Features Preview (if not loading) */}
           {!isLoadingPreview && selectedPlan.features && Object.keys(selectedPlan.features).length > 0 && (
             <div>
-              <p className="text-sm font-medium mb-2">What you'll get:</p>
+              <p className="text-sm font-medium mb-2">What you&apos;ll get:</p>
               <ul className="space-y-1 text-sm text-muted-foreground">
                 {Object.entries(selectedPlan.features)
                   .slice(0, 5)

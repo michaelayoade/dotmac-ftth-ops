@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTenant } from "@/lib/contexts/tenant-context";

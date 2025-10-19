@@ -61,7 +61,7 @@ export const useCustomers = () => {
   // Fetch customer metrics
   const fetchMetrics = useCallback(async () => {
     try {
-      const response = await apiClient.get('/api/v1/customers/metrics/overview');
+      const response = await apiClient.get('/customers/metrics/overview');
       console.log('Customer metrics response:', response.data);
       const data = (response.data || {}) as Record<string, any>;
       console.log('Top segments:', data.top_segments);
@@ -79,7 +79,7 @@ export const useCustomers = () => {
     setError(null);
 
     try {
-      const response = await apiClient.post('/api/v1/customers/search', {
+      const response = await apiClient.post('/customers/search', {
         ...params,
         page: params.page || 1,
         page_size: (params as any).page_size || params.pageSize || 50,
@@ -110,7 +110,7 @@ export const useCustomers = () => {
     setError(null);
 
     try {
-      const response = await apiClient.post('/api/v1/customers/', customerData);
+      const response = await apiClient.post('/customers/', customerData);
       return response.data as Customer;
     } catch (err) {
       logger.error('Failed to create customer', err instanceof Error ? err : new Error(String(err)));
@@ -128,7 +128,7 @@ export const useCustomers = () => {
     setError(null);
 
     try {
-      const response = await apiClient.patch(`/api/v1/customers/${customerId}`, customerData);
+      const response = await apiClient.patch(`/customers/${customerId}`, customerData);
       const updatedCustomer = response.data as Customer;
 
       // Update the customer in the local state
@@ -155,7 +155,7 @@ export const useCustomers = () => {
     setError(null);
 
     try {
-      await apiClient.delete(`/api/v1/customers/${customerId}`, {
+      await apiClient.delete(`/customers/${customerId}`, {
         params: { hard_delete: hardDelete }
       });
 
@@ -184,7 +184,7 @@ export const useCustomers = () => {
       if (includeNotes) queryParams.append('include_notes', 'true');
 
       const queryString = queryParams.toString();
-      const url = `/api/v1/customers/${customerId}${queryString ? `?${queryString}` : ''}`;
+      const url = `/customers/${customerId}${queryString ? `?${queryString}` : ''}`;
 
       const response = await apiClient.get(url);
       return response.data;
@@ -240,7 +240,7 @@ export const useCustomerActivities = (customerId: string) => {
       queryParams.append('offset', offset.toString());
 
       const queryString = queryParams.toString();
-      const url = `/api/v1/customers/${customerId}/activities?${queryString}`;
+      const url = `/customers/${customerId}/activities?${queryString}`;
 
       const response = await apiClient.get(url);
       setActivities((response.data as CustomerActivity[]) || []);
@@ -258,7 +258,7 @@ export const useCustomerActivities = (customerId: string) => {
     setError(null);
 
     try {
-      const response = await apiClient.post(`/api/v1/customers/${customerId}/activities`, activityData);
+      const response = await apiClient.post(`/customers/${customerId}/activities`, activityData);
       const newActivity = response.data as CustomerActivity;
       setActivities(prev => [newActivity, ...prev]);
       return newActivity;
@@ -304,7 +304,7 @@ export const useCustomerNotes = (customerId: string) => {
       queryParams.append('offset', offset.toString());
 
       const queryString = queryParams.toString();
-      const url = `/api/v1/customers/${customerId}/notes?${queryString}`;
+      const url = `/customers/${customerId}/notes?${queryString}`;
 
       const response = await apiClient.get(url);
       setNotes((response.data as CustomerNote[]) || []);
@@ -322,7 +322,7 @@ export const useCustomerNotes = (customerId: string) => {
     setError(null);
 
     try {
-      const response = await apiClient.post(`/api/v1/customers/${customerId}/notes`, noteData);
+      const response = await apiClient.post(`/customers/${customerId}/notes`, noteData);
       const newNote = response.data as CustomerNote;
       setNotes(prev => [newNote, ...prev]);
       return newNote;
@@ -367,7 +367,7 @@ export const useCustomer = () => {
       if (includeNotes) queryParams.append('include_notes', 'true');
 
       const queryString = queryParams.toString();
-      const url = `/api/v1/customers/${customerId}${queryString ? `?${queryString}` : ''}`;
+      const url = `/customers/${customerId}${queryString ? `?${queryString}` : ''}`;
 
       const response = await apiClient.get(url);
       return response.data;

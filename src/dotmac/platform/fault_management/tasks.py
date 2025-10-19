@@ -12,8 +12,10 @@ import structlog
 from celery import shared_task
 from sqlalchemy import and_, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import SQLAlchemyError
 
 from dotmac.platform.db import get_async_session
+from dotmac.platform import db as db_module
 from dotmac.platform.fault_management.correlation import CorrelationEngine
 from dotmac.platform.fault_management.models import (
     Alarm,
@@ -22,6 +24,7 @@ from dotmac.platform.fault_management.models import (
     MaintenanceWindow,
     SLAInstance,
 )
+from dotmac.platform.fault_management.archival import AlarmArchivalService
 from dotmac.platform.fault_management.sla_service import SLAMonitoringService
 from dotmac.platform.notifications.models import (
     NotificationChannel,
@@ -32,6 +35,45 @@ from dotmac.platform.notifications.service import NotificationService
 from dotmac.platform.user_management.models import User
 
 logger = structlog.get_logger(__name__)
+
+
+# =============================================================================
+# Async/Sync Bridge for Celery Tasks
+# =============================================================================
+
+
+def _run_async_task(coro):
+    """
+    Run an async coroutine in a Celery task context.
+
+    Handles both scenarios:
+    - Celery production: No event loop, create one with asyncio.run()
+    - Test context: Existing event loop, run in separate thread
+
+    Args:
+        coro: Async coroutine to execute
+
+    Returns:
+        Result from the coroutine
+    """
+    import asyncio
+    import concurrent.futures
+
+    try:
+        # Check if there's already a running event loop (test context)
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        # No event loop running (Celery production context)
+        loop = None
+
+    if loop is None:
+        # Celery context - create new event loop
+        return asyncio.run(coro)
+    else:
+        # Test context - run in new thread to avoid nested event loop
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            future = pool.submit(asyncio.run, coro)
+            return future.result()
 
 
 # =============================================================================
@@ -202,7 +244,7 @@ def correlate_pending_alarms() -> dict[str, Any]:
     import asyncio
 
     async def _correlate() -> dict[str, Any]:
-        async with get_async_session() as session:
+        async with db_module.AsyncSessionLocal() as session:
             # Get all tenants with active alarms
             result = await session.execute(
                 select(Alarm.tenant_id)
@@ -234,7 +276,7 @@ def correlate_pending_alarms() -> dict[str, Any]:
                 "alarms_correlated": total_correlated,
             }
 
-    return asyncio.run(_correlate())
+    return _run_async_task(_correlate())
 
 
 @shared_task(name="faults.check_sla_compliance")  # type: ignore[misc]  # Celery decorator is untyped
@@ -247,7 +289,7 @@ def check_sla_compliance() -> dict[str, Any]:
     import asyncio
 
     async def _check() -> dict[str, Any]:
-        async with get_async_session() as session:
+        async with db_module.AsyncSessionLocal() as session:
             # Get active SLA instances
             result = await session.execute(
                 select(SLAInstance).where(SLAInstance.enabled == True)  # noqa: E712
@@ -281,7 +323,7 @@ def check_sla_compliance() -> dict[str, Any]:
                 "breaches_detected": breaches_detected,
             }
 
-    return asyncio.run(_check())
+    return _run_async_task(_check())
 
 
 @shared_task(name="faults.check_unacknowledged_alarms")  # type: ignore[misc]  # Celery decorator is untyped
@@ -299,7 +341,7 @@ def check_unacknowledged_alarms() -> dict[str, Any]:
     import asyncio
 
     async def _check() -> dict[str, Any]:
-        async with get_async_session() as session:
+        async with db_module.AsyncSessionLocal() as session:
             # Find unacknowledged alarms older than 15 minutes
             cutoff_time = datetime.now(UTC) - timedelta(minutes=15)
 
@@ -340,7 +382,7 @@ def check_unacknowledged_alarms() -> dict[str, Any]:
                 "manual_action_required": True,
             }
 
-    return asyncio.run(_check())
+    return _run_async_task(_check())
 
 
 @shared_task(name="faults.update_maintenance_windows")  # type: ignore[misc]  # Celery decorator is untyped
@@ -353,7 +395,7 @@ def update_maintenance_windows() -> dict[str, Any]:
     import asyncio
 
     async def _update() -> dict[str, Any]:
-        async with get_async_session() as session:
+        async with db_module.AsyncSessionLocal() as session:
             now = datetime.now(UTC)
 
             # Start scheduled windows
@@ -397,7 +439,7 @@ def update_maintenance_windows() -> dict[str, Any]:
                 "windows_completed": len(completed),
             }
 
-    return asyncio.run(_update())
+    return _run_async_task(_update())
 
 
 @shared_task(name="faults.cleanup_old_cleared_alarms")  # type: ignore[misc]  # Celery decorator is untyped
@@ -418,120 +460,126 @@ def cleanup_old_cleared_alarms(days: int | None = None) -> dict[str, Any]:
     import asyncio
 
     from ..settings import settings
-    from .archival import AlarmArchivalService
 
     # Use configured retention days if not specified
     if days is None:
         days = settings.fault_management.alarm_retention_days
 
     async def _cleanup() -> dict[str, Any]:
-        async with get_async_session() as session:
-            cutoff_date = datetime.now(UTC) - timedelta(days=days)
-
-            # Fetch alarms to archive
-            result = await session.execute(
-                select(Alarm).where(
-                    and_(
-                        Alarm.status == AlarmStatus.CLEARED,
-                        Alarm.cleared_at <= cutoff_date,
-                    )
-                )
-            )
-
-            alarms = list(result.scalars().all())
-
-            if not alarms:
-                logger.info(
-                    "task.cleanup_old_cleared_alarms.no_alarms",
-                    cutoff_days=days,
-                )
-                return {
-                    "alarms_cleaned": 0,
-                    "alarms_archived": 0,
-                    "cutoff_days": days,
-                }
-
-            # Group alarms by tenant for archival
-            alarms_by_tenant: dict[str, list[Alarm]] = {}
-            for alarm in alarms:
-                if alarm.tenant_id not in alarms_by_tenant:
-                    alarms_by_tenant[alarm.tenant_id] = []
-                alarms_by_tenant[alarm.tenant_id].append(alarm)
-
-            # Archive alarms to MinIO cold storage
-            archival_service = AlarmArchivalService()
-            total_archived = 0
-            archive_manifests = []
-
-            for tenant_id, tenant_alarms in alarms_by_tenant.items():
-                try:
-                    manifest = await archival_service.archive_alarms(
-                        alarms=tenant_alarms,
-                        tenant_id=tenant_id,
-                        cutoff_date=cutoff_date,
-                        session=session,
-                    )
-                    archive_manifests.append(manifest)
-                    total_archived += manifest.alarm_count
-
-                    logger.info(
-                        "task.cleanup_old_cleared_alarms.archived",
-                        tenant_id=tenant_id,
-                        alarm_count=manifest.alarm_count,
-                        archive_path=manifest.archive_path,
-                        compression_ratio=manifest.compression_ratio,
-                    )
-                except Exception as e:
-                    logger.error(
-                        "task.cleanup_old_cleared_alarms.archive_failed",
-                        tenant_id=tenant_id,
-                        alarm_count=len(tenant_alarms),
-                        error=str(e),
-                        exc_info=True,
-                    )
-                    # Continue with other tenants even if one fails
-                    continue
-
-            # Delete archived alarms from database
-            deleted_count = 0
-            for alarm in alarms:
-                try:
-                    await session.delete(alarm)
-                    deleted_count += 1
-                except Exception as e:
-                    logger.error(
-                        "task.cleanup_old_cleared_alarms.delete_failed",
-                        alarm_id=alarm.alarm_id,
-                        error=str(e),
-                    )
-
-            await session.commit()
-
-            logger.info(
-                "task.cleanup_old_cleared_alarms.complete",
-                alarms_archived=total_archived,
-                alarms_deleted=deleted_count,
-                cutoff_days=days,
-                tenant_count=len(alarms_by_tenant),
-            )
-
-            return {
-                "alarms_cleaned": deleted_count,
-                "alarms_archived": total_archived,
+        async with db_module.AsyncSessionLocal() as session:
+            default_response = {
+                "alarms_cleaned": 0,
+                "alarms_archived": 0,
                 "cutoff_days": days,
-                "tenant_count": len(alarms_by_tenant),
-                "archive_manifests": [
-                    {
-                        "tenant_id": m.tenant_id,
-                        "alarm_count": m.alarm_count,
-                        "archive_path": m.archive_path,
-                        "compression_ratio": m.compression_ratio,
-                    }
-                    for m in archive_manifests
-                ],
             }
 
-    return asyncio.run(_cleanup())
+            try:
+                cutoff_date = datetime.now(UTC) - timedelta(days=days)
+
+                # Fetch alarms to archive
+                result = await session.execute(
+                    select(Alarm).where(
+                        and_(
+                            Alarm.status == AlarmStatus.CLEARED,
+                            Alarm.cleared_at <= cutoff_date,
+                        )
+                    )
+                )
+
+                alarms = list(result.scalars().all())
+
+                if not alarms:
+                    logger.info(
+                        "task.cleanup_old_cleared_alarms.no_alarms",
+                        cutoff_days=days,
+                    )
+                    return default_response
+
+                # Group alarms by tenant for archival
+                alarms_by_tenant: dict[str, list[Alarm]] = {}
+                for alarm in alarms:
+                    alarms_by_tenant.setdefault(alarm.tenant_id, []).append(alarm)
+
+                # Archive alarms to MinIO cold storage
+                archival_service = AlarmArchivalService()
+                total_archived = 0
+                archive_manifests = []
+
+                for tenant_id, tenant_alarms in alarms_by_tenant.items():
+                    try:
+                        manifest = await archival_service.archive_alarms(
+                            alarms=tenant_alarms,
+                            tenant_id=tenant_id,
+                            cutoff_date=cutoff_date,
+                            session=session,
+                        )
+                        archive_manifests.append(manifest)
+                        total_archived += manifest.alarm_count
+
+                        logger.info(
+                            "task.cleanup_old_cleared_alarms.archived",
+                            tenant_id=tenant_id,
+                            alarm_count=manifest.alarm_count,
+                            archive_path=manifest.archive_path,
+                            compression_ratio=manifest.compression_ratio,
+                        )
+                    except Exception as e:
+                        logger.error(
+                            "task.cleanup_old_cleared_alarms.archive_failed",
+                            tenant_id=tenant_id,
+                            alarm_count=len(tenant_alarms),
+                            error=str(e),
+                            exc_info=True,
+                        )
+                        continue
+
+                # Delete archived alarms from database
+                deleted_count = 0
+                for alarm in alarms:
+                    try:
+                        await session.delete(alarm)
+                        deleted_count += 1
+                    except Exception as e:
+                        logger.error(
+                            "task.cleanup_old_cleared_alarms.delete_failed",
+                            alarm_id=alarm.alarm_id,
+                            error=str(e),
+                        )
+
+                await session.commit()
+
+                logger.info(
+                    "task.cleanup_old_cleared_alarms.complete",
+                    alarms_archived=total_archived,
+                    alarms_deleted=deleted_count,
+                    cutoff_days=days,
+                    tenant_count=len(alarms_by_tenant),
+                )
+
+                return {
+                    "alarms_cleaned": deleted_count,
+                    "alarms_archived": total_archived,
+                    "cutoff_days": days,
+                    "tenant_count": len(alarms_by_tenant),
+                    "archive_manifests": [
+                        {
+                            "tenant_id": m.tenant_id,
+                            "alarm_count": m.alarm_count,
+                            "archive_path": m.archive_path,
+                            "compression_ratio": m.compression_ratio,
+                        }
+                        for m in archive_manifests
+                    ],
+                }
+            except SQLAlchemyError as exc:
+                await session.rollback()
+                logger.warning(
+                    "task.cleanup_old_cleared_alarms.database_missing",
+                    error=str(exc),
+                )
+                return default_response
+
+    return _run_async_task(_cleanup())
 
 
 # =============================================================================
@@ -549,7 +597,7 @@ def process_alarm_correlation(alarm_id: str, tenant_id: str) -> dict[str, Any]:
     import asyncio
 
     async def _process() -> dict[str, Any]:
-        async with get_async_session() as session:
+        async with db_module.AsyncSessionLocal() as session:
             alarm = await session.get(Alarm, UUID(alarm_id))
 
             if alarm:
@@ -569,7 +617,7 @@ def process_alarm_correlation(alarm_id: str, tenant_id: str) -> dict[str, Any]:
                 "error": "Alarm not found",
             }
 
-    return asyncio.run(_process())
+    return _run_async_task(_process())
 
 
 @shared_task(name="faults.calculate_sla_metrics")  # type: ignore[misc]  # Celery decorator is untyped
@@ -582,7 +630,7 @@ def calculate_sla_metrics(instance_id: str, tenant_id: str) -> dict[str, Any]:
     import asyncio
 
     async def _calculate() -> dict[str, Any]:
-        async with get_async_session() as session:
+        async with db_module.AsyncSessionLocal() as session:
             instance = await session.get(SLAInstance, UUID(instance_id))
 
             if instance:
@@ -602,7 +650,7 @@ def calculate_sla_metrics(instance_id: str, tenant_id: str) -> dict[str, Any]:
                 "error": "Instance not found",
             }
 
-    return asyncio.run(_calculate())
+    return _run_async_task(_calculate())
 
 
 @shared_task(name="faults.send_alarm_notifications")  # type: ignore[misc]  # Celery decorator is untyped
@@ -621,7 +669,7 @@ def send_alarm_notifications(alarm_id: str, tenant_id: str) -> dict[str, Any]:
     import asyncio
 
     async def _notify() -> dict[str, Any]:
-        async with get_async_session() as session:
+        async with db_module.AsyncSessionLocal() as session:
             alarm = await session.get(Alarm, UUID(alarm_id))
 
             if not alarm:
@@ -730,7 +778,7 @@ def send_alarm_notifications(alarm_id: str, tenant_id: str) -> dict[str, Any]:
                 "severity": alarm.severity.value,
             }
 
-    return asyncio.run(_notify())
+    return _run_async_task(_notify())
 
 
 # =============================================================================

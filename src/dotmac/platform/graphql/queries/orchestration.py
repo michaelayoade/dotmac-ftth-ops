@@ -4,7 +4,6 @@ GraphQL queries for Orchestration Service.
 Provides queries for workflows, provisioning status, and statistics.
 """
 
-from typing import Optional
 
 import strawberry
 import structlog
@@ -17,8 +16,12 @@ from dotmac.platform.graphql.types.orchestration import (
     WorkflowStatistics,
 )
 from dotmac.platform.orchestration.models import (
-    Workflow as WorkflowModel,
+    OrchestrationWorkflow as WorkflowModel,
+)
+from dotmac.platform.orchestration.models import (
     WorkflowStatus as DBWorkflowStatus,
+)
+from dotmac.platform.orchestration.models import (
     WorkflowType as DBWorkflowType,
 )
 from dotmac.platform.orchestration.service import OrchestrationService
@@ -35,7 +38,7 @@ class OrchestrationQueries:
         self,
         info: strawberry.Info[Context],
         workflow_id: str,
-    ) -> Optional[Workflow]:
+    ) -> Workflow | None:
         """
         Fetch a single workflow by ID.
 
@@ -75,7 +78,7 @@ class OrchestrationQueries:
     async def workflows(
         self,
         info: strawberry.Info[Context],
-        filter: Optional[WorkflowFilterInput] = None,
+        filter: WorkflowFilterInput | None = None,
     ) -> WorkflowConnection:
         """
         Fetch a list of workflows with optional filtering.

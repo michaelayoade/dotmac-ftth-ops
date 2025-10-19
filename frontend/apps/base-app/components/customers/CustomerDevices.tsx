@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Router,
   Wifi,
@@ -106,11 +106,7 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchDevices();
-  }, [customerId]);
-
-  const fetchDevices = async () => {
+  const fetchDevices = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiClient.get<{ devices: Device[] }>(
@@ -126,7 +122,11 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [customerId, toast]);
+
+  useEffect(() => {
+    fetchDevices();
+  }, [fetchDevices]);
 
   const handleRebootDevice = async (deviceId: string) => {
     try {

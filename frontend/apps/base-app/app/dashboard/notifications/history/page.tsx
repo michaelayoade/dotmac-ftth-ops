@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Mail,
   MessageSquare,
@@ -101,6 +101,31 @@ export default function NotificationHistoryPage() {
   }, [logs]);
 
   // Columns definition
+  const handleViewDetails = useCallback(
+    (log: CommunicationLog) => {
+      setSelectedLog(log);
+      setIsDetailModalOpen(true);
+    },
+    [setIsDetailModalOpen, setSelectedLog]
+  );
+
+  const handleRetry = useCallback(
+    async (log: CommunicationLog) => {
+      if (!log.id) return;
+      const shouldRetry = confirm(`Retry sending to ${log.recipient}?`);
+      if (!shouldRetry) return;
+
+      const success = await retryFailedCommunication(log.id);
+      if (success) {
+        alert('Communication queued for retry');
+        refetch();
+      } else {
+        alert('Failed to retry communication');
+      }
+    },
+    [refetch, retryFailedCommunication]
+  );
+
   const columns: ColumnDef<CommunicationLog>[] = useMemo(
     () => [
       {
@@ -266,7 +291,7 @@ export default function NotificationHistoryPage() {
         ),
       },
     ],
-    []
+    [handleRetry, handleViewDetails]
   );
 
   // Bulk actions
@@ -347,23 +372,6 @@ export default function NotificationHistoryPage() {
   );
 
   // Handlers
-  const handleViewDetails = (log: CommunicationLog) => {
-    setSelectedLog(log);
-    setIsDetailModalOpen(true);
-  };
-
-  const handleRetry = async (log: CommunicationLog) => {
-    if (confirm(`Retry sending to ${log.recipient}?`)) {
-      const success = await retryFailedCommunication(log.id);
-      if (success) {
-        alert('Communication queued for retry');
-        refetch();
-      } else {
-        alert('Failed to retry communication');
-      }
-    }
-  };
-
   const handleExportAll = () => {
     const csv = convertToCSV(logs);
     downloadCSV(csv, 'communication-logs-all.csv');
@@ -386,7 +394,7 @@ export default function NotificationHistoryPage() {
           <CardHeader>
             <CardTitle>Access Denied</CardTitle>
             <CardDescription>
-              You don't have permission to view notification history.
+              You don&apos;t have permission to view notification history.
             </CardDescription>
           </CardHeader>
           <CardContent>

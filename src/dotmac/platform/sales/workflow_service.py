@@ -7,8 +7,7 @@ Provides workflow-compatible methods for sales operations.
 import logging
 import secrets
 from datetime import datetime
-from decimal import Decimal
-from typing import Any, Dict
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select
@@ -31,7 +30,7 @@ class SalesService:
         self,
         quote_id: int | str,
         tenant_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create an order from an accepted quote.
 
@@ -42,7 +41,7 @@ class SalesService:
         Returns:
             Dict with order details including order_id, customer_id, customer_email, total_amount
         """
-        from ..crm.models import Quote, QuoteStatus, Lead
+        from ..crm.models import Lead, Quote, QuoteStatus
         from .models import Order, OrderItem, OrderStatus, OrderType
 
         logger.info(f"Creating order from quote {quote_id} for tenant {tenant_id}")

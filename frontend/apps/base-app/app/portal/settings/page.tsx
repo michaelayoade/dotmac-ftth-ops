@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import { useState } from "react";
 import { usePartnerProfile, useUpdatePartnerProfile } from "@/hooks/usePartnerPortal";
 import { Save, Building2, Mail, Phone, Globe, AlertCircle } from "lucide-react";

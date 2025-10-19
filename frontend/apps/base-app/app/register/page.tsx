@@ -30,9 +30,10 @@ export default function RegisterPage() {
     try {
       // Register the user; backend issues HttpOnly auth cookies
       await registerUser({
+        username: data.username,
         email: data.email,
         password: data.password,
-        name: data.name,
+        full_name: data.name,  // Map 'name' to 'full_name' for backend
       });
 
       // Server sets HttpOnly cookies; navigate once ready
@@ -48,8 +49,14 @@ export default function RegisterPage() {
     <main className="min-h-screen flex items-center justify-center px-6 py-12 bg-background">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Create your account</h1>
-          <p className="text-muted-foreground">Join the {branding.productName}</p>
+          <div className="flex items-center justify-center mb-4">
+            <span className="text-3xl">🌐</span>
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Create Operator Account</h1>
+          <p className="text-muted-foreground">Join the {branding.productName} platform</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Get started managing your fiber network operations
+          </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="bg-card/50 backdrop-blur border border-border rounded-lg p-8 space-y-6">
@@ -58,6 +65,29 @@ export default function RegisterPage() {
               {error}
             </div>
           )}
+
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-muted-foreground mb-2">
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              autoComplete="username"
+              {...register('username')}
+              className={`w-full px-3 py-2 bg-accent border ${
+                errors.username ? 'border-red-500' : 'border-border'
+              } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
+              placeholder="johndoe"
+              data-testid="username-input"
+            />
+            {errors.username && (
+              <p className="mt-1 text-sm text-red-400">{errors.username.message}</p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Letters, numbers, hyphens and underscores only
+            </p>
+          </div>
 
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-muted-foreground mb-2">

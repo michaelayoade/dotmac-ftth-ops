@@ -11,8 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.dependencies import require_user
-from dotmac.platform.auth.models import User
-from dotmac.platform.core.database import get_async_session
+from dotmac.platform.auth.core import UserInfo
+from dotmac.platform.db import get_async_session
 from dotmac.platform.network_monitoring.schemas import (
     AcknowledgeAlertRequest,
     AlertSeverity,
@@ -132,9 +132,9 @@ async def list_devices(
 )
 async def get_device_health(
     device_id: str,
-    device_type: DeviceType = Query(..., description="Device type"),
     current_user: Annotated[User, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
+    device_type: DeviceType = Query(..., description="Device type"),
 ) -> DeviceHealthResponse:
     """Get device health status."""
     try:
@@ -177,9 +177,9 @@ async def get_device_health(
 )
 async def get_device_metrics(
     device_id: str,
-    device_type: DeviceType = Query(..., description="Device type"),
     current_user: Annotated[User, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
+    device_type: DeviceType = Query(..., description="Device type"),
 ) -> DeviceMetricsResponse:
     """Get comprehensive device metrics."""
     try:
@@ -222,9 +222,9 @@ async def get_device_metrics(
 )
 async def get_device_traffic(
     device_id: str,
-    device_type: DeviceType = Query(..., description="Device type"),
     current_user: Annotated[User, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
+    device_type: DeviceType = Query(..., description="Device type"),
 ) -> TrafficStatsResponse:
     """Get device traffic statistics."""
     try:

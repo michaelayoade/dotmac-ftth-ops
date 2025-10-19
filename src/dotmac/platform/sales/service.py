@@ -5,20 +5,18 @@ Orchestrates the flow from customer order to deployed tenant with activated serv
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
-from ..core.events import EventBus
+from ..communications.email_service import EmailService
+from ..events.bus import EventBus
 from ..deployment.models import DeploymentTemplate
 from ..deployment.schemas import ProvisionRequest
 from ..deployment.service import DeploymentService
-from ..tenant.service import TenantService
-from ..communications.email_service import EmailService
-from ..notifications.schemas import NotificationCreate, NotificationChannel
+from ..notifications.schemas import NotificationChannel, NotificationCreateRequest
 from ..notifications.service import NotificationService
+from ..tenant.service import TenantService
 from .models import (
     ActivationStatus,
     ActivationWorkflow,
@@ -28,7 +26,7 @@ from .models import (
     OrderType,
     ServiceActivation,
 )
-from .schemas import OrderCreate, OrderItemCreate, OrderSubmit
+from .schemas import OrderCreate, OrderSubmit
 
 
 class TemplateMapper:
@@ -39,11 +37,11 @@ class TemplateMapper:
 
     def map_to_template(
         self,
-        region: Optional[str] = None,
-        deployment_type: Optional[str] = None,
-        package_code: Optional[str] = None,
-        service_codes: Optional[list[str]] = None,
-    ) -> Optional[DeploymentTemplate]:
+        region: str | None = None,
+        deployment_type: str | None = None,
+        package_code: str | None = None,
+        service_codes: list[str] | None = None,
+    ) -> DeploymentTemplate | None:
         """
         Map order parameters to appropriate deployment template
 
@@ -100,7 +98,7 @@ class OrderProcessingService:
         deployment_service: DeploymentService,
         notification_service: NotificationService,
         email_service: EmailService,
-        event_bus: Optional[EventBus] = None,
+        event_bus: EventBus | None = None,
     ):
         self.db = db
         self.tenant_service = tenant_service
@@ -111,7 +109,7 @@ class OrderProcessingService:
         self.template_mapper = TemplateMapper(db)
 
     def create_order(
-        self, request: OrderCreate, user_id: Optional[int] = None
+        self, request: OrderCreate, user_id: int | None = None
     ) -> Order:
         """
         Create new order in draft state
@@ -210,7 +208,7 @@ class OrderProcessingService:
         return order
 
     async def submit_order(
-        self, order_id: int, submit_request: OrderSubmit, user_id: Optional[int] = None
+        self, order_id: int, submit_request: OrderSubmit, user_id: int | None = None
     ) -> Order:
         """
         Submit order for processing
@@ -260,7 +258,7 @@ class OrderProcessingService:
 
         return order
 
-    async def process_order(self, order_id: int, user_id: Optional[int] = None) -> Order:
+    async def process_order(self, order_id: int, user_id: int | None = None) -> Order:
         """
         Process order through complete workflow
 
@@ -356,6 +354,176 @@ class OrderProcessingService:
 
         return order
 
+    def get_order_by_number(self, order_number: str) -> Order | None:
+        """
+        Get order by order number
+
+        Args:
+            order_number: Unique order number
+
+        Returns:
+            Order if found, None otherwise
+        """
+        return self.db.query(Order).filter(Order.order_number == order_number).first()
+
+    def list_orders(
+        self,
+        status: OrderStatus | None = None,
+        customer_email: str | None = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> list[Order]:
+        """
+        List orders with optional filtering
+
+        Args:
+            status: Filter by order status
+            customer_email: Filter by customer email
+            skip: Number of records to skip (pagination)
+            limit: Maximum number of records to return
+
+        Returns:
+            List of orders matching criteria
+        """
+        query = self.db.query(Order)
+
+        if status:
+            query = query.filter(Order.status == status)
+
+        if customer_email:
+            query = query.filter(Order.customer_email == customer_email)
+
+        return query.order_by(Order.created_at.desc()).offset(skip).limit(limit).all()
+
+    def get_order(self, order_id: int) -> Order | None:
+        """
+        Get order by ID
+
+        Args:
+            order_id: Order ID
+
+        Returns:
+            Order if found, None otherwise
+        """
+        return self.db.query(Order).filter(Order.id == order_id).first()
+
+    def update_order_status(
+        self,
+        order_id: int,
+        status: OrderStatus,
+        status_message: str | None = None
+    ) -> Order:
+        """
+        Update order status
+
+        Args:
+            order_id: Order ID
+            status: New order status
+            status_message: Optional status message
+
+        Returns:
+            Updated order
+
+        Raises:
+            ValueError: If order not found
+        """
+        order = self.db.query(Order).filter(Order.id == order_id).first()
+        if not order:
+            raise ValueError(f"Order {order_id} not found")
+
+        order.status = status
+        if status_message:
+            order.status_message = status_message
+
+        self.db.commit()
+        self.db.refresh(order)
+
+        return order
+
+    def cancel_order(self, order_id: int) -> Order:
+        """
+        Cancel an order
+
+        Args:
+            order_id: Order ID
+
+        Returns:
+            Cancelled order
+
+        Raises:
+            ValueError: If order not found or cannot be cancelled
+        """
+        order = self.db.query(Order).filter(Order.id == order_id).first()
+        if not order:
+            raise ValueError(f"Order {order_id} not found")
+
+        if order.status not in [OrderStatus.DRAFT, OrderStatus.SUBMITTED]:
+            raise ValueError(f"Cannot cancel order in {order.status} state")
+
+        order.status = OrderStatus.CANCELLED
+        self.db.commit()
+        self.db.refresh(order)
+
+        return order
+
+    def delete_order(self, order_id: int) -> bool:
+        """
+        Delete an order (alias for cancel_order for compatibility)
+
+        Args:
+            order_id: Order ID
+
+        Returns:
+            True if successful
+        """
+        self.cancel_order(order_id)
+        return True
+
+    def get_order_statistics(self) -> dict[str, Any]:
+        """
+        Get aggregated order statistics
+
+        Returns:
+            Dictionary containing order statistics
+        """
+        from sqlalchemy import func
+
+        # Orders by status
+        status_counts = self.db.query(
+            Order.status,
+            func.count(Order.id).label("count")
+        ).group_by(Order.status).all()
+
+        # Revenue totals
+        revenue = self.db.query(
+            func.sum(Order.total_amount).label("total"),
+            func.avg(Order.total_amount).label("average"),
+        ).filter(Order.status == OrderStatus.ACTIVE).first()
+
+        # Success rate
+        total_processed = self.db.query(func.count(Order.id)).filter(
+            Order.status.in_([OrderStatus.ACTIVE, OrderStatus.FAILED])
+        ).scalar()
+
+        successful = self.db.query(func.count(Order.id)).filter(
+            Order.status == OrderStatus.ACTIVE
+        ).scalar()
+
+        success_rate = (successful / total_processed * 100) if total_processed > 0 else 0
+
+        return {
+            "orders_by_status": {
+                status.value: count for status, count in status_counts
+            },
+            "revenue": {
+                "total": float(revenue.total or 0),
+                "average": float(revenue.average or 0),
+            },
+            "success_rate": round(success_rate, 2),
+            "total_processed": total_processed,
+            "successful": successful,
+        }
+
     def _validate_order(self, order: Order) -> None:
         """Validate order can be processed"""
         if not order.deployment_template_id:
@@ -371,7 +539,7 @@ class OrderProcessingService:
         if not template or not template.is_active:
             raise ValueError("Deployment template not available")
 
-    def _create_tenant_for_order(self, order: Order, user_id: Optional[int]) -> Any:
+    def _create_tenant_for_order(self, order: Order, user_id: int | None) -> Any:
         """Create tenant from order"""
         from ..tenant.schemas import TenantCreate
 
@@ -389,7 +557,7 @@ class OrderProcessingService:
         return tenant
 
     async def _provision_deployment_for_order(
-        self, order: Order, tenant_id: int, user_id: Optional[int]
+        self, order: Order, tenant_id: int, user_id: int | None
     ) -> Any:
         """Provision deployment for order"""
         template = self.db.query(DeploymentTemplate).filter(
@@ -415,7 +583,7 @@ class OrderProcessingService:
         return instance
 
     def _activate_services_for_order(
-        self, order: Order, tenant_id: int, user_id: Optional[int]
+        self, order: Order, tenant_id: int, user_id: int | None
     ) -> None:
         """Activate services via orchestrator"""
         orchestrator = ActivationOrchestrator(
@@ -438,7 +606,7 @@ class OrderProcessingService:
         order.total_amount = subtotal + tax_amount
 
     def _get_service_price(
-        self, service_code: str, billing_cycle: Optional[str]
+        self, service_code: str, billing_cycle: str | None
     ) -> float:
         """Get service price from catalog (mock implementation)"""
         # In production, query from billing catalog
@@ -453,8 +621,8 @@ class OrderProcessingService:
 
     def _generate_order_number(self) -> str:
         """Generate unique order number"""
-        from datetime import datetime
         import random
+        from datetime import datetime
         timestamp = datetime.utcnow().strftime("%Y%m%d")
         random_suffix = random.randint(1000, 9999)
         return f"ORD-{timestamp}-{random_suffix}"
@@ -522,7 +690,7 @@ class OrderProcessingService:
     def _notify_operations_team(self, order: Order) -> None:
         """Notify operations team of new deployment"""
         try:
-            notification = NotificationCreate(
+            _ = NotificationCreateRequest(
                 title=f"New Tenant Deployed: {order.company_name}",
                 message=f"Order {order.order_number} completed. Tenant {order.organization_slug} is now active.",
                 notification_type="info",
@@ -551,14 +719,14 @@ class ActivationOrchestrator:
         self,
         db: Session,
         notification_service: NotificationService,
-        event_bus: Optional[EventBus] = None,
+        event_bus: EventBus | None = None,
     ):
         self.db = db
         self.notification_service = notification_service
         self.event_bus = event_bus
 
     def activate_order_services(
-        self, order: Order, tenant_id: int, user_id: Optional[int] = None
+        self, order: Order, tenant_id: int, user_id: int | None = None
     ) -> list[ServiceActivation]:
         """
         Activate all services for an order
@@ -598,7 +766,7 @@ class ActivationOrchestrator:
 
         return activations
 
-    def _get_workflow_for_order(self, order: Order) -> Optional[ActivationWorkflow]:
+    def _get_workflow_for_order(self, order: Order) -> ActivationWorkflow | None:
         """Get activation workflow for order"""
         if not order.deployment_template_id:
             return None
@@ -611,7 +779,7 @@ class ActivationOrchestrator:
         return workflow
 
     def _execute_activation(
-        self, activation: ServiceActivation, workflow: Optional[ActivationWorkflow]
+        self, activation: ServiceActivation, workflow: ActivationWorkflow | None
     ) -> None:
         """Execute individual service activation"""
         try:
@@ -683,6 +851,54 @@ class ActivationOrchestrator:
             "activated_at": datetime.utcnow().isoformat(),
         }
 
+    def get_service_activations(self, order_id: int) -> list[ServiceActivation]:
+        """
+        Get all service activations for an order
+
+        Args:
+            order_id: Order ID
+
+        Returns:
+            List of service activation records
+        """
+        return self.db.query(ServiceActivation).filter(
+            ServiceActivation.order_id == order_id
+        ).order_by(ServiceActivation.sequence_number).all()
+
+    def retry_failed_activations(self, order_id: int) -> dict[str, Any]:
+        """
+        Retry failed service activations for an order
+
+        Args:
+            order_id: Order ID
+
+        Returns:
+            Dictionary with retry results
+        """
+        # Get failed activations
+        failed_activations = self.db.query(ServiceActivation).filter(
+            ServiceActivation.order_id == order_id,
+            ServiceActivation.activation_status == "failed",
+        ).all()
+
+        if not failed_activations:
+            return {"success": True, "message": "No failed activations to retry", "services": []}
+
+        # Retry each failed activation
+        retried = []
+        for activation in failed_activations:
+            if activation.retry_count < activation.max_retries:
+                activation.activation_status = ActivationStatus.PENDING
+                retried.append(activation.service_code)
+
+        self.db.commit()
+
+        return {
+            "success": True,
+            "message": f"Retrying {len(retried)} failed activations",
+            "services": retried,
+        }
+
     def get_activation_progress(self, order_id: int) -> dict[str, Any]:
         """Get activation progress for order"""
         activations = self.db.query(ServiceActivation).filter(
@@ -695,7 +911,7 @@ class ActivationOrchestrator:
         in_progress = sum(1 for a in activations if a.activation_status == ActivationStatus.IN_PROGRESS)
         pending = sum(1 for a in activations if a.activation_status == ActivationStatus.PENDING)
 
-        progress_percent = int((completed / total * 100)) if total > 0 else 0
+        progress_percent = int(completed / total * 100) if total > 0 else 0
 
         return {
             "total_services": total,

@@ -5,7 +5,7 @@ Uses Redis pub/sub for broadcasting updates to WebSocket connections.
 """
 
 import json
-from typing import AsyncGenerator
+from collections.abc import AsyncGenerator
 
 import strawberry
 import structlog
@@ -14,11 +14,9 @@ from redis.asyncio import Redis
 from dotmac.platform.graphql.context import Context
 from dotmac.platform.graphql.types.customer_subscriptions import (
     CustomerActivityUpdate,
-    CustomerBillingUpdate,
     CustomerDeviceUpdate,
     CustomerNetworkStatusUpdate,
     CustomerNoteUpdate,
-    CustomerSubscriptionUpdate,
     CustomerTicketUpdate,
 )
 
@@ -34,7 +32,7 @@ class CustomerSubscriptions:
         self,
         info: strawberry.Info[Context],
         customer_id: strawberry.ID,
-    ) -> AsyncGenerator[CustomerNetworkStatusUpdate, None]:
+    ) -> AsyncGenerator[CustomerNetworkStatusUpdate]:
         """
         Subscribe to real-time network status updates for a customer.
 
@@ -123,7 +121,7 @@ class CustomerSubscriptions:
         self,
         info: strawberry.Info[Context],
         customer_id: strawberry.ID,
-    ) -> AsyncGenerator[CustomerDeviceUpdate, None]:
+    ) -> AsyncGenerator[CustomerDeviceUpdate]:
         """
         Subscribe to real-time device status updates.
 
@@ -207,7 +205,7 @@ class CustomerSubscriptions:
         self,
         info: strawberry.Info[Context],
         customer_id: strawberry.ID,
-    ) -> AsyncGenerator[CustomerTicketUpdate, None]:
+    ) -> AsyncGenerator[CustomerTicketUpdate]:
         """
         Subscribe to real-time ticket updates.
 
@@ -303,7 +301,7 @@ class CustomerSubscriptions:
         self,
         info: strawberry.Info[Context],
         customer_id: strawberry.ID,
-    ) -> AsyncGenerator[CustomerActivityUpdate, None]:
+    ) -> AsyncGenerator[CustomerActivityUpdate]:
         """
         Subscribe to new customer activities.
 
@@ -356,7 +354,7 @@ class CustomerSubscriptions:
         self,
         info: strawberry.Info[Context],
         customer_id: strawberry.ID,
-    ) -> AsyncGenerator[CustomerNoteUpdate, None]:
+    ) -> AsyncGenerator[CustomerNoteUpdate]:
         """
         Subscribe to customer note updates.
 

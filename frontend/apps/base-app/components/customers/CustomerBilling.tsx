@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   DollarSign,
   FileText,
@@ -116,11 +116,7 @@ export function CustomerBilling({ customerId }: CustomerBillingProps) {
   const [summary, setSummary] = useState<BillingSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchBillingData();
-  }, [customerId]);
-
-  const fetchBillingData = async () => {
+  const fetchBillingData = useCallback(async () => {
     try {
       setLoading(true);
       const [invoicesRes, paymentsRes, summaryRes] = await Promise.all([
@@ -141,7 +137,11 @@ export function CustomerBilling({ customerId }: CustomerBillingProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [customerId, toast]);
+
+  useEffect(() => {
+    fetchBillingData();
+  }, [fetchBillingData]);
 
   const handleDownloadInvoice = async (invoiceId: string) => {
     try {

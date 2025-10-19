@@ -6,12 +6,11 @@ Pydantic schemas for order processing API.
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from .models import ActivationStatus, OrderStatus, OrderType
-
 
 # ============================================================================
 # Order Schemas
@@ -26,7 +25,7 @@ class BillingAddress(BaseModel):
     state_province: str
     postal_code: str
     country: str
-    company_name: Optional[str] = None
+    company_name: str | None = None
 
 
 class ServiceSelection(BaseModel):
@@ -35,7 +34,7 @@ class ServiceSelection(BaseModel):
     service_code: str = Field(..., min_length=1, max_length=100)
     name: str
     quantity: int = Field(1, ge=1)
-    configuration: Optional[dict[str, Any]] = None
+    configuration: dict[str, Any] | None = None
 
 
 class OrderItemCreate(BaseModel):
@@ -44,13 +43,13 @@ class OrderItemCreate(BaseModel):
     item_type: str = Field(..., pattern=r"^(service|addon|setup_fee|discount|credit)$")
     service_code: str = Field(..., min_length=1, max_length=100)
     name: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
+    description: str | None = None
     quantity: int = Field(1, ge=1)
     unit_price: Decimal = Field(..., ge=0)
     discount_amount: Decimal = Field(0, ge=0)
     tax_amount: Decimal = Field(0, ge=0)
-    configuration: Optional[dict[str, Any]] = None
-    billing_cycle: Optional[str] = Field(None, pattern=r"^(monthly|quarterly|annual|one_time)$")
+    configuration: dict[str, Any] | None = None
+    billing_cycle: str | None = Field(None, pattern=r"^(monthly|quarterly|annual|one_time)$")
     trial_days: int = Field(0, ge=0, le=365)
 
 
@@ -60,40 +59,40 @@ class OrderCreate(BaseModel):
     # Customer information
     customer_email: EmailStr
     customer_name: str = Field(..., min_length=1, max_length=255)
-    customer_phone: Optional[str] = Field(None, max_length=50)
+    customer_phone: str | None = Field(None, max_length=50)
     company_name: str = Field(..., min_length=1, max_length=255)
 
     # Organization details
-    organization_slug: Optional[str] = Field(None, pattern=r"^[a-z0-9-]+$", min_length=3, max_length=100)
-    organization_name: Optional[str] = Field(None, max_length=255)
-    billing_address: Optional[BillingAddress] = None
-    tax_id: Optional[str] = Field(None, max_length=100)
+    organization_slug: str | None = Field(None, pattern=r"^[a-z0-9-]+$", min_length=3, max_length=100)
+    organization_name: str | None = Field(None, max_length=255)
+    billing_address: BillingAddress | None = None
+    tax_id: str | None = Field(None, max_length=100)
 
     # Service configuration
-    deployment_template_id: Optional[int] = Field(None, gt=0)
-    deployment_region: Optional[str] = Field(None, max_length=50)
-    deployment_type: Optional[str] = None
+    deployment_template_id: int | None = Field(None, gt=0)
+    deployment_region: str | None = Field(None, max_length=50)
+    deployment_type: str | None = None
 
     # Services
     selected_services: list[ServiceSelection] = Field(..., min_length=1)
-    service_configuration: Optional[dict[str, Any]] = None
-    features_enabled: Optional[dict[str, bool]] = None
+    service_configuration: dict[str, Any] | None = None
+    features_enabled: dict[str, bool] | None = None
 
     # Pricing
     currency: str = Field("USD", pattern=r"^[A-Z]{3}$")
-    billing_cycle: Optional[str] = Field(None, pattern=r"^(monthly|quarterly|annual)$")
+    billing_cycle: str | None = Field(None, pattern=r"^(monthly|quarterly|annual)$")
 
     # Metadata
-    source: Optional[str] = Field(None, max_length=50)
-    utm_source: Optional[str] = Field(None, max_length=100)
-    utm_medium: Optional[str] = Field(None, max_length=100)
-    utm_campaign: Optional[str] = Field(None, max_length=100)
-    notes: Optional[str] = None
-    external_order_id: Optional[str] = Field(None, max_length=255)
+    source: str | None = Field(None, max_length=50)
+    utm_source: str | None = Field(None, max_length=100)
+    utm_medium: str | None = Field(None, max_length=100)
+    utm_campaign: str | None = Field(None, max_length=100)
+    notes: str | None = None
+    external_order_id: str | None = Field(None, max_length=255)
 
     @field_validator("organization_slug")
     @classmethod
-    def validate_slug(cls, v: Optional[str]) -> Optional[str]:
+    def validate_slug(cls, v: str | None) -> str | None:
         """Validate organization slug"""
         if v:
             # Check for reserved slugs
@@ -110,28 +109,28 @@ class OrderResponse(BaseModel):
     order_number: str
     order_type: OrderType
     status: OrderStatus
-    status_message: Optional[str] = None
+    status_message: str | None = None
 
     customer_email: str
     customer_name: str
     company_name: str
-    organization_slug: Optional[str] = None
+    organization_slug: str | None = None
 
-    deployment_template_id: Optional[int] = None
-    deployment_region: Optional[str] = None
-    deployment_type: Optional[str] = None
+    deployment_template_id: int | None = None
+    deployment_region: str | None = None
+    deployment_type: str | None = None
 
     currency: str
     subtotal: Decimal
     tax_amount: Decimal
     total_amount: Decimal
-    billing_cycle: Optional[str] = None
+    billing_cycle: str | None = None
 
-    tenant_id: Optional[int] = None
-    deployment_instance_id: Optional[int] = None
+    tenant_id: int | None = None
+    deployment_instance_id: int | None = None
 
-    processing_started_at: Optional[datetime] = None
-    processing_completed_at: Optional[datetime] = None
+    processing_started_at: datetime | None = None
+    processing_completed_at: datetime | None = None
 
     created_at: datetime
     updated_at: datetime
@@ -144,14 +143,14 @@ class OrderStatusUpdate(BaseModel):
     """Schema for updating order status"""
 
     status: OrderStatus
-    status_message: Optional[str] = None
+    status_message: str | None = None
 
 
 class OrderSubmit(BaseModel):
     """Schema for submitting order for processing"""
 
-    payment_reference: Optional[str] = None
-    contract_reference: Optional[str] = None
+    payment_reference: str | None = None
+    contract_reference: str | None = None
     auto_activate: bool = True
 
 
@@ -169,12 +168,12 @@ class ServiceActivationResponse(BaseModel):
     service_code: str
     service_name: str
     activation_status: ActivationStatus
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    duration_seconds: Optional[int] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    duration_seconds: int | None = None
     success: bool
-    error_message: Optional[str] = None
-    activation_data: Optional[dict[str, Any]] = None
+    error_message: str | None = None
+    activation_data: dict[str, Any] | None = None
     retry_count: int
     created_at: datetime
     updated_at: datetime
@@ -194,7 +193,7 @@ class ActivationProgress(BaseModel):
     in_progress: int
     pending: int
     overall_status: str
-    current_step: Optional[str] = None
+    current_step: str | None = None
     progress_percent: int
     activations: list[ServiceActivationResponse]
 
@@ -225,7 +224,7 @@ class QuickOrderRequest(BaseModel):
     email: EmailStr
     name: str = Field(..., min_length=1)
     company: str = Field(..., min_length=1)
-    phone: Optional[str] = None
+    phone: str | None = None
 
     # Package selection
     package_code: str = Field(..., pattern=r"^(starter|professional|enterprise|custom)$")
@@ -233,15 +232,15 @@ class QuickOrderRequest(BaseModel):
 
     # Deployment
     region: str = Field("us-east-1", pattern=r"^[a-z]{2}-[a-z]+-\d+$")
-    organization_slug: Optional[str] = Field(None, pattern=r"^[a-z0-9-]+$")
+    organization_slug: str | None = Field(None, pattern=r"^[a-z0-9-]+$")
 
     # Optional customizations
-    additional_services: Optional[list[str]] = None
+    additional_services: list[str] | None = None
     user_count: int = Field(10, ge=1, le=1000)
 
     # Marketing
-    utm_source: Optional[str] = None
-    utm_campaign: Optional[str] = None
+    utm_source: str | None = None
+    utm_campaign: str | None = None
 
 
 class OrderStatusResponse(BaseModel):
@@ -249,11 +248,11 @@ class OrderStatusResponse(BaseModel):
 
     order_number: str
     status: OrderStatus
-    status_message: Optional[str] = None
+    status_message: str | None = None
     progress_percent: int
-    tenant_subdomain: Optional[str] = None
-    activation_url: Optional[str] = None
-    estimated_completion: Optional[datetime] = None
+    tenant_subdomain: str | None = None
+    activation_url: str | None = None
+    estimated_completion: datetime | None = None
     created_at: datetime
 
 
@@ -277,5 +276,5 @@ class WebhookConfig(BaseModel):
 
     url: str = Field(..., pattern=r"^https?://")
     events: list[str]
-    secret: Optional[str] = None
+    secret: str | None = None
     active: bool = True

@@ -28,7 +28,7 @@ from dotmac.platform.tenant.domain_verification_schemas import (
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/tenants", )
 
 
 def get_domain_verification_service(

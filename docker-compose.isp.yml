@@ -73,7 +73,7 @@ services:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/status/"]
       interval: 30s
       timeout: 10s
       retries: 5

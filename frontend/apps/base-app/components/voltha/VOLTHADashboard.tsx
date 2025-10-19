@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Server,
   Radio,
@@ -60,17 +60,7 @@ export function VOLTHADashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    if (selectedOLT) {
-      loadOLTOverview(selectedOLT);
-    }
-  }, [selectedOLT]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [healthRes, oltsRes, onusRes, alarmsRes] = await Promise.all([
@@ -97,7 +87,17 @@ export function VOLTHADashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedOLT, toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    if (selectedOLT) {
+      loadOLTOverview(selectedOLT);
+    }
+  }, [selectedOLT]);
 
   const loadOLTOverview = async (oltId: string) => {
     try {

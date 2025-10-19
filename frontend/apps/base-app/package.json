@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "echo 'Type checking disabled - Next.js build performs type checking'",
+    "type-check": "tsc --noEmit",
     "clean": "rm -rf .next dist out",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:watch": "NODE_OPTIONS=--experimental-vm-modules jest --watch",
@@ -41,7 +41,7 @@
     "postinstall": "echo 'Skipping API generation during install'"
   },
   "dependencies": {
-    "@apollo/client": "^4.0.7",
+    "@apollo/client": "^3.14.0",
     "@dotmac/headless": "workspace:*",
     "@dotmac/primitives": "workspace:*",
     "@hookform/resolvers": "^3.9.1",
@@ -77,7 +77,7 @@
     "@graphql-codegen/typescript": "^5.0.2",
     "@graphql-codegen/typescript-operations": "^5.0.2",
     "@graphql-codegen/typescript-react-apollo": "^4.3.3",
-    "@playwright/test": "^1.49.1",
+    "@playwright/test": "^1.55.1",
     "@storybook/addon-essentials": "^8.6.14",
     "@storybook/addon-interactions": "^8.6.14",
     "@storybook/addon-links": "^8.6.14",

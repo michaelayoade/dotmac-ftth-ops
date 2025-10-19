@@ -26,7 +26,7 @@ export function useScheduledJobs(
   return useQuery<ScheduledJob[], Error, ScheduledJob[], ScheduledJobsKey>({
     queryKey: ['scheduler', 'scheduled-jobs'],
     queryFn: async () => {
-      const response = await apiClient.get<ScheduledJob[]>('/api/v1/jobs/scheduler/scheduled-jobs');
+      const response = await apiClient.get<ScheduledJob[]>('/jobs/scheduler/scheduled-jobs');
       return extractDataOrThrow(response);
     },
     staleTime: 60_000,
@@ -44,7 +44,7 @@ export function useJobChains(
     queryKey: ['scheduler', 'job-chains'],
     queryFn: async () => {
       try {
-        const response = await apiClient.get<JobChain[]>('/api/v1/jobs/scheduler/chains');
+        const response = await apiClient.get<JobChain[]>('/jobs/scheduler/chains');
         return extractDataOrThrow(response);
       } catch (error: any) {
         if (error?.response?.status === 404) {
@@ -66,7 +66,7 @@ export function useExecuteJobChain(): UseMutationResult<JobChain, Error, Execute
   const queryClient = useQueryClient();
   return useMutation<JobChain, Error, ExecuteJobChainVariables>({
     mutationFn: async ({ chainId }) => {
-      const response = await apiClient.post<JobChain>(`/api/v1/jobs/scheduler/chains/${chainId}/execute`);
+      const response = await apiClient.post<JobChain>(`/jobs/scheduler/chains/${chainId}/execute`);
       return extractDataOrThrow(response);
     },
     onSuccess: async () => {
@@ -91,7 +91,7 @@ export function useScheduledJob(jobId: string | null): UseQueryResult<ScheduledJ
     queryFn: async () => {
       if (!jobId) throw new Error('Job ID is required');
       const response = await apiClient.get<ScheduledJobResponse>(
-        `/api/v1/jobs/scheduler/scheduled-jobs/${jobId}`
+        `/jobs/scheduler/scheduled-jobs/${jobId}`
       );
       return extractDataOrThrow(response);
     },
@@ -112,7 +112,7 @@ export function useCreateScheduledJob(): UseMutationResult<
   return useMutation<ScheduledJobResponse, Error, ScheduledJobCreate>({
     mutationFn: async (payload) => {
       const response = await apiClient.post<ScheduledJobResponse>(
-        '/api/v1/jobs/scheduler/scheduled-jobs',
+        '/jobs/scheduler/scheduled-jobs',
         payload
       );
       return extractDataOrThrow(response);
@@ -136,7 +136,7 @@ export function useUpdateScheduledJob(): UseMutationResult<
   return useMutation<ScheduledJobResponse, Error, { jobId: string; payload: ScheduledJobUpdate }>({
     mutationFn: async ({ jobId, payload }) => {
       const response = await apiClient.patch<ScheduledJobResponse>(
-        `/api/v1/jobs/scheduler/scheduled-jobs/${jobId}`,
+        `/jobs/scheduler/scheduled-jobs/${jobId}`,
         payload
       );
       return extractDataOrThrow(response);
@@ -163,7 +163,7 @@ export function useToggleScheduledJob(): UseMutationResult<
   return useMutation<ScheduledJobResponse, Error, string>({
     mutationFn: async (jobId) => {
       const response = await apiClient.post<ScheduledJobResponse>(
-        `/api/v1/jobs/scheduler/scheduled-jobs/${jobId}/toggle`
+        `/jobs/scheduler/scheduled-jobs/${jobId}/toggle`
       );
       return extractDataOrThrow(response);
     },
@@ -184,7 +184,7 @@ export function useDeleteScheduledJob(): UseMutationResult<void, Error, string> 
 
   return useMutation<void, Error, string>({
     mutationFn: async (jobId) => {
-      await apiClient.delete(`/api/v1/jobs/scheduler/scheduled-jobs/${jobId}`);
+      await apiClient.delete(`/jobs/scheduler/scheduled-jobs/${jobId}`);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['scheduler', 'scheduled-jobs'] });
@@ -201,7 +201,7 @@ export function useJobChain(chainId: string | null): UseQueryResult<JobChainResp
     queryFn: async () => {
       if (!chainId) throw new Error('Chain ID is required');
       const response = await apiClient.get<JobChainResponse>(
-        `/api/v1/jobs/scheduler/chains/${chainId}`
+        `/jobs/scheduler/chains/${chainId}`
       );
       return extractDataOrThrow(response);
     },
@@ -218,7 +218,7 @@ export function useCreateJobChain(): UseMutationResult<JobChainResponse, Error, 
   return useMutation<JobChainResponse, Error, JobChainCreate>({
     mutationFn: async (payload) => {
       const response = await apiClient.post<JobChainResponse>(
-        '/api/v1/jobs/scheduler/chains',
+        '/jobs/scheduler/chains',
         payload
       );
       return extractDataOrThrow(response);

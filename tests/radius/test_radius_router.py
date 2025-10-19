@@ -372,8 +372,20 @@ class TestRADIUSRouter:
         data = response.json()
         assert data["success"] is False
 
-    async def test_unauthorized_access(self, async_client):
+    async def test_unauthorized_access(self, test_app_with_radius):
         """Test that endpoints require authentication"""
-        response = await async_client.get("/api/v1/radius/subscribers")
+        from httpx import ASGITransport, AsyncClient
 
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        # Create a new client WITHOUT auth headers to test unauthorized access
+        transport = ASGITransport(app=test_app_with_radius)
+
+        # Remove auth overrides for this test only
+        from dotmac.platform.auth.dependencies import get_current_user
+
+        # Restore original auth dependency (remove override)
+        if get_current_user in test_app_with_radius.dependency_overrides:
+            del test_app_with_radius.dependency_overrides[get_current_user]
+
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            response = await client.get("/api/v1/radius/subscribers")
+            assert response.status_code == status.HTTP_401_UNAUTHORIZED

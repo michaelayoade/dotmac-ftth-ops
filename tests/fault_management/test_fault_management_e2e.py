@@ -17,7 +17,6 @@ from dotmac.platform.fault_management.models import (
     AlarmSeverity,
     AlarmSource,
     AlarmStatus,
-    RuleType,
     SLABreach,
     SLAInstance,
     SLAStatus,
@@ -85,7 +84,7 @@ class TestDeviceFailureWorkflow:
         await alarm_service.create_rule(
             AlarmRuleCreate(
                 name="OLT to ONT Correlation",
-                rule_type=RuleType.CORRELATION,
+                rule_type="correlation",
                 enabled=True,
                 priority=1,
                 conditions={
@@ -546,7 +545,7 @@ class TestCompleteNetworkOutageScenario:
         await alarm_service.create_rule(
             AlarmRuleCreate(
                 name="Fiber to OLT Correlation",
-                rule_type=RuleType.CORRELATION,
+                rule_type="correlation",
                 enabled=True,
                 priority=1,
                 conditions={
@@ -565,7 +564,7 @@ class TestCompleteNetworkOutageScenario:
         await alarm_service.create_rule(
             AlarmRuleCreate(
                 name="OLT to ONT Correlation",
-                rule_type=RuleType.CORRELATION,
+                rule_type="correlation",
                 enabled=True,
                 priority=2,
                 conditions={

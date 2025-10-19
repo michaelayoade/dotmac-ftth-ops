@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -41,25 +41,25 @@ class ExecutionContext:
     secrets: dict[str, Any] = field(default_factory=dict)
 
     # Resource allocation
-    cpu_cores: Optional[int] = None
-    memory_gb: Optional[int] = None
-    storage_gb: Optional[int] = None
+    cpu_cores: int | None = None
+    memory_gb: int | None = None
+    storage_gb: int | None = None
 
     # Target environment
     environment: str = "production"
-    region: Optional[str] = None
-    availability_zone: Optional[str] = None
-    namespace: Optional[str] = None
-    cluster_name: Optional[str] = None
+    region: str | None = None
+    availability_zone: str | None = None
+    namespace: str | None = None
+    cluster_name: str | None = None
 
     # Version info (for upgrades)
-    from_version: Optional[str] = None
-    to_version: Optional[str] = None
+    from_version: str | None = None
+    to_version: str | None = None
 
     # Additional metadata
     tags: dict[str, str] = field(default_factory=dict)
-    notes: Optional[str] = None
-    triggered_by: Optional[int] = None
+    notes: str | None = None
+    triggered_by: int | None = None
     dry_run: bool = False
 
     def __post_init__(self) -> None:
@@ -77,9 +77,9 @@ class DeploymentResult:
     message: str
 
     # Backend execution details
-    backend_job_id: Optional[str] = None
-    backend_job_url: Optional[str] = None
-    logs: Optional[str] = None
+    backend_job_id: str | None = None
+    backend_job_url: str | None = None
+    logs: str | None = None
 
     # Deployment outputs
     endpoints: dict[str, str] = field(default_factory=dict)
@@ -87,13 +87,13 @@ class DeploymentResult:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     # Timing
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    duration_seconds: Optional[float] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    duration_seconds: float | None = None
 
     # Error information
-    error_code: Optional[str] = None
-    error_details: Optional[dict[str, Any]] = None
+    error_code: str | None = None
+    error_details: dict[str, Any] | None = None
     rollback_required: bool = False
 
     def is_success(self) -> bool:
@@ -113,7 +113,7 @@ class DeploymentAdapter(ABC):
     execution backends (Kubernetes, AWX, Docker Compose, etc.)
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize adapter
 

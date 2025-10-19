@@ -80,7 +80,7 @@ export const useBillingPlans = () => {
       if (productId) params.append('product_id', productId);
 
       const response = await apiClient.get<BillingPlan[]>(
-        `/api/v1/billing/subscriptions/plans?${params.toString()}`
+        `/billing/subscriptions/plans?${params.toString()}`
       );
 
       if ((response as any).success && (response as any).data) {
@@ -102,7 +102,7 @@ export const useBillingPlans = () => {
     try {
       const params = activeOnly ? '?is_active=true' : '';
       const response = await apiClient.get<ProductCatalogItem[]>(
-        `/api/v1/billing/catalog/products${params}`
+        `/billing/catalog/products${params}`
       );
 
       if ((response as any).success && (response as any).data) {
@@ -117,7 +117,7 @@ export const useBillingPlans = () => {
 
   const createPlan = useCallback(async (planData: PlanCreateRequest) => {
     try {
-      const response = await apiClient.post('/api/v1/billing/subscriptions/plans', planData);
+      const response = await apiClient.post('/billing/subscriptions/plans', planData);
 
       if ((response as any).success && (response as any).data) {
         await fetchPlans(); // Refresh list
@@ -135,7 +135,7 @@ export const useBillingPlans = () => {
 
   const updatePlan = useCallback(async (planId: string, updates: PlanUpdateRequest) => {
     try {
-      const response = await apiClient.patch(`/api/v1/billing/subscriptions/plans/${planId}`, updates);
+      const response = await apiClient.patch(`/billing/subscriptions/plans/${planId}`, updates);
 
       if ((response as any).success || response.data) {
         await fetchPlans(); // Refresh list
@@ -150,7 +150,7 @@ export const useBillingPlans = () => {
 
   const deletePlan = useCallback(async (planId: string) => {
     try {
-      const response = await apiClient.delete(`/api/v1/billing/subscriptions/plans/${planId}`);
+      const response = await apiClient.delete(`/billing/subscriptions/plans/${planId}`);
 
       if (response.status >= 200 && response.status < 300) {
         setPlans(prev => prev.filter(plan => plan.plan_id !== planId));

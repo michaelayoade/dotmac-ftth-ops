@@ -1,6 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FileText,
@@ -136,6 +139,69 @@ export default function QuotesPage() {
   }, [filteredQuotes, quickFilter]);
 
   // Table columns
+  const handleViewQuote = useCallback(
+    (quote: Quote) => {
+      setSelectedQuote(quote);
+      setIsDetailModalOpen(true);
+    },
+    [setIsDetailModalOpen, setSelectedQuote]
+  );
+
+  const handleEditQuote = useCallback(
+    (quote: Quote) => {
+      setSelectedQuote(quote);
+      setIsCreateModalOpen(true);
+    },
+    [setIsCreateModalOpen, setSelectedQuote]
+  );
+
+  const handleSendQuote = useCallback(
+    async (quote: Quote) => {
+      try {
+        await sendQuote(quote.id);
+        toast({
+          title: "Quote Sent",
+          description: `Quote ${quote.quote_number} has been sent to the lead.`,
+        });
+        refetch();
+      } catch (error) {
+        console.error("Failed to send quote:", error);
+        toast({
+          title: "Error",
+          description: "Failed to send quote. Please try again.",
+          variant: "destructive",
+        });
+      }
+    },
+    [refetch, sendQuote, toast]
+  );
+
+  const handleDeleteQuote = useCallback(
+    async (quote: Quote) => {
+      const confirmed = confirm(
+        `Are you sure you want to delete quote ${quote.quote_number}? This action cannot be undone.`
+      );
+      if (!confirmed) return;
+
+      try {
+        await deleteQuote(quote.id);
+        toast({
+          title: "Quote Deleted",
+          description: `Quote ${quote.quote_number} has been deleted.`,
+        });
+        refetch();
+      } catch (error) {
+        console.error("Failed to delete quote:", error);
+        toast({
+          title: "Error",
+          description: "Failed to delete quote. Please try again.",
+          variant: "destructive",
+        });
+      }
+    },
+    [deleteQuote, refetch, toast]
+  );
+
   const columns: ColumnDef<Quote>[] = useMemo(
     () => [
       {
@@ -273,7 +339,7 @@ export default function QuotesPage() {
         ),
       },
     ],
-    []
+    [handleDeleteQuote, handleEditQuote, handleSendQuote, handleViewQuote]
   );
 
   // Bulk actions
@@ -332,59 +398,6 @@ export default function QuotesPage() {
       },
     },
   ];
-
-  // Action handlers
-  const handleViewQuote = (quote: Quote) => {
-    setSelectedQuote(quote);
-    setIsDetailModalOpen(true);
-  };
-
-  const handleEditQuote = (quote: Quote) => {
-    // Open CreateQuoteModal in edit mode
-    setSelectedQuote(quote);
-    setIsCreateModalOpen(true);
-  };
-
-  const handleSendQuote = async (quote: Quote) => {
-    try {
-      await sendQuote(quote.id);
-      toast({
-        title: "Quote Sent",
-        description: `Quote ${quote.quote_number} has been sent to the lead.`,
-      });
-      refetch();
-    } catch (error) {
-      console.error("Failed to send quote:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send quote. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteQuote = async (quote: Quote) => {
-    const confirmed = confirm(
-      `Are you sure you want to delete quote ${quote.quote_number}? This action cannot be undone.`
-    );
-    if (!confirmed) return;
-
-    try {
-      await deleteQuote(quote.id);
-      toast({
-        title: "Quote Deleted",
-        description: `Quote ${quote.quote_number} has been deleted.`,
-      });
-      refetch();
-    } catch (error) {
-      console.error("Failed to delete quote:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete quote. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleExport = () => {
     if (!filteredQuotes.length) {

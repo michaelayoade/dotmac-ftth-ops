@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import { useEffect, useState, type ElementType, type ReactNode } from "react";
 import Link from "next/link";
 import { format } from "date-fns";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Plus,
   Search,
@@ -76,13 +76,7 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
     vlan: 100,
   });
 
-  useEffect(() => {
-    if (showDiscoveryModal) {
-      discoverONUs();
-    }
-  }, [showDiscoveryModal]);
-
-  const discoverONUs = async () => {
+  const discoverONUs = useCallback(async () => {
     setLoading(true);
     try {
       const response = await apiClient.get<ONUDiscoveryResponse>("/api/v1/voltha/onus/discover");
@@ -101,7 +95,13 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    if (showDiscoveryModal) {
+      discoverONUs();
+    }
+  }, [discoverONUs, showDiscoveryModal]);
 
   const handleSelectONU = (onu: DiscoveredONU) => {
     setSelectedONU(onu);

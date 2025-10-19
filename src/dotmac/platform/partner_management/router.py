@@ -37,7 +37,7 @@ from dotmac.platform.partner_management.service import PartnerService
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(tags=["Partner Management"])
+router = APIRouter(prefix="/api/v1/partners", tags=["Partner Management"])
 
 # Include partner portal sub-routers
 router.include_router(portal_router.router)

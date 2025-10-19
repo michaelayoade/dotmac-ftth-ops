@@ -78,6 +78,7 @@ class WireGuardService:
         name: str,
         public_endpoint: str,
         server_ipv4: str,
+        server_ipv6: str | None = None,
         listen_port: int = 51820,
         description: str | None = None,
         location: str | None = None,
@@ -86,12 +87,13 @@ class WireGuardService:
         allowed_ips: list[str] | None = None,
     ) -> WireGuardServer:
         """
-        Create a new WireGuard server.
+        Create a new WireGuard server with dual-stack support.
 
         Args:
             name: Server name
             public_endpoint: Public endpoint (hostname:port)
             server_ipv4: Server VPN IPv4 address (CIDR)
+            server_ipv6: Server VPN IPv6 address (CIDR, optional)
             listen_port: UDP listen port
             description: Server description
             location: Server location
@@ -160,6 +162,7 @@ class WireGuardService:
                 public_endpoint=public_endpoint,
                 listen_port=listen_port,
                 server_ipv4=server_ipv4,
+                server_ipv6=server_ipv6,
                 public_key=public_key,
                 private_key_encrypted=private_key_encrypted,
                 status=WireGuardServerStatus.ACTIVE,
@@ -330,10 +333,11 @@ class WireGuardService:
         generate_keys: bool = True,
         public_key: str | None = None,
         peer_ipv4: str | None = None,
+        peer_ipv6: str | None = None,
         allowed_ips: list[str] | None = None,
     ) -> WireGuardPeer:
         """
-        Create a new WireGuard peer.
+        Create a new WireGuard peer with dual-stack support.
 
         Args:
             server_id: Server ID
@@ -344,6 +348,7 @@ class WireGuardService:
             generate_keys: Whether to generate keys automatically
             public_key: Peer public key (if not generating)
             peer_ipv4: Peer VPN IPv4 (if not auto-allocating)
+            peer_ipv6: Peer VPN IPv6 (if not auto-allocating)
             allowed_ips: Allowed IPs (overrides server default)
 
         Returns:
@@ -371,21 +376,40 @@ class WireGuardService:
             else:
                 private_key = None
 
-            # Allocate IP if not provided
+            # Allocate IPv4 if not provided
             if not peer_ipv4:
-                # Get all used IPs
-                used_ips_result = await self.session.execute(
+                # Get all used IPv4 addresses
+                used_ipv4_result = await self.session.execute(
                     select(WireGuardPeer.peer_ipv4).where(
                         WireGuardPeer.server_id == server_id,
                         WireGuardPeer.deleted_at.is_(None),
                     )
                 )
-                used_ips = [row[0] for row in used_ips_result.all()]
+                used_ips = [row[0] for row in used_ipv4_result.all()]
                 used_ips.append(server.server_ipv4)  # Include server IP
 
                 peer_ipv4 = await self.client.allocate_peer_ip(
                     server.server_ipv4,
                     used_ips,
+                )
+
+            # Allocate IPv6 if server has IPv6 and peer IPv6 not provided
+            if server.server_ipv6 and not peer_ipv6:
+                # Get all used IPv6 addresses
+                used_ipv6_result = await self.session.execute(
+                    select(WireGuardPeer.peer_ipv6).where(
+                        WireGuardPeer.server_id == server_id,
+                        WireGuardPeer.peer_ipv6.is_not(None),
+                        WireGuardPeer.deleted_at.is_(None),
+                    )
+                )
+                used_ipv6s = [row[0] for row in used_ipv6_result.all() if row[0]]
+                used_ipv6s.append(server.server_ipv6)  # Include server IPv6
+
+                # Allocate next IPv6 address
+                peer_ipv6 = await self.client.allocate_peer_ip(
+                    server.server_ipv6,
+                    used_ipv6s,
                 )
 
             # Create peer record
@@ -398,17 +422,24 @@ class WireGuardService:
                 description=description,
                 public_key=public_key,
                 peer_ipv4=peer_ipv4,
+                peer_ipv6=peer_ipv6,
                 allowed_ips=allowed_ips or server.allowed_ips,
                 status=WireGuardPeerStatus.ACTIVE,
             )
 
             # Generate config file
             if private_key:
+                # Build peer addresses (dual-stack if IPv6 available)
+                peer_addresses = [peer_ipv4]
+                if peer_ipv6:
+                    peer_addresses.append(peer_ipv6)
+                peer_address_str = ", ".join(peer_addresses)
+
                 config_content = await self.client.generate_peer_config(
                     server_public_key=server.public_key,
                     server_endpoint=server.public_endpoint,
                     peer_private_key=private_key,
-                    peer_address=peer_ipv4,
+                    peer_address=peer_address_str,
                     dns_servers=server.dns_servers,
                     allowed_ips=peer.allowed_ips,
                 )
@@ -544,12 +575,18 @@ class WireGuardService:
         private_key, public_key = await self.client.generate_keypair()
         peer.public_key = public_key
 
+        # Build peer addresses (dual-stack if IPv6 available)
+        peer_addresses = [peer.peer_ipv4]
+        if peer.peer_ipv6:
+            peer_addresses.append(peer.peer_ipv6)
+        peer_address_str = ", ".join(peer_addresses)
+
         # Generate new config
         config_content = await self.client.generate_peer_config(
             server_public_key=server.public_key,
             server_endpoint=server.public_endpoint,
             peer_private_key=private_key,
-            peer_address=peer.peer_ipv4,
+            peer_address=peer_address_str,
             dns_servers=server.dns_servers,
             allowed_ips=peer.allowed_ips,
         )

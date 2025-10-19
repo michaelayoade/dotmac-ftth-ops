@@ -4,7 +4,7 @@ Fault Management Database Models
 Models for alarms, alarm correlation, SLA tracking, and breach detection.
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import Enum as PyEnum
 from typing import Any
 from uuid import UUID, uuid4
@@ -99,7 +99,7 @@ class Alarm(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in is
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     tenant_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     alarm_id: Mapped[str] = mapped_column(
-        String(255), unique=True, nullable=False, index=True
+        String(255), nullable=False, index=True
     )  # External alarm ID
 
     # Alarm classification
@@ -146,6 +146,7 @@ class Alarm(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in is
     )
     occurrence_count: Mapped[int] = mapped_column(Integer, default=1)
     acknowledged_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    acknowledged_by: Mapped[UUID] = mapped_column(nullable=True, index=True)
     cleared_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     resolved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
@@ -195,6 +196,7 @@ class AlarmNote(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any i
     alarm_id: Mapped[UUID] = mapped_column(ForeignKey("alarms.id"), nullable=False, index=True)
 
     note: Mapped[str] = mapped_column(Text, nullable=False)
+    note_type: Mapped[str] = mapped_column(String(50), default="note", nullable=False)
     created_by: Mapped[UUID] = mapped_column(nullable=False)
 
     # Relationships
@@ -255,10 +257,13 @@ class SLADefinition(BaseModel):  # type: ignore[misc]  # BaseModel resolves to A
     service_type: Mapped[str] = mapped_column(
         String(100), nullable=False, index=True
     )  # fiber, wireless, etc.
+    service_level: Mapped[str] = mapped_column(String(100), nullable=True, index=True)
 
     # Availability targets
     availability_target: Mapped[float] = mapped_column(Float, nullable=False)  # e.g., 99.9% = 0.999
     measurement_period_days: Mapped[int] = mapped_column(Integer, default=30)  # Monthly by default
+    response_time_target: Mapped[int] = mapped_column(Integer, default=60)
+    resolution_time_target: Mapped[int] = mapped_column(Integer, default=240)
 
     # Performance targets
     max_latency_ms: Mapped[float] = mapped_column(Float, nullable=True)  # Maximum latency
@@ -306,18 +311,24 @@ class SLAInstance(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any
 
     # Associated entities
     customer_id: Mapped[UUID] = mapped_column(nullable=True, index=True)
+    customer_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     service_id: Mapped[UUID] = mapped_column(nullable=True, index=True)
+    service_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     subscription_id: Mapped[str] = mapped_column(String(255), nullable=True, index=True)
 
     # Current status
     status: Mapped[SLAStatus] = mapped_column(Enum(SLAStatus), nullable=False, index=True)
     current_availability: Mapped[float] = mapped_column(
-        Float, default=1.0
+        Float, default=100.0
     )  # Current measured availability
 
     # Period tracking
-    period_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    period_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    start_date: Mapped[datetime] = mapped_column(
+        "period_start", DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
+    )
+    end_date: Mapped[datetime] = mapped_column(
+        "period_end", DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC) + timedelta(days=30)
+    )
 
     # Downtime tracking (minutes)
     total_downtime: Mapped[int] = mapped_column(Integer, default=0)
@@ -364,16 +375,18 @@ class SLABreach(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any i
     breach_type: Mapped[str] = mapped_column(
         String(100), nullable=False, index=True
     )  # availability, response_time, resolution_time
-    severity: Mapped[AlarmSeverity] = mapped_column(Enum(AlarmSeverity), nullable=False)
+    severity: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
 
-    breach_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    detected_at: Mapped[datetime] = mapped_column(
+        "breach_start", DateTime(timezone=True), nullable=False
+    )
     breach_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     duration_minutes: Mapped[int] = mapped_column(Integer, nullable=True)
 
     # Measured values
     target_value: Mapped[float] = mapped_column(Float, nullable=False)
     actual_value: Mapped[float] = mapped_column(Float, nullable=False)
-    deviation_percent: Mapped[float] = mapped_column(Float, nullable=False)
+    deviation_percent: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
 
     # Related entities
     alarm_id: Mapped[UUID] = mapped_column(nullable=True, index=True)

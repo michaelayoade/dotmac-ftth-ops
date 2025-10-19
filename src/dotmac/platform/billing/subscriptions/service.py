@@ -26,6 +26,7 @@ from dotmac.platform.billing.models import (
 from dotmac.platform.billing.subscriptions.models import (
     BillingCycle,
     ProrationBehavior,
+    ProrationPreview,
     ProrationResult,
     Subscription,
     SubscriptionCreateRequest,
@@ -33,6 +34,7 @@ from dotmac.platform.billing.subscriptions.models import (
     SubscriptionPlan,
     SubscriptionPlanChangeRequest,
     SubscriptionPlanCreateRequest,
+    SubscriptionPlanResponse,
     SubscriptionStatus,
     SubscriptionUpdateRequest,
     UsageRecordRequest,
@@ -1159,7 +1161,6 @@ class SubscriptionService:
 
     async def get_tenant_subscription(self, tenant_id: str) -> Subscription | None:
         """Get tenant's current active subscription."""
-        from .models import SubscriptionResponse
 
         stmt = select(BillingSubscriptionTable).where(
             and_(
@@ -1185,10 +1186,9 @@ class SubscriptionService:
         tenant_id: str,
         new_plan_id: str,
         effective_date: datetime | None,
-        proration_behavior: "ProrationBehavior",
-    ) -> "ProrationPreview":
+        proration_behavior: ProrationBehavior,
+    ) -> ProrationPreview:
         """Preview costs/credits for changing plan."""
-        from .models import ProrationPreview, SubscriptionPlanResponse
 
         # Get current subscription
         subscription = await self.get_tenant_subscription(tenant_id)
@@ -1219,7 +1219,7 @@ class SubscriptionService:
             next_billing_date=subscription.current_period_end,
         )
 
-    async def change_plan(
+    async def change_tenant_subscription_plan(
         self,
         tenant_id: str,
         new_plan_id: str,
@@ -1235,7 +1235,7 @@ class SubscriptionService:
             raise SubscriptionNotFoundError("No active subscription found")
 
         # Validate new plan exists
-        new_plan = await self.get_plan(new_plan_id, tenant_id)
+        await self.get_plan(new_plan_id, tenant_id)
 
         # Use existing change_plan method
         await self.change_subscription_plan(
@@ -1266,7 +1266,7 @@ class SubscriptionService:
 
         return updated_subscription
 
-    async def cancel_subscription(
+    async def cancel_tenant_subscription(
         self,
         tenant_id: str,
         cancel_at_period_end: bool,
@@ -1312,7 +1312,7 @@ class SubscriptionService:
 
         return updated_subscription
 
-    async def reactivate_subscription(
+    async def reactivate_tenant_subscription(
         self,
         tenant_id: str,
         reactivated_by_user_id: str,
@@ -1368,10 +1368,8 @@ class SubscriptionService:
 
         return self._db_to_pydantic_subscription(db_subscription)
 
-    def _plan_to_response(self, plan: SubscriptionPlan) -> "SubscriptionPlanResponse":
+    def _plan_to_response(self, plan: SubscriptionPlan) -> SubscriptionPlanResponse:
         """Convert SubscriptionPlan to SubscriptionPlanResponse."""
-        from .models import SubscriptionPlanResponse
-
         return SubscriptionPlanResponse(
             plan_id=plan.plan_id,
             tenant_id=plan.tenant_id,

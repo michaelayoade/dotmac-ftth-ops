@@ -8,8 +8,12 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from dotmac.platform.core.ip_validation import (
+    IPv4AddressValidator,
+    IPv6AddressValidator,
+)
 
 # ============================================================================
 # Enums
@@ -57,7 +61,21 @@ class DeviceHealthResponse(BaseModel):
     device_name: str
     device_type: DeviceType
     status: DeviceStatus
-    ip_address: str | None = None
+
+    # Management IP addresses (dual-stack support)
+    management_ipv4: str | None = Field(None, description="Management IPv4 address")
+    management_ipv6: str | None = Field(None, description="Management IPv6 address")
+
+    # Optional: separate data plane IPs for devices with management/data separation
+    data_plane_ipv4: str | None = Field(None, description="Data plane IPv4 address")
+    data_plane_ipv6: str | None = Field(None, description="Data plane IPv6 address")
+
+    # Backward compatibility - computed field
+    @property
+    def ip_address(self) -> str | None:
+        """Backward compatibility: return IPv4 management address"""
+        return self.management_ipv4
+
     last_seen: datetime | None = None
     uptime_seconds: int | None = None
 
@@ -78,6 +96,18 @@ class DeviceHealthResponse(BaseModel):
     tenant_id: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("management_ipv4", "data_plane_ipv4")
+    @classmethod
+    def validate_ipv4(cls, v: str | None) -> str | None:
+        """Validate IPv4 addresses"""
+        return IPv4AddressValidator.validate(v)
+
+    @field_validator("management_ipv6", "data_plane_ipv6")
+    @classmethod
+    def validate_ipv6(cls, v: str | None) -> str | None:
+        """Validate IPv6 addresses"""
+        return IPv6AddressValidator.validate(v)
 
 
 # ============================================================================
@@ -164,8 +194,30 @@ class CPEMetrics(BaseModel):
     connected_clients: int | None = None
     wifi_2ghz_clients: int | None = None
     wifi_5ghz_clients: int | None = None
-    wan_ip: str | None = None
+
+    # WAN IP addresses (dual-stack support)
+    wan_ipv4: str | None = Field(None, description="WAN IPv4 address")
+    wan_ipv6: str | None = Field(None, description="WAN IPv6 address")
+
+    # Backward compatibility
+    @property
+    def wan_ip(self) -> str | None:
+        """Backward compatibility: return WAN IPv4 address"""
+        return self.wan_ipv4
+
     last_inform: datetime | None = None
+
+    @field_validator("wan_ipv4")
+    @classmethod
+    def validate_wan_ipv4(cls, v: str | None) -> str | None:
+        """Validate WAN IPv4 address"""
+        return IPv4AddressValidator.validate(v)
+
+    @field_validator("wan_ipv6")
+    @classmethod
+    def validate_wan_ipv6(cls, v: str | None) -> str | None:
+        """Validate WAN IPv6 address"""
+        return IPv6AddressValidator.validate(v)
 
 
 class DeviceMetricsResponse(BaseModel):

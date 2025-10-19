@@ -342,7 +342,7 @@ export default function PartnerOnboardingWorkflow() {
                 required
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Select the license template to use for this partner's customers
+                Select the license template to use for this partner&apos;s customers
               </p>
             </div>
           </div>

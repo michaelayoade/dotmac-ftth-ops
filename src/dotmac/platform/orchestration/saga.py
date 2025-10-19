@@ -12,12 +12,18 @@ Reference: https://microservices.io/patterns/data/saga.html
 """
 
 import logging
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable, Optional
+from typing import Any
 
 from sqlalchemy.orm import Session
 
-from .models import Workflow, WorkflowStep, WorkflowStatus, WorkflowStepStatus
+from .models import (
+    OrchestrationWorkflow,
+    OrchestrationWorkflowStep,
+    WorkflowStatus,
+    WorkflowStepStatus,
+)
 from .schemas import StepDefinition, WorkflowDefinition
 
 logger = logging.getLogger(__name__)
@@ -60,15 +66,15 @@ class SagaOrchestrator:
 
     async def execute_workflow(
         self,
-        workflow: Workflow,
+        workflow: OrchestrationWorkflow,
         workflow_definition: WorkflowDefinition,
-        context: Optional[dict[str, Any]] = None,
-    ) -> Workflow:
+        context: dict[str, Any] | None = None,
+    ) -> OrchestrationWorkflow:
         """
         Execute a complete workflow with saga pattern.
 
         Args:
-            workflow: Workflow database model
+            workflow: OrchestrationWorkflow database model
             workflow_definition: Definition of steps to execute
             context: Execution context (shared data between steps)
 
@@ -129,7 +135,7 @@ class SagaOrchestrator:
 
     async def _execute_step(
         self,
-        step: WorkflowStep,
+        step: OrchestrationWorkflowStep,
         step_def: StepDefinition,
         context: dict[str, Any],
     ) -> bool:
@@ -211,12 +217,12 @@ class SagaOrchestrator:
 
         return False
 
-    async def _compensate_workflow(self, workflow: Workflow) -> None:
+    async def _compensate_workflow(self, workflow: OrchestrationWorkflow) -> None:
         """
         Compensate (rollback) all completed steps in reverse order.
 
         Args:
-            workflow: Workflow to compensate
+            workflow: OrchestrationWorkflow to compensate
         """
         logger.info(f"Starting compensation for workflow {workflow.workflow_id}")
 
@@ -264,7 +270,7 @@ class SagaOrchestrator:
         workflow.compensation_completed_at = datetime.utcnow()
         self.db.commit()
 
-    async def _compensate_step(self, step: WorkflowStep) -> bool:
+    async def _compensate_step(self, step: OrchestrationWorkflowStep) -> bool:
         """
         Compensate (rollback) a single step.
 
@@ -338,10 +344,10 @@ class SagaOrchestrator:
 
     def _get_or_create_step(
         self,
-        workflow: Workflow,
+        workflow: OrchestrationWorkflow,
         step_def: StepDefinition,
         step_order: int,
-    ) -> WorkflowStep:
+    ) -> OrchestrationWorkflowStep:
         """
         Get existing step or create new one.
 
@@ -351,7 +357,7 @@ class SagaOrchestrator:
             step_order: Step execution order
 
         Returns:
-            WorkflowStep model
+            OrchestrationWorkflowStep model
         """
         # Try to find existing step
         existing_step = next(
@@ -363,7 +369,7 @@ class SagaOrchestrator:
             return existing_step
 
         # Create new step
-        step = WorkflowStep(
+        step = OrchestrationWorkflowStep(
             workflow_id=workflow.id,
             step_id=f"{workflow.workflow_id}_step_{step_order}",
             step_order=step_order,
@@ -382,7 +388,9 @@ class SagaOrchestrator:
 
         return step
 
-    async def retry_failed_workflow(self, workflow: Workflow) -> Workflow:
+    async def retry_failed_workflow(
+        self, workflow: OrchestrationWorkflow
+    ) -> OrchestrationWorkflow:
         """
         Retry a failed workflow from the failed step.
 

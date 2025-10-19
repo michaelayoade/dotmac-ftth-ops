@@ -9,6 +9,12 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from dotmac.platform.core.ip_validation import (
+    IPv4AddressValidator,
+    IPv6AddressValidator,
+    IPv6NetworkValidator,
+)
+
 # ============================================================================
 # RADIUS Subscriber Schemas
 # ============================================================================
@@ -23,9 +29,20 @@ class RADIUSSubscriberCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=64, description="RADIUS username")
     password: str = Field(..., min_length=8, description="RADIUS password")
     bandwidth_profile_id: str | None = Field(None, description="Bandwidth profile to apply")
-    framed_ip_address: str | None = Field(None, description="Static IP address (optional)")
+
+    # IPv4 Support
+    framed_ipv4_address: str | None = Field(None, description="Static IPv4 address (optional)")
+
+    # IPv6 Support (NEW)
+    framed_ipv6_address: str | None = Field(None, description="Static IPv6 address (optional)")
+    delegated_ipv6_prefix: str | None = Field(None, description="IPv6 prefix delegation (e.g., 2001:db8::/64)")
+
+    # Timeouts
     session_timeout: int | None = Field(None, gt=0, description="Session timeout in seconds")
     idle_timeout: int | None = Field(None, gt=0, description="Idle timeout in seconds")
+
+    # Backward compatibility: map old field to new field
+    framed_ip_address: str | None = Field(None, description="[DEPRECATED] Use framed_ipv4_address instead")
 
     @field_validator("username")
     @classmethod
@@ -35,6 +52,29 @@ class RADIUSSubscriberCreate(BaseModel):
             raise ValueError("Username can only contain letters, numbers, _, -, ., @")
         return v.lower()
 
+    @field_validator("framed_ipv4_address")
+    @classmethod
+    def validate_framed_ipv4(cls, v: str | None) -> str | None:
+        """Validate IPv4 address"""
+        return IPv4AddressValidator.validate(v)
+
+    @field_validator("framed_ipv6_address")
+    @classmethod
+    def validate_framed_ipv6(cls, v: str | None) -> str | None:
+        """Validate IPv6 address"""
+        return IPv6AddressValidator.validate(v)
+
+    @field_validator("delegated_ipv6_prefix")
+    @classmethod
+    def validate_ipv6_prefix(cls, v: str | None) -> str | None:
+        """Validate IPv6 prefix (CIDR notation)"""
+        return IPv6NetworkValidator.validate(v, strict=False)
+
+    def model_post_init(self, __context) -> None:
+        """Handle backward compatibility for framed_ip_address"""
+        if self.framed_ip_address and not self.framed_ipv4_address:
+            self.framed_ipv4_address = self.framed_ip_address
+
 
 class RADIUSSubscriberUpdate(BaseModel):
     """Update RADIUS subscriber credentials"""
@@ -43,10 +83,44 @@ class RADIUSSubscriberUpdate(BaseModel):
 
     password: str | None = Field(None, min_length=8, description="New password")
     bandwidth_profile_id: str | None = Field(None, description="New bandwidth profile")
-    framed_ip_address: str | None = Field(None, description="Static IP address")
+
+    # IPv4 Support
+    framed_ipv4_address: str | None = Field(None, description="Static IPv4 address")
+
+    # IPv6 Support (NEW)
+    framed_ipv6_address: str | None = Field(None, description="Static IPv6 address")
+    delegated_ipv6_prefix: str | None = Field(None, description="IPv6 prefix delegation")
+
+    # Timeouts
     session_timeout: int | None = Field(None, gt=0, description="Session timeout in seconds")
     idle_timeout: int | None = Field(None, gt=0, description="Idle timeout in seconds")
     enabled: bool | None = Field(None, description="Enable/disable RADIUS access")
+
+    # Backward compatibility
+    framed_ip_address: str | None = Field(None, description="[DEPRECATED] Use framed_ipv4_address instead")
+
+    @field_validator("framed_ipv4_address")
+    @classmethod
+    def validate_framed_ipv4(cls, v: str | None) -> str | None:
+        """Validate IPv4 address"""
+        return IPv4AddressValidator.validate(v)
+
+    @field_validator("framed_ipv6_address")
+    @classmethod
+    def validate_framed_ipv6(cls, v: str | None) -> str | None:
+        """Validate IPv6 address"""
+        return IPv6AddressValidator.validate(v)
+
+    @field_validator("delegated_ipv6_prefix")
+    @classmethod
+    def validate_ipv6_prefix(cls, v: str | None) -> str | None:
+        """Validate IPv6 prefix"""
+        return IPv6NetworkValidator.validate(v, strict=False)
+
+    def model_post_init(self, __context) -> None:
+        """Handle backward compatibility"""
+        if self.framed_ip_address and not self.framed_ipv4_address:
+            self.framed_ipv4_address = self.framed_ip_address
 
 
 class RADIUSSubscriberResponse(BaseModel):
@@ -57,12 +131,26 @@ class RADIUSSubscriberResponse(BaseModel):
     subscriber_id: str
     username: str
     bandwidth_profile_id: str | None = None
-    framed_ip_address: str | None = None
+
+    # IPv4 Support
+    framed_ipv4_address: str | None = None
+
+    # IPv6 Support (NEW)
+    framed_ipv6_address: str | None = None
+    delegated_ipv6_prefix: str | None = None
+
+    # Timeouts
     session_timeout: int | None = None
     idle_timeout: int | None = None
     enabled: bool = True
     created_at: datetime
     updated_at: datetime
+
+    # Backward compatibility - computed field
+    @property
+    def framed_ip_address(self) -> str | None:
+        """Backward compatibility: return IPv4 address"""
+        return self.framed_ipv4_address
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -81,7 +169,16 @@ class RADIUSSessionResponse(BaseModel):
     username: str
     acctsessionid: str
     nasipaddress: str
+
+    # IPv4 session info
     framedipaddress: str | None = None
+
+    # IPv6 session info (NEW)
+    framedipv6address: str | None = None
+    framedipv6prefix: str | None = None
+    delegatedipv6prefix: str | None = None
+
+    # Session timing and accounting
     acctstarttime: datetime | None = None
     acctsessiontime: int | None = None  # Seconds
     acctinputoctets: int | None = None  # Bytes downloaded

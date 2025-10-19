@@ -16,7 +16,7 @@ export default function HomePage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/v1/auth/me', {
+        const response = await fetch('/auth/me', {
           credentials: 'include',
         });
         setIsLoggedIn(response.ok);
@@ -55,8 +55,8 @@ export default function HomePage() {
         </h1>
 
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-          Complete reusable backend for authentication, customer management, billing,
-          analytics, and more. Built for scale with FastAPI and React, branded for {branding.companyName}.
+          Fiber-to-the-Home (FTTH) Operations Platform. Manage your network infrastructure,
+          subscribers, billing, and service delivery with enterprise-grade telecom solutions.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
@@ -90,35 +90,35 @@ export default function HomePage() {
 
       <section className="grid w-full max-w-6xl gap-6 md:grid-cols-3">
         <div className="bg-card/40 backdrop-blur border border-border/40 rounded-xl p-8 hover:bg-card/60 transition-all">
-          <div className="text-sky-400 mb-4 text-2xl">🔐</div>
-          <h3 className="text-xl font-semibold text-foreground mb-3">Authentication & Security</h3>
+          <div className="text-sky-400 mb-4 text-2xl">🌐</div>
+          <h3 className="text-xl font-semibold text-foreground mb-3">Network Operations</h3>
           <ul className="space-y-2 text-muted-foreground text-sm">
-            <li>• JWT-based authentication</li>
-            <li>• Role-based access control</li>
-            <li>• Secure secrets management</li>
-            <li>• API key management</li>
+            <li>• FTTH/PON network management</li>
+            <li>• OLT/ONU provisioning & monitoring</li>
+            <li>• IPAM & DCIM (NetBox)</li>
+            <li>• Real-time network diagnostics</li>
           </ul>
         </div>
 
         <div className="bg-card/40 backdrop-blur border border-border/40 rounded-xl p-8 hover:bg-card/60 transition-all">
-          <div className="text-green-400 mb-4 text-2xl">📊</div>
-          <h3 className="text-xl font-semibold text-foreground mb-3">Business Operations</h3>
+          <div className="text-green-400 mb-4 text-2xl">👥</div>
+          <h3 className="text-xl font-semibold text-foreground mb-3">Subscriber Management</h3>
           <ul className="space-y-2 text-muted-foreground text-sm">
-            <li>• Customer relationship management</li>
-            <li>• Billing & payment processing</li>
-            <li>• Analytics & reporting</li>
-            <li>• Communication tools</li>
+            <li>• RADIUS authentication & accounting</li>
+            <li>• Service plans & bandwidth control</li>
+            <li>• CPE management (GenieACS)</li>
+            <li>• Subscriber self-service portal</li>
           </ul>
         </div>
 
         <div className="bg-card/40 backdrop-blur border border-border/40 rounded-xl p-8 hover:bg-card/60 transition-all">
-          <div className="text-purple-400 mb-4 text-2xl">🚀</div>
-          <h3 className="text-xl font-semibold text-foreground mb-3">Developer Experience</h3>
+          <div className="text-purple-400 mb-4 text-2xl">💳</div>
+          <h3 className="text-xl font-semibold text-foreground mb-3">Business Support Systems</h3>
           <ul className="space-y-2 text-muted-foreground text-sm">
-            <li>• Modern React/Next.js frontend</li>
-            <li>• FastAPI backend with OpenAPI</li>
-            <li>• Docker containerization</li>
-            <li>• Production-ready monitoring</li>
+            <li>• Automated billing & invoicing</li>
+            <li>• Usage-based billing & rating</li>
+            <li>• Payment processing & dunning</li>
+            <li>• Revenue analytics & reporting</li>
           </ul>
         </div>
       </section>

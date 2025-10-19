@@ -1,0 +1,415 @@
+{
+  "dashboard": {
+    "title": "Dual-Stack IPv4/IPv6 Overview",
+    "tags": ["dual-stack", "ipv6", "ipv4", "overview"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Subscriber Overview",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "dotmac_subscribers_total{tenant_id=\"global\"}",
+            "legendFormat": "Total Subscribers",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value",
+          "orientation": "horizontal",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"}
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Dual-Stack Adoption",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 6, "y": 0},
+        "targets": [
+          {
+            "expr": "dotmac_dual_stack_percentage{tenant_id=\"global\"}",
+            "legendFormat": "Dual-Stack %",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 30, "color": "yellow"},
+                {"value": 60, "color": "green"}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "IPv4 Pool Utilization",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "dotmac_ipv4_pool_utilization_percentage{tenant_id=\"global\"}",
+            "legendFormat": "IPv4 Pool %",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 70, "color": "yellow"},
+                {"value": 85, "color": "red"}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "IPv6 Prefix Utilization",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "dotmac_ipv6_prefix_utilization_percentage{tenant_id=\"global\"}",
+            "legendFormat": "IPv6 Prefix %",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 60, "color": "yellow"},
+                {"value": 80, "color": "red"}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Subscriber Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "dotmac_subscribers_dual_stack{tenant_id=\"global\"}",
+            "legendFormat": "Dual-Stack",
+            "refId": "A"
+          },
+          {
+            "expr": "dotmac_subscribers_ipv4_only{tenant_id=\"global\"}",
+            "legendFormat": "IPv4 Only",
+            "refId": "B"
+          },
+          {
+            "expr": "dotmac_subscribers_ipv6_only{tenant_id=\"global\"}",
+            "legendFormat": "IPv6 Only",
+            "refId": "C"
+          }
+        ],
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "right"
+          },
+          "pieType": "donut"
+        }
+      },
+      {
+        "id": 6,
+        "title": "Traffic Split (IPv4 vs IPv6)",
+        "type": "piechart",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "dotmac_traffic_ipv4_percentage{tenant_id=\"global\"}",
+            "legendFormat": "IPv4 Traffic",
+            "refId": "A"
+          },
+          {
+            "expr": "dotmac_traffic_ipv6_percentage{tenant_id=\"global\"}",
+            "legendFormat": "IPv6 Traffic",
+            "refId": "B"
+          }
+        ],
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "right"
+          },
+          "pieType": "donut"
+        }
+      },
+      {
+        "id": 7,
+        "title": "Connectivity Status",
+        "type": "timeseries",
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 18},
+        "targets": [
+          {
+            "expr": "dotmac_connectivity_ipv4_percentage{tenant_id=\"global\"}",
+            "legendFormat": "IPv4 Connectivity %",
+            "refId": "A"
+          },
+          {
+            "expr": "dotmac_connectivity_ipv6_percentage{tenant_id=\"global\"}",
+            "legendFormat": "IPv6 Connectivity %",
+            "refId": "B"
+          }
+        ],
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10
+            },
+            "min": 0,
+            "max": 100,
+            "unit": "percent"
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Average Latency (IPv4 vs IPv6)",
+        "type": "timeseries",
+        "gridPos": {"h": 10, "w": 12, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "dotmac_latency_ipv4_milliseconds{tenant_id=\"global\"}",
+            "legendFormat": "IPv4 Latency",
+            "refId": "A"
+          },
+          {
+            "expr": "dotmac_latency_ipv6_milliseconds{tenant_id=\"global\"}",
+            "legendFormat": "IPv6 Latency",
+            "refId": "B"
+          }
+        ],
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10
+            },
+            "min": 0,
+            "unit": "ms"
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "IPv4 Latency"},
+              "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}]
+            },
+            {
+              "matcher": {"id": "byName", "options": "IPv6 Latency"},
+              "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]
+            }
+          ]
+        }
+      },
+      {
+        "id": 9,
+        "title": "Packet Loss (IPv4 vs IPv6)",
+        "type": "timeseries",
+        "gridPos": {"h": 10, "w": 12, "x": 12, "y": 28},
+        "targets": [
+          {
+            "expr": "dotmac_packet_loss_ipv4_percentage{tenant_id=\"global\"}",
+            "legendFormat": "IPv4 Packet Loss",
+            "refId": "A"
+          },
+          {
+            "expr": "dotmac_packet_loss_ipv6_percentage{tenant_id=\"global\"}",
+            "legendFormat": "IPv6 Packet Loss",
+            "refId": "B"
+          }
+        ],
+        "options": {
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "fillOpacity": 10
+            },
+            "min": 0,
+            "max": 10,
+            "unit": "percent"
+          },
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "IPv4 Packet Loss"},
+              "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}}]
+            },
+            {
+              "matcher": {"id": "byName", "options": "IPv6 Packet Loss"},
+              "properties": [{"id": "color", "value": {"mode": "fixed", "fixedColor": "green"}}]
+            }
+          ]
+        }
+      },
+      {
+        "id": 10,
+        "title": "WireGuard VPN Status",
+        "type": "stat",
+        "gridPos": {"h": 6, "w": 12, "x": 0, "y": 38},
+        "targets": [
+          {
+            "expr": "dotmac_wireguard_servers_total{tenant_id=\"global\"}",
+            "legendFormat": "Total Servers",
+            "refId": "A"
+          },
+          {
+            "expr": "dotmac_wireguard_servers_dual_stack{tenant_id=\"global\"}",
+            "legendFormat": "Dual-Stack Servers",
+            "refId": "B"
+          },
+          {
+            "expr": "dotmac_wireguard_peers_total{tenant_id=\"global\"}",
+            "legendFormat": "Total Peers",
+            "refId": "C"
+          },
+          {
+            "expr": "dotmac_wireguard_peers_dual_stack{tenant_id=\"global\"}",
+            "legendFormat": "Dual-Stack Peers",
+            "refId": "D"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value",
+          "orientation": "horizontal",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "Migration Progress",
+        "type": "gauge",
+        "gridPos": {"h": 6, "w": 12, "x": 12, "y": 38},
+        "targets": [
+          {
+            "expr": "dotmac_migration_progress_percentage{tenant_id=\"global\"}",
+            "legendFormat": "Migration Progress",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 50, "color": "yellow"},
+                {"value": 90, "color": "green"}
+              ]
+            },
+            "unit": "percent"
+          }
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "tenant_id",
+          "label": "Tenant",
+          "type": "query",
+          "query": "label_values(dotmac_subscribers_total, tenant_id)",
+          "current": {
+            "text": "global",
+            "value": "global"
+          },
+          "multi": false,
+          "includeAll": false
+        }
+      ]
+    },
+    "annotations": {
+      "list": []
+    }
+  }
+}

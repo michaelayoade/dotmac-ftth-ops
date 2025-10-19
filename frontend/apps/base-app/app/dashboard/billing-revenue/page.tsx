@@ -196,7 +196,7 @@ function BillingRevenuePageContent() {
 
       // Fetch recent transactions
       try {
-        const transactionsResponse = await apiClient.get<{payments: Array<Record<string, unknown>>}>('/api/v1/billing/payments?limit=5');
+        const transactionsResponse = await apiClient.get<{payments: Array<Record<string, unknown>>}>('/billing/payments?limit=5');
         if (transactionsResponse.data?.payments) {
           const transactions: PaymentActivityItem[] = transactionsResponse.data.payments.map((t, index: number) => ({
             id: (t.id as string) || `trans-${index}`,

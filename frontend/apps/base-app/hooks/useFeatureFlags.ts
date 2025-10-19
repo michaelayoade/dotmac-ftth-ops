@@ -32,7 +32,7 @@ export const useFeatureFlags = () => {
 
     try {
       const response = await apiClient.get<FeatureFlag[]>(
-        `/api/v1/feature-flags/flags${enabledOnly ? '?enabled_only=true' : ''}`
+        `/feature-flags/flags${enabledOnly ? '?enabled_only=true' : ''}`
       );
 
       // Check if wrapped response
@@ -54,7 +54,7 @@ export const useFeatureFlags = () => {
 
   const fetchStatus = useCallback(async () => {
     try {
-      const response = await apiClient.get<FlagStatus>('/api/v1/feature-flags/status');
+      const response = await apiClient.get<FlagStatus>('/feature-flags/status');
 
       if ('success' in response && (response as any).success && (response as any).data) {
         setStatus((response as any).data);
@@ -68,7 +68,7 @@ export const useFeatureFlags = () => {
 
   const toggleFlag = useCallback(async (flagName: string, enabled: boolean) => {
     try {
-      const response = await apiClient.put(`/api/v1/feature-flags/flags/${flagName}`, {
+      const response = await apiClient.put(`/feature-flags/flags/${flagName}`, {
         enabled,
       });
 
@@ -91,7 +91,7 @@ export const useFeatureFlags = () => {
 
   const createFlag = useCallback(async (flagName: string, data: Partial<FeatureFlag>) => {
     try {
-      const response = await apiClient.post(`/api/v1/feature-flags/flags/${flagName}`, data);
+      const response = await apiClient.post(`/feature-flags/flags/${flagName}`, data);
 
       if ('success' in response && (response as any).success && (response as any).data) {
         await fetchFlags(); // Refresh list
@@ -109,7 +109,7 @@ export const useFeatureFlags = () => {
 
   const deleteFlag = useCallback(async (flagName: string) => {
     try {
-      const response = await apiClient.delete(`/api/v1/feature-flags/flags/${flagName}`);
+      const response = await apiClient.delete(`/feature-flags/flags/${flagName}`);
 
       const success = response.status >= 200 && response.status < 300;
       if (success) {

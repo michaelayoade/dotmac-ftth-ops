@@ -102,14 +102,14 @@ Transform the DotMac Platform Services into a comprehensive **ISP Operations Pla
 # Create network
 docker network create isp-network
 
-# Start core services
+# Start core services (API, frontend, database, redis)
 docker compose up -d
 
-# Start ISP services
+# Start optional ISP services (FreeRADIUS, etc.)
 docker compose -f docker-compose.isp.yml up -d
 
-# Start monitoring
-docker compose -f docker-compose.monitoring.yml up -d
+# Start optional observability stack (Prometheus, Grafana, Jaeger)
+docker compose -f docker-compose.observability.yml up -d
 ```
 
 ---
@@ -462,10 +462,14 @@ docker network create isp-network
 
 ### 3. Start Infrastructure
 ```bash
-# Start all services
+# Start core stack
 docker compose up -d
+
+# ISP services (optional)
 docker compose -f docker-compose.isp.yml up -d
-docker compose -f docker-compose.monitoring.yml up -d
+
+# Observability stack (optional)
+docker compose -f docker-compose.observability.yml up -d
 
 # Check status
 docker compose ps

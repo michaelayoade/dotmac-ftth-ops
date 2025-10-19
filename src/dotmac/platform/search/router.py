@@ -10,7 +10,7 @@ from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 
 logger = structlog.get_logger(__name__)
-search_router = APIRouter()
+search_router = APIRouter(prefix="/api/v1/search", )
 
 
 # Response Models

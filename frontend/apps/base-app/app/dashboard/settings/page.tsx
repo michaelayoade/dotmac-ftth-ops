@@ -203,7 +203,7 @@ function SettingsHubPageContent() {
     try {
       setLoading(true);
       // Fetch user data
-      const userResponse = await apiClient.get('/api/v1/auth/me').catch(() => ({ data: null }));
+      const userResponse = await apiClient.get('/auth/me').catch(() => ({ data: null }));
 
       // Organization endpoint not yet implemented - will be added later
       const orgResponse = { data: null };

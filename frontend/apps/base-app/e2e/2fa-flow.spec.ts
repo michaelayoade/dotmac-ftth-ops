@@ -8,7 +8,7 @@ function generateMockTOTP(): string {
 test.describe('2FA Setup Flow', () => {
   async function loginUser(page: Page) {
     await page.goto('/login');
-    await page.fill('[data-testid="username-input"]', 'admin');
+    await page.fill('[data-testid="email-input"]', 'admin');
     await page.fill('[data-testid="password-input"]', 'admin123');
     await page.click('[data-testid="submit-button"]');
     await page.waitForURL(/.*dashboard/);
@@ -158,7 +158,7 @@ test.describe('2FA Login Flow', () => {
     });
 
     await page.goto('/login');
-    await page.fill('[data-testid="username-input"]', 'user-with-2fa');
+    await page.fill('[data-testid="email-input"]', 'user-with-2fa');
     await page.fill('[data-testid="password-input"]', 'password123');
     await page.click('[data-testid="submit-button"]');
 
@@ -208,7 +208,7 @@ test.describe('2FA Login Flow', () => {
     });
 
     await page.goto('/login');
-    await page.fill('[data-testid="username-input"]', 'user-with-2fa');
+    await page.fill('[data-testid="email-input"]', 'user-with-2fa');
     await page.fill('[data-testid="password-input"]', 'password123');
     await page.click('[data-testid="submit-button"]');
 
@@ -242,7 +242,7 @@ test.describe('2FA Login Flow', () => {
     });
 
     await page.goto('/login');
-    await page.fill('[data-testid="username-input"]', 'user-with-2fa');
+    await page.fill('[data-testid="email-input"]', 'user-with-2fa');
     await page.fill('[data-testid="password-input"]', 'password123');
     await page.click('[data-testid="submit-button"]');
 
@@ -280,7 +280,7 @@ test.describe('2FA Login Flow', () => {
     });
 
     await page.goto('/login');
-    await page.fill('[data-testid="username-input"]', 'user-with-2fa');
+    await page.fill('[data-testid="email-input"]', 'user-with-2fa');
     await page.fill('[data-testid="password-input"]', 'password123');
     await page.click('[data-testid="submit-button"]');
 
@@ -314,7 +314,7 @@ test.describe('2FA Management', () => {
     });
 
     await page.goto('/login');
-    await page.fill('[data-testid="username-input"]', 'admin');
+    await page.fill('[data-testid="email-input"]', 'admin');
     await page.fill('[data-testid="password-input"]', 'admin123');
     await page.click('[data-testid="submit-button"]');
     await page.waitForTimeout(1000);

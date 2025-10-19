@@ -142,7 +142,7 @@ async def get_async_session() -> AsyncGenerator[AsyncSession]:  # pragma: no cov
 
 
 # Create router
-auth_router = APIRouter()
+auth_router = APIRouter(prefix="/api/v1/auth", )
 security = HTTPBearer(auto_error=False)
 
 
@@ -809,9 +809,15 @@ async def register(
     # Get current tenant from request context (set by TenantMiddleware)
     current_tenant_id = get_current_tenant_id()
 
-    # Check if user already exists - use generic error message to prevent enumeration
-    existing_user_by_username = await user_service.get_user_by_username(register_request.username)
-    existing_user_by_email = await user_service.get_user_by_email(register_request.email)
+    # Check if user already exists within current tenant - use generic error message to prevent enumeration
+    existing_user_by_username = await user_service.get_user_by_username(
+        register_request.username,
+        tenant_id=current_tenant_id,
+    )
+    existing_user_by_email = await user_service.get_user_by_email(
+        register_request.email,
+        tenant_id=current_tenant_id,
+    )
 
     if existing_user_by_username or existing_user_by_email:
         # Log registration attempt with existing user
@@ -1369,16 +1375,43 @@ async def verify_token(
 @auth_router.post("/password-reset")
 @rate_limit("3/minute")  # type: ignore[misc]  # SECURITY: Prevent abuse of password reset
 async def request_password_reset(
-    request: PasswordResetRequest,
+    reset_request: PasswordResetRequest,
+    http_request: Request,
     session: AsyncSession = Depends(get_auth_session),
 ) -> dict[str, Any]:
     """
     Request a password reset token to be sent via email.
+
+    Multi-tenant support:
+    - Tenant can be specified via X-Tenant-ID header or tenant_id query parameter
+    - If tenant is not specified and multiple users exist with the same email across tenants,
+      reset emails will be sent to all matching accounts for security
     """
+    from sqlalchemy.exc import MultipleResultsFound
+
+    from dotmac.platform.tenant import TenantIdentityResolver
+
     user_service = UserService(session)
 
-    # Find user by email
-    user = await user_service.get_user_by_email(request.email)
+    # Try to resolve tenant from request (header or query param)
+    resolver = TenantIdentityResolver()
+    tenant_id = await resolver.resolve(http_request)
+
+    # Find user by email with optional tenant filtering
+    # Handle MultipleResultsFound when same email exists in multiple tenants
+    user = None
+    try:
+        user = await user_service.get_user_by_email(reset_request.email, tenant_id=tenant_id)
+    except MultipleResultsFound:
+        # Multiple users with same email across tenants
+        # For security, we silently ignore and return success message
+        # User should specify tenant via header/query param to disambiguate
+        logger.warning(
+            "Password reset requested for email with multiple tenant accounts",
+            email=reset_request.email,
+            tenant_provided=tenant_id is not None,
+        )
+        return {"message": "If the email exists, a password reset link has been sent."}
 
     # Always return success to prevent email enumeration
     if user and user.is_active:
@@ -1397,16 +1430,26 @@ async def request_password_reset(
 
 @auth_router.post("/password-reset/confirm")
 async def confirm_password_reset(
-    request: PasswordResetConfirm,
+    reset_confirm: PasswordResetConfirm,
     response: Response,
+    http_request: Request,
     session: AsyncSession = Depends(get_auth_session),
 ) -> dict[str, Any]:
     """
     Confirm password reset with token and set new password.
+
+    Multi-tenant support:
+    - Tenant can be specified via X-Tenant-ID header or tenant_id query parameter
+    - If tenant is not specified and multiple users exist with the same email across tenants,
+      the request will fail and user must provide tenant information
     """
+    from sqlalchemy.exc import MultipleResultsFound
+
+    from dotmac.platform.tenant import TenantIdentityResolver
+
     # Verify the reset token
     email_service = get_auth_email_service()
-    email = email_service.verify_reset_token(request.token)
+    email = email_service.verify_reset_token(reset_confirm.token)
 
     if not email:
         raise HTTPException(
@@ -1414,9 +1457,25 @@ async def confirm_password_reset(
             detail="Invalid or expired reset token",
         )
 
-    # Find user and update password
+    # Try to resolve tenant from request (header or query param)
+    resolver = TenantIdentityResolver()
+    tenant_id = await resolver.resolve(http_request)
+
+    # Find user and update password with tenant filtering
     user_service = UserService(session)
-    user = await user_service.get_user_by_email(email)
+    try:
+        user = await user_service.get_user_by_email(email, tenant_id=tenant_id)
+    except MultipleResultsFound:
+        # Multiple users with same email across tenants
+        logger.error(
+            "Password reset confirmation failed: multiple tenant accounts",
+            email=email,
+            tenant_provided=tenant_id is not None,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unable to identify account. Please include tenant information in request.",
+        )
 
     if not user:
         raise HTTPException(
@@ -1426,7 +1485,7 @@ async def confirm_password_reset(
 
     # Update password
     try:
-        user.password_hash = hash_password(request.new_password)
+        user.password_hash = hash_password(reset_confirm.new_password)
         await session.commit()
 
         # Send confirmation email
@@ -1647,10 +1706,14 @@ async def _validate_username_email_conflicts(
     update_data: dict[str, Any],
     user: User,
     user_service: UserService,
+    tenant_id: str | None = None,
 ) -> None:
-    """Validate that username and email changes don't conflict with existing users."""
+    """Validate that username and email changes don't conflict with existing users within the same tenant."""
     if "username" in update_data and update_data["username"] != user.username:
-        existing = await user_service.get_user_by_username(update_data["username"])
+        existing = await user_service.get_user_by_username(
+            update_data["username"],
+            tenant_id=tenant_id,
+        )
         if existing and existing.id != user.id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -1658,7 +1721,10 @@ async def _validate_username_email_conflicts(
             )
 
     if "email" in update_data and update_data["email"] != user.email:
-        existing = await user_service.get_user_by_email(update_data["email"])
+        existing = await user_service.get_user_by_email(
+            update_data["email"],
+            tenant_id=tenant_id,
+        )
         if existing and existing.id != user.id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -1777,8 +1843,10 @@ async def update_current_user_profile(
         # Update only provided fields
         update_data = profile_update.model_dump(exclude_unset=True)
 
-        # Validate username/email conflicts
-        await _validate_username_email_conflicts(update_data, user, user_service)
+        # Validate username/email conflicts within current tenant
+        await _validate_username_email_conflicts(
+            update_data, user, user_service, tenant_id=user.tenant_id
+        )
 
         # Prepare name fields (first_name + last_name → full_name)
         _prepare_name_fields(update_data, user)

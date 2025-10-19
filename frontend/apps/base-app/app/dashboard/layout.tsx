@@ -343,7 +343,7 @@ export default function DashboardLayout({
 
     try {
       logger.debug('Dashboard: Fetching current user');
-      const response = await apiClient.get('/api/v1/auth/me');
+      const response = await apiClient.get('/auth/me');
 
       if (response.data) {
         const userData = response.data as Record<string, unknown> & { id?: string };
@@ -363,7 +363,7 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     try {
-      await apiClient.post('/api/v1/auth/logout');
+      await apiClient.post('/auth/logout');
       window.location.href = '/login';
     } catch (error) {
       logger.error('Logout error', error instanceof Error ? error : new Error(String(error)));

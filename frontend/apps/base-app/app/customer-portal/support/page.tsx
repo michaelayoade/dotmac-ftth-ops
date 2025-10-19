@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -185,7 +188,7 @@ export default function CustomerSupportPage() {
             <DialogHeader>
               <DialogTitle>Create Support Ticket</DialogTitle>
               <DialogDescription>
-                Describe your issue and we'll help you resolve it
+                Describe your issue and we&apos;ll help you resolve it
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">

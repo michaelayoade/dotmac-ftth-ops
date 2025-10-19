@@ -6,9 +6,8 @@ Handles deployment to Kubernetes clusters using Helm charts.
 
 import asyncio
 import json
-import subprocess
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from .base import DeploymentAdapter, DeploymentResult, ExecutionContext, ExecutionStatus
 
@@ -21,7 +20,7 @@ class KubernetesAdapter(DeploymentAdapter):
     Suitable for cloud-native multi-tenant deployments in shared clusters.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize Kubernetes adapter
 
@@ -620,7 +619,7 @@ class KubernetesAdapter(DeploymentAdapter):
                 return condition.get("status") == "True"
         return False
 
-    async def _run_command(self, cmd: list[str], input_data: Optional[str] = None) -> str:
+    async def _run_command(self, cmd: list[str], input_data: str | None = None) -> str:
         """Run shell command asynchronously"""
         process = await asyncio.create_subprocess_exec(
             *cmd,

@@ -184,7 +184,7 @@ class PaymentCustomerLoader:
         if uncached_ids:
             # Query all customers at once
             stmt = select(Customer).where(
-                Customer.id.in_([cid for cid in uncached_ids])
+                Customer.id.in_(list(uncached_ids))
             )
 
             result = await self.db.execute(stmt)
@@ -219,7 +219,7 @@ class PaymentInvoiceLoader:
         if valid_ids:
             # Query all invoices at once
             stmt = select(InvoiceEntity).where(
-                InvoiceEntity.invoice_id.in_([iid for iid in valid_ids])
+                InvoiceEntity.invoice_id.in_(list(valid_ids))
             )
 
             result = await self.db.execute(stmt)
@@ -365,7 +365,7 @@ class UserRolesLoader:
         user_role_rows = result.all()
 
         # Get unique role IDs
-        role_ids = list(set(row.role_id for row in user_role_rows))
+        role_ids = list({row.role_id for row in user_role_rows})
 
         # Fetch all roles at once
         roles_stmt = select(Role).where(Role.id.in_(role_ids))
@@ -402,7 +402,7 @@ class UserPermissionsLoader:
             return []
 
         # Import here to avoid circular imports
-        from dotmac.platform.auth.models import Permission, Role, role_permissions, user_roles
+        from dotmac.platform.auth.models import Permission, role_permissions, user_roles
 
         # Get all roles for these users
         user_roles_stmt = select(user_roles).where(user_roles.c.user_id.in_(user_ids))
@@ -410,7 +410,7 @@ class UserPermissionsLoader:
         user_role_rows = user_roles_result.all()
 
         # Get unique role IDs
-        role_ids = list(set(row.role_id for row in user_role_rows))
+        role_ids = list({row.role_id for row in user_role_rows})
 
         if not role_ids:
             # No roles found, return empty lists
@@ -422,7 +422,7 @@ class UserPermissionsLoader:
         role_perm_rows = role_perms_result.all()
 
         # Get unique permission IDs
-        permission_ids = list(set(row.permission_id for row in role_perm_rows))
+        permission_ids = list({row.permission_id for row in role_perm_rows})
 
         if not permission_ids:
             # No permissions found, return empty lists
@@ -487,7 +487,7 @@ class UserTeamsLoader:
         all_memberships = result.scalars().all()
 
         # Get unique team IDs
-        team_ids = list(set(m.team_id for m in all_memberships))
+        team_ids = list({m.team_id for m in all_memberships})
 
         # Fetch all teams at once
         teams_stmt = select(Team).where(Team.id.in_(team_ids))
@@ -537,7 +537,7 @@ class ProfileChangeHistoryLoader:
         all_changes = result.scalars().all()
 
         # Get unique changed_by_user_ids for username lookup
-        changed_by_ids = list(set(c.changed_by_user_id for c in all_changes))
+        changed_by_ids = list({c.changed_by_user_id for c in all_changes})
 
         # Fetch all users who made changes
         users_stmt = select(User).where(User.id.in_(changed_by_ids))

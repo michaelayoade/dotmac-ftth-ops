@@ -22,7 +22,7 @@ async function setupAuthenticatedPage(page: Page) {
   });
 
   await page.goto('/login');
-  await page.fill('[data-testid="username-input"]', 'admin');
+  await page.fill('[data-testid="email-input"]', 'admin');
   await page.fill('[data-testid="password-input"]', 'admin123');
   await page.click('[data-testid="submit-button"]');
   await page.waitForTimeout(1000);
@@ -91,7 +91,7 @@ test.describe('Mobile Login Form', () => {
     await page.goto('/login');
 
     // Form should be visible and properly sized
-    const usernameInput = page.locator('[data-testid="username-input"]');
+    const usernameInput = page.locator('[data-testid="email-input"]');
     const passwordInput = page.locator('[data-testid="password-input"]');
     const submitButton = page.locator('[data-testid="submit-button"]');
 
@@ -115,10 +115,10 @@ test.describe('Mobile Login Form', () => {
     await page.goto('/login');
 
     // Focus on username input
-    await page.click('[data-testid="username-input"]');
+    await page.click('[data-testid="email-input"]');
 
     // Page should scroll to show input above keyboard
-    const input = page.locator('[data-testid="username-input"]');
+    const input = page.locator('[data-testid="email-input"]');
     await expect(input).toBeVisible();
 
     // Should be able to type

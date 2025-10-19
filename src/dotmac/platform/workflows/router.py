@@ -5,7 +5,6 @@ REST API endpoints for workflow management and execution.
 """
 
 import logging
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -77,7 +76,7 @@ async def create_workflow(
     dependencies=[Depends(require_permission("workflows:read"))],
 )
 async def list_workflows(
-    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    is_active: bool | None = Query(None, description="Filter by active status"),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> WorkflowListResponse:
     """
@@ -94,16 +93,73 @@ async def list_workflows(
 
 @router.get(
     "/builtin",
-    response_model=List[dict],
+    response_model=list[dict],
     dependencies=[Depends(require_permission("workflows:read"))],
 )
-async def list_builtin_workflows() -> List[dict]:
+async def list_builtin_workflows() -> list[dict]:
     """
     List all built-in workflow definitions.
 
     Required permission: workflows:read
     """
     return get_all_builtin_workflows()
+
+
+# NOTE: Specific routes like /executions and /stats must come BEFORE /{workflow_id}
+# to prevent FastAPI from matching them as parameterized routes
+
+
+@router.get(
+    "/executions",
+    response_model=WorkflowExecutionListResponse,
+    dependencies=[Depends(require_permission("workflows:read"))],
+)
+async def list_executions(
+    workflow_id: int | None = Query(None, description="Filter by workflow ID"),
+    status_filter: WorkflowStatus | None = Query(None, alias="status", description="Filter by status"),
+    tenant_id: int | None = Query(None, description="Filter by tenant ID"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum results"),
+    offset: int = Query(0, ge=0, description="Results offset"),
+    service: WorkflowService = Depends(get_workflow_service),
+) -> WorkflowExecutionListResponse:
+    """
+    List workflow executions with filtering.
+
+    Required permission: workflows:read
+    """
+    executions = await service.list_executions(
+        workflow_id=workflow_id,
+        status=status_filter,
+        tenant_id=tenant_id,
+        limit=limit,
+        offset=offset,
+    )
+    return WorkflowExecutionListResponse(
+        executions=[WorkflowExecutionResponse.model_validate(e) for e in executions],
+        total=len(executions),
+    )
+
+
+@router.get(
+    "/stats",
+    response_model=WorkflowStatsResponse,
+    dependencies=[Depends(require_permission("workflows:read"))],
+)
+async def get_workflow_stats(
+    workflow_id: int | None = Query(None, description="Filter by workflow ID"),
+    tenant_id: int | None = Query(None, description="Filter by tenant ID"),
+    service: WorkflowService = Depends(get_workflow_service),
+) -> WorkflowStatsResponse:
+    """
+    Get workflow execution statistics.
+
+    Required permission: workflows:read
+    """
+    stats = await service.get_execution_stats(
+        workflow_id=workflow_id,
+        tenant_id=tenant_id,
+    )
+    return WorkflowStatsResponse(**stats)
 
 
 @router.get(
@@ -239,8 +295,8 @@ async def execute_workflow_by_id(
     workflow_id: int,
     context: dict,
     trigger_type: str = "manual",
-    trigger_source: Optional[str] = None,
-    tenant_id: Optional[int] = None,
+    trigger_source: str | None = None,
+    tenant_id: int | None = None,
     service: WorkflowService = Depends(get_workflow_service),
 ) -> WorkflowExecutionResponse:
     """
@@ -268,37 +324,6 @@ async def execute_workflow_by_id(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Workflow execution failed: {str(e)}",
         )
-
-
-@router.get(
-    "/executions",
-    response_model=WorkflowExecutionListResponse,
-    dependencies=[Depends(require_permission("workflows:read"))],
-)
-async def list_executions(
-    workflow_id: Optional[int] = Query(None, description="Filter by workflow ID"),
-    status_filter: Optional[WorkflowStatus] = Query(None, alias="status", description="Filter by status"),
-    tenant_id: Optional[int] = Query(None, description="Filter by tenant ID"),
-    limit: int = Query(100, ge=1, le=1000, description="Maximum results"),
-    offset: int = Query(0, ge=0, description="Results offset"),
-    service: WorkflowService = Depends(get_workflow_service),
-) -> WorkflowExecutionListResponse:
-    """
-    List workflow executions with filtering.
-
-    Required permission: workflows:read
-    """
-    executions = await service.list_executions(
-        workflow_id=workflow_id,
-        status=status_filter,
-        tenant_id=tenant_id,
-        limit=limit,
-        offset=offset,
-    )
-    return WorkflowExecutionListResponse(
-        executions=[WorkflowExecutionResponse.model_validate(e) for e in executions],
-        total=len(executions),
-    )
 
 
 @router.get(
@@ -352,35 +377,13 @@ async def cancel_execution(
 
 
 @router.get(
-    "/stats",
-    response_model=WorkflowStatsResponse,
-    dependencies=[Depends(require_permission("workflows:read"))],
-)
-async def get_workflow_stats(
-    workflow_id: Optional[int] = Query(None, description="Filter by workflow ID"),
-    tenant_id: Optional[int] = Query(None, description="Filter by tenant ID"),
-    service: WorkflowService = Depends(get_workflow_service),
-) -> WorkflowStatsResponse:
-    """
-    Get workflow execution statistics.
-
-    Required permission: workflows:read
-    """
-    stats = await service.get_execution_stats(
-        workflow_id=workflow_id,
-        tenant_id=tenant_id,
-    )
-    return WorkflowStatsResponse(**stats)
-
-
-@router.get(
     "/{workflow_id}/stats",
     response_model=WorkflowStatsResponse,
     dependencies=[Depends(require_permission("workflows:read"))],
 )
 async def get_workflow_stats_by_id(
     workflow_id: int,
-    tenant_id: Optional[int] = Query(None, description="Filter by tenant ID"),
+    tenant_id: int | None = Query(None, description="Filter by tenant ID"),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> WorkflowStatsResponse:
     """

@@ -235,7 +235,7 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
           <TabsContent value="bank_account" className="space-y-4">
             <div className="rounded-md bg-yellow-500/10 border border-yellow-500/20 p-3">
               <p className="text-sm text-yellow-600 dark:text-yellow-500">
-                <strong>Bank account verification required:</strong> After adding, you'll receive 2 small deposits
+                <strong>Bank account verification required:</strong> After adding, you&apos;ll receive 2 small deposits
                 within 1-2 business days. Verify these amounts to activate the account.
               </p>
             </div>

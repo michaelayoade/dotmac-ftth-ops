@@ -6,14 +6,15 @@ REST API endpoints for wireless network infrastructure management.
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
-from uuid import UUID
 
 from ..auth.core import get_current_user
-from ..user_management.models import User
 from ..db import get_db
+from ..user_management.models import User
 from .models import CoverageType, DeviceStatus, DeviceType
 from .schemas import (
     CoverageZoneCreate,

@@ -5,10 +5,8 @@ Handles add-on purchases, cancellations, and quantity management for tenants.
 """
 
 from datetime import UTC, datetime
-from typing import Any
 
 import structlog
-from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.exceptions import AddonNotFoundError
@@ -17,7 +15,6 @@ from .models import (
     Addon,
     AddonResponse,
     AddonStatus,
-    TenantAddon,
     TenantAddonResponse,
 )
 

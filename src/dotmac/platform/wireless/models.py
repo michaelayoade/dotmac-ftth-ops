@@ -20,7 +20,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dotmac.platform.db import AuditMixin, Base, TenantMixin, TimestampMixin
 
-
 # ============================================================================
 # Enums
 # ============================================================================
@@ -153,17 +152,17 @@ class WirelessDevice(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ig
     tags: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
 
     # Relationships
-    radios: Mapped[list["WirelessRadio"]] = relationship(
+    radios: Mapped[list[WirelessRadio]] = relationship(
         "WirelessRadio",
         back_populates="device",
         cascade="all, delete-orphan",
     )
-    coverage_zones: Mapped[list["CoverageZone"]] = relationship(
+    coverage_zones: Mapped[list[CoverageZone]] = relationship(
         "CoverageZone",
         back_populates="device",
         cascade="all, delete-orphan",
     )
-    signal_measurements: Mapped[list["SignalMeasurement"]] = relationship(
+    signal_measurements: Mapped[list[SignalMeasurement]] = relationship(
         "SignalMeasurement",
         back_populates="device",
         cascade="all, delete-orphan",
@@ -246,7 +245,7 @@ class WirelessRadio(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     extra_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
 
     # Relationships
-    device: Mapped["WirelessDevice"] = relationship(
+    device: Mapped[WirelessDevice] = relationship(
         "WirelessDevice",
         back_populates="radios",
     )
@@ -308,7 +307,7 @@ class CoverageZone(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     extra_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
 
     # Relationships
-    device: Mapped["WirelessDevice | None"] = relationship(
+    device: Mapped[WirelessDevice | None] = relationship(
         "WirelessDevice",
         back_populates="coverage_zones",
     )
@@ -375,7 +374,7 @@ class SignalMeasurement(Base, TimestampMixin, TenantMixin):  # type: ignore[misc
     extra_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
 
     # Relationships
-    device: Mapped["WirelessDevice"] = relationship(
+    device: Mapped[WirelessDevice] = relationship(
         "WirelessDevice",
         back_populates="signal_measurements",
     )

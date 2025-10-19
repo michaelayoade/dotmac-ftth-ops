@@ -21,6 +21,78 @@ from dotmac.platform.fault_management.models import (
 
 
 @pytest.fixture
+def session(async_db_session):
+    """Alias for async_db_session to match test expectations.
+
+    This fixture provides a consistent session interface for all fault_management
+    tests that request 'session: AsyncSession' parameter.
+    """
+    return async_db_session
+
+
+@pytest.fixture(autouse=True)
+async def override_db_session_for_services(async_db_engine):
+    """Override the global AsyncSessionLocal to use test database.
+
+    This ensures that all services, tasks, and other code that creates their own
+    database sessions will use the test database instead of production database.
+
+    IMPORTANT: autouse=True means this runs for ALL tests automatically.
+    """
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+
+    from dotmac.platform import db as db_module
+
+    # Save original session maker
+    original_session_maker = db_module.AsyncSessionLocal
+
+    # Create test session maker bound to test engine
+    test_session_maker = async_sessionmaker(
+        async_db_engine, expire_on_commit=False, class_=AsyncSession
+    )
+
+    # Override global session maker
+    db_module.AsyncSessionLocal = test_session_maker
+    db_module._async_session_maker = test_session_maker
+
+    yield
+
+    # Restore original session maker after test
+    db_module.AsyncSessionLocal = original_session_maker
+    db_module._async_session_maker = original_session_maker
+
+
+@pytest.fixture
+def mock_notification_service(mocker):
+    """Mock NotificationService for integration tests.
+
+    Returns a mock that simulates successful notification creation.
+    Tests can customize the mock behavior as needed.
+    """
+    from unittest.mock import AsyncMock
+    from uuid import uuid4
+
+    # Create mock notification object
+    mock_notification = mocker.MagicMock()
+    mock_notification.id = uuid4()
+    mock_notification.tenant_id = "test-tenant"
+    mock_notification.user_id = uuid4()
+
+    # Create mock service
+    mock_service = mocker.MagicMock()
+    mock_service.create_notification = AsyncMock(return_value=mock_notification)
+    mock_service.send_notification = AsyncMock(return_value=True)
+
+    # Patch the NotificationService class
+    mocker.patch(
+        "dotmac.platform.fault_management.tasks.NotificationService",
+        return_value=mock_service,
+    )
+
+    return mock_service
+
+
+@pytest.fixture
 def sample_alarm_data():
     """Sample alarm creation data"""
     return {
@@ -55,6 +127,8 @@ async def sample_alarm(session: AsyncSession, test_tenant: str) -> Alarm:
         resource_id="device-001",
         resource_name="Test Device",
         subscriber_count=10,
+        correlation_id=uuid4(),
+        is_root_cause=True,
         first_occurrence=datetime.now(UTC),
         last_occurrence=datetime.now(UTC),
         occurrence_count=1,
@@ -97,10 +171,9 @@ async def sample_sla_definition(session: AsyncSession, test_tenant: str) -> SLAD
         tenant_id=test_tenant,
         name="Enterprise SLA",
         description="99.9% uptime guarantee",
-        service_level="enterprise",
-        availability_target=99.9,
-        response_time_target=60,
-        resolution_time_target=240,
+        service_type="fiber",
+        availability_target=0.999,  # 0-1 scale
+        # Note: response_time_critical/major/minor have defaults, don't need to specify
     )
     session.add(definition)
     await session.commit()

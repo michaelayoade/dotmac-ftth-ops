@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import axios from 'axios';
 import { apiClient } from '@/lib/api/client';
 import { logger } from '@/lib/logger';
 
@@ -33,16 +34,54 @@ export const useHealth = () => {
     try {
       const response = await apiClient.get<HealthSummary>('/ready');
 
-      if ('success' in response && (response as any).success && (response as any).data) {
-        setHealth((response as any).data);
-      } else if ('error' in response && (response as any).error) {
-        setError((response as any).error.message);
-      } else if (response.data) {
-        setHealth(response.data);
+      const payload = response.data as
+        | HealthSummary
+        | { success: boolean; data: HealthSummary }
+        | { error?: { message?: string }; data?: HealthSummary };
+
+      if (payload && typeof payload === 'object' && 'success' in payload && payload.success && payload.data) {
+        setHealth(payload.data);
+      } else if (payload && typeof payload === 'object' && 'error' in payload && payload.error?.message) {
+        setError(payload.error.message);
+        setHealth({
+          status: 'degraded',
+          healthy: false,
+          services: [],
+          failed_services: [],
+          version: undefined,
+          timestamp: new Date().toISOString(),
+        });
+      } else if (payload && typeof payload === 'object' && 'services' in payload) {
+        setHealth(payload as HealthSummary);
+      } else {
+        setHealth({
+          status: 'unknown',
+          healthy: false,
+          services: [],
+          failed_services: [],
+          version: undefined,
+          timestamp: new Date().toISOString(),
+        });
       }
     } catch (err) {
+      const isAxiosError = axios.isAxiosError(err);
+      const status = isAxiosError ? err.response?.status : undefined;
+      const fallback: HealthSummary = {
+        status: status === 403 ? 'forbidden' : 'degraded',
+        healthy: false,
+        services: [],
+        failed_services: [],
+        version: undefined,
+        timestamp: new Date().toISOString(),
+      };
+
       logger.error('Failed to fetch health data', err instanceof Error ? err : new Error(String(err)));
-      setError('Failed to fetch health data');
+      setHealth(fallback);
+      setError(
+        status === 403
+          ? 'You do not have permission to view service health.'
+          : 'Service health is temporarily unavailable.'
+      );
     } finally {
       setLoading(false);
     }

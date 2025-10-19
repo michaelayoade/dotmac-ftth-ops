@@ -21,7 +21,7 @@ import type {
   UsageUpdateRequest,
 } from '../types/internet-plans';
 
-const API_BASE = '/api/v1/services/internet-plans';
+const API_BASE = '/services/internet-plans';
 
 // ============================================================================
 // Query Keys

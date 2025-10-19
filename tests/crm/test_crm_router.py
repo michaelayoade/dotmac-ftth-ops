@@ -10,7 +10,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.crm.models import Lead, LeadStatus, Quote, ServiceType, SiteSurvey
+from dotmac.platform.crm.models import Lead, LeadStatus, Quote, SiteSurvey
 from dotmac.platform.tenant.models import Tenant
 
 
@@ -93,7 +93,7 @@ class TestLeadEndpoints:
             last_name="Smith",
             email="alice@example.com",
             phone="+1111111111",
-            service_type=ServiceType.FIBER_INTERNET,
+            service_type="fiber_internet",
             source="website",
             status=LeadStatus.NEW,
         )
@@ -104,7 +104,7 @@ class TestLeadEndpoints:
             last_name="Jones",
             email="bob@example.com",
             phone="+2222222222",
-            service_type=ServiceType.BUSINESS_FIBER,
+            service_type="business_fiber",
             source="referral",
             status=LeadStatus.QUALIFIED,
         )
@@ -138,7 +138,7 @@ class TestLeadEndpoints:
             last_name="Lead",
             email="test@example.com",
             phone="+1234567890",
-            service_type=ServiceType.FIBER_INTERNET,
+            service_type="fiber_internet",
             source="website",
             status=LeadStatus.NEW,
         )
@@ -170,7 +170,7 @@ class TestLeadEndpoints:
             last_name="Test",
             email="update@example.com",
             phone="+1234567890",
-            service_type=ServiceType.FIBER_INTERNET,
+            service_type="fiber_internet",
             source="website",
             status=LeadStatus.NEW,
         )
@@ -206,7 +206,7 @@ class TestLeadEndpoints:
                 last_name="Test",
                 email=f"lead{i}@example.com",
                 phone=f"+123456789{i}",
-                service_type=ServiceType.FIBER_INTERNET,
+                service_type="fiber_internet",
                 source="website",
                 status=status,
             )
@@ -243,7 +243,7 @@ class TestQuoteEndpoints:
             last_name="Customer",
             email="quote@example.com",
             phone="+1234567890",
-            service_type=ServiceType.FIBER_INTERNET,
+            service_type="fiber_internet",
             source="website",
             status=LeadStatus.QUALIFIED,
         )
@@ -289,7 +289,7 @@ class TestQuoteEndpoints:
             last_name="List",
             email="quotelist@example.com",
             phone="+1234567890",
-            service_type=ServiceType.FIBER_INTERNET,
+            service_type="fiber_internet",
             source="website",
             status=LeadStatus.QUALIFIED,
         )
@@ -301,7 +301,7 @@ class TestQuoteEndpoints:
             tenant_id=str(test_tenant.id),
             lead_id=lead.id,
             quote_number="Q-TEST-001",
-            service_type=ServiceType.FIBER_INTERNET,
+            service_type="fiber_internet",
             monthly_price=79.99,
             installation_fee=99.99,
         )
@@ -340,7 +340,7 @@ class TestSiteSurveyEndpoints:
             last_name="Customer",
             email="survey@example.com",
             phone="+1234567890",
-            service_type=ServiceType.FIBER_INTERNET,
+            service_type="fiber_internet",
             source="website",
             status=LeadStatus.QUALIFIED,
         )
@@ -387,7 +387,7 @@ class TestSiteSurveyEndpoints:
             last_name="List",
             email="surveylist@example.com",
             phone="+1234567890",
-            service_type=ServiceType.FIBER_INTERNET,
+            service_type="fiber_internet",
             source="website",
             status=LeadStatus.QUALIFIED,
         )
@@ -435,7 +435,7 @@ class TestCRMTenantIsolation:
             last_name="Tenant",
             email="other@example.com",
             phone="+9999999999",
-            service_type=ServiceType.FIBER_INTERNET,
+            service_type="fiber_internet",
             source="website",
             status=LeadStatus.NEW,
         )
@@ -470,7 +470,7 @@ class TestCRMTenantIsolation:
             last_name="Tenant",
             email="other@example.com",
             phone="+9999999999",
-            service_type=ServiceType.FIBER_INTERNET,
+            service_type="fiber_internet",
             source="website",
             status=LeadStatus.NEW,
         )

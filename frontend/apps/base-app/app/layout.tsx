@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   icons: [{ rel: 'icon', url: favicon }],
 };
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>

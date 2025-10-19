@@ -12,11 +12,15 @@ Created: 2025-10-16
 """
 
 from datetime import datetime
-from typing import Any, Optional
+import json
+import uuid
+from collections import defaultdict
+from statistics import mean
 
 import strawberry
 from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from strawberry.types import Info
 
 from dotmac.platform.graphql.types.wireless import (
@@ -24,7 +28,6 @@ from dotmac.platform.graphql.types.wireless import (
     AccessPointConnection,
     AccessPointStatus,
     APPerformanceMetrics,
-    ChannelInfo,
     ChannelUtilization,
     ClientConnectionType,
     CoverageZone,
@@ -32,7 +35,6 @@ from dotmac.platform.graphql.types.wireless import (
     FrequencyBand,
     GeoLocation,
     InstallationLocation,
-    InterferenceSource,
     RFAnalytics,
     RFMetrics,
     SignalQuality,
@@ -42,18 +44,44 @@ from dotmac.platform.graphql.types.wireless import (
     WirelessSecurityType,
     WirelessSiteMetrics,
 )
-
-
 from dotmac.platform.wireless.models import (
-    WirelessDevice,
-    WirelessClient as WirelessClientModel,
-    WirelessRadio,
     CoverageZone as CoverageZoneModel,
-    DeviceType,
     DeviceStatus,
+    DeviceType,
     Frequency,
-    CoverageType,
+    WirelessDevice,
+    WirelessRadio,
+    WirelessClient as WirelessClientModel,
 )
+
+
+async def _fetch_site_radios(db: AsyncSession, tenant_id: str, site_id: str) -> list[WirelessRadio]:
+    radios_query = (
+        select(WirelessRadio)
+        .join(WirelessDevice)
+        .options(selectinload(WirelessRadio.device))
+        .where(
+            and_(
+                WirelessDevice.tenant_id == tenant_id,
+                WirelessDevice.site_name == site_id,
+                WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+            )
+        )
+    )
+    result = await db.execute(radios_query)
+    return result.unique().scalars().all()
+
+
+def _channel_to_frequency_mhz(channel: int | None, frequency: Frequency) -> int:
+    if channel is None:
+        return 0
+    if frequency == Frequency.FREQ_2_4_GHZ:
+        return 2407 + channel * 5
+    if frequency == Frequency.FREQ_5_GHZ:
+        return 5000 + channel * 5
+    if frequency == Frequency.FREQ_6_GHZ:
+        return 5950 + channel * 5
+    return 0
 
 
 @strawberry.type
@@ -70,10 +98,10 @@ class WirelessQueries:
         info: Info,
         limit: int = 50,
         offset: int = 0,
-        site_id: Optional[str] = None,
-        status: Optional[AccessPointStatus] = None,
-        frequency_band: Optional[FrequencyBand] = None,
-        search: Optional[str] = None,
+        site_id: str | None = None,
+        status: AccessPointStatus | None = None,
+        frequency_band: FrequencyBand | None = None,
+        search: str | None = None,
     ) -> AccessPointConnection:
         """
         Query access points with filtering and pagination.
@@ -91,6 +119,13 @@ class WirelessQueries:
         """
         db: AsyncSession = info.context["db"]
         tenant_id = info.context["tenant_id"]
+
+        if limit is None or limit <= 0 or offset < 0:
+            return AccessPointConnection(
+                access_points=[],
+                total_count=0,
+                has_next_page=False,
+            )
 
         # Build query for access points (device_type = ACCESS_POINT)
         query = select(WirelessDevice).where(
@@ -148,7 +183,7 @@ class WirelessQueries:
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> Optional[AccessPoint]:
+    ) -> AccessPoint | None:
         """
         Query a single access point by ID.
 
@@ -161,9 +196,14 @@ class WirelessQueries:
         db: AsyncSession = info.context["db"]
         tenant_id = info.context["tenant_id"]
 
+        try:
+            lookup_id = uuid.UUID(str(id))
+        except ValueError:
+            lookup_id = str(id)
+
         query = select(WirelessDevice).where(
             and_(
-                WirelessDevice.id == id,
+                WirelessDevice.id == lookup_id,
                 WirelessDevice.tenant_id == tenant_id,
                 WirelessDevice.device_type == DeviceType.ACCESS_POINT,
             )
@@ -217,10 +257,10 @@ class WirelessQueries:
         info: Info,
         limit: int = 50,
         offset: int = 0,
-        access_point_id: Optional[str] = None,
-        customer_id: Optional[str] = None,
-        frequency_band: Optional[FrequencyBand] = None,
-        search: Optional[str] = None,
+        access_point_id: str | None = None,
+        customer_id: str | None = None,
+        frequency_band: FrequencyBand | None = None,
+        search: str | None = None,
     ) -> WirelessClientConnection:
         """
         Query wireless clients with filtering and pagination.
@@ -239,23 +279,35 @@ class WirelessQueries:
         db: AsyncSession = info.context["db"]
         tenant_id = info.context["tenant_id"]
 
-        # Build query for wireless clients
+        if limit is None or limit < 0 or offset < 0:
+            return WirelessClientConnection(
+                clients=[],
+                total_count=0,
+                has_next_page=False,
+            )
+
+        # Base query for wireless clients
         query = select(WirelessClientModel).where(
             WirelessClientModel.tenant_id == tenant_id
-        )
+        ).order_by(desc(WirelessClientModel.last_seen))
 
-        # Apply filters
         if access_point_id:
-            query = query.where(WirelessClientModel.device_id == access_point_id)
-
-        if customer_id:
-            query = query.where(WirelessClientModel.customer_id == customer_id)
+            device_filters = [WirelessClientModel.device_id == str(access_point_id)]
+            try:
+                ap_uuid = uuid.UUID(str(access_point_id))
+                device_filters.append(WirelessClientModel.device_id == ap_uuid)
+            except ValueError:
+                pass
+            query = query.where(or_(*device_filters))
 
         if frequency_band:
-            # Map GraphQL frequency band to database frequency
-            db_freq = Frequency.FREQ_2_4_GHZ if frequency_band == FrequencyBand.BAND_2_4_GHZ else \
-                     Frequency.FREQ_5_GHZ if frequency_band == FrequencyBand.BAND_5_GHZ else \
-                     Frequency.FREQ_6_GHZ
+            db_freq = (
+                Frequency.FREQ_2_4_GHZ
+                if frequency_band == FrequencyBand.BAND_2_4_GHZ
+                else Frequency.FREQ_5_GHZ
+                if frequency_band == FrequencyBand.BAND_5_GHZ
+                else Frequency.FREQ_6_GHZ
+            )
             query = query.where(WirelessClientModel.frequency == db_freq)
 
         if search:
@@ -267,28 +319,40 @@ class WirelessQueries:
                 )
             )
 
-        # Get total count
-        total_count_query = select(func.count()).select_from(query.subquery())
-        total_count = await db.scalar(total_count_query) or 0
-
-        # Apply pagination
-        query = query.limit(limit).offset(offset).order_by(
-            desc(WirelessClientModel.last_seen)
-        )
-
-        # Execute query
         result = await db.execute(query)
         client_models = result.scalars().all()
 
-        # Map to GraphQL types
-        clients = [
-            map_client_model_to_graphql(client) for client in client_models
-        ]
+        if customer_id:
+            filtered_clients: list[WirelessClientModel] = []
+            for client in client_models:
+                matches = False
+                if client.customer_id and str(client.customer_id) == customer_id:
+                    matches = True
+                else:
+                    metadata = client.extra_metadata or {}
+                    customer_meta = metadata.get("customer") or {}
+                    if customer_meta.get("id") == customer_id:
+                        matches = True
+                if matches:
+                    filtered_clients.append(client)
+            client_models = filtered_clients
+
+        total_count = len(client_models)
+
+        if offset >= total_count or limit == 0:
+            paginated_models: list[WirelessClientModel] = []
+        else:
+            end = offset + limit if limit else None
+            paginated_models = client_models[offset:end]
+
+        clients = [map_client_model_to_graphql(client) for client in paginated_models]
+
+        has_next_page = (offset + len(paginated_models)) < total_count
 
         return WirelessClientConnection(
             clients=clients,
             total_count=total_count,
-            has_next_page=(offset + limit) < total_count,
+            has_next_page=has_next_page,
         )
 
     @strawberry.field
@@ -296,7 +360,7 @@ class WirelessQueries:
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> Optional[WirelessClient]:
+    ) -> WirelessClient | None:
         """
         Query a single wireless client by ID.
 
@@ -309,9 +373,14 @@ class WirelessQueries:
         db: AsyncSession = info.context["db"]
         tenant_id = info.context["tenant_id"]
 
+        try:
+            client_id = uuid.UUID(str(id))
+        except ValueError:
+            client_id = str(id)
+
         query = select(WirelessClientModel).where(
             and_(
-                WirelessClientModel.id == id,
+                WirelessClientModel.id == client_id,
                 WirelessClientModel.tenant_id == tenant_id,
             )
         )
@@ -341,10 +410,17 @@ class WirelessQueries:
         db: AsyncSession = info.context["db"]
         tenant_id = info.context["tenant_id"]
 
+        device_filters = [WirelessClientModel.device_id == str(access_point_id)]
+        try:
+            ap_uuid = uuid.UUID(str(access_point_id))
+            device_filters.append(WirelessClientModel.device_id == ap_uuid)
+        except ValueError:
+            pass
+
         query = select(WirelessClientModel).where(
             and_(
                 WirelessClientModel.tenant_id == tenant_id,
-                WirelessClientModel.device_id == access_point_id,
+                or_(*device_filters),
             )
         ).order_by(desc(WirelessClientModel.last_seen))
 
@@ -372,16 +448,27 @@ class WirelessQueries:
         tenant_id = info.context["tenant_id"]
 
         query = select(WirelessClientModel).where(
-            and_(
-                WirelessClientModel.tenant_id == tenant_id,
-                WirelessClientModel.customer_id == customer_id,
-            )
+            WirelessClientModel.tenant_id == tenant_id
         ).order_by(desc(WirelessClientModel.last_seen))
 
         result = await db.execute(query)
         clients = result.scalars().all()
 
-        return [map_client_model_to_graphql(client) for client in clients]
+        filtered_clients: list[WirelessClientModel] = []
+        for client in clients:
+            matches = False
+            if client.customer_id and str(client.customer_id) == customer_id:
+                matches = True
+            else:
+                metadata = client.extra_metadata or {}
+                customer_meta = metadata.get("customer") or {}
+                if customer_meta.get("id") == customer_id:
+                    matches = True
+
+            if matches:
+                filtered_clients.append(client)
+
+        return [map_client_model_to_graphql(client) for client in filtered_clients]
 
     # ========================================================================
     # Coverage Zone Queries
@@ -393,8 +480,8 @@ class WirelessQueries:
         info: Info,
         limit: int = 50,
         offset: int = 0,
-        site_id: Optional[str] = None,
-        area_type: Optional[str] = None,
+        site_id: str | None = None,
+        area_type: str | None = None,
     ) -> CoverageZoneConnection:
         """
         Query coverage zones with filtering and pagination.
@@ -450,7 +537,7 @@ class WirelessQueries:
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> Optional[CoverageZone]:
+    ) -> CoverageZone | None:
         """
         Query a single coverage zone by ID.
 
@@ -517,115 +604,129 @@ class WirelessQueries:
         self,
         info: Info,
         site_id: str,
-    ) -> Optional[RFAnalytics]:
-        """
-        Query RF spectrum analytics for a site.
-
-        Provides channel utilization, interference analysis,
-        and recommended channels for optimal performance.
-
-        Args:
-            site_id: Site identifier
-
-        Returns:
-            RF analytics data or None
-        """
+    ) -> RFAnalytics:
+        """Query RF spectrum analytics for a site."""
         db: AsyncSession = info.context["db"]
         tenant_id = info.context["tenant_id"]
 
-        # Query all radios at the site
-        radios_query = (
-            select(WirelessRadio)
-            .join(WirelessDevice)
-            .where(
-                and_(
-                    WirelessDevice.tenant_id == tenant_id,
-                    WirelessDevice.site_name == site_id,
-                    WirelessDevice.device_type == DeviceType.ACCESS_POINT,
-                )
-            )
-        )
-        result = await db.execute(radios_query)
-        radios = result.scalars().all()
+        radios = await _fetch_site_radios(db, tenant_id, site_id)
+
+        site_display_name = site_id
+        for radio in radios:
+            device = getattr(radio, "device", None)
+            if device and device.extra_metadata:
+                metadata_site = (device.extra_metadata or {}).get("site") or {}
+                site_display_name = metadata_site.get("name", site_display_name)
+                break
 
         if not radios:
-            return None
+            return RFAnalytics(
+                site_id=site_id,
+                site_name=site_display_name,
+                analysis_timestamp=datetime.utcnow(),
+                channel_utilization_2_4ghz=[],
+                channel_utilization_5ghz=[],
+                channel_utilization_6ghz=[],
+                recommended_channels_2_4ghz=[],
+                recommended_channels_5ghz=[],
+                recommended_channels_6ghz=[],
+                interference_sources=[],
+                total_interference_score=0.0,
+                average_signal_strength_dbm=-60.0,
+                average_snr=30.0,
+                coverage_quality_score=75.0,
+                clients_per_band_2_4ghz=0,
+                clients_per_band_5ghz=0,
+                clients_per_band_6ghz=0,
+                band_utilization_balance_score=100.0,
+            )
 
-        # Aggregate metrics by frequency band
-        band_metrics = {}
+        frequency_band_map = {
+            Frequency.FREQ_2_4_GHZ: FrequencyBand.BAND_2_4_GHZ,
+            Frequency.FREQ_5_GHZ: FrequencyBand.BAND_5_GHZ,
+            Frequency.FREQ_6_GHZ: FrequencyBand.BAND_6_GHZ,
+        }
+
+        band_to_channels = defaultdict(list)
+        clients_per_band = defaultdict(int)
+        interference_values: list[float] = []
+        signal_values: list[float] = []
+        snr_values: list[float] = []
+
         for radio in radios:
-            band = radio.frequency.value if radio.frequency else "unknown"
-            if band not in band_metrics:
-                band_metrics[band] = {
-                    "radios": [],
-                    "total_utilization": 0,
-                    "total_interference": 0,
-                    "count": 0,
-                }
-
-            band_metrics[band]["radios"].append(radio)
-            band_metrics[band]["total_utilization"] += radio.utilization_percent or 0
-            band_metrics[band]["total_interference"] += radio.interference_level or 0
-            band_metrics[band]["count"] += 1
-
-        # Calculate averages and build channel utilization list
-        channel_utilization_list = []
-        for band, metrics in band_metrics.items():
-            avg_util = metrics["total_utilization"] / metrics["count"] if metrics["count"] > 0 else 0
-            avg_interference = metrics["total_interference"] / metrics["count"] if metrics["count"] > 0 else 0
-
-            # Group by channel
-            channels = {}
-            for radio in metrics["radios"]:
-                if radio.channel:
-                    if radio.channel not in channels:
-                        channels[radio.channel] = {
-                            "utilization": [],
-                            "clients": 0,
-                            "aps": 0,
-                        }
-                    channels[radio.channel]["utilization"].append(radio.utilization_percent or 0)
-                    channels[radio.channel]["clients"] += radio.connected_clients
-                    channels[radio.channel]["aps"] += 1
-
-            # Create ChannelUtilization objects
-            for channel_num, channel_data in channels.items():
-                avg_channel_util = sum(channel_data["utilization"]) / len(channel_data["utilization"]) if channel_data["utilization"] else 0
-
-                channel_utilization_list.append(
-                    ChannelUtilization(
-                        channel=channel_num,
-                        frequency_band=FrequencyBand.BAND_2_4_GHZ if band == "2.4GHz" else
-                                     FrequencyBand.BAND_5_GHZ if band == "5GHz" else
-                                     FrequencyBand.BAND_6_GHZ,
-                        utilization_percent=avg_channel_util,
-                        access_points_count=channel_data["aps"],
-                        clients_count=channel_data["clients"],
-                        interference_level=avg_interference,
-                        noise_floor_dbm=-95.0,  # Typical noise floor
-                        is_dfs_channel=channel_num in [52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140],
-                        recommended_for_use=avg_channel_util < 50.0,  # Recommend if under 50% utilization
-                    )
+            band_enum = radio.frequency
+            strawberry_band = frequency_band_map.get(band_enum, FrequencyBand.BAND_5_GHZ)
+            band_to_channels[band_enum].append(
+                ChannelUtilization(
+                    channel=radio.channel or 0,
+                    frequency_mhz=_channel_to_frequency_mhz(radio.channel, band_enum),
+                    band=strawberry_band,
+                    utilization_percent=radio.utilization_percent or 0.0,
+                    interference_level=radio.interference_level or 0.0,
+                    access_points_count=1,
                 )
+            )
+            clients_per_band[band_enum] += radio.connected_clients
 
-        # Calculate overall metrics
-        total_radios = len(radios)
-        avg_utilization = sum(r.utilization_percent or 0 for r in radios) / total_radios if total_radios > 0 else 0
-        avg_interference = sum(r.interference_level or 0 for r in radios) / total_radios if total_radios > 0 else 0
+            if radio.interference_level is not None:
+                interference_values.append(radio.interference_level)
+
+            device = getattr(radio, "device", None)
+            if device:
+                metadata = device.extra_metadata or {}
+                metrics = metadata.get("rf_metrics") or {}
+                if metrics.get("signal_strength_dbm") is not None:
+                    signal_values.append(metrics["signal_strength_dbm"])
+                if metrics.get("snr") is not None:
+                    snr_values.append(metrics["snr"])
+
+        def _recommended_channels(band: Frequency) -> list[int]:
+            infos = band_to_channels.get(band, [])
+            if not infos:
+                return []
+            sorted_infos = sorted(infos, key=lambda info: info.utilization_percent)
+            return [info.channel for info in sorted_infos[:3]]
+
+        average_signal_strength = mean(signal_values) if signal_values else -60.0
+        average_snr = mean(snr_values) if snr_values else 30.0
+        avg_interference = mean(interference_values) if interference_values else 0.0
+        total_interference_score = min(100.0, avg_interference * 100.0)
+
+        utilization_values = [info.utilization_percent for infos in band_to_channels.values() for info in infos]
+        avg_utilization = mean(utilization_values) if utilization_values else 0.0
+        coverage_quality_score = max(
+            0.0,
+            min(100.0, 80.0 + (average_snr / 2.0) - (avg_interference * 20.0)),
+        )
+
+        total_clients = sum(clients_per_band.values())
+        if total_clients:
+            non_zero_counts = [count for count in clients_per_band.values() if count > 0]
+            ideal = total_clients / max(len(non_zero_counts), 1)
+            imbalance = sum(abs(count - ideal) for count in clients_per_band.values())
+            band_utilization_balance_score = max(0.0, 100.0 - (imbalance / total_clients) * 100.0)
+        else:
+            band_utilization_balance_score = 100.0
 
         return RFAnalytics(
             site_id=site_id,
-            site_name=site_id,
-            total_radios=total_radios,
-            active_radios=sum(1 for r in radios if r.status == DeviceStatus.ONLINE),
-            channel_utilization=channel_utilization_list,
-            average_utilization_percent=avg_utilization,
-            peak_utilization_percent=max((r.utilization_percent or 0 for r in radios), default=0),
-            interference_sources=[],  # Would require external detection system
-            recommended_channels=[],  # Could implement channel recommendation algorithm
-            spectrum_quality_score=max(0, min(100, 100 - avg_utilization - (avg_interference * 10))),
-            noise_floor_dbm=-95.0,
-            analyzed_at=datetime.utcnow(),
+            site_name=site_display_name,
+            analysis_timestamp=datetime.utcnow(),
+            channel_utilization_2_4ghz=band_to_channels.get(Frequency.FREQ_2_4_GHZ, []),
+            channel_utilization_5ghz=band_to_channels.get(Frequency.FREQ_5_GHZ, []),
+            channel_utilization_6ghz=band_to_channels.get(Frequency.FREQ_6_GHZ, []),
+            recommended_channels_2_4ghz=_recommended_channels(Frequency.FREQ_2_4_GHZ),
+            recommended_channels_5ghz=_recommended_channels(Frequency.FREQ_5_GHZ),
+            recommended_channels_6ghz=_recommended_channels(Frequency.FREQ_6_GHZ),
+            interference_sources=[],
+            total_interference_score=total_interference_score,
+            average_signal_strength_dbm=average_signal_strength,
+            average_snr=average_snr,
+            coverage_quality_score=coverage_quality_score,
+            clients_per_band_2_4ghz=clients_per_band.get(Frequency.FREQ_2_4_GHZ, 0),
+            clients_per_band_5ghz=clients_per_band.get(Frequency.FREQ_5_GHZ, 0),
+            clients_per_band_6ghz=clients_per_band.get(Frequency.FREQ_6_GHZ, 0),
+            band_utilization_balance_score=band_utilization_balance_score,
         )
 
     @strawberry.field
@@ -635,91 +736,42 @@ class WirelessQueries:
         site_id: str,
         frequency_band: FrequencyBand,
     ) -> list[ChannelUtilization]:
-        """
-        Query channel utilization for a specific frequency band at a site.
-
-        Args:
-            site_id: Site identifier
-            frequency_band: Frequency band to analyze
-
-        Returns:
-            List of channel utilization data
-        """
+        """Query channel utilization for a specific band."""
         db: AsyncSession = info.context["db"]
         tenant_id = info.context["tenant_id"]
 
-        # Map GraphQL band to database frequency
-        db_freq = Frequency.FREQ_2_4_GHZ if frequency_band == FrequencyBand.BAND_2_4_GHZ else \
-                 Frequency.FREQ_5_GHZ if frequency_band == FrequencyBand.BAND_5_GHZ else \
-                 Frequency.FREQ_6_GHZ
+        band_map = {
+            FrequencyBand.BAND_2_4_GHZ: Frequency.FREQ_2_4_GHZ,
+            FrequencyBand.BAND_5_GHZ: Frequency.FREQ_5_GHZ,
+            FrequencyBand.BAND_6_GHZ: Frequency.FREQ_6_GHZ,
+        }
+        target_frequency = band_map.get(frequency_band, Frequency.FREQ_5_GHZ)
 
-        # Query radios at the site with the specified frequency
-        radios_query = (
-            select(WirelessRadio)
-            .join(WirelessDevice)
-            .where(
-                and_(
-                    WirelessDevice.tenant_id == tenant_id,
-                    WirelessDevice.site_name == site_id,
-                    WirelessDevice.device_type == DeviceType.ACCESS_POINT,
-                    WirelessRadio.frequency == db_freq,
-                )
-            )
-        )
-        result = await db.execute(radios_query)
-        radios = result.scalars().all()
+        radios = await _fetch_site_radios(db, tenant_id, site_id)
 
-        # Group by channel
-        channels = {}
+        channel_infos: list[ChannelUtilization] = []
         for radio in radios:
-            if radio.channel:
-                if radio.channel not in channels:
-                    channels[radio.channel] = {
-                        "utilization": [],
-                        "clients": 0,
-                        "aps": 0,
-                        "interference": [],
-                        "noise": [],
-                    }
-                channels[radio.channel]["utilization"].append(radio.utilization_percent or 0)
-                channels[radio.channel]["clients"] += radio.connected_clients
-                channels[radio.channel]["aps"] += 1
-                channels[radio.channel]["interference"].append(radio.interference_level or 0)
-                channels[radio.channel]["noise"].append(radio.noise_floor_dbm or -95.0)
-
-        # Build ChannelUtilization list
-        channel_list = []
-        for channel_num, data in channels.items():
-            avg_util = sum(data["utilization"]) / len(data["utilization"]) if data["utilization"] else 0
-            avg_interference = sum(data["interference"]) / len(data["interference"]) if data["interference"] else 0
-            avg_noise = sum(data["noise"]) / len(data["noise"]) if data["noise"] else -95.0
-
-            channel_list.append(
+            if radio.frequency != target_frequency:
+                continue
+            channel_infos.append(
                 ChannelUtilization(
-                    channel=channel_num,
-                    frequency_band=frequency_band,
-                    utilization_percent=avg_util,
-                    access_points_count=data["aps"],
-                    clients_count=data["clients"],
-                    interference_level=avg_interference,
-                    noise_floor_dbm=avg_noise,
-                    is_dfs_channel=channel_num in [52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140],
-                    recommended_for_use=avg_util < 50.0,
+                    channel=radio.channel or 0,
+                    frequency_mhz=_channel_to_frequency_mhz(radio.channel, radio.frequency),
+                    band=frequency_band,
+                    utilization_percent=radio.utilization_percent or 0.0,
+                    interference_level=radio.interference_level or 0.0,
+                    access_points_count=1,
                 )
             )
 
-        return sorted(channel_list, key=lambda c: c.channel)
-
-    # ========================================================================
-    # Dashboard and Metrics Queries
-    # ========================================================================
+        return channel_infos
 
     @strawberry.field
     async def wireless_site_metrics(
         self,
         info: Info,
         site_id: str,
-    ) -> Optional[WirelessSiteMetrics]:
+    ) -> WirelessSiteMetrics | None:
         """
         Query aggregated wireless metrics for a site.
 
@@ -774,7 +826,7 @@ class WirelessQueries:
                 and_(
                     WirelessClientModel.tenant_id == tenant_id,
                     WirelessDevice.site_name == site_id,
-                    WirelessClientModel.connected == True,
+                    WirelessClientModel.connected,
                 )
             )
         )
@@ -789,7 +841,7 @@ class WirelessQueries:
                 and_(
                     WirelessClientModel.tenant_id == tenant_id,
                     WirelessDevice.site_name == site_id,
-                    WirelessClientModel.connected == True,
+                    WirelessClientModel.connected,
                     WirelessClientModel.frequency == Frequency.FREQ_2_4_GHZ,
                 )
             )
@@ -804,7 +856,7 @@ class WirelessQueries:
                 and_(
                     WirelessClientModel.tenant_id == tenant_id,
                     WirelessDevice.site_name == site_id,
-                    WirelessClientModel.connected == True,
+                    WirelessClientModel.connected,
                     WirelessClientModel.frequency == Frequency.FREQ_5_GHZ,
                 )
             )
@@ -938,6 +990,103 @@ def map_device_to_access_point(device: WirelessDevice) -> AccessPoint:
     Returns:
         GraphQL AccessPoint instance
     """
+    metadata = device.extra_metadata or {}
+    site_info = metadata.get("site", {})
+    site_id = site_info.get("id") or device.site_name
+    site_name = site_info.get("name") or device.site_name
+
+    location_meta = metadata.get("location", {})
+    latitude = location_meta.get("latitude", device.latitude)
+    longitude = location_meta.get("longitude", device.longitude)
+    altitude = location_meta.get("altitude", device.altitude_meters)
+    location = None
+    if site_name or location_meta:
+        coordinates = None
+        if latitude is not None and longitude is not None:
+            coordinates = GeoLocation(
+                latitude=latitude,
+                longitude=longitude,
+                altitude=altitude,
+                accuracy=location_meta.get("accuracy"),
+            )
+        location = InstallationLocation(
+            site_name=site_name or "",
+            building=location_meta.get("building"),
+            floor=location_meta.get("floor"),
+            room=location_meta.get("room"),
+            mounting_type=location_meta.get("mounting_type"),
+            coordinates=coordinates,
+        )
+
+    frequency_band_value = str(metadata.get("frequency_band", "5GHz")).lower()
+    frequency_band_map = {
+        "2.4ghz": FrequencyBand.BAND_2_4_GHZ,
+        "2.4": FrequencyBand.BAND_2_4_GHZ,
+        "5ghz": FrequencyBand.BAND_5_GHZ,
+        "5": FrequencyBand.BAND_5_GHZ,
+        "6ghz": FrequencyBand.BAND_6_GHZ,
+        "6": FrequencyBand.BAND_6_GHZ,
+    }
+    frequency_band = frequency_band_map.get(frequency_band_value, FrequencyBand.BAND_5_GHZ)
+
+    channel = int(metadata.get("channel", 0))
+    channel_width = int(metadata.get("channel_width", 80))
+    transmit_power = int(metadata.get("transmit_power", 20))
+    max_clients = metadata.get("max_clients")
+
+    security_type_value = str(metadata.get("security_type", WirelessSecurityType.WPA2_WPA3.value)).lower()
+    try:
+        security_type = WirelessSecurityType(security_type_value)
+    except ValueError:
+        security_type = WirelessSecurityType.WPA2_WPA3
+
+    rf_metrics_data = metadata.get("rf_metrics") or {}
+    rf_metrics = None
+    if rf_metrics_data:
+        rf_metrics = RFMetrics(
+            signal_strength_dbm=rf_metrics_data.get("signal_strength_dbm"),
+            noise_floor_dbm=rf_metrics_data.get("noise_floor_dbm"),
+            signal_to_noise_ratio=rf_metrics_data.get("snr"),
+            channel_utilization_percent=rf_metrics_data.get("channel_utilization_percent"),
+            interference_level=rf_metrics_data.get("interference_level"),
+            tx_power_dbm=rf_metrics_data.get("tx_power_dbm"),
+            rx_power_dbm=rf_metrics_data.get("rx_power_dbm"),
+        )
+
+    performance_data = metadata.get("performance") or {}
+    performance = None
+    if performance_data:
+        performance = APPerformanceMetrics(
+            tx_bytes=int(performance_data.get("tx_bytes", 0)),
+            rx_bytes=int(performance_data.get("rx_bytes", 0)),
+            tx_packets=int(performance_data.get("tx_packets", 0)),
+            rx_packets=int(performance_data.get("rx_packets", 0)),
+            tx_rate_mbps=performance_data.get("tx_rate_mbps"),
+            rx_rate_mbps=performance_data.get("rx_rate_mbps"),
+            tx_errors=int(performance_data.get("tx_errors", 0)),
+            rx_errors=int(performance_data.get("rx_errors", 0)),
+            tx_dropped=int(performance_data.get("tx_dropped", 0)),
+            rx_dropped=int(performance_data.get("rx_dropped", 0)),
+            retries=int(performance_data.get("retries", 0)),
+            retry_rate_percent=performance_data.get("retry_rate_percent"),
+            connected_clients=int(performance_data.get("connected_clients", 0)),
+            authenticated_clients=int(performance_data.get("authenticated_clients", 0)),
+            authorized_clients=int(performance_data.get("authorized_clients", 0)),
+            cpu_usage_percent=performance_data.get("cpu_usage_percent"),
+            memory_usage_percent=performance_data.get("memory_usage_percent"),
+            uptime_seconds=performance_data.get("uptime_seconds"),
+        )
+
+    last_reboot_raw = metadata.get("last_reboot_at")
+    last_reboot_at = None
+    if isinstance(last_reboot_raw, datetime):
+        last_reboot_at = last_reboot_raw
+    elif isinstance(last_reboot_raw, str):
+        try:
+            last_reboot_at = datetime.fromisoformat(last_reboot_raw)
+        except ValueError:
+            last_reboot_at = None
+
     # Map device status to AP status
     status_map = {
         DeviceStatus.ONLINE: AccessPointStatus.ONLINE,
@@ -948,7 +1097,7 @@ def map_device_to_access_point(device: WirelessDevice) -> AccessPoint:
     }
 
     # Map frequency to frequency band
-    freq_map = {
+    _ = {
         Frequency.FREQ_2_4_GHZ: FrequencyBand.BAND_2_4_GHZ,
         Frequency.FREQ_5_GHZ: FrequencyBand.BAND_5_GHZ,
         Frequency.FREQ_6_GHZ: FrequencyBand.BAND_6_GHZ,
@@ -968,43 +1117,32 @@ def map_device_to_access_point(device: WirelessDevice) -> AccessPoint:
         firmware_version=device.firmware_version,
         hardware_revision=None,  # Not in current model
         ssid=device.ssid or "",
-        frequency_band=FrequencyBand.BAND_5_GHZ,  # Default, should come from radios
-        channel=0,  # Should come from radios
-        channel_width=80,  # Default
-        transmit_power=20,  # Default
-        max_clients=None,
-        security_type=WirelessSecurityType.WPA2_WPA3,  # Default
+        frequency_band=frequency_band,
+        channel=channel,
+        channel_width=channel_width,
+        transmit_power=transmit_power,
+        max_clients=max_clients,
+        security_type=security_type,
 
         # Location
-        location=InstallationLocation(
-            site_name=device.site_name or "",
-            building=None,
-            floor=None,
-            room=None,
-            mounting_type=None,
-            coordinates=GeoLocation(
-                latitude=device.latitude,
-                longitude=device.longitude,
-                altitude=device.altitude_meters,
-            ) if device.latitude and device.longitude else None,
-        ) if device.site_name else None,
+        location=location,
 
-        # RF Metrics - would need separate query or join
-        rf_metrics=None,
+        # RF Metrics
+        rf_metrics=rf_metrics,
 
-        # Performance Metrics - would need separate query or join
-        performance=None,
+        # Performance Metrics
+        performance=performance,
 
         # Management
         controller_id=None,
         controller_name=None,
-        site_id=device.site_name,  # Using site_name as ID
-        site_name=device.site_name,
+        site_id=site_id,
+        site_name=site_name,
 
         # Timestamps
         created_at=device.created_at,
         updated_at=device.updated_at,
-        last_reboot_at=None,
+        last_reboot_at=last_reboot_at,
 
         # Configuration
         is_mesh_enabled=False,
@@ -1030,42 +1168,86 @@ def map_client_model_to_graphql(client: WirelessClientModel) -> WirelessClient:
         Frequency.FREQ_6_GHZ: FrequencyBand.BAND_6_GHZ,
     }
 
+    metadata = client.extra_metadata or {}
+    access_point_name = metadata.get("access_point_name") or ""
+
+    connection_type_value = str(
+        metadata.get(
+            "connection_type",
+            client.frequency.value if client.frequency else "5GHz",
+        )
+    ).lower()
+    connection_type_map = {
+        "2.4ghz": ClientConnectionType.WIFI_2_4,
+        "2.4": ClientConnectionType.WIFI_2_4,
+        "5ghz": ClientConnectionType.WIFI_5,
+        "5": ClientConnectionType.WIFI_5,
+        "6ghz": ClientConnectionType.WIFI_6,
+        "6": ClientConnectionType.WIFI_6,
+        "6e": ClientConnectionType.WIFI_6E,
+    }
+    connection_type = connection_type_map.get(connection_type_value, ClientConnectionType.WIFI_5)
+
+    frequency_band = freq_map.get(client.frequency, FrequencyBand.BAND_5_GHZ)
+
+    is_authenticated = bool(metadata.get("is_authenticated", client.connected))
+    is_authorized = bool(metadata.get("is_authorized", client.connected))
+
+    signal_quality_meta = metadata.get("signal_quality") or {}
+    noise_floor_dbm = metadata.get("noise_floor_dbm", signal_quality_meta.get("noise_floor_dbm"))
+    signal_quality = None
+    if client.rssi_dbm is not None or client.snr_db is not None or signal_quality_meta:
+        signal_quality = SignalQuality(
+            rssi_dbm=signal_quality_meta.get("rssi_dbm", client.rssi_dbm),
+            snr_db=signal_quality_meta.get("snr_db", client.snr_db),
+            noise_floor_dbm=noise_floor_dbm,
+            signal_strength_percent=signal_quality_meta.get("signal_strength_percent"),
+            link_quality_percent=signal_quality_meta.get("link_quality_percent"),
+        )
+
+    manufacturer = metadata.get("manufacturer", client.vendor)
+
+    customer_meta = metadata.get("customer") or {}
+    customer_id = customer_meta.get("id")
+    customer_name = customer_meta.get("name")
+
     return WirelessClient(
         id=strawberry.ID(str(client.id)),
         mac_address=client.mac_address,
-        ip_address=client.ip_address,
         hostname=client.hostname,
-        access_point_id=strawberry.ID(str(client.device_id)),
-        access_point_name=None,  # Would need join to get AP name
-        ssid=client.ssid,
-        frequency_band=freq_map.get(client.frequency, FrequencyBand.BAND_5_GHZ) if client.frequency else None,
-        channel=client.channel,
-        connection_type=ClientConnectionType.WIFI,  # Default
-        is_connected=client.connected,
-        first_seen_at=client.first_seen,
-        last_seen_at=client.last_seen,
-        connection_duration_seconds=client.connection_duration_seconds,
-        signal_quality=SignalQuality(
-            rssi_dbm=client.rssi_dbm,
-            snr_db=client.snr_db,
-            noise_floor_dbm=None,  # Not in current model
-            signal_strength_percent=None,  # Can be calculated from RSSI
-            link_quality_percent=None,  # Not in current model
-        ) if client.rssi_dbm or client.snr_db else None,
+        ip_address=client.ip_address,
+        manufacturer=manufacturer,
+        access_point_id=str(client.device_id),
+        access_point_name=access_point_name,
+        ssid=client.ssid or "",
+        connection_type=connection_type,
+        frequency_band=frequency_band,
+        channel=client.channel or 0,
+        is_authenticated=is_authenticated,
+        is_authorized=is_authorized,
+        auth_method=metadata.get("auth_method"),
+        signal_strength_dbm=client.rssi_dbm,
+        signal_quality=signal_quality,
+        noise_floor_dbm=noise_floor_dbm,
+        snr=client.snr_db,
         tx_rate_mbps=client.tx_rate_mbps,
         rx_rate_mbps=client.rx_rate_mbps,
         tx_bytes=client.tx_bytes,
         rx_bytes=client.rx_bytes,
         tx_packets=client.tx_packets,
         rx_packets=client.rx_packets,
-        total_bytes=client.tx_bytes + client.rx_bytes,
-        vendor=client.vendor,
-        device_type=client.device_type,
-        operating_system=None,  # Not in current model
-        customer_id=strawberry.ID(str(client.customer_id)) if client.customer_id else None,
-        subscriber_id=client.subscriber_id,
-        created_at=client.created_at,
-        updated_at=client.updated_at,
+        tx_retries=int(metadata.get("tx_retries", 0)),
+        rx_retries=int(metadata.get("rx_retries", 0)),
+        connected_at=client.first_seen,
+        last_seen_at=client.last_seen,
+        uptime_seconds=client.connection_duration_seconds or 0,
+        idle_time_seconds=metadata.get("idle_time_seconds"),
+        supports_80211k=bool(metadata.get("supports_80211k", False)),
+        supports_80211r=bool(metadata.get("supports_80211r", False)),
+        supports_80211v=bool(metadata.get("supports_80211v", False)),
+        max_phy_rate_mbps=metadata.get("max_phy_rate_mbps"),
+        customer_id=customer_id,
+        customer_name=customer_name,
     )
 
 
@@ -1079,37 +1261,69 @@ def map_coverage_zone_model_to_graphql(zone: CoverageZoneModel) -> CoverageZone:
     Returns:
         GraphQL CoverageZone instance
     """
+    metadata = zone.extra_metadata or {}
+    site_info = metadata.get("site", {})
+    site_id = site_info.get("id", "unknown")
+    site_name = site_info.get("name", site_id)
+
+    floor = metadata.get("floor")
+    area_type = metadata.get("area_type", "indoor")
+
+    signal_strength_meta = metadata.get("signal_strength") or {}
+
+    access_point_ids = [str(ap_id) for ap_id in metadata.get("access_points", [])]
+    access_point_count = int(metadata.get("access_point_count", len(access_point_ids)))
+
+    connected_clients = int(metadata.get("connected_clients", 0))
+    max_client_capacity = int(metadata.get("max_client_capacity", 0))
+    client_density_per_ap = metadata.get("client_density_per_ap")
+
+    interference_level = metadata.get("interference_level")
+    channel_utilization_avg = metadata.get("channel_utilization_avg")
+    noise_floor_avg_dbm = metadata.get("noise_floor_avg_dbm")
+
+    coverage_polygon = metadata.get("coverage_polygon")
+    if coverage_polygon is None and zone.geometry:
+        coverage_polygon = json.dumps(zone.geometry)
+
+    last_surveyed_raw = metadata.get("last_surveyed_at")
+    last_surveyed_at = None
+    if isinstance(last_surveyed_raw, datetime):
+        last_surveyed_at = last_surveyed_raw
+    elif isinstance(last_surveyed_raw, str):
+        try:
+            last_surveyed_at = datetime.fromisoformat(last_surveyed_raw)
+        except ValueError:
+            last_surveyed_at = None
+
+    return CoverageZone(
+        id=strawberry.ID(str(zone.id)),
+        name=zone.zone_name,
+        description=zone.description,
+        site_id=site_id,
+        site_name=site_name,
+        floor=floor,
+        area_type=area_type,
+        coverage_area_sqm=metadata.get("coverage_area_sqm"),
+        signal_strength_min_dbm=signal_strength_meta.get("min_dbm"),
+        signal_strength_max_dbm=signal_strength_meta.get("max_dbm"),
+        signal_strength_avg_dbm=signal_strength_meta.get("avg_dbm"),
+        access_point_ids=access_point_ids,
+        access_point_count=access_point_count,
+        interference_level=interference_level,
+        channel_utilization_avg=channel_utilization_avg,
+        noise_floor_avg_dbm=noise_floor_avg_dbm,
+        connected_clients=connected_clients,
+        max_client_capacity=max_client_capacity,
+        client_density_per_ap=client_density_per_ap,
+        coverage_polygon=coverage_polygon,
+        created_at=zone.created_at,
+        updated_at=zone.updated_at,
+        last_surveyed_at=last_surveyed_at,
+    )
     # Map frequency to frequency band
     freq_map = {
         Frequency.FREQ_2_4_GHZ: FrequencyBand.BAND_2_4_GHZ,
         Frequency.FREQ_5_GHZ: FrequencyBand.BAND_5_GHZ,
         Frequency.FREQ_6_GHZ: FrequencyBand.BAND_6_GHZ,
     }
-
-    return CoverageZone(
-        id=strawberry.ID(str(zone.id)),
-        zone_name=zone.zone_name,
-        description=zone.description,
-        access_point_id=strawberry.ID(str(zone.device_id)) if zone.device_id else None,
-        access_point_name=None,  # Would need join to get AP name
-        site_id=None,  # Would need join through device
-        site_name=None,  # Would need join through device
-        coverage_type=zone.coverage_type.value if zone.coverage_type else "primary",
-        area_type=None,  # Not in current model
-        boundary_geojson=zone.geometry,
-        center_location=GeoLocation(
-            latitude=zone.center_latitude,
-            longitude=zone.center_longitude,
-            altitude=None,
-        ) if zone.center_latitude and zone.center_longitude else None,
-        coverage_radius_meters=zone.coverage_radius_meters,
-        estimated_signal_strength_dbm=zone.estimated_signal_strength_dbm,
-        frequency_band=freq_map.get(zone.frequency, FrequencyBand.BAND_5_GHZ) if zone.frequency else None,
-        overlapping_zones=[],  # Would need geometric query
-        connected_clients_count=0,  # Would need client join
-        average_signal_strength_dbm=zone.estimated_signal_strength_dbm,
-        signal_quality_percent=None,  # Can be calculated from signal strength
-        is_active=True,  # Not in current model
-        created_at=zone.created_at,
-        updated_at=zone.updated_at,
-    )

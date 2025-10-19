@@ -5,14 +5,13 @@ Handles deployment to standalone hosts using Docker Compose.
 """
 
 import asyncio
-import yaml
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
-from .base import Deployment
+import yaml
 
-Adapter, DeploymentResult, ExecutionContext, ExecutionStatus
+from .base import DeploymentAdapter, DeploymentResult, ExecutionContext, ExecutionStatus
 
 
 class DockerComposeAdapter(DeploymentAdapter):
@@ -23,7 +22,7 @@ class DockerComposeAdapter(DeploymentAdapter):
     Suitable for small-scale on-premises installations.
     """
 
-    def __init__(self, config: Optional[dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize Docker Compose adapter
 
@@ -256,7 +255,7 @@ class DockerComposeAdapter(DeploymentAdapter):
         return {"api": "http://localhost:8000"}
 
     async def _run_compose_command(
-        self, project_name: str, args: list[str], compose_file: Optional[Path] = None
+        self, project_name: str, args: list[str], compose_file: Path | None = None
     ) -> str:
         """Run docker-compose command"""
         cmd = ["docker-compose", "-p", project_name]

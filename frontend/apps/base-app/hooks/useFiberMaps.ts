@@ -53,7 +53,7 @@ export function useFiberCables(options: UseFiberCablesOptions = {}) {
       if (options.limit) params.append('limit', options.limit.toString());
 
       const response = await apiClient.get<FiberCablesResponse>(
-        `/api/v1/fibermaps/cables?${params.toString()}`
+        `/fibermaps/cables?${params.toString()}`
       );
 
       setCables(response.data.cables);
@@ -74,7 +74,7 @@ export function useFiberCables(options: UseFiberCablesOptions = {}) {
 
   const createCable = useCallback(async (data: CreateFiberCableRequest) => {
     try {
-      const response = await apiClient.post<FiberCable>('/api/v1/fibermaps/cables', data);
+      const response = await apiClient.post<FiberCable>('/fibermaps/cables', data);
 
       toast({
         title: 'Cable Created',
@@ -95,7 +95,7 @@ export function useFiberCables(options: UseFiberCablesOptions = {}) {
 
   const updateCable = useCallback(async (id: string, data: Partial<FiberCable>) => {
     try {
-      const response = await apiClient.patch<FiberCable>(`/api/v1/fibermaps/cables/${id}`, data);
+      const response = await apiClient.patch<FiberCable>(`/fibermaps/cables/${id}`, data);
 
       toast({
         title: 'Cable Updated',
@@ -116,7 +116,7 @@ export function useFiberCables(options: UseFiberCablesOptions = {}) {
 
   const deleteCable = useCallback(async (id: string) => {
     try {
-      await apiClient.delete(`/api/v1/fibermaps/cables/${id}`);
+      await apiClient.delete(`/fibermaps/cables/${id}`);
 
       toast({
         title: 'Cable Deleted',
@@ -178,7 +178,7 @@ export function useSplicePoints(options: UseSplicePointsOptions = {}) {
       if (options.limit) params.append('limit', options.limit.toString());
 
       const response = await apiClient.get<SplicePointsResponse>(
-        `/api/v1/fibermaps/splice-points?${params.toString()}`
+        `/fibermaps/splice-points?${params.toString()}`
       );
 
       setSplicePoints(response.data.splice_points);
@@ -199,7 +199,7 @@ export function useSplicePoints(options: UseSplicePointsOptions = {}) {
 
   const createSplicePoint = useCallback(async (data: CreateSplicePointRequest) => {
     try {
-      const response = await apiClient.post<SplicePoint>('/api/v1/fibermaps/splice-points', data);
+      const response = await apiClient.post<SplicePoint>('/fibermaps/splice-points', data);
 
       toast({
         title: 'Splice Point Created',
@@ -220,7 +220,7 @@ export function useSplicePoints(options: UseSplicePointsOptions = {}) {
 
   const updateSplicePoint = useCallback(async (id: string, data: Partial<SplicePoint>) => {
     try {
-      const response = await apiClient.patch<SplicePoint>(`/api/v1/fibermaps/splice-points/${id}`, data);
+      const response = await apiClient.patch<SplicePoint>(`/fibermaps/splice-points/${id}`, data);
 
       toast({
         title: 'Splice Point Updated',
@@ -241,7 +241,7 @@ export function useSplicePoints(options: UseSplicePointsOptions = {}) {
 
   const deleteSplicePoint = useCallback(async (id: string) => {
     try {
-      await apiClient.delete(`/api/v1/fibermaps/splice-points/${id}`);
+      await apiClient.delete(`/fibermaps/splice-points/${id}`);
 
       toast({
         title: 'Splice Point Deleted',
@@ -303,7 +303,7 @@ export function useDistributionPoints(options: UseDistributionPointsOptions = {}
       if (options.limit) params.append('limit', options.limit.toString());
 
       const response = await apiClient.get<DistributionPointsResponse>(
-        `/api/v1/fibermaps/distribution-points?${params.toString()}`
+        `/fibermaps/distribution-points?${params.toString()}`
       );
 
       setDistributionPoints(response.data.distribution_points);
@@ -324,7 +324,7 @@ export function useDistributionPoints(options: UseDistributionPointsOptions = {}
 
   const createDistributionPoint = useCallback(async (data: CreateDistributionPointRequest) => {
     try {
-      const response = await apiClient.post<DistributionPoint>('/api/v1/fibermaps/distribution-points', data);
+      const response = await apiClient.post<DistributionPoint>('/fibermaps/distribution-points', data);
 
       toast({
         title: 'Distribution Point Created',
@@ -345,7 +345,7 @@ export function useDistributionPoints(options: UseDistributionPointsOptions = {}
 
   const updateDistributionPoint = useCallback(async (id: string, data: Partial<DistributionPoint>) => {
     try {
-      const response = await apiClient.patch<DistributionPoint>(`/api/v1/fibermaps/distribution-points/${id}`, data);
+      const response = await apiClient.patch<DistributionPoint>(`/fibermaps/distribution-points/${id}`, data);
 
       toast({
         title: 'Distribution Point Updated',
@@ -366,7 +366,7 @@ export function useDistributionPoints(options: UseDistributionPointsOptions = {}
 
   const deleteDistributionPoint = useCallback(async (id: string) => {
     try {
-      await apiClient.delete(`/api/v1/fibermaps/distribution-points/${id}`);
+      await apiClient.delete(`/fibermaps/distribution-points/${id}`);
 
       toast({
         title: 'Distribution Point Deleted',
@@ -428,7 +428,7 @@ export function useServiceAreas(options: UseServiceAreasOptions = {}) {
       if (options.limit) params.append('limit', options.limit.toString());
 
       const response = await apiClient.get<ServiceAreasResponse>(
-        `/api/v1/fibermaps/service-areas?${params.toString()}`
+        `/fibermaps/service-areas?${params.toString()}`
       );
 
       setServiceAreas(response.data.service_areas);
@@ -475,7 +475,7 @@ export function useFiberInfrastructureStats() {
 
     try {
       const response = await apiClient.get<FiberInfrastructureStats>(
-        '/api/v1/fibermaps/statistics'
+        '/fibermaps/statistics'
       );
 
       setStats(response.data);

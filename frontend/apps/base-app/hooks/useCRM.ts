@@ -348,7 +348,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
       if (options.partnerId) params.append('partner_id', options.partnerId);
 
       const response = await apiClient.get<Lead[]>(
-        `/api/v1/crm/leads${params.toString() ? `?${params.toString()}` : ''}`
+        `/crm/leads${params.toString() ? `?${params.toString()}` : ''}`
       );
 
       if (response.data) {
@@ -375,7 +375,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
 
   const createLead = useCallback(async (data: LeadCreateRequest): Promise<Lead | null> => {
     try {
-      const response = await apiClient.post<Lead>('/api/v1/crm/leads', data);
+      const response = await apiClient.post<Lead>('/crm/leads', data);
       if (response.data) {
         setLeads((prev) => [response.data, ...prev]);
         return response.data;
@@ -389,7 +389,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
 
   const updateLead = useCallback(async (id: string, data: LeadUpdateRequest): Promise<Lead | null> => {
     try {
-      const response = await apiClient.patch<Lead>(`/api/v1/crm/leads/${id}`, data);
+      const response = await apiClient.patch<Lead>(`/crm/leads/${id}`, data);
       if (response.data) {
         setLeads((prev) => prev.map((l) => (l.id === id ? response.data : l)));
         return response.data;
@@ -403,7 +403,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
 
   const updateLeadStatus = useCallback(async (id: string, status: LeadStatus): Promise<boolean> => {
     try {
-      await apiClient.patch(`/api/v1/crm/leads/${id}/status`, { status });
+      await apiClient.patch(`/crm/leads/${id}/status`, { status });
       setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
       return true;
     } catch (err) {
@@ -414,7 +414,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
 
   const qualifyLead = useCallback(async (id: string): Promise<boolean> => {
     try {
-      await apiClient.post(`/api/v1/crm/leads/${id}/qualify`, {});
+      await apiClient.post(`/crm/leads/${id}/qualify`, {});
       setLeads((prev) =>
         prev.map((l) =>
           l.id === id ? { ...l, status: 'qualified' as LeadStatus, qualified_at: new Date().toISOString() } : l
@@ -429,7 +429,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
 
   const disqualifyLead = useCallback(async (id: string, reason: string): Promise<boolean> => {
     try {
-      await apiClient.post(`/api/v1/crm/leads/${id}/disqualify`, { reason });
+      await apiClient.post(`/crm/leads/${id}/disqualify`, { reason });
       setLeads((prev) =>
         prev.map((l) =>
           l.id === id
@@ -451,7 +451,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
 
   const assignLead = useCallback(async (id: string, userId: string): Promise<boolean> => {
     try {
-      await apiClient.post(`/api/v1/crm/leads/${id}/assign`, { user_id: userId });
+      await apiClient.post(`/crm/leads/${id}/assign`, { user_id: userId });
       setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, assigned_to_id: userId } : l)));
       return true;
     } catch (err) {
@@ -463,7 +463,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
   const updateServiceability = useCallback(
     async (id: string, serviceability: Serviceability, notes?: string): Promise<boolean> => {
       try {
-        await apiClient.patch(`/api/v1/crm/leads/${id}/serviceability`, {
+        await apiClient.patch(`/crm/leads/${id}/serviceability`, {
           serviceability,
           notes,
         });
@@ -490,7 +490,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
 
   const convertToCustomer = useCallback(async (id: string, conversionData?: Record<string, any>): Promise<any> => {
     try {
-      const response = await apiClient.post(`/api/v1/crm/leads/${id}/convert-to-customer`, conversionData || {});
+      const response = await apiClient.post(`/crm/leads/${id}/convert-to-customer`, conversionData || {});
       if (response.data) {
         // Update lead status to 'won'
         setLeads((prev) =>
@@ -554,7 +554,7 @@ export function useQuotes(options: UseQuotesOptions = {}) {
       if (options.status) params.append('status', options.status);
 
       const response = await apiClient.get<Quote[]>(
-        `/api/v1/crm/quotes${params.toString() ? `?${params.toString()}` : ''}`
+        `/crm/quotes${params.toString() ? `?${params.toString()}` : ''}`
       );
 
       if (response.data) {
@@ -573,7 +573,7 @@ export function useQuotes(options: UseQuotesOptions = {}) {
 
   const createQuote = useCallback(async (data: QuoteCreateRequest): Promise<Quote | null> => {
     try {
-      const response = await apiClient.post<Quote>('/api/v1/crm/quotes', data);
+      const response = await apiClient.post<Quote>('/crm/quotes', data);
       if (response.data) {
         setQuotes((prev) => [response.data, ...prev]);
         return response.data;
@@ -587,7 +587,7 @@ export function useQuotes(options: UseQuotesOptions = {}) {
 
   const sendQuote = useCallback(async (id: string): Promise<boolean> => {
     try {
-      await apiClient.post(`/api/v1/crm/quotes/${id}/send`, {});
+      await apiClient.post(`/crm/quotes/${id}/send`, {});
       setQuotes((prev) =>
         prev.map((q) =>
           q.id === id ? { ...q, status: 'sent' as QuoteStatus, sent_at: new Date().toISOString() } : q
@@ -602,7 +602,7 @@ export function useQuotes(options: UseQuotesOptions = {}) {
 
   const acceptQuote = useCallback(async (id: string, signatureData?: Record<string, any>): Promise<boolean> => {
     try {
-      await apiClient.post(`/api/v1/crm/quotes/${id}/accept`, { signature_data: signatureData });
+      await apiClient.post(`/crm/quotes/${id}/accept`, { signature_data: signatureData });
       setQuotes((prev) =>
         prev.map((q) =>
           q.id === id
@@ -624,7 +624,7 @@ export function useQuotes(options: UseQuotesOptions = {}) {
 
   const rejectQuote = useCallback(async (id: string, reason: string): Promise<boolean> => {
     try {
-      await apiClient.post(`/api/v1/crm/quotes/${id}/reject`, { reason });
+      await apiClient.post(`/crm/quotes/${id}/reject`, { reason });
       setQuotes((prev) =>
         prev.map((q) =>
           q.id === id
@@ -682,7 +682,7 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
       if (options.technicianId) params.append('technician_id', options.technicianId);
 
       const response = await apiClient.get<SiteSurvey[]>(
-        `/api/v1/crm/site-surveys${params.toString() ? `?${params.toString()}` : ''}`
+        `/crm/site-surveys${params.toString() ? `?${params.toString()}` : ''}`
       );
 
       if (response.data) {
@@ -701,7 +701,7 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
 
   const scheduleSurvey = useCallback(async (data: SiteSurveyScheduleRequest): Promise<SiteSurvey | null> => {
     try {
-      const response = await apiClient.post<SiteSurvey>('/api/v1/crm/site-surveys', data);
+      const response = await apiClient.post<SiteSurvey>('/crm/site-surveys', data);
       if (response.data) {
         setSurveys((prev) => [response.data, ...prev]);
         return response.data;
@@ -715,7 +715,7 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
 
   const startSurvey = useCallback(async (id: string): Promise<boolean> => {
     try {
-      await apiClient.post(`/api/v1/crm/site-surveys/${id}/start`, {});
+      await apiClient.post(`/crm/site-surveys/${id}/start`, {});
       setSurveys((prev) => prev.map((s) => (s.id === id ? { ...s, status: 'in_progress' as SiteSurveyStatus } : s)));
       return true;
     } catch (err) {
@@ -726,7 +726,7 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
 
   const completeSurvey = useCallback(async (id: string, data: SiteSurveyCompleteRequest): Promise<boolean> => {
     try {
-      await apiClient.post(`/api/v1/crm/site-surveys/${id}/complete`, data);
+      await apiClient.post(`/crm/site-surveys/${id}/complete`, data);
       setSurveys((prev) =>
         prev.map((s) =>
           s.id === id
@@ -748,7 +748,7 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
 
   const cancelSurvey = useCallback(async (id: string, reason?: string): Promise<boolean> => {
     try {
-      await apiClient.post(`/api/v1/crm/site-surveys/${id}/cancel`, { reason });
+      await apiClient.post(`/crm/site-surveys/${id}/cancel`, { reason });
       setSurveys((prev) => prev.map((s) => (s.id === id ? { ...s, status: 'canceled' as SiteSurveyStatus } : s)));
       return true;
     } catch (err) {

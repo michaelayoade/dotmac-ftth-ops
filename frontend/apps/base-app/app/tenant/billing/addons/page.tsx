@@ -54,7 +54,7 @@ export default function AddonsPage() {
     if (availableAddons.length === 0) {
       fetchAvailableAddons();
     }
-  }, []);
+  }, [availableAddons.length, fetchAvailableAddons]);
 
   // Filter and search add-ons
   const filteredAddons = useMemo(() => {

@@ -7,7 +7,6 @@ and profile change history via DataLoaders.
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 import strawberry
 
@@ -28,7 +27,7 @@ class Role:
     id: strawberry.ID
     name: str
     display_name: str
-    description: Optional[str]
+    description: str | None
     priority: int
     is_active: bool
     is_system: bool
@@ -83,7 +82,7 @@ class Permission:
     id: strawberry.ID
     name: str
     display_name: str
-    description: Optional[str]
+    description: str | None
     category: PermissionCategoryEnum
     is_active: bool
     is_system: bool
@@ -115,8 +114,8 @@ class TeamMembership:
     team_name: str
     role: str  # member, lead, admin
     is_active: bool
-    joined_at: Optional[datetime]
-    left_at: Optional[datetime]
+    joined_at: datetime | None
+    left_at: datetime | None
 
     @classmethod
     def from_model(cls, membership: any, team_name: str) -> "TeamMembership":
@@ -138,16 +137,16 @@ class ProfileChangeRecord:
 
     id: strawberry.ID
     field_name: str
-    old_value: Optional[str]
-    new_value: Optional[str]
-    change_reason: Optional[str]
+    old_value: str | None
+    new_value: str | None
+    change_reason: str | None
     changed_by_user_id: strawberry.ID
-    changed_by_username: Optional[str]
+    changed_by_username: str | None
     created_at: datetime
-    ip_address: Optional[str]
+    ip_address: str | None
 
     @classmethod
-    def from_model(cls, record: any, changed_by_username: Optional[str] = None) -> "ProfileChangeRecord":
+    def from_model(cls, record: any, changed_by_username: str | None = None) -> "ProfileChangeRecord":
         """Convert SQLAlchemy ProfileChangeHistory model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(record.id)),
@@ -178,18 +177,18 @@ class User:
     tenant_id: str
 
     # Profile fields
-    full_name: Optional[str]
-    first_name: Optional[str]
-    last_name: Optional[str]
-    phone_number: Optional[str]
-    phone: Optional[str]
+    full_name: str | None
+    first_name: str | None
+    last_name: str | None
+    phone_number: str | None
+    phone: str | None
     phone_verified: bool
-    bio: Optional[str]
-    website: Optional[str]
-    location: Optional[str]
-    timezone: Optional[str]
-    language: Optional[str]
-    avatar_url: Optional[str]
+    bio: str | None
+    website: str | None
+    location: str | None
+    timezone: str | None
+    language: str | None
+    avatar_url: str | None
 
     # Status fields
     is_active: bool
@@ -199,10 +198,10 @@ class User:
     mfa_enabled: bool
 
     # Tracking fields
-    last_login: Optional[datetime]
-    last_login_ip: Optional[str]
+    last_login: datetime | None
+    last_login_ip: str | None
     failed_login_attempts: int
-    locked_until: Optional[datetime]
+    locked_until: datetime | None
 
     # Timestamps
     created_at: datetime
@@ -214,7 +213,7 @@ class User:
     primary_role: str
 
     # Metadata (optional - can be large)
-    metadata: Optional[strawberry.scalars.JSON]
+    metadata: strawberry.scalars.JSON | None
 
     # Relationships (conditionally loaded via DataLoaders)
     roles: list[Role] = strawberry.field(default_factory=list)

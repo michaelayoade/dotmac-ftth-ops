@@ -27,30 +27,32 @@ import type {
   WireGuardSyncStatsResponse,
 } from '../types/wireguard';
 
-const API_BASE = '/api/v1/wireguard';
+const API_BASE = '/wireguard';
 
 // ============================================================================
 // Query Keys
 // ============================================================================
 
+const baseKey = ['wireguard'] as const;
+
 export const wireGuardKeys = {
-  all: ['wireguard'] as const,
+  all: baseKey,
   servers: {
-    all: [...wireGuardKeys.all, 'servers'] as const,
-    lists: () => [...wireGuardKeys.servers.all, 'list'] as const,
+    all: [...baseKey, 'servers'] as const,
+    lists: () => [...baseKey, 'servers', 'list'] as const,
     list: (params: ListServersParams) =>
-      [...wireGuardKeys.servers.lists(), params] as const,
-    detail: (id: string) => [...wireGuardKeys.servers.all, 'detail', id] as const,
-    health: (id: string) => [...wireGuardKeys.servers.all, 'health', id] as const,
+      [...baseKey, 'servers', 'list', params] as const,
+    detail: (id: string) => [...baseKey, 'servers', 'detail', id] as const,
+    health: (id: string) => [...baseKey, 'servers', 'health', id] as const,
   },
   peers: {
-    all: [...wireGuardKeys.all, 'peers'] as const,
-    lists: () => [...wireGuardKeys.peers.all, 'list'] as const,
-    list: (params: ListPeersParams) => [...wireGuardKeys.peers.lists(), params] as const,
-    detail: (id: string) => [...wireGuardKeys.peers.all, 'detail', id] as const,
-    config: (id: string) => [...wireGuardKeys.peers.all, 'config', id] as const,
+    all: [...baseKey, 'peers'] as const,
+    lists: () => [...baseKey, 'peers', 'list'] as const,
+    list: (params: ListPeersParams) => [...baseKey, 'peers', 'list', params] as const,
+    detail: (id: string) => [...baseKey, 'peers', 'detail', id] as const,
+    config: (id: string) => [...baseKey, 'peers', 'config', id] as const,
   },
-  dashboard: () => [...wireGuardKeys.all, 'dashboard'] as const,
+  dashboard: () => [...baseKey, 'dashboard'] as const,
 };
 
 // ============================================================================

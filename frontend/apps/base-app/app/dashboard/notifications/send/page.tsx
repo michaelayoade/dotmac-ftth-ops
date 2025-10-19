@@ -204,7 +204,7 @@ export default function BulkNotificationSenderPage() {
           <CardHeader>
             <CardTitle>Access Denied</CardTitle>
             <CardDescription>
-              You don't have permission to send bulk notifications.
+              You don&apos;t have permission to send bulk notifications.
             </CardDescription>
           </CardHeader>
           <CardContent>

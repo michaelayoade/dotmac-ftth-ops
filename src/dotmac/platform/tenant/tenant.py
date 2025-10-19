@@ -102,7 +102,10 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/openapi.json",
             "/api/v1/auth/login",  # Auth endpoints don't need tenant
             "/api/v1/auth/register",
+            "/api/v1/auth/me",  # Allow authenticated users to fetch their profile with tenant_id
+            "/api/v1/auth/rbac/my-permissions",  # Allow authenticated users to fetch their permissions
             "/api/v1/secrets/health",  # Vault health check is public
+            "/api/v1/health",  # Health check endpoint (also available at /health)
         }
         # Paths where tenant is optional (middleware runs but doesn't require tenant)
         self.optional_tenant_paths = {

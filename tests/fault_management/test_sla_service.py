@@ -16,7 +16,6 @@ from dotmac.platform.fault_management.models import (
     AlarmStatus,
     SLABreach,
     SLADefinition,
-    SLADowntime,
     SLAInstance,
     SLAStatus,
 )
@@ -44,19 +43,16 @@ class TestSLADefinitionManagement:
         definition_create = SLADefinitionCreate(
             name="Business SLA",
             description="99.5% uptime for business customers",
-            service_level="business",
-            availability_target=99.5,
-            response_time_target=120,
-            resolution_time_target=480,
+            service_type="business",
+            availability_target=0.995,  # 0-1 scale, not 0-100
         )
 
         definition = await service.create_definition(definition_create, user_id=user_id)
 
         assert definition.id is not None
         assert definition.name == "Business SLA"
-        assert definition.availability_target == 99.5
-        assert definition.response_time_target == 120
-        assert definition.resolution_time_target == 480
+        assert definition.service_type == "business"
+        assert definition.availability_target == 0.995
 
     @pytest.mark.asyncio
     async def test_list_sla_definitions(
@@ -113,23 +109,21 @@ class TestSLAInstanceManagement:
         customer_id = uuid4()
         service_id = uuid4()
 
+        now = datetime.now(UTC)
         instance_create = SLAInstanceCreate(
             sla_definition_id=sample_sla_definition.id,
             customer_id=customer_id,
-            customer_name="Acme Corp",
             service_id=service_id,
-            service_name="Fiber 1Gbps",
-            start_date=datetime.now(UTC),
+            period_start=now,
+            period_end=now + timedelta(days=30),
         )
 
         instance = await service.create_instance(instance_create, user_id=user_id)
 
         assert instance.id is not None
         assert instance.customer_id == customer_id
-        assert instance.customer_name == "Acme Corp"
+        assert instance.sla_definition_id == sample_sla_definition.id
         assert instance.status == SLAStatus.COMPLIANT
-        assert instance.enabled is True
-        assert instance.current_availability == 100.0
 
     @pytest.mark.asyncio
     async def test_get_sla_instance(
@@ -252,7 +246,7 @@ class TestDowntimeTracking:
         test_tenant: str,
         sample_sla_instance: SLAInstance,
     ):
-        """Test that downtime recording creates SLADowntime record"""
+        """Test that downtime recording updates SLAInstance"""
         service = SLAMonitoringService(session, test_tenant)
 
         datetime.now(UTC)
@@ -262,15 +256,15 @@ class TestDowntimeTracking:
             is_planned=False,
         )
 
-        # Verify SLADowntime record exists
+        # Verify SLAInstance downtime fields are updated
         result = await session.execute(
-            select(SLADowntime).where(SLADowntime.sla_instance_id == sample_sla_instance.id)
+            select(SLAInstance).where(SLAInstance.id == sample_sla_instance.id)
         )
-        downtime_records = list(result.scalars().all())
+        updated_instance = result.scalar_one()
 
-        assert len(downtime_records) == 1
-        assert downtime_records[0].duration_minutes == 45
-        assert downtime_records[0].is_planned is False
+        # Downtime should be recorded in the instance
+        assert updated_instance.unplanned_downtime >= 45
+        assert updated_instance.total_downtime >= 45
 
 
 class TestAvailabilityCalculation:

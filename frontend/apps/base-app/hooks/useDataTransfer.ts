@@ -143,7 +143,7 @@ export function useTransferJobs(
   >({
     queryKey: ['data-transfer', 'jobs', params],
     queryFn: async () => {
-      const response = await apiClient.get<TransferJobListResponse>('/api/v1/data-transfer/jobs', {
+      const response = await apiClient.get<TransferJobListResponse>('/data-transfer/jobs', {
         params: {
           type: params?.type,
           job_status: params?.status,
@@ -168,7 +168,7 @@ export function useTransferJob(
   return useQuery<TransferJobResponse, Error, TransferJobResponse, ['data-transfer', 'jobs', string]>({
     queryKey: ['data-transfer', 'jobs', jobId],
     queryFn: async () => {
-      const response = await apiClient.get<TransferJobResponse>(`/api/v1/data-transfer/jobs/${jobId}`);
+      const response = await apiClient.get<TransferJobResponse>(`/data-transfer/jobs/${jobId}`);
       return extractDataOrThrow(response, 'Failed to load transfer job');
     },
     enabled: !!jobId,
@@ -186,7 +186,7 @@ export function useSupportedFormats(
   return useQuery<FormatsResponse, Error, FormatsResponse, ['data-transfer', 'formats']>({
     queryKey: ['data-transfer', 'formats'],
     queryFn: async () => {
-      const response = await apiClient.get<FormatsResponse>('/api/v1/data-transfer/formats');
+      const response = await apiClient.get<FormatsResponse>('/data-transfer/formats');
       return extractDataOrThrow(response, 'Failed to load data formats');
     },
     staleTime: 300000, // 5 minutes - formats don't change often
@@ -207,7 +207,7 @@ export function useCreateImportJob() {
 
   return useMutation({
     mutationFn: async (data: ImportRequest) => {
-      const response = await apiClient.post<TransferJobResponse>('/api/v1/data-transfer/import', data);
+      const response = await apiClient.post<TransferJobResponse>('/data-transfer/import', data);
       return extractDataOrThrow(response, 'Failed to create import job');
     },
     onSuccess: (data) => {
@@ -237,7 +237,7 @@ export function useCreateExportJob() {
 
   return useMutation({
     mutationFn: async (data: ExportRequest) => {
-      const response = await apiClient.post<TransferJobResponse>('/api/v1/data-transfer/export', data);
+      const response = await apiClient.post<TransferJobResponse>('/data-transfer/export', data);
       return extractDataOrThrow(response, 'Failed to create export job');
     },
     onSuccess: (data) => {
@@ -267,7 +267,7 @@ export function useCancelJob() {
 
   return useMutation({
     mutationFn: async (jobId: string) => {
-      const response = await apiClient.delete(`/api/v1/data-transfer/jobs/${jobId}`);
+      const response = await apiClient.delete(`/data-transfer/jobs/${jobId}`);
       // Check for successful status codes (2xx)
       if (response.status < 200 || response.status >= 300) {
         throw new Error('Failed to cancel job');

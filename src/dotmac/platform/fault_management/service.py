@@ -17,6 +17,7 @@ from dotmac.platform.fault_management.models import (
     Alarm,
     AlarmNote,
     AlarmRule,
+    AlarmSeverity,
     AlarmStatus,
     MaintenanceWindow,
 )
@@ -61,6 +62,96 @@ class AlarmService:
         in_maintenance = await self._is_in_maintenance_window(
             resource_type=data.resource_type, resource_id=data.resource_id
         )
+
+        # Deduplicate based on external alarm ID for active alarms
+        existing_alarm: Alarm | None = None
+        if data.alarm_id:
+            result = await self.session.execute(
+                select(Alarm).where(
+                    and_(
+                        Alarm.tenant_id == self.tenant_id,
+                        Alarm.alarm_id == data.alarm_id,
+                        Alarm.status.in_(
+                            [
+                                AlarmStatus.ACTIVE,
+                                AlarmStatus.ACKNOWLEDGED,
+                                AlarmStatus.SUPPRESSED,
+                            ]
+                        ),
+                    )
+                )
+            )
+            existing_alarm = result.scalar_one_or_none()
+
+        if existing_alarm:
+            now = datetime.now(UTC)
+            severity_rank = {
+                AlarmSeverity.INFO: 1,
+                AlarmSeverity.WARNING: 2,
+                AlarmSeverity.MINOR: 3,
+                AlarmSeverity.MAJOR: 4,
+                AlarmSeverity.CRITICAL: 5,
+            }
+
+            # Update severity if new alarm is more severe
+            if (
+                severity_rank.get(data.severity, 0)
+                >= severity_rank.get(existing_alarm.severity, 0)
+            ):
+                existing_alarm.severity = data.severity
+
+            existing_alarm.source = data.source
+            existing_alarm.alarm_type = data.alarm_type
+            existing_alarm.title = data.title
+            if data.description:
+                existing_alarm.description = data.description
+            if data.message:
+                existing_alarm.message = data.message
+            if data.resource_type:
+                existing_alarm.resource_type = data.resource_type
+            if data.resource_id:
+                existing_alarm.resource_id = data.resource_id
+            if data.resource_name:
+                existing_alarm.resource_name = data.resource_name
+            if data.customer_id:
+                existing_alarm.customer_id = data.customer_id
+            if data.customer_name:
+                existing_alarm.customer_name = data.customer_name
+            if data.subscriber_count is not None:
+                existing_alarm.subscriber_count = data.subscriber_count
+            if data.tags:
+                merged_tags = dict(existing_alarm.tags or {})
+                merged_tags.update(data.tags)
+                existing_alarm.tags = merged_tags
+            if data.metadata:
+                merged_metadata = dict(existing_alarm.alarm_metadata or {})
+                merged_metadata.update(data.metadata)
+                existing_alarm.alarm_metadata = merged_metadata
+            if data.probable_cause:
+                existing_alarm.probable_cause = data.probable_cause
+            if data.recommended_action:
+                existing_alarm.recommended_action = data.recommended_action
+
+            existing_alarm.last_occurrence = now
+            existing_alarm.occurrence_count = (existing_alarm.occurrence_count or 0) + 1
+
+            # Update maintenance status
+            if in_maintenance:
+                existing_alarm.status = AlarmStatus.SUPPRESSED
+            elif existing_alarm.status == AlarmStatus.SUPPRESSED:
+                existing_alarm.status = AlarmStatus.ACTIVE
+
+            await self.session.commit()
+            await self.session.refresh(existing_alarm)
+
+            logger.info(
+                "alarm.duplicate_detected",
+                alarm_id=existing_alarm.id,
+                external_id=existing_alarm.alarm_id,
+                occurrence_count=existing_alarm.occurrence_count,
+            )
+
+            return AlarmResponse.model_validate(existing_alarm)
 
         # Create alarm
         alarm = Alarm(
@@ -162,6 +253,7 @@ class AlarmService:
 
         alarm.status = AlarmStatus.ACKNOWLEDGED
         alarm.acknowledged_at = datetime.now(UTC)
+        alarm.acknowledged_by = user_id
         alarm.assigned_to = user_id
 
         if note:
@@ -169,6 +261,7 @@ class AlarmService:
                 tenant_id=self.tenant_id,
                 alarm_id=alarm_id,
                 note=note,
+                note_type="acknowledgment",
                 created_by=user_id,
             )
             self.session.add(alarm_note)
@@ -192,8 +285,12 @@ class AlarmService:
         if not alarm:
             return None
 
+        alarm.status = AlarmStatus.CLEARED
+        alarm.cleared_at = datetime.now(UTC)
+
         logger.info("alarm.cleared", alarm_id=alarm_id, user_id=user_id)
 
+        await self.session.commit()
         await self.session.refresh(alarm)
         return AlarmResponse.model_validate(alarm)
 
@@ -209,14 +306,17 @@ class AlarmService:
         if not alarm:
             return None
 
-        alarm.status = AlarmStatus.RESOLVED
-        alarm.resolved_at = datetime.now(UTC)
+        alarm.status = AlarmStatus.CLEARED
+        resolved_time = datetime.now(UTC)
+        alarm.resolved_at = resolved_time
+        alarm.cleared_at = resolved_time
 
         # Add resolution note
         note = AlarmNote(
             tenant_id=self.tenant_id,
             alarm_id=alarm_id,
             note=f"Resolved: {resolution_note}",
+            note_type="resolution",
             created_by=user_id,
         )
         self.session.add(note)
@@ -343,6 +443,7 @@ class AlarmService:
             minor_alarms=severity_counts.get("minor", 0),
             acknowledged_alarms=status_counts.get("acknowledged", 0),
             unacknowledged_alarms=active - status_counts.get("acknowledged", 0),
+            cleared_alarms=status_counts.get("cleared", 0),
             with_tickets=with_tickets,
             without_tickets=total - with_tickets,
             avg_resolution_time_minutes=avg_resolution_minutes,
@@ -356,7 +457,8 @@ class AlarmService:
         note = AlarmNote(
             tenant_id=self.tenant_id,
             alarm_id=alarm_id,
-            note=data.note,
+            note=data.content,
+            note_type="note",
             created_by=user_id,
         )
         self.session.add(note)
@@ -656,6 +758,13 @@ class AlarmService:
         self, data: MaintenanceWindowCreate, user_id: UUID | None = None
     ) -> MaintenanceWindowResponse:
         """Create maintenance window"""
+        affected_resources = dict(data.affected_resources)
+        if data.resource_type and data.resource_id:
+            key = f"{data.resource_type}s"
+            resources = affected_resources.setdefault(key, [])
+            if data.resource_id not in resources:
+                resources.append(data.resource_id)
+
         window = MaintenanceWindow(
             tenant_id=self.tenant_id,
             title=data.title,
@@ -665,7 +774,7 @@ class AlarmService:
             timezone=data.timezone,
             affected_services=data.affected_services,
             affected_customers=data.affected_customers,
-            affected_resources=data.affected_resources,
+            affected_resources=affected_resources,
             suppress_alarms=data.suppress_alarms,
             notify_customers=data.notify_customers,
         )
@@ -738,10 +847,16 @@ class AlarmService:
 
         for window in windows:
             # Check if resource is affected
-            affected_key = f"{resource_type}s"  # e.g., "devices", "services"
-            if affected_key in window.affected_resources:
-                affected_ids = window.affected_resources[affected_key]
-                if resource_id in affected_ids:
+            if not window.affected_resources:
+                continue
+
+            candidate_keys = {
+                resource_type.lower(),
+                f"{resource_type}s".lower(),
+            }
+
+            for key, affected in window.affected_resources.items():
+                if key.lower() in candidate_keys and resource_id in affected:
                     return True
 
         return False

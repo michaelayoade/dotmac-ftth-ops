@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import { apiClient } from '@/lib/api/client';
 
 // ============================================================================
@@ -211,6 +212,11 @@ export interface NotificationPreference {
   notification_types?: NotificationType[];
 }
 
+const buildUrlWithParams = (basePath: string, params: URLSearchParams) => {
+  const queryString = params.toString();
+  return queryString ? `${basePath}?${queryString}` : basePath;
+};
+
 // ============================================================================
 // Hook: useNotifications
 // ============================================================================
@@ -243,17 +249,23 @@ export function useNotifications(options?: {
         params.set('notification_type', options.notificationType);
       }
 
-      const response = await apiClient.get<NotificationListResponse>(
-        `/api/v1/notifications?${params.toString()}`
-      );
+      const endpoint = buildUrlWithParams('/notifications', params);
+      const response = await apiClient.get<NotificationListResponse>(endpoint);
 
       if (response.data) {
         setNotifications(response.data.notifications);
         setUnreadCount(response.data.unread_count);
       }
     } catch (err) {
-      console.error('Failed to fetch notifications:', err);
-      setError(err instanceof Error ? err : new Error('Failed to fetch notifications'));
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        console.warn('Notifications endpoint returned 403. Using empty fallback data.');
+        setNotifications([]);
+        setUnreadCount(0);
+        setError(null);
+      } else {
+        console.error('Failed to fetch notifications:', err);
+        setError(err instanceof Error ? err : new Error('Failed to fetch notifications'));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -272,7 +284,7 @@ export function useNotifications(options?: {
   const markAsRead = useCallback(
     async (notificationId: string): Promise<boolean> => {
       try {
-        await apiClient.patch(`/api/v1/notifications/${notificationId}/read`);
+        await apiClient.post(`/notifications/${notificationId}/read`, {});
 
         // Update local state
         setNotifications((prev) =>
@@ -294,7 +306,7 @@ export function useNotifications(options?: {
   const markAsUnread = useCallback(
     async (notificationId: string): Promise<boolean> => {
       try {
-        await apiClient.patch(`/api/v1/notifications/${notificationId}/unread`);
+        await apiClient.post(`/notifications/${notificationId}/unread`, {});
 
         // Update local state
         setNotifications((prev) =>
@@ -315,7 +327,7 @@ export function useNotifications(options?: {
 
   const markAllAsRead = useCallback(async (): Promise<boolean> => {
     try {
-      await apiClient.post('/api/v1/notifications/mark-all-read');
+      await apiClient.post('/notifications/mark-all-read');
 
       // Update local state
       setNotifications((prev) =>
@@ -333,7 +345,7 @@ export function useNotifications(options?: {
   const archiveNotification = useCallback(
     async (notificationId: string): Promise<boolean> => {
       try {
-        await apiClient.patch(`/api/v1/notifications/${notificationId}/archive`);
+        await apiClient.post(`/notifications/${notificationId}/archive`, {});
 
         // Remove from local state
         setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
@@ -350,7 +362,7 @@ export function useNotifications(options?: {
   const deleteNotification = useCallback(
     async (notificationId: string): Promise<boolean> => {
       try {
-        await apiClient.delete(`/api/v1/notifications/${notificationId}`);
+        await apiClient.delete(`/notifications/${notificationId}`);
 
         // Remove from local state
         setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
@@ -403,16 +415,21 @@ export function useNotificationTemplates(options?: {
         params.set('active_only', 'true');
       }
 
-      const response = await apiClient.get<CommunicationTemplate[]>(
-        `/api/v1/communications/templates?${params.toString()}`
-      );
+      const endpoint = buildUrlWithParams('/communications/templates', params);
+      const response = await apiClient.get<CommunicationTemplate[]>(endpoint);
 
       if (response.data) {
         setTemplates(response.data);
       }
     } catch (err) {
-      console.error('Failed to fetch templates:', err);
-      setError(err instanceof Error ? err : new Error('Failed to fetch templates'));
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        console.warn('Templates endpoint returned 403. Falling back to empty template list.');
+        setTemplates([]);
+        setError(null);
+      } else {
+        console.error('Failed to fetch templates:', err);
+        setError(err instanceof Error ? err : new Error('Failed to fetch templates'));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -426,7 +443,7 @@ export function useNotificationTemplates(options?: {
     async (data: TemplateCreateRequest): Promise<CommunicationTemplate | null> => {
       try {
         const response = await apiClient.post<CommunicationTemplate>(
-          '/api/v1/communications/templates',
+          '/communications/templates',
           data
         );
 
@@ -447,7 +464,7 @@ export function useNotificationTemplates(options?: {
     async (templateId: string, data: TemplateUpdateRequest): Promise<CommunicationTemplate | null> => {
       try {
         const response = await apiClient.patch<CommunicationTemplate>(
-          `/api/v1/communications/templates/${templateId}`,
+          `/communications/templates/${templateId}`,
           data
         );
 
@@ -469,7 +486,7 @@ export function useNotificationTemplates(options?: {
   const deleteTemplate = useCallback(
     async (templateId: string): Promise<boolean> => {
       try {
-        await apiClient.delete(`/api/v1/communications/templates/${templateId}`);
+        await apiClient.delete(`/communications/templates/${templateId}`);
 
         setTemplates((prev) => prev.filter((t) => t.id !== templateId));
 
@@ -486,7 +503,7 @@ export function useNotificationTemplates(options?: {
     async (templateId: string, data: Record<string, any>): Promise<{ subject?: string; text?: string; html?: string } | null> => {
       try {
         const response = await apiClient.post<{ subject?: string; text?: string; html?: string }>(
-          `/api/v1/communications/templates/${templateId}/render`,
+          `/communications/templates/${templateId}/render`,
           { data }
         );
 
@@ -543,17 +560,23 @@ export function useCommunicationLogs(options?: {
       if (options?.page) params.set('page', options.page.toString());
       if (options?.pageSize) params.set('page_size', options.pageSize.toString());
 
-      const response = await apiClient.get<{ logs: CommunicationLog[]; total: number }>(
-        `/api/v1/communications/logs?${params.toString()}`
-      );
+      const endpoint = buildUrlWithParams('/communications/logs', params);
+      const response = await apiClient.get<{ logs: CommunicationLog[]; total: number }>(endpoint);
 
       if (response.data) {
         setLogs(response.data.logs);
         setTotal(response.data.total);
       }
     } catch (err) {
-      console.error('Failed to fetch communication logs:', err);
-      setError(err instanceof Error ? err : new Error('Failed to fetch logs'));
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        console.warn('Communications logs endpoint returned 403. Falling back to empty log set.');
+        setLogs([]);
+        setTotal(0);
+        setError(null);
+      } else {
+        console.error('Failed to fetch communication logs:', err);
+        setError(err instanceof Error ? err : new Error('Failed to fetch logs'));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -566,7 +589,7 @@ export function useCommunicationLogs(options?: {
   const retryFailedCommunication = useCallback(
     async (logId: string): Promise<boolean> => {
       try {
-        await apiClient.post(`/api/v1/communications/logs/${logId}/retry`);
+        await apiClient.post(`/communications/logs/${logId}/retry`);
         await fetchLogs(); // Refresh logs
         return true;
       } catch (err) {
@@ -600,7 +623,7 @@ export function useBulkNotifications() {
         setIsLoading(true);
 
         const response = await apiClient.post<BulkNotificationResponse>(
-          '/api/v1/notifications/bulk',
+          '/notifications/bulk',
           data
         );
 
@@ -619,7 +642,7 @@ export function useBulkNotifications() {
     async (jobId: string): Promise<BulkNotificationResponse | null> => {
       try {
         const response = await apiClient.get<BulkNotificationResponse>(
-          `/api/v1/notifications/bulk/${jobId}`
+          `/notifications/bulk/${jobId}`
         );
 
         return response.data || null;
@@ -654,14 +677,19 @@ export function useUnreadCount(options?: {
       setIsLoading(true);
 
       const response = await apiClient.get<{ unread_count: number }>(
-        '/api/v1/notifications/unread-count'
+        '/notifications/unread-count'
       );
 
       if (response.data) {
         setUnreadCount(response.data.unread_count);
       }
     } catch (err) {
-      console.error('Failed to fetch unread count:', err);
+      if (axios.isAxiosError(err) && err.response?.status === 403) {
+        console.warn('Unread count endpoint returned 403. Defaulting to zero unread notifications.');
+        setUnreadCount(0);
+      } else {
+        console.error('Failed to fetch unread count:', err);
+      }
     } finally {
       setIsLoading(false);
     }

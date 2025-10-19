@@ -205,6 +205,35 @@ export interface AvailableIP {
   family: number; // 4 or 6
 }
 
+// Dual-stack IP allocation request
+export interface DualStackAllocationRequest {
+  ipv4_prefix_id: number;
+  ipv6_prefix_id: number;
+  description?: string;
+  dns_name?: string;
+  tenant?: number;
+}
+
+// Dual-stack IP allocation response
+export interface DualStackAllocationResponse {
+  ipv4: IPAddress;
+  ipv6: IPAddress;
+}
+
+// Bulk IP allocation request
+export interface BulkIPAllocationRequest {
+  prefix_id: number;
+  count: number;
+  description_prefix?: string;
+  tenant?: number;
+}
+
+// Bulk IP allocation response
+export interface BulkIPAllocationResponse {
+  allocated: IPAddress[];
+  count: number;
+}
+
 // ============================================================================
 // DCIM (Data Center Infrastructure Management)
 // ============================================================================

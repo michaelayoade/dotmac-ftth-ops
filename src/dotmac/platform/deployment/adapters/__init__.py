@@ -8,11 +8,11 @@ Pluggable adapters for different deployment backends:
 - Terraform
 """
 
-from .base import DeploymentAdapter, DeploymentResult, ExecutionContext
-from .kubernetes import KubernetesAdapter
 from .awx import AWXAdapter
+from .base import DeploymentAdapter, DeploymentResult, ExecutionContext
 from .docker_compose import DockerComposeAdapter
 from .factory import AdapterFactory
+from .kubernetes import KubernetesAdapter
 
 __all__ = [
     "DeploymentAdapter",

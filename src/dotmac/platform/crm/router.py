@@ -264,7 +264,11 @@ async def convert_lead_to_customer(
     This endpoint creates a new customer from lead data and marks the lead as converted.
     The lead data is used as defaults, with any fields in the request overriding them.
     """
-    from dotmac.platform.customer_management.models import Customer, CustomerStatus, CustomerTier, CustomerType
+    from dotmac.platform.customer_management.models import (
+        CustomerStatus,
+        CustomerTier,
+        CustomerType,
+    )
     from dotmac.platform.customer_management.service import CustomerService
 
     lead_service = LeadService(db)

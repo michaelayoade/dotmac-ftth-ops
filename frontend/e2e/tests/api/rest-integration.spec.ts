@@ -129,7 +129,7 @@ test.describe('REST API Integration', () => {
     test('should display API data in UI', async ({ page, request }) => {
       // Login first
       await page.goto(`${APP_URL}/login`);
-      await page.getByTestId('username-input').fill(TEST_USERNAME);
+      await page.getByTestId('email-input').fill(TEST_USERNAME);
       await page.getByTestId('password-input').fill(TEST_PASSWORD);
       await page.getByTestId('submit-button').click();
 
@@ -205,7 +205,7 @@ test.describe('REST API Integration', () => {
     test('should include auth headers in API requests', async ({ page }) => {
       // Login first
       await page.goto(`${APP_URL}/login`);
-      await page.getByTestId('username-input').fill(TEST_USERNAME);
+      await page.getByTestId('email-input').fill(TEST_USERNAME);
       await page.getByTestId('password-input').fill(TEST_PASSWORD);
       await page.getByTestId('submit-button').click();
 
@@ -271,7 +271,7 @@ test.describe('REST API Integration', () => {
     test('should handle concurrent requests', async ({ page }) => {
       // Login first
       await page.goto(`${APP_URL}/login`);
-      await page.getByTestId('username-input').fill(TEST_USERNAME);
+      await page.getByTestId('email-input').fill(TEST_USERNAME);
       await page.getByTestId('password-input').fill(TEST_PASSWORD);
       await page.getByTestId('submit-button').click();
 
@@ -310,7 +310,7 @@ test.describe('REST API Integration', () => {
     test('should cache repeated requests', async ({ page }) => {
       // Login first
       await page.goto(`${APP_URL}/login`);
-      await page.getByTestId('username-input').fill(TEST_USERNAME);
+      await page.getByTestId('email-input').fill(TEST_USERNAME);
       await page.getByTestId('password-input').fill(TEST_PASSWORD);
       await page.getByTestId('submit-button').click();
 

@@ -7,11 +7,10 @@ Business logic for wireless network infrastructure management.
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any
 from uuid import UUID
 
 import structlog
-from sqlalchemy import and_, func, or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from .models import (
@@ -416,7 +415,7 @@ class WirelessService:
             query = query.filter(WirelessClient.device_id == device_id)
 
         if connected_only:
-            query = query.filter(WirelessClient.connected == True)
+            query = query.filter(WirelessClient.connected)
 
         return query.order_by(WirelessClient.last_seen.desc()).limit(limit).offset(offset).all()
 
@@ -453,7 +452,7 @@ class WirelessService:
 
         active_radios = self.db.query(func.count(WirelessRadio.id)).filter(
             WirelessRadio.tenant_id == self.tenant_id,
-            WirelessRadio.enabled == True,
+            WirelessRadio.enabled,
             WirelessRadio.status == DeviceStatus.ONLINE,
         ).scalar() or 0
 
@@ -465,7 +464,7 @@ class WirelessService:
         # Client counts
         total_connected_clients = self.db.query(func.count(WirelessClient.id)).filter(
             WirelessClient.tenant_id == self.tenant_id,
-            WirelessClient.connected == True,
+            WirelessClient.connected,
         ).scalar() or 0
 
         since_24h = datetime.utcnow() - timedelta(hours=24)
@@ -551,7 +550,7 @@ class WirelessService:
         connected_clients = self.db.query(func.count(WirelessClient.id)).filter(
             WirelessClient.tenant_id == self.tenant_id,
             WirelessClient.device_id == device_id,
-            WirelessClient.connected == True,
+            WirelessClient.connected,
         ).scalar() or 0
 
         # Average metrics from radios
@@ -560,7 +559,7 @@ class WirelessService:
         ).filter(
             WirelessRadio.tenant_id == self.tenant_id,
             WirelessRadio.device_id == device_id,
-            WirelessRadio.enabled == True,
+            WirelessRadio.enabled,
         ).first()
 
         avg_utilization = float(radio_metrics[0]) if radio_metrics and radio_metrics[0] else None

@@ -51,6 +51,13 @@ cp /path/to/key.pem nginx/ssl/
 cp /path/to/chain.pem nginx/ssl/  # For OCSP stapling
 ```
 
+> **Compose overlay update**
+> The production stack now builds on `docker-compose.base.yml`. Use it together with the environment overlay:
+> ```bash
+> docker compose -f docker-compose.production.yml up -d
+> ```
+> Optional components (Celery, observability, storage) are enabled automatically by the overlay, so you no longer need separate compose files. Any legacy references to `docker-compose.prod.yml` in this document refer to `docker-compose.production.yml`.
+
 ## Deployment Steps
 
 ### 1. Build Production Images
@@ -58,7 +65,7 @@ cp /path/to/chain.pem nginx/ssl/  # For OCSP stapling
 ```bash
 # Build with specific version tag
 export APP_VERSION=1.0.0
-docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.production.yml build
 
 # Or build and tag for registry
 docker build -f Dockerfile.prod \
@@ -71,49 +78,49 @@ docker build -f Dockerfile.prod \
 
 ```bash
 # Start infrastructure services first
-docker compose -f docker-compose.prod.yml up -d postgres redis rabbitmq vault minio
+docker compose -f docker-compose.production.yml up -d postgres redis vault minio
 
 # Wait for services to be healthy
-docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.production.yml ps
 
 # Initialize Vault/OpenBao
-docker compose -f docker-compose.prod.yml exec vault vault operator init
+docker compose -f docker-compose.production.yml exec vault vault operator init
 # Save the unseal keys and root token securely!
 
 # Unseal Vault
-docker compose -f docker-compose.prod.yml exec vault vault operator unseal <key1>
-docker compose -f docker-compose.prod.yml exec vault vault operator unseal <key2>
-docker compose -f docker-compose.prod.yml exec vault vault operator unseal <key3>
+docker compose -f docker-compose.production.yml exec vault vault operator unseal <key1>
+docker compose -f docker-compose.production.yml exec vault vault operator unseal <key2>
+docker compose -f docker-compose.production.yml exec vault vault operator unseal <key3>
 ```
 
 ### 3. Run Database Migrations
 
 ```bash
 # Run migrations before starting API
-docker compose -f docker-compose.prod.yml run --rm api migrate
+docker compose -f docker-compose.production.yml run --rm app migrate
 ```
 
 ### 4. Start Application Services
 
 ```bash
 # Start all services
-docker compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.production.yml up -d
 
 # Or start with specific scale
-docker compose -f docker-compose.prod.yml up -d --scale api=3 --scale celery-worker=2
+docker compose -f docker-compose.production.yml up -d --scale app=3 --scale celery-worker=2
 ```
 
 ### 5. Verify Deployment
 
 ```bash
 # Check service health
-docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.production.yml ps
 
 # Check API health endpoint
 curl https://api.example.com/health
 
 # View logs
-docker compose -f docker-compose.prod.yml logs -f api
+docker compose -f docker-compose.production.yml logs -f app
 
 # Monitor resource usage
 docker stats

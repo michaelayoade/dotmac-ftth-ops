@@ -1,14 +1,15 @@
 'use client';
 
+// Force dynamic rendering to avoid SSR issues with React Query hooks
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 /**
  * Global Search Page
  *
  * Comprehensive search interface for finding any entity across the tenant's data.
  * Supports filtering by type, pagination, and provides relevance-scored results.
  */
-
-// Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';

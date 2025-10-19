@@ -100,7 +100,7 @@ export const useTenantSubscription = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/api/v1/billing/tenant/subscription/current');
+      const response = await apiClient.get('/billing/tenant/subscription/current');
       setSubscription(response.data);
       logger.info('Fetched tenant subscription', { subscription_id: response.data?.subscription_id });
       return response.data;
@@ -122,7 +122,7 @@ export const useTenantSubscription = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/api/v1/billing/tenant/subscription/available-plans');
+      const response = await apiClient.get('/billing/tenant/subscription/available-plans');
       setAvailablePlans(response.data);
       logger.info('Fetched available plans', { count: response.data.length });
       return response.data;
@@ -145,7 +145,7 @@ export const useTenantSubscription = () => {
     setError(null);
     try {
       const response = await apiClient.post(
-        '/api/v1/billing/tenant/subscription/preview-change',
+        '/billing/tenant/subscription/preview-change',
         request
       );
       setProrationPreview(response.data);
@@ -170,7 +170,7 @@ export const useTenantSubscription = () => {
     setError(null);
     try {
       const response = await apiClient.post(
-        '/api/v1/billing/tenant/subscription/change-plan',
+        '/billing/tenant/subscription/change-plan',
         request
       );
       setSubscription(response.data);
@@ -195,7 +195,7 @@ export const useTenantSubscription = () => {
     setError(null);
     try {
       const response = await apiClient.post(
-        '/api/v1/billing/tenant/subscription/cancel',
+        '/billing/tenant/subscription/cancel',
         request
       );
       setSubscription(response.data);
@@ -219,7 +219,7 @@ export const useTenantSubscription = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.post('/api/v1/billing/tenant/subscription/reactivate');
+      const response = await apiClient.post('/billing/tenant/subscription/reactivate');
       setSubscription(response.data);
       logger.info('Reactivated subscription');
       return response.data;

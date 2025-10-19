@@ -5,7 +5,7 @@ High-level service layer for workflow management and execution.
 """
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,8 +30,8 @@ class WorkflowService:
     def __init__(
         self,
         db_session: AsyncSession,
-        event_publisher: Optional[Any] = None,
-        service_registry: Optional[Any] = None,
+        event_publisher: Any | None = None,
+        service_registry: Any | None = None,
     ):
         self.db = db_session
         self.event_publisher = event_publisher
@@ -40,10 +40,10 @@ class WorkflowService:
     async def create_workflow(
         self,
         name: str,
-        definition: Dict[str, Any],
-        description: Optional[str] = None,
+        definition: dict[str, Any],
+        description: str | None = None,
         version: str = "1.0.0",
-        tags: Optional[Dict[str, Any]] = None,
+        tags: dict[str, Any] | None = None,
     ) -> Workflow:
         """
         Create a new workflow template.
@@ -76,10 +76,10 @@ class WorkflowService:
     async def update_workflow(
         self,
         workflow_id: int,
-        definition: Optional[Dict[str, Any]] = None,
-        description: Optional[str] = None,
-        is_active: Optional[bool] = None,
-        tags: Optional[Dict[str, Any]] = None,
+        definition: dict[str, Any] | None = None,
+        description: str | None = None,
+        is_active: bool | None = None,
+        tags: dict[str, Any] | None = None,
     ) -> Workflow:
         """
         Update an existing workflow template.
@@ -113,7 +113,7 @@ class WorkflowService:
         logger.info(f"Updated workflow {workflow_id} '{workflow.name}'")
         return workflow
 
-    async def get_workflow(self, workflow_id: int) -> Optional[Workflow]:
+    async def get_workflow(self, workflow_id: int) -> Workflow | None:
         """
         Get workflow by ID.
 
@@ -125,7 +125,7 @@ class WorkflowService:
         """
         return await self.db.get(Workflow, workflow_id)
 
-    async def get_workflow_by_name(self, name: str) -> Optional[Workflow]:
+    async def get_workflow_by_name(self, name: str) -> Workflow | None:
         """
         Get workflow by name.
 
@@ -140,9 +140,9 @@ class WorkflowService:
 
     async def list_workflows(
         self,
-        is_active: Optional[bool] = None,
-        tags: Optional[Dict[str, Any]] = None,
-    ) -> List[Workflow]:
+        is_active: bool | None = None,
+        tags: dict[str, Any] | None = None,
+    ) -> list[Workflow]:
         """
         List all workflows with optional filtering.
 
@@ -187,10 +187,10 @@ class WorkflowService:
     async def execute_workflow(
         self,
         workflow_name: str,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         trigger_type: str = "manual",
-        trigger_source: Optional[str] = None,
-        tenant_id: Optional[int] = None,
+        trigger_source: str | None = None,
+        tenant_id: int | None = None,
     ) -> WorkflowExecution:
         """
         Execute a workflow by name.
@@ -230,10 +230,10 @@ class WorkflowService:
     async def execute_workflow_by_id(
         self,
         workflow_id: int,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         trigger_type: str = "manual",
-        trigger_source: Optional[str] = None,
-        tenant_id: Optional[int] = None,
+        trigger_source: str | None = None,
+        tenant_id: int | None = None,
     ) -> WorkflowExecution:
         """
         Execute a workflow by ID.
@@ -274,7 +274,7 @@ class WorkflowService:
         self,
         execution_id: int,
         include_steps: bool = False,
-    ) -> Optional[WorkflowExecution]:
+    ) -> WorkflowExecution | None:
         """
         Get workflow execution by ID.
 
@@ -295,12 +295,12 @@ class WorkflowService:
 
     async def list_executions(
         self,
-        workflow_id: Optional[int] = None,
-        status: Optional[WorkflowStatus] = None,
-        tenant_id: Optional[int] = None,
+        workflow_id: int | None = None,
+        status: WorkflowStatus | None = None,
+        tenant_id: int | None = None,
         limit: int = 100,
         offset: int = 0,
-    ) -> List[WorkflowExecution]:
+    ) -> list[WorkflowExecution]:
         """
         List workflow executions with filtering.
 
@@ -345,9 +345,9 @@ class WorkflowService:
 
     async def get_execution_stats(
         self,
-        workflow_id: Optional[int] = None,
-        tenant_id: Optional[int] = None,
-    ) -> Dict[str, Any]:
+        workflow_id: int | None = None,
+        tenant_id: int | None = None,
+    ) -> dict[str, Any]:
         """
         Get execution statistics.
 

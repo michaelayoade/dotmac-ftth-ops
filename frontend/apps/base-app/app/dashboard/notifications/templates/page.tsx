@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Plus, Edit, Trash2, Eye, Copy, CheckCircle2, XCircle } from 'lucide-react';
 import { useNotificationTemplates } from '@/hooks/useNotifications';
 import type { CommunicationTemplate, TemplateCreateRequest } from '@/hooks/useNotifications';
@@ -57,6 +57,62 @@ export default function NotificationTemplatesPage() {
       totalUsage,
     };
   }, [templates]);
+
+  const handleEdit = useCallback(
+    (template: CommunicationTemplate) => {
+      setSelectedTemplate(template);
+      setIsEditModalOpen(true);
+    },
+    [setIsEditModalOpen, setSelectedTemplate]
+  );
+
+  const handlePreview = useCallback(
+    (template: CommunicationTemplate) => {
+      setSelectedTemplate(template);
+      setIsPreviewModalOpen(true);
+    },
+    [setIsPreviewModalOpen, setSelectedTemplate]
+  );
+
+  const handleDuplicate = useCallback(
+    async (template: CommunicationTemplate) => {
+      try {
+        await createTemplate({
+          name: `${template.name} (Copy)`,
+          description: template.description,
+          type: template.type,
+          subject_template: template.subject_template,
+          text_template: template.text_template,
+          html_template: template.html_template,
+          required_variables: template.required_variables,
+        });
+        refetch();
+      } catch (err) {
+        console.error('Failed to duplicate template:', err);
+        alert('Failed to duplicate template. Please try again.');
+      }
+    },
+    [createTemplate, refetch]
+  );
+
+  const handleDelete = useCallback(
+    async (template: CommunicationTemplate) => {
+      const confirmed = confirm(
+        `Are you sure you want to delete "${template.name}"? This action cannot be undone.`
+      );
+
+      if (!confirmed) return;
+
+      try {
+        await deleteTemplate(template.id);
+        refetch();
+      } catch (err) {
+        console.error('Failed to delete template:', err);
+        alert('Failed to delete template. Please try again.');
+      }
+    },
+    [deleteTemplate, refetch]
+  );
 
   // Columns definition
   const columns: ColumnDef<CommunicationTemplate>[] = useMemo(
@@ -185,7 +241,7 @@ export default function NotificationTemplatesPage() {
         ),
       },
     ],
-    [canWrite]
+    [canWrite, handleDuplicate, handleEdit, handlePreview]
   );
 
   // Bulk actions
@@ -277,50 +333,6 @@ export default function NotificationTemplatesPage() {
     }
   };
 
-  const handleEdit = (template: CommunicationTemplate) => {
-    setSelectedTemplate(template);
-    setIsEditModalOpen(true);
-  };
-
-  const handlePreview = (template: CommunicationTemplate) => {
-    setSelectedTemplate(template);
-    setIsPreviewModalOpen(true);
-  };
-
-  const handleDuplicate = async (template: CommunicationTemplate) => {
-    try {
-      await createTemplate({
-        name: `${template.name} (Copy)`,
-        description: template.description,
-        type: template.type,
-        subject_template: template.subject_template,
-        text_template: template.text_template,
-        html_template: template.html_template,
-        required_variables: template.required_variables,
-      });
-      refetch();
-    } catch (err) {
-      console.error('Failed to duplicate template:', err);
-      alert('Failed to duplicate template. Please try again.');
-    }
-  };
-
-  const handleDelete = async (template: CommunicationTemplate) => {
-    if (
-      confirm(
-        `Are you sure you want to delete "${template.name}"? This action cannot be undone.`
-      )
-    ) {
-      try {
-        await deleteTemplate(template.id);
-        refetch();
-      } catch (err) {
-        console.error('Failed to delete template:', err);
-        alert('Failed to delete template. Please try again.');
-      }
-    }
-  };
-
   // Permission check
   if (!hasPermission('notifications.read') && !hasPermission('admin')) {
     return (
@@ -329,7 +341,7 @@ export default function NotificationTemplatesPage() {
           <CardHeader>
             <CardTitle>Access Denied</CardTitle>
             <CardDescription>
-              You don't have permission to view notification templates.
+              You don&apos;t have permission to view notification templates.
             </CardDescription>
           </CardHeader>
           <CardContent>

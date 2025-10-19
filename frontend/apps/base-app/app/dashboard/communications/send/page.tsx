@@ -2,6 +2,7 @@
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
 export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
 
 /**
  * Email Composer Page
@@ -88,14 +89,14 @@ export default function SendEmailPage() {
   const [sendMode, setSendMode] = useState<'immediate' | 'queue'>('immediate');
   const [showPreview, setShowPreview] = useState(false);
   const [previewHtml, setPreviewHtml] = useState<string>('');
-  const [useTemplate, setUseTemplate] = useState(false);
+  const [enableTemplate, setEnableTemplate] = useState(false);
   const [templateVariables, setTemplateVariables] = useState<string[]>([]);
 
   const selectedTemplate = useTemplate(formData.template_id || null);
 
   // Extract variables when template or manual content changes
   useEffect(() => {
-    if (useTemplate && selectedTemplate.data) {
+    if (enableTemplate && selectedTemplate.data) {
       const htmlVars = extractTemplateVariables(selectedTemplate.data.body_html || '');
       const textVars = extractTemplateVariables(selectedTemplate.data.body_text || '');
       const subjectVars = extractTemplateVariables(selectedTemplate.data.subject || '');
@@ -106,13 +107,13 @@ export default function SendEmailPage() {
       const vars: Record<string, string> = {};
       allVars.forEach(v => vars[v] = '');
       setFormData(prev => ({ ...prev, variables: vars }));
-    } else if (!useTemplate) {
+    } else if (!enableTemplate) {
       const textVars = extractTemplateVariables(formData.body_text || '');
       const htmlVars = extractTemplateVariables(formData.body_html || '');
       const allVars = [...new Set([...textVars, ...htmlVars])];
       setTemplateVariables(allVars);
     }
-  }, [useTemplate, selectedTemplate.data, formData.body_text, formData.body_html]);
+  }, [enableTemplate, selectedTemplate.data, formData.body_text, formData.body_html]);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -147,14 +148,14 @@ export default function SendEmailPage() {
     }
 
     // Validate body
-    if (useTemplate && !formData.template_id) {
+    if (enableTemplate && !formData.template_id) {
       newErrors.template_id = 'Please select a template';
-    } else if (!useTemplate && !formData.body_text && !formData.body_html) {
+    } else if (!enableTemplate && !formData.body_text && !formData.body_html) {
       newErrors.body_text = 'Email body is required';
     }
 
     // Validate template variables
-    if (useTemplate && templateVariables.length > 0) {
+    if (enableTemplate && templateVariables.length > 0) {
       const missingVars = templateVariables.filter(
         v => !formData.variables?.[v] || formData.variables[v].trim() === ''
       );
@@ -170,7 +171,7 @@ export default function SendEmailPage() {
   const handlePreview = async () => {
     if (!validate()) return;
 
-    if (useTemplate && formData.template_id && formData.variables) {
+    if (enableTemplate && formData.template_id && formData.variables) {
       try {
         const result = await renderTemplate.mutateAsync({
           id: formData.template_id,
@@ -215,7 +216,7 @@ export default function SendEmailPage() {
       reply_to: formData.reply_to,
     };
 
-    if (useTemplate && formData.template_id) {
+    if (enableTemplate && formData.template_id) {
       emailData.template_id = formData.template_id;
       emailData.variables = formData.variables;
     } else {
@@ -337,8 +338,8 @@ export default function SendEmailPage() {
                   <input
                     type="checkbox"
                     id="use_template"
-                    checked={useTemplate}
-                    onChange={(e) => setUseTemplate(e.target.checked)}
+                    checked={enableTemplate}
+                    onChange={(e) => setEnableTemplate(e.target.checked)}
                     className="h-4 w-4 rounded border-gray-300"
                   />
                   <Label htmlFor="use_template" className="font-normal cursor-pointer">
@@ -347,7 +348,7 @@ export default function SendEmailPage() {
                 </div>
 
                 {/* Template Selection */}
-                {useTemplate && (
+                {enableTemplate && (
                   <div className="space-y-2">
                     <Label htmlFor="template_id">
                       Template <span className="text-red-500">*</span>
@@ -434,7 +435,7 @@ export default function SendEmailPage() {
                 </div>
 
                 {/* Template Variables */}
-                {useTemplate && templateVariables.length > 0 && (
+                {enableTemplate && templateVariables.length > 0 && (
                   <div className="space-y-3 p-4 border rounded-lg">
                     <Label>Template Variables</Label>
                     {templateVariables.map((varName) => (
@@ -457,7 +458,7 @@ export default function SendEmailPage() {
                 )}
 
                 {/* Manual Body */}
-                {!useTemplate && (
+                {!enableTemplate && (
                   <Tabs defaultValue="text">
                     <TabsList>
                       <TabsTrigger value="text">Plain Text</TabsTrigger>

@@ -8,12 +8,10 @@ and invitations to optimize performance.
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
 
 import strawberry
 
 from dotmac.platform.graphql.types.common import BillingCycleEnum
-from dotmac.platform.tenant.models import BillingCycle, TenantPlanType, TenantStatus
 
 
 @strawberry.enum
@@ -68,7 +66,7 @@ class TenantSetting:
     key: str
     value: str
     value_type: str
-    description: Optional[str]
+    description: str | None
     is_encrypted: bool
     created_at: datetime
     updated_at: datetime
@@ -130,7 +128,7 @@ class TenantInvitation:
     invited_by: strawberry.ID
     status: str
     expires_at: datetime
-    accepted_at: Optional[datetime]
+    accepted_at: datetime | None
     created_at: datetime
     is_expired: bool
     is_pending: bool
@@ -166,7 +164,7 @@ class Tenant:
     id: strawberry.ID
     name: str
     slug: str
-    domain: Optional[str]
+    domain: str | None
 
     # Status and subscription
     status: TenantStatusEnum
@@ -174,37 +172,37 @@ class Tenant:
     billing_cycle: BillingCycleEnum
 
     # Contact information
-    email: Optional[str]
-    phone: Optional[str]
-    billing_email: Optional[str]
+    email: str | None
+    phone: str | None
+    billing_email: str | None
 
     # Subscription dates
-    trial_ends_at: Optional[datetime]
-    subscription_starts_at: Optional[datetime]
-    subscription_ends_at: Optional[datetime]
+    trial_ends_at: datetime | None
+    subscription_starts_at: datetime | None
+    subscription_ends_at: datetime | None
 
     # Usage metrics (always included - lightweight)
     usage_metrics: TenantUsageMetrics
 
     # Company information
-    company_size: Optional[str]
-    industry: Optional[str]
-    country: Optional[str]
+    company_size: str | None
+    industry: str | None
+    country: str | None
     timezone: str
 
     # Branding
-    logo_url: Optional[str]
-    primary_color: Optional[str]
+    logo_url: str | None
+    primary_color: str | None
 
     # Metadata (optional, can be large)
-    features: Optional[strawberry.scalars.JSON]
-    settings_json: Optional[strawberry.scalars.JSON]
-    custom_metadata: Optional[strawberry.scalars.JSON]
+    features: strawberry.scalars.JSON | None
+    settings_json: strawberry.scalars.JSON | None
+    custom_metadata: strawberry.scalars.JSON | None
 
     # Timestamps
     created_at: datetime
     updated_at: datetime
-    deleted_at: Optional[datetime]
+    deleted_at: datetime | None
 
     # Computed properties
     is_trial: bool

@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth } from './useAuth';
+import { apiClient } from '../lib/api/client';
 import { SSEClient, SSEEndpoints } from '../lib/realtime/sse-client';
 import {
   WebSocketClient,
@@ -44,7 +45,7 @@ export function useSSE<T extends BaseEvent>(
   handler: EventHandler<T>,
   enabled = true
 ) {
-  const { apiClient } = useAuth();
+  const { user } = useAuth();
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<SSEClient | null>(null);
@@ -52,8 +53,8 @@ export function useSSE<T extends BaseEvent>(
   useEffect(() => {
     if (!enabled) return;
 
-    // Get token from auth context
-    const token = apiClient.defaults.headers.common[
+    // Get token from auth context - using optional chaining to prevent crashes
+    const token = apiClient?.defaults?.headers?.common?.[
       'Authorization'
     ]?.toString().replace('Bearer ', '') || '';
 
@@ -89,7 +90,7 @@ export function useSSE<T extends BaseEvent>(
       client.close();
       clientRef.current = null;
     };
-  }, [endpoint, eventType, enabled, apiClient]);
+  }, [endpoint, eventType, enabled, user]);
 
   const reconnect = useCallback(() => {
     if (clientRef.current) {
@@ -183,7 +184,7 @@ export function useRADIUSSessionEvents(
  * Base WebSocket hook
  */
 export function useWebSocket(endpoint: string, enabled = true) {
-  const { apiClient } = useAuth();
+  const { user } = useAuth();
   const [status, setStatus] = useState<ConnectionStatus>('disconnected');
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<WebSocketClient | null>(null);
@@ -192,7 +193,7 @@ export function useWebSocket(endpoint: string, enabled = true) {
     if (!enabled) return;
 
     const token =
-      apiClient.defaults.headers.common['Authorization']
+      apiClient?.defaults?.headers?.common?.['Authorization']
         ?.toString()
         .replace('Bearer ', '') || '';
 
@@ -224,7 +225,7 @@ export function useWebSocket(endpoint: string, enabled = true) {
       client.close();
       clientRef.current = null;
     };
-  }, [endpoint, enabled, apiClient]);
+  }, [endpoint, enabled, user]);
 
   const subscribe = useCallback(
     <T extends BaseEvent>(

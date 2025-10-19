@@ -17,7 +17,7 @@ test.describe('Multi-Factor Authentication', () => {
 
   test('should redirect to MFA verification if enabled for user', async ({ page }) => {
     // MFA UI is now implemented at /mfa/verify and /mfa/setup
-    await page.getByTestId('username-input').fill(TEST_USERNAME);
+    await page.getByTestId('email-input').fill(TEST_USERNAME);
     await page.getByTestId('password-input').fill(TEST_PASSWORD);
     await page.getByTestId('submit-button').click();
 
@@ -37,7 +37,7 @@ test.describe('Multi-Factor Authentication', () => {
 
   test('should access MFA settings from user profile', async ({ page }) => {
     // Login first
-    await page.getByTestId('username-input').fill(TEST_USERNAME);
+    await page.getByTestId('email-input').fill(TEST_USERNAME);
     await page.getByTestId('password-input').fill(TEST_PASSWORD);
     await page.getByTestId('submit-button').click();
 

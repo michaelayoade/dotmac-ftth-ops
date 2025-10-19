@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   CheckCircle2,
   Upload,
@@ -564,10 +565,13 @@ export function CompleteSurveyModal({
                         className="relative border rounded-lg p-2 space-y-2"
                       >
                         <div className="relative aspect-video">
-                          <img
+                          <Image
                             src={photo.preview}
                             alt="Preview"
-                            className="rounded object-cover w-full h-full"
+                            fill
+                            unoptimized
+                            className="rounded object-cover"
+                            sizes="(max-width: 768px) 100vw, 50vw"
                           />
                           <Button
                             type="button"

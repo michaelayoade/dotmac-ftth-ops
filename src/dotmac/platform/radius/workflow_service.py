@@ -6,7 +6,7 @@ Provides workflow-compatible methods for RADIUS operations (ISP).
 
 import logging
 import secrets
-from typing import Any, Dict
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,7 +31,7 @@ class RADIUSService:
         tenant_id: str | None = None,
         subscriber_id: str | None = None,
         static_ip: str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a RADIUS subscriber account for ISP customer.
 
@@ -64,7 +64,8 @@ class RADIUSService:
             ValueError: If bandwidth profile not found or username already exists
         """
         from sqlalchemy import select
-        from .models import RadCheck, RadReply, RadiusBandwidthProfile
+
+        from .models import RadCheck, RadiusBandwidthProfile, RadReply
 
         logger.info(
             f"Creating RADIUS subscriber for customer {customer_id}, "

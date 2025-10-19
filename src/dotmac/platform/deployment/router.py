@@ -5,14 +5,13 @@ REST API endpoints for deployment orchestration.
 """
 
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from ..auth.rbac_dependencies import require_permissions
-from ..dependencies import get_db, get_current_user
-from ..user_management.models import User
+from ..dependencies import get_db
+from ..auth.core import UserInfo
 from .models import DeploymentBackend, DeploymentState, DeploymentType
 from .registry import DeploymentRegistry
 from .schemas import (
@@ -38,7 +37,7 @@ from .service import DeploymentService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/deployments", )
 
 
 def get_deployment_service(db: Session = Depends(get_db)) -> DeploymentService:
@@ -54,13 +53,13 @@ def get_deployment_service(db: Session = Depends(get_db)) -> DeploymentService:
 
 @router.get("/templates", response_model=list[DeploymentTemplateResponse])
 async def list_templates(
-    is_active: Optional[bool] = Query(None),
-    backend: Optional[DeploymentBackend] = Query(None),
-    deployment_type: Optional[DeploymentType] = Query(None),
+    is_active: bool | None = Query(None),
+    backend: DeploymentBackend | None = Query(None),
+    deployment_type: DeploymentType | None = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.template.read"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.template.read")),
 ):
     """List deployment templates"""
     registry = DeploymentRegistry(db)
@@ -72,7 +71,7 @@ async def list_templates(
 async def create_template(
     template: DeploymentTemplateCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.template.create"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.template.create")),
 ):
     """Create deployment template"""
     from .models import DeploymentTemplate
@@ -92,7 +91,7 @@ async def create_template(
 async def get_template(
     template_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.template.read"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.template.read")),
 ):
     """Get deployment template"""
     registry = DeploymentRegistry(db)
@@ -107,7 +106,7 @@ async def update_template(
     template_id: int,
     updates: DeploymentTemplateUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.template.update"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.template.update")),
 ):
     """Update deployment template"""
     registry = DeploymentRegistry(db)
@@ -124,16 +123,16 @@ async def update_template(
 
 @router.get("/instances", response_model=DeploymentListResponse)
 async def list_instances(
-    tenant_id: Optional[int] = Query(None),
-    state: Optional[DeploymentState] = Query(None),
-    environment: Optional[str] = Query(None),
-    region: Optional[str] = Query(None),
-    template_id: Optional[int] = Query(None),
-    health_status: Optional[str] = Query(None),
+    tenant_id: int | None = Query(None),
+    state: DeploymentState | None = Query(None),
+    environment: str | None = Query(None),
+    region: str | None = Query(None),
+    template_id: int | None = Query(None),
+    health_status: str | None = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.instance.read"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.instance.read")),
 ):
     """List deployment instances"""
     registry = DeploymentRegistry(db)
@@ -158,7 +157,7 @@ async def list_instances(
 async def get_instance(
     instance_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.instance.read"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.instance.read")),
 ):
     """Get deployment instance"""
     registry = DeploymentRegistry(db)
@@ -172,7 +171,7 @@ async def get_instance(
 async def get_instance_status(
     instance_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.instance.read"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.instance.read")),
 ):
     """Get deployment instance status"""
     registry = DeploymentRegistry(db)
@@ -209,7 +208,7 @@ async def get_instance_status(
 async def provision_deployment(
     request: ProvisionRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.instance.create"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.instance.create")),
     service: DeploymentService = Depends(get_deployment_service),
 ):
     """Provision new deployment"""
@@ -218,7 +217,7 @@ async def provision_deployment(
         tenant_id = current_user.tenant_id
 
         instance, execution = await service.provision_deployment(
-            tenant_id=tenant_id, request=request, triggered_by=current_user.id
+            tenant_id=tenant_id, request=request, triggered_by=current_user.user_id
         )
 
         return OperationResponse(
@@ -241,12 +240,12 @@ async def upgrade_deployment(
     instance_id: int,
     request: UpgradeRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.instance.upgrade"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.instance.upgrade")),
     service: DeploymentService = Depends(get_deployment_service),
 ):
     """Upgrade deployment"""
     try:
-        execution = await service.upgrade_deployment(instance_id=instance_id, request=request, triggered_by=current_user.id)
+        execution = await service.upgrade_deployment(instance_id=instance_id, request=request, triggered_by=current_user.user_id)
 
         registry = DeploymentRegistry(db)
         instance = registry.get_instance(instance_id)
@@ -271,12 +270,12 @@ async def scale_deployment(
     instance_id: int,
     request: ScaleRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.instance.scale"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.instance.scale")),
     service: DeploymentService = Depends(get_deployment_service),
 ):
     """Scale deployment resources"""
     try:
-        execution = await service.scale_deployment(instance_id=instance_id, request=request, triggered_by=current_user.id)
+        execution = await service.scale_deployment(instance_id=instance_id, request=request, triggered_by=current_user.user_id)
 
         registry = DeploymentRegistry(db)
         instance = registry.get_instance(instance_id)
@@ -301,12 +300,12 @@ async def suspend_deployment(
     instance_id: int,
     request: SuspendRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.instance.suspend"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.instance.suspend")),
     service: DeploymentService = Depends(get_deployment_service),
 ):
     """Suspend deployment"""
     try:
-        execution = await service.suspend_deployment(instance_id=instance_id, reason=request.reason, triggered_by=current_user.id)
+        execution = await service.suspend_deployment(instance_id=instance_id, reason=request.reason, triggered_by=current_user.user_id)
 
         registry = DeploymentRegistry(db)
         instance = registry.get_instance(instance_id)
@@ -331,12 +330,12 @@ async def resume_deployment(
     instance_id: int,
     request: ResumeRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.instance.resume"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.instance.resume")),
     service: DeploymentService = Depends(get_deployment_service),
 ):
     """Resume suspended deployment"""
     try:
-        execution = await service.resume_deployment(instance_id=instance_id, reason=request.reason, triggered_by=current_user.id)
+        execution = await service.resume_deployment(instance_id=instance_id, reason=request.reason, triggered_by=current_user.user_id)
 
         registry = DeploymentRegistry(db)
         instance = registry.get_instance(instance_id)
@@ -361,13 +360,13 @@ async def destroy_deployment(
     instance_id: int,
     request: DestroyRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.instance.destroy"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.instance.destroy")),
     service: DeploymentService = Depends(get_deployment_service),
 ):
     """Destroy deployment"""
     try:
         execution = await service.destroy_deployment(
-            instance_id=instance_id, reason=request.reason, backup_data=request.backup_data, triggered_by=current_user.id
+            instance_id=instance_id, reason=request.reason, backup_data=request.backup_data, triggered_by=current_user.user_id
         )
 
         registry = DeploymentRegistry(db)
@@ -396,11 +395,11 @@ async def destroy_deployment(
 @router.get("/instances/{instance_id}/executions", response_model=list[DeploymentExecutionResponse])
 async def list_executions(
     instance_id: int,
-    operation: Optional[str] = Query(None),
+    operation: str | None = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.instance.read"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.instance.read")),
 ):
     """List execution history for instance"""
     registry = DeploymentRegistry(db)
@@ -412,7 +411,7 @@ async def list_executions(
 async def get_execution(
     execution_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.instance.read"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.instance.read")),
 ):
     """Get execution details"""
     registry = DeploymentRegistry(db)
@@ -433,7 +432,7 @@ async def list_health_records(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.instance.read"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.instance.read")),
 ):
     """List health check history"""
     registry = DeploymentRegistry(db)
@@ -445,7 +444,7 @@ async def list_health_records(
 async def trigger_health_check(
     instance_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.instance.health_check"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.instance.health_check")),
     service: DeploymentService = Depends(get_deployment_service),
 ):
     """Trigger manual health check"""
@@ -466,9 +465,9 @@ async def trigger_health_check(
 
 @router.get("/stats")
 async def get_deployment_stats(
-    tenant_id: Optional[int] = Query(None),
+    tenant_id: int | None = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.stats.read"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.stats.read")),
 ):
     """Get deployment statistics"""
     registry = DeploymentRegistry(db)
@@ -478,7 +477,7 @@ async def get_deployment_stats(
 @router.get("/stats/templates")
 async def get_template_usage_stats(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.stats.read"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.stats.read")),
 ):
     """Get template usage statistics"""
     registry = DeploymentRegistry(db)
@@ -487,9 +486,9 @@ async def get_template_usage_stats(
 
 @router.get("/stats/resources")
 async def get_resource_allocation(
-    tenant_id: Optional[int] = Query(None),
+    tenant_id: int | None = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.stats.read"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.stats.read")),
 ):
     """Get resource allocation statistics"""
     registry = DeploymentRegistry(db)
@@ -505,7 +504,7 @@ async def get_resource_allocation(
 async def schedule_deployment(
     request: ScheduledDeploymentRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_permissions(["deployment.schedule.create"])),
+    current_user: UserInfo = Depends(require_permissions("deployment.schedule.create")),
     service: DeploymentService = Depends(get_deployment_service),
 ):
     """
@@ -561,7 +560,7 @@ async def schedule_deployment(
             upgrade_request=request.upgrade_request,
             scale_request=request.scale_request,
             instance_id=request.instance_id,
-            triggered_by=current_user.id if hasattr(current_user, "id") else None,
+            triggered_by=current_user.user_id if hasattr(current_user, "user_id") else None,
             cron_expression=request.cron_expression,
             interval_seconds=request.interval_seconds,
             metadata=request.metadata,

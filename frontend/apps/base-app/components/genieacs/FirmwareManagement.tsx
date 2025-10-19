@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Upload,
   Calendar,
@@ -85,14 +85,7 @@ export function FirmwareManagement() {
 
   const [deviceFilter, setDeviceFilter] = useState<string>("{}");
 
-  useEffect(() => {
-    loadData();
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(loadData, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [filesRes, schedulesRes] = await Promise.all([
@@ -111,7 +104,14 @@ export function FirmwareManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadData();
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(loadData, 10000);
+    return () => clearInterval(interval);
+  }, [loadData]);
 
   const loadScheduleDetails = async (scheduleId: string) => {
     try {
@@ -386,7 +386,7 @@ export function FirmwareManagement() {
               <Info className="h-4 w-4" />
               <AlertTitle>No Schedules</AlertTitle>
               <AlertDescription>
-                No firmware upgrade schedules have been created yet. Click "Schedule Upgrade" to create one.
+                No firmware upgrade schedules have been created yet. Click &quot;Schedule Upgrade&quot; to create one.
               </AlertDescription>
             </Alert>
           ) : (

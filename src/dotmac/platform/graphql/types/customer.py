@@ -8,18 +8,8 @@ batched loading via DataLoaders to prevent N+1 query problems.
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
-from uuid import UUID
 
 import strawberry
-
-from dotmac.platform.customer_management.models import (
-    ActivityType,
-    CommunicationChannel,
-    CustomerStatus,
-    CustomerTier,
-    CustomerType,
-)
 
 
 @strawberry.enum
@@ -82,8 +72,8 @@ class CustomerActivity:
     customer_id: strawberry.ID
     activity_type: ActivityTypeEnum
     title: str
-    description: Optional[str]
-    performed_by: Optional[strawberry.ID]
+    description: str | None
+    performed_by: strawberry.ID | None
     created_at: datetime
 
     @classmethod
@@ -111,7 +101,7 @@ class CustomerNote:
     subject: str
     content: str
     is_internal: bool
-    created_by_id: Optional[strawberry.ID]
+    created_by_id: strawberry.ID | None
     created_at: datetime
     updated_at: datetime
 
@@ -139,10 +129,10 @@ class CustomerMetrics:
     lifetime_value: Decimal
     total_purchases: int
     average_order_value: Decimal
-    last_purchase_date: Optional[datetime]
-    first_purchase_date: Optional[datetime]
-    satisfaction_score: Optional[int]
-    net_promoter_score: Optional[int]
+    last_purchase_date: datetime | None
+    first_purchase_date: datetime | None
+    satisfaction_score: int | None
+    net_promoter_score: int | None
 
 
 @strawberry.type
@@ -160,9 +150,9 @@ class Customer:
     # Basic information
     first_name: str
     last_name: str
-    middle_name: Optional[str]
-    display_name: Optional[str]
-    company_name: Optional[str]
+    middle_name: str | None
+    display_name: str | None
+    company_name: str | None
 
     # Account information
     status: CustomerStatusEnum
@@ -172,34 +162,34 @@ class Customer:
     # Contact information
     email: str
     email_verified: bool
-    phone: Optional[str]
+    phone: str | None
     phone_verified: bool
-    mobile: Optional[str]
+    mobile: str | None
 
     # Address
-    address_line1: Optional[str]
-    address_line2: Optional[str]
-    city: Optional[str]
-    state_province: Optional[str]
-    postal_code: Optional[str]
-    country: Optional[str]
+    address_line1: str | None
+    address_line2: str | None
+    city: str | None
+    state_province: str | None
+    postal_code: str | None
+    country: str | None
 
     # Business info (for business customers)
-    tax_id: Optional[str]
-    industry: Optional[str]
-    employee_count: Optional[int]
+    tax_id: str | None
+    industry: str | None
+    employee_count: int | None
 
     # Metrics
     lifetime_value: Decimal
     total_purchases: int
     average_order_value: Decimal
-    last_purchase_date: Optional[datetime]
+    last_purchase_date: datetime | None
 
     # Dates
     created_at: datetime
     updated_at: datetime
     acquisition_date: datetime
-    last_contact_date: Optional[datetime]
+    last_contact_date: datetime | None
 
     # Relationships - batched via DataLoaders
     activities: list[CustomerActivity] = strawberry.field(default_factory=list)

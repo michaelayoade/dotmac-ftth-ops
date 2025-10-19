@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import { useMemo, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -326,7 +329,7 @@ export default function DunningDashboardPage() {
           <CardHeader>
             <CardTitle>Dunning & Collections</CardTitle>
             <CardDescription className="text-destructive">
-              You don't have permission to access dunning management.
+              You don&apos;t have permission to access dunning management.
             </CardDescription>
           </CardHeader>
         </Card>

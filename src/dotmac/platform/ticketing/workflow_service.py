@@ -6,7 +6,7 @@ Provides workflow-compatible methods for ticketing operations.
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,7 +39,7 @@ class TicketingService:
         tenant_id: str | None = None,
         ticket_type: str | None = None,
         service_address: str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a support ticket for a customer.
 
@@ -215,7 +215,7 @@ class TicketingService:
         tenant_id: str | None = None,
         priority: str = "normal",
         notes: str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Schedule an installation appointment for ISP customer.
 
@@ -249,7 +249,7 @@ class TicketingService:
         Raises:
             ValueError: If customer not found or invalid date format
         """
-        from datetime import UTC, datetime, timedelta
+        from datetime import UTC, timedelta
 
         logger.info(
             f"Scheduling installation for customer {customer_id} at {installation_address}"
@@ -279,6 +279,7 @@ class TicketingService:
             # For now, use a simple auto-assignment
             # In production, query from user_management for field technicians
             from sqlalchemy import select
+
             from ..user_management.models import User
 
             # Find technicians in the tenant (users with "field_technician" role)
@@ -327,6 +328,7 @@ This installation was automatically scheduled via the workflow system.
         # In production, you might have a separate InstallationSchedule table
         # For now, we'll include it in the ticket metadata
         from sqlalchemy import select, update
+
         from .models import Ticket
 
         ticket_uuid = UUID(ticket_result["ticket_id"])

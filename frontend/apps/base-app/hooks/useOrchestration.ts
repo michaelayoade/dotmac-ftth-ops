@@ -108,7 +108,7 @@ export function useOrchestrationStats() {
   const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get<WorkflowStatistics>('/api/v1/orchestration/stats');
+      const response = await apiClient.get<WorkflowStatistics>('/orchestration/stats');
       setStats(response.data);
       setError(null);
     } catch (err: any) {
@@ -171,7 +171,7 @@ export function useWorkflows(options: UseWorkflowsOptions = {}) {
       if (workflowType) params.workflow_type = workflowType;
 
       const response = await apiClient.get<WorkflowListResponse>(
-        '/api/v1/orchestration/workflows',
+        '/orchestration/workflows',
         { params }
       );
 
@@ -230,7 +230,7 @@ export function useWorkflow(workflowId: string | null, autoRefresh = false) {
     try {
       setLoading(true);
       const response = await apiClient.get<Workflow>(
-        `/api/v1/orchestration/workflows/${workflowId}`
+        `/orchestration/workflows/${workflowId}`
       );
       setWorkflow(response.data);
       setError(null);
@@ -278,7 +278,7 @@ export function useRetryWorkflow() {
     try {
       setLoading(true);
       setError(null);
-      await apiClient.post(`/api/v1/orchestration/workflows/${workflowId}/retry`);
+      await apiClient.post(`/orchestration/workflows/${workflowId}/retry`);
       return true;
     } catch (err: any) {
       console.error('Failed to retry workflow:', err);
@@ -308,7 +308,7 @@ export function useCancelWorkflow() {
     try {
       setLoading(true);
       setError(null);
-      await apiClient.post(`/api/v1/orchestration/workflows/${workflowId}/cancel`);
+      await apiClient.post(`/orchestration/workflows/${workflowId}/cancel`);
       return true;
     } catch (err: any) {
       console.error('Failed to cancel workflow:', err);
@@ -356,7 +356,7 @@ export function useExportWorkflows() {
       if (options.limit) params.append('limit', options.limit.toString());
 
       const response = await apiClient.get(
-        `/api/v1/orchestration/export/csv?${params.toString()}`,
+        `/orchestration/export/csv?${params.toString()}`,
         { responseType: 'blob' }
       );
 
@@ -397,7 +397,7 @@ export function useExportWorkflows() {
       }
 
       const response = await apiClient.get(
-        `/api/v1/orchestration/export/json?${params.toString()}`,
+        `/orchestration/export/json?${params.toString()}`,
         { responseType: 'blob' }
       );
 

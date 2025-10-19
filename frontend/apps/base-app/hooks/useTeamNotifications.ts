@@ -56,7 +56,7 @@ export function useTeamNotifications() {
         }
 
         const response = await apiClient.post<TeamNotificationResponse>(
-          '/api/v1/notifications/team',
+          '/notifications/team',
           {
             team_members: request.team_members,
             role_filter: request.role_filter,

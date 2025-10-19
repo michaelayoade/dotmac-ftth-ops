@@ -1,6 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
+import { useCallback, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   UserPlus,
@@ -140,6 +143,53 @@ export default function LeadsManagementPage() {
   }, [leads]);
 
   // Table columns
+  const handleViewLead = useCallback(
+    (lead: Lead) => {
+      setSelectedLead(lead);
+      setIsDetailModalOpen(true);
+    },
+    [setSelectedLead, setIsDetailModalOpen]
+  );
+
+  const handleEditLead = useCallback(
+    (lead: Lead) => {
+      setSelectedLead(lead);
+      setIsCreateModalOpen(true);
+    },
+    [setSelectedLead, setIsCreateModalOpen]
+  );
+
+  const handleQualify = useCallback(
+    async (leadId: string) => {
+      const success = await qualifyLead(leadId);
+      if (success) {
+        toast({
+          title: "Lead Qualified",
+          description: "Lead has been marked as qualified.",
+        });
+        refetch();
+      }
+    },
+    [qualifyLead, refetch, toast]
+  );
+
+  const handleDisqualify = useCallback(
+    async (leadId: string) => {
+      const reason = prompt("Reason for disqualification:");
+      if (reason) {
+        const success = await disqualifyLead(leadId, reason);
+        if (success) {
+          toast({
+            title: "Lead Disqualified",
+            description: "Lead has been disqualified.",
+          });
+          refetch();
+        }
+      }
+    },
+    [disqualifyLead, refetch, toast]
+  );
+
   const columns: ColumnDef<Lead>[] = useMemo(
     () => [
       {
@@ -243,7 +293,7 @@ export default function LeadsManagementPage() {
         ),
       },
     ],
-    []
+    [handleDisqualify, handleEditLead, handleQualify, handleViewLead]
   );
 
   // Bulk actions
@@ -327,42 +377,6 @@ export default function LeadsManagementPage() {
   );
 
   // Handlers
-  const handleViewLead = (lead: Lead) => {
-    setSelectedLead(lead);
-    setIsDetailModalOpen(true);
-  };
-
-  const handleEditLead = (lead: Lead) => {
-    setSelectedLead(lead);
-    // Open edit modal (same as create modal but in edit mode)
-    setIsCreateModalOpen(true);
-  };
-
-  const handleQualify = async (leadId: string) => {
-    const success = await qualifyLead(leadId);
-    if (success) {
-      toast({
-        title: "Lead Qualified",
-        description: "Lead has been marked as qualified.",
-      });
-      refetch();
-    }
-  };
-
-  const handleDisqualify = async (leadId: string) => {
-    const reason = prompt("Reason for disqualification:");
-    if (reason) {
-      const success = await disqualifyLead(leadId, reason);
-      if (success) {
-        toast({
-          title: "Lead Disqualified",
-          description: "Lead has been disqualified.",
-        });
-        refetch();
-      }
-    }
-  };
-
   const handleClearFilters = () => {
     setStatusFilter("");
     setSourceFilter("");

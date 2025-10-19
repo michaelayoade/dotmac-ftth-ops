@@ -271,7 +271,7 @@ export function EnhancedDataTable<TData, TValue>({
   // Get selected rows
   const selectedRows = React.useMemo(() => {
     return table.getFilteredSelectedRowModel().rows.map((row) => row.original);
-  }, [table, rowSelection]);
+  }, [table]);
 
   // Export handler
   const handleExport = React.useCallback(() => {

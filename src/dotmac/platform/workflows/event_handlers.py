@@ -5,7 +5,7 @@ Event listeners that trigger workflows based on domain events.
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 

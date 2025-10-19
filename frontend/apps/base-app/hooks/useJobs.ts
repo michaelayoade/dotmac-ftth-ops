@@ -54,7 +54,7 @@ export function useJobs(options: UseJobsOptions = {}) {
       params.append('offset', String(offset));
 
       const response = await apiClient.get<JobsResponse>(
-        `/api/v1/jobs?${params.toString()}`
+        `/jobs?${params.toString()}`
       );
       return extractDataOrThrow(response);
     },
@@ -71,7 +71,7 @@ export function useCancelJob() {
   return useMutation({
     mutationFn: async (jobId: string) => {
       const response = await apiClient.post<Job>(
-        `/api/v1/jobs/${jobId}/cancel`
+        `/jobs/${jobId}/cancel`
       );
       return extractDataOrThrow(response);
     },

@@ -28,7 +28,7 @@ export function useNetboxHealth({
   return useQuery<NetboxHealth, Error, NetboxHealth, NetboxHealthKey>({
     queryKey: ['netbox', 'health'],
     queryFn: async () => {
-      const response = await apiClient.get<NetboxHealth>('/api/v1/netbox/health');
+      const response = await apiClient.get<NetboxHealth>('/netbox/health');
       return extractDataOrThrow(response);
     },
     enabled,
@@ -49,7 +49,7 @@ export function useNetboxSites({
   return useQuery<NetboxSite[], Error, NetboxSite[], NetboxSitesKey>({
     queryKey: ['netbox', 'sites', { limit, offset }],
     queryFn: async () => {
-      const response = await apiClient.get<NetboxSite[]>('/api/v1/netbox/dcim/sites', {
+      const response = await apiClient.get<NetboxSite[]>('/netbox/dcim/sites', {
         params: { limit, offset },
       });
       return extractDataOrThrow(response);

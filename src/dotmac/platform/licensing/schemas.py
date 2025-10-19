@@ -243,8 +243,10 @@ class TemplateFeature(BaseModel):
 class TemplateRestriction(BaseModel):
     """Template restriction schema."""
 
-    restriction_type: LicenseRestriction.__annotations__["restriction_type"]
-    operator: LicenseRestriction.__annotations__["operator"] = "ALLOW"
+    restriction_type: Literal[
+        "GEOGRAPHIC", "DOMAIN", "IP_RANGE", "MAC_ADDRESS", "HARDWARE_ID", "TIME_BASED"
+    ]
+    operator: Literal["ALLOW", "DENY"] = "ALLOW"
     configurable: bool = True
     default_values: list[str] | None = None
 

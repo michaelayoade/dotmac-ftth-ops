@@ -32,6 +32,7 @@
     "pnpm": ">=9"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.1",
     "concurrently": "^8.2.0",
     "openapi-typescript": "^7.5.2"
   }

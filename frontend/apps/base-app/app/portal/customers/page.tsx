@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import { usePartnerCustomers } from "@/hooks/usePartnerPortal";
 import { Users, DollarSign, TrendingUp, CheckCircle } from "lucide-react";
 

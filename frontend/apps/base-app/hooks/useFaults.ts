@@ -129,7 +129,7 @@ export function useAlarms(params?: AlarmQueryParams) {
       if (params?.limit) queryParams.set('limit', String(params.limit));
       if (params?.offset) queryParams.set('offset', String(params.offset));
 
-      const endpoint = `/api/v1/faults/alarms${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const endpoint = `/faults/alarms${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const response = await apiClient.get(endpoint);
 
       if (response.data) {
@@ -168,7 +168,7 @@ export function useAlarmStatistics() {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.get('/api/v1/faults/alarms/statistics');
+      const response = await apiClient.get('/faults/alarms/statistics');
 
       if (response.data) {
         setStatistics(response.data as AlarmStatistics);
@@ -206,7 +206,7 @@ export function useAlarmOperations() {
       setError(null);
 
       const promises = alarmIds.map(id =>
-        apiClient.post(`/api/v1/faults/alarms/${id}/acknowledge`, { note })
+        apiClient.post(`/faults/alarms/${id}/acknowledge`, { note })
       );
 
       await Promise.all(promises);
@@ -226,7 +226,7 @@ export function useAlarmOperations() {
       setError(null);
 
       const promises = alarmIds.map(id =>
-        apiClient.post(`/api/v1/faults/alarms/${id}/clear`, {})
+        apiClient.post(`/faults/alarms/${id}/clear`, {})
       );
 
       await Promise.all(promises);
@@ -246,7 +246,7 @@ export function useAlarmOperations() {
       setError(null);
 
       const promises = alarmIds.map(id =>
-        apiClient.post(`/api/v1/faults/alarms/${id}/create-ticket`, { priority })
+        apiClient.post(`/faults/alarms/${id}/create-ticket`, { priority })
       );
 
       await Promise.all(promises);
@@ -286,7 +286,7 @@ export function useSLACompliance(days: number = 30) {
       fromDate.setDate(fromDate.getDate() - days);
 
       const response = await apiClient.get(
-        `/api/v1/faults/sla/compliance?from_date=${fromDate.toISOString()}`
+        `/faults/sla/compliance?from_date=${fromDate.toISOString()}`
       );
 
       if (response.data) {
@@ -330,8 +330,8 @@ export function useAlarmDetails(alarmId: string | null) {
 
       // Fetch history and notes in parallel
       const [historyResponse, notesResponse] = await Promise.all([
-        apiClient.get(`/api/v1/faults/alarms/${alarmId}/history`),
-        apiClient.get(`/api/v1/faults/alarms/${alarmId}/notes`),
+        apiClient.get(`/faults/alarms/${alarmId}/history`),
+        apiClient.get(`/faults/alarms/${alarmId}/notes`),
       ]);
 
       setHistory(historyResponse.data || []);
@@ -352,7 +352,7 @@ export function useAlarmDetails(alarmId: string | null) {
     if (!alarmId) return false;
 
     try {
-      await apiClient.post(`/api/v1/faults/alarms/${alarmId}/notes`, { content });
+      await apiClient.post(`/faults/alarms/${alarmId}/notes`, { content });
       await fetchDetails(); // Refresh notes
       return true;
     } catch (err) {

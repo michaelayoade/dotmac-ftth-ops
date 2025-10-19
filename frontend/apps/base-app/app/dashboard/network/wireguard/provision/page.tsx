@@ -1,5 +1,9 @@
 'use client';
 
+// Force dynamic rendering to avoid SSR issues with React Query hooks
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 /**
  * WireGuard VPN Provisioning Page
  *

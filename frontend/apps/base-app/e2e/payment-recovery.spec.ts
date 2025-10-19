@@ -14,7 +14,7 @@ async function setupBillingPage(page: Page) {
   });
 
   await page.goto('/login');
-  await page.fill('[data-testid="username-input"]', 'admin');
+  await page.fill('[data-testid="email-input"]', 'admin');
   await page.fill('[data-testid="password-input"]', 'admin123');
   await page.click('[data-testid="submit-button"]');
   await page.waitForTimeout(1000);
@@ -480,7 +480,7 @@ test.describe('Invoice Payment Recovery', () => {
     });
 
     await page.goto('/login');
-    await page.fill('[data-testid="username-input"]', 'suspended-user');
+    await page.fill('[data-testid="email-input"]', 'suspended-user');
     await page.fill('[data-testid="password-input"]', 'password123');
     await page.click('[data-testid="submit-button"]');
 

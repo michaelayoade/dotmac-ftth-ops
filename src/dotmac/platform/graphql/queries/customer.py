@@ -5,16 +5,17 @@ Provides efficient customer queries with batched loading of activities and notes
 """
 
 from decimal import Decimal
-from typing import Optional
 from uuid import UUID
 
 import strawberry
 import structlog
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.customer_management.models import (
     Customer as CustomerModel,
+)
+from dotmac.platform.customer_management.models import (
     CustomerStatus,
 )
 from dotmac.platform.graphql.context import Context
@@ -41,7 +42,7 @@ class CustomerQueries:
         id: strawberry.ID,
         include_activities: bool = True,
         include_notes: bool = True,
-    ) -> Optional[Customer]:
+    ) -> Customer | None:
         """
         Fetch a single customer by ID.
 
@@ -99,8 +100,8 @@ class CustomerQueries:
         info: strawberry.Info[Context],
         limit: int = 50,
         offset: int = 0,
-        status: Optional[CustomerStatusEnum] = None,
-        search: Optional[str] = None,
+        status: CustomerStatusEnum | None = None,
+        search: str | None = None,
         include_activities: bool = False,
         include_notes: bool = False,
     ) -> CustomerConnection:
@@ -159,7 +160,7 @@ class CustomerQueries:
             activity_loader = info.context.loaders.get_customer_activity_loader()
             all_activities = await activity_loader.load_many(customer_ids)
 
-            for customer, activities in zip(customers, all_activities):
+            for customer, activities in zip(customers, all_activities, strict=False):
                 if activities:
                     customer.activities = [CustomerActivity.from_model(a) for a in activities]
 
@@ -169,7 +170,7 @@ class CustomerQueries:
             note_loader = info.context.loaders.get_customer_note_loader()
             all_notes = await note_loader.load_many(customer_ids)
 
-            for customer, notes in zip(customers, all_notes):
+            for customer, notes in zip(customers, all_notes, strict=False):
                 if notes:
                     customer.notes = [CustomerNote.from_model(n) for n in notes]
 

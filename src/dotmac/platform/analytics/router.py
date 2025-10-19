@@ -61,7 +61,7 @@ def _isoformat(value: Any | None) -> str:
 
 
 # Create router
-analytics_router = APIRouter()
+analytics_router = APIRouter(prefix="/api/v1/analytics", )
 
 # Analytics service instance (lazy initialization)
 _analytics_service = None

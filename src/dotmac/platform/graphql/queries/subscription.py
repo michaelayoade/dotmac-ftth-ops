@@ -7,7 +7,6 @@ plans, and invoices via DataLoaders to prevent N+1 queries.
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Optional
 
 import strawberry
 from sqlalchemy import func, or_, select
@@ -41,7 +40,7 @@ class SubscriptionQueries:
         include_customer: bool = False,
         include_plan: bool = False,
         include_invoices: bool = False,
-    ) -> Optional[Subscription]:
+    ) -> Subscription | None:
         """
         Fetch a single subscription by ID.
 
@@ -101,9 +100,9 @@ class SubscriptionQueries:
         info: strawberry.Info[Context],
         page: int = 1,
         page_size: int = 10,
-        status: Optional[SubscriptionStatusEnum] = None,
-        billing_cycle: Optional[BillingCycleEnum] = None,
-        search: Optional[str] = None,
+        status: SubscriptionStatusEnum | None = None,
+        billing_cycle: BillingCycleEnum | None = None,
+        search: str | None = None,
         include_customer: bool = False,
         include_plan: bool = False,
         include_invoices: bool = False,
@@ -220,7 +219,6 @@ class SubscriptionQueries:
 
         # Import here to avoid circular imports
         from dotmac.platform.billing.domain.aggregates import Subscription as SubscriptionModel
-        from dotmac.platform.billing.subscriptions.models import SubscriptionPlan
 
         # Get status counts
         status_stmt = select(
@@ -330,8 +328,8 @@ class SubscriptionQueries:
         info: strawberry.Info[Context],
         page: int = 1,
         page_size: int = 20,
-        is_active: Optional[bool] = None,
-        billing_cycle: Optional[BillingCycleEnum] = None,
+        is_active: bool | None = None,
+        billing_cycle: BillingCycleEnum | None = None,
     ) -> PlanConnection:
         """
         Fetch subscription plans with filtering and pagination.
@@ -394,8 +392,8 @@ class SubscriptionQueries:
         info: strawberry.Info[Context],
         page: int = 1,
         page_size: int = 20,
-        is_active: Optional[bool] = None,
-        category: Optional[str] = None,
+        is_active: bool | None = None,
+        category: str | None = None,
     ) -> ProductConnection:
         """
         Fetch products with filtering and pagination.

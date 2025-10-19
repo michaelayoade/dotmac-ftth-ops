@@ -109,7 +109,7 @@ export default function CreateRoleModal({ permissions, roles, onClose, onCreate 
         parent_role: formData.parent_role || undefined,
       };
 
-      const response = await apiClient.post('/api/v1/auth/rbac/roles', createData);
+      const response = await apiClient.post('/auth/rbac/roles', createData);
 
       if (response.status >= 200 && response.status < 300) {
         toast.success('Role created successfully');

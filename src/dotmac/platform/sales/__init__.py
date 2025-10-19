@@ -6,14 +6,14 @@ sales orders to fully provisioned tenant deployments.
 """
 
 from .models import (
+    ActivationStatus,
     Order,
     OrderItem,
     OrderStatus,
     OrderType,
     ServiceActivation,
-    ActivationStatus,
 )
-from .service import OrderProcessingService, ActivationOrchestrator
+from .service import ActivationOrchestrator, OrderProcessingService
 
 __all__ = [
     "Order",

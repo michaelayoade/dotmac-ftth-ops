@@ -37,7 +37,7 @@ import type {
   AvailableIP,
 } from '@/types/netbox';
 
-const API_BASE = '/api/v1/netbox';
+const API_BASE = '/netbox';
 
 // ============================================================================
 // Health

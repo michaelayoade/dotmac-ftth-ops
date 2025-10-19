@@ -38,7 +38,7 @@ from dotmac.platform.db import get_session_dependency
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(tags=["Customer Management"])
+router = APIRouter(prefix="/api/v1/customers", tags=["Customer Management"])
 
 
 def _convert_customer_to_response(customer: Any) -> CustomerResponse:
@@ -563,8 +563,8 @@ async def impersonate_customer(
 
     Returns a temporary access token scoped to the customer's permissions.
     """
-    from dotmac.platform.auth.core import jwt_service
     from dotmac.platform.audit import ActivitySeverity, ActivityType, log_user_activity
+    from dotmac.platform.auth.core import jwt_service
 
     try:
         # Get the customer

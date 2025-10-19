@@ -1,0 +1,354 @@
+groups:
+  - name: dual_stack_infrastructure
+    interval: 30s
+    rules:
+      # ============================================================================
+      # IP Pool Utilization Alerts
+      # ============================================================================
+
+      - alert: IPv4PoolCriticallyHigh
+        expr: dotmac_ipv4_pool_utilization_percentage > 85
+        for: 5m
+        labels:
+          severity: critical
+          component: ipam
+          protocol: ipv4
+        annotations:
+          summary: "IPv4 pool utilization critically high ({{ $value }}%)"
+          description: "IPv4 address pool utilization is at {{ $value | humanize }}% for tenant {{ $labels.tenant_id }}. Immediate action required to prevent exhaustion."
+          runbook_url: "https://docs.example.com/runbooks/ipv4-pool-exhaustion"
+          dashboard_url: "https://grafana.example.com/d/dual-stack-overview"
+
+      - alert: IPv4PoolHigh
+        expr: dotmac_ipv4_pool_utilization_percentage > 70
+        for: 15m
+        labels:
+          severity: warning
+          component: ipam
+          protocol: ipv4
+        annotations:
+          summary: "IPv4 pool utilization high ({{ $value }}%)"
+          description: "IPv4 address pool utilization is at {{ $value | humanize }}% for tenant {{ $labels.tenant_id }}. Plan capacity expansion."
+          runbook_url: "https://docs.example.com/runbooks/capacity-planning"
+
+      - alert: IPv6PrefixCriticallyHigh
+        expr: dotmac_ipv6_prefix_utilization_percentage > 80
+        for: 5m
+        labels:
+          severity: critical
+          component: ipam
+          protocol: ipv6
+        annotations:
+          summary: "IPv6 prefix utilization critically high ({{ $value }}%)"
+          description: "IPv6 prefix pool utilization is at {{ $value | humanize }}% for tenant {{ $labels.tenant_id }}. Request additional IPv6 allocation."
+          runbook_url: "https://docs.example.com/runbooks/ipv6-prefix-expansion"
+
+      - alert: IPv6PrefixHigh
+        expr: dotmac_ipv6_prefix_utilization_percentage > 60
+        for: 15m
+        labels:
+          severity: warning
+          component: ipam
+          protocol: ipv6
+        annotations:
+          summary: "IPv6 prefix utilization high ({{ $value }}%)"
+          description: "IPv6 prefix pool utilization is at {{ $value | humanize }}% for tenant {{ $labels.tenant_id }}."
+
+      - alert: IPv4AddressesLow
+        expr: dotmac_ipv4_addresses_available < 100
+        for: 5m
+        labels:
+          severity: critical
+          component: ipam
+          protocol: ipv4
+        annotations:
+          summary: "Very few IPv4 addresses available ({{ $value }})"
+          description: "Only {{ $value }} IPv4 addresses remain available for tenant {{ $labels.tenant_id }}. Pool exhaustion imminent."
+          runbook_url: "https://docs.example.com/runbooks/ipv4-pool-exhaustion"
+
+      # ============================================================================
+      # Dual-Stack Adoption Alerts
+      # ============================================================================
+
+      - alert: DualStackAdoptionCriticallyLow
+        expr: dotmac_dual_stack_percentage < 20 and dotmac_subscribers_total > 100
+        for: 30m
+        labels:
+          severity: critical
+          component: migration
+        annotations:
+          summary: "Dual-stack adoption critically low ({{ $value }}%)"
+          description: "Only {{ $value | humanize }}% of subscribers have dual-stack configuration for tenant {{ $labels.tenant_id }}. Migration effort stalled."
+          runbook_url: "https://docs.example.com/runbooks/migration-acceleration"
+
+      - alert: DualStackAdoptionLow
+        expr: dotmac_dual_stack_percentage < 30 and dotmac_subscribers_total > 100
+        for: 1h
+        labels:
+          severity: warning
+          component: migration
+        annotations:
+          summary: "Dual-stack adoption low ({{ $value }}%)"
+          description: "Dual-stack adoption is {{ $value | humanize }}% for tenant {{ $labels.tenant_id }}. Consider accelerating migration."
+
+      # ============================================================================
+      # Connectivity Alerts
+      # ============================================================================
+
+      - alert: IPv4ConnectivityCritical
+        expr: dotmac_connectivity_ipv4_percentage < 90
+        for: 10m
+        labels:
+          severity: critical
+          component: network
+          protocol: ipv4
+        annotations:
+          summary: "IPv4 connectivity critically low ({{ $value }}%)"
+          description: "IPv4 connectivity is {{ $value | humanize }}% for tenant {{ $labels.tenant_id }}. Major network issue affecting subscribers."
+          runbook_url: "https://docs.example.com/troubleshooting/connectivity-issues"
+
+      - alert: IPv4ConnectivityDegraded
+        expr: dotmac_connectivity_ipv4_percentage < 95
+        for: 15m
+        labels:
+          severity: warning
+          component: network
+          protocol: ipv4
+        annotations:
+          summary: "IPv4 connectivity degraded ({{ $value }}%)"
+          description: "IPv4 connectivity is {{ $value | humanize }}% for tenant {{ $labels.tenant_id }}. Some devices unreachable."
+
+      - alert: IPv6ConnectivityCritical
+        expr: dotmac_connectivity_ipv6_percentage < 90
+        for: 10m
+        labels:
+          severity: critical
+          component: network
+          protocol: ipv6
+        annotations:
+          summary: "IPv6 connectivity critically low ({{ $value }}%)"
+          description: "IPv6 connectivity is {{ $value | humanize }}% for tenant {{ $labels.tenant_id }}. Check IPv6 routing and firewall rules."
+          runbook_url: "https://docs.example.com/troubleshooting/ipv6-connectivity"
+
+      - alert: IPv6ConnectivityDegraded
+        expr: dotmac_connectivity_ipv6_percentage < 95
+        for: 15m
+        labels:
+          severity: warning
+          component: network
+          protocol: ipv6
+        annotations:
+          summary: "IPv6 connectivity degraded ({{ $value }}%)"
+          description: "IPv6 connectivity is {{ $value | humanize }}% for tenant {{ $labels.tenant_id }}."
+
+      # ============================================================================
+      # Performance Alerts
+      # ============================================================================
+
+      - alert: IPv4LatencyCritical
+        expr: dotmac_latency_ipv4_milliseconds > 100
+        for: 10m
+        labels:
+          severity: critical
+          component: network
+          protocol: ipv4
+        annotations:
+          summary: "IPv4 latency critically high ({{ $value }}ms)"
+          description: "Average IPv4 latency is {{ $value | humanize }}ms for tenant {{ $labels.tenant_id }}. Network performance severely degraded."
+          runbook_url: "https://docs.example.com/troubleshooting/high-latency"
+
+      - alert: IPv4LatencyHigh
+        expr: dotmac_latency_ipv4_milliseconds > 50
+        for: 15m
+        labels:
+          severity: warning
+          component: network
+          protocol: ipv4
+        annotations:
+          summary: "IPv4 latency high ({{ $value }}ms)"
+          description: "Average IPv4 latency is {{ $value | humanize }}ms for tenant {{ $labels.tenant_id }}."
+
+      - alert: IPv6LatencyCritical
+        expr: dotmac_latency_ipv6_milliseconds > 100
+        for: 10m
+        labels:
+          severity: critical
+          component: network
+          protocol: ipv6
+        annotations:
+          summary: "IPv6 latency critically high ({{ $value }}ms)"
+          description: "Average IPv6 latency is {{ $value | humanize }}ms for tenant {{ $labels.tenant_id }}. Check IPv6 routing path."
+          runbook_url: "https://docs.example.com/troubleshooting/high-latency"
+
+      - alert: IPv6LatencyHigh
+        expr: dotmac_latency_ipv6_milliseconds > 50
+        for: 15m
+        labels:
+          severity: warning
+          component: network
+          protocol: ipv6
+        annotations:
+          summary: "IPv6 latency high ({{ $value }}ms)"
+          description: "Average IPv6 latency is {{ $value | humanize }}ms for tenant {{ $labels.tenant_id }}."
+
+      - alert: IPv4PacketLossCritical
+        expr: dotmac_packet_loss_ipv4_percentage > 5
+        for: 10m
+        labels:
+          severity: critical
+          component: network
+          protocol: ipv4
+        annotations:
+          summary: "IPv4 packet loss critically high ({{ $value }}%)"
+          description: "IPv4 packet loss is {{ $value | humanize }}% for tenant {{ $labels.tenant_id }}. Severe network degradation."
+          runbook_url: "https://docs.example.com/troubleshooting/packet-loss"
+
+      - alert: IPv4PacketLossHigh
+        expr: dotmac_packet_loss_ipv4_percentage > 1
+        for: 15m
+        labels:
+          severity: warning
+          component: network
+          protocol: ipv4
+        annotations:
+          summary: "IPv4 packet loss elevated ({{ $value }}%)"
+          description: "IPv4 packet loss is {{ $value | humanize }}% for tenant {{ $labels.tenant_id }}."
+
+      - alert: IPv6PacketLossCritical
+        expr: dotmac_packet_loss_ipv6_percentage > 5
+        for: 10m
+        labels:
+          severity: critical
+          component: network
+          protocol: ipv6
+        annotations:
+          summary: "IPv6 packet loss critically high ({{ $value }}%)"
+          description: "IPv6 packet loss is {{ $value | humanize }}% for tenant {{ $labels.tenant_id }}."
+          runbook_url: "https://docs.example.com/troubleshooting/packet-loss"
+
+      - alert: IPv6PacketLossHigh
+        expr: dotmac_packet_loss_ipv6_percentage > 1
+        for: 15m
+        labels:
+          severity: warning
+          component: network
+          protocol: ipv6
+        annotations:
+          summary: "IPv6 packet loss elevated ({{ $value }}%)"
+          description: "IPv6 packet loss is {{ $value | humanize }}% for tenant {{ $labels.tenant_id }}."
+
+      # ============================================================================
+      # Subscriber Provisioning Alerts
+      # ============================================================================
+
+      - alert: SubscriberProvisioningFailureRateHigh
+        expr: rate(dotmac_subscriber_provisioned_total{ip_type="failed"}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: provisioning
+        annotations:
+          summary: "High subscriber provisioning failure rate"
+          description: "Subscriber provisioning failures at {{ $value | humanize }} per second for tenant {{ $labels.tenant_id }}."
+          runbook_url: "https://docs.example.com/troubleshooting/provisioning-failures"
+
+      - alert: NoRecentProvisioningActivity
+        expr: rate(dotmac_subscriber_provisioned_total[1h]) == 0 and hour() >= 8 and hour() <= 18
+        for: 2h
+        labels:
+          severity: warning
+          component: provisioning
+        annotations:
+          summary: "No subscriber provisioning activity"
+          description: "No new subscribers provisioned in the last 2 hours during business hours for tenant {{ $labels.tenant_id }}. May indicate system issue."
+
+      # ============================================================================
+      # IP Allocation Alerts
+      # ============================================================================
+
+      - alert: IPAllocationFailureRateHigh
+        expr: rate(dotmac_ip_allocation_failure_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          component: ipam
+        annotations:
+          summary: "High IP allocation failure rate"
+          description: "IP allocation failures at {{ $value | humanize }} per second for {{ $labels.ip_version }} and tenant {{ $labels.tenant_id }}."
+          runbook_url: "https://docs.example.com/troubleshooting/ip-allocation-failures"
+
+      - alert: IPv4AllocationExhaustion
+        expr: dotmac_ip_allocation_failure_total{ip_version="ipv4",reason="pool_exhausted"} > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: ipam
+          protocol: ipv4
+        annotations:
+          summary: "IPv4 pool exhausted - allocations failing"
+          description: "IPv4 allocations failing due to pool exhaustion for tenant {{ $labels.tenant_id }}. Immediate action required."
+          runbook_url: "https://docs.example.com/runbooks/ipv4-pool-exhaustion"
+
+      # ============================================================================
+      # WireGuard VPN Alerts
+      # ============================================================================
+
+      - alert: WireGuardPeerConnectionsLow
+        expr: (dotmac_wireguard_peers_dual_stack / dotmac_wireguard_peers_total) < 0.5 and dotmac_wireguard_peers_total > 10
+        for: 30m
+        labels:
+          severity: warning
+          component: wireguard
+        annotations:
+          summary: "Low WireGuard dual-stack peer percentage"
+          description: "Only {{ $value | humanizePercentage }} of WireGuard peers have dual-stack configuration for tenant {{ $labels.tenant_id }}."
+
+      # ============================================================================
+      # Migration Progress Alerts
+      # ============================================================================
+
+      - alert: MigrationFailureRateHigh
+        expr: dotmac_migration_failed / (dotmac_migration_completed + dotmac_migration_failed) > 0.1 and (dotmac_migration_completed + dotmac_migration_failed) > 10
+        for: 30m
+        labels:
+          severity: warning
+          component: migration
+        annotations:
+          summary: "High migration failure rate ({{ $value | humanizePercentage }})"
+          description: "Migration failure rate is {{ $value | humanizePercentage }} for tenant {{ $labels.tenant_id }}. Review migration logs."
+          runbook_url: "https://docs.example.com/troubleshooting/migration-failures"
+
+      - alert: MigrationStalled
+        expr: increase(dotmac_migration_completed[24h]) == 0 and dotmac_migration_started > dotmac_migration_completed
+        for: 2h
+        labels:
+          severity: warning
+          component: migration
+        annotations:
+          summary: "Migration progress stalled"
+          description: "No migration progress in the last 24 hours for tenant {{ $labels.tenant_id }}. {{ dotmac_migration_started - dotmac_migration_completed }} subscribers pending."
+
+      # ============================================================================
+      # System Health Alerts
+      # ============================================================================
+
+      - alert: MetricsCollectionFailing
+        expr: up{job="dual-stack-metrics"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: monitoring
+        annotations:
+          summary: "Dual-stack metrics collection down"
+          description: "Metrics collection service is down. Monitoring visibility lost."
+          runbook_url: "https://docs.example.com/troubleshooting/metrics-not-updating"
+
+      - alert: MetricsStale
+        expr: time() - dotmac_last_collection_timestamp > 600
+        for: 5m
+        labels:
+          severity: warning
+          component: monitoring
+        annotations:
+          summary: "Metrics data is stale"
+          description: "Metrics haven't been updated in over 10 minutes. Last update: {{ $value | humanizeDuration }} ago."

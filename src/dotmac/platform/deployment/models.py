@@ -6,7 +6,6 @@ Data models for multi-tenant deployment management.
 
 import enum
 from datetime import datetime
-from typing import Any
 
 from sqlalchemy import (
     JSON,
@@ -20,9 +19,10 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
 
-from ..core.models import Base, TimestampMixin, TenantMixin
+from ..db import Base, TenantMixin, TimestampMixin
 
 
 class DeploymentBackend(str, enum.Enum):
@@ -165,8 +165,8 @@ class DeploymentInstance(Base, TenantMixin, TimestampMixin):
     # Metadata
     tags = Column(JSON)  # Instance tags
     notes = Column(Text)  # Operator notes
-    deployed_by = Column(Integer, ForeignKey("user.id"))  # User who deployed
-    approved_by = Column(Integer, ForeignKey("user.id"))  # User who approved
+    deployed_by = Column(PGUUID(as_uuid=True), ForeignKey("users.id"))  # User who deployed
+    approved_by = Column(PGUUID(as_uuid=True), ForeignKey("users.id"))  # User who approved
 
     # Relationships
     executions = relationship("DeploymentExecution", back_populates="instance", cascade="all, delete-orphan")
@@ -215,7 +215,7 @@ class DeploymentExecution(Base, TimestampMixin):
     rollback_execution_id = Column(Integer, ForeignKey("deployment_executions.id"))  # Rollback reference
 
     # Audit
-    triggered_by = Column(Integer, ForeignKey("user.id"))  # User or system
+    triggered_by = Column(PGUUID(as_uuid=True), ForeignKey("users.id"))  # User or system
     trigger_type = Column(String(50))  # manual, automated, scheduled
 
     def __repr__(self) -> str:

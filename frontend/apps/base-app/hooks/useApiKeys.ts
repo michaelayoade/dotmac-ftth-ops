@@ -59,7 +59,7 @@ export function useApiKeys() {
       params.append('page', page.toString());
       params.append('limit', limit.toString());
 
-      const response = await apiClient.get(`/api/v1/auth/api-keys?${params.toString()}`);
+      const response = await apiClient.get(`/auth/api-keys?${params.toString()}`);
       const data = response.data as { api_keys?: APIKey[] };
       setApiKeys(data.api_keys || []);
     } catch (err) {
@@ -75,7 +75,7 @@ export function useApiKeys() {
     setError(null);
 
     try {
-      const response = await apiClient.post('/api/v1/auth/api-keys', data);
+      const response = await apiClient.post('/auth/api-keys', data);
       const newApiKey = response.data as APIKeyCreateResponse;
 
       setApiKeys(prev => [newApiKey, ...prev]);
@@ -94,7 +94,7 @@ export function useApiKeys() {
     setError(null);
 
     try {
-      const response = await apiClient.patch(`/api/v1/auth/api-keys/${id}`, data);
+      const response = await apiClient.patch(`/auth/api-keys/${id}`, data);
       const updatedKey = response.data as APIKey;
 
       setApiKeys(prev => prev.map(key => key.id === id ? updatedKey : key));
@@ -113,7 +113,7 @@ export function useApiKeys() {
     setError(null);
 
     try {
-      await apiClient.delete(`/api/v1/auth/api-keys/${id}`);
+      await apiClient.delete(`/auth/api-keys/${id}`);
       setApiKeys(prev => prev.filter(key => key.id !== id));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to revoke API key';
@@ -126,7 +126,7 @@ export function useApiKeys() {
 
   const getAvailableScopes = useCallback(async (): Promise<AvailableScopes> => {
     try {
-      const response = await apiClient.get('/api/v1/auth/api-keys/scopes/available');
+      const response = await apiClient.get('/auth/api-keys/scopes/available');
       return (response.data as AvailableScopes) || {} as AvailableScopes;
     } catch (err) {
       console.error('Failed to fetch available scopes:', err);

@@ -9,14 +9,13 @@ import io
 import json
 import logging
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from ..auth.core import get_current_user
-from ..user_management.models import User
 from ..db import get_db
+from ..user_management.models import User
 from .models import WorkflowStatus, WorkflowType
 from .schemas import (
     ActivateServiceRequest,
@@ -133,11 +132,26 @@ async def deprovision_subscriber(
 
     **Required Permissions:** `subscribers.delete`
     """
-    # TODO: Implement deprovision workflow
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Deprovisioning workflow not yet implemented",
-    )
+    try:
+        result = await service.deprovision_subscriber(
+            request=request,
+            initiator_id=current_user.id,
+            initiator_type="user",
+        )
+        return result
+
+    except ValueError as e:
+        logger.error(f"Validation error in deprovisioning: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        logger.exception(f"Error deprovisioning subscriber: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to deprovision subscriber. Check logs for details.",
+        )
 
 
 @router.post(
@@ -156,11 +170,26 @@ async def activate_service(
 
     **Required Permissions:** `subscribers.update`
     """
-    # TODO: Implement activation workflow
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Activation workflow not yet implemented",
-    )
+    try:
+        result = await service.activate_service(
+            request=request,
+            initiator_id=current_user.id,
+            initiator_type="user",
+        )
+        return result
+
+    except ValueError as e:
+        logger.error(f"Validation error in service activation: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        logger.exception(f"Error activating service: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to activate service. Check logs for details.",
+        )
 
 
 @router.post(
@@ -179,11 +208,26 @@ async def suspend_service(
 
     **Required Permissions:** `subscribers.update`
     """
-    # TODO: Implement suspension workflow
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Suspension workflow not yet implemented",
-    )
+    try:
+        result = await service.suspend_service(
+            request=request,
+            initiator_id=current_user.id,
+            initiator_type="user",
+        )
+        return result
+
+    except ValueError as e:
+        logger.error(f"Validation error in service suspension: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        logger.exception(f"Error suspending service: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to suspend service. Check logs for details.",
+        )
 
 
 # ============================================================================
@@ -198,8 +242,8 @@ async def suspend_service(
     description="List orchestration workflows with filtering and pagination.",
 )
 async def list_workflows(
-    workflow_type: Optional[WorkflowType] = Query(None, description="Filter by workflow type"),
-    status: Optional[WorkflowStatus] = Query(None, description="Filter by status"),
+    workflow_type: WorkflowType | None = Query(None, description="Filter by workflow type"),
+    status: WorkflowStatus | None = Query(None, description="Filter by status"),
     limit: int = Query(50, ge=1, le=200, description="Maximum results"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
     service: OrchestrationService = Depends(get_orchestration_service),
@@ -355,10 +399,10 @@ async def get_statistics(
     """,
 )
 async def export_workflows_csv(
-    workflow_type: Optional[WorkflowType] = Query(None, description="Filter by workflow type"),
-    status: Optional[WorkflowStatus] = Query(None, description="Filter by status"),
-    date_from: Optional[datetime] = Query(None, description="Start date filter"),
-    date_to: Optional[datetime] = Query(None, description="End date filter"),
+    workflow_type: WorkflowType | None = Query(None, description="Filter by workflow type"),
+    status: WorkflowStatus | None = Query(None, description="Filter by status"),
+    date_from: datetime | None = Query(None, description="Start date filter"),
+    date_to: datetime | None = Query(None, description="End date filter"),
     limit: int = Query(1000, ge=1, le=10000, description="Maximum records to export"),
     service: OrchestrationService = Depends(get_orchestration_service),
     current_user: User = Depends(get_current_user),
@@ -449,10 +493,10 @@ async def export_workflows_csv(
     """,
 )
 async def export_workflows_json(
-    workflow_type: Optional[WorkflowType] = Query(None, description="Filter by workflow type"),
-    status: Optional[WorkflowStatus] = Query(None, description="Filter by status"),
-    date_from: Optional[datetime] = Query(None, description="Start date filter"),
-    date_to: Optional[datetime] = Query(None, description="End date filter"),
+    workflow_type: WorkflowType | None = Query(None, description="Filter by workflow type"),
+    status: WorkflowStatus | None = Query(None, description="Filter by status"),
+    date_from: datetime | None = Query(None, description="Start date filter"),
+    date_to: datetime | None = Query(None, description="End date filter"),
     limit: int = Query(1000, ge=1, le=10000, description="Maximum records to export"),
     include_steps: bool = Query(True, description="Include workflow step details"),
     include_data: bool = Query(False, description="Include input/output data"),

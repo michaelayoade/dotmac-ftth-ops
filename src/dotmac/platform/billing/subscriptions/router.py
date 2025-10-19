@@ -31,7 +31,7 @@ from .models import (
 )
 from .service import SubscriptionService
 
-router = APIRouter(tags=["Billing - Subscriptions"])
+router = APIRouter(prefix="/api/v1/billing/subscriptions", tags=["Billing - Subscriptions"])
 
 
 # Subscription Plans Management
@@ -509,7 +509,6 @@ async def check_subscription_renewal_eligibility(
     - Days until renewal
     - Any blocking reasons
     """
-    from .models import RenewalEligibilityResponse
 
     service = SubscriptionService(db_session)
     try:
@@ -599,7 +598,6 @@ async def process_subscription_renewal_payment(
     Note: Actual payment provider integration should be handled by the caller.
     After successful payment, call the /extend endpoint to update the subscription.
     """
-    from .models import RenewalPaymentResponse
 
     service = SubscriptionService(db_session)
     try:

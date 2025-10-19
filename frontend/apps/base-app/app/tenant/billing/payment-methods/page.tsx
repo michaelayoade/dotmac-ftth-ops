@@ -264,7 +264,7 @@ export default function PaymentMethodsPage() {
 
             <Alert>
               <AlertDescription className="text-sm">
-                These deposits typically appear within 1-2 business days. If you don't see them yet, please check again later.
+                These deposits typically appear within 1-2 business days. If you don&apos;t see them yet, please check again later.
               </AlertDescription>
             </Alert>
           </div>

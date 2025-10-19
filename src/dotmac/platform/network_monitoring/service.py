@@ -6,8 +6,7 @@ unified network health and performance monitoring.
 """
 
 import asyncio
-import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 
 import httpx
@@ -24,7 +23,6 @@ from dotmac.platform.network_monitoring.schemas import (
     DeviceStatus,
     DeviceType,
     DeviceTypeSummary,
-    InterfaceStats,
     NetworkAlertResponse,
     NetworkOverviewResponse,
     ONUMetrics,
@@ -179,7 +177,7 @@ class NetworkMonitoringService:
                         # Simple TCP check (ICMP requires root)
                         await asyncio.wait_for(client.get(f"http://{ip}"), timeout=2.0)
                         ping_latency = (datetime.utcnow() - start).total_seconds() * 1000
-                except:
+                except Exception:
                     status = DeviceStatus.OFFLINE
 
             return DeviceHealthResponse(

@@ -4,7 +4,7 @@ SLA Monitoring Service
 Real-time SLA tracking, breach detection, and compliance reporting.
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import structlog
@@ -45,22 +45,29 @@ class SLAMonitoringService:
         self, data: SLADefinitionCreate, user_id: UUID | None = None
     ) -> SLADefinitionResponse:
         """Create SLA definition"""
+        service_type = data.service_type or data.service_level or "general"
+        availability_target = data.availability_target
+        response_target = data.response_time_target
+        resolution_target = data.resolution_time_target
         definition = SLADefinition(
             tenant_id=self.tenant_id,
             name=data.name,
             description=data.description,
-            service_type=data.service_type,
-            availability_target=data.availability_target,
+            service_type=service_type,
+            service_level=data.service_level or data.service_type or service_type,
+            availability_target=availability_target,
             measurement_period_days=data.measurement_period_days,
+            response_time_target=response_target,
+            resolution_time_target=resolution_target,
             max_latency_ms=data.max_latency_ms,
             max_packet_loss_percent=data.max_packet_loss_percent,
             min_bandwidth_mbps=data.min_bandwidth_mbps,
-            response_time_critical=data.response_time_critical,
-            response_time_major=data.response_time_major,
-            response_time_minor=data.response_time_minor,
-            resolution_time_critical=data.resolution_time_critical,
-            resolution_time_major=data.resolution_time_major,
-            resolution_time_minor=data.resolution_time_minor,
+            response_time_critical=data.response_time_critical or response_target,
+            response_time_major=data.response_time_major or response_target,
+            response_time_minor=data.response_time_minor or response_target,
+            resolution_time_critical=data.resolution_time_critical or resolution_target,
+            resolution_time_major=data.resolution_time_major or resolution_target,
+            resolution_time_minor=data.resolution_time_minor or resolution_target,
             business_hours_only=data.business_hours_only,
             exclude_maintenance=data.exclude_maintenance,
             enabled=data.enabled,
@@ -97,6 +104,18 @@ class SLAMonitoringService:
             definition.description = data.description
         if data.availability_target is not None:
             definition.availability_target = data.availability_target
+        if data.measurement_period_days is not None:
+            definition.measurement_period_days = data.measurement_period_days
+        if data.response_time_target is not None:
+            definition.response_time_target = data.response_time_target
+            definition.response_time_critical = data.response_time_target
+            definition.response_time_major = data.response_time_target
+            definition.response_time_minor = data.response_time_target
+        if data.resolution_time_target is not None:
+            definition.resolution_time_target = data.resolution_time_target
+            definition.resolution_time_critical = data.resolution_time_target
+            definition.resolution_time_major = data.resolution_time_target
+            definition.resolution_time_minor = data.resolution_time_target
         if data.max_latency_ms is not None:
             definition.max_latency_ms = data.max_latency_ms
         if data.max_packet_loss_percent is not None:
@@ -126,15 +145,33 @@ class SLAMonitoringService:
         self, data: SLAInstanceCreate, user_id: UUID | None = None
     ) -> SLAInstanceResponse:
         """Create SLA instance for customer/service"""
+        result = await self.session.execute(
+            select(SLADefinition).where(
+                and_(
+                    SLADefinition.id == data.sla_definition_id,
+                    SLADefinition.tenant_id == self.tenant_id,
+                )
+            )
+        )
+        definition = result.scalar_one_or_none()
+        if not definition:
+            raise ValueError(f"SLA definition {data.sla_definition_id} not found")
+
+        start_date = data.start_date
+        end_date = data.end_date or start_date + timedelta(days=definition.measurement_period_days)
+
         instance = SLAInstance(
             tenant_id=self.tenant_id,
             sla_definition_id=data.sla_definition_id,
             customer_id=data.customer_id,
+            customer_name=data.customer_name,
             service_id=data.service_id,
+            service_name=data.service_name,
             subscription_id=data.subscription_id,
             status=SLAStatus.COMPLIANT,
-            period_start=data.period_start,
-            period_end=data.period_end,
+            start_date=start_date,
+            end_date=end_date,
+            current_availability=100.0,
         )
 
         self.session.add(instance)
@@ -246,6 +283,18 @@ class SLAMonitoringService:
             # Check response time SLA
             await self._check_response_time(instance, alarm)
 
+            # Record downtime when alarm has been cleared/resolved
+            start_time = alarm.first_occurrence or alarm.last_occurrence
+            end_time = alarm.cleared_at or alarm.resolved_at
+            if start_time and end_time:
+                downtime_minutes = int((end_time - start_time).total_seconds() / 60)
+                if downtime_minutes > 0:
+                    await self.record_downtime(
+                        instance.id,
+                        downtime_minutes=downtime_minutes,
+                        is_planned=False,
+                    )
+
         await self.session.commit()
 
     async def check_alarm_resolution(self, alarm: Alarm) -> None:
@@ -274,8 +323,8 @@ class SLAMonitoringService:
     async def _calculate_availability(self, instance: SLAInstance) -> None:
         """Calculate current availability for instance"""
         # Get total period minutes
-        period_duration = instance.period_end - instance.period_start
-        total_minutes = period_duration.total_seconds() / 60
+        period_duration = instance.end_date - instance.start_date
+        total_minutes = max(period_duration.total_seconds() / 60, 0)
 
         # Get SLA definition
         result = await self.session.execute(
@@ -288,12 +337,13 @@ class SLAMonitoringService:
         if definition.exclude_maintenance:
             downtime = instance.unplanned_downtime
 
-        # Calculate availability
+        # Calculate availability percentage
         if total_minutes > 0:
-            uptime_minutes = total_minutes - downtime
-            instance.current_availability = max(0.0, uptime_minutes / total_minutes)
+            uptime_minutes = max(total_minutes - downtime, 0)
+            availability = (uptime_minutes / total_minutes) * 100
+            instance.current_availability = max(0.0, min(100.0, round(availability, 4)))
         else:
-            instance.current_availability = 1.0
+            instance.current_availability = 100.0
 
     async def _check_availability_breach(self, instance: SLAInstance) -> None:
         """Check if availability target is breached"""
@@ -302,34 +352,36 @@ class SLAMonitoringService:
         )
         definition = result.scalar_one()
 
-        target = definition.availability_target
+        raw_target = definition.availability_target
+        target = raw_target * 100 if raw_target <= 1 else raw_target
         actual = instance.current_availability
 
-        # Update status
-        if actual < target:
-            deviation = ((target - actual) / target) * 100
-
-            if deviation > 10:  # >10% below target
-                instance.status = SLAStatus.BREACHED
-                severity = AlarmSeverity.CRITICAL
-            elif deviation > 5:  # 5-10% below target
-                instance.status = SLAStatus.AT_RISK
-                severity = AlarmSeverity.MAJOR
-            else:
-                instance.status = SLAStatus.AT_RISK
-                severity = AlarmSeverity.MINOR
-
-            # Create breach record
-            await self._create_breach(
-                instance=instance,
-                breach_type="availability",
-                severity=severity,
-                target_value=target,
-                actual_value=actual,
-                deviation_percent=deviation,
-            )
-        else:
+        difference = target - actual
+        if difference <= 0:
             instance.status = SLAStatus.COMPLIANT
+            return
+
+        deviation_percent = ((difference) / target) * 100 if target else difference
+
+        if difference < 0.5:
+            instance.status = SLAStatus.AT_RISK
+            return
+
+        if difference >= 2:
+            severity_label = "critical"
+        else:
+            severity_label = "high"
+
+        instance.status = SLAStatus.BREACHED
+
+        await self._create_breach(
+            instance=instance,
+            breach_type="availability",
+            severity=severity_label,
+            target_value=target,
+            actual_value=actual,
+            deviation_percent=deviation_percent,
+        )
 
     async def _check_response_time(self, instance: SLAInstance, alarm: Alarm) -> None:
         """Check response time SLA"""
@@ -341,13 +393,7 @@ class SLAMonitoringService:
         )
         definition = result.scalar_one()
 
-        # Get target response time based on severity
-        if alarm.severity == AlarmSeverity.CRITICAL:
-            target_minutes = definition.response_time_critical
-        elif alarm.severity == AlarmSeverity.MAJOR:
-            target_minutes = definition.response_time_major
-        else:
-            target_minutes = definition.response_time_minor
+        target_minutes = definition.response_time_target
 
         # Calculate actual response time
         response_time = alarm.acknowledged_at - alarm.first_occurrence
@@ -355,12 +401,17 @@ class SLAMonitoringService:
 
         # Check for breach
         if actual_minutes > target_minutes:
-            deviation = ((actual_minutes - target_minutes) / target_minutes) * 100
+            deviation = ((actual_minutes - target_minutes) / target_minutes) * 100 if target_minutes else actual_minutes
+            severity_label = {
+                AlarmSeverity.CRITICAL: "critical",
+                AlarmSeverity.MAJOR: "high",
+                AlarmSeverity.MINOR: "medium",
+            }.get(alarm.severity, "low")
 
             await self._create_breach(
                 instance=instance,
                 breach_type="response_time",
-                severity=alarm.severity,
+                severity=severity_label,
                 target_value=float(target_minutes),
                 actual_value=actual_minutes,
                 deviation_percent=deviation,
@@ -377,13 +428,7 @@ class SLAMonitoringService:
         )
         definition = result.scalar_one()
 
-        # Get target resolution time
-        if alarm.severity == AlarmSeverity.CRITICAL:
-            target_minutes = definition.resolution_time_critical
-        elif alarm.severity == AlarmSeverity.MAJOR:
-            target_minutes = definition.resolution_time_major
-        else:
-            target_minutes = definition.resolution_time_minor
+        target_minutes = definition.resolution_time_target
 
         # Calculate actual resolution time
         resolution_time = alarm.resolved_at - alarm.first_occurrence
@@ -391,35 +436,73 @@ class SLAMonitoringService:
 
         # Check for breach
         if actual_minutes > target_minutes:
-            deviation = ((actual_minutes - target_minutes) / target_minutes) * 100
+            deviation = ((actual_minutes - target_minutes) / target_minutes) * 100 if target_minutes else actual_minutes
+            severity_label = {
+                AlarmSeverity.CRITICAL: "critical",
+                AlarmSeverity.MAJOR: "high",
+                AlarmSeverity.MINOR: "medium",
+            }.get(alarm.severity, "low")
 
             await self._create_breach(
                 instance=instance,
                 breach_type="resolution_time",
-                severity=alarm.severity,
+                severity=severity_label,
                 target_value=float(target_minutes),
                 actual_value=actual_minutes,
                 deviation_percent=deviation,
                 alarm_id=alarm.id,
             )
 
+    async def _has_active_breach(self, instance: SLAInstance, breach_type: str) -> bool:
+        """Check if there is an unresolved breach for the instance."""
+        result = await self.session.execute(
+            select(SLABreach).where(
+                and_(
+                    SLABreach.tenant_id == self.tenant_id,
+                    SLABreach.sla_instance_id == instance.id,
+                    SLABreach.breach_type == breach_type,
+                    SLABreach.resolved == False,  # noqa: E712
+                )
+            ).limit(1)
+        )
+        return result.scalar_one_or_none() is not None
+
     async def _create_breach(
         self,
         instance: SLAInstance,
         breach_type: str,
-        severity: AlarmSeverity,
+        severity: str,
         target_value: float,
         actual_value: float,
         deviation_percent: float,
         alarm_id: UUID | None = None,
     ) -> SLABreach:
         """Create SLA breach record"""
+        if await self._has_active_breach(instance, breach_type):
+            logger.debug(
+                "sla.breach_existing",
+                instance_id=instance.id,
+                breach_type=breach_type,
+            )
+            result = await self.session.execute(
+                select(SLABreach).where(
+                    and_(
+                        SLABreach.tenant_id == self.tenant_id,
+                        SLABreach.sla_instance_id == instance.id,
+                        SLABreach.breach_type == breach_type,
+                        SLABreach.resolved == False,  # noqa: E712
+                    )
+                ).limit(1)
+            )
+            existing_breach = result.scalar_one()
+            return existing_breach
+
         breach = SLABreach(
             tenant_id=self.tenant_id,
             sla_instance_id=instance.id,
             breach_type=breach_type,
             severity=severity,
-            breach_start=datetime.now(UTC),
+            detected_at=datetime.now(UTC),
             target_value=target_value,
             actual_value=actual_value,
             deviation_percent=deviation_percent,
@@ -434,7 +517,7 @@ class SLAMonitoringService:
             "sla.breach_detected",
             instance_id=instance.id,
             breach_type=breach_type,
-            severity=severity.value,
+            severity=severity,
             deviation=f"{deviation_percent:.1f}%",
         )
 
@@ -454,9 +537,9 @@ class SLAMonitoringService:
         if customer_id:
             filters.append(SLAInstance.customer_id == customer_id)
         if period_start:
-            filters.append(SLAInstance.period_start >= period_start)
+            filters.append(SLAInstance.start_date >= period_start)
         if period_end:
-            filters.append(SLAInstance.period_end <= period_end)
+            filters.append(SLAInstance.end_date <= period_end)
 
         # Get instances
         result = await self.session.execute(select(SLAInstance).where(and_(*filters)))
@@ -471,9 +554,11 @@ class SLAMonitoringService:
                 at_risk_instances=0,
                 breached_instances=0,
                 avg_availability=0.0,
+                overall_compliance_rate=0.0,
                 total_breaches=0,
                 total_credits=0.0,
                 compliance_by_service_type={},
+                instances=[],
             )
 
         # Calculate statistics
@@ -481,7 +566,8 @@ class SLAMonitoringService:
         compliant = sum(1 for i in instances if i.status == SLAStatus.COMPLIANT)
         at_risk = sum(1 for i in instances if i.status == SLAStatus.AT_RISK)
         breached = sum(1 for i in instances if i.status == SLAStatus.BREACHED)
-        avg_availability = sum(i.current_availability for i in instances) / total
+        avg_availability = round(sum(i.current_availability for i in instances) / total, 4)
+        overall_compliance_rate = round((compliant / total) * 100, 2) if total else 0.0
         total_breaches = sum(i.breach_count for i in instances)
         total_credits = sum(i.credit_amount for i in instances)
 
@@ -499,20 +585,24 @@ class SLAMonitoringService:
             service_type_stats[service_type].append(instance.current_availability)
 
         compliance_by_service_type = {
-            st: sum(avails) / len(avails) for st, avails in service_type_stats.items()
+            st: round(sum(avails) / len(avails), 4) for st, avails in service_type_stats.items()
         }
 
+        instance_responses = [SLAInstanceResponse.model_validate(i) for i in instances]
+
         return SLAComplianceReport(
-            period_start=period_start or instances[0].period_start,
-            period_end=period_end or instances[0].period_end,
+            period_start=period_start or instances[0].start_date,
+            period_end=period_end or instances[0].end_date,
             total_instances=total,
             compliant_instances=compliant,
             at_risk_instances=at_risk,
             breached_instances=breached,
             avg_availability=avg_availability,
+            overall_compliance_rate=overall_compliance_rate,
             total_breaches=total_breaches,
             total_credits=total_credits,
             compliance_by_service_type=compliance_by_service_type,
+            instances=instance_responses,
         )
 
     async def list_breaches(
@@ -529,7 +619,7 @@ class SLAMonitoringService:
             filters.append(SLABreach.resolved == resolved)
 
         result = await self.session.execute(
-            select(SLABreach).where(and_(*filters)).order_by(SLABreach.breach_start.desc())
+            select(SLABreach).where(and_(*filters)).order_by(SLABreach.detected_at.desc())
         )
 
         breaches = result.scalars().all()

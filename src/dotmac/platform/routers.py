@@ -8,7 +8,7 @@ import importlib
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, cast
+from typing import Any
 
 import structlog
 from fastapi import Depends, FastAPI
@@ -36,6 +36,14 @@ class RouterConfig:
 
 # Define router configurations
 ROUTER_CONFIGS = [
+    RouterConfig(
+        module_path="dotmac.platform.config.router",
+        router_name="health_router",
+        prefix="/api/v1",
+        tags=["Health"],
+        requires_auth=False,  # Public health check
+        description="Health check endpoint at /api/v1/health",
+    ),
     RouterConfig(
         module_path="dotmac.platform.config.router",
         router_name="router",
@@ -146,6 +154,15 @@ ROUTER_CONFIGS = [
         prefix="/api/v1/tenants",
         tags=["Tenant Management"],
         description="Multi-tenant organization management",
+        requires_auth=True,
+    ),
+    # Legacy singular prefix for backwards compatibility
+    RouterConfig(
+        module_path="dotmac.platform.tenant.router",
+        router_name="router",
+        prefix="/api/v1/tenant",
+        tags=["Tenant Management"],
+        description="Legacy tenant endpoints (singular prefix)",
         requires_auth=True,
     ),
     RouterConfig(
@@ -550,6 +567,14 @@ ROUTER_CONFIGS = [
         requires_auth=True,
     ),
     RouterConfig(
+        module_path="dotmac.platform.workflows.metrics_router",
+        router_name="router",
+        prefix="/api/v1",
+        tags=["Workflow Metrics"],
+        description="Workflow services metrics (operations, performance, errors)",
+        requires_auth=True,
+    ),
+    RouterConfig(
         module_path="dotmac.platform.integrations.router",
         router_name="integrations_router",
         prefix="/api/v1/integrations",
@@ -766,7 +791,6 @@ def register_routers(app: FastAPI) -> None:
     try:
         from strawberry.fastapi import GraphQLRouter
 
-        from dotmac.platform.graphql.context import Context
         from dotmac.platform.graphql.schema import schema
 
         # GraphQLRouter with explicit path

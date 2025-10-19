@@ -4,14 +4,13 @@ Orchestration Service Models
 Database models for workflow orchestration and saga pattern implementation.
 """
 
-from datetime import datetime
 from enum import Enum
-from typing import Any
 
-from sqlalchemy import JSON, Column, DateTime, Enum as SQLEnum, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import relationship
 
-from ..db import Base, TimestampMixin, TenantMixin
+from ..db import Base, TenantMixin, TimestampMixin
 
 
 class WorkflowStatus(str, Enum):
@@ -52,7 +51,7 @@ class WorkflowType(str, Enum):
     MIGRATE_SUBSCRIBER = "migrate_subscriber"
 
 
-class Workflow(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class OrchestrationWorkflow(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Workflow orchestration model.
 
@@ -100,17 +99,20 @@ class Workflow(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
 
     # Relationships
     steps = relationship(
-        "WorkflowStep",
+        "OrchestrationWorkflowStep",
         back_populates="workflow",
         cascade="all, delete-orphan",
-        order_by="WorkflowStep.step_order",
+        order_by="OrchestrationWorkflowStep.step_order",
     )
 
     def __repr__(self) -> str:
-        return f"<Workflow(id={self.id}, workflow_id={self.workflow_id}, type={self.workflow_type}, status={self.status})>"
+        return (
+            f"<OrchestrationWorkflow(id={self.id}, workflow_id={self.workflow_id}, "
+            f"type={self.workflow_type}, status={self.status})>"
+        )
 
 
-class WorkflowStep(Base, TimestampMixin):  # type: ignore[misc]
+class OrchestrationWorkflowStep(Base, TimestampMixin):  # type: ignore[misc]
     """
     Individual step within a workflow.
 
@@ -121,7 +123,12 @@ class WorkflowStep(Base, TimestampMixin):  # type: ignore[misc]
     __tablename__ = "orchestration_workflow_steps"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    workflow_id = Column(Integer, ForeignKey("orchestration_workflows.id"), nullable=False, index=True)
+    workflow_id = Column(
+        Integer,
+        ForeignKey("orchestration_workflows.id"),
+        nullable=False,
+        index=True,
+    )
     step_id = Column(String(64), nullable=False, index=True)
     step_order = Column(Integer, nullable=False)
 
@@ -163,29 +170,34 @@ class WorkflowStep(Base, TimestampMixin):  # type: ignore[misc]
     idempotency_key = Column(String(128), nullable=True, unique=True)
 
     # Relationships
-    workflow = relationship("Workflow", back_populates="steps")
+    workflow = relationship("OrchestrationWorkflow", back_populates="steps")
 
     def __repr__(self) -> str:
-        return f"<WorkflowStep(id={self.id}, step_id={self.step_id}, name={self.step_name}, status={self.status})>"
+        return (
+            f"<OrchestrationWorkflowStep(id={self.id}, step_id={self.step_id}, "
+            f"name={self.step_name}, status={self.status})>"
+        )
 
 
 # Add index for common queries
-from sqlalchemy import Index
-
 Index(
-    "idx_workflow_tenant_status",
-    Workflow.tenant_id,
-    Workflow.status,
+    "idx_orchestration_workflow_tenant_status",
+    OrchestrationWorkflow.tenant_id,
+    OrchestrationWorkflow.status,
 )
 
 Index(
-    "idx_workflow_type_status",
-    Workflow.workflow_type,
-    Workflow.status,
+    "idx_orchestration_workflow_type_status",
+    OrchestrationWorkflow.workflow_type,
+    OrchestrationWorkflow.status,
 )
 
 Index(
-    "idx_workflow_step_workflow_order",
-    WorkflowStep.workflow_id,
-    WorkflowStep.step_order,
+    "idx_orchestration_workflow_step_order",
+    OrchestrationWorkflowStep.workflow_id,
+    OrchestrationWorkflowStep.step_order,
 )
+
+# Backwards compatibility aliases (to be removed in a future major release)
+Workflow = OrchestrationWorkflow
+WorkflowStep = OrchestrationWorkflowStep

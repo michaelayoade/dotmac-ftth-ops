@@ -239,10 +239,30 @@ class RADIUSSettings(BaseModel):  # BaseModel resolves to Any in isolation
 
 
 def _default_session_redis_url() -> str:
-    value = os.getenv("SESSION_REDIS_URL")
-    if value:
-        return value
-    return os.getenv("REDIS_URL", "redis://localhost:6379/1")
+    """Build session Redis URL with password support."""
+    env_value = os.getenv("SESSION_REDIS_URL")
+    if env_value:
+        return env_value
+
+    # Fall back to REDIS_URL if fully specified (includes password if provided)
+    legacy_value = os.getenv("REDIS_URL")
+    if legacy_value:
+        return legacy_value
+
+    host = os.getenv("REDIS_HOST", "localhost")
+    port = os.getenv("REDIS_PORT", "6379")
+    password = os.getenv("REDIS_PASSWORD", "")
+
+    # Allow overriding the DB index specifically for sessions while keeping backwards compatibility
+    session_db = (
+        os.getenv("SESSION_REDIS_DB")
+        or os.getenv("REDIS_SESSION_DB")
+        or os.getenv("SESSION_REDIS_DATABASE")
+        or "1"
+    )
+
+    auth_segment = f":{password}@" if password else ""
+    return f"redis://{auth_segment}{host}:{port}/{session_db}"
 
 
 class AuthSettings(BaseModel):  # BaseModel resolves to Any in isolation
@@ -965,7 +985,16 @@ class Settings(BaseSettings):
             description="Global list of supported currencies",
         )
 
+        # Payment processing
+        require_payment_plugin: bool = Field(
+            True,
+            description="Require payment plugin (fail if unavailable). MUST be True in production to prevent mock payments. Set False ONLY in development/testing."
+        )
+
         # Payment gateway credentials (load from Vault in production)
+        paystack_secret_key: str = Field("", description="Paystack secret key")
+        paystack_public_key: str = Field("", description="Paystack public key")
+
         stripe_api_key: str = Field("", description="Stripe API key (secret)")
         stripe_webhook_secret: str = Field("", description="Stripe webhook secret")
         stripe_publishable_key: str = Field("", description="Stripe publishable key")

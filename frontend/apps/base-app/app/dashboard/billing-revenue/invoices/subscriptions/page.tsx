@@ -74,8 +74,8 @@ export default function SubscriptionManagementPage() {
     try {
       // Load both plans and subscriptions
       const [plansResponse, subscriptionsResponse] = await Promise.all([
-        apiClient.get<SubscriptionPlan[]>('/api/v1/billing/subscriptions/plans'),
-        apiClient.get<Subscription[]>('/api/v1/billing/subscriptions')
+        apiClient.get<SubscriptionPlan[]>('/billing/subscriptions/plans'),
+        apiClient.get<Subscription[]>('/billing/subscriptions')
       ]);
 
       if (plansResponse.data) {

@@ -4,6 +4,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { logger } from '@/lib/logger';
@@ -106,6 +107,14 @@ export interface UserPermissionGrant {
   expires_at?: string;
 }
 
+const EMPTY_USER_PERMISSIONS: UserPermissions = {
+  user_id: 'unknown',
+  roles: [],
+  direct_permissions: [],
+  effective_permissions: [],
+  is_superuser: false,
+};
+
 /**
  * API functions
  */
@@ -113,56 +122,108 @@ const rbacApi = {
   // Permissions
   fetchPermissions: async (category?: PermissionCategory): Promise<Permission[]> => {
     const params = category ? `?category=${category}` : '';
-    const response = await apiClient.get(`/api/v1/auth/rbac/permissions${params}`);
-    return response.data as Permission[];
+    try {
+      const response = await apiClient.get(`/auth/rbac/permissions${params}`);
+      return response.data as Permission[];
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 403) {
+        logger.warn('Permissions list returned 403. Returning empty permissions array.');
+        return [];
+      }
+      throw error;
+    }
   },
 
   fetchPermission: async (name: string): Promise<Permission> => {
-    const response = await apiClient.get(`/api/v1/auth/rbac/permissions/${name}`);
-    return response.data as Permission;
+    try {
+      const response = await apiClient.get(`/auth/rbac/permissions/${name}`);
+      return response.data as Permission;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 403) {
+        logger.warn(
+          { permission: name },
+          'Single permission fetch returned 403. Returning minimal permission record.'
+        );
+        return {
+          name,
+          display_name: name,
+          category: PermissionCategory.SYSTEM,
+          is_system: false,
+          description: 'Permission unavailable due to insufficient access.',
+        } as Permission;
+      }
+      throw error;
+    }
   },
 
   // Roles
   fetchRoles: async (activeOnly = true): Promise<Role[]> => {
-    const response = await apiClient.get(`/api/v1/auth/rbac/roles?active_only=${activeOnly}`);
-    return response.data as Role[];
+    try {
+      const response = await apiClient.get(`/auth/rbac/roles?active_only=${activeOnly}`);
+      return response.data as Role[];
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 403) {
+        logger.warn('Roles endpoint returned 403. Returning empty roles array.');
+        return [];
+      }
+      throw error;
+    }
   },
 
   createRole: async (data: RoleCreateRequest): Promise<Role> => {
-    const response = await apiClient.post('/api/v1/auth/rbac/roles', data);
+    const response = await apiClient.post('/auth/rbac/roles', data);
     return response.data as Role;
   },
 
   updateRole: async (name: string, data: RoleUpdateRequest): Promise<Role> => {
-    const response = await apiClient.patch(`/api/v1/auth/rbac/roles/${name}`, data);
+    const response = await apiClient.patch(`/auth/rbac/roles/${name}`, data);
     return response.data as Role;
   },
 
   deleteRole: async (name: string): Promise<void> => {
-    await apiClient.delete(`/api/v1/auth/rbac/roles/${name}`);
+    await apiClient.delete(`/auth/rbac/roles/${name}`);
   },
 
   // User permissions
   fetchMyPermissions: async (): Promise<UserPermissions> => {
-    const response = await apiClient.get('/api/v1/auth/rbac/my-permissions');
-    return response.data as UserPermissions;
+    try {
+      const response = await apiClient.get('/auth/rbac/my-permissions');
+      return response.data as UserPermissions;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 403) {
+        logger.warn('My permissions endpoint returned 403. Defaulting to safe permissions.');
+        return EMPTY_USER_PERMISSIONS;
+      }
+      throw error;
+    }
   },
 
   fetchUserPermissions: async (userId: string): Promise<UserPermissions> => {
-    const response = await apiClient.get(`/api/v1/auth/rbac/users/${userId}/permissions`);
-    return response.data as UserPermissions;
+    try {
+      const response = await apiClient.get(`/auth/rbac/users/${userId}/permissions`);
+      return response.data as UserPermissions;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 403) {
+        logger.warn(
+          { userId },
+          'User permissions endpoint returned 403. Defaulting to safe permissions.'
+        );
+        return { ...EMPTY_USER_PERMISSIONS, user_id: userId };
+      }
+      throw error;
+    }
   },
 
   assignRoleToUser: async (data: UserRoleAssignment): Promise<void> => {
-    await apiClient.post('/api/v1/auth/rbac/users/assign-role', data);
+    await apiClient.post('/auth/rbac/users/assign-role', data);
   },
 
   revokeRoleFromUser: async (data: UserRoleAssignment): Promise<void> => {
-    await apiClient.post('/api/v1/auth/rbac/users/revoke-role', data);
+    await apiClient.post('/auth/rbac/users/revoke-role', data);
   },
 
   grantPermissionToUser: async (data: UserPermissionGrant): Promise<void> => {
-    await apiClient.post('/api/v1/auth/rbac/users/grant-permission', data);
+    await apiClient.post('/auth/rbac/users/grant-permission', data);
   },
 };
 

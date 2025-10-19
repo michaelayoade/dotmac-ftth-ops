@@ -160,7 +160,7 @@ export function NotificationCenter({
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Bell className="mb-2 h-12 w-12 text-muted-foreground/50" />
               <p className="text-sm text-muted-foreground">No notifications</p>
-              <p className="text-xs text-muted-foreground">You're all caught up!</p>
+              <p className="text-xs text-muted-foreground">You&apos;re all caught up!</p>
             </div>
           )}
 

@@ -405,7 +405,7 @@ def build_subscription_created_context(subscription: Any, tenant: Any) -> dict[s
             if subscription.trial_end
             else ""
         ),
-        "dashboard_url": f"https://app.example.com/tenant/billing/subscription",
+        "dashboard_url": "https://app.example.com/tenant/billing/subscription",
     }
 
 

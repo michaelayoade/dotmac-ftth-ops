@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -230,7 +233,7 @@ export default function CustomerUsagePage() {
               <div>
                 <p className="font-semibold text-yellow-500">Usage Alert</p>
                 <p className="text-sm text-muted-foreground">
-                  You've used {usagePercentage.toFixed(0)}% of your monthly data cap.
+                  You&apos;ve used {usagePercentage.toFixed(0)}% of your monthly data cap.
                   Consider upgrading your plan if you frequently exceed your limit.
                 </p>
               </div>
@@ -306,7 +309,7 @@ export default function CustomerUsagePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Wifi className="h-5 w-5" />
-            Today's Usage Pattern
+            Today&apos;s Usage Pattern
           </CardTitle>
           <CardDescription>
             Bandwidth usage by hour (last 24 hours)

@@ -25,7 +25,7 @@ export function useAWXHealth(
   return useQuery<AWXHealthResponse, Error, AWXHealthResponse, HealthQueryKey>({
     queryKey: ['ansible', 'health'],
     queryFn: async () => {
-      const response = await apiClient.get<AWXHealthResponse>('/api/v1/ansible/health');
+      const response = await apiClient.get<AWXHealthResponse>('/ansible/health');
       return extractDataOrThrow(response);
     },
     staleTime: 30_000,
@@ -42,7 +42,7 @@ export function useJobTemplates(
   return useQuery<JobTemplate[], Error, JobTemplate[], TemplatesQueryKey>({
     queryKey: ['ansible', 'templates'],
     queryFn: async () => {
-      const response = await apiClient.get<JobTemplate[]>('/api/v1/ansible/job-templates');
+      const response = await apiClient.get<JobTemplate[]>('/ansible/job-templates');
       return extractDataOrThrow(response);
     },
     staleTime: 60_000,
@@ -63,7 +63,7 @@ export function useJobTemplate(
       if (!templateId) {
         throw new Error('Template ID is required');
       }
-      const response = await apiClient.get<JobTemplate>(`/api/v1/ansible/job-templates/${templateId}`);
+      const response = await apiClient.get<JobTemplate>(`/ansible/job-templates/${templateId}`);
       return extractDataOrThrow(response);
     },
     enabled: Boolean(templateId),
@@ -81,7 +81,7 @@ export function useJobs(
   return useQuery<Job[], Error, Job[], JobsQueryKey>({
     queryKey: ['ansible', 'jobs'],
     queryFn: async () => {
-      const response = await apiClient.get<Job[]>('/api/v1/ansible/jobs');
+      const response = await apiClient.get<Job[]>('/ansible/jobs');
       return extractDataOrThrow(response);
     },
     staleTime: 30_000,
@@ -102,7 +102,7 @@ export function useJob(
       if (!jobId) {
         throw new Error('Job ID is required');
       }
-      const response = await apiClient.get<Job>(`/api/v1/ansible/jobs/${jobId}`);
+      const response = await apiClient.get<Job>(`/ansible/jobs/${jobId}`);
       return extractDataOrThrow(response);
     },
     enabled: Boolean(jobId),
@@ -118,7 +118,7 @@ export function useLaunchJob(): UseMutationResult<JobLaunchResponse, Error, JobL
   const queryClient = useQueryClient();
   return useMutation<JobLaunchResponse, Error, JobLaunchRequest>({
     mutationFn: async (request: JobLaunchRequest) => {
-      const response = await apiClient.post<JobLaunchResponse>('/api/v1/ansible/jobs/launch', request);
+      const response = await apiClient.post<JobLaunchResponse>('/ansible/jobs/launch', request);
       return extractDataOrThrow(response);
     },
     onSuccess: async () => {
@@ -138,7 +138,7 @@ export function useCancelJob(): UseMutationResult<void, Error, CancelJobVariable
   const queryClient = useQueryClient();
   return useMutation<void, Error, CancelJobVariables>({
     mutationFn: async ({ jobId }: CancelJobVariables) => {
-      await apiClient.post(`/api/v1/ansible/jobs/${jobId}/cancel`);
+      await apiClient.post(`/ansible/jobs/${jobId}/cancel`);
     },
     onSuccess: async (_, { jobId }) => {
       await Promise.all([

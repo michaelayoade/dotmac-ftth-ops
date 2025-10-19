@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import { useState } from "react";
 import { useCustomerAuth } from "@/lib/auth/CustomerAuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -151,7 +154,7 @@ export default function CustomerLoginPage() {
             {/* Help Links */}
             <div className="space-y-2 text-center text-sm">
               <p className="text-slate-400">
-                Don't have an account?{" "}
+                Don&apos;t have an account?{" "}
                 <Link
                   href="/customer-portal/signup"
                   className="text-primary hover:underline font-medium"

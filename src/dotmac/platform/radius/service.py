@@ -51,7 +51,7 @@ class RADIUSService:
         # RADIUS secret from Vault (Pure Vault mode in production)
         from dotmac.platform.settings import settings
 
-        self.radius_secret = settings.radius.secret
+        self.radius_secret = settings.radius.shared_secret
 
         # Production validation
         if settings.is_production and not self.radius_secret:
@@ -81,6 +81,11 @@ class RADIUSService:
         1. RadCheck entry with username/password
         2. RadReply entries for bandwidth, IP, timeouts, etc.
         """
+        # Check if username already exists
+        existing = await self.repository.get_radcheck_by_username(self.tenant_id, data.username)
+        if existing:
+            raise ValueError(f"Subscriber with username '{data.username}' already exists")
+
         # Create authentication entry (radcheck)
         radcheck = await self.repository.create_radcheck(
             tenant_id=self.tenant_id,
@@ -90,13 +95,34 @@ class RADIUSService:
         )
 
         # Create authorization entries (radreply)
-        if data.framed_ip_address:
+        # IPv4 address
+        if data.framed_ipv4_address:
             await self.repository.create_radreply(
                 tenant_id=self.tenant_id,
                 subscriber_id=data.subscriber_id,
                 username=data.username,
                 attribute="Framed-IP-Address",
-                value=data.framed_ip_address,
+                value=data.framed_ipv4_address,
+            )
+
+        # IPv6 address (RFC 6911)
+        if data.framed_ipv6_address:
+            await self.repository.create_radreply(
+                tenant_id=self.tenant_id,
+                subscriber_id=data.subscriber_id,
+                username=data.username,
+                attribute="Framed-IPv6-Address",
+                value=data.framed_ipv6_address,
+            )
+
+        # IPv6 prefix delegation (RFC 4818)
+        if data.delegated_ipv6_prefix:
+            await self.repository.create_radreply(
+                tenant_id=self.tenant_id,
+                subscriber_id=data.subscriber_id,
+                username=data.username,
+                attribute="Delegated-IPv6-Prefix",
+                value=data.delegated_ipv6_prefix,
             )
 
         if data.session_timeout:
@@ -133,7 +159,9 @@ class RADIUSService:
             subscriber_id=radcheck.subscriber_id,
             username=radcheck.username,
             bandwidth_profile_id=data.bandwidth_profile_id,
-            framed_ip_address=data.framed_ip_address,
+            framed_ipv4_address=data.framed_ipv4_address,
+            framed_ipv6_address=data.framed_ipv6_address,
+            delegated_ipv6_prefix=data.delegated_ipv6_prefix,
             session_timeout=data.session_timeout,
             idle_timeout=data.idle_timeout,
             enabled=True,
@@ -151,21 +179,34 @@ class RADIUSService:
         radreplies = await self.repository.get_radreplies_by_username(self.tenant_id, username)
 
         # Extract common attributes
-        framed_ip = None
+        framed_ipv4 = None
+        framed_ipv6 = None
+        delegated_ipv6_prefix = None
         session_timeout = None
         idle_timeout = None
         bandwidth_profile_id = None
+        is_enabled = True  # Default to enabled
 
         for reply in radreplies:
             if reply.attribute == "Framed-IP-Address":
-                framed_ip = reply.value
+                framed_ipv4 = reply.value
+            elif reply.attribute == "Framed-IPv6-Address":
+                framed_ipv6 = reply.value
+            elif reply.attribute == "Delegated-IPv6-Prefix":
+                delegated_ipv6_prefix = reply.value
             elif reply.attribute == "Session-Timeout":
                 session_timeout = int(reply.value)
             elif reply.attribute == "Idle-Timeout":
                 idle_timeout = int(reply.value)
             elif reply.attribute == "Mikrotik-Rate-Limit":
-                # Store profile reference if using Mikrotik attributes
+                # Skip - this is a rate limit string, not a profile ID
+                pass
+            elif reply.attribute == "X-Bandwidth-Profile-ID":
+                # Custom attribute to store bandwidth profile ID
                 bandwidth_profile_id = reply.value
+            elif reply.attribute == "Auth-Type" and reply.value == "Reject":
+                # Subscriber is disabled if Auth-Type := Reject exists
+                is_enabled = False
 
         return RADIUSSubscriberResponse(
             id=radcheck.id,
@@ -173,10 +214,12 @@ class RADIUSService:
             subscriber_id=radcheck.subscriber_id,
             username=radcheck.username,
             bandwidth_profile_id=bandwidth_profile_id,
-            framed_ip_address=framed_ip,
+            framed_ipv4_address=framed_ipv4,
+            framed_ipv6_address=framed_ipv6,
+            delegated_ipv6_prefix=delegated_ipv6_prefix,
             session_timeout=session_timeout,
             idle_timeout=idle_timeout,
-            enabled=True,
+            enabled=is_enabled,
             created_at=radcheck.created_at,
             updated_at=radcheck.updated_at,
         )
@@ -190,17 +233,44 @@ class RADIUSService:
             await self.repository.update_radcheck_password(self.tenant_id, username, data.password)
 
         # Update reply attributes
-        if data.framed_ip_address is not None:
+        # IPv4 address
+        if data.framed_ipv4_address is not None:
             # Delete existing and create new
             await self.repository.delete_radreply(self.tenant_id, username, "Framed-IP-Address")
-            if data.framed_ip_address:
+            if data.framed_ipv4_address:
                 radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
                 await self.repository.create_radreply(
                     tenant_id=self.tenant_id,
                     subscriber_id=radcheck.subscriber_id,
                     username=username,
                     attribute="Framed-IP-Address",
-                    value=data.framed_ip_address,
+                    value=data.framed_ipv4_address,
+                )
+
+        # IPv6 address
+        if data.framed_ipv6_address is not None:
+            await self.repository.delete_radreply(self.tenant_id, username, "Framed-IPv6-Address")
+            if data.framed_ipv6_address:
+                radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
+                await self.repository.create_radreply(
+                    tenant_id=self.tenant_id,
+                    subscriber_id=radcheck.subscriber_id,
+                    username=username,
+                    attribute="Framed-IPv6-Address",
+                    value=data.framed_ipv6_address,
+                )
+
+        # IPv6 prefix delegation
+        if data.delegated_ipv6_prefix is not None:
+            await self.repository.delete_radreply(self.tenant_id, username, "Delegated-IPv6-Prefix")
+            if data.delegated_ipv6_prefix:
+                radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
+                await self.repository.create_radreply(
+                    tenant_id=self.tenant_id,
+                    subscriber_id=radcheck.subscriber_id,
+                    username=username,
+                    attribute="Delegated-IPv6-Prefix",
+                    value=data.delegated_ipv6_prefix,
                 )
 
         if data.session_timeout is not None:
@@ -259,13 +329,16 @@ class RADIUSService:
 
         return bool(deleted_check)
 
-    async def enable_subscriber(self, username: str) -> None:
+    async def enable_subscriber(self, username: str) -> RADIUSSubscriberResponse | None:
         """Enable RADIUS access for subscriber"""
         # Remove any deny attributes
         await self.repository.delete_radreply(self.tenant_id, username, "Auth-Type")
         await self.session.commit()
 
-    async def disable_subscriber(self, username: str) -> None:
+        # Return the updated subscriber
+        return await self.get_subscriber(username)
+
+    async def disable_subscriber(self, username: str) -> RADIUSSubscriberResponse | None:
         """Disable RADIUS access for subscriber"""
         radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
         if radcheck:
@@ -279,6 +352,10 @@ class RADIUSService:
                 value="Reject",
             )
             await self.session.commit()
+
+            # Return the updated subscriber
+            return await self.get_subscriber(username)
+        return None
 
     async def list_subscribers(
         self, skip: int = 0, limit: int = 100
@@ -306,8 +383,19 @@ class RADIUSService:
         if not profile:
             raise ValueError(f"Bandwidth profile {profile_id} not found")
 
-        # Remove existing rate limit attributes
+        # Remove existing rate limit and profile ID attributes
         await self.repository.delete_radreply(self.tenant_id, username, "Mikrotik-Rate-Limit")
+        await self.repository.delete_radreply(self.tenant_id, username, "X-Bandwidth-Profile-ID")
+
+        # Store bandwidth profile ID as a custom attribute for later retrieval
+        await self.repository.create_radreply(
+            tenant_id=self.tenant_id,
+            subscriber_id=subscriber_id,
+            username=username,
+            attribute="X-Bandwidth-Profile-ID",
+            value=profile_id,
+            op="=",
+        )
 
         # Create Mikrotik rate limit attribute
         # Format: "rx-rate[/tx-rate] [rx-burst-rate[/tx-burst-rate]]"

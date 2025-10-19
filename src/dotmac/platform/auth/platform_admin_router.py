@@ -28,7 +28,7 @@ from .platform_admin import (
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(tags=["Platform Administration"])
+router = APIRouter(prefix="/api/v1/admin/platform", tags=["Platform Administration"])
 
 
 # ============================================

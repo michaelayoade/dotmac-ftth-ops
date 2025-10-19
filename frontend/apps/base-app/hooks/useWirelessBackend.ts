@@ -25,7 +25,7 @@ import type {
   CreateSignalMeasurementRequest,
 } from '@/types/wireless-backend';
 
-const API_BASE = '/api/v1/wireless';
+const API_BASE = '/wireless';
 
 // ============================================================================
 // Wireless Devices

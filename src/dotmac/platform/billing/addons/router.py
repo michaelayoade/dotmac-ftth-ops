@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
-from dotmac.platform.auth.dependencies import get_current_user, require_scopes
+from dotmac.platform.auth.dependencies import require_scopes
 from dotmac.platform.billing._typing_helpers import rate_limit
 from dotmac.platform.billing.exceptions import AddonNotFoundError
 from dotmac.platform.db import get_async_session

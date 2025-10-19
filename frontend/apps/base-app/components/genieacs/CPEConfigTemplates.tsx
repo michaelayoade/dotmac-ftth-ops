@@ -498,7 +498,7 @@ export function CPEConfigTemplates() {
           <DialogHeader>
             <DialogTitle>Apply Configuration Template</DialogTitle>
             <DialogDescription>
-              Apply "{selectedTemplate?.name}" to selected CPE devices
+              Apply &quot;{selectedTemplate?.name}&quot; to selected CPE devices
             </DialogDescription>
           </DialogHeader>
 

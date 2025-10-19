@@ -5,7 +5,7 @@ Provides workflow-compatible methods for communication operations.
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 from uuid import uuid4
 
 from sqlalchemy import select
@@ -28,8 +28,8 @@ class CommunicationsService:
         self,
         template: str,
         recipient: str,
-        variables: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        variables: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         Send a templated email.
 
@@ -43,10 +43,10 @@ class CommunicationsService:
         """
         from datetime import datetime
 
+        from ..settings import settings
         from .email_service import EmailMessage, EmailService
         from .models import CommunicationTemplate
         from .template_service import TemplateService
-        from ..settings import settings
 
         logger.info(
             f"Sending template email '{template}' to {recipient} with variables: {list(variables.keys())}"
@@ -55,7 +55,7 @@ class CommunicationsService:
         # 1. Load template from database
         stmt = select(CommunicationTemplate).where(
             CommunicationTemplate.name == template,
-            CommunicationTemplate.is_active == True,
+            CommunicationTemplate.is_active,
         )
         result = await self.db.execute(stmt)
         template_record = result.scalar_one_or_none()
@@ -66,7 +66,7 @@ class CommunicationsService:
             return await self._send_fallback_email(template, recipient, variables)
 
         # 2. Render template with variables
-        template_service = TemplateService()
+        _ = TemplateService()
 
         try:
             # Render subject
@@ -150,8 +150,8 @@ class CommunicationsService:
         self,
         template_name: str,
         recipient: str,
-        variables: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        variables: dict[str, Any],
+    ) -> dict[str, Any]:
         """
         Send a simple fallback email when template is not found.
 
@@ -165,8 +165,8 @@ class CommunicationsService:
         """
         from datetime import datetime
 
-        from .email_service import EmailMessage, EmailService
         from ..settings import settings
+        from .email_service import EmailMessage, EmailService
 
         logger.info(f"Sending fallback email for template '{template_name}' to {recipient}")
 

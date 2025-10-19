@@ -3,19 +3,18 @@ Pydantic schemas for composable licensing framework API.
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
 from dotmac.platform.licensing.framework import (
+    BillingCycle,
+    EventType,
     ModuleCategory,
     PricingModel,
     SubscriptionStatus,
-    BillingCycle,
-    EventType,
 )
-
 
 # ========================================================================
 # FEATURE MODULE SCHEMAS
@@ -91,14 +90,14 @@ class FeatureModuleResponse(BaseModel):
 class FeatureModuleUpdate(BaseModel):
     """Update feature module."""
 
-    module_name: Optional[str] = Field(None, min_length=1, max_length=200)
-    description: Optional[str] = None
-    dependencies: Optional[list[str]] = None
-    pricing_model: Optional[PricingModel] = None
-    base_price: Optional[float] = Field(None, ge=0)
-    config_schema: Optional[dict[str, Any]] = None
-    default_config: Optional[dict[str, Any]] = None
-    is_active: Optional[bool] = None
+    module_name: str | None = Field(None, min_length=1, max_length=200)
+    description: str | None = None
+    dependencies: list[str] | None = None
+    pricing_model: PricingModel | None = None
+    base_price: float | None = Field(None, ge=0)
+    config_schema: dict[str, Any] | None = None
+    default_config: dict[str, Any] | None = None
+    is_active: bool | None = None
 
 
 # ========================================================================
@@ -116,7 +115,7 @@ class QuotaDefinitionCreate(BaseModel):
     pricing_model: PricingModel
     overage_rate: float = Field(..., ge=0)
     is_metered: bool = False
-    reset_period: Optional[str] = Field(None, pattern="^(MONTHLY|QUARTERLY|ANNUAL)$")
+    reset_period: str | None = Field(None, pattern="^(MONTHLY|QUARTERLY|ANNUAL)$")
     config: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -131,7 +130,7 @@ class QuotaDefinitionResponse(BaseModel):
     pricing_model: PricingModel
     overage_rate: float
     is_metered: bool
-    reset_period: Optional[str]
+    reset_period: str | None
     config: dict[str, Any]
     is_active: bool
     created_at: datetime
@@ -143,15 +142,15 @@ class QuotaDefinitionResponse(BaseModel):
 class QuotaDefinitionUpdate(BaseModel):
     """Update quota definition."""
 
-    quota_name: Optional[str] = Field(None, min_length=1, max_length=200)
-    description: Optional[str] = None
-    unit_name: Optional[str] = Field(None, min_length=1, max_length=50)
-    pricing_model: Optional[PricingModel] = None
-    overage_rate: Optional[float] = Field(None, ge=0)
-    is_metered: Optional[bool] = None
-    reset_period: Optional[str] = Field(None, pattern="^(MONTHLY|QUARTERLY|ANNUAL)$")
-    config: Optional[dict[str, Any]] = None
-    is_active: Optional[bool] = None
+    quota_name: str | None = Field(None, min_length=1, max_length=200)
+    description: str | None = None
+    unit_name: str | None = Field(None, min_length=1, max_length=50)
+    pricing_model: PricingModel | None = None
+    overage_rate: float | None = Field(None, ge=0)
+    is_metered: bool | None = None
+    reset_period: str | None = Field(None, pattern="^(MONTHLY|QUARTERLY|ANNUAL)$")
+    config: dict[str, Any] | None = None
+    is_active: bool | None = None
 
 
 # ========================================================================
@@ -165,9 +164,9 @@ class PlanModuleConfig(BaseModel):
     module_id: UUID
     included: bool = True
     addon: bool = False
-    price: Optional[float] = Field(None, ge=0)
+    price: float | None = Field(None, ge=0)
     trial_only: bool = False
-    promotional_until: Optional[datetime] = None
+    promotional_until: datetime | None = None
     config: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -176,9 +175,9 @@ class PlanQuotaConfig(BaseModel):
 
     quota_id: UUID
     quantity: int = Field(..., ge=-1)  # -1 = unlimited
-    soft_limit: Optional[int] = Field(None, ge=0)
+    soft_limit: int | None = Field(None, ge=0)
     allow_overage: bool = False
-    overage_rate: Optional[float] = Field(None, ge=0)
+    overage_rate: float | None = Field(None, ge=0)
     pricing_tiers: list[dict[str, Any]] = Field(default_factory=list)
     config: dict[str, Any] = Field(default_factory=dict)
 
@@ -217,9 +216,9 @@ class PlanModuleResponse(BaseModel):
     module_code: str
     included_by_default: bool
     is_optional_addon: bool
-    override_price: Optional[float]
+    override_price: float | None
     trial_only: bool
-    promotional_until: Optional[datetime]
+    promotional_until: datetime | None
     config: dict[str, Any]
 
     model_config = {"from_attributes": True}
@@ -234,9 +233,9 @@ class PlanQuotaResponse(BaseModel):
     quota_code: str
     unit_name: str
     included_quantity: int
-    soft_limit: Optional[int]
+    soft_limit: int | None
     allow_overage: bool
-    overage_rate_override: Optional[float]
+    overage_rate_override: float | None
     pricing_tiers: list[dict[str, Any]]
     config: dict[str, Any]
 
@@ -271,15 +270,15 @@ class ServicePlanResponse(BaseModel):
 class ServicePlanUpdate(BaseModel):
     """Update service plan."""
 
-    plan_name: Optional[str] = Field(None, min_length=1, max_length=200)
-    description: Optional[str] = None
-    base_price_monthly: Optional[float] = Field(None, ge=0)
-    annual_discount_percent: Optional[float] = Field(None, ge=0, le=100)
-    is_public: Optional[bool] = None
-    trial_days: Optional[int] = Field(None, ge=0)
-    trial_modules: Optional[list[str]] = None
-    metadata: Optional[dict[str, Any]] = None
-    is_active: Optional[bool] = None
+    plan_name: str | None = Field(None, min_length=1, max_length=200)
+    description: str | None = None
+    base_price_monthly: float | None = Field(None, ge=0)
+    annual_discount_percent: float | None = Field(None, ge=0, le=100)
+    is_public: bool | None = None
+    trial_days: int | None = Field(None, ge=0)
+    trial_modules: list[str] | None = None
+    metadata: dict[str, Any] | None = None
+    is_active: bool | None = None
 
 
 class ServicePlanDuplicate(BaseModel):
@@ -297,7 +296,7 @@ class PlanPricingResponse(BaseModel):
     total_monthly: float
     annual_discount_percent: float
     discount_amount: float
-    total_annual: Optional[float]
+    total_annual: float | None
 
 
 # ========================================================================
@@ -314,8 +313,8 @@ class SubscriptionCreate(BaseModel):
     start_trial: bool = False
     addon_module_ids: list[UUID] = Field(default_factory=list)
     custom_config: dict[str, Any] = Field(default_factory=dict)
-    stripe_customer_id: Optional[str] = None
-    stripe_subscription_id: Optional[str] = None
+    stripe_customer_id: str | None = None
+    stripe_subscription_id: str | None = None
 
 
 class SubscriptionModuleResponse(BaseModel):
@@ -327,8 +326,8 @@ class SubscriptionModuleResponse(BaseModel):
     module_code: str
     is_enabled: bool
     source: str  # PLAN, ADDON, TRIAL, PROMOTION, CUSTOM
-    addon_price: Optional[float]
-    expires_at: Optional[datetime]
+    addon_price: float | None
+    expires_at: datetime | None
     config: dict[str, Any]
 
     model_config = {"from_attributes": True}
@@ -343,7 +342,7 @@ class SubscriptionQuotaResponse(BaseModel):
     quota_code: str
     unit_name: str
     period_start: datetime
-    period_end: Optional[datetime]
+    period_end: datetime | None
     allocated_quantity: int
     current_usage: int
     overage_quantity: int
@@ -362,13 +361,13 @@ class TenantSubscriptionResponse(BaseModel):
     status: SubscriptionStatus
     billing_cycle: BillingCycle
     monthly_price: float
-    annual_price: Optional[float]
-    trial_start: Optional[datetime]
-    trial_end: Optional[datetime]
+    annual_price: float | None
+    trial_start: datetime | None
+    trial_end: datetime | None
     current_period_start: datetime
     current_period_end: datetime
-    stripe_customer_id: Optional[str]
-    stripe_subscription_id: Optional[str]
+    stripe_customer_id: str | None
+    stripe_subscription_id: str | None
     custom_config: dict[str, Any]
     modules: list[SubscriptionModuleResponse]
     quotas: list[SubscriptionQuotaResponse]
@@ -399,7 +398,7 @@ class FeatureEntitlementCheck(BaseModel):
     """Check feature entitlement request."""
 
     module_code: str
-    capability_code: Optional[str] = None
+    capability_code: str | None = None
 
 
 class FeatureEntitlementResponse(BaseModel):
@@ -407,9 +406,9 @@ class FeatureEntitlementResponse(BaseModel):
 
     entitled: bool
     module_code: str
-    capability_code: Optional[str]
-    subscription_id: Optional[UUID]
-    expires_at: Optional[datetime]
+    capability_code: str | None
+    subscription_id: UUID | None
+    expires_at: datetime | None
 
 
 class EntitledCapabilitiesResponse(BaseModel):
@@ -435,7 +434,7 @@ class QuotaCheckResponse(BaseModel):
     available: int
     overage_allowed: bool
     overage_rate: float
-    soft_limit: Optional[int]
+    soft_limit: int | None
 
 
 class QuotaConsumeRequest(BaseModel):
@@ -475,7 +474,7 @@ class SubscriptionEventResponse(BaseModel):
     subscription_id: UUID
     event_type: EventType
     event_data: dict[str, Any]
-    created_by: Optional[UUID]
+    created_by: UUID | None
     created_at: datetime
 
     model_config = {"from_attributes": True}

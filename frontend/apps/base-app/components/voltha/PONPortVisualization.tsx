@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Radio,
   TrendingUp,
@@ -41,13 +41,7 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
   const [portStatistics, setPortStatistics] = useState<PONStatistics | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (selectedPort !== null) {
-      loadPortStatistics(selectedPort);
-    }
-  }, [selectedPort]);
-
-  const loadPortStatistics = async (portNo: number) => {
+  const loadPortStatistics = useCallback(async (portNo: number) => {
     setLoading(true);
     try {
       const response = await apiClient.get<PONStatistics>(
@@ -64,7 +58,13 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
     } finally {
       setLoading(false);
     }
-  };
+  }, [oltId, toast]);
+
+  useEffect(() => {
+    if (selectedPort !== null) {
+      loadPortStatistics(selectedPort);
+    }
+  }, [loadPortStatistics, selectedPort]);
 
   const getUtilizationColor = (utilization?: number) => {
     if (!utilization) return "bg-gray-200";

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Wifi,
   WifiOff,
@@ -124,12 +124,7 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchNetworkInfo();
-    fetchNetworkStats();
-  }, [customerId]);
-
-  const fetchNetworkInfo = async () => {
+  const fetchNetworkInfo = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiClient.get<NetworkInfo>(
@@ -145,9 +140,9 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [customerId, toast]);
 
-  const fetchNetworkStats = async () => {
+  const fetchNetworkStats = useCallback(async () => {
     try {
       const response = await apiClient.get<NetworkStats>(
         `/api/v1/customers/${customerId}/network-stats`
@@ -157,7 +152,12 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
       // Stats are optional, don't show error
       console.error('Failed to load network stats:', error);
     }
-  };
+  }, [customerId]);
+
+  useEffect(() => {
+    fetchNetworkInfo();
+    fetchNetworkStats();
+  }, [fetchNetworkInfo, fetchNetworkStats]);
 
   const handleRefresh = async () => {
     setRefreshing(true);

@@ -104,7 +104,7 @@ export const useTenantPaymentMethods = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/api/v1/billing/tenant/payment-methods');
+      const response = await apiClient.get('/billing/tenant/payment-methods');
       setPaymentMethods(response.data);
       logger.info('Fetched payment methods', { count: response.data.length });
       return response.data;
@@ -127,7 +127,7 @@ export const useTenantPaymentMethods = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await apiClient.post('/api/v1/billing/tenant/payment-methods', request);
+        const response = await apiClient.post('/billing/tenant/payment-methods', request);
         // Refresh payment methods
         await fetchPaymentMethods();
         logger.info('Added payment method', { method_type: request.method_type });
@@ -154,7 +154,7 @@ export const useTenantPaymentMethods = () => {
       setError(null);
       try {
         const response = await apiClient.patch(
-          `/api/v1/billing/tenant/payment-methods/${paymentMethodId}`,
+          `/billing/tenant/payment-methods/${paymentMethodId}`,
           request
         );
         // Refresh payment methods
@@ -183,7 +183,7 @@ export const useTenantPaymentMethods = () => {
       setError(null);
       try {
         const response = await apiClient.post(
-          `/api/v1/billing/tenant/payment-methods/${paymentMethodId}/set-default`
+          `/billing/tenant/payment-methods/${paymentMethodId}/set-default`
         );
         // Refresh payment methods
         await fetchPaymentMethods();
@@ -210,7 +210,7 @@ export const useTenantPaymentMethods = () => {
       setLoading(true);
       setError(null);
       try {
-        await apiClient.delete(`/api/v1/billing/tenant/payment-methods/${paymentMethodId}`);
+        await apiClient.delete(`/billing/tenant/payment-methods/${paymentMethodId}`);
         // Refresh payment methods
         await fetchPaymentMethods();
         logger.info('Removed payment method', { payment_method_id: paymentMethodId });
@@ -236,7 +236,7 @@ export const useTenantPaymentMethods = () => {
       setError(null);
       try {
         const response = await apiClient.post(
-          `/api/v1/billing/tenant/payment-methods/${paymentMethodId}/verify`,
+          `/billing/tenant/payment-methods/${paymentMethodId}/verify`,
           request
         );
         // Refresh payment methods

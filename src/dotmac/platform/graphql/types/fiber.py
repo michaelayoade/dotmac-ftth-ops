@@ -13,10 +13,8 @@ Created: 2025-10-16
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
 
 import strawberry
-
 
 # ============================================================================
 # Enums
@@ -24,7 +22,7 @@ import strawberry
 
 
 @strawberry.enum
-class FiberCableStatus(Enum):
+class FiberCableStatus(str, Enum):
     """Fiber cable operational status."""
 
     ACTIVE = "active"
@@ -36,7 +34,7 @@ class FiberCableStatus(Enum):
 
 
 @strawberry.enum
-class FiberType(Enum):
+class FiberType(str, Enum):
     """Fiber optic cable type."""
 
     SINGLE_MODE = "single_mode"
@@ -45,7 +43,7 @@ class FiberType(Enum):
 
 
 @strawberry.enum
-class CableInstallationType(Enum):
+class CableInstallationType(str, Enum):
     """Installation method for fiber cable."""
 
     AERIAL = "aerial"
@@ -57,7 +55,7 @@ class CableInstallationType(Enum):
 
 
 @strawberry.enum
-class SpliceType(Enum):
+class SpliceType(str, Enum):
     """Type of fiber splice."""
 
     FUSION = "fusion"
@@ -65,7 +63,7 @@ class SpliceType(Enum):
 
 
 @strawberry.enum
-class SpliceStatus(Enum):
+class SpliceStatus(str, Enum):
     """Splice point operational status."""
 
     ACTIVE = "active"
@@ -75,7 +73,7 @@ class SpliceStatus(Enum):
 
 
 @strawberry.enum
-class DistributionPointType(Enum):
+class DistributionPointType(str, Enum):
     """Type of distribution point equipment."""
 
     CABINET = "cabinet"
@@ -88,7 +86,7 @@ class DistributionPointType(Enum):
 
 
 @strawberry.enum
-class ServiceAreaType(Enum):
+class ServiceAreaType(str, Enum):
     """Type of service area coverage."""
 
     RESIDENTIAL = "residential"
@@ -98,7 +96,7 @@ class ServiceAreaType(Enum):
 
 
 @strawberry.enum
-class FiberHealthStatus(Enum):
+class FiberHealthStatus(str, Enum):
     """Overall fiber health status."""
 
     EXCELLENT = "excellent"
@@ -119,7 +117,7 @@ class GeoCoordinate:
 
     latitude: float
     longitude: float
-    altitude: Optional[float] = None
+    altitude: float | None = None
 
 
 @strawberry.type
@@ -143,16 +141,16 @@ class FiberStrand:
     """Individual fiber strand within a cable."""
 
     strand_id: int
-    color_code: Optional[str] = None
+    color_code: str | None = None
     is_active: bool
     is_available: bool
-    customer_id: Optional[str] = None
-    customer_name: Optional[str] = None
-    service_id: Optional[str] = None
+    customer_id: str | None = None
+    customer_name: str | None = None
+    service_id: str | None = None
 
     # Optical metrics
-    attenuation_db: Optional[float] = None
-    loss_db: Optional[float] = None
+    attenuation_db: float | None = None
+    loss_db: float | None = None
 
     # Splice points on this strand
     splice_count: int
@@ -172,9 +170,9 @@ class CableRoute:
     intermediate_points: list[GeoCoordinate]
 
     # Route characteristics
-    elevation_change_meters: Optional[float] = None
-    underground_distance_meters: Optional[float] = None
-    aerial_distance_meters: Optional[float] = None
+    elevation_change_meters: float | None = None
+    underground_distance_meters: float | None = None
+    aerial_distance_meters: float | None = None
 
 
 @strawberry.type
@@ -185,7 +183,7 @@ class FiberCable:
     id: strawberry.ID
     cable_id: str  # External/label ID
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
     # Status
     status: FiberCableStatus
@@ -196,8 +194,8 @@ class FiberCable:
     total_strands: int
     available_strands: int
     used_strands: int
-    manufacturer: Optional[str] = None
-    model: Optional[str] = None
+    manufacturer: str | None = None
+    model: str | None = None
     installation_type: CableInstallationType
 
     # Route
@@ -210,36 +208,36 @@ class FiberCable:
     # Connection points
     start_distribution_point_id: str
     end_distribution_point_id: str
-    start_point_name: Optional[str] = None
-    end_point_name: Optional[str] = None
+    start_point_name: str | None = None
+    end_point_name: str | None = None
 
     # Capacity metrics
     capacity_utilization_percent: float
-    bandwidth_capacity_gbps: Optional[float] = None
+    bandwidth_capacity_gbps: float | None = None
 
     # Splice information
     splice_point_ids: list[str]
     splice_count: int
 
     # Optical metrics (aggregate)
-    total_loss_db: Optional[float] = None
-    average_attenuation_db_per_km: Optional[float] = None
-    max_attenuation_db_per_km: Optional[float] = None
+    total_loss_db: float | None = None
+    average_attenuation_db_per_km: float | None = None
+    max_attenuation_db_per_km: float | None = None
 
     # Physical characteristics
-    conduit_id: Optional[str] = None
-    duct_number: Optional[int] = None
+    conduit_id: str | None = None
+    duct_number: int | None = None
     armored: bool = False
     fire_rated: bool = False
 
     # Ownership/management
-    owner_id: Optional[str] = None
-    owner_name: Optional[str] = None
+    owner_id: str | None = None
+    owner_name: str | None = None
     is_leased: bool = False
 
     # Timestamps
-    installed_at: Optional[datetime] = None
-    tested_at: Optional[datetime] = None
+    installed_at: datetime | None = None
+    tested_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -261,14 +259,14 @@ class SpliceConnection:
 
     # Splice details
     splice_type: SpliceType
-    loss_db: Optional[float] = None
-    reflectance_db: Optional[float] = None
+    loss_db: float | None = None
+    reflectance_db: float | None = None
 
     # Quality metrics
     is_passing: bool
-    test_result: Optional[str] = None
-    tested_at: Optional[datetime] = None
-    tested_by: Optional[str] = None
+    test_result: str | None = None
+    tested_at: datetime | None = None
+    tested_by: str | None = None
 
 
 @strawberry.type
@@ -279,7 +277,7 @@ class SplicePoint:
     id: strawberry.ID
     splice_id: str
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
     # Status
     status: SpliceStatus
@@ -287,13 +285,13 @@ class SplicePoint:
 
     # Location
     location: GeoCoordinate
-    address: Optional[Address] = None
-    distribution_point_id: Optional[str] = None
+    address: Address | None = None
+    distribution_point_id: str | None = None
 
     # Equipment
-    closure_type: Optional[str] = None
-    manufacturer: Optional[str] = None
-    model: Optional[str] = None
+    closure_type: str | None = None
+    manufacturer: str | None = None
+    model: str | None = None
     tray_count: int
     tray_capacity: int
 
@@ -305,20 +303,20 @@ class SplicePoint:
     active_splices: int
 
     # Quality metrics
-    average_splice_loss_db: Optional[float] = None
-    max_splice_loss_db: Optional[float] = None
+    average_splice_loss_db: float | None = None
+    max_splice_loss_db: float | None = None
     passing_splices: int
     failing_splices: int
 
     # Accessibility
     access_type: str  # indoor, outdoor, underground
     requires_special_access: bool
-    access_notes: Optional[str] = None
+    access_notes: str | None = None
 
     # Timestamps
-    installed_at: Optional[datetime] = None
-    last_tested_at: Optional[datetime] = None
-    last_maintained_at: Optional[datetime] = None
+    installed_at: datetime | None = None
+    last_tested_at: datetime | None = None
+    last_maintained_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -335,11 +333,11 @@ class PortAllocation:
     port_number: int
     is_allocated: bool
     is_active: bool
-    cable_id: Optional[str] = None
-    strand_id: Optional[int] = None
-    customer_id: Optional[str] = None
-    customer_name: Optional[str] = None
-    service_id: Optional[str] = None
+    cable_id: str | None = None
+    strand_id: int | None = None
+    customer_id: str | None = None
+    customer_name: str | None = None
+    service_id: str | None = None
 
 
 @strawberry.type
@@ -350,7 +348,7 @@ class DistributionPoint:
     id: strawberry.ID
     site_id: str
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
     # Type and status
     point_type: DistributionPointType
@@ -359,12 +357,12 @@ class DistributionPoint:
 
     # Location
     location: GeoCoordinate
-    address: Optional[Address] = None
-    site_name: Optional[str] = None
+    address: Address | None = None
+    site_name: str | None = None
 
     # Equipment specifications
-    manufacturer: Optional[str] = None
-    model: Optional[str] = None
+    manufacturer: str | None = None
+    model: str | None = None
     total_capacity: int
     available_capacity: int
     used_capacity: int
@@ -386,8 +384,8 @@ class DistributionPoint:
     has_power: bool
     battery_backup: bool
     environmental_monitoring: bool
-    temperature_celsius: Optional[float] = None
-    humidity_percent: Optional[float] = None
+    temperature_celsius: float | None = None
+    humidity_percent: float | None = None
 
     # Capacity metrics
     capacity_utilization_percent: float
@@ -401,13 +399,13 @@ class DistributionPoint:
     # Accessibility
     access_type: str  # 24/7, business_hours, restricted
     requires_key: bool
-    security_level: Optional[str] = None
-    access_notes: Optional[str] = None
+    security_level: str | None = None
+    access_notes: str | None = None
 
     # Timestamps
-    installed_at: Optional[datetime] = None
-    last_inspected_at: Optional[datetime] = None
-    last_maintained_at: Optional[datetime] = None
+    installed_at: datetime | None = None
+    last_inspected_at: datetime | None = None
+    last_maintained_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -425,7 +423,7 @@ class ServiceArea:
     id: strawberry.ID
     area_id: str
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
     # Area type and status
     area_type: ServiceAreaType
@@ -447,7 +445,7 @@ class ServiceArea:
     homes_connected: int
     businesses_passed: int
     businesses_connected: int
-    penetration_rate_percent: Optional[float] = None
+    penetration_rate_percent: float | None = None
 
     # Infrastructure
     distribution_point_ids: list[str]
@@ -462,21 +460,21 @@ class ServiceArea:
 
     # Service details
     max_bandwidth_gbps: float
-    average_distance_to_distribution_meters: Optional[float] = None
+    average_distance_to_distribution_meters: float | None = None
 
     # Demographics
-    estimated_population: Optional[int] = None
-    household_density_per_sqkm: Optional[float] = None
+    estimated_population: int | None = None
+    household_density_per_sqkm: float | None = None
 
     # Build status
     construction_status: str  # planned, in_progress, completed
-    construction_complete_percent: Optional[float] = None
-    target_completion_date: Optional[datetime] = None
+    construction_complete_percent: float | None = None
+    target_completion_date: datetime | None = None
 
     # Timestamps
-    planned_at: Optional[datetime] = None
-    construction_started_at: Optional[datetime] = None
-    activated_at: Optional[datetime] = None
+    planned_at: datetime | None = None
+    construction_started_at: datetime | None = None
+    activated_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -514,10 +512,10 @@ class OTDRTestResult:
     # Quality assessment
     is_passing: bool
     pass_threshold_db: float
-    margin_db: Optional[float] = None
+    margin_db: float | None = None
 
     # File reference
-    trace_file_url: Optional[str] = None
+    trace_file_url: str | None = None
 
 
 @strawberry.type
@@ -535,11 +533,11 @@ class FiberHealthMetrics:
     total_loss_db: float
     average_loss_per_km_db: float
     max_loss_per_km_db: float
-    reflectance_db: Optional[float] = None
+    reflectance_db: float | None = None
 
     # Splice quality
-    average_splice_loss_db: Optional[float] = None
-    max_splice_loss_db: Optional[float] = None
+    average_splice_loss_db: float | None = None
+    max_splice_loss_db: float | None = None
     failing_splices_count: int
 
     # Capacity
@@ -549,9 +547,9 @@ class FiberHealthMetrics:
     failed_strands: int
 
     # Test history
-    last_tested_at: Optional[datetime] = None
-    test_pass_rate_percent: Optional[float] = None
-    days_since_last_test: Optional[int] = None
+    last_tested_at: datetime | None = None
+    test_pass_rate_percent: float | None = None
+    days_since_last_test: int | None = None
 
     # Issues
     active_alarms: int

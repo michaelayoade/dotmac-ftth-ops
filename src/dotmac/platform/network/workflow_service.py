@@ -5,7 +5,7 @@ Provides workflow-compatible methods for network resource allocation (ISP).
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,7 +33,7 @@ class NetworkService:
         vlan_id: int | None = None,
         static_ip: str | None = None,
         description: str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Allocate network resources for an ISP customer.
 
@@ -73,7 +73,9 @@ class NetworkService:
         import ipaddress
         import random
         import secrets
+
         from sqlalchemy import select
+
         from ..customer_management.models import Customer
 
         logger.info(

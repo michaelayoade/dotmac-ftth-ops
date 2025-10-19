@@ -40,7 +40,7 @@ export default function SubscriptionPage() {
     if (availablePlans.length === 0) {
       fetchAvailablePlans();
     }
-  }, []);
+  }, [availablePlans.length, fetchAvailablePlans]);
 
   const handleSelectPlan = async (plan: AvailablePlan) => {
     setSelectedPlan(plan);

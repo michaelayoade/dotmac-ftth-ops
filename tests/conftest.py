@@ -21,11 +21,12 @@ import pytest
 if "DATABASE_URL" in os.environ and "DOTMAC_DATABASE_URL_ASYNC" not in os.environ:
     # User has DATABASE_URL set but not test override - remove it for tests
     del os.environ["DATABASE_URL"]
-# Use a file-based SQLite database so multiple async engines share the same schema
+# Use in-memory SQLite databases to avoid file locking issues
+# Each test gets a fresh database via function-scoped fixtures
 if "DOTMAC_DATABASE_URL_ASYNC" not in os.environ:
-    os.environ["DOTMAC_DATABASE_URL_ASYNC"] = "sqlite+aiosqlite:///./pytest.db"
+    os.environ["DOTMAC_DATABASE_URL_ASYNC"] = "sqlite+aiosqlite:///:memory:"
 if "DOTMAC_DATABASE_URL" not in os.environ:
-    os.environ["DOTMAC_DATABASE_URL"] = "sqlite:///./pytest.db"
+    os.environ["DOTMAC_DATABASE_URL"] = "sqlite:///:memory:"
 # Use in-memory rate limiting and disable Redis requirements during tests
 os.environ.setdefault("RATE_LIMIT__STORAGE_URL", "memory://")
 os.environ.setdefault("REQUIRE_REDIS_SESSIONS", "false")
@@ -35,9 +36,11 @@ os.environ.setdefault("RATE_LIMIT__ENABLED", "false")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 # Import shared fixtures and telemetry fixtures
-from tests.conftest_telemetry import *  # noqa: F401,F403
-from tests.shared_fixtures import *  # noqa: F401,F403
-from tests.test_utils import *  # noqa: F401,F403
+# IMPORTANT: shared_fixtures imports models which trigger event bus initialization
+# This causes pytest collection to hang. Import them conditionally in individual test files instead.
+# from tests.conftest_telemetry import *  # noqa: F401,F403
+# from tests.shared_fixtures import *  # noqa: F401,F403
+# from tests.test_utils import *  # noqa: F401,F403
 
 # Optional dependency imports with fallbacks
 # Optional fakeredis import with graceful fallback when unavailable
@@ -117,6 +120,7 @@ try:
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
     from sqlalchemy.orm import Session, sessionmaker  # noqa: F401
     from sqlalchemy.pool import StaticPool
+    from sqlalchemy.exc import OperationalError
 
     HAS_SQLALCHEMY = True
 except ImportError:
@@ -130,7 +134,24 @@ try:
 except ImportError:
     HAS_JWT_SERVICE = False
 
+# Check if Base is available, but DON'T import it at module level
+# This prevents triggering event bus initialization and other side effects during pytest collection
 try:
+    import importlib.util
+
+    spec = importlib.util.find_spec("dotmac.platform.db")
+    HAS_DATABASE_BASE = spec is not None
+except (ImportError, ValueError):
+    HAS_DATABASE_BASE = False
+
+
+def _import_base_and_models():
+    """Import Base and all models.
+
+    IMPORTANT: This function should ONLY be called from inside fixtures,
+    never at module level. Importing models at module level triggers
+    event bus initialization and causes pytest collection to hang.
+    """
     from dotmac.platform.db import Base
 
     # Import all models to ensure they're registered with Base.metadata
@@ -188,7 +209,15 @@ try:
         pass
 
     try:
-        from dotmac.platform.radius import models as radius_models  # noqa: F401
+        # Import directly from .models since __init__.py doesn't export models
+        from dotmac.platform.radius.models import (  # noqa: F401
+            NAS,
+            RadAcct,
+            RadCheck,
+            RadiusBandwidthProfile,
+            RadPostAuth,
+            RadReply,
+        )
     except ImportError:
         pass
 
@@ -202,9 +231,22 @@ try:
     except ImportError:
         pass
 
-    HAS_DATABASE_BASE = True
-except ImportError:
-    HAS_DATABASE_BASE = False
+    try:
+        from dotmac.platform.deployment import models as deployment_models  # noqa: F401
+    except ImportError:
+        pass
+
+    try:
+        from dotmac.platform.sales import models as sales_models  # noqa: F401
+    except ImportError:
+        pass
+
+    try:
+        from dotmac.platform.wireless import models as wireless_models  # noqa: F401
+    except ImportError:
+        pass
+
+    return Base
 
 
 # Basic fixtures that don't require external dependencies
@@ -287,7 +329,12 @@ if HAS_SQLALCHEMY:
 
     @pytest.fixture
     def db_engine():
-        """Test database engine."""
+        """Test database engine.
+
+        IMPORTANT: Function-scoped to avoid hanging during pytest collection.
+        Session-scoped fixtures cause Base.metadata.create_all() to block
+        indefinitely when loading all ~20+ model modules at import time.
+        """
         db_url = os.environ.get("DOTMAC_DATABASE_URL", "sqlite:///:memory:")
         connect_args: dict[str, object] = {}
 
@@ -306,10 +353,22 @@ if HAS_SQLALCHEMY:
                 candidate.parent.mkdir(parents=True, exist_ok=True)
 
         engine = create_engine(db_url, connect_args=connect_args)
+
         if HAS_DATABASE_BASE:
-            Base.metadata.create_all(engine)
+            # Import Base and models inside fixture to avoid hanging during collection
+            Base = _import_base_and_models()
+            try:
+                Base.metadata.create_all(engine, checkfirst=True)
+            except Exception as e:
+                # Ignore "already exists" errors
+                if "already exists" not in str(e):
+                    raise
+
         yield engine
         if HAS_DATABASE_BASE:
+            # Base is already imported from above
+            from dotmac.platform.db import Base
+
             Base.metadata.drop_all(engine)
         engine.dispose()
 
@@ -380,7 +439,15 @@ if HAS_SQLALCHEMY:
                     pool_recycle=3600,  # Recycle connections every hour
                 )
             if HAS_DATABASE_BASE:
+                # Import Base and models inside fixture to avoid hanging during collection
+                Base = _import_base_and_models()
                 async with engine.begin() as conn:
+                    # For SQLite with StaticPool, indexes may persist across tests
+                    # Use checkfirst for tables, wrap in try/except for index conflicts
+                    try:
+                        await conn.run_sync(Base.metadata.drop_all)
+                    except OperationalError:
+                        pass
                     await conn.run_sync(Base.metadata.create_all)
 
             # Ensure application code uses the test engine/session maker
@@ -403,6 +470,8 @@ if HAS_SQLALCHEMY:
                 yield engine
             finally:
                 if HAS_DATABASE_BASE:
+                    from dotmac.platform.db import Base
+
                     async with engine.begin() as conn:
                         await conn.run_sync(Base.metadata.drop_all)
                 # Force close all connections to prevent event loop issues across tests
@@ -462,13 +531,21 @@ if HAS_SQLALCHEMY:
                     pool_recycle=3600,  # Recycle connections every hour
                 )
             if HAS_DATABASE_BASE:
+                # Import Base and models inside fixture to avoid hanging during collection
+                Base = _import_base_and_models()
                 async with engine.begin() as conn:
+                    try:
+                        await conn.run_sync(Base.metadata.drop_all)
+                    except OperationalError:
+                        pass
                     await conn.run_sync(Base.metadata.create_all)
 
             try:
                 yield engine
             finally:
                 if HAS_DATABASE_BASE:
+                    from dotmac.platform.db import Base
+
                     async with engine.begin() as conn:
                         await conn.run_sync(Base.metadata.drop_all)
                 # Force close all connections to prevent event loop issues across tests

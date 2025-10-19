@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 import { authService, User } from '@/lib/api/services/auth.service';
 import { logger } from '@/lib/logger';
 import { apiClient } from '@/lib/api/client';
@@ -56,28 +57,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      console.log('[AuthProvider] Calling getCurrentUser...');
       const userData = await authService.getCurrentUser();
+      console.log('[AuthProvider] getCurrentUser success:', !!userData);
       if (userData) {
         setUser(userData);
 
+        // Store tenant ID in localStorage for API client interceptor
+        if (userData.tenant_id) {
+          localStorage.setItem('tenant_id', userData.tenant_id);
+        }
+
         // Fetch user permissions from RBAC endpoint
         try {
-          const permissionsResponse = await apiClient.get('/api/v1/auth/rbac/my-permissions');
+          const permissionsResponse = await apiClient.get('/auth/rbac/my-permissions');
           setPermissions(permissionsResponse.data as UserPermissions);
           logger.info('User permissions loaded', {
             userId: userData.id,
             permissionCount: (permissionsResponse.data as UserPermissions)?.effective_permissions?.length || 0
           });
         } catch (permErr) {
-          logger.error('Failed to fetch permissions', permErr instanceof Error ? permErr : new Error(String(permErr)));
+          if (axios.isAxiosError(permErr) && permErr.response?.status === 403) {
+            logger.warn('Permissions endpoint returned 403. Defaulting to empty permissions.');
+            setPermissions({ effective_permissions: [] });
+          } else {
+            logger.error('Failed to fetch permissions', permErr instanceof Error ? permErr : new Error(String(permErr)));
+          }
           // Continue even if permissions fail to load
         }
       } else {
         setUser(null);
         setPermissions(null);
+        localStorage.removeItem('tenant_id');
       }
     } catch (err) {
+      console.error('[AuthProvider] Auth check failed:', err);
+      // Add detailed error logging
+      if (err && typeof err === 'object') {
+        console.error('[AuthProvider] Error details:', {
+          message: (err as any).message,
+          response: (err as any).response?.data,
+          status: (err as any).response?.status,
+          apiError: (err as any).apiError
+        });
+      }
       logger.error('Auth check failed', err instanceof Error ? err : new Error(String(err)));
+
+      // Delay before clearing user state to allow reading error
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      console.log('[AuthProvider] Clearing user state after error...');
+
       setUser(null);
       setPermissions(null);
     } finally {
@@ -95,18 +124,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authResponse && authResponse.user) {
         setUser(authResponse.user);
 
+        // Store tenant ID in localStorage for API client interceptor
+        if (authResponse.user.tenant_id) {
+          localStorage.setItem('tenant_id', authResponse.user.tenant_id);
+        }
+
         // Fetch permissions after successful login
         try {
-          const permissionsResponse = await apiClient.get('/api/v1/auth/rbac/my-permissions');
+          const permissionsResponse = await apiClient.get('/auth/rbac/my-permissions');
           setPermissions(permissionsResponse.data as UserPermissions);
           logger.info('User permissions loaded after login', {
             userId: authResponse.user.id,
             permissionCount: (permissionsResponse.data as UserPermissions)?.effective_permissions?.length || 0
           });
         } catch (permErr) {
-          logger.error('Failed to fetch permissions after login', permErr instanceof Error ? permErr : new Error(String(permErr)));
+          if (axios.isAxiosError(permErr) && permErr.response?.status === 403) {
+            logger.warn('Permissions endpoint returned 403 after login. Defaulting to empty permissions.');
+            setPermissions({ effective_permissions: [] });
+          } else {
+            logger.error('Failed to fetch permissions after login', permErr instanceof Error ? permErr : new Error(String(permErr)));
+          }
         }
 
+        // Small delay to ensure cookies are set before navigation
+        await new Promise(resolve => setTimeout(resolve, 100));
         router.push('/dashboard');
       } else {
         throw new Error('Login failed');
@@ -126,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authService.logout();
       setUser(null);
       setPermissions(null);
+      localStorage.removeItem('tenant_id');
       router.push('/login');
     } catch (err) {
       logger.error('Logout failed', err instanceof Error ? err : new Error(String(err)));

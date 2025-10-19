@@ -81,7 +81,7 @@ export function useUsers(
   return useQuery<User[], Error, User[], ['users']>({
     queryKey: ['users'],
     queryFn: async () => {
-      const response = await apiClient.get<UserListResponse>('/api/v1/users');
+      const response = await apiClient.get<UserListResponse>('/users');
       const payload = extractDataOrThrow(response, 'Failed to load users');
       return payload.users;
     },
@@ -99,7 +99,7 @@ export function useUser(
   return useQuery<User, Error, User, ['users', string]>({
     queryKey: ['users', userId],
     queryFn: async () => {
-      const response = await apiClient.get<User>(`/api/v1/users/${userId}`);
+      const response = await apiClient.get<User>(`/users/${userId}`);
       return extractDataOrThrow(response, 'Failed to load user');
     },
     enabled: !!userId,
@@ -116,7 +116,7 @@ export function useCurrentUser(
   return useQuery<User, Error, User, ['users', 'me']>({
     queryKey: ['users', 'me'],
     queryFn: async () => {
-      const response = await apiClient.get<User>('/api/v1/users/me');
+      const response = await apiClient.get<User>('/users/me');
       return extractDataOrThrow(response, 'Failed to load current user');
     },
     ...options,
@@ -136,7 +136,7 @@ export function useUpdateUser() {
 
   return useMutation({
     mutationFn: async ({ userId, data }: { userId: string; data: UserUpdateRequest }) => {
-      const response = await apiClient.put<User>(`/api/v1/users/${userId}`, data);
+      const response = await apiClient.put<User>(`/users/${userId}`, data);
       return extractDataOrThrow(response, 'Failed to update user');
     },
     onSuccess: (data) => {
@@ -168,7 +168,7 @@ export function useDeleteUser() {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiClient.delete(`/api/v1/users/${userId}`);
+      const response = await apiClient.delete(`/users/${userId}`);
       // Check for successful status codes (2xx)
       if (response.status < 200 || response.status >= 300) {
         throw new Error('Failed to delete user');
@@ -201,7 +201,7 @@ export function useDisableUser() {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiClient.post(`/api/v1/users/${userId}/disable`);
+      const response = await apiClient.post(`/users/${userId}/disable`);
       if (response.status < 200 || response.status >= 300) {
         throw new Error('Failed to disable user');
       }
@@ -233,7 +233,7 @@ export function useEnableUser() {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiClient.post(`/api/v1/users/${userId}/enable`);
+      const response = await apiClient.post(`/users/${userId}/enable`);
       if (response.status < 200 || response.status >= 300) {
         throw new Error('Failed to enable user');
       }

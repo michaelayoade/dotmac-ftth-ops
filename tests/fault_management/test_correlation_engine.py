@@ -14,7 +14,6 @@ from dotmac.platform.fault_management.models import (
     AlarmSeverity,
     AlarmSource,
     AlarmStatus,
-    RuleType,
 )
 
 
@@ -34,7 +33,7 @@ class TestTopologyCorrelation:
         rule = AlarmRule(
             tenant_id=test_tenant,
             name="OLT to ONT",
-            rule_type=RuleType.CORRELATION,
+            rule_type="correlation",
             enabled=True,
             priority=1,
             conditions={
@@ -122,7 +121,7 @@ class TestTopologyCorrelation:
         rule = AlarmRule(
             tenant_id=test_tenant,
             name="Switch to Device",
-            rule_type=RuleType.CORRELATION,
+            rule_type="correlation",
             enabled=True,
             priority=1,
             conditions={
@@ -204,7 +203,7 @@ class TestTimeBasedCorrelation:
         rule = AlarmRule(
             tenant_id=test_tenant,
             name="Time Window Correlation",
-            rule_type=RuleType.CORRELATION,
+            rule_type="correlation",
             enabled=True,
             priority=1,
             conditions={
@@ -280,7 +279,7 @@ class TestTimeBasedCorrelation:
         rule = AlarmRule(
             tenant_id=test_tenant,
             name="Time Window Correlation",
-            rule_type=RuleType.CORRELATION,
+            rule_type="correlation",
             enabled=True,
             priority=1,
             conditions={
@@ -360,7 +359,7 @@ class TestPatternBasedCorrelation:
         rule = AlarmRule(
             tenant_id=test_tenant,
             name="Pattern Match Correlation",
-            rule_type=RuleType.CORRELATION,
+            rule_type="correlation",
             enabled=True,
             priority=1,
             conditions={
@@ -600,7 +599,7 @@ class TestSuppressionRules:
         rule = AlarmRule(
             tenant_id=test_tenant,
             name="Suppress Minor Monitoring Alarms",
-            rule_type=RuleType.SUPPRESSION,
+            rule_type="suppression",
             enabled=True,
             priority=10,
             conditions={
@@ -748,7 +747,7 @@ class TestRecorrelation:
         rule = AlarmRule(
             tenant_id=test_tenant,
             name="OLT to ONT",
-            rule_type=RuleType.CORRELATION,
+            rule_type="correlation",
             enabled=True,
             priority=1,
             conditions={

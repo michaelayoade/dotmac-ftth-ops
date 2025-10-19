@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Wifi,
   TrendingUp,
@@ -96,11 +96,7 @@ export function CustomerSubscriptions({ customerId }: CustomerSubscriptionsProps
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchSubscriptions();
-  }, [customerId]);
-
-  const fetchSubscriptions = async () => {
+  const fetchSubscriptions = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiClient.get<{ subscriptions: Subscription[] }>(
@@ -116,7 +112,11 @@ export function CustomerSubscriptions({ customerId }: CustomerSubscriptionsProps
     } finally {
       setLoading(false);
     }
-  };
+  }, [customerId, toast]);
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, [fetchSubscriptions]);
 
   const handleManageSubscription = (subscriptionId: string) => {
     // Navigate to subscription management page
@@ -136,7 +136,7 @@ export function CustomerSubscriptions({ customerId }: CustomerSubscriptionsProps
       <div className="text-center py-12">
         <Wifi className="w-12 h-12 text-slate-600 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-slate-300 mb-2">No Active Subscriptions</h3>
-        <p className="text-slate-500 mb-4">This customer doesn't have any subscriptions yet.</p>
+        <p className="text-slate-500 mb-4">This customer doesn&apos;t have any subscriptions yet.</p>
         <Button>
           <Plus className="w-4 h-4 mr-2" />
           Add Subscription

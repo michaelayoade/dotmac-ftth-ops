@@ -5,7 +5,7 @@ Provides workflow-compatible methods for customer management operations.
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select
@@ -31,7 +31,7 @@ class CustomerService:
         self,
         lead_id: int | str,
         tenant_id: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a customer record from a qualified lead.
 
@@ -105,11 +105,11 @@ class CustomerService:
     async def create_partner_customer(
         self,
         partner_id: int | str,
-        customer_data: Dict[str, Any],
+        customer_data: dict[str, Any],
         tenant_id: str | None = None,
         engagement_type: str = "managed",
         custom_commission_rate: float | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a customer under a partner account.
 
@@ -188,7 +188,9 @@ class CustomerService:
                 )
 
             # Check partner quota using quota check method
-            from ..partner_management.workflow_service import PartnerService as PartnerWorkflowService
+            from ..partner_management.workflow_service import (
+                PartnerService as PartnerWorkflowService,
+            )
 
             partner_workflow = PartnerWorkflowService(self.db)
             quota_check = await partner_workflow.check_license_quota(

@@ -6,6 +6,7 @@ Combines all GraphQL queries and mutations into a single schema.
 
 import strawberry
 
+from dotmac.platform.graphql.mutations.orchestration import OrchestrationMutations
 from dotmac.platform.graphql.queries.analytics import AnalyticsQueries
 from dotmac.platform.graphql.queries.customer import CustomerQueries
 from dotmac.platform.graphql.queries.fiber import FiberQueries
@@ -17,7 +18,6 @@ from dotmac.platform.graphql.queries.subscription import SubscriptionQueries
 from dotmac.platform.graphql.queries.tenant import TenantQueries
 from dotmac.platform.graphql.queries.user import UserQueries
 from dotmac.platform.graphql.queries.wireless import WirelessQueries
-from dotmac.platform.graphql.mutations.orchestration import OrchestrationMutations
 from dotmac.platform.graphql.subscriptions.customer import CustomerSubscriptions
 
 

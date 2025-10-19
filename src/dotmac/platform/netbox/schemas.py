@@ -9,6 +9,11 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from dotmac.platform.core.ip_validation import (
+    IPNetworkValidator,
+    detect_ip_version,
+)
+
 # ============================================================================
 # IP Address Management (IPAM) Schemas
 # ============================================================================
@@ -19,8 +24,8 @@ class IPAddressCreate(BaseModel):  # BaseModel resolves to Any in isolation
 
     model_config = ConfigDict()
 
-    address: str = Field(..., description="IP address with prefix (e.g., 10.0.0.1/24)")
-    status: str = Field(default="active", description="IP status (active, reserved, dhcp)")
+    address: str = Field(..., description="IP address with prefix (e.g., 10.0.0.1/24 or 2001:db8::1/64)")
+    status: str = Field(default="active", description="IP status (active, reserved, dhcp, slaac)")
     tenant: int | None = Field(None, description="Tenant ID")
     vrf: int | None = Field(None, description="VRF ID")
     description: str | None = Field(None, max_length=200, description="Description")
@@ -37,6 +42,15 @@ class IPAddressCreate(BaseModel):  # BaseModel resolves to Any in isolation
         if v.lower() not in valid_statuses:
             raise ValueError(f"Status must be one of: {', '.join(valid_statuses)}")
         return v.lower()
+
+    @field_validator("address")
+    @classmethod
+    def validate_address(cls, v: str) -> str:
+        """Validate IP address with CIDR notation (IPv4 or IPv6)"""
+        validated = IPNetworkValidator.validate(v, strict=False)
+        if validated is None:
+            raise ValueError(f"Invalid IP address with CIDR notation: {v}")
+        return validated
 
 
 class IPAddressUpdate(BaseModel):  # BaseModel resolves to Any in isolation
@@ -616,3 +630,66 @@ class CircuitTerminationResponse(BaseModel):  # BaseModel resolves to Any in iso
     last_updated: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# ============================================================================
+# Dual-Stack IP Allocation Schemas (NEW)
+# ============================================================================
+
+
+class DualStackAllocationRequest(BaseModel):
+    """Request to allocate both IPv4 and IPv6 addresses atomically"""
+
+    model_config = ConfigDict()
+
+    ipv4_prefix_id: int = Field(..., description="IPv4 prefix ID to allocate from")
+    ipv6_prefix_id: int = Field(..., description="IPv6 prefix ID to allocate from")
+    description: str | None = Field(None, max_length=200, description="Description for both IPs")
+    dns_name: str | None = Field(None, max_length=255, description="DNS name for both IPs")
+    tenant: int | None = Field(None, description="Tenant ID")
+
+
+class DualStackAllocationResponse(BaseModel):
+    """Response after dual-stack allocation"""
+
+    model_config = ConfigDict()
+
+    ipv4: IPAddressResponse = Field(..., description="Allocated IPv4 address")
+    ipv6: IPAddressResponse = Field(..., description="Allocated IPv6 address")
+    allocated_at: datetime = Field(default_factory=datetime.utcnow, description="Allocation timestamp")
+
+
+class BulkIPAllocationRequest(BaseModel):
+    """Request to allocate multiple IPs from a prefix"""
+
+    model_config = ConfigDict()
+
+    prefix_id: int = Field(..., description="Prefix ID to allocate from")
+    count: int = Field(..., ge=1, le=100, description="Number of IPs to allocate (1-100)")
+    description_prefix: str | None = Field(None, max_length=150, description="Description prefix (will be numbered)")
+    tenant: int | None = Field(None, description="Tenant ID")
+
+
+class BulkIPAllocationResponse(BaseModel):
+    """Response after bulk IP allocation"""
+
+    model_config = ConfigDict()
+
+    allocated: list[IPAddressResponse] = Field(..., description="List of allocated IPs")
+    count: int = Field(..., description="Number of IPs allocated")
+    prefix_id: int = Field(..., description="Source prefix ID")
+
+
+class IPUtilizationResponse(BaseModel):
+    """IP prefix utilization statistics"""
+
+    model_config = ConfigDict()
+
+    prefix_id: int
+    prefix: str
+    family: int = Field(..., description="IP version (4 or 6)")
+    total_ips: int = Field(..., description="Total IPs in prefix")
+    allocated_ips: int = Field(..., description="Number of allocated IPs")
+    available_ips: int = Field(..., description="Number of available IPs")
+    utilization_percent: float = Field(..., ge=0, le=100, description="Utilization percentage")
+    status: str = Field(..., description="Prefix status")

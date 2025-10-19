@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Activity,
   AlertCircle,
@@ -97,14 +97,7 @@ export function NetworkMonitoringDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetchDashboardData();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchDashboardData, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setRefreshing(true);
       setError(null);
@@ -142,7 +135,14 @@ export function NetworkMonitoringDashboard() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchDashboardData();
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(fetchDashboardData, 30000);
+    return () => clearInterval(interval);
+  }, [fetchDashboardData]);
 
   const handleRefresh = () => {
     fetchDashboardData();

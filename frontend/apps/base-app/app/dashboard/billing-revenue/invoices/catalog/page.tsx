@@ -47,8 +47,8 @@ export default function ProductCatalogPage() {
     try {
       // Load products and categories
       const [productsResponse, categoriesResponse] = await Promise.all([
-        apiClient.get<{ products: Product[] }>('/api/v1/billing/catalog/products'),
-        apiClient.get<{ categories: ProductCategory[] }>('/api/v1/billing/catalog/categories')
+        apiClient.get<{ products: Product[] }>('/billing/catalog/products'),
+        apiClient.get<{ categories: ProductCategory[] }>('/billing/catalog/categories')
       ]);
 
       if (productsResponse.data) {

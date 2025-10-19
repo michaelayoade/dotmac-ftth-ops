@@ -8,32 +8,20 @@ import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta
 from typing import Any
-from uuid import uuid4
 
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..billing.models import Product as BillingProduct
-from ..customer_management.models import Customer
 from .models import (
     Activation,
     ActivationStatus,
-    ActivationType,
-    ComplianceAudit,
-    ComplianceViolation,
     License,
     LicenseEventLog,
-    LicenseOrder,
     LicenseStatus,
-    LicenseTemplate,
-    OrderStatus,
-    PaymentStatus,
-    ViolationStatus,
 )
 from .schemas import (
     ActivationCreate,
-    ActivationHeartbeat,
     LicenseCreate,
     LicenseRenewal,
     LicenseTransfer,

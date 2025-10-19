@@ -25,7 +25,7 @@ from dotmac.platform.rate_limit.models import (
 from dotmac.platform.rate_limit.service import RateLimitService
 from dotmac.platform.user_management.models import User
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/rate-limits", )
 
 
 # Request/Response Models

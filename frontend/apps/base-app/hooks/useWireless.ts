@@ -61,7 +61,7 @@ export function useAccessPoints(options: UseAccessPointsOptions = {}) {
 
       // Backend endpoint is /devices
       const response = await apiClient.get<any[]>(
-        `/api/v1/wireless/devices?${params.toString()}`
+        `/wireless/devices?${params.toString()}`
       );
 
       // Transform backend WirelessDevice to frontend AccessPoint
@@ -84,7 +84,7 @@ export function useAccessPoints(options: UseAccessPointsOptions = {}) {
 
   const createAccessPoint = useCallback(async (data: CreateAccessPointRequest) => {
     try {
-      const response = await apiClient.post<AccessPoint>('/api/v1/wireless/access-points', data);
+      const response = await apiClient.post<AccessPoint>('/wireless/access-points', data);
 
       toast({
         title: 'Access Point Created',
@@ -105,7 +105,7 @@ export function useAccessPoints(options: UseAccessPointsOptions = {}) {
 
   const updateAccessPoint = useCallback(async (id: string, data: UpdateAccessPointRequest) => {
     try {
-      const response = await apiClient.patch<AccessPoint>(`/api/v1/wireless/access-points/${id}`, data);
+      const response = await apiClient.patch<AccessPoint>(`/wireless/access-points/${id}`, data);
 
       toast({
         title: 'Access Point Updated',
@@ -126,7 +126,7 @@ export function useAccessPoints(options: UseAccessPointsOptions = {}) {
 
   const deleteAccessPoint = useCallback(async (id: string) => {
     try {
-      await apiClient.delete(`/api/v1/wireless/access-points/${id}`);
+      await apiClient.delete(`/wireless/access-points/${id}`);
 
       toast({
         title: 'Access Point Deleted',
@@ -147,7 +147,7 @@ export function useAccessPoints(options: UseAccessPointsOptions = {}) {
 
   const rebootAccessPoint = useCallback(async (id: string) => {
     try {
-      await apiClient.post(`/api/v1/wireless/access-points/${id}/reboot`);
+      await apiClient.post(`/wireless/access-points/${id}/reboot`);
 
       toast({
         title: 'Reboot Initiated',
@@ -213,7 +213,7 @@ export function useWirelessClients(options: UseWirelessClientsOptions = {}) {
       if (options.limit) params.append('limit', options.limit.toString());
 
       const response = await apiClient.get<WirelessClientsResponse>(
-        `/api/v1/wireless/clients?${params.toString()}`
+        `/wireless/clients?${params.toString()}`
       );
 
       setClients(response.data.clients);
@@ -234,7 +234,7 @@ export function useWirelessClients(options: UseWirelessClientsOptions = {}) {
 
   const disconnectClient = useCallback(async (id: string) => {
     try {
-      await apiClient.post(`/api/v1/wireless/clients/${id}/disconnect`);
+      await apiClient.post(`/wireless/clients/${id}/disconnect`);
 
       toast({
         title: 'Client Disconnected',
@@ -296,7 +296,7 @@ export function useCoverageZones(options: UseCoverageZonesOptions = {}) {
       if (options.limit) params.append('limit', options.limit.toString());
 
       const response = await apiClient.get<CoverageZonesResponse>(
-        `/api/v1/wireless/coverage-zones?${params.toString()}`
+        `/wireless/coverage-zones?${params.toString()}`
       );
 
       setCoverageZones(response.data.coverage_zones);
@@ -317,7 +317,7 @@ export function useCoverageZones(options: UseCoverageZonesOptions = {}) {
 
   const createCoverageZone = useCallback(async (data: CreateCoverageZoneRequest) => {
     try {
-      const response = await apiClient.post<CoverageZone>('/api/v1/wireless/coverage-zones', data);
+      const response = await apiClient.post<CoverageZone>('/wireless/coverage-zones', data);
 
       toast({
         title: 'Coverage Zone Created',
@@ -338,7 +338,7 @@ export function useCoverageZones(options: UseCoverageZonesOptions = {}) {
 
   const updateCoverageZone = useCallback(async (id: string, data: Partial<CoverageZone>) => {
     try {
-      const response = await apiClient.patch<CoverageZone>(`/api/v1/wireless/coverage-zones/${id}`, data);
+      const response = await apiClient.patch<CoverageZone>(`/wireless/coverage-zones/${id}`, data);
 
       toast({
         title: 'Coverage Zone Updated',
@@ -359,7 +359,7 @@ export function useCoverageZones(options: UseCoverageZonesOptions = {}) {
 
   const deleteCoverageZone = useCallback(async (id: string) => {
     try {
-      await apiClient.delete(`/api/v1/wireless/coverage-zones/${id}`);
+      await apiClient.delete(`/wireless/coverage-zones/${id}`);
 
       toast({
         title: 'Coverage Zone Deleted',
@@ -423,7 +423,7 @@ export function useRFAnalytics(options: UseRFAnalyticsOptions = {}) {
       if (options.limit) params.append('limit', options.limit.toString());
 
       const response = await apiClient.get<RFAnalyticsResponse>(
-        `/api/v1/wireless/rf-analytics?${params.toString()}`
+        `/wireless/rf-analytics?${params.toString()}`
       );
 
       setAnalytics(response.data.analytics);
@@ -445,7 +445,7 @@ export function useRFAnalytics(options: UseRFAnalyticsOptions = {}) {
   const runSpectrumAnalysis = useCallback(async (accessPointId: string) => {
     try {
       const response = await apiClient.post<RFAnalytics>(
-        `/api/v1/wireless/access-points/${accessPointId}/spectrum-analysis`
+        `/wireless/access-points/${accessPointId}/spectrum-analysis`
       );
 
       toast({
@@ -506,7 +506,7 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
       if (options.limit) params.append('limit', options.limit.toString());
 
       const response = await apiClient.get<SiteSurveysResponse>(
-        `/api/v1/wireless/site-surveys?${params.toString()}`
+        `/wireless/site-surveys?${params.toString()}`
       );
 
       setSiteSurveys(response.data.site_surveys);
@@ -527,7 +527,7 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
 
   const createSiteSurvey = useCallback(async (data: CreateSiteSurveyRequest) => {
     try {
-      const response = await apiClient.post<SiteSurvey>('/api/v1/wireless/site-surveys', data);
+      const response = await apiClient.post<SiteSurvey>('/wireless/site-surveys', data);
 
       toast({
         title: 'Site Survey Created',
@@ -548,7 +548,7 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
 
   const updateSiteSurvey = useCallback(async (id: string, data: Partial<SiteSurvey>) => {
     try {
-      const response = await apiClient.patch<SiteSurvey>(`/api/v1/wireless/site-surveys/${id}`, data);
+      const response = await apiClient.patch<SiteSurvey>(`/wireless/site-surveys/${id}`, data);
 
       toast({
         title: 'Site Survey Updated',
@@ -569,7 +569,7 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
 
   const deleteSiteSurvey = useCallback(async (id: string) => {
     try {
-      await apiClient.delete(`/api/v1/wireless/site-surveys/${id}`);
+      await apiClient.delete(`/wireless/site-surveys/${id}`);
 
       toast({
         title: 'Site Survey Deleted',
@@ -633,7 +633,7 @@ export function useSSIDs(options: UseSSIDsOptions = {}) {
       if (options.limit) params.append('limit', options.limit.toString());
 
       const response = await apiClient.get<{ ssids: SSID[]; total: number }>(
-        `/api/v1/wireless/ssids?${params.toString()}`
+        `/wireless/ssids?${params.toString()}`
       );
 
       setSSIDs(response.data.ssids);
@@ -654,7 +654,7 @@ export function useSSIDs(options: UseSSIDsOptions = {}) {
 
   const createSSID = useCallback(async (data: CreateSSIDRequest) => {
     try {
-      const response = await apiClient.post<SSID>('/api/v1/wireless/ssids', data);
+      const response = await apiClient.post<SSID>('/wireless/ssids', data);
 
       toast({
         title: 'SSID Created',
@@ -675,7 +675,7 @@ export function useSSIDs(options: UseSSIDsOptions = {}) {
 
   const updateSSID = useCallback(async (id: string, data: Partial<SSID>) => {
     try {
-      const response = await apiClient.patch<SSID>(`/api/v1/wireless/ssids/${id}`, data);
+      const response = await apiClient.patch<SSID>(`/wireless/ssids/${id}`, data);
 
       toast({
         title: 'SSID Updated',
@@ -696,7 +696,7 @@ export function useSSIDs(options: UseSSIDsOptions = {}) {
 
   const deleteSSID = useCallback(async (id: string) => {
     try {
-      await apiClient.delete(`/api/v1/wireless/ssids/${id}`);
+      await apiClient.delete(`/wireless/ssids/${id}`);
 
       toast({
         title: 'SSID Deleted',
@@ -746,7 +746,7 @@ export function useWirelessInfrastructureStats() {
 
     try {
       const response = await apiClient.get<WirelessInfrastructureStats>(
-        '/api/v1/wireless/statistics'
+        '/wireless/statistics'
       );
 
       setStats(response.data);

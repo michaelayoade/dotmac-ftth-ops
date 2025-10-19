@@ -4,7 +4,6 @@ RADIUS subscriber and session GraphQL queries.
 Provides optimized queries for ISP subscriber management with batched session loading.
 """
 
-from typing import Optional
 
 import strawberry
 import structlog
@@ -25,8 +24,8 @@ class RadiusQueries:
         self,
         info: strawberry.Info[Context],
         limit: int = 50,
-        enabled: Optional[bool] = None,
-        search: Optional[str] = None,
+        enabled: bool | None = None,
+        search: str | None = None,
     ) -> list[Subscriber]:
         """
         Get RADIUS subscribers with optional filtering.
@@ -89,7 +88,7 @@ class RadiusQueries:
             )
 
             # Attach sessions to subscribers
-            for subscriber, sessions in zip(subscribers, sessions_by_username):
+            for subscriber, sessions in zip(subscribers, sessions_by_username, strict=False):
                 subscriber.sessions = [
                     Session(
                         radacctid=s.radacctid,
@@ -119,7 +118,7 @@ class RadiusQueries:
         self,
         info: strawberry.Info[Context],
         limit: int = 100,
-        username: Optional[str] = None,
+        username: str | None = None,
     ) -> list[Session]:
         """
         Get active RADIUS sessions.

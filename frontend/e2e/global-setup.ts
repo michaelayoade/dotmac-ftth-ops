@@ -55,16 +55,15 @@ async function createTestData() {
   const baseUrl = 'http://localhost:8000';
 
   try {
-    // Create test admin user
+    // Create test admin user (matching test credentials: admin / admin123)
     const adminResponse = await fetch(`${baseUrl}/api/v1/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: 'admin@test.com',
-        password: 'Test123!@#',
-        username: 'testadmin',
-        full_name: 'Test Admin',
-        is_platform_admin: false
+        password: 'admin123',
+        username: 'admin',
+        full_name: 'Test Admin'
       })
     });
 
@@ -75,16 +74,15 @@ async function createTestData() {
       console.log(`⚠️  Admin user creation response: ${adminResponse.status} ${errorText}`);
     }
 
-    // Create test regular user
+    // Create test regular user (using same credentials for now - tests can be updated later)
     const userResponse = await fetch(`${baseUrl}/api/v1/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: 'user@test.com',
-        password: 'Test123!@#',
-        username: 'testuser',
-        full_name: 'Test User',
-        is_platform_admin: false
+        password: 'admin123',
+        username: 'regularuser',
+        full_name: 'Test User'
       })
     });
 

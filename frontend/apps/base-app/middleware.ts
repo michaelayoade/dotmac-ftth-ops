@@ -48,8 +48,19 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('access_token');
   const refreshToken = request.cookies.get('refresh_token');
 
-  // Handle API routes
-  if (pathname.startsWith('/api/')) {
+  // Debug logging for protected routes
+  if (pathname.startsWith('/dashboard')) {
+    console.log('[Middleware] Dashboard access attempt:', {
+      pathname,
+      hasToken: !!token,
+      hasRefreshToken: !!refreshToken,
+      allCookies: Array.from(request.cookies.getAll().map(c => c.name))
+    });
+  }
+
+  // Handle API routes - but skip auth-related endpoints
+  // Auth endpoints need cookies to be forwarded as-is to backend
+  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/v1/auth/')) {
     if (!token) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'No valid authentication token' },

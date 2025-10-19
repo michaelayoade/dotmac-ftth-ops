@@ -245,7 +245,7 @@ export default function SubscribersPage() {
           <CardHeader>
             <CardTitle>Subscribers</CardTitle>
             <CardDescription>
-              You don't have permission to view subscribers. Contact your administrator for access.
+              You don&apos;t have permission to view subscribers. Contact your administrator for access.
             </CardDescription>
           </CardHeader>
         </Card>

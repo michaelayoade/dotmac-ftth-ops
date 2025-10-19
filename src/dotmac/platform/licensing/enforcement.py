@@ -8,27 +8,25 @@ Provides:
 """
 
 import functools
-from typing import Callable, Optional
+from collections.abc import Callable
 from uuid import UUID
 
 from fastapi import HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.core.database import get_session
-from dotmac.platform.customer_management.dependencies import get_current_tenant
+from dotmac.platform.db import get_session
 from dotmac.platform.licensing.service_framework import (
-    LicensingFrameworkService,
     FeatureNotEntitledError,
+    LicensingFrameworkService,
     QuotaExceededError,
 )
-
 
 # ========================================================================
 # FEATURE ENTITLEMENT DECORATORS
 # ========================================================================
 
 
-def require_module(module_code: str, capability_code: Optional[str] = None):
+def require_module(module_code: str, capability_code: str | None = None):
     """
     Decorator to enforce feature module entitlement.
 
@@ -88,7 +86,7 @@ def require_module(module_code: str, capability_code: Optional[str] = None):
     return decorator
 
 
-def check_feature_access(module_code: str, capability_code: Optional[str] = None):
+def check_feature_access(module_code: str, capability_code: str | None = None):
     """
     Non-blocking feature check decorator.
 
@@ -152,7 +150,7 @@ def check_feature_access(module_code: str, capability_code: Optional[str] = None
 # ========================================================================
 
 
-def enforce_quota(quota_code: str, quantity: int = 1, metadata_key: Optional[str] = None):
+def enforce_quota(quota_code: str, quantity: int = 1, metadata_key: str | None = None):
     """
     Decorator to enforce quota limits.
 
@@ -317,7 +315,7 @@ class FeatureEntitlementMiddleware:
         )
     """
 
-    def __init__(self, app, route_module_map: dict[str, tuple[str, Optional[str]]]):
+    def __init__(self, app, route_module_map: dict[str, tuple[str, str | None]]):
         """
         Initialize middleware.
 
@@ -381,7 +379,7 @@ class FeatureEntitlementMiddleware:
 
 async def require_module_dependency(
     module_code: str,
-    capability_code: Optional[str] = None,
+    capability_code: str | None = None,
     tenant=None,
     db: AsyncSession = None,
 ):

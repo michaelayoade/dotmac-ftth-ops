@@ -18,7 +18,7 @@ test.describe('Base App Authentication Flow', () => {
     await page.waitForLoadState('networkidle');
 
     // Fill in login form
-    await page.getByTestId('username-input').fill(username);
+    await page.getByTestId('email-input').fill(username);
     await page.getByTestId('password-input').fill(password);
 
     // Submit form
@@ -36,11 +36,11 @@ test.describe('Base App Authentication Flow', () => {
     await page.goto(`${BASE_APP_URL}/login`);
 
     // Check page elements
-    await expect(page.locator('text=Welcome back')).toBeVisible();
-    await expect(page.locator('text=Sign in to your DotMac Platform account')).toBeVisible();
+    await expect(page.locator('h1')).toContainText('Network Operations Portal');
+    await expect(page.locator('text=Access your')).toBeVisible();
 
     // Check form elements with test IDs
-    await expect(page.getByTestId('username-input')).toBeVisible();
+    await expect(page.getByTestId('email-input')).toBeVisible();
     await expect(page.getByTestId('password-input')).toBeVisible();
     await expect(page.getByTestId('submit-button')).toBeVisible();
 
@@ -109,7 +109,7 @@ test.describe('Base App Authentication Flow', () => {
     await expect(page).toHaveURL(/\/dashboard/);
 
     // Check for common dashboard elements
-    await expect(page.locator('text=Welcome back')).toBeVisible();
+    await expect(page.locator('text=Active Subscribers')).toBeVisible();
   });
 
   test('authenticated user can navigate between pages', async ({ page }) => {
@@ -180,19 +180,19 @@ test.describe('Base App Authentication Flow', () => {
     await page.waitForLoadState('networkidle');
 
     // Form elements should still be visible and usable
-    await expect(page.getByTestId('username-input')).toBeVisible();
+    await expect(page.getByTestId('email-input')).toBeVisible();
     await expect(page.getByTestId('password-input')).toBeVisible();
     await expect(page.getByTestId('submit-button')).toBeVisible();
 
     // Text should be readable
-    await expect(page.locator('text=Welcome back')).toBeVisible();
+    await expect(page.locator('h1')).toContainText('Network Operations Portal');
   });
 
   test('loading state shows during login', async ({ page }) => {
     await page.goto(`${BASE_APP_URL}/login`);
 
     // Fill form
-    await page.getByTestId('username-input').fill(TEST_USERNAME);
+    await page.getByTestId('email-input').fill(TEST_USERNAME);
     await page.getByTestId('password-input').fill(TEST_PASSWORD);
 
     // Click submit and immediately check for loading state

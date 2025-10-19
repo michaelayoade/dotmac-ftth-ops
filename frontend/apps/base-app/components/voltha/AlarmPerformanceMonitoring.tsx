@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   AlertCircle,
   AlertTriangle,
@@ -68,11 +68,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
     }
   });
 
-  useEffect(() => {
-    loadAlarms();
-  }, [deviceId]);
-
-  const loadAlarms = async () => {
+  const loadAlarms = useCallback(async () => {
     setLoading(true);
     try {
       const endpoint = deviceId
@@ -90,7 +86,11 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
     } finally {
       setLoading(false);
     }
-  };
+  }, [deviceId, toast]);
+
+  useEffect(() => {
+    loadAlarms();
+  }, [deviceId, loadAlarms]);
 
   const handleAcknowledgeAlarm = async (alarmId: string) => {
     try {

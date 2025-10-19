@@ -8,12 +8,8 @@ customer and invoice data via DataLoaders to prevent N+1 query problems.
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Optional
-from uuid import UUID
 
 import strawberry
-
-from dotmac.platform.billing.core.models import PaymentMethodType, PaymentStatus
 
 
 @strawberry.enum
@@ -53,7 +49,7 @@ class PaymentCustomer:
     id: strawberry.ID
     name: str
     email: str
-    customer_number: Optional[str]
+    customer_number: str | None
 
 
 @strawberry.type
@@ -72,10 +68,10 @@ class PaymentMethod:
 
     type: PaymentMethodTypeEnum
     provider: str
-    last4: Optional[str]
-    brand: Optional[str]
-    expiry_month: Optional[int]
-    expiry_year: Optional[int]
+    last4: str | None
+    brand: str | None
+    expiry_month: int | None
+    expiry_year: int | None
 
 
 @strawberry.type
@@ -89,42 +85,42 @@ class Payment:
 
     # Core identifiers
     id: strawberry.ID
-    payment_number: Optional[str]
+    payment_number: str | None
 
     # Amount information
     amount: Decimal
     currency: str
-    fee_amount: Optional[Decimal]
-    net_amount: Optional[Decimal]
-    refund_amount: Optional[Decimal]
+    fee_amount: Decimal | None
+    net_amount: Decimal | None
+    refund_amount: Decimal | None
 
     # Status and processing
     status: PaymentStatusEnum
-    failure_reason: Optional[str]
-    failure_code: Optional[str]
+    failure_reason: str | None
+    failure_code: str | None
 
     # Payment method
     payment_method_type: PaymentMethodTypeEnum
     provider: str
-    payment_method: Optional[PaymentMethod]
+    payment_method: PaymentMethod | None
 
     # Related entities (batched via DataLoaders)
     customer_id: strawberry.ID
-    customer: Optional[PaymentCustomer]
+    customer: PaymentCustomer | None
 
-    invoice_id: Optional[strawberry.ID]
-    invoice: Optional[PaymentInvoice]
+    invoice_id: strawberry.ID | None
+    invoice: PaymentInvoice | None
 
-    subscription_id: Optional[strawberry.ID]
+    subscription_id: strawberry.ID | None
 
     # Dates
     created_at: datetime
-    processed_at: Optional[datetime]
-    refunded_at: Optional[datetime]
+    processed_at: datetime | None
+    refunded_at: datetime | None
 
     # Metadata (optional, for extensibility)
-    description: Optional[str]
-    metadata: Optional[strawberry.scalars.JSON]
+    description: str | None
+    metadata: strawberry.scalars.JSON | None
 
     @classmethod
     def from_model(cls, payment: any) -> "Payment":

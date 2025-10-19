@@ -21,7 +21,7 @@ from .models import (
 )
 
 logger = structlog.get_logger(__name__)
-data_transfer_router = APIRouter()
+data_transfer_router = APIRouter(prefix="/api/v1/data-transfer", )
 
 
 @data_transfer_router.post("/import", response_model=TransferJobResponse)

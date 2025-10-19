@@ -23,8 +23,8 @@ const config: CodegenConfig = {
         withComponent: false,
         withHOC: false,
         skipTypename: false,
-        enumsAsTypes: true,
-        // Disable newer Apollo Client v3.8+ hooks to avoid import errors with v4.0.7
+        // Generate proper TypeScript enums instead of string unions
+        enumsAsTypes: false,
         addDocBlocks: false,
         dedupeFragments: true,
         avoidOptionals: {

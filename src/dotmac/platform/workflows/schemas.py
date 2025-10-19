@@ -5,12 +5,11 @@ Pydantic schemas for API request/response validation.
 """
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 from .models import StepStatus, WorkflowStatus
-
 
 # Workflow Template Schemas
 
@@ -19,19 +18,19 @@ class WorkflowCreate(BaseModel):
     """Schema for creating a workflow template"""
 
     name: str = Field(..., min_length=1, max_length=255, description="Unique workflow name")
-    description: Optional[str] = Field(None, description="Workflow description")
-    definition: Dict[str, Any] = Field(..., description="Workflow definition with steps")
+    description: str | None = Field(None, description="Workflow description")
+    definition: dict[str, Any] = Field(..., description="Workflow definition with steps")
     version: str = Field(default="1.0.0", description="Workflow version")
-    tags: Optional[Dict[str, Any]] = Field(None, description="Metadata tags")
+    tags: dict[str, Any] | None = Field(None, description="Metadata tags")
 
 
 class WorkflowUpdate(BaseModel):
     """Schema for updating a workflow template"""
 
-    description: Optional[str] = None
-    definition: Optional[Dict[str, Any]] = None
-    is_active: Optional[bool] = None
-    tags: Optional[Dict[str, Any]] = None
+    description: str | None = None
+    definition: dict[str, Any] | None = None
+    is_active: bool | None = None
+    tags: dict[str, Any] | None = None
 
 
 class WorkflowResponse(BaseModel):
@@ -39,11 +38,11 @@ class WorkflowResponse(BaseModel):
 
     id: int
     name: str
-    description: Optional[str]
-    definition: Dict[str, Any]
+    description: str | None
+    definition: dict[str, Any]
     is_active: bool
     version: str
-    tags: Optional[Dict[str, Any]]
+    tags: dict[str, Any] | None
     created_at: datetime
     updated_at: datetime
 
@@ -54,7 +53,7 @@ class WorkflowResponse(BaseModel):
 class WorkflowListResponse(BaseModel):
     """Schema for workflow list response"""
 
-    workflows: List[WorkflowResponse]
+    workflows: list[WorkflowResponse]
     total: int
 
 
@@ -65,10 +64,10 @@ class WorkflowExecuteRequest(BaseModel):
     """Schema for executing a workflow"""
 
     workflow_name: str = Field(..., description="Name of workflow to execute")
-    context: Dict[str, Any] = Field(default_factory=dict, description="Input context")
+    context: dict[str, Any] = Field(default_factory=dict, description="Input context")
     trigger_type: str = Field(default="manual", description="Trigger type")
-    trigger_source: Optional[str] = Field(None, description="Trigger source")
-    tenant_id: Optional[int] = Field(None, description="Tenant ID")
+    trigger_source: str | None = Field(None, description="Trigger source")
+    tenant_id: int | None = Field(None, description="Tenant ID")
 
 
 class WorkflowStepResponse(BaseModel):
@@ -79,15 +78,15 @@ class WorkflowStepResponse(BaseModel):
     step_type: str
     sequence_number: int
     status: StepStatus
-    input_data: Optional[Dict[str, Any]]
-    output_data: Optional[Dict[str, Any]]
-    error_message: Optional[str]
-    error_details: Optional[Dict[str, Any]]
+    input_data: dict[str, Any] | None
+    output_data: dict[str, Any] | None
+    error_message: str | None
+    error_details: dict[str, Any] | None
     retry_count: int
     max_retries: int
-    started_at: Optional[datetime]
-    completed_at: Optional[datetime]
-    duration_seconds: Optional[int]
+    started_at: datetime | None
+    completed_at: datetime | None
+    duration_seconds: int | None
     created_at: datetime
     updated_at: datetime
 
@@ -101,17 +100,17 @@ class WorkflowExecutionResponse(BaseModel):
     id: int
     workflow_id: int
     status: WorkflowStatus
-    context: Optional[Dict[str, Any]]
-    result: Optional[Dict[str, Any]]
-    error_message: Optional[str]
-    started_at: Optional[datetime]
-    completed_at: Optional[datetime]
-    trigger_type: Optional[str]
-    trigger_source: Optional[str]
-    tenant_id: Optional[int]
+    context: dict[str, Any] | None
+    result: dict[str, Any] | None
+    error_message: str | None
+    started_at: datetime | None
+    completed_at: datetime | None
+    trigger_type: str | None
+    trigger_source: str | None
+    tenant_id: int | None
     created_at: datetime
     updated_at: datetime
-    steps: Optional[List[WorkflowStepResponse]] = None
+    steps: list[WorkflowStepResponse] | None = None
 
     class Config:
         from_attributes = True
@@ -120,7 +119,7 @@ class WorkflowExecutionResponse(BaseModel):
 class WorkflowExecutionListResponse(BaseModel):
     """Schema for execution list response"""
 
-    executions: List[WorkflowExecutionResponse]
+    executions: list[WorkflowExecutionResponse]
     total: int
 
 
@@ -128,7 +127,7 @@ class WorkflowStatsResponse(BaseModel):
     """Schema for workflow statistics response"""
 
     total: int
-    by_status: Dict[str, int]
+    by_status: dict[str, int]
 
 
 # Built-in Workflow Definitions
@@ -141,23 +140,23 @@ class StepDefinition(BaseModel):
     type: str = Field(
         ..., description="Step type: service_call, transform, condition, wait"
     )
-    description: Optional[str] = Field(None, description="Step description")
-    input: Optional[Dict[str, Any]] = Field(None, description="Step input parameters")
-    params: Optional[Dict[str, Any]] = Field(None, description="Service call parameters")
-    service: Optional[str] = Field(None, description="Service name for service_call type")
-    method: Optional[str] = Field(None, description="Method name for service_call type")
-    transform_type: Optional[str] = Field(None, description="Transform type: map, filter")
-    mapping: Optional[Dict[str, str]] = Field(None, description="Key mapping for transform")
-    condition: Optional[Dict[str, Any]] = Field(None, description="Condition expression")
-    duration: Optional[int] = Field(None, description="Wait duration in seconds")
+    description: str | None = Field(None, description="Step description")
+    input: dict[str, Any] | None = Field(None, description="Step input parameters")
+    params: dict[str, Any] | None = Field(None, description="Service call parameters")
+    service: str | None = Field(None, description="Service name for service_call type")
+    method: str | None = Field(None, description="Method name for service_call type")
+    transform_type: str | None = Field(None, description="Transform type: map, filter")
+    mapping: dict[str, str] | None = Field(None, description="Key mapping for transform")
+    condition: dict[str, Any] | None = Field(None, description="Condition expression")
+    duration: int | None = Field(None, description="Wait duration in seconds")
     max_retries: int = Field(default=3, description="Maximum retry attempts")
 
 
 class WorkflowDefinition(BaseModel):
     """Schema for complete workflow definition"""
 
-    steps: List[StepDefinition] = Field(..., description="Workflow steps")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Workflow metadata")
+    steps: list[StepDefinition] = Field(..., description="Workflow steps")
+    metadata: dict[str, Any] | None = Field(None, description="Workflow metadata")
 
 
 # Examples for documentation

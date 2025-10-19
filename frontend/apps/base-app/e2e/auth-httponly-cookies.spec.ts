@@ -12,7 +12,7 @@ test.describe('HttpOnly Cookie Authentication', () => {
 
   test('login flow sets HttpOnly cookies and redirects to dashboard', async ({ page, context }) => {
     // Fill in login form
-    await page.fill('[data-testid="username-input"]', 'admin');
+    await page.fill('[data-testid="email-input"]', 'admin');
     await page.fill('[data-testid="password-input"]', 'admin123');
 
     // Intercept the login API call
@@ -58,7 +58,7 @@ test.describe('HttpOnly Cookie Authentication', () => {
   test('authenticated requests use HttpOnly cookies automatically', async ({ page, context }) => {
     // Login first
     await page.goto('/login');
-    await page.fill('[data-testid="username-input"]', 'admin');
+    await page.fill('[data-testid="email-input"]', 'admin');
     await page.fill('[data-testid="password-input"]', 'admin123');
     await page.click('[data-testid="submit-button"]');
 
@@ -89,7 +89,7 @@ test.describe('HttpOnly Cookie Authentication', () => {
   test('token refresh happens automatically on 401', async ({ page, context }) => {
     // Login first
     await page.goto('/login');
-    await page.fill('[data-testid="username-input"]', 'admin');
+    await page.fill('[data-testid="email-input"]', 'admin');
     await page.fill('[data-testid="password-input"]', 'admin123');
     await page.click('[data-testid="submit-button"]');
 
@@ -167,7 +167,7 @@ test.describe('HttpOnly Cookie Authentication', () => {
 
     // Login in first tab
     await page1.goto('/login');
-    await page1.fill('[data-testid="username-input"]', 'admin');
+    await page1.fill('[data-testid="email-input"]', 'admin');
     await page1.fill('[data-testid="password-input"]', 'admin123');
     await page1.click('[data-testid="submit-button"]');
 
@@ -247,7 +247,7 @@ test.describe('HttpOnly Cookie Authentication', () => {
   test('XSS protection - cookies not accessible via JavaScript', async ({ page }) => {
     // Login first
     await page.goto('/login');
-    await page.fill('[data-testid="username-input"]', 'admin');
+    await page.fill('[data-testid="email-input"]', 'admin');
     await page.fill('[data-testid="password-input"]', 'admin123');
     await page.click('[data-testid="submit-button"]');
 

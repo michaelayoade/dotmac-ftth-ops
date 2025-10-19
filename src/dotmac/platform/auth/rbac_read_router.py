@@ -14,7 +14,7 @@ from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.auth.models import Role
 from dotmac.platform.db import get_session_dependency
 
-router = APIRouter(tags=["RBAC"])
+router = APIRouter(prefix="/api/v1/auth/rbac", tags=["RBAC"])
 
 
 class PermissionInfo(BaseModel):

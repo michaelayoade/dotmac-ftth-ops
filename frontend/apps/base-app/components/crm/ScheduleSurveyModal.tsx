@@ -132,7 +132,7 @@ export function ScheduleSurveyModal({
         <DialogHeader>
           <DialogTitle>Schedule Site Survey</DialogTitle>
           <DialogDescription>
-            Schedule a technical assessment for a lead's service location
+            Schedule a technical assessment for a lead&apos;s service location
           </DialogDescription>
         </DialogHeader>
 
@@ -279,9 +279,9 @@ export function ScheduleSurveyModal({
             <AlertTitle>What Happens Next</AlertTitle>
             <AlertDescription className="text-xs mt-2 space-y-1">
               <ul className="list-disc list-inside space-y-1">
-                <li>Survey will be created with status "Scheduled"</li>
+                <li>Survey will be created with status &quot;Scheduled&quot;</li>
                 <li>Assigned technician will receive notification</li>
-                <li>Lead status will update to "Site Survey Scheduled"</li>
+                <li>Lead status will update to &quot;Site Survey Scheduled&quot;</li>
                 <li>Technician can start survey when arriving on-site</li>
                 <li>After completion, lead serviceability will be updated</li>
               </ul>

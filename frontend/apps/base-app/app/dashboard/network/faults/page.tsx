@@ -147,9 +147,18 @@ export default function FaultManagementPage() {
   // Alarm operations
   const { acknowledgeAlarms, clearAlarms, createTickets, isLoading: operationsLoading } = useAlarmOperations();
 
-  // Use mock data as fallback during development
-  const alarms = apiAlarms.length > 0 ? apiAlarms : mockAlarms;
+  // Only use mock data in development mode with explicit flag
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const useMockData = isDevelopment && process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+
+  // In production, never fall back to mock data
+  const alarms = useMockData && apiAlarms.length === 0 ? mockAlarms : apiAlarms;
   const isLoading = alarmsLoading || operationsLoading;
+
+  // Production safety: log warning if using mock data
+  if (useMockData && apiAlarms.length === 0) {
+    console.warn('⚠️ DEVELOPMENT MODE: Using mock alarm data. Set NEXT_PUBLIC_USE_MOCK_DATA=false to test real API.');
+  }
 
   // Calculate statistics (prefer API statistics, fallback to calculated)
   const statistics = useMemo(() => {

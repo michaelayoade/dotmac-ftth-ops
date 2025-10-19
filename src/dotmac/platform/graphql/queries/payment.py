@@ -7,7 +7,6 @@ customer and invoice data via DataLoaders.
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Optional
 from uuid import UUID
 
 import strawberry
@@ -38,7 +37,7 @@ class PaymentQueries:
         id: strawberry.ID,
         include_customer: bool = True,
         include_invoice: bool = True,
-    ) -> Optional[Payment]:
+    ) -> Payment | None:
         """
         Fetch a single payment by ID.
 
@@ -102,10 +101,10 @@ class PaymentQueries:
         info: strawberry.Info[Context],
         limit: int = 50,
         offset: int = 0,
-        status: Optional[PaymentStatusEnum] = None,
-        customer_id: Optional[strawberry.ID] = None,
-        date_from: Optional[datetime] = None,
-        date_to: Optional[datetime] = None,
+        status: PaymentStatusEnum | None = None,
+        customer_id: strawberry.ID | None = None,
+        date_from: datetime | None = None,
+        date_to: datetime | None = None,
         include_customer: bool = True,
         include_invoice: bool = False,
     ) -> PaymentConnection:
@@ -187,7 +186,7 @@ class PaymentQueries:
 
                 # Map invoices to payments (need to handle None invoice_ids)
                 invoice_idx = 0
-                for payment, payment_entity in zip(payments, payment_entities):
+                for payment, payment_entity in zip(payments, payment_entities, strict=False):
                     if payment_entity.invoice_id and invoice_idx < len(invoices):
                         invoice_model = invoices[invoice_idx]
                         if invoice_model:
@@ -252,8 +251,8 @@ class PaymentQueries:
     async def payment_metrics(
         self,
         info: strawberry.Info[Context],
-        date_from: Optional[datetime] = None,
-        date_to: Optional[datetime] = None,
+        date_from: datetime | None = None,
+        date_to: datetime | None = None,
     ) -> PaymentMetrics:
         """
         Get aggregated payment metrics.

@@ -21,7 +21,7 @@ test.describe('Advanced Authentication Scenarios', () => {
       route.abort('failed');
     });
 
-    await page.getByTestId('username-input').fill(TEST_USERNAME);
+    await page.getByTestId('email-input').fill(TEST_USERNAME);
     await page.getByTestId('password-input').fill(TEST_PASSWORD);
     await page.getByTestId('submit-button').click();
 
@@ -36,7 +36,7 @@ test.describe('Advanced Authentication Scenarios', () => {
       await route.continue();
     });
 
-    await page.getByTestId('username-input').fill(TEST_USERNAME);
+    await page.getByTestId('email-input').fill(TEST_USERNAME);
     await page.getByTestId('password-input').fill(TEST_PASSWORD);
 
     const submitButton = page.getByTestId('submit-button');
@@ -49,7 +49,7 @@ test.describe('Advanced Authentication Scenarios', () => {
   test('should handle rate limiting', async ({ page }) => {
     // Make multiple failed login attempts
     for (let i = 0; i < 5; i++) {
-      await page.getByTestId('username-input').fill(TEST_USERNAME);
+      await page.getByTestId('email-input').fill(TEST_USERNAME);
       await page.getByTestId('password-input').fill('wrongpassword');
       await page.getByTestId('submit-button').click();
 
@@ -61,7 +61,7 @@ test.describe('Advanced Authentication Scenarios', () => {
     }
 
     // Next attempt should be rate limited (backend may return 429)
-    await page.getByTestId('username-input').fill(TEST_USERNAME);
+    await page.getByTestId('email-input').fill(TEST_USERNAME);
     await page.getByTestId('password-input').fill('wrongpassword');
     await page.getByTestId('submit-button').click();
 
@@ -84,7 +84,7 @@ test.describe('Advanced Authentication Scenarios', () => {
     await expect(page).toHaveURL(/\/login/);
 
     // Login
-    await page.getByTestId('username-input').fill(TEST_USERNAME);
+    await page.getByTestId('email-input').fill(TEST_USERNAME);
     await page.getByTestId('password-input').fill(TEST_PASSWORD);
     await page.getByTestId('submit-button').click();
 
@@ -97,7 +97,7 @@ test.describe('Advanced Authentication Scenarios', () => {
 
   test('should logout successfully and clear session', async ({ page }) => {
     // Login first
-    await page.getByTestId('username-input').fill(TEST_USERNAME);
+    await page.getByTestId('email-input').fill(TEST_USERNAME);
     await page.getByTestId('password-input').fill(TEST_PASSWORD);
     await page.getByTestId('submit-button').click();
 

@@ -10,12 +10,12 @@ from enum import Enum
 from typing import Any
 
 import httpx
-from redis import Redis
 from redis.exceptions import RedisError
 from sqlalchemy import text
 
 from dotmac.platform.db import get_sync_engine
 from dotmac.platform.settings import settings
+from redis import Redis
 
 logger = logging.getLogger(__name__)
 

@@ -91,7 +91,7 @@ class LeadService:
             partner_id=partner_id,
             metadata=metadata or {},
             notes=notes,
-            created_by_id=created_by_id,
+            created_by=str(created_by_id) if created_by_id else None,
         )
 
         self.db.add(lead)
@@ -109,7 +109,7 @@ class LeadService:
         lead = result.scalar_one_or_none()
 
         if not lead:
-            raise EntityNotFoundError(f"Lead {lead_id} not found")
+            raise EntityNotFoundError(entity_type="Lead", entity_id=str(lead_id))
 
         return lead
 
@@ -311,7 +311,7 @@ class QuoteService:
         lead = lead_result.scalar_one_or_none()
 
         if not lead:
-            raise EntityNotFoundError(f"Lead {lead_id} not found")
+            raise EntityNotFoundError(entity_type="Lead", entity_id=str(lead_id))
 
         # Generate quote number
         quote_number = await self._generate_quote_number(tenant_id)
@@ -343,7 +343,7 @@ class QuoteService:
             line_items=line_items or [],
             metadata=metadata or {},
             notes=notes,
-            created_by_id=created_by_id,
+            created_by=str(created_by_id) if created_by_id else None,
         )
 
         self.db.add(quote)
@@ -369,7 +369,7 @@ class QuoteService:
         quote = result.scalar_one_or_none()
 
         if not quote:
-            raise EntityNotFoundError(f"Quote {quote_id} not found")
+            raise EntityNotFoundError(entity_type="Quote", entity_id=str(quote_id))
 
         return quote
 
@@ -600,7 +600,7 @@ class QuoteService:
             priority=2,  # Medium priority for renewals
             metadata={"renewal": True, "customer_id": str(customer_id)},
             notes=f"Auto-generated renewal lead for customer {customer_id}",
-            created_by_id=created_by_id,
+            created_by=str(created_by_id) if created_by_id else None,
         )
 
         quote = Quote(
@@ -624,7 +624,7 @@ class QuoteService:
             line_items=line_items,
             metadata=metadata,
             notes=notes or f"Renewal quote for existing customer - {discount_percentage}% discount" if discount_percentage else "Renewal quote for existing customer",
-            created_by_id=created_by_id,
+            created_by=str(created_by_id) if created_by_id else None,
         )
 
         self.db.add(quote)
@@ -668,7 +668,7 @@ class SiteSurveyService:
         lead = lead_result.scalar_one_or_none()
 
         if not lead:
-            raise EntityNotFoundError(f"Lead {lead_id} not found")
+            raise EntityNotFoundError(entity_type="Lead", entity_id=str(lead_id))
 
         # Generate survey number
         survey_number = await self._generate_survey_number(tenant_id)
@@ -683,7 +683,7 @@ class SiteSurveyService:
             technician_id=technician_id,
             metadata=metadata or {},
             notes=notes,
-            created_by_id=created_by_id,
+            created_by=str(created_by_id) if created_by_id else None,
         )
 
         self.db.add(survey)
@@ -713,7 +713,7 @@ class SiteSurveyService:
         survey = result.scalar_one_or_none()
 
         if not survey:
-            raise EntityNotFoundError(f"Site survey {survey_id} not found")
+            raise EntityNotFoundError(entity_type="SiteSurvey", entity_id=str(survey_id))
 
         return survey
 

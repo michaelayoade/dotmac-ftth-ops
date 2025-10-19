@@ -13,10 +13,8 @@ Created: 2025-10-16
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
 
 import strawberry
-
 
 # ============================================================================
 # Enums
@@ -24,7 +22,7 @@ import strawberry
 
 
 @strawberry.enum
-class AccessPointStatus(Enum):
+class AccessPointStatus(str, Enum):
     """Access Point operational status."""
 
     ONLINE = "online"
@@ -36,7 +34,7 @@ class AccessPointStatus(Enum):
 
 
 @strawberry.enum
-class FrequencyBand(Enum):
+class FrequencyBand(str, Enum):
     """Wireless frequency bands."""
 
     BAND_2_4_GHZ = "2.4GHz"
@@ -45,7 +43,7 @@ class FrequencyBand(Enum):
 
 
 @strawberry.enum
-class WirelessSecurityType(Enum):
+class WirelessSecurityType(str, Enum):
     """Wireless security protocol types."""
 
     OPEN = "open"
@@ -57,7 +55,7 @@ class WirelessSecurityType(Enum):
 
 
 @strawberry.enum
-class ClientConnectionType(Enum):
+class ClientConnectionType(str, Enum):
     """Client device connection type."""
 
     WIFI_2_4 = "2.4GHz"
@@ -80,8 +78,8 @@ class GeoLocation:
 
     latitude: float
     longitude: float
-    altitude: Optional[float] = None
-    accuracy: Optional[float] = None  # meters
+    altitude: float | None = None
+    accuracy: float | None = None  # meters
 
 
 @strawberry.type
@@ -89,11 +87,11 @@ class InstallationLocation:
     """Physical installation location details."""
 
     site_name: str
-    building: Optional[str] = None
-    floor: Optional[str] = None
-    room: Optional[str] = None
-    mounting_type: Optional[str] = None  # ceiling, wall, pole
-    coordinates: Optional[GeoLocation] = None
+    building: str | None = None
+    floor: str | None = None
+    room: str | None = None
+    mounting_type: str | None = None  # ceiling, wall, pole
+    coordinates: GeoLocation | None = None
 
 
 # ============================================================================
@@ -105,24 +103,24 @@ class InstallationLocation:
 class RFMetrics:
     """Radio Frequency metrics and performance data."""
 
-    signal_strength_dbm: Optional[float] = None
-    noise_floor_dbm: Optional[float] = None
-    signal_to_noise_ratio: Optional[float] = None
-    channel_utilization_percent: Optional[float] = None
-    interference_level: Optional[float] = None
-    tx_power_dbm: Optional[float] = None
-    rx_power_dbm: Optional[float] = None
+    signal_strength_dbm: float | None = None
+    noise_floor_dbm: float | None = None
+    signal_to_noise_ratio: float | None = None
+    channel_utilization_percent: float | None = None
+    interference_level: float | None = None
+    tx_power_dbm: float | None = None
+    rx_power_dbm: float | None = None
 
 
 @strawberry.type
 class SignalQuality:
     """Signal quality metrics for wireless connections."""
 
-    rssi_dbm: Optional[float] = None
-    snr_db: Optional[float] = None
-    noise_floor_dbm: Optional[float] = None
-    signal_strength_percent: Optional[float] = None
-    link_quality_percent: Optional[float] = None
+    rssi_dbm: float | None = None
+    snr_db: float | None = None
+    noise_floor_dbm: float | None = None
+    signal_strength_percent: float | None = None
+    link_quality_percent: float | None = None
 
 
 @strawberry.type
@@ -133,7 +131,7 @@ class ChannelInfo:
     frequency_mhz: int
     bandwidth_mhz: int
     is_dfs_channel: bool
-    utilization_percent: Optional[float] = None
+    utilization_percent: float | None = None
 
 
 # ============================================================================
@@ -150,8 +148,8 @@ class APPerformanceMetrics:
     rx_bytes: int
     tx_packets: int
     rx_packets: int
-    tx_rate_mbps: Optional[float] = None
-    rx_rate_mbps: Optional[float] = None
+    tx_rate_mbps: float | None = None
+    rx_rate_mbps: float | None = None
 
     # Error metrics
     tx_errors: int
@@ -159,7 +157,7 @@ class APPerformanceMetrics:
     tx_dropped: int
     rx_dropped: int
     retries: int
-    retry_rate_percent: Optional[float] = None
+    retry_rate_percent: float | None = None
 
     # Client metrics
     connected_clients: int
@@ -167,9 +165,9 @@ class APPerformanceMetrics:
     authorized_clients: int
 
     # Capacity metrics
-    cpu_usage_percent: Optional[float] = None
-    memory_usage_percent: Optional[float] = None
-    uptime_seconds: Optional[int] = None
+    cpu_usage_percent: float | None = None
+    memory_usage_percent: float | None = None
+    uptime_seconds: int | None = None
 
 
 # ============================================================================
@@ -185,19 +183,19 @@ class AccessPoint:
     id: strawberry.ID
     name: str
     mac_address: str
-    ip_address: Optional[str] = None
-    serial_number: Optional[str] = None
+    ip_address: str | None = None
+    serial_number: str | None = None
 
     # Status
     status: AccessPointStatus
     is_online: bool
-    last_seen_at: Optional[datetime] = None
+    last_seen_at: datetime | None = None
 
     # Hardware information
-    model: Optional[str] = None
-    manufacturer: Optional[str] = None
-    firmware_version: Optional[str] = None
-    hardware_revision: Optional[str] = None
+    model: str | None = None
+    manufacturer: str | None = None
+    firmware_version: str | None = None
+    hardware_revision: str | None = None
 
     # Wireless configuration
     ssid: str
@@ -205,28 +203,28 @@ class AccessPoint:
     channel: int
     channel_width: int  # MHz (20, 40, 80, 160)
     transmit_power: int  # dBm
-    max_clients: Optional[int] = None
+    max_clients: int | None = None
     security_type: WirelessSecurityType
 
     # Location
-    location: Optional[InstallationLocation] = None
+    location: InstallationLocation | None = None
 
     # RF Metrics
-    rf_metrics: Optional[RFMetrics] = None
+    rf_metrics: RFMetrics | None = None
 
     # Performance
-    performance: Optional[APPerformanceMetrics] = None
+    performance: APPerformanceMetrics | None = None
 
     # Management
-    controller_id: Optional[str] = None
-    controller_name: Optional[str] = None
-    site_id: Optional[str] = None
-    site_name: Optional[str] = None
+    controller_id: str | None = None
+    controller_name: str | None = None
+    site_id: str | None = None
+    site_name: str | None = None
 
     # Timestamps
     created_at: datetime
     updated_at: datetime
-    last_reboot_at: Optional[datetime] = None
+    last_reboot_at: datetime | None = None
 
     # Configuration
     is_mesh_enabled: bool = False
@@ -246,9 +244,9 @@ class WirelessClient:
     # Identity
     id: strawberry.ID
     mac_address: str
-    hostname: Optional[str] = None
-    ip_address: Optional[str] = None
-    manufacturer: Optional[str] = None
+    hostname: str | None = None
+    ip_address: str | None = None
+    manufacturer: str | None = None
 
     # Connection details
     access_point_id: str
@@ -261,17 +259,17 @@ class WirelessClient:
     # Authentication
     is_authenticated: bool
     is_authorized: bool
-    auth_method: Optional[str] = None
+    auth_method: str | None = None
 
     # Signal metrics
-    signal_strength_dbm: Optional[float] = None
-    signal_quality: Optional[SignalQuality] = None
-    noise_floor_dbm: Optional[float] = None
-    snr: Optional[float] = None
+    signal_strength_dbm: float | None = None
+    signal_quality: SignalQuality | None = None
+    noise_floor_dbm: float | None = None
+    snr: float | None = None
 
     # Performance
-    tx_rate_mbps: Optional[float] = None
-    rx_rate_mbps: Optional[float] = None
+    tx_rate_mbps: float | None = None
+    rx_rate_mbps: float | None = None
     tx_bytes: int = 0
     rx_bytes: int = 0
     tx_packets: int = 0
@@ -283,17 +281,17 @@ class WirelessClient:
     connected_at: datetime
     last_seen_at: datetime
     uptime_seconds: int
-    idle_time_seconds: Optional[int] = None
+    idle_time_seconds: int | None = None
 
     # Device capabilities
     supports_80211k: bool = False
     supports_80211r: bool = False
     supports_80211v: bool = False
-    max_phy_rate_mbps: Optional[float] = None
+    max_phy_rate_mbps: float | None = None
 
     # Customer association
-    customer_id: Optional[str] = None
-    customer_name: Optional[str] = None
+    customer_id: str | None = None
+    customer_name: str | None = None
 
 
 # ============================================================================
@@ -308,41 +306,41 @@ class CoverageZone:
     # Identity
     id: strawberry.ID
     name: str
-    description: Optional[str] = None
+    description: str | None = None
 
     # Geographic area
     site_id: str
     site_name: str
-    floor: Optional[str] = None
+    floor: str | None = None
     area_type: str  # indoor, outdoor, mixed
 
     # Coverage metrics
-    coverage_area_sqm: Optional[float] = None
-    signal_strength_min_dbm: Optional[float] = None
-    signal_strength_max_dbm: Optional[float] = None
-    signal_strength_avg_dbm: Optional[float] = None
+    coverage_area_sqm: float | None = None
+    signal_strength_min_dbm: float | None = None
+    signal_strength_max_dbm: float | None = None
+    signal_strength_avg_dbm: float | None = None
 
     # Access points in zone
     access_point_ids: list[str]
     access_point_count: int
 
     # RF quality
-    interference_level: Optional[float] = None
-    channel_utilization_avg: Optional[float] = None
-    noise_floor_avg_dbm: Optional[float] = None
+    interference_level: float | None = None
+    channel_utilization_avg: float | None = None
+    noise_floor_avg_dbm: float | None = None
 
     # Client metrics
     connected_clients: int
     max_client_capacity: int
-    client_density_per_ap: Optional[float] = None
+    client_density_per_ap: float | None = None
 
     # GeoJSON polygon
-    coverage_polygon: Optional[str] = None  # GeoJSON polygon string
+    coverage_polygon: str | None = None  # GeoJSON polygon string
 
     # Timestamps
     created_at: datetime
     updated_at: datetime
-    last_surveyed_at: Optional[datetime] = None
+    last_surveyed_at: datetime | None = None
 
 
 # ============================================================================
@@ -432,13 +430,13 @@ class WirelessSiteMetrics:
     clients_6ghz: int
 
     # Performance
-    average_signal_strength_dbm: Optional[float] = None
-    average_snr: Optional[float] = None
-    total_throughput_mbps: Optional[float] = None
+    average_signal_strength_dbm: float | None = None
+    average_snr: float | None = None
+    total_throughput_mbps: float | None = None
 
     # Capacity
     total_capacity: int
-    capacity_utilization_percent: Optional[float] = None
+    capacity_utilization_percent: float | None = None
 
     # Health scores
     overall_health_score: float  # 0-100

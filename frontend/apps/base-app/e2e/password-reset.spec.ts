@@ -222,7 +222,7 @@ test.describe('Complete Password Reset Journey', () => {
     await expect(page).toHaveURL(/.*login/);
 
     // Step 5: Login with new password
-    await page.fill('[data-testid="username-input"]', 'user@example.com');
+    await page.fill('[data-testid="email-input"]', 'user@example.com');
     await page.fill('[data-testid="password-input"]', newPassword);
     await page.click('[data-testid="submit-button"]');
 

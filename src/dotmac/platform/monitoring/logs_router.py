@@ -15,6 +15,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.audit.models import ActivitySeverity, AuditActivity
+from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import CurrentUser, get_current_user
 from dotmac.platform.db import get_session_dependency
 
@@ -96,7 +97,7 @@ class LogStats(BaseModel):  # BaseModel resolves to Any in isolation
 # Router
 # ============================================================
 
-logs_router = APIRouter()
+logs_router = APIRouter(prefix="/api/v1/monitoring", )
 
 
 # ============================================================
@@ -125,6 +126,7 @@ class LogsService:
 
     async def get_logs(
         self,
+        current_user: UserInfo,
         level: LogLevel | None = None,
         service: str | None = None,
         search: str | None = None,
@@ -149,6 +151,7 @@ class LogsService:
         """
         if self._use_database():
             return await self._get_logs_from_database(
+                current_user=current_user,
                 level=level,
                 service=service,
                 search=search,
@@ -170,12 +173,14 @@ class LogsService:
 
     async def get_log_stats(
         self,
+        current_user: UserInfo,
         start_time: datetime | None = None,
         end_time: datetime | None = None,
     ) -> LogStats:
         """Get log statistics from audit activities."""
         if self._use_database():
             return await self._get_log_stats_from_database(
+                current_user=current_user,
                 start_time=start_time,
                 end_time=end_time,
             )
@@ -185,10 +190,10 @@ class LogsService:
             end_time=end_time,
         )
 
-    async def get_available_services(self) -> list[str]:
+    async def get_available_services(self, current_user: UserInfo) -> list[str]:
         """Return list of available service names."""
         if self._use_database():
-            return await self._get_available_services_from_database()
+            return await self._get_available_services_from_database(current_user=current_user)
 
         services = {log.service for log in self._sample_logs}
         return sorted(services)
@@ -196,6 +201,7 @@ class LogsService:
     async def _get_logs_from_database(
         self,
         *,
+        current_user: UserInfo,
         level: LogLevel | None,
         service: str | None,
         search: str | None,
@@ -208,6 +214,24 @@ class LogsService:
         try:
             # Build query
             query = select(AuditActivity)
+
+            # SECURITY: Apply tenant isolation - only show logs for current user's tenant
+            # unless user is a platform admin
+            if not current_user.is_platform_admin:
+                if not current_user.tenant_id:
+                    # Non-admin users must have a tenant_id
+                    self.logger.warning(
+                        "User without tenant_id attempted to access logs",
+                        user_id=current_user.user_id,
+                    )
+                    return LogsResponse(
+                        logs=[],
+                        total=0,
+                        page=page,
+                        page_size=page_size,
+                        has_more=False,
+                    )
+                query = query.where(AuditActivity.tenant_id == current_user.tenant_id)
 
             # Apply filters
             if level:
@@ -235,8 +259,13 @@ class LogsService:
             if end_time:
                 query = query.where(AuditActivity.created_at <= end_time)
 
-            # Get total count
+            # Get total count with same tenant isolation
             count_query = select(func.count()).select_from(AuditActivity)
+
+            # Apply tenant isolation to count query
+            if not current_user.is_platform_admin and current_user.tenant_id:
+                count_query = count_query.where(AuditActivity.tenant_id == current_user.tenant_id)
+
             if level or service or search or start_time or end_time:
                 # Apply same filters for count
                 count_query = select(func.count()).select_from(query.subquery())
@@ -343,6 +372,7 @@ class LogsService:
     async def _get_log_stats_from_database(
         self,
         *,
+        current_user: UserInfo,
         start_time: datetime | None,
         end_time: datetime | None,
     ) -> LogStats:
@@ -350,6 +380,27 @@ class LogsService:
         try:
             # Build base query
             query = select(AuditActivity)
+
+            # SECURITY: Apply tenant isolation - only show stats for current user's tenant
+            # unless user is a platform admin
+            if not current_user.is_platform_admin:
+                if not current_user.tenant_id:
+                    # Non-admin users must have a tenant_id
+                    self.logger.warning(
+                        "User without tenant_id attempted to access log stats",
+                        user_id=current_user.user_id,
+                    )
+                    now = datetime.now(UTC)
+                    return LogStats(
+                        total=0,
+                        by_level={},
+                        by_service={},
+                        time_range={
+                            "start": (start_time or now).isoformat(),
+                            "end": (end_time or now).isoformat(),
+                        },
+                    )
+                query = query.where(AuditActivity.tenant_id == current_user.tenant_id)
 
             if start_time:
                 query = query.where(AuditActivity.created_at >= start_time)
@@ -365,6 +416,10 @@ class LogsService:
             severity_query = select(AuditActivity.severity, func.count(AuditActivity.id)).group_by(
                 AuditActivity.severity
             )
+
+            # Apply tenant isolation to severity query
+            if not current_user.is_platform_admin and current_user.tenant_id:
+                severity_query = severity_query.where(AuditActivity.tenant_id == current_user.tenant_id)
 
             if start_time:
                 severity_query = severity_query.where(AuditActivity.created_at >= start_time)
@@ -466,10 +521,23 @@ class LogsService:
             },
         )
 
-    async def _get_available_services_from_database(self) -> list[str]:
+    async def _get_available_services_from_database(self, current_user: UserInfo) -> list[str]:
         session = cast(AsyncSession, self.session)
         try:
+            # SECURITY: Apply tenant isolation - only show services for current user's tenant
+            # unless user is a platform admin
             query = select(AuditActivity.activity_type).distinct()
+
+            if not current_user.is_platform_admin:
+                if not current_user.tenant_id:
+                    # Non-admin users must have a tenant_id
+                    self.logger.warning(
+                        "User without tenant_id attempted to access available services",
+                        user_id=current_user.user_id,
+                    )
+                    return []
+                query = query.where(AuditActivity.tenant_id == current_user.tenant_id)
+
             result = await session.execute(query)
             activity_types = result.scalars().all()
 
@@ -591,6 +659,7 @@ async def get_logs(
     )
 
     return await logs_service.get_logs(
+        current_user=current_user,
         level=level,
         service=service,
         search=search,
@@ -621,6 +690,7 @@ async def get_log_statistics(
     )
 
     return await logs_service.get_log_stats(
+        current_user=current_user,
         start_time=start_time,
         end_time=end_time,
     )
@@ -634,7 +704,7 @@ async def get_available_services(
     """Get list of available services from audit activities."""
     logger.info("logs.services.list", user_id=current_user.user_id)
 
-    services = await logs_service.get_available_services()
+    services = await logs_service.get_available_services(current_user=current_user)
     return services
 
 

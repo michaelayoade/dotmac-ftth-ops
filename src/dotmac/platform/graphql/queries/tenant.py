@@ -7,8 +7,6 @@ usage records, and invitations via DataLoaders.
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Optional
-from uuid import UUID
 
 import strawberry
 from sqlalchemy import func, select
@@ -46,7 +44,7 @@ class TenantQueries:
         include_settings: bool = False,
         include_usage: bool = False,
         include_invitations: bool = False,
-    ) -> Optional[Tenant]:
+    ) -> Tenant | None:
         """
         Fetch a single tenant by ID.
 
@@ -102,9 +100,9 @@ class TenantQueries:
         info: strawberry.Info[Context],
         page: int = 1,
         page_size: int = 10,
-        status: Optional[TenantStatusEnum] = None,
-        plan: Optional[str] = None,
-        search: Optional[str] = None,
+        status: TenantStatusEnum | None = None,
+        plan: str | None = None,
+        search: str | None = None,
         include_metadata: bool = False,
         include_settings: bool = False,
         include_usage: bool = False,

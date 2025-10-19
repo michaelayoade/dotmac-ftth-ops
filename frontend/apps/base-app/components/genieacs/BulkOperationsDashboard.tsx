@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Layers,
   Plus,
@@ -76,11 +76,7 @@ export function BulkOperationsDashboard() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [configRes, firmwareRes] = await Promise.all([
@@ -151,7 +147,11 @@ export function BulkOperationsDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleCancelJob = async (jobId: string, type: "config" | "firmware") => {
     try {

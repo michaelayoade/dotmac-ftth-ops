@@ -74,7 +74,7 @@ export const useTenantAddons = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/api/v1/billing/tenant/addons/available');
+      const response = await apiClient.get('/billing/tenant/addons/available');
       setAvailableAddons(response.data);
       logger.info('Fetched available add-ons', { count: response.data.length });
       return response.data;
@@ -96,7 +96,7 @@ export const useTenantAddons = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/api/v1/billing/tenant/addons/active');
+      const response = await apiClient.get('/billing/tenant/addons/active');
       setActiveAddons(response.data);
       logger.info('Fetched active add-ons', { count: response.data.length });
       return response.data;
@@ -119,7 +119,7 @@ export const useTenantAddons = () => {
     setError(null);
     try {
       const response = await apiClient.post(
-        `/api/v1/billing/tenant/addons/${addonId}/purchase`,
+        `/billing/tenant/addons/${addonId}/purchase`,
         request
       );
       // Refresh active add-ons
@@ -146,7 +146,7 @@ export const useTenantAddons = () => {
       setError(null);
       try {
         const response = await apiClient.patch(
-          `/api/v1/billing/tenant/addons/${tenantAddonId}/quantity`,
+          `/billing/tenant/addons/${tenantAddonId}/quantity`,
           request
         );
         // Refresh active add-ons
@@ -175,7 +175,7 @@ export const useTenantAddons = () => {
       setError(null);
       try {
         const response = await apiClient.post(
-          `/api/v1/billing/tenant/addons/${tenantAddonId}/cancel`,
+          `/billing/tenant/addons/${tenantAddonId}/cancel`,
           request
         );
         // Refresh active add-ons
@@ -204,7 +204,7 @@ export const useTenantAddons = () => {
       setError(null);
       try {
         const response = await apiClient.post(
-          `/api/v1/billing/tenant/addons/${tenantAddonId}/reactivate`
+          `/billing/tenant/addons/${tenantAddonId}/reactivate`
         );
         // Refresh active add-ons
         await fetchActiveAddons();

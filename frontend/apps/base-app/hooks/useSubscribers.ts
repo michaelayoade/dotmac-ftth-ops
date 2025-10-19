@@ -222,7 +222,7 @@ export function useSubscribers(params?: SubscriberQueryParams) {
       if (params?.sort_by) queryParams.set('sort_by', params.sort_by);
       if (params?.sort_order) queryParams.set('sort_order', params.sort_order);
 
-      const endpoint = `/api/v1/subscribers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const endpoint = `/subscribers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const response = await apiClient.get(endpoint);
 
       if (response.data) {
@@ -265,7 +265,7 @@ export function useSubscriber(subscriberId: string | null) {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.get(`/api/v1/subscribers/${subscriberId}`);
+      const response = await apiClient.get(`/subscribers/${subscriberId}`);
       setSubscriber(response.data);
     } catch (err) {
       setError(err as Error);
@@ -300,7 +300,7 @@ export function useSubscriberStatistics() {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.get('/api/v1/subscribers/statistics');
+      const response = await apiClient.get('/subscribers/statistics');
       setStatistics(response.data);
     } catch (err) {
       setError(err as Error);
@@ -334,7 +334,7 @@ export function useSubscriberOperations() {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.post('/api/v1/subscribers', data);
+      const response = await apiClient.post('/subscribers', data);
       return response.data as Subscriber;
     } catch (err) {
       setError(err as Error);
@@ -350,7 +350,7 @@ export function useSubscriberOperations() {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.patch(`/api/v1/subscribers/${subscriberId}`, data);
+      const response = await apiClient.patch(`/subscribers/${subscriberId}`, data);
       return response.data as Subscriber;
     } catch (err) {
       setError(err as Error);
@@ -366,7 +366,7 @@ export function useSubscriberOperations() {
       setIsLoading(true);
       setError(null);
 
-      await apiClient.delete(`/api/v1/subscribers/${subscriberId}`);
+      await apiClient.delete(`/subscribers/${subscriberId}`);
       return true;
     } catch (err) {
       setError(err as Error);
@@ -382,7 +382,7 @@ export function useSubscriberOperations() {
       setIsLoading(true);
       setError(null);
 
-      await apiClient.post(`/api/v1/subscribers/${subscriberId}/suspend`, { reason });
+      await apiClient.post(`/subscribers/${subscriberId}/suspend`, { reason });
       return true;
     } catch (err) {
       setError(err as Error);
@@ -398,7 +398,7 @@ export function useSubscriberOperations() {
       setIsLoading(true);
       setError(null);
 
-      await apiClient.post(`/api/v1/subscribers/${subscriberId}/activate`, {});
+      await apiClient.post(`/subscribers/${subscriberId}/activate`, {});
       return true;
     } catch (err) {
       setError(err as Error);
@@ -414,7 +414,7 @@ export function useSubscriberOperations() {
       setIsLoading(true);
       setError(null);
 
-      await apiClient.post(`/api/v1/subscribers/${subscriberId}/terminate`, { reason });
+      await apiClient.post(`/subscribers/${subscriberId}/terminate`, { reason });
       return true;
     } catch (err) {
       setError(err as Error);
@@ -452,7 +452,7 @@ export function useSubscriberServices(subscriberId: string | null) {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.get(`/api/v1/subscribers/${subscriberId}/services`);
+      const response = await apiClient.get(`/subscribers/${subscriberId}/services`);
       setServices(response.data || []);
     } catch (err) {
       setError(err as Error);

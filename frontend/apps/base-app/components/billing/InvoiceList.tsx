@@ -56,7 +56,7 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
         queryParams.set('tenant_id', tenantId);
       }
 
-      const endpoint = `/api/v1/billing/invoices${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const endpoint = `/billing/invoices${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const response = await apiClient.get(endpoint);
       if (response.data) {
         const data = response.data as { invoices?: Invoice[] };
@@ -78,11 +78,11 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
   }, [fetchInvoices]);
 
   // Bulk operations
-  const handleBulkSend = async (selected: Invoice[]) => {
+  const handleBulkSend = useCallback(async (selected: Invoice[]) => {
     setBulkLoading(true);
     try {
       const invoiceIds = selected.map(inv => inv.invoice_id);
-      await apiClient.post('/api/v1/billing/invoices/bulk-send', { invoice_ids: invoiceIds });
+      await apiClient.post('/billing/invoices/bulk-send', { invoice_ids: invoiceIds });
       alert(`Successfully sent ${invoiceIds.length} invoice(s)`);
       await fetchInvoices();
     } catch (err) {
@@ -91,9 +91,9 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
     } finally {
       setBulkLoading(false);
     }
-  };
+  }, [fetchInvoices]);
 
-  const handleBulkVoid = async (selected: Invoice[]) => {
+  const handleBulkVoid = useCallback(async (selected: Invoice[]) => {
     if (!confirm(`Are you sure you want to void ${selected.length} invoice(s)? This cannot be undone.`)) {
       return;
     }
@@ -101,7 +101,7 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
     setBulkLoading(true);
     try {
       const invoiceIds = selected.map(inv => inv.invoice_id);
-      await apiClient.post('/api/v1/billing/invoices/bulk-void', { invoice_ids: invoiceIds });
+      await apiClient.post('/billing/invoices/bulk-void', { invoice_ids: invoiceIds });
       alert(`Successfully voided ${invoiceIds.length} invoice(s)`);
       await fetchInvoices();
     } catch (err) {
@@ -110,13 +110,13 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
     } finally {
       setBulkLoading(false);
     }
-  };
+  }, [fetchInvoices]);
 
-  const handleBulkDownload = async (selected: Invoice[]) => {
+  const handleBulkDownload = useCallback(async (selected: Invoice[]) => {
     setBulkLoading(true);
     try {
       const invoiceIds = selected.map(inv => inv.invoice_id);
-      const response = await apiClient.post('/api/v1/billing/invoices/bulk-download',
+      const response = await apiClient.post('/billing/invoices/bulk-download',
         { invoice_ids: invoiceIds },
         { responseType: 'blob' }
       );
@@ -135,11 +135,11 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
     } finally {
       setBulkLoading(false);
     }
-  };
+  }, []);
 
-  const handleCreateCreditNote = (invoice: Invoice) => {
+  const handleCreateCreditNote = useCallback((invoice: Invoice) => {
     router.push(`/tenant/billing/credit-notes/new?invoice_id=${invoice.invoice_id}`);
-  };
+  }, [router]);
 
   // Column definitions
   const columns: ColumnDef<Invoice>[] = useMemo(() => [
@@ -241,7 +241,7 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
           <button
             onClick={(e) => {
               e.stopPropagation();
-              window.open(`/api/v1/billing/invoices/${invoice.invoice_id}/download`, '_blank');
+              window.open(`/billing/invoices/${invoice.invoice_id}/download`, '_blank');
             }}
             className="p-1 text-muted-foreground hover:text-foreground transition-colors"
             title="Download invoice"
@@ -251,7 +251,7 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
         </div>
       ),
     },
-  ], [router]);
+  ], [handleCreateCreditNote]);
 
   // Bulk actions
   const bulkActions: BulkAction<Invoice>[] = useMemo(() => [
@@ -272,7 +272,7 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
       icon: Download,
       action: handleBulkDownload,
     },
-  ], []);
+  ], [handleBulkDownload, handleBulkSend, handleBulkVoid]);
 
   // Quick filters
   const quickFilters: QuickFilter<Invoice>[] = useMemo(() => [

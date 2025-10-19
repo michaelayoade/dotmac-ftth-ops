@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -72,7 +75,7 @@ export default function CustomerDashboard() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Welcome back!</h1>
         <p className="text-muted-foreground">
-          Here's an overview of your internet service
+          Here&apos;s an overview of your internet service
         </p>
       </div>
 

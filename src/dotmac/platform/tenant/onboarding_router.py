@@ -25,7 +25,7 @@ from .service import TenantAlreadyExistsError, TenantNotFoundError, TenantServic
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(tags=["Tenant Onboarding"])
+router = APIRouter(prefix="/api/v1/tenants", tags=["Tenant Onboarding"])
 
 
 async def get_user_service_dependency(

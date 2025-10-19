@@ -31,7 +31,7 @@ from .schemas import (
 )
 from .service import DunningService
 
-router = APIRouter(tags=["Billing - Dunning"])
+router = APIRouter(prefix="/api/v1/billing/dunning", tags=["Billing - Dunning"])
 
 
 # Campaign Management

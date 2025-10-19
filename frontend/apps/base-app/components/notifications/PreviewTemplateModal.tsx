@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Eye, Code, Copy, Check } from 'lucide-react';
 import type { CommunicationTemplate } from '@/hooks/useNotifications';
 import { useNotificationTemplates } from '@/hooks/useNotifications';
@@ -69,17 +69,10 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
     setSampleData(initialData);
   }, [template]);
 
-  // Render template when sample data changes
-  useEffect(() => {
-    if (Object.keys(sampleData).length > 0) {
-      handleRender();
-    }
-  }, [sampleData]);
-
-  const handleRender = async () => {
+  const handleRender = useCallback(async (data: Record<string, string> = sampleData) => {
     setIsRendering(true);
     try {
-      const result = await renderTemplatePreview(template.id, sampleData);
+      const result = await renderTemplatePreview(template.id, data);
       if (result) {
         setRenderedContent(result);
       }
@@ -88,7 +81,14 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
     } finally {
       setIsRendering(false);
     }
-  };
+  }, [renderTemplatePreview, sampleData, template.id]);
+
+  // Render template when sample data changes
+  useEffect(() => {
+    if (Object.keys(sampleData).length > 0) {
+      handleRender(sampleData);
+    }
+  }, [handleRender, sampleData]);
 
   const handleCopy = (field: string, content: string) => {
     navigator.clipboard.writeText(content);

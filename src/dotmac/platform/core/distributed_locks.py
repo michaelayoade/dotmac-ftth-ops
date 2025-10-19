@@ -7,7 +7,7 @@ import asyncio
 import uuid
 from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
-from typing import Any, Awaitable, Callable, cast
+from typing import Any, cast
 
 import redis.asyncio as redis
 import structlog

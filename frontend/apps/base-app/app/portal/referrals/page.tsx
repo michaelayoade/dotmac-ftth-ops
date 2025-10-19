@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 import { useState } from "react";
 import { usePartnerReferrals, useSubmitReferral } from "@/hooks/usePartnerPortal";
 import { UserPlus, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";

@@ -6,8 +6,6 @@ permissions, teams, and profile history via DataLoaders.
 """
 
 from datetime import UTC, datetime, timedelta
-from typing import Optional
-from uuid import UUID
 
 import strawberry
 from sqlalchemy import func, or_, select
@@ -16,8 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.graphql.context import Context
 from dotmac.platform.graphql.types.user import (
     Permission,
-    PermissionsByCategory,
     PermissionCategoryEnum,
+    PermissionsByCategory,
     ProfileChangeRecord,
     Role,
     RoleConnection,
@@ -43,7 +41,7 @@ class UserQueries:
         include_permissions: bool = False,
         include_teams: bool = False,
         include_profile_changes: bool = False,
-    ) -> Optional[User]:
+    ) -> User | None:
         """
         Fetch a single user by ID.
 
@@ -117,11 +115,11 @@ class UserQueries:
         info: strawberry.Info[Context],
         page: int = 1,
         page_size: int = 10,
-        is_active: Optional[bool] = None,
-        is_verified: Optional[bool] = None,
-        is_superuser: Optional[bool] = None,
-        is_platform_admin: Optional[bool] = None,
-        search: Optional[str] = None,
+        is_active: bool | None = None,
+        is_verified: bool | None = None,
+        is_superuser: bool | None = None,
+        is_platform_admin: bool | None = None,
+        search: str | None = None,
         include_metadata: bool = False,
         include_roles: bool = False,
         include_permissions: bool = False,
@@ -356,9 +354,9 @@ class UserQueries:
         info: strawberry.Info[Context],
         page: int = 1,
         page_size: int = 20,
-        is_active: Optional[bool] = None,
-        is_system: Optional[bool] = None,
-        search: Optional[str] = None,
+        is_active: bool | None = None,
+        is_system: bool | None = None,
+        search: str | None = None,
     ) -> RoleConnection:
         """
         Fetch a list of roles with filtering and pagination.
@@ -429,7 +427,7 @@ class UserQueries:
     async def permissions_by_category(
         self,
         info: strawberry.Info[Context],
-        category: Optional[PermissionCategoryEnum] = None,
+        category: PermissionCategoryEnum | None = None,
     ) -> list[PermissionsByCategory]:
         """
         Get all permissions grouped by category.

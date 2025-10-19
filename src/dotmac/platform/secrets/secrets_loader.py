@@ -56,9 +56,14 @@ SECRETS_MAPPING = {
     # ============================================================
     # Payment Gateway Credentials (RESTRICTED)
     # ============================================================
+    # Paystack (Primary payment gateway)
+    "billing.paystack_secret_key": "billing/paystack/secret_key",
+    "billing.paystack_public_key": "billing/paystack/public_key",
+    # Stripe (Alternative payment gateway)
     "billing.stripe_api_key": "billing/stripe/api_key",
     "billing.stripe_webhook_secret": "billing/stripe/webhook_secret",
     "billing.stripe_publishable_key": "billing/stripe/publishable_key",
+    # PayPal (Alternative payment gateway)
     "billing.paypal_client_id": "billing/paypal/client_id",
     "billing.paypal_client_secret": "billing/paypal/client_secret",
     "billing.paypal_webhook_id": "billing/paypal/webhook_id",
@@ -382,6 +387,22 @@ def validate_production_secrets(settings_obj: Settings) -> None:
     # Check for weak passwords (basic check)
     if settings_obj.database.password and len(settings_obj.database.password) < 12:
         errors.append("Database password is too short (minimum 12 characters)")
+
+    # Check payment gateway configuration (Paystack is primary)
+    if not settings_obj.billing.paystack_secret_key:
+        errors.append("Paystack secret key is not set (required for payment processing)")
+
+    if not settings_obj.billing.paystack_public_key:
+        errors.append("Paystack public key is not set (required for payment processing)")
+
+    # Validate Paystack key format (should start with sk_ or pk_)
+    if settings_obj.billing.paystack_secret_key:
+        if not settings_obj.billing.paystack_secret_key.startswith(("sk_live_", "sk_test_")):
+            errors.append("Paystack secret key has invalid format (should start with sk_live_ or sk_test_)")
+
+    if settings_obj.billing.paystack_public_key:
+        if not settings_obj.billing.paystack_public_key.startswith(("pk_live_", "pk_test_")):
+            errors.append("Paystack public key has invalid format (should start with pk_live_ or pk_test_)")
 
     if errors:
         error_msg = "Production secrets validation failed:\n" + "\n".join(

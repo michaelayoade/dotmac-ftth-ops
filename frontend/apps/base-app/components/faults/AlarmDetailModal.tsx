@@ -171,7 +171,7 @@ export function AlarmDetailModal({
     if (open && alarm) {
       fetchAlarmDetails();
     }
-  }, [open, alarm?.id]);
+  }, [alarm, fetchAlarmDetails, open]);
 
   const fetchAlarmDetails = useCallback(async () => {
     if (!alarm) return;

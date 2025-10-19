@@ -132,7 +132,7 @@ export function useScheduledDeployments() {
         }
 
         const response = await apiClient.post<ScheduledDeploymentResponse>(
-          '/api/v1/deployments/schedule',
+          '/deployments/schedule',
           request
         );
 
@@ -151,7 +151,7 @@ export function useScheduledDeployments() {
   const fetchTemplates = useCallback(async (): Promise<DeploymentTemplate[]> => {
     try {
       const response = await apiClient.get<DeploymentTemplate[]>(
-        '/api/v1/deployments/templates?is_active=true'
+        '/deployments/templates?is_active=true'
       );
       return response.data;
     } catch (err) {
@@ -164,7 +164,7 @@ export function useScheduledDeployments() {
   const fetchInstances = useCallback(async (): Promise<DeploymentInstance[]> => {
     try {
       const response = await apiClient.get<{ instances: DeploymentInstance[] }>(
-        '/api/v1/deployments/instances'
+        '/deployments/instances'
       );
       return response.data.instances;
     } catch (err) {

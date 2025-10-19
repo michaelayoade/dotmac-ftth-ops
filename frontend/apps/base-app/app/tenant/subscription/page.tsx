@@ -126,7 +126,7 @@ export default function TenantSubscriptionPage() {
             <DialogHeader>
               <DialogTitle>Confirm Subscription</DialogTitle>
               <DialogDescription>
-                You're about to subscribe to {selectedPlan?.plan_name}
+                You&apos;re about to subscribe to {selectedPlan?.plan_name}
               </DialogDescription>
             </DialogHeader>
 

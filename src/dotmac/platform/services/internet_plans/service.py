@@ -224,7 +224,7 @@ class InternetPlanService:
         sub_stmt = select(func.count(PlanSubscription.id)).where(
             and_(
                 PlanSubscription.plan_id == plan_id,
-                PlanSubscription.is_active == True,
+                PlanSubscription.is_active,
             )
         )
         sub_result = await self.session.execute(sub_stmt)
@@ -453,7 +453,7 @@ class InternetPlanService:
         sub_stmt = select(func.count(PlanSubscription.id)).where(
             and_(
                 PlanSubscription.plan_id == plan_id,
-                PlanSubscription.is_active == True,
+                PlanSubscription.is_active,
             )
         )
         sub_result = await self.session.execute(sub_stmt)

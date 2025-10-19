@@ -68,11 +68,7 @@ export default function UserActivityLogPage() {
   const [dateTo, setDateTo] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
-  useEffect(() => {
-    loadUserAuditLog();
-  }, [userId]);
-
-  const loadUserAuditLog = async () => {
+  const loadUserAuditLog = useCallback(async () => {
     setLoading(true);
     try {
       const data = await platformAdminService.getAuditLogs();
@@ -95,7 +91,11 @@ export default function UserActivityLogPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast, userId]);
+
+  useEffect(() => {
+    loadUserAuditLog();
+  }, [loadUserAuditLog]);
 
   // Calculate activity stats
   const activityStats: ActivityStats = useMemo(() => {

@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 from dotmac.platform.fault_management.models import (
     AlarmSeverity,
@@ -124,6 +124,7 @@ class AlarmResponse(BaseModel):  # BaseModel resolves to Any in isolation
     last_occurrence: datetime
     occurrence_count: int
     acknowledged_at: datetime | None
+    acknowledged_by: UUID | None
     cleared_at: datetime | None
     resolved_at: datetime | None
 
@@ -131,22 +132,23 @@ class AlarmResponse(BaseModel):  # BaseModel resolves to Any in isolation
     ticket_id: UUID | None
 
     tags: dict[str, Any]
-    metadata: dict[str, Any]
+    metadata: dict[str, Any] = Field(alias="alarm_metadata")
     probable_cause: str | None
     recommended_action: str | None
 
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class AlarmNoteCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create alarm note request"""
 
-    model_config = ConfigDict()
+    model_config = ConfigDict(populate_by_name=True)
 
-    note: str = Field(..., min_length=1, description="Note content")
+    content: str = Field(..., alias="note", min_length=1, description="Note content")
+    note_type: str = Field("note", description="Type of note (acknowledgment, resolution, etc.)")
 
 
 class AlarmNoteResponse(BaseModel):  # BaseModel resolves to Any in isolation
@@ -155,10 +157,11 @@ class AlarmNoteResponse(BaseModel):  # BaseModel resolves to Any in isolation
     id: UUID
     alarm_id: UUID
     note: str
+    note_type: str
     created_by: UUID
     created_at: datetime
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 class AlarmRuleCreate(BaseModel):  # BaseModel resolves to Any in isolation
@@ -229,22 +232,27 @@ class SLADefinitionCreate(BaseModel):
 
     name: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
-    service_type: str = Field(..., min_length=1, max_length=100)
+    service_type: str | None = Field(None, min_length=1, max_length=100)
+    service_level: str | None = Field(None, min_length=1, max_length=100)
 
-    availability_target: float = Field(..., ge=0.0, le=1.0, description="Target availability (0-1)")
+    availability_target: float = Field(
+        ..., ge=0.0, le=100.0, description="Target availability percentage (0-100)"
+    )
     measurement_period_days: int = Field(default=30, ge=1, le=365)
+    response_time_target: int = Field(default=60, ge=1, description="Minutes")
+    resolution_time_target: int = Field(default=240, ge=1, description="Minutes")
 
     max_latency_ms: float | None = Field(None, ge=0.0)
     max_packet_loss_percent: float | None = Field(None, ge=0.0, le=100.0)
     min_bandwidth_mbps: float | None = Field(None, ge=0.0)
 
-    response_time_critical: int = Field(default=15, ge=1, description="Minutes")
-    response_time_major: int = Field(default=60, ge=1, description="Minutes")
-    response_time_minor: int = Field(default=240, ge=1, description="Minutes")
+    response_time_critical: int | None = Field(None, ge=1, description="Minutes")
+    response_time_major: int | None = Field(None, ge=1, description="Minutes")
+    response_time_minor: int | None = Field(None, ge=1, description="Minutes")
 
-    resolution_time_critical: int = Field(default=240, ge=1, description="Minutes")
-    resolution_time_major: int = Field(default=480, ge=1, description="Minutes")
-    resolution_time_minor: int = Field(default=1440, ge=1, description="Minutes")
+    resolution_time_critical: int | None = Field(None, ge=1, description="Minutes")
+    resolution_time_major: int | None = Field(None, ge=1, description="Minutes")
+    resolution_time_minor: int | None = Field(None, ge=1, description="Minutes")
 
     business_hours_only: bool = False
     exclude_maintenance: bool = True
@@ -258,7 +266,10 @@ class SLADefinitionUpdate(BaseModel):  # BaseModel resolves to Any in isolation
 
     name: str | None = None
     description: str | None = None
-    availability_target: float | None = Field(None, ge=0.0, le=1.0)
+    availability_target: float | None = Field(None, ge=0.0, le=100.0)
+    measurement_period_days: int | None = Field(None, ge=1, le=365)
+    response_time_target: int | None = Field(None, ge=1)
+    resolution_time_target: int | None = Field(None, ge=1)
     max_latency_ms: float | None = Field(None, ge=0.0)
     max_packet_loss_percent: float | None = Field(None, ge=0.0, le=100.0)
     min_bandwidth_mbps: float | None = Field(None, ge=0.0)
@@ -273,17 +284,14 @@ class SLADefinitionResponse(BaseModel):  # BaseModel resolves to Any in isolatio
     name: str
     description: str | None
     service_type: str
+    service_level: str | None
     availability_target: float
     measurement_period_days: int
+    response_time_target: int
+    resolution_time_target: int
     max_latency_ms: float | None
     max_packet_loss_percent: float | None
     min_bandwidth_mbps: float | None
-    response_time_critical: int
-    response_time_major: int
-    response_time_minor: int
-    resolution_time_critical: int
-    resolution_time_major: int
-    resolution_time_minor: int
     business_hours_only: bool
     exclude_maintenance: bool
     enabled: bool
@@ -296,14 +304,20 @@ class SLADefinitionResponse(BaseModel):  # BaseModel resolves to Any in isolatio
 class SLAInstanceCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Create SLA instance request"""
 
-    model_config = ConfigDict()
+    model_config = ConfigDict(populate_by_name=True)
 
     sla_definition_id: UUID
     customer_id: UUID | None = None
+    customer_name: str | None = None
     service_id: UUID | None = None
+    service_name: str | None = None
     subscription_id: str | None = None
-    period_start: datetime
-    period_end: datetime
+    start_date: datetime = Field(
+        ..., validation_alias=AliasChoices("start_date", "period_start")
+    )
+    end_date: datetime | None = Field(
+        None, validation_alias=AliasChoices("end_date", "period_end")
+    )
 
 
 class SLAInstanceResponse(BaseModel):  # BaseModel resolves to Any in isolation
@@ -313,12 +327,14 @@ class SLAInstanceResponse(BaseModel):  # BaseModel resolves to Any in isolation
     tenant_id: str
     sla_definition_id: UUID
     customer_id: UUID | None
+    customer_name: str | None
     service_id: UUID | None
+    service_name: str | None
     subscription_id: str | None
     status: SLAStatus
     current_availability: float
-    period_start: datetime
-    period_end: datetime
+    start_date: datetime
+    end_date: datetime
     total_downtime: int
     planned_downtime: int
     unplanned_downtime: int
@@ -340,8 +356,8 @@ class SLABreachResponse(BaseModel):  # BaseModel resolves to Any in isolation
     tenant_id: str
     sla_instance_id: UUID
     breach_type: str
-    severity: AlarmSeverity
-    breach_start: datetime
+    severity: str
+    detected_at: datetime
     breach_end: datetime | None
     duration_minutes: int | None
     target_value: float
@@ -373,6 +389,8 @@ class MaintenanceWindowCreate(BaseModel):  # BaseModel resolves to Any in isolat
     start_time: datetime
     end_time: datetime
     timezone: str = "UTC"
+    resource_type: str | None = None
+    resource_id: str | None = None
     affected_services: list[str] = Field(default_factory=lambda: [])
     affected_customers: list[str] = Field(default_factory=lambda: [])
     affected_resources: dict[str, Any] = Field(default_factory=lambda: {})
@@ -460,6 +478,7 @@ class AlarmStatistics(BaseModel):  # BaseModel resolves to Any in isolation
     minor_alarms: int
     acknowledged_alarms: int
     unacknowledged_alarms: int
+    cleared_alarms: int
     with_tickets: int
     without_tickets: int
     avg_resolution_time_minutes: float | None
@@ -480,6 +499,8 @@ class SLAComplianceReport(BaseModel):
     at_risk_instances: int
     breached_instances: int
     avg_availability: float
+    overall_compliance_rate: float
     total_breaches: int
     total_credits: float
     compliance_by_service_type: dict[str, float]
+    instances: list[SLAInstanceResponse]

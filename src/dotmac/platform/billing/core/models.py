@@ -19,6 +19,8 @@ from .enums import (
     PaymentMethodStatus,
     PaymentMethodType,
     PaymentStatus,
+    ServiceStatus,
+    ServiceType,
     TransactionType,
 )
 
@@ -442,6 +444,61 @@ class Subscription(BillingBaseModel):
     next_billing_date: datetime | None = Field(None, description="Next billing date")
 
     extra_data: dict[str, Any] = Field(default_factory=lambda: {})
+
+
+# ============================================================================
+# Service Models
+# ============================================================================
+
+
+class Service(BillingBaseModel):
+    """Service model for tracking subscriber services"""
+
+    model_config = ConfigDict()
+
+    service_id: str = Field(default_factory=lambda: str(uuid4()), description="Unique service identifier")
+
+    # References
+    customer_id: str = Field(..., description="Customer identifier")
+    subscriber_id: str | None = Field(None, description="Subscriber identifier")
+    subscription_id: str | None = Field(None, description="Subscription identifier")
+    plan_id: str | None = Field(None, description="Service plan identifier")
+
+    # Service details
+    service_type: ServiceType = Field(default=ServiceType.BROADBAND, description="Service type category")
+    service_name: str = Field(..., min_length=1, max_length=255, description="Service name")
+    service_description: str | None = Field(None, description="Service description")
+
+    # Status
+    status: ServiceStatus = Field(default=ServiceStatus.PENDING, description="Service status")
+
+    # Lifecycle timestamps
+    activated_at: datetime | None = Field(None, description="Service activation timestamp")
+    suspended_at: datetime | None = Field(None, description="Service suspension timestamp")
+    terminated_at: datetime | None = Field(None, description="Service termination timestamp")
+
+    # Suspension details
+    suspension_reason: str | None = Field(None, description="Reason for suspension")
+    suspend_until: datetime | None = Field(None, description="Auto-resume date for suspension")
+
+    # Termination details
+    termination_reason: str | None = Field(None, description="Reason for termination")
+
+    # Service configuration
+    bandwidth_mbps: int | None = Field(None, ge=0, description="Bandwidth allocation in Mbps")
+    service_metadata: dict[str, Any] = Field(default_factory=dict, description="Service-specific metadata")
+
+    # Pricing
+    monthly_price: int | None = Field(None, ge=0, description="Monthly price in minor currency units")
+    currency: str = Field(default="USD", min_length=3, max_length=3, description="Currency code")
+
+    # Notes
+    notes: str | None = Field(None, description="Customer-visible notes")
+    internal_notes: str | None = Field(None, description="Internal notes")
+
+    # Timestamps (inherited from BillingBaseModel via BaseModel)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 # ============================================================================

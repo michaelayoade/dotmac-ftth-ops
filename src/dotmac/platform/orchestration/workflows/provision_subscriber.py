@@ -6,24 +6,31 @@ Atomic multi-system subscriber provisioning with automatic rollback.
 Workflow Steps:
 1. Create customer record in database
 2. Create subscriber record in database
-3. Create RADIUS authentication account
-4. Allocate IP address from NetBox
+3. Create RADIUS authentication account (with dual-stack IP assignment)
+4. Allocate IP addresses from NetBox (dual-stack: IPv4 + IPv6)
 5. Activate ONU in VOLTHA
-6. Configure CPE in GenieACS
+6. Configure CPE in GenieACS (with dual-stack WAN configuration)
 7. Create billing service record
 8. Send welcome email
 
 Each step has a compensation handler for automatic rollback.
+
+IPv6 Support:
+- Dual-stack allocation: Allocates both IPv4 and IPv6 addresses atomically
+- IPv6-only support: Can provision subscribers with IPv6 only
+- Backward compatible: IPv4-only mode still supported
+- RADIUS integration: Assigns both Framed-IP-Address and Framed-IPv6-Address
+- CPE configuration: Configures dual-stack WAN on customer premises equipment
 """
 
 import logging
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
-# TODO: Create Service model in billing.core.models
-# from ...billing.core.models import Service
+from ...billing.core.entities import ServiceEntity
 from ...customer_management.models import Customer
 from ...genieacs.service import GenieACSService
 from ...netbox.service import NetBoxService
@@ -276,7 +283,7 @@ async def create_radius_account_handler(
     context: dict[str, Any],
     db: Session,
 ) -> dict[str, Any]:
-    """Create RADIUS authentication account."""
+    """Create RADIUS authentication account with dual-stack IP support."""
     if not input_data.get("create_radius_account", True):
         logger.info("Skipping RADIUS account creation (disabled)")
         return {
@@ -293,16 +300,33 @@ async def create_radius_account_handler(
     username = input_data.get("email", context["subscriber_number"])
     password = input_data.get("password") or f"tmp_{uuid4().hex[:12]}"
 
-    # Create RADIUS user
-    radius_user = await radius_service.create_subscriber(
+    # Prepare RADIUS creation data with dual-stack support
+    from ...radius.schemas import RADIUSSubscriberCreate
+
+    # Strip CIDR notation from IP addresses (RADIUS expects just the IP)
+    ipv4_address = context.get("ipv4_address")
+    if ipv4_address and "/" in ipv4_address:
+        ipv4_address = ipv4_address.split("/")[0]
+
+    ipv6_address = context.get("ipv6_address")
+    if ipv6_address and "/" in ipv6_address:
+        ipv6_address = ipv6_address.split("/")[0]
+
+    radius_data = RADIUSSubscriberCreate(
+        subscriber_id=context["subscriber_id"],
         username=username,
         password=password,
-        subscriber_id=context["subscriber_id"],
+        framed_ipv4_address=ipv4_address,
+        framed_ipv6_address=ipv6_address,
+        delegated_ipv6_prefix=context.get("ipv6_prefix"),
         bandwidth_profile=input_data.get("service_plan_id"),
         vlan_id=input_data.get("vlan_id"),
     )
 
-    logger.info(f"Created RADIUS account: {username}")
+    # Create RADIUS user
+    radius_user = await radius_service.create_subscriber(radius_data)
+
+    logger.info(f"Created RADIUS account: {username} (IPv4: {ipv4_address}, IPv6: {ipv6_address})")
 
     return {
         "output_data": {
@@ -340,7 +364,7 @@ async def allocate_ip_handler(
     context: dict[str, Any],
     db: Session,
 ) -> dict[str, Any]:
-    """Allocate IP address from NetBox."""
+    """Allocate dual-stack IP addresses from NetBox."""
     if not input_data.get("allocate_ip_from_netbox", True):
         logger.info("Skipping IP allocation (disabled)")
         return {
@@ -349,45 +373,130 @@ async def allocate_ip_handler(
             "context_updates": {},
         }
 
-    # If static IP provided, use it
-    if input_data.get("ipv4_address"):
-        logger.info(f"Using provided static IP: {input_data['ipv4_address']}")
+    # Check for static IPs (backward compatibility)
+    if input_data.get("ipv4_address") or input_data.get("ipv6_address"):
+        logger.info(
+            f"Using provided static IPs - IPv4: {input_data.get('ipv4_address')}, "
+            f"IPv6: {input_data.get('ipv6_address')}"
+        )
         return {
             "output_data": {
-                "ipv4_address": input_data["ipv4_address"],
+                "ipv4_address": input_data.get("ipv4_address"),
+                "ipv6_address": input_data.get("ipv6_address"),
+                "ipv6_prefix": input_data.get("ipv6_prefix"),
                 "static_ip": True,
             },
             "compensation_data": {"skipped": True},
             "context_updates": {
-                "ipv4_address": input_data["ipv4_address"],
+                "ipv4_address": input_data.get("ipv4_address"),
+                "ipv6_address": input_data.get("ipv6_address"),
+                "ipv6_prefix": input_data.get("ipv6_prefix"),
             },
         }
 
-    logger.info("Allocating IP address from NetBox")
+    # Determine allocation strategy
+    enable_ipv6 = input_data.get("enable_ipv6", True)
+    ipv4_prefix_id = input_data.get("ipv4_prefix_id")
+    ipv6_prefix_id = input_data.get("ipv6_prefix_id")
 
     netbox_service = NetBoxService()
 
-    # Allocate IP from pool
-    ip_allocation = await netbox_service.allocate_ip(
-        subscriber_id=context["subscriber_id"],
-        description=f"Subscriber {context['subscriber_number']}",
-    )
+    # Dual-stack allocation (IPv4 + IPv6)
+    if enable_ipv6 and ipv4_prefix_id and ipv6_prefix_id:
+        logger.info("Allocating dual-stack IPs from NetBox")
 
-    logger.info(f"Allocated IP: {ip_allocation['address']}")
+        ipv4_allocation, ipv6_allocation = await netbox_service.allocate_dual_stack_ips(
+            ipv4_prefix_id=ipv4_prefix_id,
+            ipv6_prefix_id=ipv6_prefix_id,
+            description=f"Subscriber {context['subscriber_number']}",
+            dns_name=f"sub-{context['subscriber_number']}.ftth.net",
+            tenant=input_data.get("tenant_id"),
+        )
 
-    return {
-        "output_data": {
-            "ipv4_address": ip_allocation["address"],
-            "ip_id": ip_allocation["id"],
-        },
-        "compensation_data": {
-            "ip_id": ip_allocation["id"],
-            "ipv4_address": ip_allocation["address"],
-        },
-        "context_updates": {
-            "ipv4_address": ip_allocation["address"],
-        },
-    }
+        logger.info(
+            f"Allocated dual-stack IPs - IPv4: {ipv4_allocation['address']}, "
+            f"IPv6: {ipv6_allocation['address']}"
+        )
+
+        return {
+            "output_data": {
+                "ipv4_address": ipv4_allocation["address"],
+                "ipv4_id": ipv4_allocation["id"],
+                "ipv6_address": ipv6_allocation["address"],
+                "ipv6_id": ipv6_allocation["id"],
+            },
+            "compensation_data": {
+                "ipv4_id": ipv4_allocation["id"],
+                "ipv6_id": ipv6_allocation["id"],
+                "ipv4_address": ipv4_allocation["address"],
+                "ipv6_address": ipv6_allocation["address"],
+            },
+            "context_updates": {
+                "ipv4_address": ipv4_allocation["address"],
+                "ipv6_address": ipv6_allocation["address"],
+            },
+        }
+
+    # IPv4-only allocation (backward compatibility)
+    elif ipv4_prefix_id:
+        logger.info("Allocating IPv4-only from NetBox")
+
+        ipv4_allocation = await netbox_service.allocate_ip(
+            prefix_id=ipv4_prefix_id,
+            data={
+                "description": f"Subscriber {context['subscriber_number']}",
+                "dns_name": f"sub-{context['subscriber_number']}.ftth.net",
+                "tenant": input_data.get("tenant_id"),
+            },
+        )
+
+        logger.info(f"Allocated IPv4: {ipv4_allocation['address']}")
+
+        return {
+            "output_data": {
+                "ipv4_address": ipv4_allocation["address"],
+                "ipv4_id": ipv4_allocation["id"],
+            },
+            "compensation_data": {
+                "ipv4_id": ipv4_allocation["id"],
+                "ipv4_address": ipv4_allocation["address"],
+            },
+            "context_updates": {
+                "ipv4_address": ipv4_allocation["address"],
+            },
+        }
+
+    # IPv6-only allocation
+    elif enable_ipv6 and ipv6_prefix_id:
+        logger.info("Allocating IPv6-only from NetBox")
+
+        ipv6_allocation = await netbox_service.allocate_ip(
+            prefix_id=ipv6_prefix_id,
+            data={
+                "description": f"Subscriber {context['subscriber_number']}",
+                "dns_name": f"sub-{context['subscriber_number']}.ftth.net",
+                "tenant": input_data.get("tenant_id"),
+            },
+        )
+
+        logger.info(f"Allocated IPv6: {ipv6_allocation['address']}")
+
+        return {
+            "output_data": {
+                "ipv6_address": ipv6_allocation["address"],
+                "ipv6_id": ipv6_allocation["id"],
+            },
+            "compensation_data": {
+                "ipv6_id": ipv6_allocation["id"],
+                "ipv6_address": ipv6_allocation["address"],
+            },
+            "context_updates": {
+                "ipv6_address": ipv6_allocation["address"],
+            },
+        }
+
+    else:
+        raise ValueError("No IP allocation strategy specified (missing prefix IDs)")
 
 
 async def release_ip_handler(
@@ -395,15 +504,35 @@ async def release_ip_handler(
     compensation_data: dict[str, Any],
     db: Session,
 ) -> None:
-    """Compensate IP allocation."""
+    """Compensate IP allocation (dual-stack aware)."""
     if compensation_data.get("skipped"):
         return
 
-    ip_id = compensation_data["ip_id"]
-    logger.info(f"Releasing IP: {compensation_data['ipv4_address']}")
-
     netbox_service = NetBoxService()
-    await netbox_service.release_ip(ip_id)
+
+    # Release IPv4 if allocated
+    if compensation_data.get("ipv4_id"):
+        logger.info(f"Releasing IPv4: {compensation_data.get('ipv4_address')}")
+        try:
+            await netbox_service.delete_ip_address(compensation_data["ipv4_id"])
+        except Exception as e:
+            logger.error(f"Failed to release IPv4: {e}")
+
+    # Release IPv6 if allocated
+    if compensation_data.get("ipv6_id"):
+        logger.info(f"Releasing IPv6: {compensation_data.get('ipv6_address')}")
+        try:
+            await netbox_service.delete_ip_address(compensation_data["ipv6_id"])
+        except Exception as e:
+            logger.error(f"Failed to release IPv6: {e}")
+
+    # Backward compatibility: release single IP
+    if compensation_data.get("ip_id"):
+        logger.info(f"Releasing IP: {compensation_data.get('ipv4_address')}")
+        try:
+            await netbox_service.release_ip(compensation_data["ip_id"])
+        except Exception as e:
+            logger.error(f"Failed to release IP: {e}")
 
 
 async def activate_onu_handler(
@@ -501,16 +630,21 @@ async def configure_cpe_handler(
 
     genieacs_service = GenieACSService()
 
-    # Configure CPE
+    # Configure CPE with dual-stack support
     cpe_config = await genieacs_service.configure_device(
         mac_address=cpe_mac,
         subscriber_id=context["subscriber_id"],
-        wan_ip=context.get("ipv4_address"),
+        wan_ipv4=context.get("ipv4_address"),
+        wan_ipv6=context.get("ipv6_address"),
+        ipv6_prefix=context.get("ipv6_prefix"),
         wifi_ssid=f"Subscriber-{context['subscriber_number']}",
         wifi_password=f"wifi_{uuid4().hex[:12]}",
     )
 
-    logger.info(f"CPE configured: {cpe_config['device_id']}")
+    logger.info(
+        f"CPE configured: {cpe_config['device_id']} "
+        f"(IPv4: {context.get('ipv4_address')}, IPv6: {context.get('ipv6_address')})"
+    )
 
     return {
         "output_data": {
@@ -551,26 +685,36 @@ async def create_billing_service_handler(
     """Create billing service record."""
     logger.info("Creating billing service")
 
-    # TODO: Implement Service model creation
-    # service = Service(
-    #     customer_id=context["customer_id"],
-    #     subscriber_id=context["subscriber_id"],
-    #     service_type="broadband",
-    #     service_name=f"Broadband Service - {input_data['connection_type'].upper()}",
-    #     plan_id=input_data.get("service_plan_id"),
-    #     status="active" if input_data.get("auto_activate", True) else "pending",
-    #     bandwidth_mbps=input_data.get("bandwidth_mbps"),
-    #     metadata={
-    #         "subscriber_number": context["subscriber_number"],
-    #         "connection_type": input_data["connection_type"],
-    #     },
-    # )
-    # db.add(service)
-    # db.flush()
+    # Get tenant_id from context or input_data
+    tenant_id = context.get("tenant_id") or input_data.get("tenant_id")
+    if not tenant_id:
+        raise ValueError("tenant_id is required for service creation")
 
-    # Temporary: Return mock service_id
-    service_id = str(uuid4())
-    logger.info(f"Created billing service (mock): {service_id}")
+    # Create service entity
+    service = ServiceEntity(
+        tenant_id=tenant_id,
+        customer_id=context["customer_id"],
+        subscriber_id=context["subscriber_id"],
+        service_type="broadband",
+        service_name=f"Broadband Service - {input_data['connection_type'].upper()}",
+        plan_id=input_data.get("service_plan_id"),
+        status="active" if input_data.get("auto_activate", True) else "pending",
+        bandwidth_mbps=input_data.get("bandwidth_mbps"),
+        service_metadata={
+            "subscriber_number": context["subscriber_number"],
+            "connection_type": input_data["connection_type"],
+        },
+    )
+
+    # Set activation timestamp if auto-activating
+    if input_data.get("auto_activate", True):
+        service.activated_at = datetime.now(UTC)
+
+    db.add(service)
+    db.flush()
+
+    service_id = service.service_id
+    logger.info(f"Created billing service: {service_id}")
 
     return {
         "output_data": {
@@ -595,12 +739,14 @@ async def delete_billing_service_handler(
     service_id = compensation_data["service_id"]
     logger.info(f"Deleting billing service: {service_id}")
 
-    # TODO: Implement Service model deletion
-    # service = db.query(Service).filter(Service.id == service_id).first()
-    # if service:
-    #     db.delete(service)
-    #     db.flush()
-    logger.info(f"Billing service deletion (mock): {service_id}")
+    # Delete service entity (or soft delete if using SoftDeleteMixin)
+    service = db.query(ServiceEntity).filter(ServiceEntity.service_id == service_id).first()
+    if service:
+        db.delete(service)  # Hard delete for compensation
+        db.flush()
+        logger.info(f"Billing service deleted: {service_id}")
+    else:
+        logger.warning(f"Billing service not found for deletion: {service_id}")
 
 
 # ============================================================================

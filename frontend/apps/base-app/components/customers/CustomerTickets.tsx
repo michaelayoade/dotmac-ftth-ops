@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Ticket,
   Plus,
@@ -99,11 +99,7 @@ export function CustomerTickets({ customerId }: CustomerTicketsProps) {
   const [tickets, setTickets] = useState<CustomerTicket[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchTickets();
-  }, [customerId]);
-
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     try {
       setLoading(true);
       const response = await apiClient.get<{ tickets: CustomerTicket[] }>(
@@ -119,7 +115,11 @@ export function CustomerTickets({ customerId }: CustomerTicketsProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [customerId, toast]);
+
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
 
   const handleCreateTicket = () => {
     window.open(`/tenant/tickets/new?customer_id=${customerId}`, '_blank');

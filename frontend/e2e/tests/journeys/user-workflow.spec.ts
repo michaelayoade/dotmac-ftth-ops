@@ -12,14 +12,26 @@ test.describe('Regular User Journey', () => {
 
   /**
    * Helper to login
+   * Uses exposed E2E login function to bypass react-hook-form issues
    */
   async function login(page: any) {
-    await page.goto(`${BASE_APP_URL}/login`);
-    await page.waitForLoadState('networkidle');
-    await page.getByTestId('username-input').fill(TEST_USERNAME);
-    await page.getByTestId('password-input').fill(TEST_PASSWORD);
-    await page.getByTestId('submit-button').click();
-    await page.waitForURL(/dashboard/, { timeout: 10000 });
+    await page.goto(`${BASE_APP_URL}/login`, { waitUntil: 'load' });
+
+    // Wait for page to be fully loaded
+    await page.waitForLoadState('domcontentloaded');
+
+    // Wait for the E2E login function to be available
+    await page.waitForFunction(() => (window as any).__e2e_login !== undefined, { timeout: 5000 });
+
+    // Call the login function (don't await the inner promise, just trigger it)
+    await page.evaluate((credentials: { username: string; password: string }) => {
+      const loginFn = (window as any).__e2e_login;
+      // Trigger login but don't await - let it run asynchronously
+      loginFn(credentials.username, credentials.password);
+    }, { username: TEST_USERNAME, password: TEST_PASSWORD });
+
+    // Wait for redirect to dashboard (this happens after login completes)
+    await page.waitForURL(/dashboard/, { timeout: 15000 });
   }
 
   test.beforeEach(async ({ page }) => {

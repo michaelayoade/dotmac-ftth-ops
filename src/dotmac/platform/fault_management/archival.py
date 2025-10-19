@@ -109,18 +109,18 @@ class ArchivedAlarmData(BaseModel):  # BaseModel resolves to Any in isolation
             resource_name=alarm.resource_name,
             customer_id=alarm.customer_id,
             customer_name=alarm.customer_name,
-            subscriber_count=alarm.subscriber_count,
+            subscriber_count=int(alarm.subscriber_count or 0),
             correlation_id=alarm.correlation_id,
             correlation_action=(
                 alarm.correlation_action.value
-                if isinstance(alarm.correlation_action, CorrelationAction)
-                else alarm.correlation_action
+                if alarm.correlation_action and isinstance(alarm.correlation_action, CorrelationAction)
+                else (alarm.correlation_action if alarm.correlation_action else "none")
             ),
             parent_alarm_id=alarm.parent_alarm_id,
-            is_root_cause=alarm.is_root_cause,
+            is_root_cause=alarm.is_root_cause if alarm.is_root_cause is not None else False,
             first_occurrence=alarm.first_occurrence,
             last_occurrence=alarm.last_occurrence,
-            occurrence_count=alarm.occurrence_count,
+            occurrence_count=int(alarm.occurrence_count or 0),
             acknowledged_at=alarm.acknowledged_at,
             cleared_at=alarm.cleared_at,
             resolved_at=alarm.resolved_at,
@@ -128,7 +128,7 @@ class ArchivedAlarmData(BaseModel):  # BaseModel resolves to Any in isolation
             assigned_by=alarm.assigned_by,
             assigned_at=alarm.assigned_at if hasattr(alarm, "assigned_at") else None,
             additional_info=alarm.additional_info if hasattr(alarm, "additional_info") else {},
-            tags=list(alarm.tags) if hasattr(alarm, "tags") else [],
+            tags=list(alarm.tags) if (hasattr(alarm, "tags") and alarm.tags) else [],
             archived_at=datetime.now(UTC),
         )
 

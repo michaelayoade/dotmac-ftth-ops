@@ -191,7 +191,7 @@ export const UsageAnalyticsDashboard: React.FC<UsageAnalyticsDashboardProps> = (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Usage limit reached:</strong> You've exceeded 90% of your plan limits for one or
+            <strong>Usage limit reached:</strong> You&apos;ve exceeded 90% of your plan limits for one or
             more resources. Consider upgrading your plan to avoid service interruptions.
           </AlertDescription>
         </Alert>
@@ -205,7 +205,7 @@ export const UsageAnalyticsDashboard: React.FC<UsageAnalyticsDashboardProps> = (
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <strong>Approaching limit:</strong> You're using more than 75% of your plan limits. You may
+            <strong>Approaching limit:</strong> You&apos;re using more than 75% of your plan limits. You may
             want to upgrade soon to ensure uninterrupted service.
           </AlertDescription>
         </Alert>

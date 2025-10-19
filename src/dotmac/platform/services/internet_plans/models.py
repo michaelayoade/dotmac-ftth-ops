@@ -11,10 +11,10 @@ from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, Boolean, CheckConstraint, Index, Integer, Numeric, String, Time
+from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, Integer, Numeric, String, Time
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from dotmac.platform.core.models import AuditMixin, Base, TenantMixin, TimestampMixin
+from dotmac.platform.db import AuditMixin, Base, TenantMixin, TimestampMixin
 
 
 class SpeedUnit(str, Enum):
@@ -248,7 +248,7 @@ class PlanSubscription(Base, TenantMixin, TimestampMixin):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
 
     # References
-    plan_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
+    plan_id: Mapped[UUID] = mapped_column(ForeignKey("internet_service_plans.id"), nullable=False, index=True)
     customer_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
     subscription_id: Mapped[UUID | None] = mapped_column()  # Link to billing subscription
 

@@ -191,7 +191,7 @@ export default function BillingSettingsPage() {
   const loadSettings = async () => {
     setLoading(true);
     try {
-      const response = await apiClient.get('/api/v1/billing/settings');
+      const response = await apiClient.get('/billing/settings');
       if (response.data) {
         setSettings(response.data as BillingSettings);
       }
@@ -212,7 +212,7 @@ export default function BillingSettingsPage() {
         ? settings[`${section}_settings` as keyof BillingSettings] || settings[section as keyof BillingSettings]
         : settings;
 
-      const response = await apiClient.put('/api/v1/billing/settings', body);
+      const response = await apiClient.put('/billing/settings', body);
       if (response.data) {
         setSettings(response.data as BillingSettings);
       }
@@ -231,7 +231,7 @@ export default function BillingSettingsPage() {
 
     setSaving(true);
     try {
-      const response = await apiClient.post('/api/v1/billing/settings/reset');
+      const response = await apiClient.post('/billing/settings/reset');
       if (response.data) {
         setSettings(response.data as BillingSettings);
       }

@@ -133,7 +133,7 @@ export function useWebhooks() {
         params.append('is_active', 'true');
       }
 
-      const response = await apiClient.get(`/api/v1/webhooks/subscriptions?${params.toString()}`);
+      const response = await apiClient.get(`/webhooks/subscriptions?${params.toString()}`);
       const data = (response.data || []) as any[];
       const enriched = data.map(enrichSubscription);
       setWebhooks(enriched);
@@ -162,7 +162,7 @@ export function useWebhooks() {
 
       delete (payload as Record<string, unknown>).name; // Remove from root level
 
-      const response = await apiClient.post('/api/v1/webhooks/subscriptions', payload);
+      const response = await apiClient.post('/webhooks/subscriptions', payload);
       const enriched = enrichSubscription(response.data as any);
 
       setWebhooks(prev => [enriched, ...prev]);
@@ -184,7 +184,7 @@ export function useWebhooks() {
     setError(null);
 
     try {
-      const response = await apiClient.patch(`/api/v1/webhooks/subscriptions/${id}`, data);
+      const response = await apiClient.patch(`/webhooks/subscriptions/${id}`, data);
       const enriched = enrichSubscription(response.data as any);
 
       setWebhooks(prev => prev.map(webhook => webhook.id === id ? enriched : webhook));
@@ -203,7 +203,7 @@ export function useWebhooks() {
     setError(null);
 
     try {
-      await apiClient.delete(`/api/v1/webhooks/subscriptions/${id}`);
+      await apiClient.delete(`/webhooks/subscriptions/${id}`);
       setWebhooks(prev => prev.filter(webhook => webhook.id !== id));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete webhook';
@@ -252,7 +252,7 @@ export function useWebhooks() {
 
   const getAvailableEvents = useCallback(async (): Promise<AvailableEvents> => {
     try {
-      const response = await apiClient.get('/api/v1/webhooks/events');
+      const response = await apiClient.get('/webhooks/events');
       // Transform backend format to UI format
       const events: AvailableEvents = {};
       const responseData = response.data as { events: Array<{ event_type: string; description: string }> };
@@ -312,7 +312,7 @@ export function useWebhookDeliveries(subscriptionId: string) {
       }
 
       const response = await apiClient.get(
-        `/api/v1/webhooks/subscriptions/${subscriptionId}/deliveries?${params.toString()}`
+        `/webhooks/subscriptions/${subscriptionId}/deliveries?${params.toString()}`
       );
       const deliveryData = (response.data || []) as any[];
       const enriched = deliveryData.map(enrichDelivery);
@@ -330,7 +330,7 @@ export function useWebhookDeliveries(subscriptionId: string) {
     setError(null);
 
     try {
-      await apiClient.post(`/api/v1/webhooks/deliveries/${deliveryId}/retry`);
+      await apiClient.post(`/webhooks/deliveries/${deliveryId}/retry`);
       await fetchDeliveries();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to retry delivery';

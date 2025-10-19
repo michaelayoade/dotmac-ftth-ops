@@ -21,7 +21,7 @@ from dotmac.platform.user_management.service import UserService
 logger = structlog.get_logger(__name__)
 
 # Create router
-user_router = APIRouter()
+user_router = APIRouter(prefix="/api/v1/users", )
 
 
 # ========================================

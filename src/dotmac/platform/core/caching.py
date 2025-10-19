@@ -10,9 +10,9 @@ from datetime import datetime
 from functools import wraps
 from typing import Any, cast
 
-import redis
 from cachetools import LRUCache, TTLCache, cached  # noqa: PGH003
 
+import redis
 from dotmac.platform.settings import settings
 
 

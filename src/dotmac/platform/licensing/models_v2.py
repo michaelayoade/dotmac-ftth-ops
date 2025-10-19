@@ -12,10 +12,7 @@ from uuid import uuid4
 from sqlalchemy import (
     JSON,
     Boolean,
-    Column,
     DateTime,
-    Enum as SQLEnum,
-    Float,
     ForeignKey,
     Index,
     Integer,
@@ -23,10 +20,12 @@ from sqlalchemy import (
     String,
     Text,
 )
+from sqlalchemy import (
+    Enum as SQLEnum,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import BaseModel
-
 
 # ==================== Enums ====================
 
