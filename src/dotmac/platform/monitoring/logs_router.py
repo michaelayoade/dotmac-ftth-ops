@@ -97,7 +97,7 @@ class LogStats(BaseModel):  # BaseModel resolves to Any in isolation
 # Router
 # ============================================================
 
-logs_router = APIRouter(prefix="/api/v1/monitoring", )
+logs_router = APIRouter(prefix="/monitoring", )
 
 
 # ============================================================

@@ -66,6 +66,7 @@ export interface AlarmStatistics {
   acknowledged_alarms: number;
   resolved_last_24h: number;
   affected_subscribers: number;
+  total_impacted_subscribers?: number;
   by_severity: Record<AlarmSeverity, number>;
   by_status: Record<AlarmStatus, number>;
   by_source: Record<AlarmSource, number>;

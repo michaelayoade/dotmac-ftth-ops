@@ -205,7 +205,7 @@ export function UnifiedAdminDashboard() {
               paymentMetrics.topPaymentMethods.length > 0 && (
                 <div className="space-y-2 pt-2 border-t">
                   <h4 className="text-sm font-medium">Top Payment Methods</h4>
-                  {paymentMetrics.topPaymentMethods.slice(0, 3).map((method) => (
+                  {paymentMetrics.topPaymentMethods.slice(0, 3).map((method: any) => (
                     <div
                       key={method.method}
                       className="flex items-center justify-between text-sm"

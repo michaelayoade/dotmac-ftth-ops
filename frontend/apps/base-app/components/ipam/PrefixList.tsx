@@ -60,7 +60,7 @@ export function PrefixList({
 
     if (familyFilter === 'all') return true;
 
-    const family = detectIPFamily(prefix.prefix.split('/')[0]);
+    const family = detectIPFamily(prefix.prefix.split('/')[0] ?? '');
     if (familyFilter === 'ipv4') return family === IPFamily.IPv4;
     if (familyFilter === 'ipv6') return family === IPFamily.IPv6;
 

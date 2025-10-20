@@ -85,11 +85,11 @@ def upgrade() -> None:
         sa.Column("completed_at", sa.DateTime()),
         sa.Column("trigger_type", sa.String(50)),
         sa.Column("trigger_source", sa.String(255)),
-        sa.Column("tenant_id", sa.Integer()),
+        sa.Column("tenant_id", sa.String(length=255)),
         sa.Column("created_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
         sa.Column("updated_at", sa.DateTime(), nullable=False, server_default=sa.text("CURRENT_TIMESTAMP")),
         sa.ForeignKeyConstraint(["workflow_id"], ["workflows.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["tenant_id"], ["tenant.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_workflow_executions_workflow_id", "workflow_executions", ["workflow_id"])

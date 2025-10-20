@@ -3,10 +3,9 @@
 import { useAppConfig } from '@/providers/AppConfigContext';
 
 export function useBranding() {
-  const { branding, theme } = useAppConfig();
+  const { branding } = useAppConfig();
 
   return {
     branding,
-    theme,
   };
 }

@@ -132,10 +132,11 @@ function IPAddressSingle({
 }: IPAddressSingleProps) {
   const formatted = formatIPAddress(ip, compress);
 
+  const ipWithoutMask = ip.split('/')[0] ?? '';
   const isPrivate =
     family === IPFamily.IPv4
-      ? isPrivateIPv4(ip.split('/')[0])
-      : isULAIPv6(ip.split('/')[0]) || isLinkLocalIPv6(ip.split('/')[0]);
+      ? isPrivateIPv4(ipWithoutMask)
+      : isULAIPv6(ipWithoutMask) || isLinkLocalIPv6(ipWithoutMask);
 
   return (
     <div className="flex items-center gap-2">

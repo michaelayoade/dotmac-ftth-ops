@@ -115,8 +115,8 @@ export default function DashboardPage() {
     },
     {
       title: 'Active Services',
-      value: serviceStats ? numberFormatter.format(serviceStats.active_services) : '—',
-      subtitle: serviceStats ? `${numberFormatter.format(serviceStats.provisioning_services)} provisioning` : 'Lifecycle stats unavailable',
+      value: serviceStats ? numberFormatter.format(serviceStats.active_count) : '—',
+      subtitle: serviceStats ? `${numberFormatter.format(serviceStats.provisioning_count)} provisioning` : 'Lifecycle stats unavailable',
     },
     {
       title: 'Active Sessions',

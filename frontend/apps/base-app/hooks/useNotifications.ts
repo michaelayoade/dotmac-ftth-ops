@@ -279,6 +279,7 @@ export function useNotifications(options?: {
       const interval = setInterval(fetchNotifications, options.refreshInterval || 30000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [fetchNotifications, options?.autoRefresh, options?.refreshInterval]);
 
   const markAsRead = useCallback(
@@ -703,6 +704,7 @@ export function useUnreadCount(options?: {
       const interval = setInterval(fetchUnreadCount, options.refreshInterval || 30000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [fetchUnreadCount, options?.autoRefresh, options?.refreshInterval]);
 
   return {

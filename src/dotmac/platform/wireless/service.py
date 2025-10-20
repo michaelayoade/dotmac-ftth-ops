@@ -518,6 +518,23 @@ class WirelessService:
             SignalMeasurement.throughput_mbps.isnot(None),
         ).scalar()
 
+        # Calculate total coverage area from coverage zones
+        coverage_area_km2 = None
+        if total_coverage_zones > 0:
+            coverage_zones = self.db.query(CoverageZone).filter(
+                CoverageZone.tenant_id == self.tenant_id,
+                CoverageZone.coverage_type == CoverageType.PRIMARY,  # Only count primary coverage
+            ).all()
+
+            total_area = 0.0
+            for zone in coverage_zones:
+                if zone.geometry and zone.geometry.get("type") == "Polygon":
+                    # Calculate polygon area using Shoelace formula (geographic approximation)
+                    area_km2 = self._calculate_polygon_area_km2(zone.geometry["coordinates"])
+                    total_area += area_km2
+
+            coverage_area_km2 = total_area if total_area > 0 else None
+
         return WirelessStatistics(
             total_devices=total_devices,
             online_devices=online_devices,
@@ -526,7 +543,7 @@ class WirelessService:
             total_radios=total_radios,
             active_radios=active_radios,
             total_coverage_zones=total_coverage_zones,
-            coverage_area_km2=None,  # TODO: Calculate from coverage zones
+            coverage_area_km2=coverage_area_km2,
             total_connected_clients=total_connected_clients,
             total_clients_seen_24h=total_clients_seen_24h,
             by_device_type=by_device_type,
@@ -606,6 +623,61 @@ class WirelessService:
             last_seen=device.last_seen,
             uptime_seconds=device.uptime_seconds,
         )
+
+    def _calculate_polygon_area_km2(self, coordinates: list) -> float:
+        """
+        Calculate approximate area of a polygon in square kilometers.
+
+        Uses the Shoelace formula with spherical correction for geographic coordinates.
+        This is an approximation suitable for small to medium-sized areas.
+
+        Args:
+            coordinates: GeoJSON polygon coordinates [[[lng, lat], ...]]
+
+        Returns:
+            Area in square kilometers
+        """
+        import math
+
+        if not coordinates or len(coordinates) == 0:
+            return 0.0
+
+        # Get outer ring (first element in coordinates)
+        ring = coordinates[0]
+        if len(ring) < 3:
+            return 0.0
+
+        # Earth's radius in km
+        R = 6371.0
+
+        # Calculate area using spherical excess formula for better accuracy
+        # For simplicity, using planar approximation with latitude correction
+        total_area = 0.0
+
+        # Get average latitude for correction factor
+        avg_lat = sum(point[1] for point in ring) / len(ring)
+        lat_correction = math.cos(math.radians(avg_lat))
+
+        # Shoelace formula
+        for i in range(len(ring) - 1):
+            lon1, lat1 = ring[i][0], ring[i][1]
+            lon2, lat2 = ring[i + 1][0], ring[i + 1][1]
+
+            # Convert to radians and apply correction
+            x1 = math.radians(lon1) * lat_correction
+            y1 = math.radians(lat1)
+            x2 = math.radians(lon2) * lat_correction
+            y2 = math.radians(lat2)
+
+            total_area += (x1 * y2 - x2 * y1)
+
+        # Complete the formula
+        area_rad2 = abs(total_area) / 2.0
+
+        # Convert to km² (R² * area in steradians)
+        area_km2 = area_rad2 * (R ** 2)
+
+        return area_km2
 
 
 __all__ = ["WirelessService"]

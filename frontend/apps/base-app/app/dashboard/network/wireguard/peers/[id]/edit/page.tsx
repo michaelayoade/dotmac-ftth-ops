@@ -81,7 +81,9 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
     }
 
     if (formData.allowed_ips !== undefined) {
-      const ips = formData.allowed_ips.split(',').map((ip) => ip.trim());
+      const ips = typeof formData.allowed_ips === 'string'
+        ? formData.allowed_ips.split(',').map((ip: string) => ip.trim())
+        : formData.allowed_ips;
       for (const ip of ips) {
         if (!ip) continue;
         if (!/^[\d\.:a-fA-F]+\/\d+$/.test(ip)) {
@@ -155,7 +157,7 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
     }
 
     updatePeer.mutate(
-      { id, updates },
+      { peerId: id, data: updates },
       {
         onSuccess: (data) => {
           toast({
@@ -176,7 +178,7 @@ export default function EditPeerPage({ params }: EditPeerPageProps) {
   };
 
   const handleChange = (field: keyof UpdateWireGuardPeerRequest, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => {
         const newErrors = { ...prev };

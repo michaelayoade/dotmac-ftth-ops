@@ -13,7 +13,7 @@
 
 import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/use-toast';
 import { searchService } from '@/lib/services/search-service';
 import type {
   SearchResponse,
@@ -116,13 +116,13 @@ export function useIndexContent(options?: {
     onSuccess: (data) => {
       // Invalidate all search queries to reflect new content
       queryClient.invalidateQueries({ queryKey: searchKeys.all });
-      toast.success('Content indexed successfully');
+      // toast.success('Content indexed successfully');
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to index content', {
-        description: error.message,
-      });
+      // toast.error('Failed to index content', {
+      //   description: error.message,
+      // });
       options?.onError?.(error);
     },
   });
@@ -143,13 +143,13 @@ export function useRemoveFromIndex(options?: {
     onSuccess: (data) => {
       // Invalidate all search queries to reflect removed content
       queryClient.invalidateQueries({ queryKey: searchKeys.all });
-      toast.success('Content removed from index');
+      // toast.success('Content removed from index');
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to remove content', {
-        description: error.message,
-      });
+      // toast.error('Failed to remove content', {
+      //   description: error.message,
+      // });
       options?.onError?.(error);
     },
   });
@@ -170,15 +170,15 @@ export function useReindex(options?: {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: searchKeys.all });
       queryClient.invalidateQueries({ queryKey: searchKeys.statistics() });
-      toast.success('Reindex started successfully', {
-        description: 'Search index is being rebuilt',
-      });
+      // toast.success('Reindex started successfully', {
+      //   description: 'Search index is being rebuilt',
+      // });
       options?.onSuccess?.();
     },
     onError: (error) => {
-      toast.error('Failed to start reindex', {
-        description: error.message,
-      });
+      // toast.error('Failed to start reindex', {
+      //   description: error.message,
+      // });
       options?.onError?.(error);
     },
   });

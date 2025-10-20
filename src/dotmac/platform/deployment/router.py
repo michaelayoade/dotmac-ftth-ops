@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from ..auth.rbac_dependencies import require_permissions
 from ..dependencies import get_db
 from ..auth.core import UserInfo
+from ..settings import get_settings
 from .models import DeploymentBackend, DeploymentState, DeploymentType
 from .registry import DeploymentRegistry
 from .schemas import (
@@ -37,13 +38,37 @@ from .service import DeploymentService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/deployments", )
+router = APIRouter(prefix="/deployments", )
 
 
 def get_deployment_service(db: Session = Depends(get_db)) -> DeploymentService:
-    """Get deployment service instance"""
-    # TODO: Load adapter configs from settings
-    return DeploymentService(db)
+    """Get deployment service instance with adapter configurations from settings"""
+    settings = get_settings()
+
+    # Build adapter configs from settings
+    adapter_configs: dict[DeploymentBackend, dict] = {}
+
+    # AWX/Ansible adapter configuration
+    if settings.oss.ansible.url:
+        adapter_configs[DeploymentBackend.AWX_ANSIBLE] = {
+            "awx_url": settings.oss.ansible.url,
+            "awx_token": settings.oss.ansible.api_token,
+            "awx_username": settings.oss.ansible.username,
+            "awx_password": settings.oss.ansible.password,
+            "verify_ssl": settings.oss.ansible.verify_ssl,
+            "timeout_seconds": settings.oss.ansible.timeout_seconds,
+            "max_retries": settings.oss.ansible.max_retries,
+        }
+
+    # Kubernetes adapter configuration
+    # Note: Kubernetes config not yet in settings - will use adapter defaults
+    # Future: Add to settings.deployment.kubernetes when needed
+
+    # Docker Compose adapter configuration
+    # Note: Docker Compose config not yet in settings - will use adapter defaults
+    # Future: Add to settings.deployment.docker_compose when needed
+
+    return DeploymentService(db, adapter_configs=adapter_configs)
 
 
 # ============================================================================

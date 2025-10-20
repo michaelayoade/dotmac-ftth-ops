@@ -31,7 +31,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { EnhancedDataTable, type ColumnDef, type BulkAction } from "@/components/ui/EnhancedDataTable";
+import { EnhancedDataTable, type ColumnDef, type BulkAction, type Row } from "@/components/ui/EnhancedDataTable";
 import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -87,6 +87,7 @@ export default function LeadsManagementPage() {
     isLoading,
     error,
     refetch,
+    createLead,
     updateLeadStatus,
     qualifyLead,
     disqualifyLead,
@@ -196,14 +197,14 @@ export default function LeadsManagementPage() {
         id: "lead_number",
         header: "Lead #",
         accessorKey: "lead_number",
-        cell: ({ row }) => (
+        cell: ({ row }: { row: Row<Lead> }) => (
           <span className="font-mono text-sm">{row.original.lead_number}</span>
         ),
       },
       {
         id: "contact",
         header: "Contact",
-        cell: ({ row }) => (
+        cell: ({ row }: { row: Row<Lead> }) => (
           <div className="flex flex-col">
             <span className="font-medium">
               {row.original.first_name} {row.original.last_name}
@@ -218,32 +219,32 @@ export default function LeadsManagementPage() {
       {
         id: "status",
         header: "Status",
-        cell: ({ row }) => <LeadStatusBadge status={row.original.status} />,
+        cell: ({ row }: { row: Row<Lead> }) => <LeadStatusBadge status={row.original.status} />,
       },
       {
         id: "source",
         header: "Source",
-        cell: ({ row }) => <LeadSourceBadge source={row.original.source} />,
+        cell: ({ row }: { row: Row<Lead> }) => <LeadSourceBadge source={row.original.source} />,
       },
       {
         id: "priority",
         header: "Priority",
-        cell: ({ row }) => <LeadPriorityBadge priority={row.original.priority} />,
+        cell: ({ row }: { row: Row<Lead> }) => <LeadPriorityBadge priority={row.original.priority} />,
       },
       {
         id: "serviceability",
         header: "Serviceability",
-        cell: ({ row }) => {
+        cell: ({ row }: { row: Row<Lead> }) => {
           if (!row.original.is_serviceable) return <span className="text-muted-foreground">—</span>;
 
-          const config = {
+          const config: Record<string, { label: string; className: string }> = {
             serviceable: { label: "✅ Serviceable", className: "text-green-500" },
             not_serviceable: { label: "❌ Not Serviceable", className: "text-red-500" },
             pending_expansion: { label: "⏳ Pending", className: "text-yellow-500" },
             requires_construction: { label: "🔧 Construction", className: "text-orange-500" },
           };
 
-          const { label, className } = config[row.original.is_serviceable];
+          const { label, className } = config[row.original.is_serviceable] || { label: "Unknown", className: "text-gray-500" };
           return <span className={`text-xs ${className}`}>{label}</span>;
         },
       },
@@ -251,7 +252,7 @@ export default function LeadsManagementPage() {
         id: "created",
         header: "Created",
         accessorKey: "created_at",
-        cell: ({ row }) => (
+        cell: ({ row }: { row: Row<Lead> }) => (
           <span className="text-sm text-muted-foreground">
             {formatRelativeDate(row.original.created_at)}
           </span>
@@ -260,7 +261,7 @@ export default function LeadsManagementPage() {
       {
         id: "actions",
         header: "Actions",
-        cell: ({ row }) => (
+        cell: ({ row }: { row: Row<Lead> }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm">
@@ -349,33 +350,6 @@ export default function LeadsManagementPage() {
     [updateLeadStatus, qualifyLead, refetch, toast]
   );
 
-  // Quick filters
-  const quickFilters = useMemo(
-    () => [
-      {
-        label: "New",
-        active: statusFilter === "new",
-        onClick: () => setStatusFilter(statusFilter === "new" ? "" : "new"),
-      },
-      {
-        label: "Qualified",
-        active: statusFilter === "qualified",
-        onClick: () => setStatusFilter(statusFilter === "qualified" ? "" : "qualified"),
-      },
-      {
-        label: "Quote Sent",
-        active: statusFilter === "quote_sent",
-        onClick: () => setStatusFilter(statusFilter === "quote_sent" ? "" : "quote_sent"),
-      },
-      {
-        label: "High Priority",
-        active: priorityFilter === "1",
-        onClick: () => setPriorityFilter(priorityFilter === "1" ? "" : "1"),
-      },
-    ],
-    [statusFilter, priorityFilter]
-  );
-
   // Handlers
   const handleClearFilters = () => {
     setStatusFilter("");
@@ -455,10 +429,9 @@ export default function LeadsManagementPage() {
         />
         <MetricCardEnhanced
           title="Conversion Rate"
-          value={stats.conversionRate}
+          value={`${stats.conversionRate}%`}
           subtitle="Won / Total"
           icon={TrendingUp}
-          suffix="%"
           loading={isLoading}
         />
       </div>
@@ -558,9 +531,7 @@ export default function LeadsManagementPage() {
         data={filteredLeads}
         columns={columns}
         isLoading={isLoading}
-        error={error?.message}
         bulkActions={bulkActions}
-        quickFilters={quickFilters}
         onRowClick={(lead) => handleViewLead(lead)}
         searchable
         exportable
@@ -570,8 +541,8 @@ export default function LeadsManagementPage() {
       <CreateLeadModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onCreate={createLead}
         onSuccess={() => refetch()}
+        onCreate={createLead}
       />
       <LeadDetailModal
         isOpen={isDetailModalOpen}

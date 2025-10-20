@@ -16,6 +16,8 @@ from dotmac.platform.communications.email_service import EmailMessage
 from dotmac.platform.communications.task_service import queue_email
 from dotmac.platform.communications.template_service import TemplateService
 from dotmac.platform.core.exceptions import NotFoundError
+from dotmac.platform.notifications.channels.base import NotificationContext
+from dotmac.platform.notifications.channels.factory import ChannelProviderFactory
 from dotmac.platform.notifications.models import (
     Notification,
     NotificationChannel,
@@ -505,14 +507,135 @@ class NotificationService:
         )
 
     async def _send_sms(self, notification: Notification) -> None:
-        """Send notification via SMS (placeholder)."""
-        # TODO: Integrate with SMS provider (Twilio, AWS SNS, etc.)
-        logger.info("SMS notification (placeholder)", notification_id=str(notification.id))
+        """Send notification via SMS using configured provider (Twilio, AWS SNS, etc.)."""
+        # Get SMS channel provider
+        sms_provider = ChannelProviderFactory.get_provider(NotificationChannel.SMS)
+        if not sms_provider:
+            logger.warning(
+                "SMS provider not configured or disabled",
+                notification_id=str(notification.id),
+            )
+            return
+
+        # Get user phone number
+        from dotmac.platform.user_management.models import User
+
+        stmt = select(User).where(User.id == notification.user_id)
+        result = await self.db.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if not user or not user.phone:
+            logger.warning(
+                "Cannot send SMS notification - user has no phone number",
+                user_id=str(notification.user_id),
+                notification_id=str(notification.id),
+            )
+            return
+
+        # Create notification context
+        context = NotificationContext(
+            notification_id=notification.id,
+            tenant_id=notification.tenant_id,
+            user_id=notification.user_id,
+            notification_type=notification.type,
+            priority=notification.priority,
+            title=notification.title,
+            message=notification.message,
+            action_url=notification.action_url,
+            action_label=notification.action_label,
+            recipient_phone=user.phone,
+            recipient_name=f"{user.first_name} {user.last_name}".strip() or user.email,
+            metadata=notification.metadata,
+            created_at=notification.created_at,
+            related_entity_type=notification.related_entity_type,
+            related_entity_id=notification.related_entity_id,
+        )
+
+        # Send via SMS provider
+        await sms_provider.send(context)
+
+        logger.info(
+            "SMS notification sent",
+            notification_id=str(notification.id),
+            phone_masked=self._mask_phone(user.phone),
+        )
 
     async def _send_push(self, notification: Notification) -> None:
-        """Send push notification (placeholder)."""
-        # TODO: Integrate with push provider (Firebase, OneSignal, etc.)
-        logger.info("Push notification (placeholder)", notification_id=str(notification.id))
+        """Send push notification using configured provider (Firebase FCM, OneSignal, AWS SNS, etc.)."""
+        # Get push channel provider
+        push_provider = ChannelProviderFactory.get_provider(NotificationChannel.PUSH)
+        if not push_provider:
+            logger.warning(
+                "Push provider not configured or disabled",
+                notification_id=str(notification.id),
+            )
+            return
+
+        # Get user information
+        from dotmac.platform.user_management.models import User, UserDevice
+
+        stmt = select(User).where(User.id == notification.user_id)
+        result = await self.db.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if not user:
+            logger.warning(
+                "Cannot send push notification - user not found",
+                user_id=str(notification.user_id),
+                notification_id=str(notification.id),
+            )
+            return
+
+        # Get user's active push tokens from device registration table
+        device_stmt = select(UserDevice).where(
+            and_(
+                UserDevice.user_id == notification.user_id,
+                UserDevice.tenant_id == notification.tenant_id,
+                UserDevice.is_active == True,  # noqa: E712
+            )
+        )
+        device_result = await self.db.execute(device_stmt)
+        devices = device_result.scalars().all()
+
+        if not devices:
+            logger.debug(
+                "No active devices registered for user - skipping push notification",
+                user_id=str(notification.user_id),
+                notification_id=str(notification.id),
+            )
+            return
+
+        # Extract device tokens
+        push_tokens = [device.device_token for device in devices]
+
+        # Create notification context
+        context = NotificationContext(
+            notification_id=notification.id,
+            tenant_id=notification.tenant_id,
+            user_id=notification.user_id,
+            notification_type=notification.type,
+            priority=notification.priority,
+            title=notification.title,
+            message=notification.message,
+            action_url=notification.action_url,
+            action_label=notification.action_label,
+            recipient_push_tokens=push_tokens,
+            recipient_name=f"{user.first_name} {user.last_name}".strip() or user.email,
+            recipient_email=user.email,
+            metadata=notification.metadata,
+            created_at=notification.created_at,
+            related_entity_type=notification.related_entity_type,
+            related_entity_id=notification.related_entity_id,
+        )
+
+        # Send via push provider
+        await push_provider.send(context)
+
+        logger.info(
+            "Push notification sent",
+            notification_id=str(notification.id),
+            device_count=len(push_tokens),
+        )
 
     async def notify_team(
         self,
@@ -701,3 +824,23 @@ class NotificationService:
         </body>
         </html>
         """
+
+    @staticmethod
+    def _mask_phone(phone: str) -> str:
+        """
+        Mask phone number for privacy in logs.
+
+        Args:
+            phone: Phone number to mask
+
+        Returns:
+            Masked phone number (e.g., +234***1234)
+        """
+        if not phone or len(phone) < 4:
+            return "***"
+
+        # Keep first 4 and last 4 characters, mask the rest
+        if len(phone) <= 8:
+            return phone[:2] + "***" + phone[-2:]
+
+        return phone[:4] + "***" + phone[-4:]

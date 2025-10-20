@@ -105,7 +105,7 @@ export default function DCIMPage() {
     site: selectedSiteForDevices?.toString(),
   });
   const { data: interfaces = [], isLoading: interfacesLoading } = useInterfaces({
-    device_id: selectedDeviceForInterfaces?.toString(),
+    device: selectedDeviceForInterfaces,
   });
 
   // Mutations

@@ -264,7 +264,7 @@ export default function ScheduledDeploymentPage() {
               <Label>Schedule Type *</Label>
               <RadioGroup
                 value={scheduleType}
-                onValueChange={(v) => setScheduleType(v as ScheduleType)}
+                onValueChange={(v: string) => setScheduleType(v as ScheduleType)}
               >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="one_time" id="one_time" />

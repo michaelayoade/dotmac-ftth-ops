@@ -93,6 +93,7 @@ export interface WireGuardPeer {
 
   // Identification
   name: string;
+  peer_name?: string; // Alias for name
   description: string | null;
 
   // WireGuard Keys
@@ -101,6 +102,7 @@ export interface WireGuardPeer {
 
   // Network Allocation
   peer_ipv4: string;
+  peer_ip?: string; // Alias for peer_ipv4
   peer_ipv6: string | null;
   allowed_ips: string[];
 
@@ -111,6 +113,7 @@ export interface WireGuardPeer {
   // Connection Tracking
   last_handshake: string | null;
   endpoint: string | null;
+  persistent_keepalive?: number; // WireGuard keepalive setting
 
   // Traffic Statistics
   rx_bytes: number;
@@ -119,6 +122,7 @@ export interface WireGuardPeer {
 
   // Expiration
   expires_at: string | null;
+  expiration_date?: string | null; // Alias for expires_at
 
   // Configuration & Notes
   config_file: string | null;
@@ -135,6 +139,11 @@ export interface WireGuardPeer {
 // ============================================================================
 // Create/Update DTOs
 // ============================================================================
+
+// Type aliases for compatibility
+export type CreateWireGuardPeerRequest = WireGuardPeerCreate;
+export type UpdateWireGuardPeerRequest = WireGuardPeerUpdate;
+export type VPNProvisionRequest = WireGuardServiceProvisionRequest;
 
 export interface WireGuardServerCreate {
   name: string;
@@ -167,6 +176,7 @@ export interface WireGuardServerUpdate {
 export interface WireGuardPeerCreate {
   server_id: string;
   name: string;
+  peer_name?: string; // Alias for name
   description?: string | null;
   customer_id?: string | null;
   subscriber_id?: string | null;
@@ -174,19 +184,26 @@ export interface WireGuardPeerCreate {
   public_key?: string;
   peer_ipv4?: string;
   peer_ipv6?: string | null;
-  allowed_ips?: string[];
+  allowed_ips?: string | string[]; // Accept both string (form input) and string[] (array)
+  persistent_keepalive?: number; // WireGuard keepalive setting
   expires_at?: string | null;
+  expiration_date?: string | null; // Alias for expires_at
   metadata?: Record<string, unknown>;
   notes?: string | null;
 }
 
 export interface WireGuardPeerUpdate {
+  peerId?: string; // For update operations
+  id?: string; // Alternative for peerId
   name?: string;
+  peer_name?: string; // Alias for name
   description?: string | null;
   enabled?: boolean;
   status?: WireGuardPeerStatus;
-  allowed_ips?: string[];
+  allowed_ips?: string | string[]; // Accept both string (form input) and string[] (array)
+  persistent_keepalive?: number; // WireGuard keepalive setting
   expires_at?: string | null;
+  expiration_date?: string | null; // Alias for expires_at
   metadata?: Record<string, unknown>;
   notes?: string | null;
 }
@@ -276,14 +293,23 @@ export interface WireGuardServiceProvisionRequest {
   customer_id: string;
   subscriber_id?: string | null;
   peer_name: string;
+  peer_name_prefix?: string; // Optional peer name prefix for bulk provisioning
   description?: string | null;
-  allowed_ips?: string[];
+  allowed_ips?: string | string[]; // Accept both string (form input) and string[] (array)
   expires_at?: string | null;
+  server_location?: string; // Optional server location
+  listen_port?: number; // Optional listen port
+  subnet?: string; // Optional subnet configuration
+  dns_servers?: string | string[]; // Accept both string (form input) and string[] (array)
+  initial_peer_count?: number; // Optional initial peer count for bulk provisioning
+  notes?: string | null; // Optional notes
+  server_name?: string; // Optional server name
 }
 
 export interface WireGuardServiceProvisionResponse {
   server: WireGuardServer;
   peer: WireGuardPeer;
+  peers?: WireGuardPeer[]; // Alias for bulk operations
   config_file: string;
   message: string;
 }

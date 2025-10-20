@@ -49,6 +49,7 @@ export function LiveBandwidthChart() {
 
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [isConnected]);
 
   const chartData = history.map((point) => ({

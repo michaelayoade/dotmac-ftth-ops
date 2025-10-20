@@ -84,11 +84,24 @@ export interface BulkAction<TData> {
   confirmMessage?: string;
 }
 
+export interface QuickFilter<TData> {
+  label: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  description?: string;
+  defaultActive?: boolean;
+  filter: (row: TData) => boolean;
+}
+
 export interface FilterConfig {
   column: string;
   label: string;
   type: "text" | "select" | "date" | "number";
   options?: { label: string; value: string }[];
+}
+
+export interface SearchConfig<TData> {
+  placeholder?: string;
+  searchableFields?: (keyof TData)[];
 }
 
 export interface EnhancedDataTableProps<TData, TValue> {
@@ -99,9 +112,12 @@ export interface EnhancedDataTableProps<TData, TValue> {
   searchable?: boolean;
   searchPlaceholder?: string;
   searchColumn?: string;
+  searchKey?: string;
+  searchConfig?: SearchConfig<TData>;
 
   // Pagination
   paginated?: boolean;
+  pagination?: boolean;
   pageSizeOptions?: number[];
   defaultPageSize?: number;
 
@@ -112,6 +128,7 @@ export interface EnhancedDataTableProps<TData, TValue> {
   // Filtering
   filterable?: boolean;
   filters?: FilterConfig[];
+  quickFilters?: QuickFilter<TData>[];
 
   // Export
   exportable?: boolean;
@@ -124,9 +141,13 @@ export interface EnhancedDataTableProps<TData, TValue> {
   className?: string;
   isLoading?: boolean;
   onRowClick?: (row: TData) => void;
+  getRowId?: (row: TData, index: number) => string | number;
 
   // Toolbar actions
   toolbarActions?: React.ReactNode;
+  errorMessage?: string;
+  error?: string;
+  hideToolbar?: boolean;
 }
 
 // ============================================================================
@@ -181,11 +202,8 @@ function getSelectionColumn<TData>(): ColumnDef<TData> {
     id: "select",
     header: ({ table }) => (
       <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        checked={table.getIsAllPageRowsSelected()}
+        onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
         aria-label="Select all"
         className="translate-y-[2px]"
       />
@@ -193,7 +211,7 @@ function getSelectionColumn<TData>(): ColumnDef<TData> {
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        onChange={(e) => row.toggleSelected(e.target.checked)}
         aria-label="Select row"
         className="translate-y-[2px]"
       />
@@ -213,13 +231,17 @@ export function EnhancedDataTable<TData, TValue>({
   searchable = true,
   searchPlaceholder = "Search...",
   searchColumn,
+  searchKey,
+  searchConfig,
   paginated = true,
+  pagination,
   pageSizeOptions = [10, 20, 30, 50, 100],
   defaultPageSize = 10,
   selectable = false,
   bulkActions = [],
   filterable = false,
   filters = [],
+  quickFilters = [],
   exportable = false,
   exportFilename = "data",
   exportColumns,
@@ -228,15 +250,60 @@ export function EnhancedDataTable<TData, TValue>({
   className,
   isLoading = false,
   onRowClick,
+  getRowId,
   toolbarActions,
+  hideToolbar,
+  errorMessage,
+  error,
 }: EnhancedDataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibilityState, setColumnVisibilityState] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [showFilters, setShowFilters] = React.useState(false);
+  const [globalFilter, setGlobalFilter] = React.useState("");
+  const [activeQuickFilters, setActiveQuickFilters] = React.useState<string[]>(() =>
+    quickFilters.filter((filter) => filter.defaultActive).map((filter) => filter.label)
+  );
 
-  // Add selection column if selectable
+  React.useEffect(() => {
+    setActiveQuickFilters((previous) => {
+      const available = new Set(quickFilters.map((filter) => filter.label));
+      const cleaned = previous.filter((label) => available.has(label));
+      if (cleaned.length > 0 || quickFilters.every((filter) => !filter.defaultActive)) {
+        return cleaned;
+      }
+      return quickFilters.filter((filter) => filter.defaultActive).map((filter) => filter.label);
+    });
+  }, [quickFilters]);
+
+  const searchFields = React.useMemo<string[]>(() => {
+    if (searchConfig?.searchableFields?.length) {
+      return searchConfig.searchableFields.map(String);
+    }
+    if (searchKey) return [searchKey];
+    if (searchColumn) return [searchColumn];
+    return [];
+  }, [searchConfig, searchKey, searchColumn]);
+
+  const enableSearch = searchable && searchFields.length > 0;
+  const searchInputPlaceholder = searchConfig?.placeholder ?? searchPlaceholder;
+  const isPaginated = pagination ?? paginated;
+  const resolvedErrorMessage = errorMessage ?? error;
+
+  const filteredData = React.useMemo(() => {
+    if (quickFilters.length === 0 || activeQuickFilters.length === 0) {
+      return data;
+    }
+    const activeSet = new Set(activeQuickFilters);
+    return data.filter((item) =>
+      Array.from(activeSet).every((label) => {
+        const definition = quickFilters.find((filter) => filter.label === label);
+        return definition ? definition.filter(item) : true;
+      })
+    );
+  }, [data, quickFilters, activeQuickFilters]);
+
   const tableColumns = React.useMemo(() => {
     if (selectable) {
       return [getSelectionColumn<TData>(), ...columns];
@@ -244,22 +311,49 @@ export function EnhancedDataTable<TData, TValue>({
     return columns;
   }, [columns, selectable]);
 
+  const globalFilterFn = React.useCallback(
+    (row: Row<TData>, _columnId: string, filterValue: string) => {
+      const searchTerm = String(filterValue ?? "").trim().toLowerCase();
+      if (!searchTerm) return true;
+
+      const fields = searchFields.length > 0 ? searchFields : [];
+      if (fields.length === 0) {
+        return row
+          .getVisibleCells()
+          .some((cell) => String(cell.getValue() ?? "").toLowerCase().includes(searchTerm));
+      }
+
+      return fields.some((field) => {
+        const value = (row.original as Record<string, unknown>)[field];
+        if (value === null || value === undefined) return false;
+        return String(value).toLowerCase().includes(searchTerm);
+      });
+    },
+    [searchFields]
+  );
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: paginated ? getPaginationRowModel() : undefined,
+    getPaginationRowModel: isPaginated ? getPaginationRowModel() : undefined,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibilityState,
     onRowSelectionChange: setRowSelection,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: enableSearch ? globalFilterFn : undefined,
+    getRowId: getRowId
+      ? (originalRow, index) => String(getRowId(originalRow, index))
+      : undefined,
     state: {
       sorting,
       columnFilters,
       columnVisibility: columnVisibilityState,
       rowSelection,
+      globalFilter,
     },
     initialState: {
       pagination: {
@@ -268,53 +362,80 @@ export function EnhancedDataTable<TData, TValue>({
     },
   });
 
-  // Get selected rows
+  React.useEffect(() => {
+    if (isPaginated) {
+      table.setPageIndex(0);
+    }
+  }, [filteredData, table, isPaginated]);
+
   const selectedRows = React.useMemo(() => {
     return table.getFilteredSelectedRowModel().rows.map((row) => row.original);
   }, [table]);
 
-  // Export handler
   const handleExport = React.useCallback(() => {
-    const dataToExport = selectedRows.length > 0 ? selectedRows : data;
+    const dataToExport = selectedRows.length > 0 ? selectedRows : filteredData;
     const columnsToExport =
-      exportColumns || (Object.keys(data[0] || {}) as (keyof TData)[]);
+      exportColumns || (Object.keys(filteredData[0] || {}) as (keyof TData)[]);
     exportToCSV(dataToExport, columnsToExport, exportFilename);
-  }, [data, selectedRows, exportColumns, exportFilename]);
+  }, [filteredData, selectedRows, exportColumns, exportFilename]);
 
-  // Bulk action handler
   const handleBulkAction = React.useCallback(
     async (action: BulkAction<TData>) => {
-      if (action.confirmMessage) {
-        if (!confirm(action.confirmMessage)) return;
+      if (action.confirmMessage && !confirm(action.confirmMessage)) {
+        return;
       }
-
       await action.action(selectedRows);
       table.resetRowSelection();
     },
     [selectedRows, table]
   );
 
+  const toggleQuickFilter = React.useCallback(
+    (label: string) => {
+      setActiveQuickFilters((previous) =>
+        previous.includes(label)
+          ? previous.filter((value) => value !== label)
+          : [...previous, label]
+      );
+      if (isPaginated) {
+        table.setPageIndex(0);
+      }
+    },
+    [table, isPaginated]
+  );
+
+  const hasToolbarContent =
+    enableSearch ||
+    (filterable && filters.length > 0) ||
+    quickFilters.length > 0 ||
+    !!toolbarActions ||
+    exportable ||
+    columnVisibility ||
+    (selectable && bulkActions.length > 0);
+  const showToolbar = !hideToolbar && hasToolbarContent;
+
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Toolbar */}
-      <div className="flex flex-col gap-4">
-        {/* Top row: Search, Filters, Actions */}
+      {resolvedErrorMessage && (
+        <div className="rounded-md border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {resolvedErrorMessage}
+        </div>
+      )}
+
+      {showToolbar && (
+        <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-2 flex-1">
-            {/* Search */}
-            {searchable && searchColumn && (
+            {enableSearch && (
               <Input
-                placeholder={searchPlaceholder}
-                value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ""}
-                onChange={(event) =>
-                  table.getColumn(searchColumn)?.setFilterValue(event.target.value)
-                }
+                placeholder={searchInputPlaceholder}
+                value={globalFilter}
+                onChange={(event) => setGlobalFilter(event.target.value)}
                 className="max-w-sm"
                 aria-label="Search table"
               />
             )}
 
-            {/* Filter toggle */}
             {filterable && filters.length > 0 && (
               <Button
                 variant={showFilters ? "default" : "outline"}
@@ -328,18 +449,15 @@ export function EnhancedDataTable<TData, TValue>({
             )}
           </div>
 
-          {/* Right side actions */}
           <div className="flex items-center gap-2">
-            {/* Custom toolbar actions */}
             {toolbarActions}
 
-            {/* Export */}
             {exportable && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleExport}
-                disabled={data.length === 0}
+                disabled={filteredData.length === 0}
                 aria-label="Export data"
               >
                 <Download className="h-4 w-4 mr-2" />
@@ -347,7 +465,6 @@ export function EnhancedDataTable<TData, TValue>({
               </Button>
             )}
 
-            {/* Column visibility */}
             {columnVisibility && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -373,7 +490,6 @@ export function EnhancedDataTable<TData, TValue>({
               </DropdownMenu>
             )}
 
-            {/* Bulk actions */}
             {selectable && bulkActions.length > 0 && selectedRows.length > 0 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -408,7 +524,36 @@ export function EnhancedDataTable<TData, TValue>({
           </div>
         </div>
 
-        {/* Filter bar */}
+        {quickFilters.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2">
+            {quickFilters.map((filter) => {
+              const isActive = activeQuickFilters.includes(filter.label);
+              const Icon = filter.icon;
+              return (
+                <Button
+                  key={filter.label}
+                  size="sm"
+                  variant={isActive ? "default" : "outline"}
+                  onClick={() => toggleQuickFilter(filter.label)}
+                  className="gap-2"
+                >
+                  {Icon && <Icon className="h-4 w-4" />}
+                  {filter.label}
+                </Button>
+              );
+            })}
+            {activeQuickFilters.length > 0 && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setActiveQuickFilters([])}
+              >
+                Clear filters
+              </Button>
+            )}
+          </div>
+        )}
+
         {filterable && showFilters && filters.length > 0 && (
           <div className="flex items-center gap-4 p-4 border border-border rounded-md bg-muted/50">
             {filters.map((filter) => (
@@ -454,8 +599,8 @@ export function EnhancedDataTable<TData, TValue>({
           </div>
         )}
       </div>
+      )}
 
-      {/* Table */}
       <div className="rounded-md border border-border bg-card">
         <Table>
           <TableHeader>
@@ -484,11 +629,10 @@ export function EnhancedDataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   className={cn(onRowClick && "cursor-pointer hover:bg-muted/50")}
-                  onClick={(e) => {
-                    // Don't trigger row click if clicking on checkbox or actions
+                  onClick={(event) => {
                     if (
-                      (e.target as HTMLElement).closest('[role="checkbox"]') ||
-                      (e.target as HTMLElement).closest('button')
+                      (event.target as HTMLElement).closest('[role="checkbox"]') ||
+                      (event.target as HTMLElement).closest("button")
                     ) {
                       return;
                     }
@@ -513,8 +657,7 @@ export function EnhancedDataTable<TData, TValue>({
         </Table>
       </div>
 
-      {/* Pagination */}
-      {paginated && (
+      {isPaginated && (
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
             {table.getFilteredSelectedRowModel().rows.length > 0 ? (
@@ -523,9 +666,7 @@ export function EnhancedDataTable<TData, TValue>({
                 {table.getFilteredRowModel().rows.length} row(s) selected
               </span>
             ) : (
-              <span>
-                {table.getFilteredRowModel().rows.length} total row(s)
-              </span>
+              <span>{table.getFilteredRowModel().rows.length} total row(s)</span>
             )}
           </div>
           <div className="flex items-center space-x-6 lg:space-x-8">
@@ -533,7 +674,7 @@ export function EnhancedDataTable<TData, TValue>({
               <p className="text-sm font-medium text-foreground">Rows per page</p>
               <select
                 value={table.getState().pagination.pageSize}
-                onChange={(e) => table.setPageSize(Number(e.target.value))}
+                onChange={(event) => table.setPageSize(Number(event.target.value))}
                 className="h-8 w-[70px] rounded-md border border-input bg-card px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 aria-label="Select page size"
               >
@@ -580,3 +721,8 @@ export function EnhancedDataTable<TData, TValue>({
 export const DataTableUtils = {
   exportToCSV,
 };
+
+/**
+ * Re-export types from @tanstack/react-table for convenience
+ */
+export type { ColumnDef, Row } from "@tanstack/react-table";

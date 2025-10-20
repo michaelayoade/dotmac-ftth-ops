@@ -322,7 +322,7 @@ export default function PeerDetailsPage({ params }: PeerDetailsPageProps) {
           <div>
             <p className="text-sm text-muted-foreground mb-2">Allowed IPs</p>
             <div className="flex flex-wrap gap-2">
-              {peer.allowed_ips.map((ip, idx) => (
+              {peer.allowed_ips.map((ip: string, idx: number) => (
                 <Badge key={idx} variant="outline">
                   {ip}
                 </Badge>

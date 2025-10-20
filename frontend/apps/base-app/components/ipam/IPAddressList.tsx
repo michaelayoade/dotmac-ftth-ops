@@ -61,7 +61,7 @@ export function IPAddressList({
 
     if (!matchesSearch) return false;
 
-    const family = detectIPFamily(addr.address.split('/')[0]);
+    const family = detectIPFamily(addr.address.split('/')[0] ?? '');
     if (familyFilter === 'ipv4' && family !== IPFamily.IPv4) return false;
     if (familyFilter === 'ipv6' && family !== IPFamily.IPv6) return false;
 
@@ -222,7 +222,7 @@ function AddressGroupRow({ group, showTenant, onEdit, onDelete, onCopy }: Addres
   const [copied, setCopied] = useState(false);
 
   const handleCopy = (address: string) => {
-    const ipOnly = address.split('/')[0];
+    const ipOnly = address.split('/')[0] ?? '';
     navigator.clipboard.writeText(ipOnly);
     onCopy?.(ipOnly);
     setCopied(true);
@@ -230,8 +230,8 @@ function AddressGroupRow({ group, showTenant, onEdit, onDelete, onCopy }: Addres
   };
 
   if (group.isDualStack) {
-    const ipv4 = group.addresses.find((a) => detectIPFamily(a.address.split('/')[0]) === IPFamily.IPv4);
-    const ipv6 = group.addresses.find((a) => detectIPFamily(a.address.split('/')[0]) === IPFamily.IPv6);
+    const ipv4 = group.addresses.find((a) => detectIPFamily(a.address.split('/')[0] ?? '') === IPFamily.IPv4);
+    const ipv6 = group.addresses.find((a) => detectIPFamily(a.address.split('/')[0] ?? '') === IPFamily.IPv6);
     const primary = ipv4 || ipv6!;
 
     return (
@@ -337,7 +337,8 @@ function AddressGroupRow({ group, showTenant, onEdit, onDelete, onCopy }: Addres
 
   // Single address
   const addr = group.addresses[0];
-  const family = detectIPFamily(addr.address.split('/')[0]);
+  if (!addr) return null;
+  const family = detectIPFamily(addr.address.split('/')[0] ?? '');
 
   return (
     <TableRow>

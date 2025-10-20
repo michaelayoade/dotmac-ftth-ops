@@ -84,11 +84,11 @@ class AuditActivity(Base, TimestampMixin, StrictTenantMixin):
     )
 
     # Activity identification
-    activity_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    severity: Mapped[str] = mapped_column(String(20), default=ActivitySeverity.LOW, index=True)
+    activity_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(String(20), default=ActivitySeverity.LOW)
 
     # Who and when
-    user_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    user_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     # tenant_id is inherited from StrictTenantMixin and is NOT NULL
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True

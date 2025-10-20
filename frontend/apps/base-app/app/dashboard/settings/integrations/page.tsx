@@ -290,9 +290,10 @@ export default function IntegrationsPage() {
   };
 
   // Filter available plugins
+  const searchLower = searchTerm.toLowerCase();
   const filteredPlugins = availablePlugins.filter(plugin =>
-    plugin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    plugin.description.toLowerCase().includes(searchTerm.toLowerCase())
+    plugin.name.toLowerCase().includes(searchLower) ||
+    (plugin.description?.toLowerCase() ?? '').includes(searchLower)
   );
 
   if (isLoading) {

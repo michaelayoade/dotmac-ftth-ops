@@ -445,6 +445,21 @@ class Settings(BaseSettings):
     debug: bool = Field(False, description="Debug mode")
     testing: bool = Field(False, description="Testing mode")
 
+    # Deployment mode configuration
+    DEPLOYMENT_MODE: str = Field(
+        "multi_tenant",
+        description="Deployment mode: multi_tenant, single_tenant, or hybrid",
+        pattern="^(multi_tenant|single_tenant|hybrid)$",
+    )
+    TENANT_ID: str | None = Field(
+        None,
+        description="Fixed tenant ID for single-tenant deployments (None for multi-tenant)",
+    )
+    ENABLE_PLATFORM_ROUTES: bool = Field(
+        True,
+        description="Enable platform administration routes (disable in single-tenant mode)",
+    )
+
     # Server configuration
     host: str = Field(
         "0.0.0.0", description="Server host"

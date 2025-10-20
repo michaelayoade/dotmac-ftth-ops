@@ -64,6 +64,7 @@ from dotmac.platform.contacts.models import *  # noqa: F401,F403,E402
 # Customer and contacts
 from dotmac.platform.customer_management.models import *  # noqa: F401,F403,E402
 from dotmac.platform.partner_management.models import *  # noqa: F401,F403,E402
+from dotmac.platform.subscribers.models import *  # noqa: F401,F403,E402
 
 try:
     from dotmac.platform.billing.money_models import *  # noqa: F401,F403,E402
@@ -109,6 +110,12 @@ except ImportError:
 # Wireless Infrastructure
 try:
     from dotmac.platform.wireless.models import *  # noqa: F401,F403,E402
+except ImportError:
+    pass
+
+# Fiber Infrastructure
+try:
+    from dotmac.platform.fiber.models import *  # noqa: F401,F403,E402
 except ImportError:
     pass
 

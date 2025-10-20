@@ -139,7 +139,7 @@ class Lead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # t
     # Contact Information
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
-    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
     phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
     company_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
 

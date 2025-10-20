@@ -226,7 +226,8 @@ export function AuditLogFilters({
 // Helper function to format activity type labels
 function formatActivityTypeLabel(activityType: ActivityType): string {
   const parts = activityType.split('.');
-  return parts[parts.length - 1]
+  const lastPart = parts[parts.length - 1] ?? '';
+  return lastPart
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');

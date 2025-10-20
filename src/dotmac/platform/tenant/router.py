@@ -44,7 +44,7 @@ from .service import (
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/tenant", tags=["Tenant Management"])
+router = APIRouter(prefix="/tenant", tags=["Tenant Management"])
 
 
 # Dependency to get tenant service

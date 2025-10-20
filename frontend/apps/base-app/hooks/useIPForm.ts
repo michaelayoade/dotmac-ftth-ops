@@ -182,7 +182,7 @@ export function createIPFieldRegistration(
       }
 
       const result = schema.safeParse(value);
-      return result.success || result.error.errors[0].message;
+      return result.success || result.error?.errors[0]?.message || 'Invalid IP address';
     },
   };
 }

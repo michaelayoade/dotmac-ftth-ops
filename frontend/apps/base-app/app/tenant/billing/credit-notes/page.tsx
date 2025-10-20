@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { ColumnDef } from '@tanstack/react-table';
 import { useRBAC } from '@/contexts/RBACContext';
+import { apiClient } from '@/lib/api/client';
 
 // ============================================================================
 // Types
@@ -115,6 +116,7 @@ export default function CreditNotesPage() {
   const { hasPermission } = useRBAC();
   const [creditNotes, setCreditNotes] = useState<CreditNote[]>(mockCreditNotes);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedCreditNote, setSelectedCreditNote] = useState<CreditNote | null>(null);
 
   const hasBillingAccess = hasPermission('billing.read');
 
@@ -254,16 +256,27 @@ export default function CreditNotesPage() {
       icon: CheckCircle,
       action: async (selected) => {
         setIsLoading(true);
-        console.log('Issuing credit notes:', selected.map(cn => cn.credit_note_id));
-        // TODO: API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+          // Issue credit notes via API
+          const promises = selected.map(cn =>
+            apiClient.post(`/billing/credit-notes/${cn.credit_note_id}/issue`, {})
+          );
+          await Promise.all(promises);
 
-        setCreditNotes(prev => prev.map(cn =>
-          selected.find(s => s.credit_note_id === cn.credit_note_id)
-            ? { ...cn, status: 'issued' as CreditNoteStatus }
-            : cn
-        ));
-        setIsLoading(false);
+          // Update local state
+          setCreditNotes(prev => prev.map(cn =>
+            selected.find(s => s.credit_note_id === cn.credit_note_id)
+              ? { ...cn, status: 'issued' as CreditNoteStatus }
+              : cn
+          ));
+
+          alert(`Successfully issued ${selected.length} credit note(s)`);
+        } catch (error) {
+          console.error('Failed to issue credit notes:', error);
+          alert(`Failed to issue credit notes: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+          setIsLoading(false);
+        }
       },
       disabled: (selected) => selected.every(cn => cn.status !== 'draft'),
     },
@@ -273,16 +286,34 @@ export default function CreditNotesPage() {
       variant: 'destructive',
       action: async (selected) => {
         setIsLoading(true);
-        console.log('Voiding credit notes:', selected.map(cn => cn.credit_note_id));
-        // TODO: API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+          // Void credit notes via API
+          const promises = selected.map(cn =>
+            apiClient.post(`/billing/credit-notes/${cn.credit_note_id}/void`, {
+              void_reason: 'Voided via bulk action'
+            })
+          );
+          await Promise.all(promises);
 
-        setCreditNotes(prev => prev.map(cn =>
-          selected.find(s => s.credit_note_id === cn.credit_note_id)
-            ? { ...cn, status: 'voided' as CreditNoteStatus }
-            : cn
-        ));
-        setIsLoading(false);
+          // Update local state
+          setCreditNotes(prev => prev.map(cn =>
+            selected.find(s => s.credit_note_id === cn.credit_note_id)
+              ? {
+                  ...cn,
+                  status: 'voided' as CreditNoteStatus,
+                  voided_at: new Date().toISOString(),
+                  void_reason: 'Voided via bulk action'
+                }
+              : cn
+          ));
+
+          alert(`Successfully voided ${selected.length} credit note(s)`);
+        } catch (error) {
+          console.error('Failed to void credit notes:', error);
+          alert(`Failed to void credit notes: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+          setIsLoading(false);
+        }
       },
       confirmMessage: 'Are you sure you want to void these credit notes? This action cannot be undone.',
     },
@@ -290,9 +321,43 @@ export default function CreditNotesPage() {
       label: 'Download CSV',
       icon: Download,
       action: async (selected) => {
-        console.log('Downloading credit notes:', selected.map(cn => cn.credit_note_id));
-        // TODO: API call to download
-        alert(`Downloading ${selected.length} credit note(s)`);
+        try {
+          // Prepare credit note IDs for download
+          const creditNoteIds = selected.map(cn => cn.credit_note_id);
+
+          // Call API to generate CSV
+          const response = await fetch('/api/billing/credit-notes/export', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ credit_note_ids: creditNoteIds }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to download CSV: ${response.statusText}`);
+          }
+
+          // Get the CSV blob
+          const blob = await response.blob();
+
+          // Create a download link and trigger download
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `credit-notes-${new Date().toISOString().split('T')[0]}.csv`;
+          document.body.appendChild(link);
+          link.click();
+
+          // Cleanup
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+
+          alert(`Successfully downloaded ${selected.length} credit note(s)`);
+        } catch (error) {
+          console.error('Failed to download credit notes:', error);
+          alert(`Failed to download: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
       },
     },
   ];
@@ -436,8 +501,8 @@ export default function CreditNotesPage() {
               },
             ]}
             onRowClick={(creditNote) => {
-              console.log('View credit note details:', creditNote);
-              // TODO: Open credit note detail modal
+              // Open credit note detail modal
+              setSelectedCreditNote(creditNote);
             }}
           />
         </CardContent>

@@ -19,10 +19,12 @@ import {
   Users,
   Wifi,
   Clock,
+  XCircle,
 } from 'lucide-react';
 import { useSessionsWebSocket } from '../../hooks/useRealtime';
 import type { RADIUSSessionEvent } from '../../types/realtime';
 import { CompactConnectionStatus } from './ConnectionStatusIndicator';
+import { useNetworkDiagnostics } from '@/hooks/useNetworkDiagnostics';
 
 interface Session {
   session_id: string;
@@ -60,6 +62,7 @@ export function LiveRadiusSessions({
   const { status, isConnected } = useSessionsWebSocket((event) => {
     handleSessionEvent(event);
   }, enabled);
+  const { disconnectSession, isDisconnecting } = useNetworkDiagnostics();
 
   const handleSessionEvent = (event: RADIUSSessionEvent) => {
     const sessionId = event.session_id;
@@ -108,6 +111,24 @@ export function LiveRadiusSessions({
         next.delete(sessionId);
         return next;
       });
+    }
+  };
+
+  const handleDisconnectSession = async (session: Session) => {
+    const confirmed = confirm(
+      `Are you sure you want to disconnect session for user "${session.username}"?\n\nThis will immediately terminate their connection.`
+    );
+    if (!confirmed) return;
+
+    try {
+      await disconnectSession.mutateAsync({
+        username: session.username,
+        acctsessionid: session.session_id,
+        nasipaddress: session.nas_ip_address,
+      });
+      // Session will be removed automatically via WebSocket 'session.stopped' event
+    } catch (error) {
+      // Error handling is done in the hook
     }
   };
 
@@ -256,6 +277,9 @@ export function LiveRadiusSessions({
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-700 uppercase">
                     Last Update
                   </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -287,6 +311,20 @@ export function LiveRadiusSessions({
                     </td>
                     <td className="px-4 py-3 text-sm text-right text-muted-foreground">
                       {getTimeAgo(session.last_updated)}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex justify-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDisconnectSession(session)}
+                          disabled={isDisconnecting}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Disconnect
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

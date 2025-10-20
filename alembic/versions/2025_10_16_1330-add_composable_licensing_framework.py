@@ -1,7 +1,7 @@
 """add composable licensing framework
 
-Revision ID: 2025_10_16_1330
-Revises: 2025_10_16_1200
+Revision ID: 9c3d4e5f6a7b
+Revises: 8a9b0c1d2e3f
 Create Date: 2025-10-16 13:30:00.000000
 
 """

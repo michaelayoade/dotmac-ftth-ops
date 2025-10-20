@@ -39,6 +39,14 @@ interface ReconciliationWizardProps {
 
 type WizardStep = "setup" | "matching" | "review" | "complete";
 
+interface ReconciliationSetupState {
+  bank_account_id: string;
+  period_start: string;
+  period_end: string;
+  statement_balance: string;
+  notes: string;
+}
+
 export function ReconciliationWizard({
   open,
   onOpenChange,
@@ -48,10 +56,10 @@ export function ReconciliationWizard({
   const [reconciliationId, setReconciliationId] = useState<number | null>(null);
 
   // Setup form data
-  const [setupData, setSetupData] = useState({
+  const [setupData, setSetupData] = useState<ReconciliationSetupState>({
     bank_account_id: "",
-    period_start: new Date(new Date().setDate(1)).toISOString().split("T")[0],
-    period_end: new Date().toISOString().split("T")[0],
+    period_start: new Date(new Date().setDate(1)).toISOString().slice(0, 10),
+    period_end: new Date().toISOString().slice(0, 10),
     statement_balance: "",
     notes: "",
   });
@@ -72,11 +80,19 @@ export function ReconciliationWizard({
 
   const handleStartReconciliation = async () => {
     try {
+      const bankAccountId = Number.parseInt(setupData.bank_account_id, 10);
+      const statementBalance = Number.parseFloat(setupData.statement_balance);
+
+      if (Number.isNaN(bankAccountId) || Number.isNaN(statementBalance)) {
+        return;
+      }
+
       const data: ReconciliationStart = {
-        bank_account_id: parseInt(setupData.bank_account_id),
+        bank_account_id: bankAccountId,
         period_start: setupData.period_start,
         period_end: setupData.period_end,
-        statement_balance: parseFloat(setupData.statement_balance),
+        opening_balance: statementBalance,
+        statement_balance: statementBalance,
         notes: setupData.notes || undefined,
       };
 
@@ -135,8 +151,8 @@ export function ReconciliationWizard({
     setSelectedPayments([]);
     setSetupData({
       bank_account_id: "",
-      period_start: new Date(new Date().setDate(1)).toISOString().split("T")[0],
-      period_end: new Date().toISOString().split("T")[0],
+      period_start: new Date(new Date().setDate(1)).toISOString().slice(0, 10),
+      period_end: new Date().toISOString().slice(0, 10),
       statement_balance: "",
       notes: "",
     });
@@ -166,7 +182,7 @@ export function ReconciliationWizard({
 
   const isPending =
     startReconciliation.isPending ||
-    reconcilePayment.isPending ||
+    addReconciledPayment.isPending ||
     completeReconciliation.isPending;
 
   return (
@@ -322,36 +338,42 @@ export function ReconciliationWizard({
               ) : (
                 <div className="border rounded-lg divide-y max-h-96 overflow-y-auto">
                   {unReconciledPayments
-                    .filter((p) => !p.is_reconciled)
-                    .map((payment) => (
-                      <div
-                        key={payment.id}
-                        className="flex items-center gap-3 p-3 hover:bg-muted cursor-pointer"
-                        onClick={() => togglePaymentSelection(payment.id)}
-                      >
-                        <Checkbox
-                          checked={selectedPayments.includes(payment.id)}
-                          onCheckedChange={() => togglePaymentSelection(payment.id)}
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium">
-                              {payment.customer?.full_name || "Unknown"}
-                            </span>
-                            <span className="font-bold">
-                              {payment.currency} {payment.amount.toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span>{payment.payment_reference}</span>
-                            <Badge variant="outline" className="text-xs">
-                              {payment.payment_method}
-                            </Badge>
-                            <span>{new Date(payment.payment_date).toLocaleDateString()}</span>
+                    .filter((p) => !p.reconciled)
+                    .map((payment) => {
+                      const isSelected = selectedPayments.includes(payment.id);
+                      return (
+                        <div
+                          key={payment.id}
+                          className="flex items-center gap-3 p-3 hover:bg-muted cursor-pointer"
+                          onClick={() => togglePaymentSelection(payment.id)}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            onChange={(event) => {
+                              event.stopPropagation();
+                              togglePaymentSelection(payment.id);
+                            }}
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className="font-medium">
+                                Customer: {payment.customer_id}
+                              </span>
+                              <span className="font-bold">
+                                {payment.currency} {payment.amount.toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <span>{payment.payment_reference}</span>
+                              <Badge variant="outline" className="text-xs">
+                                {payment.payment_method}
+                              </Badge>
+                              <span>{new Date(payment.payment_date).toLocaleDateString()}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                 </div>
               )}
             </div>

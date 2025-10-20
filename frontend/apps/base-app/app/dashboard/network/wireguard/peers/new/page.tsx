@@ -46,6 +46,7 @@ export default function CreatePeerPage() {
 
   const [formData, setFormData] = useState<CreateWireGuardPeerRequest>({
     server_id: '',
+    name: '',
     peer_name: '',
     customer_id: '',
     allowed_ips: '0.0.0.0/0, ::/0',
@@ -76,7 +77,9 @@ export default function CreatePeerPage() {
 
     if (formData.allowed_ips) {
       // Basic validation for IP ranges
-      const ips = formData.allowed_ips.split(',').map((ip) => ip.trim());
+      const ips = typeof formData.allowed_ips === 'string'
+        ? formData.allowed_ips.split(',').map((ip: string) => ip.trim())
+        : formData.allowed_ips;
       for (const ip of ips) {
         if (!ip) continue;
         // Check if it's a valid CIDR notation (basic check)
@@ -120,6 +123,7 @@ export default function CreatePeerPage() {
     // Prepare request data
     const requestData: CreateWireGuardPeerRequest = {
       server_id: formData.server_id,
+      name: formData.peer_name || '',
       peer_name: formData.peer_name,
       allowed_ips: formData.allowed_ips || '0.0.0.0/0, ::/0',
       persistent_keepalive: formData.persistent_keepalive || 25,
@@ -156,7 +160,7 @@ export default function CreatePeerPage() {
   };
 
   const handleChange = (field: keyof CreateWireGuardPeerRequest, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
     // Clear error for this field
     if (errors[field]) {
       setErrors((prev) => {
@@ -237,7 +241,7 @@ export default function CreatePeerPage() {
                 <SelectContent>
                   {servers?.map((server) => (
                     <SelectItem key={server.id} value={server.id}>
-                      {server.name} ({server.endpoint})
+                      {server.name} ({server.public_endpoint})
                     </SelectItem>
                   ))}
                 </SelectContent>

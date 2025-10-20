@@ -28,6 +28,7 @@ import {
   type ConnectionType,
 } from '@/hooks/useSubscribers';
 import { SubscriberList } from '@/components/subscribers/SubscriberList';
+import type { BulkAction } from '@/components/ui/EnhancedDataTable';
 import { SubscriberDetailModal } from '@/components/subscribers/SubscriberDetailModal';
 import { AddSubscriberModal } from '@/components/subscribers/AddSubscriberModal';
 import {
@@ -41,6 +42,8 @@ import {
   Download,
   Filter,
   X,
+  Ban,
+  Trash2,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { logger } from '@/lib/logger';
@@ -236,6 +239,127 @@ export default function SubscribersPage() {
   };
 
   const hasActiveFilters = search || statusFilter !== 'all' || connectionTypeFilter !== 'all';
+
+  // Bulk action handlers
+  const handleBulkSuspend = async (selectedSubscribers: Subscriber[]) => {
+    try {
+      const results = await Promise.allSettled(
+        selectedSubscribers.map(subscriber =>
+          suspendSubscriber(subscriber.id, 'Bulk suspension by operator')
+        )
+      );
+
+      const succeeded = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
+
+      toast({
+        title: 'Bulk Suspend Complete',
+        description: `Suspended ${succeeded} subscribers. ${failed > 0 ? `${failed} failed.` : ''}`,
+        variant: failed > 0 ? 'destructive' : 'default',
+      });
+
+      refetch();
+    } catch (error) {
+      logger.error('Bulk suspend operation failed', error instanceof Error ? error : new Error(String(error)));
+      toast({
+        title: 'Bulk Suspend Failed',
+        description: 'Unable to suspend subscribers. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleBulkActivate = async (selectedSubscribers: Subscriber[]) => {
+    try {
+      const results = await Promise.allSettled(
+        selectedSubscribers.map(subscriber =>
+          activateSubscriber(subscriber.id)
+        )
+      );
+
+      const succeeded = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
+
+      toast({
+        title: 'Bulk Activate Complete',
+        description: `Activated ${succeeded} subscribers. ${failed > 0 ? `${failed} failed.` : ''}`,
+        variant: failed > 0 ? 'destructive' : 'default',
+      });
+
+      refetch();
+    } catch (error) {
+      logger.error('Bulk activate operation failed', error instanceof Error ? error : new Error(String(error)));
+      toast({
+        title: 'Bulk Activate Failed',
+        description: 'Unable to activate subscribers. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleBulkDelete = async (selectedSubscribers: Subscriber[]) => {
+    try {
+      const results = await Promise.allSettled(
+        selectedSubscribers.map(subscriber =>
+          deleteSubscriber(subscriber.id)
+        )
+      );
+
+      const succeeded = results.filter(r => r.status === 'fulfilled').length;
+      const failed = results.filter(r => r.status === 'rejected').length;
+
+      toast({
+        title: 'Bulk Delete Complete',
+        description: `Deleted ${succeeded} subscribers. ${failed > 0 ? `${failed} failed.` : ''}`,
+        variant: failed > 0 ? 'destructive' : 'default',
+      });
+
+      refetch();
+    } catch (error) {
+      logger.error('Bulk delete operation failed', error instanceof Error ? error : new Error(String(error)));
+      toast({
+        title: 'Bulk Delete Failed',
+        description: 'Unable to delete subscribers. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Define bulk actions based on permissions
+  const bulkActions = useMemo<BulkAction<Subscriber>[]>(() => {
+    const actions: BulkAction<Subscriber>[] = [];
+
+    if (canUpdate) {
+      actions.push({
+        label: 'Suspend Selected',
+        icon: Ban,
+        action: handleBulkSuspend,
+        variant: 'outline',
+        confirmMessage: 'Are you sure you want to suspend all selected subscribers?',
+        disabled: (rows) => rows.every(r => r.status === 'suspended'),
+      });
+
+      actions.push({
+        label: 'Activate Selected',
+        icon: UserCheck,
+        action: handleBulkActivate,
+        variant: 'outline',
+        disabled: (rows) => rows.every(r => r.status === 'active'),
+      });
+    }
+
+    if (canDelete) {
+      actions.push({
+        label: 'Delete Selected',
+        icon: Trash2,
+        action: handleBulkDelete,
+        variant: 'destructive',
+        confirmMessage: 'Are you sure you want to delete all selected subscribers? This action cannot be undone.',
+      });
+    }
+
+    return actions;
+  }, [canUpdate, canDelete]);
 
   // Permission check
   if (!canView) {
@@ -483,6 +607,8 @@ export default function SubscribersPage() {
               onSuspend={canUpdate ? handleSuspend : undefined}
               onActivate={canUpdate ? handleActivate : undefined}
               onRowClick={handleViewSubscriber}
+              enableBulkActions={canUpdate || canDelete}
+              bulkActions={bulkActions}
             />
           )}
         </CardContent>

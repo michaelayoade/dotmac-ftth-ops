@@ -141,8 +141,8 @@ const rbacApi = {
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 403) {
         logger.warn(
-          { permission: name },
-          'Single permission fetch returned 403. Returning minimal permission record.'
+          'Single permission fetch returned 403. Returning minimal permission record.',
+          { permission: name }
         );
         return {
           name,
@@ -205,8 +205,8 @@ const rbacApi = {
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 403) {
         logger.warn(
-          { userId },
-          'User permissions endpoint returned 403. Defaulting to safe permissions.'
+          'User permissions endpoint returned 403. Defaulting to safe permissions.',
+          { userId }
         );
         return { ...EMPTY_USER_PERMISSIONS, user_id: userId };
       }

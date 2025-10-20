@@ -55,8 +55,26 @@ async def get_available_addons(
 
     try:
         # Get tenant's current plan ID from their subscription
-        # TODO: Fetch plan_id from tenant's active subscription
+        from dotmac.platform.billing.models import BillingSubscriptionTable
+        from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
+        from sqlalchemy import select
+
+        # Fetch the tenant's active subscription to get plan_id
         plan_id = None
+        stmt = (
+            select(BillingSubscriptionTable.plan_id)
+            .where(BillingSubscriptionTable.tenant_id == tenant_id)
+            .where(BillingSubscriptionTable.status.in_([
+                SubscriptionStatus.ACTIVE.value,
+                SubscriptionStatus.TRIALING.value,
+            ]))
+            .order_by(BillingSubscriptionTable.created_at.desc())
+            .limit(1)
+        )
+        result = await db_session.execute(stmt)
+        plan_row = result.scalar_one_or_none()
+        if plan_row:
+            plan_id = plan_row
 
         addons = await service.get_available_addons(tenant_id, plan_id)
 

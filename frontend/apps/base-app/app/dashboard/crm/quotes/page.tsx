@@ -43,6 +43,7 @@ import {
 import { QuoteStatusBadge } from "@/components/crm/Badges";
 import { CreateQuoteModal } from "@/components/crm/CreateQuoteModal";
 import { QuoteDetailModal } from "@/components/crm/QuoteDetailModal";
+import { apiClient } from "@/lib/api/client";
 import {
   Select,
   SelectContent,
@@ -66,9 +67,14 @@ export default function QuotesPage() {
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
 
   // Fetch quotes
-  const { quotes, isLoading, error, refetch, deleteQuote, sendQuote, createQuote } = useQuotes({
+  const { quotes, isLoading, error, refetch, sendQuote, createQuote } = useQuotes({
     status: statusFilter !== "all" ? statusFilter : undefined,
   });
+
+  // Delete quote function
+  const deleteQuote = useCallback(async (quoteId: string) => {
+    await apiClient.delete(`/crm/quotes/${quoteId}`);
+  }, []);
 
   // Statistics
   const stats = useMemo(() => {
@@ -108,7 +114,7 @@ export default function QuotesPage() {
       (quote) =>
         quote.quote_number.toLowerCase().includes(query) ||
         quote.service_plan_name.toLowerCase().includes(query) ||
-        quote.service_bandwidth?.toLowerCase().includes(query)
+        quote.bandwidth?.toLowerCase().includes(query)
     );
   }, [quotes, searchQuery]);
 
@@ -218,9 +224,9 @@ export default function QuotesPage() {
         cell: ({ row }) => (
           <div className="flex flex-col">
             <span className="font-medium text-sm">{row.original.service_plan_name}</span>
-            {row.original.service_bandwidth && (
+            {row.original.bandwidth && (
               <span className="text-xs text-muted-foreground">
-                {row.original.service_bandwidth}
+                {row.original.bandwidth}
               </span>
             )}
           </div>
@@ -457,37 +463,31 @@ export default function QuotesPage() {
           title="Total Quotes"
           value={stats.total}
           icon={FileText}
-          trend="neutral"
         />
         <MetricCardEnhanced
           title="Draft"
           value={stats.draft}
           icon={Edit}
-          trend="neutral"
         />
         <MetricCardEnhanced
           title="Sent"
           value={stats.sent}
           icon={Send}
-          trend="neutral"
         />
         <MetricCardEnhanced
           title="Accepted"
           value={stats.accepted}
           icon={CheckCircle}
-          trend="up"
         />
         <MetricCardEnhanced
           title="Acceptance Rate"
           value={`${stats.acceptanceRate}%`}
           icon={TrendingUp}
-          trend={stats.acceptanceRate >= 30 ? "up" : "down"}
         />
         <MetricCardEnhanced
           title="Total MRR"
           value={`$${stats.totalMRR.toFixed(0)}`}
           icon={DollarSign}
-          trend="up"
         />
       </div>
 
@@ -659,7 +659,7 @@ function convertToCSV(quotes: Quote[]): string {
   const rows = quotes.map((quote) => [
     quote.quote_number,
     quote.service_plan_name,
-    quote.service_bandwidth || "",
+    quote.bandwidth || "",
     quote.monthly_recurring_charge.toString(),
     quote.total_upfront_cost.toString(),
     quote.installation_fee.toString(),

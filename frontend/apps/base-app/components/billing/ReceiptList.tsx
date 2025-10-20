@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/lib/api/client';
 import { Receipt } from '@/types/billing';
-import { EnhancedDataTable, type ColumnDef, type BulkAction, type QuickFilter } from '@/components/ui/EnhancedDataTable';
+import { EnhancedDataTable, type ColumnDef, type BulkAction, type QuickFilter, type Row } from '@/components/ui/EnhancedDataTable';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils/currency';
 
@@ -178,32 +178,32 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
       id: 'receipt_number',
       header: 'Receipt #',
       accessorKey: 'receipt_number',
-      cell: (receipt) => (
+      cell: ({ row }: { row: Row<Receipt> }) => (
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">{receipt.receipt_number}</span>
+          <span className="font-medium">{row.original.receipt_number}</span>
         </div>
       ),
     },
     {
       id: 'customer',
       header: 'Customer',
-      cell: (receipt) => (
+      cell: ({ row }: { row: Row<Receipt> }) => (
         <div>
-          <div className="text-sm font-medium">{receipt.customer_name}</div>
-          <div className="text-xs text-muted-foreground">{receipt.customer_email}</div>
+          <div className="text-sm font-medium">{row.original.customer_name}</div>
+          <div className="text-xs text-muted-foreground">{row.original.customer_email}</div>
         </div>
       ),
     },
     {
       id: 'amount',
       header: 'Amount',
-      cell: (receipt) => (
+      cell: ({ row }: { row: Row<Receipt> }) => (
         <div>
-          <div className="font-medium">{formatCurrency(receipt.total_amount, receipt.currency)}</div>
-          {receipt.tax_amount > 0 && (
+          <div className="font-medium">{formatCurrency(row.original.total_amount, row.original.currency)}</div>
+          {row.original.tax_amount > 0 && (
             <div className="text-xs text-muted-foreground">
-              Tax: {formatCurrency(receipt.tax_amount, receipt.currency)}
+              Tax: {formatCurrency(row.original.tax_amount, row.original.currency)}
             </div>
           )}
         </div>
@@ -212,12 +212,12 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
     {
       id: 'payment_method',
       header: 'Payment Method',
-      cell: (receipt) => {
-        const Icon = paymentMethodIcons[receipt.payment_method.toLowerCase()] || CreditCard;
+      cell: ({ row }: { row: Row<Receipt> }) => {
+        const Icon = paymentMethodIcons[row.original.payment_method.toLowerCase()] || CreditCard;
         return (
           <div className="flex items-center gap-2">
             <Icon className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm capitalize">{receipt.payment_method.replace('_', ' ')}</span>
+            <span className="text-sm capitalize">{row.original.payment_method.replace('_', ' ')}</span>
           </div>
         );
       },
@@ -226,8 +226,8 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
       id: 'issue_date',
       header: 'Issue Date',
       accessorKey: 'issue_date',
-      cell: (receipt) => {
-        const issueDate = new Date(receipt.issue_date);
+      cell: ({ row }: { row: Row<Receipt> }) => {
+        const issueDate = new Date(row.original.issue_date);
         return (
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3 text-muted-foreground" />
@@ -240,26 +240,26 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
       id: 'payment_status',
       header: 'Status',
       accessorKey: 'payment_status',
-      cell: (receipt) => (
+      cell: ({ row }: { row: Row<Receipt> }) => (
         <Badge variant={
-          receipt.payment_status === 'completed' || receipt.payment_status === 'succeeded' ? 'success' :
-          receipt.payment_status === 'failed' ? 'destructive' :
-          receipt.payment_status === 'processing' ? 'default' :
+          row.original.payment_status === 'completed' || row.original.payment_status === 'succeeded' ? 'success' :
+          row.original.payment_status === 'failed' ? 'destructive' :
+          row.original.payment_status === 'processing' ? 'default' :
           'secondary'
         }>
-          {receipt.payment_status}
+          {row.original.payment_status}
         </Badge>
       ),
     },
     {
       id: 'actions',
       header: 'Actions',
-      cell: (receipt) => (
+      cell: ({ row }: { row: Row<Receipt> }) => (
         <div className="flex items-center gap-1">
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleViewReceipt(receipt);
+              handleViewReceipt(row.original);
             }}
             className="p-1 text-muted-foreground hover:text-foreground transition-colors"
             title="View receipt"
@@ -269,7 +269,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleDownloadPDF(receipt);
+              handleDownloadPDF(row.original);
             }}
             className="p-1 text-muted-foreground hover:text-foreground transition-colors"
             title="Download PDF"
@@ -279,7 +279,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handlePrintReceipt(receipt);
+              handlePrintReceipt(row.original);
             }}
             className="p-1 text-muted-foreground hover:text-foreground transition-colors"
             title="Print receipt"
@@ -289,7 +289,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleEmailReceipt(receipt);
+              handleEmailReceipt(row.original);
             }}
             className="p-1 text-muted-foreground hover:text-foreground transition-colors"
             title="Email receipt"
@@ -319,7 +319,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
   const quickFilters: QuickFilter<Receipt>[] = useMemo(() => [
     {
       label: 'This Month',
-      filter: (receipt) => {
+      filter: (receipt: Receipt) => {
         const issueDate = new Date(receipt.issue_date);
         const now = new Date();
         return issueDate.getMonth() === now.getMonth() && issueDate.getFullYear() === now.getFullYear();
@@ -327,7 +327,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
     },
     {
       label: 'Last 7 Days',
-      filter: (receipt) => {
+      filter: (receipt: Receipt) => {
         const issueDate = new Date(receipt.issue_date);
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -336,11 +336,11 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
     },
     {
       label: 'Card Payments',
-      filter: (receipt) => receipt.payment_method.toLowerCase().includes('card') || receipt.payment_method === 'stripe',
+      filter: (receipt: Receipt) => receipt.payment_method.toLowerCase().includes('card') || receipt.payment_method === 'stripe',
     },
     {
       label: 'Completed',
-      filter: (receipt) => receipt.payment_status === 'completed' || receipt.payment_status === 'succeeded',
+      filter: (receipt: Receipt) => receipt.payment_status === 'completed' || receipt.payment_status === 'succeeded',
     },
   ], []);
 
@@ -424,7 +424,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
         onRowClick={onReceiptSelect}
         isLoading={bulkLoading}
         emptyMessage="No receipts found"
-        getRowId={(receipt) => receipt.receipt_id}
+        getRowId={(receipt: Receipt) => receipt.receipt_id}
       />
     </div>
   );

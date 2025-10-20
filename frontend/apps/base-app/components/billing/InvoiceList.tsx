@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/lib/api/client';
 import { Invoice, InvoiceLineItem, InvoiceStatuses } from '@/types';
-import { EnhancedDataTable, type ColumnDef, type BulkAction, type QuickFilter } from '@/components/ui/EnhancedDataTable';
+import { EnhancedDataTable, type ColumnDef, type BulkAction, type QuickFilter, type Row } from '@/components/ui/EnhancedDataTable';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils/currency';
 import { useRouter } from 'next/navigation';
@@ -147,32 +147,32 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
       id: 'invoice_number',
       header: 'Invoice #',
       accessorKey: 'invoice_number',
-      cell: (invoice) => (
+      cell: ({ row }: { row: Row<Invoice> }) => (
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-muted-foreground" />
-          <span className="font-medium">{invoice.invoice_number}</span>
+          <span className="font-medium">{row.original.invoice_number}</span>
         </div>
       ),
     },
     {
       id: 'customer',
       header: 'Customer',
-      cell: (invoice) => (
+      cell: ({ row }: { row: Row<Invoice> }) => (
         <div>
-          <div className="text-sm">{invoice.billing_email}</div>
-          <div className="text-xs text-muted-foreground">{invoice.customer_id.slice(0, 8)}...</div>
+          <div className="text-sm">{row.original.billing_email}</div>
+          <div className="text-xs text-muted-foreground">{row.original.customer_id.slice(0, 8)}...</div>
         </div>
       ),
     },
     {
       id: 'amount',
       header: 'Amount',
-      cell: (invoice) => (
+      cell: ({ row }: { row: Row<Invoice> }) => (
         <div>
-          <div className="font-medium">{formatCurrency(invoice.total_amount, invoice.currency || 'USD')}</div>
-          {invoice.amount_due > 0 && (
+          <div className="font-medium">{formatCurrency(row.original.total_amount, row.original.currency || 'USD')}</div>
+          {row.original.amount_due > 0 && (
             <div className="text-xs text-muted-foreground">
-              Due: {formatCurrency(invoice.amount_due, invoice.currency || 'USD')}
+              Due: {formatCurrency(row.original.amount_due, row.original.currency || 'USD')}
             </div>
           )}
         </div>
@@ -182,9 +182,9 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
       id: 'due_date',
       header: 'Due Date',
       accessorKey: 'due_date',
-      cell: (invoice) => {
-        const dueDate = new Date(invoice.due_date);
-        const isOverdue = dueDate < new Date() && invoice.amount_due > 0;
+      cell: ({ row }: { row: Row<Invoice> }) => {
+        const dueDate = new Date(row.original.due_date);
+        const isOverdue = dueDate < new Date() && row.original.amount_due > 0;
         return (
           <div className={`flex items-center gap-1 ${isOverdue ? 'text-red-600 dark:text-red-400' : ''}`}>
             <Calendar className="h-3 w-3" />
@@ -197,14 +197,14 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
       id: 'status',
       header: 'Status',
       accessorKey: 'status',
-      cell: (invoice) => (
+      cell: ({ row }: { row: Row<Invoice> }) => (
         <Badge variant={
-          invoice.status === 'paid' ? 'success' :
-          invoice.status === 'void' ? 'destructive' :
-          invoice.status === 'draft' ? 'secondary' :
+          row.original.status === 'paid' ? 'success' :
+          row.original.status === 'void' ? 'destructive' :
+          row.original.status === 'draft' ? 'secondary' :
           'default'
         }>
-          {invoice.status}
+          {row.original.status}
         </Badge>
       ),
     },
@@ -212,26 +212,26 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
       id: 'payment_status',
       header: 'Payment',
       accessorKey: 'payment_status',
-      cell: (invoice) => (
+      cell: ({ row }: { row: Row<Invoice> }) => (
         <Badge variant={
-          invoice.payment_status === 'paid' ? 'success' :
-          invoice.payment_status === 'failed' ? 'destructive' :
-          invoice.payment_status === 'processing' ? 'default' :
+          row.original.payment_status === 'paid' ? 'success' :
+          row.original.payment_status === 'failed' ? 'destructive' :
+          row.original.payment_status === 'processing' ? 'default' :
           'secondary'
         }>
-          {invoice.payment_status || 'pending'}
+          {row.original.payment_status || 'pending'}
         </Badge>
       ),
     },
     {
       id: 'actions',
       header: 'Actions',
-      cell: (invoice) => (
+      cell: ({ row }: { row: Row<Invoice> }) => (
         <div className="flex items-center gap-2">
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleCreateCreditNote(invoice);
+              handleCreateCreditNote(row.original);
             }}
             className="p-1 text-muted-foreground hover:text-foreground transition-colors"
             title="Create credit note"
@@ -241,7 +241,7 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
           <button
             onClick={(e) => {
               e.stopPropagation();
-              window.open(`/billing/invoices/${invoice.invoice_id}/download`, '_blank');
+              window.open(`/billing/invoices/${row.original.invoice_id}/download`, '_blank');
             }}
             className="p-1 text-muted-foreground hover:text-foreground transition-colors"
             title="Download invoice"
@@ -278,26 +278,26 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
   const quickFilters: QuickFilter<Invoice>[] = useMemo(() => [
     {
       label: 'Overdue',
-      filter: (invoice) => {
+      filter: (invoice: Invoice) => {
         const dueDate = new Date(invoice.due_date);
         return dueDate < new Date() && invoice.amount_due > 0;
       },
     },
     {
       label: 'Unpaid',
-      filter: (invoice) => invoice.amount_due > 0 && invoice.status !== 'void',
+      filter: (invoice: Invoice) => invoice.amount_due > 0 && invoice.status !== 'void',
     },
     {
       label: 'This Month',
-      filter: (invoice) => {
-        const issueDate = new Date(invoice.issue_date);
+      filter: (invoice: Invoice) => {
+        const createdDate = new Date(invoice.created_at);
         const now = new Date();
-        return issueDate.getMonth() === now.getMonth() && issueDate.getFullYear() === now.getFullYear();
+        return createdDate.getMonth() === now.getMonth() && createdDate.getFullYear() === now.getFullYear();
       },
     },
     {
       label: 'Paid',
-      filter: (invoice) => invoice.status === 'paid',
+      filter: (invoice: Invoice) => invoice.status === 'paid',
     },
   ], []);
 
@@ -313,11 +313,11 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
     const totalOutstanding = invoices.reduce((sum, inv) => sum + inv.amount_due, 0);
     const paidThisMonth = invoices
       .filter(inv => {
-        const issueDate = new Date(inv.issue_date);
+        const createdDate = new Date(inv.created_at);
         const now = new Date();
         return inv.payment_status === 'paid' &&
-               issueDate.getMonth() === now.getMonth() &&
-               issueDate.getFullYear() === now.getFullYear();
+               createdDate.getMonth() === now.getMonth() &&
+               createdDate.getFullYear() === now.getFullYear();
       })
       .reduce((sum, inv) => sum + inv.amount_paid, 0);
 
@@ -383,7 +383,7 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
         onRowClick={onInvoiceSelect}
         isLoading={bulkLoading}
         emptyMessage="No invoices found"
-        getRowId={(invoice) => invoice.invoice_id}
+        getRowId={(invoice: Invoice) => invoice.invoice_id}
       />
     </div>
   );

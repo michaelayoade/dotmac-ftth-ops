@@ -43,7 +43,7 @@ from dotmac.platform.tenant import get_current_tenant_id
 logger = structlog.get_logger(__name__)
 
 
-router = APIRouter(prefix="/api/v1/contacts", tags=["Contacts"])
+router = APIRouter(prefix="/contacts", tags=["Contacts"])
 
 
 # Contact endpoints

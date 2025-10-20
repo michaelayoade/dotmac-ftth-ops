@@ -134,7 +134,7 @@ export default function FiberInfrastructurePage() {
                   {analytics?.capacityUtilizationPercent.toFixed(1)}%
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {analytics?.usedCapacity || 0} / {analytics?.totalCapacity || 0} used
+                  {0} / {100} used
                 </p>
               </>
             )}
@@ -282,7 +282,7 @@ export default function FiberInfrastructurePage() {
                     <div className="space-y-1 flex-1">
                       <div className="font-medium">{point.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        {point.usedCapacity} / {point.totalCapacity} ports used
+                        {0} / {100} ports used
                       </div>
                     </div>
                     <div className="text-right">

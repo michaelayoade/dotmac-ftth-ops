@@ -142,7 +142,7 @@ async def get_async_session() -> AsyncGenerator[AsyncSession]:  # pragma: no cov
 
 
 # Create router
-auth_router = APIRouter(prefix="/api/v1/auth", )
+auth_router = APIRouter(prefix="/auth", )
 security = HTTPBearer(auto_error=False)
 
 

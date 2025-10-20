@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           username: 'admin',
           email: 'admin@example.com',
           full_name: 'Test Admin'
-        } as User);
+        } as unknown as User);
         setPermissions({
           effective_permissions: []
         });

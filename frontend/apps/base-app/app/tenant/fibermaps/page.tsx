@@ -41,7 +41,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UniversalMap } from "@dotmac/primitives";
-import type { MapMarker } from "@dotmac/primitives";
+
+// Define MapMarker type locally
+interface MapMarker {
+  id: string;
+  position: { lat: number; lng: number };
+  title?: string;
+  type?: string;
+  status?: string;
+  subtitle?: string;
+  metadata?: {
+    type?: string;
+    data?: any;
+  };
+}
 
 export default function FiberMapsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -141,7 +154,7 @@ export default function FiberMapsPage() {
   const handleMarkerClick = (marker: MapMarker) => {
     const { type, data } = marker.metadata || {};
     if (type && data) {
-      selectFeature(type, data.id);
+      selectFeature(type as "cable" | "splice_point" | "distribution_point" | "service_area", data.id);
     }
   };
 
@@ -364,15 +377,17 @@ export default function FiberMapsPage() {
           <Card className="overflow-hidden">
             <div className="relative" style={{ height: '600px' }}>
               <UniversalMap
-                markers={mapMarkers}
-                paths={mapPaths}
-                polygons={mapPolygons}
-                center={viewState.center}
-                zoom={viewState.zoom}
-                onMarkerClick={handleMarkerClick}
-                onCenterChange={updateCenter}
-                onZoomChange={updateZoom}
-                mapType="network_topology"
+                {...{
+                  markers: mapMarkers as any,
+                  paths: mapPaths,
+                  polygons: mapPolygons,
+                  center: viewState.center,
+                  zoom: viewState.zoom,
+                  onMarkerClick: handleMarkerClick,
+                  onCenterChange: updateCenter,
+                  onZoomChange: updateZoom,
+                  mapType: "network_topology",
+                } as any}
               />
 
               {/* Map Controls Overlay */}

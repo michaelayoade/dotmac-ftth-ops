@@ -8,7 +8,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -322,6 +322,74 @@ class TeamMember(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
             "is_active": self.is_active,
             "joined_at": self.joined_at.isoformat() if self.joined_at else None,
             "left_at": self.left_at.isoformat() if self.left_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class UserDevice(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+    """User device registration for push notifications."""
+
+    __tablename__ = "user_devices"
+    __table_args__ = (
+        # Unique device token per user
+        UniqueConstraint("user_id", "device_token", name="uq_user_devices_user_token"),
+    )
+
+    # Primary key
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False
+    )
+
+    # User reference
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+
+    # Device information
+    device_token: Mapped[str] = mapped_column(String(512), nullable=False, index=True)
+    device_type: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # ios, android, web
+    device_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    device_model: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    os_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    app_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+    # Push notification provider
+    push_provider: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # fcm, apns, onesignal, etc.
+
+    # Status
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    # Tracking
+    last_used_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    registered_ip: Mapped[str | None] = mapped_column(String(45), nullable=True)
+
+    # Metadata
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
+
+    def __repr__(self) -> str:
+        return f"<UserDevice(id={self.id}, user_id={self.user_id}, device_type={self.device_type})>"
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert device to dictionary for API responses."""
+        return {
+            "id": str(self.id),
+            "tenant_id": self.tenant_id,
+            "user_id": str(self.user_id),
+            "device_type": self.device_type,
+            "device_name": self.device_name,
+            "device_model": self.device_model,
+            "os_version": self.os_version,
+            "app_version": self.app_version,
+            "push_provider": self.push_provider,
+            "is_active": self.is_active,
+            "last_used_at": self.last_used_at.isoformat() if self.last_used_at else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

@@ -166,13 +166,6 @@ export function AlarmDetailModal({
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingNote, setIsSavingNote] = useState(false);
 
-  // Fetch alarm details when modal opens
-  useEffect(() => {
-    if (open && alarm) {
-      fetchAlarmDetails();
-    }
-  }, [alarm, fetchAlarmDetails, open]);
-
   const fetchAlarmDetails = useCallback(async () => {
     if (!alarm) return;
 
@@ -203,6 +196,13 @@ export function AlarmDetailModal({
       setIsLoading(false);
     }
   }, [alarm]);
+
+  // Fetch alarm details when modal opens
+  useEffect(() => {
+    if (open && alarm) {
+      fetchAlarmDetails();
+    }
+  }, [alarm, fetchAlarmDetails, open]);
 
   const handleAcknowledge = async () => {
     if (!alarm) return;

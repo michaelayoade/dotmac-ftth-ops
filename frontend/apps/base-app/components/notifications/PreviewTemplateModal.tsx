@@ -340,7 +340,7 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
             <Button variant="outline" onClick={onClose}>
               Close
             </Button>
-            <Button onClick={handleRender} disabled={isRendering}>
+            <Button onClick={() => handleRender()} disabled={isRendering}>
               {isRendering ? 'Rendering...' : 'Refresh Preview'}
             </Button>
           </div>

@@ -12,7 +12,7 @@ import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { EnhancedDataTable, type ColumnDef } from "@/components/ui/EnhancedDataTable";
+import { EnhancedDataTable, type ColumnDef, type Row } from "@/components/ui/EnhancedDataTable";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useLeads, useQuotes, useSiteSurveys, type Lead, type Quote, type SiteSurvey } from "@/hooks/useCRM";
 import { useToast } from "@/components/ui/use-toast";
@@ -147,7 +147,7 @@ export default function CRMOverviewPage() {
       {
         id: "lead",
         header: "Lead",
-        cell: ({ row }) => (
+        cell: ({ row }: { row: Row<Lead> }) => (
           <div className="flex flex-col">
             <span className="font-medium">
               {row.original.first_name} {row.original.last_name}
@@ -159,22 +159,22 @@ export default function CRMOverviewPage() {
       {
         id: "status",
         header: "Status",
-        cell: ({ row }) => <LeadStatusBadge status={row.original.status} />,
+        cell: ({ row }: { row: Row<Lead> }) => <LeadStatusBadge status={row.original.status} />,
       },
       {
         id: "source",
         header: "Source",
-        cell: ({ row }) => <LeadSourceBadge source={row.original.source} />,
+        cell: ({ row }: { row: Row<Lead> }) => <LeadSourceBadge source={row.original.source} />,
       },
       {
         id: "priority",
         header: "Priority",
-        cell: ({ row }) => <LeadPriorityBadge priority={row.original.priority} />,
+        cell: ({ row }: { row: Row<Lead> }) => <LeadPriorityBadge priority={row.original.priority} />,
       },
       {
         id: "created",
         header: "Created",
-        cell: ({ row }) => (
+        cell: ({ row }: { row: Row<Lead> }) => (
           <span className="text-sm text-muted-foreground">
             {formatRelativeDate(row.original.created_at)}
           </span>
@@ -189,7 +189,7 @@ export default function CRMOverviewPage() {
       {
         id: "quote",
         header: "Quote",
-        cell: ({ row }) => (
+        cell: ({ row }: { row: Row<Quote> }) => (
           <div className="flex flex-col">
             <span className="font-medium">{row.original.quote_number}</span>
             <span className="text-xs text-muted-foreground">
@@ -481,7 +481,7 @@ function LeadPriorityBadge({ priority }: { priority: Lead["priority"] }) {
     3: { label: "Low", className: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
   };
 
-  const { label, className } = config[priority] ?? config[3];
+  const { label, className } = config[priority] ?? config[3] ?? { label: "Low", className: "bg-slate-500/20 text-slate-300 border-slate-500/30" };
 
   return <Badge className={className}>{label}</Badge>;
 }

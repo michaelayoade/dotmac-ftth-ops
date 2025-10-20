@@ -373,8 +373,6 @@ secret/
 ├── search/
 │   └── meilisearch/
 │       └── api_key
-└── observability/
-    └── sentry_dsn
 ```
 
 ### Accessing Secrets Manually

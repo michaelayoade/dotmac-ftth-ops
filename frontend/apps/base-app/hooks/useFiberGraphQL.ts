@@ -42,6 +42,22 @@ import {
 } from '@/lib/graphql/generated';
 
 // ============================================================================
+// TYPE EXPORTS
+// ============================================================================
+
+// Re-export types for use in components
+export type {
+  FiberCableStatus,
+  FiberType,
+  CableInstallationType,
+  SpliceStatus,
+  SpliceType,
+  DistributionPointType,
+  ServiceAreaType,
+  FiberHealthStatus,
+};
+
+// ============================================================================
 // FIBER DASHBOARD
 // ============================================================================
 
@@ -482,6 +498,7 @@ export function useDistributionPointListGraphQL(options: {
   status?: FiberCableStatus;
   siteId?: string;
   nearCapacity?: boolean;
+  search?: string;
   pollInterval?: number;
 } = {}) {
   const {
@@ -585,6 +602,7 @@ export function useServiceAreaListGraphQL(options: {
   areaType?: ServiceAreaType;
   isServiceable?: boolean;
   constructionStatus?: string;
+  search?: string;
   pollInterval?: number;
 } = {}) {
   const {

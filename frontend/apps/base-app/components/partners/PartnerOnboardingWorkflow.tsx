@@ -61,14 +61,14 @@ export default function PartnerOnboardingWorkflow() {
 
   const handleNext = () => {
     const nextIndex = currentStepIndex + 1;
-    if (nextIndex < steps.length) {
+    if (nextIndex < steps.length && steps[nextIndex]) {
       setCurrentStep(steps[nextIndex].id);
     }
   };
 
   const handleBack = () => {
     const prevIndex = currentStepIndex - 1;
-    if (prevIndex >= 0) {
+    if (prevIndex >= 0 && steps[prevIndex]) {
       setCurrentStep(steps[prevIndex].id);
     }
   };

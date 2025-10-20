@@ -32,6 +32,14 @@ import {
 
 import type { UsageType, BilledStatus } from '@/hooks/useUsageBilling';
 
+// Define UsageStats type locally
+interface UsageStats {
+  total_records: number;
+  total_amount: number;
+  pending_amount: number;
+  billed_amount: number;
+}
+
 interface UsageChartData {
   date: string;
   data_transfer: number;
@@ -47,6 +55,7 @@ interface UsageChartData {
 const mockUsageRecords: UsageRecord[] = [
   {
     id: 'usage-001',
+    tenant_id: 'demo-alpha',
     subscription_id: 'sub-001',
     customer_id: 'cust-001',
     customer_name: 'John Doe',
@@ -62,9 +71,11 @@ const mockUsageRecords: UsageRecord[] = [
     source_system: 'radius',
     description: 'Internet data usage',
     created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: 'usage-002',
+    tenant_id: 'demo-alpha',
     subscription_id: 'sub-002',
     customer_id: 'cust-002',
     customer_name: 'Jane Smith',
@@ -82,9 +93,11 @@ const mockUsageRecords: UsageRecord[] = [
     source_system: 'api',
     description: 'VoIP call minutes',
     created_at: new Date(Date.now() - 172800000).toISOString(),
+    updated_at: new Date(Date.now() - 43200000).toISOString(),
   },
   {
     id: 'usage-003',
+    tenant_id: 'demo-alpha',
     subscription_id: 'sub-003',
     customer_id: 'cust-003',
     customer_name: 'Bob Johnson',
@@ -101,9 +114,11 @@ const mockUsageRecords: UsageRecord[] = [
     description: 'Data overage charges',
     service_location: '123 Main St, City, ST 12345',
     created_at: new Date(Date.now() - 259200000).toISOString(),
+    updated_at: new Date(Date.now() - 259200000).toISOString(),
   },
   {
     id: 'usage-004',
+    tenant_id: 'demo-alpha',
     subscription_id: 'sub-001',
     customer_id: 'cust-001',
     customer_name: 'John Doe',
@@ -122,6 +137,7 @@ const mockUsageRecords: UsageRecord[] = [
     description: 'ONT equipment rental',
     device_id: 'ONT-12345',
     created_at: new Date(Date.now() - 86400000 * 30).toISOString(),
+    updated_at: new Date(Date.now() - 86400000).toISOString(),
   },
 ];
 
@@ -151,6 +167,8 @@ const mockUsageChartData: UsageChartData[] = Array.from({ length: 7 }, (_, i) =>
 export default function UsageBillingPage() {
   const { hasPermission } = useRBAC();
   const hasBillingAccess = hasPermission('billing.read');
+  const [selectedUsageRecord, setSelectedUsageRecord] = useState<UsageRecord | null>(null);
+  const [invoiceIdForBilling, setInvoiceIdForBilling] = useState<string>('');
 
   // API Hooks
   const { data: apiRecords = [], isLoading: recordsLoading, error: recordsError, refetch } = useUsageRecords({
@@ -320,13 +338,21 @@ export default function UsageBillingPage() {
       label: 'Mark as Billed',
       icon: Receipt,
       action: async (selected) => {
+        // Prompt for invoice ID
+        const invoiceId = prompt('Enter the invoice ID to associate with these usage records:');
+
+        if (!invoiceId || invoiceId.trim() === '') {
+          alert('Invoice ID is required to mark usage records as billed.');
+          return;
+        }
+
         const usageIds = selected.map(r => r.id);
-        // TODO: Replace 'manual-invoice' with actual invoice ID from invoice creation flow
-        const success = await markAsBilled(usageIds, 'manual-invoice');
+        const success = await markAsBilled(usageIds, invoiceId.trim());
 
         if (success) {
           // Refetch data to show updated records
           await refetch();
+          alert(`Successfully marked ${selected.length} usage record(s) as billed to invoice ${invoiceId}`);
         } else {
           alert('Failed to mark usage records as billed. Please try again.');
         }
@@ -352,9 +378,43 @@ export default function UsageBillingPage() {
       label: 'Download CSV',
       icon: Download,
       action: async (selected) => {
-        console.log('Downloading usage records:', selected.map(r => r.id));
-        // TODO: Implement CSV download via API
-        alert(`Downloading ${selected.length} usage record(s)`);
+        try {
+          // Prepare usage record IDs for download
+          const usageIds = selected.map(r => r.id);
+
+          // Call API to generate CSV
+          const response = await fetch('/api/billing/usage/export', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ usage_ids: usageIds }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to download CSV: ${response.statusText}`);
+          }
+
+          // Get the CSV blob
+          const blob = await response.blob();
+
+          // Create a download link and trigger download
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `usage-records-${new Date().toISOString().split('T')[0]}.csv`;
+          document.body.appendChild(link);
+          link.click();
+
+          // Cleanup
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+
+          alert(`Successfully downloaded ${selected.length} usage record(s)`);
+        } catch (error) {
+          console.error('Failed to download usage records:', error);
+          alert(`Failed to download: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
       },
     },
   ];
@@ -389,7 +449,7 @@ export default function UsageBillingPage() {
             <p className="text-sm text-muted-foreground mb-4">
               Error: {recordsError.message}
             </p>
-            <Button onClick={refetch}>
+            <Button onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
             </Button>
@@ -410,7 +470,7 @@ export default function UsageBillingPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={refetch} variant="outline" disabled={isLoading}>
+          <Button onClick={() => refetch()} variant="outline" disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
@@ -499,18 +559,20 @@ export default function UsageBillingPage() {
               </div>
             ) : (
               <UniversalChart
-                type="line"
-                data={apiChartData.length > 0 ? apiChartData : mockUsageChartData}
-                series={[
-                  { key: 'data_transfer', name: 'Data Transfer (GB)', color: '#3b82f6' },
-                  { key: 'voice_minutes', name: 'Voice Minutes', color: '#10b981' },
-                  { key: 'bandwidth_gb', name: 'Bandwidth (GB)', color: '#f59e0b' },
-                  { key: 'overage_gb', name: 'Overage (GB)', color: '#ef4444' },
-                ]}
-                xAxisLabel="Date"
-                yAxisLabel="Usage"
-                showLegend
-                showGrid
+                {...{
+                  type: "line",
+                  data: apiChartData.length > 0 ? apiChartData : mockUsageChartData,
+                  series: [
+                    { key: 'data_transfer', name: 'Data Transfer (GB)', color: '#3b82f6' },
+                    { key: 'voice_minutes', name: 'Voice Minutes', color: '#10b981' },
+                    { key: 'bandwidth_gb', name: 'Bandwidth (GB)', color: '#f59e0b' },
+                    { key: 'overage_gb', name: 'Overage (GB)', color: '#ef4444' },
+                  ],
+                  xAxisLabel: "Date",
+                  yAxisLabel: "Usage",
+                  showLegend: true,
+                  showGrid: true,
+                } as any}
               />
             )}
           </div>
@@ -568,8 +630,8 @@ export default function UsageBillingPage() {
               },
             ]}
             onRowClick={(record) => {
-              console.log('View usage record details:', record);
-              // TODO: Open usage record detail modal
+              // Open usage record detail modal
+              setSelectedUsageRecord(record);
             }}
           />
         </CardContent>

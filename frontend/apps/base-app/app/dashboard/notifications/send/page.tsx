@@ -342,8 +342,8 @@ export default function BulkNotificationSenderPage() {
                   <Checkbox
                     id="email"
                     checked={channels.includes('email')}
-                    onCheckedChange={(checked) =>
-                      handleChannelToggle('email', checked as boolean)
+                    onChange={(e) =>
+                      handleChannelToggle('email', e.target.checked)
                     }
                   />
                   <Label htmlFor="email" className="flex-1 cursor-pointer">
@@ -358,8 +358,8 @@ export default function BulkNotificationSenderPage() {
                   <Checkbox
                     id="sms"
                     checked={channels.includes('sms')}
-                    onCheckedChange={(checked) =>
-                      handleChannelToggle('sms', checked as boolean)
+                    onChange={(e) =>
+                      handleChannelToggle('sms', e.target.checked)
                     }
                   />
                   <Label htmlFor="sms" className="flex-1 cursor-pointer">
@@ -374,8 +374,8 @@ export default function BulkNotificationSenderPage() {
                   <Checkbox
                     id="in_app"
                     checked={channels.includes('in_app')}
-                    onCheckedChange={(checked) =>
-                      handleChannelToggle('in_app', checked as boolean)
+                    onChange={(e) =>
+                      handleChannelToggle('in_app', e.target.checked)
                     }
                   />
                   <Label htmlFor="in_app" className="flex-1 cursor-pointer">
@@ -390,8 +390,8 @@ export default function BulkNotificationSenderPage() {
                   <Checkbox
                     id="push"
                     checked={channels.includes('push')}
-                    onCheckedChange={(checked) =>
-                      handleChannelToggle('push', checked as boolean)
+                    onChange={(e) =>
+                      handleChannelToggle('push', e.target.checked)
                     }
                   />
                   <Label htmlFor="push" className="flex-1 cursor-pointer">
@@ -451,8 +451,8 @@ export default function BulkNotificationSenderPage() {
                       <Checkbox
                         id={`status-${status}`}
                         checked={recipientFilter.status.includes(status)}
-                        onCheckedChange={(checked) =>
-                          handleStatusToggle(status, checked as boolean)
+                        onChange={(e) =>
+                          handleStatusToggle(status, e.target.checked)
                         }
                       />
                       <Label htmlFor={`status-${status}`} className="cursor-pointer capitalize">
@@ -472,8 +472,8 @@ export default function BulkNotificationSenderPage() {
                       <Checkbox
                         id={`type-${type}`}
                         checked={recipientFilter.connectionType.includes(type)}
-                        onCheckedChange={(checked) =>
-                          handleConnectionTypeToggle(type, checked as boolean)
+                        onChange={(e) =>
+                          handleConnectionTypeToggle(type, e.target.checked)
                         }
                       />
                       <Label htmlFor={`type-${type}`} className="cursor-pointer uppercase">

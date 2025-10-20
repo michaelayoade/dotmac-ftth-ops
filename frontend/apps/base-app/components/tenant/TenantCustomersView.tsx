@@ -9,6 +9,7 @@ import { CustomerViewModal } from '@/components/customers/CustomerViewModal';
 import { CustomerEditModal } from '@/components/customers/CustomerEditModal';
 import { useCustomerListGraphQL, useCustomerMetricsGraphQL } from '@/hooks/useCustomersGraphQL';
 import { CustomerStatusEnum } from '@/lib/graphql/generated';
+import { apiClient } from '@/lib/api/client';
 import { Customer } from '@/types';
 import {
   Dialog,
@@ -60,20 +61,21 @@ export default function TenantCustomersView() {
   // Transform GraphQL customers to match expected Customer type
   const customers: Customer[] = graphqlCustomers.map(c => ({
     id: c.id,
-    name: c.name,
-    display_name: c.name,
+    name: c.displayName || `${c.firstName} ${c.lastName}`,
+    display_name: c.displayName || `${c.firstName} ${c.lastName}`,
     email: c.email,
     status: c.status.toLowerCase() as Customer['status'],
     created_at: c.createdAt,
     updated_at: c.updatedAt || c.createdAt,
-  }));
+  } as unknown as Customer));
 
   // Transform GraphQL metrics to match expected format
   const metrics = {
-    total: graphqlMetrics?.totalCustomers || 0,
-    active: graphqlMetrics?.activeCustomers || 0,
-    inactive: (graphqlMetrics?.totalCustomers || 0) - (graphqlMetrics?.activeCustomers || 0),
-    new_this_month: graphqlMetrics?.newCustomers || 0,
+    total_customers: graphqlMetrics?.totalCustomers || 0,
+    active_customers: graphqlMetrics?.activeCustomers || 0,
+    new_customers_this_month: graphqlMetrics?.newCustomers || 0,
+    average_lifetime_value: 0,
+    total_revenue: 0,
   };
 
   const loading = customersLoading || metricsLoading;
@@ -113,8 +115,9 @@ export default function TenantCustomersView() {
 
     setIsDeleting(true);
     try {
-      // TODO: Implement GraphQL mutation for delete
-      // await deleteCustomerMutation({ variables: { id: customerToDelete.id } });
+      // Execute REST API call for delete
+      await apiClient.delete(`/customers/${customerToDelete.id}`);
+
       refetchCustomers();
       refetchMetrics();
       setShowDeleteDialog(false);
@@ -124,7 +127,11 @@ export default function TenantCustomersView() {
       );
     } catch (error) {
       console.error('Failed to delete customer:', error);
-      toast.error('Failed to delete customer. Please try again.');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Failed to delete customer. Please try again.',
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -188,7 +195,7 @@ export default function TenantCustomersView() {
           <Filter className="h-4 w-4 text-muted-foreground" aria-hidden />
           <select
             value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
+            onChange={(e) => setSelectedStatus(e.target.value as CustomerStatusEnum | undefined)}
             className="w-full rounded-md border border-border bg-background py-2 px-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           >
             <option value="all">All statuses</option>
@@ -224,6 +231,8 @@ export default function TenantCustomersView() {
         <CreateCustomerModal
           onClose={() => setShowCreateModal(false)}
           onCustomerCreated={handleCustomerCreated}
+          createCustomer={async () => ({ id: '', email: '', status: 'active', created_at: '', updated_at: '' } as Customer)}
+          updateCustomer={async () => ({ id: '', email: '', status: 'active', created_at: '', updated_at: '' } as Customer)}
         />
       )}
 

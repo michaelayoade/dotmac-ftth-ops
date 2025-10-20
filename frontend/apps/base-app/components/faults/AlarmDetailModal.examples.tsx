@@ -40,7 +40,7 @@ export function BasicAlarmDetailExample() {
     subscriber_count: 1,
     correlation_id: 'corr-789',
     correlation_action: 'aggregate',
-    parent_alarm_id: null,
+    parent_alarm_id: undefined,
     is_root_cause: true,
     first_occurrence: new Date(Date.now() - 3600000).toISOString(),
     last_occurrence: new Date().toISOString(),
@@ -289,7 +289,7 @@ export function MultipleSeverityExample() {
   };
 
   const handleViewAlarm = (severity: string) => {
-    setSelectedAlarm(alarmsBySeverity[severity]);
+    setSelectedAlarm(alarmsBySeverity[severity] ?? null);
     setIsModalOpen(true);
   };
 

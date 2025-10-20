@@ -6,6 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mail, Send, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, Users } from 'lucide-react';
 import Link from 'next/link';
+import { useCommunicationStats, useCommunicationLogs } from '@/hooks/useCommunications';
+
+interface EmailDisplay {
+  id: string;
+  subject: string;
+  recipient: string;
+  status: string;
+  sentAt: Date;
+}
 
 /**
  * Communications Dashboard Component
@@ -13,39 +22,33 @@ import Link from 'next/link';
  * Provides overview of email communications, templates, and campaign statistics
  */
 export function CommunicationsDashboard() {
-  // TODO: Fetch real data from API
-  const stats = {
-    totalSent: 1234,
-    queued: 45,
-    failed: 12,
-    delivered: 1177,
-    deliveryRate: 95.4,
-    avgSendTime: 2.3,
+  // Fetch real data from API using hooks
+  const { data: statsData, isLoading: statsLoading } = useCommunicationStats();
+  const { data: emailsData, isLoading: emailsLoading } = useCommunicationLogs({ page: 1, page_size: 10, sort_by: 'created_at', sort_order: 'desc' });
+
+  const stats = statsData ? {
+    totalSent: statsData.total_sent,
+    queued: statsData.by_status?.queued || 0,
+    failed: statsData.total_failed,
+    delivered: statsData.total_delivered,
+    deliveryRate: statsData.delivery_rate,
+    avgSendTime: 0, // Not available in current stats
+  } : {
+    totalSent: 0,
+    queued: 0,
+    failed: 0,
+    delivered: 0,
+    deliveryRate: 0,
+    avgSendTime: 0,
   };
 
-  const recentEmails = [
-    {
-      id: '1',
-      subject: 'Monthly Service Update',
-      recipient: 'customer@example.com',
-      status: 'delivered',
-      sentAt: new Date(Date.now() - 3600000),
-    },
-    {
-      id: '2',
-      subject: 'Payment Confirmation',
-      recipient: 'user@example.com',
-      status: 'delivered',
-      sentAt: new Date(Date.now() - 7200000),
-    },
-    {
-      id: '3',
-      subject: 'Service Notification',
-      recipient: 'subscriber@example.com',
-      status: 'failed',
-      sentAt: new Date(Date.now() - 10800000),
-    },
-  ];
+  const recentEmails: EmailDisplay[] = emailsData?.logs.map(log => ({
+    id: log.id,
+    subject: log.subject || 'No subject',
+    recipient: log.recipient_email || 'Unknown',
+    status: log.status,
+    sentAt: new Date(log.created_at),
+  })) || [];
 
   const templates = [
     { id: '1', name: 'Welcome Email', usageCount: 145 },
@@ -178,7 +181,7 @@ export function CommunicationsDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentEmails.map((email) => (
+                {recentEmails.map((email: EmailDisplay) => (
                   <div
                     key={email.id}
                     className="flex items-center justify-between p-4 rounded-lg border"

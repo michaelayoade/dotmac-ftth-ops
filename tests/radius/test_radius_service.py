@@ -354,3 +354,136 @@ class TestRADIUSService:
 
         deleted = await service.delete_subscriber("nonexistent@isp")
         assert deleted is False
+
+    async def test_create_subscriber_with_ipv6(self, async_db_session, test_tenant):
+        """Test creating subscriber with IPv6 address"""
+        service = RADIUSService(async_db_session, test_tenant.id)
+
+        data = RADIUSSubscriberCreate(
+            subscriber_id="sub-ipv6",
+            username="ipv6user@isp",
+            password="SecurePass123!",
+            framed_ipv6_address="2001:db8::1",
+        )
+
+        subscriber = await service.create_subscriber(data)
+        assert subscriber.username == "ipv6user@isp"
+
+        # Verify IPv6 address was set in radreply
+        radreplies = await service.repository.get_radreplies_by_username(
+            test_tenant.id, "ipv6user@isp"
+        )
+        ipv6_replies = [r for r in radreplies if r.attribute == "Framed-IPv6-Address"]
+        assert len(ipv6_replies) == 1
+        assert ipv6_replies[0].value == "2001:db8::1"
+
+    async def test_create_subscriber_with_ipv6_prefix(self, async_db_session, test_tenant):
+        """Test creating subscriber with IPv6 prefix delegation"""
+        service = RADIUSService(async_db_session, test_tenant.id)
+
+        data = RADIUSSubscriberCreate(
+            subscriber_id="sub-prefix",
+            username="prefixuser@isp",
+            password="SecurePass123!",
+            delegated_ipv6_prefix="2001:db8::/56",
+        )
+
+        subscriber = await service.create_subscriber(data)
+        assert subscriber.username == "prefixuser@isp"
+
+        # Verify prefix was set
+        radreplies = await service.repository.get_radreplies_by_username(
+            test_tenant.id, "prefixuser@isp"
+        )
+        prefix_replies = [r for r in radreplies if r.attribute == "Delegated-IPv6-Prefix"]
+        assert len(prefix_replies) == 1
+        assert prefix_replies[0].value == "2001:db8::/56"
+
+    async def test_update_subscriber_ipv6(self, async_db_session, test_tenant):
+        """Test updating subscriber IPv6 address"""
+        service = RADIUSService(async_db_session, test_tenant.id)
+
+        # Create subscriber
+        data = RADIUSSubscriberCreate(
+            subscriber_id="sub-001",
+            username="updateipv6@isp",
+            password="SecurePass123!",
+        )
+        await service.create_subscriber(data)
+
+        # Update with IPv6
+        update_data = RADIUSSubscriberUpdate(framed_ipv6_address="2001:db8::100")
+        updated = await service.update_subscriber("updateipv6@isp", update_data)
+        assert updated is not None
+
+    async def test_list_nas_devices(self, async_db_session, test_tenant):
+        """Test listing NAS devices"""
+        service = RADIUSService(async_db_session, test_tenant.id)
+
+        # Create NAS devices
+        for i in range(3):
+            nas_data = NASCreate(
+                nasname=f"192.168.1.{i+1}",
+                shortname=f"router{i:02d}",
+                type="mikrotik",
+                secret="secret123",
+            )
+            await service.create_nas(nas_data)
+
+        # List
+        nas_list = await service.list_nas_devices()
+        assert len(nas_list) >= 3
+
+    async def test_list_bandwidth_profiles(self, async_db_session, test_tenant):
+        """Test listing bandwidth profiles"""
+        service = RADIUSService(async_db_session, test_tenant.id)
+
+        # Create profiles
+        for i in [10, 20, 50]:
+            profile_data = BandwidthProfileCreate(
+                name=f"{i} Mbps Plan",
+                download_rate_kbps=i * 1000,
+                upload_rate_kbps=i * 500,
+            )
+            await service.create_bandwidth_profile(profile_data)
+
+        # List
+        profiles = await service.list_bandwidth_profiles()
+        assert len(profiles) >= 3
+
+    async def test_get_nas(self, async_db_session, test_tenant):
+        """Test getting NAS device by ID"""
+        service = RADIUSService(async_db_session, test_tenant.id)
+
+        # Create NAS
+        nas_data = NASCreate(
+            nasname="192.168.1.1",
+            shortname="router01",
+            type="mikrotik",
+            secret="secret123",
+        )
+        nas = await service.create_nas(nas_data)
+
+        # Get
+        retrieved = await service.get_nas(nas.id)
+        assert retrieved is not None
+        assert retrieved.id == nas.id
+        assert retrieved.nasname == "192.168.1.1"
+
+    async def test_get_bandwidth_profile(self, async_db_session, test_tenant):
+        """Test getting bandwidth profile by ID"""
+        service = RADIUSService(async_db_session, test_tenant.id)
+
+        # Create profile
+        profile_data = BandwidthProfileCreate(
+            name="10 Mbps Plan",
+            download_rate_kbps=10000,
+            upload_rate_kbps=2000,
+        )
+        profile = await service.create_bandwidth_profile(profile_data)
+
+        # Get
+        retrieved = await service.get_bandwidth_profile(profile.id)
+        assert retrieved is not None
+        assert retrieved.id == profile.id
+        assert retrieved.name == "10 Mbps Plan"

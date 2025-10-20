@@ -25,34 +25,38 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useRBAC } from '@/contexts/RBACContext';
+import { useFiberCableListGraphQL } from '@/hooks/useFiberGraphQL';
 import {
-  useFiberCableListGraphQL,
-  type FiberCableStatus,
-  type FiberType,
-  type CableInstallationType,
-} from '@/hooks/useFiberGraphQL';
+  FiberCableStatus,
+  FiberType,
+  CableInstallationType,
+} from '@/lib/graphql/generated';
 import { platformConfig } from '@/lib/config';
 import { Cable, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 const FIBER_CABLE_STATUSES: FiberCableStatus[] = [
-  'ACTIVE',
-  'INACTIVE',
-  'UNDER_CONSTRUCTION',
-  'MAINTENANCE',
-  'DAMAGED',
-  'DECOMMISSIONED',
+  FiberCableStatus.Active,
+  FiberCableStatus.Inactive,
+  FiberCableStatus.UnderConstruction,
+  FiberCableStatus.Maintenance,
+  FiberCableStatus.Damaged,
+  FiberCableStatus.Decommissioned,
 ];
 
-const FIBER_TYPES: FiberType[] = ['SINGLE_MODE', 'MULTI_MODE', 'HYBRID'];
+const FIBER_TYPES: FiberType[] = [
+  FiberType.SingleMode,
+  FiberType.MultiMode,
+  FiberType.Hybrid,
+];
 
 const INSTALLATION_TYPES: CableInstallationType[] = [
-  'AERIAL',
-  'UNDERGROUND',
-  'BURIED',
-  'DUCT',
-  'BUILDING',
-  'SUBMARINE',
+  CableInstallationType.Aerial,
+  CableInstallationType.Underground,
+  CableInstallationType.Buried,
+  CableInstallationType.Duct,
+  CableInstallationType.Building,
+  CableInstallationType.Submarine,
 ];
 
 export default function FiberCablesPage() {
@@ -77,9 +81,20 @@ export default function FiberCablesPage() {
       status,
       fiberType,
       installationType,
-      search,
       pollInterval: 60000, // Refresh every minute
     });
+
+  const searchLower = search.trim().toLowerCase();
+  const filteredCables = searchLower
+    ? cables.filter((cable) =>
+        [cable.name, cable.cableId]
+          .filter(Boolean)
+          .some((field) => field!.toString().toLowerCase().includes(searchLower))
+      )
+    : cables;
+
+  const displayCables = filteredCables;
+  const displayTotalCount = searchLower ? filteredCables.length : totalCount;
 
   if (!hasFiberAccess) {
     return (
@@ -283,7 +298,7 @@ export default function FiberCablesPage() {
           {error && <p className="text-sm text-destructive">{error}</p>}
         </CardHeader>
         <CardContent>
-          {cables.length === 0 && !loading ? (
+          {displayCables.length === 0 && !loading ? (
             <div className="text-center py-12">
               <Cable className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No fiber cables found</h3>
@@ -314,7 +329,7 @@ export default function FiberCablesPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {cables.map((cable) => (
+                    {displayCables.map((cable) => (
                       <TableRow key={cable.id}>
                         <TableCell className="font-medium">{cable.name}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">

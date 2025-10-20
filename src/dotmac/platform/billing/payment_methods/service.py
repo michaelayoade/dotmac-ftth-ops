@@ -407,10 +407,8 @@ class PaymentMethodService:
         # Check if default and has active subscriptions
         if payment_method.is_default:
             # Check for active subscriptions
-            from dotmac.platform.billing.models import SubscriptionStatus
-            from dotmac.platform.billing.subscription.models import (
-                Subscription as BillingSubscriptionTable,
-            )
+            from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
+            from dotmac.platform.billing.models import BillingSubscriptionTable
 
             active_subs_stmt = select(BillingSubscriptionTable).where(
                 BillingSubscriptionTable.tenant_id == tenant_id,

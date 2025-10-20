@@ -35,7 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useManualPayments, useVerifyPayment } from "@/hooks/useBankAccounts";
-import type { ManualPaymentResponse } from "@/lib/services/bank-accounts-service";
+import type { ManualPaymentResponse, PaymentMethodType } from "@/lib/services/bank-accounts-service";
 import { PaymentRecordDialog } from "./PaymentRecordDialog";
 import { format } from "date-fns";
 
@@ -50,8 +50,8 @@ export function ManualPaymentsTab() {
   });
 
   const { data: payments, isLoading } = useManualPayments({
-    payment_status: filters.status !== "all" ? filters.status : undefined,
-    payment_method: filters.method !== "all" ? filters.method : undefined,
+    status: filters.status !== "all" ? filters.status : undefined,
+    payment_method: filters.method !== "all" ? (filters.method as PaymentMethodType) : undefined,
     search: filters.search || undefined,
     date_from: filters.startDate || undefined,
     date_to: filters.endDate || undefined,
@@ -298,14 +298,14 @@ export function ManualPaymentsTab() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {getStatusIcon(payment.payment_status)}
+                          {getStatusIcon(payment.status)}
                           <span className="font-mono text-sm">{payment.payment_reference}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="text-sm font-medium">{payment.customer?.full_name || "N/A"}</p>
-                          <p className="text-xs text-muted-foreground">{payment.customer?.email || ""}</p>
+                          <p className="text-sm font-medium">{payment.customer_id || "N/A"}</p>
+                          <p className="text-xs text-muted-foreground">{payment.external_reference || ""}</p>
                         </div>
                       </TableCell>
                       <TableCell>{getMethodBadge(payment.payment_method)}</TableCell>
@@ -317,9 +317,9 @@ export function ManualPaymentsTab() {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell>{getStatusBadge(payment.payment_status)}</TableCell>
+                      <TableCell>{getStatusBadge(payment.status)}</TableCell>
                       <TableCell>
-                        {payment.is_reconciled ? (
+                        {payment.reconciled ? (
                           <Badge variant="default" className="gap-1">
                             <CheckCircle className="h-3 w-3" />
                             Reconciled
@@ -330,7 +330,7 @@ export function ManualPaymentsTab() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          {payment.payment_status === "pending" && (
+                          {payment.status === "pending" && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -340,14 +340,14 @@ export function ManualPaymentsTab() {
                               Verify
                             </Button>
                           )}
-                          {payment.receipt_file_url && (
+                          {payment.receipt_url && (
                             <Button
                               size="sm"
                               variant="ghost"
                               asChild
                             >
                               <a
-                                href={payment.receipt_file_url}
+                                href={payment.receipt_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >

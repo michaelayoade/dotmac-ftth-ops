@@ -142,13 +142,17 @@ export default function IPAMDashboardPage() {
 
   // Calculate prefix utilization
   const getPrefixUtilization = (prefix: Prefix) => {
+    if (!prefix.prefix) return 0;
     const [, maskBits] = prefix.prefix.split('/');
+    if (!maskBits) return 0;
     const totalIPs = Math.pow(2, 32 - parseInt(maskBits)) - 2; // Exclude network and broadcast
     const usedIPs = ipAddresses.filter((ip) => {
-      const ipPrefix = ip.address.split('/')[0];
-      const prefixNet = prefix.prefix.split('/')[0];
+      if (!ip.address || !prefix.prefix) return false;
+      const ipPrefix = ip.address.split('/')[0] ?? "";
+      const prefixNet = prefix.prefix.split('/')[0] ?? "";
       // Simple check - in production would use proper IP range checking
-      return ipPrefix.startsWith(prefixNet.split('.').slice(0, 3).join('.'));
+      const networkFragment = prefixNet.split('.').slice(0, 3).join('.');
+      return networkFragment.length > 0 && ipPrefix.startsWith(networkFragment);
     }).length;
     return totalIPs > 0 ? (usedIPs / totalIPs) * 100 : 0;
   };

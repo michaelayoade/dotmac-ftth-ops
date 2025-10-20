@@ -24,6 +24,7 @@ import {
   type WorkflowType,
   type Workflow,
 } from '@/hooks/useOrchestration';
+import { apiClient } from '@/lib/api/client';
 
 // ============================================================================
 // Utility Functions
@@ -444,10 +445,34 @@ export default function WorkflowHistoryPage() {
     URL.revokeObjectURL(url);
   };
 
-  const handleBulkDelete = () => {
-    // TODO: Implement bulk delete
-    console.log('Bulk delete:', Array.from(selectedIds));
-    alert('Bulk delete functionality coming soon!');
+  const handleBulkDelete = async () => {
+    const workflowIds = Array.from(selectedIds);
+    if (workflowIds.length === 0) return;
+
+    if (!confirm(`Are you sure you want to delete ${workflowIds.length} workflow(s)? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      // Delete workflows in parallel
+      await Promise.all(
+        workflowIds.map(async (id) => {
+          await apiClient.delete(`/orchestration/workflows/${id}`);
+        })
+      );
+
+      // Clear selection
+      setSelectedIds(new Set());
+
+      // Show success message
+      alert(`Successfully deleted ${workflowIds.length} workflow(s)`);
+
+      // Refresh the list
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Bulk delete failed:', error);
+      alert(`Failed to delete workflows: ${error.message || 'Unknown error'}`);
+    }
   };
 
   return (

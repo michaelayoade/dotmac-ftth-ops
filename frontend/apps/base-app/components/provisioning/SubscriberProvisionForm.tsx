@@ -201,7 +201,7 @@ export function SubscriberProvisionForm({
                   <Checkbox
                     id="auto_allocate_ipv4"
                     checked={autoAllocateIPv4}
-                    onCheckedChange={(checked) => setValue('auto_allocate_ipv4', checked as boolean)}
+                    onChange={(e) => setValue('auto_allocate_ipv4', e.target.checked)}
                   />
                   <Label htmlFor="auto_allocate_ipv4">
                     Auto-allocate IPv4 address
@@ -223,7 +223,7 @@ export function SubscriberProvisionForm({
                   <Checkbox
                     id="auto_allocate_ipv6"
                     checked={autoAllocateIPv6}
-                    onCheckedChange={(checked) => setValue('auto_allocate_ipv6', checked as boolean)}
+                    onChange={(e) => setValue('auto_allocate_ipv6', e.target.checked)}
                   />
                   <Label htmlFor="auto_allocate_ipv6">
                     Auto-allocate IPv6 prefix
@@ -319,7 +319,7 @@ export function SubscriberProvisionForm({
                 <Checkbox
                   id="provision_wireguard"
                   checked={provisionWireGuard}
-                  onCheckedChange={(checked) => setValue('provision_wireguard', checked as boolean)}
+                  onChange={(e) => setValue('provision_wireguard', e.target.checked)}
                 />
                 <Label htmlFor="provision_wireguard">
                   Provision WireGuard VPN peer

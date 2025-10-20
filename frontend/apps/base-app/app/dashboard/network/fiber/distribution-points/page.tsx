@@ -27,30 +27,29 @@ import {
 import { useRBAC } from '@/contexts/RBACContext';
 import {
   useDistributionPointListGraphQL,
-  type DistributionPointType,
-  type FiberCableStatus,
 } from '@/hooks/useFiberGraphQL';
+import { DistributionPointType, FiberCableStatus } from '@/lib/graphql/generated';
 import { platformConfig } from '@/lib/config';
 import { MapPin, Search, Filter, ChevronLeft, ChevronRight, Cable } from 'lucide-react';
 import Link from 'next/link';
 
 const DISTRIBUTION_POINT_TYPES: DistributionPointType[] = [
-  'CABINET',
-  'CLOSURE',
-  'POLE',
-  'MANHOLE',
-  'HANDHOLE',
-  'BUILDING_ENTRY',
-  'PEDESTAL',
+  DistributionPointType.Cabinet,
+  DistributionPointType.Closure,
+  DistributionPointType.Pole,
+  DistributionPointType.Manhole,
+  DistributionPointType.Handhole,
+  DistributionPointType.BuildingEntry,
+  DistributionPointType.Pedestal,
 ];
 
 const POINT_STATUSES: FiberCableStatus[] = [
-  'ACTIVE',
-  'INACTIVE',
-  'UNDER_CONSTRUCTION',
-  'MAINTENANCE',
-  'DAMAGED',
-  'DECOMMISSIONED',
+  FiberCableStatus.Active,
+  FiberCableStatus.Inactive,
+  FiberCableStatus.UnderConstruction,
+  FiberCableStatus.Maintenance,
+  FiberCableStatus.Damaged,
+  FiberCableStatus.Decommissioned,
 ];
 
 export default function DistributionPointsPage() {
@@ -72,7 +71,6 @@ export default function DistributionPointsPage() {
     loading,
     error,
     refetch,
-    fetchMore,
   } = useDistributionPointListGraphQL({
     limit,
     offset,
@@ -101,7 +99,6 @@ export default function DistributionPointsPage() {
     if (hasNextPage) {
       const newOffset = offset + limit;
       setOffset(newOffset);
-      fetchMore(newOffset);
     }
   };
 
@@ -109,7 +106,6 @@ export default function DistributionPointsPage() {
     if (offset > 0) {
       const newOffset = Math.max(0, offset - limit);
       setOffset(newOffset);
-      fetchMore(newOffset);
     }
   };
 

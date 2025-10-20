@@ -40,7 +40,7 @@ class BillingSQLModel(SQLBaseModel):  # type: ignore[misc]  # SQLBaseModel resol
 
     __abstract__ = True
 
-    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
@@ -299,6 +299,93 @@ class BillingRuleUsageTable(BillingSQLModel):
     )
 
 
+class BillingAddonTable(BillingSQLModel):
+    """SQLAlchemy table for billing add-ons catalog."""
+
+    __tablename__ = "billing_addons"
+
+    # Primary key
+    addon_id = Column(String(50), primary_key=True)
+
+    # Basic information
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    addon_type = Column(String(20), nullable=False)  # feature, resource, service, user_seats, integration
+    billing_type = Column(String(20), nullable=False)  # one_time, recurring, metered
+
+    # Pricing
+    price = Column(Numeric(15, 2), nullable=False)
+    currency = Column(String(3), nullable=False, default="USD")
+    setup_fee = Column(Numeric(15, 2), nullable=True)
+
+    # Quantity configuration
+    is_quantity_based: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    min_quantity = Column(Numeric(10, 0), nullable=False, default=1)
+    max_quantity = Column(Numeric(10, 0), nullable=True)
+
+    # Metered billing configuration
+    metered_unit = Column(String(50), nullable=True)
+    included_quantity = Column(Numeric(10, 0), nullable=True)
+
+    # Availability
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    is_featured: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    # Plan compatibility
+    compatible_with_all_plans: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    compatible_plan_ids = Column(JSON, nullable=False, default=list)
+
+    # Metadata
+    icon = Column(String(255), nullable=True)
+    features = Column(JSON, nullable=False, default=list)
+
+    # Indexes
+    __table_args__ = (
+        Index("ix_billing_addons_tenant_active", "tenant_id", "is_active"),
+        Index("ix_billing_addons_tenant_type", "tenant_id", "addon_type"),
+        Index("ix_billing_addons_tenant_billing_type", "tenant_id", "billing_type"),
+        Index("ix_billing_addons_tenant_featured", "tenant_id", "is_featured"),
+        {"extend_existing": True},
+    )
+
+
+class BillingTenantAddonTable(BillingSQLModel):
+    """SQLAlchemy table for tenant's purchased add-ons."""
+
+    __tablename__ = "billing_tenant_addons"
+
+    # Primary key
+    tenant_addon_id = Column(String(50), primary_key=True)
+    addon_id = Column(String(50), nullable=False)
+
+    # Subscription association
+    subscription_id = Column(String(50), nullable=True)
+
+    # Current state
+    status = Column(String(20), nullable=False, default="active")  # active, canceled, ended, suspended
+    quantity = Column(Numeric(10, 0), nullable=False, default=1)
+
+    # Billing dates
+    started_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
+    current_period_start = Column(DateTime(timezone=True), nullable=True)
+    current_period_end = Column(DateTime(timezone=True), nullable=True)
+    canceled_at = Column(DateTime(timezone=True), nullable=True)
+    ended_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Usage tracking (for metered add-ons)
+    current_usage = Column(Numeric(10, 0), nullable=False, default=0)
+
+    # Indexes
+    __table_args__ = (
+        Index("ix_billing_tenant_addons_tenant", "tenant_id"),
+        Index("ix_billing_tenant_addons_tenant_status", "tenant_id", "status"),
+        Index("ix_billing_tenant_addons_addon", "addon_id"),
+        Index("ix_billing_tenant_addons_subscription", "subscription_id"),
+        Index("ix_billing_tenant_addons_period_end", "current_period_end"),
+        {"extend_existing": True},
+    )
+
+
 __all__ = [
     "BillingBaseModel",
     "BillingSQLModel",
@@ -309,6 +396,8 @@ __all__ = [
     "BillingSubscriptionEventTable",
     "BillingPricingRuleTable",
     "BillingRuleUsageTable",
+    "BillingAddonTable",
+    "BillingTenantAddonTable",
     # Core models
     "Invoice",
     "InvoiceLineItem",

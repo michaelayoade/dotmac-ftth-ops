@@ -77,7 +77,7 @@ export default function PlanValidationPage() {
       concurrentUsers: 5,
       description: 'Heavy usage: 4K streaming, large downloads, multiple devices',
     },
-    extreme: {
+    custom: {
       downloadGB: 2000,
       uploadGB: 500,
       concurrentUsers: 10,
@@ -528,6 +528,8 @@ function ValidationResultItem({ result }: { result: ValidationResult }) {
         return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
       case 'info':
         return <CheckCircle className="h-5 w-5 text-green-500" />;
+      default:
+        return <AlertCircle className="h-5 w-5 text-gray-500" />;
     }
   };
 
@@ -539,6 +541,8 @@ function ValidationResultItem({ result }: { result: ValidationResult }) {
         return 'border-yellow-200 bg-yellow-50';
       case 'info':
         return 'border-green-200 bg-green-50';
+      default:
+        return 'border-gray-200 bg-gray-50';
     }
   };
 

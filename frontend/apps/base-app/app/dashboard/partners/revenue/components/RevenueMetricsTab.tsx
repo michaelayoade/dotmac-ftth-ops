@@ -274,8 +274,8 @@ export function RevenueMetricsTab() {
             <div>
               <span className="text-muted-foreground">Period:</span>
               <p className="font-medium mt-1">
-                {new Date(period.start).toLocaleDateString()} -{" "}
-                {new Date(period.end).toLocaleDateString()}
+                {period.start && new Date(period.start).toLocaleDateString()} -{" "}
+                {period.end && new Date(period.end).toLocaleDateString()}
               </p>
             </div>
             <div>

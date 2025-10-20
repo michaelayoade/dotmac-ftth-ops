@@ -41,7 +41,7 @@ import {
   type ScheduledJobCreate,
   type ScheduledJobResponse,
   type JobChainCreate,
-  type JobChainResponse,
+  type JobChainResponse as JobChain,
   JobPriority,
   JobExecutionMode,
 } from '@/types';
@@ -64,14 +64,14 @@ export default function JobSchedulerPage() {
   const createJobChain = useCreateJobChain();
   const executeJobChain = useExecuteJobChain();
 
-  const scheduledJobs = scheduledJobsData?.scheduled_jobs || [];
-  const jobChains = jobChainsData?.chains || [];
+  const scheduledJobs = scheduledJobsData || [];
+  const jobChains = jobChainsData || [];
 
   // Calculate statistics
-  const activeJobs = scheduledJobs.filter((j) => j.is_active).length;
-  const totalRuns = scheduledJobs.reduce((sum, j) => sum + j.total_runs, 0);
-  const successfulRuns = scheduledJobs.reduce((sum, j) => sum + j.successful_runs, 0);
-  const failedRuns = scheduledJobs.reduce((sum, j) => sum + j.failed_runs, 0);
+  const activeJobs = scheduledJobs.filter(j => j.is_active).length;
+  const totalRuns = scheduledJobs.reduce((sum, j) => sum + (j.total_runs || 0), 0);
+  const successfulRuns = scheduledJobs.reduce((sum, j) => sum + (j.successful_runs || 0), 0);
+  const failedRuns = scheduledJobs.reduce((sum, j) => sum + (j.failed_runs || 0), 0);
 
   const handleToggleJob = async (jobId: string) => {
     try {
@@ -109,7 +109,7 @@ export default function JobSchedulerPage() {
 
   const handleExecuteChain = async (chainId: string) => {
     try {
-      await executeJobChain.mutateAsync(chainId);
+      await executeJobChain.mutateAsync({ chainId });
       toast({
         title: 'Success',
         description: 'Job chain execution started',
@@ -263,7 +263,7 @@ export default function JobSchedulerPage() {
               {scheduledJobs.map((job) => (
                 <ScheduledJobCard
                   key={job.id}
-                  job={job}
+                  job={job as any}
                   onToggle={() => handleToggleJob(job.id)}
                   onDelete={() => handleDeleteJob(job.id)}
                 />
@@ -290,7 +290,7 @@ export default function JobSchedulerPage() {
               {jobChains.map((chain) => (
                 <JobChainCard
                   key={chain.id}
-                  chain={chain}
+                  chain={chain as JobChain}
                   onExecute={() => handleExecuteChain(chain.id)}
                 />
               ))}
@@ -371,7 +371,7 @@ function JobChainCard({
   chain,
   onExecute,
 }: {
-  chain: JobChainResponse;
+  chain: JobChain;
   onExecute: () => void;
 }) {
   const statusColors = {

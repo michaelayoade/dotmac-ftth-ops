@@ -110,7 +110,7 @@ export default function UserActivityLogPage() {
     }, {} as Record<string, number>);
     const mostCommonAction =
       Object.keys(actionCounts).length > 0
-        ? Object.entries(actionCounts).sort((a, b) => b[1] - a[1])[0][0]
+        ? (Object.entries(actionCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'N/A')
         : 'N/A';
 
     const lastActivityDate =

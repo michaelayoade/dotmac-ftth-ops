@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import {
   Dialog,
@@ -34,11 +34,16 @@ import {
   CheckCircle,
   Clock,
   AlertTriangle,
+  Bell,
+  Receipt,
 } from "lucide-react";
 import { type Invoice, InvoiceStatuses } from "@/types/billing";
 import { formatCurrency } from "@/lib/utils";
 import { RecordPaymentModal } from "./RecordPaymentModal";
 import { InvoicePDFGenerator } from "@/lib/pdf/invoice-pdf";
+import { useInvoiceActions } from "@/hooks/useInvoiceActions";
+import { CreateCreditNoteModal } from "./CreateCreditNoteModal";
+import { apiClient } from "@/lib/api/client";
 
 interface InvoiceDetailModalProps {
   isOpen: boolean;
@@ -58,6 +63,69 @@ export function InvoiceDetailModal({
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showCreditNoteModal, setShowCreditNoteModal] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState<any>(null);
+  const [customerInfo, setCustomerInfo] = useState<any>(null);
+
+  // Invoice actions hook
+  const {
+    sendInvoiceEmail,
+    voidInvoice,
+    sendPaymentReminder,
+    createCreditNote,
+    isLoading: isActionLoading,
+  } = useInvoiceActions();
+
+  // Fetch company info from settings
+  useEffect(() => {
+    const fetchCompanyInfo = async () => {
+      try {
+        const response = await apiClient.get('/settings/company');
+        if (response.data) {
+          setCompanyInfo(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch company info:', error);
+        // Use fallback data if API fails
+        setCompanyInfo({
+          name: "Your ISP Company",
+          address: "123 Main Street",
+          city: "Your City",
+          state: "ST",
+          zip: "12345",
+          phone: "(555) 123-4567",
+          email: "billing@yourisp.com",
+          website: "www.yourisp.com",
+        });
+      }
+    };
+
+    if (isOpen && invoice) {
+      fetchCompanyInfo();
+    }
+  }, [isOpen, invoice]);
+
+  // Fetch customer info
+  useEffect(() => {
+    const fetchCustomerInfo = async () => {
+      if (!invoice?.customer_id) return;
+
+      try {
+        const response = await apiClient.get(`/customers/${invoice.customer_id}`);
+        if (response.data) {
+          setCustomerInfo(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch customer info:', error);
+        // Fallback to just customer ID
+        setCustomerInfo({ name: `Customer ${invoice.customer_id}` });
+      }
+    };
+
+    if (isOpen && invoice) {
+      fetchCustomerInfo();
+    }
+  }, [isOpen, invoice]);
 
   if (!invoice) return null;
 
@@ -72,64 +140,35 @@ export function InvoiceDetailModal({
   );
 
   const handleSendEmail = async () => {
-    setIsProcessing(true);
-    try {
-      // TODO: Replace with actual API call
-      // await sendInvoiceEmail(invoice.invoice_id);
-      console.log("Sending invoice email:", invoice.invoice_id);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      toast({
-        title: "Invoice Sent",
-        description: `Invoice ${invoice.invoice_number} has been sent to ${invoice.billing_email}`,
-      });
-
-      if (onUpdate) onUpdate();
-    } catch (error) {
-      console.error("Failed to send invoice:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send invoice. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
+    await sendInvoiceEmail.mutateAsync({
+      invoiceId: invoice.invoice_id,
+      email: invoice.billing_email,
+    });
+    if (onUpdate) onUpdate();
   };
 
   const handleVoid = async () => {
-    const confirmed = confirm(
-      `Are you sure you want to void invoice ${invoice.invoice_number}? This action cannot be undone.`
+    const reason = prompt(
+      `Are you sure you want to void invoice ${invoice.invoice_number}?\n\nThis action cannot be undone. Please provide a reason:`
     );
-    if (!confirmed) return;
+    if (!reason) return;
 
-    setIsProcessing(true);
-    try {
-      // TODO: Replace with actual API call
-      // await voidInvoice(invoice.invoice_id);
-      console.log("Voiding invoice:", invoice.invoice_id);
+    await voidInvoice.mutateAsync({
+      invoiceId: invoice.invoice_id,
+      reason,
+    });
+    if (onUpdate) onUpdate();
+  };
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+  const handleSendReminder = async () => {
+    await sendPaymentReminder.mutateAsync({
+      invoiceId: invoice.invoice_id,
+    });
+    if (onUpdate) onUpdate();
+  };
 
-      toast({
-        title: "Invoice Voided",
-        description: `Invoice ${invoice.invoice_number} has been voided.`,
-      });
-
-      if (onUpdate) onUpdate();
-    } catch (error) {
-      console.error("Failed to void invoice:", error);
-      toast({
-        title: "Error",
-        description: "Failed to void invoice. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
+  const handleCreateCreditNote = () => {
+    setShowCreditNoteModal(true);
   };
 
   const handleDownloadPDF = async () => {
@@ -137,8 +176,8 @@ export function InvoiceDetailModal({
     try {
       const generator = new InvoicePDFGenerator();
 
-      // TODO: Replace with actual company info from settings/config
-      const companyInfo = {
+      // Use fetched company info or fallback
+      const company = companyInfo || {
         name: "Your ISP Company",
         address: "123 Main Street",
         city: "Your City",
@@ -149,11 +188,16 @@ export function InvoiceDetailModal({
         website: "www.yourisp.com",
       };
 
+      // Use fetched customer info or fallback
+      const customerName = customerInfo?.name ||
+                          customerInfo?.full_name ||
+                          customerInfo?.company_name ||
+                          `Customer ${invoice.customer_id}`;
+
       await generator.downloadInvoicePDF({
-        company: companyInfo,
+        company,
         invoice: invoice,
-        customerName: `Customer ${invoice.customer_id}`,
-        // TODO: Add actual customer info when available
+        customerName,
       });
 
       toast({
@@ -205,13 +249,12 @@ export function InvoiceDetailModal({
       },
     };
 
-    const statusConfig = config[status] || config.draft;
-    const Icon = statusConfig.icon;
+    const { label, className, icon: Icon } = (config[status] || config.draft)!;
 
     return (
-      <Badge className={statusConfig.className}>
+      <Badge className={className}>
         <Icon className="h-3 w-3 mr-1" />
-        {statusConfig.label}
+        {label}
       </Badge>
     );
   };
@@ -257,7 +300,7 @@ export function InvoiceDetailModal({
                 <Button
                   size="sm"
                   onClick={() => setShowPaymentModal(true)}
-                  disabled={isProcessing}
+                  disabled={isProcessing || isActionLoading}
                 >
                   <DollarSign className="h-4 w-4 mr-2" />
                   Record Payment
@@ -268,12 +311,25 @@ export function InvoiceDetailModal({
                 size="sm"
                 variant="outline"
                 onClick={handleSendEmail}
-                disabled={isProcessing}
+                disabled={isProcessing || isActionLoading}
               >
                 <Send className="h-4 w-4 mr-2" />
                 Send Email
               </Button>
             )}
+            {isOverdue &&
+              invoice.status !== InvoiceStatuses.PAID &&
+              invoice.status !== InvoiceStatuses.VOID && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSendReminder}
+                  disabled={isProcessing || isActionLoading}
+                >
+                  <Bell className="h-4 w-4 mr-2" />
+                  Send Reminder
+                </Button>
+              )}
             <Button
               size="sm"
               variant="outline"
@@ -292,13 +348,24 @@ export function InvoiceDetailModal({
               <Printer className="h-4 w-4 mr-2" />
               Print
             </Button>
+            {invoice.status !== InvoiceStatuses.VOID && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCreateCreditNote}
+                disabled={isProcessing || isActionLoading}
+              >
+                <Receipt className="h-4 w-4 mr-2" />
+                Credit Note
+              </Button>
+            )}
             {invoice.status !== InvoiceStatuses.PAID &&
               invoice.status !== InvoiceStatuses.VOID && (
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={handleVoid}
-                  disabled={isProcessing}
+                  disabled={isProcessing || isActionLoading}
                   className="text-red-400 hover:text-red-300"
                 >
                   <XCircle className="h-4 w-4 mr-2" />
@@ -542,6 +609,19 @@ export function InvoiceDetailModal({
           invoices={[invoice]}
           onSuccess={() => {
             setShowPaymentModal(false);
+            if (onUpdate) onUpdate();
+          }}
+        />
+      )}
+
+      {/* Credit Note Creation Modal */}
+      {showCreditNoteModal && (
+        <CreateCreditNoteModal
+          isOpen={showCreditNoteModal}
+          onClose={() => setShowCreditNoteModal(false)}
+          invoice={invoice}
+          onSuccess={() => {
+            setShowCreditNoteModal(false);
             if (onUpdate) onUpdate();
           }}
         />

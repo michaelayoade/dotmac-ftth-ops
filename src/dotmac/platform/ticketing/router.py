@@ -35,7 +35,7 @@ from .service import (
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/tickets", tags=["Ticketing"])
+router = APIRouter(prefix="/tickets", tags=["Ticketing"])
 
 
 def _handle_ticket_error(exc: Exception) -> NoReturn:

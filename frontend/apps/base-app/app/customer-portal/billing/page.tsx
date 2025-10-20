@@ -107,12 +107,57 @@ export default function CustomerBillingPage() {
     }
   };
 
-  const handleDownloadInvoice = (invoiceId: string) => {
-    // TODO: Implement invoice download
-    toast({
-      title: "Download Started",
-      description: "Your invoice is being downloaded.",
-    });
+  const handleDownloadInvoice = async (invoiceId: string) => {
+    try {
+      const invoice = invoices?.find((inv) => inv.invoice_id === invoiceId);
+      if (!invoice) {
+        throw new Error("Invoice not found");
+      }
+
+      toast({
+        title: "Download Started",
+        description: "Your invoice is being downloaded.",
+      });
+
+      // Fetch the invoice PDF from the API
+      const response = await fetch(`/api/customer/invoices/${invoiceId}/download`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/pdf',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to download invoice: ${response.statusText}`);
+      }
+
+      // Get the PDF blob
+      const blob = await response.blob();
+
+      // Create a download link and trigger download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice-${invoice.invoice_number}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Download Complete",
+        description: `Invoice ${invoice.invoice_number} has been downloaded.`,
+      });
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      toast({
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "Failed to download invoice",
+        variant: "destructive",
+      });
+    }
   };
 
 

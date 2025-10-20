@@ -31,7 +31,7 @@ from .models import (
 )
 from .service import SubscriptionService
 
-router = APIRouter(prefix="/api/v1/billing/subscriptions", tags=["Billing - Subscriptions"])
+router = APIRouter(prefix="/billing/subscriptions", tags=["Billing - Subscriptions"])
 
 
 # Subscription Plans Management

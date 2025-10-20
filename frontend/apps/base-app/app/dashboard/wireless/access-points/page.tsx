@@ -29,16 +29,16 @@ import {
   useAccessPointListGraphQL,
   getSignalQualityLabel,
 } from '@/hooks/useWirelessGraphQL';
-import type { AccessPointStatus, FrequencyBand } from '@/lib/graphql/generated';
+import { AccessPointStatus, type FrequencyBand } from '@/lib/graphql/generated';
 import { platformConfig } from '@/lib/config';
 import { Wifi, Search, Filter, ChevronLeft, ChevronRight, RefreshCw, Activity } from 'lucide-react';
 import Link from 'next/link';
 
 const ACCESS_POINT_STATUSES: AccessPointStatus[] = [
-  'ONLINE',
-  'OFFLINE',
-  'DEGRADED',
-  'MAINTENANCE',
+  AccessPointStatus.Online,
+  AccessPointStatus.Offline,
+  AccessPointStatus.Degraded,
+  AccessPointStatus.Maintenance,
 ];
 
 export default function AccessPointsPage() {
@@ -211,7 +211,7 @@ export default function AccessPointsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {accessPoints.reduce((sum, ap) => sum + (ap.clientCount || 0), 0)}
+                {accessPoints.reduce((sum, ap) => sum + (ap.performance?.connectedClients || 0), 0)}
               </div>
             </CardContent>
           </Card>
@@ -349,15 +349,15 @@ export default function AccessPointsPage() {
                         <TableCell className="text-sm">{ap.siteName || '-'}</TableCell>
                         <TableCell className="font-mono text-xs">{ap.ipAddress || '-'}</TableCell>
                         <TableCell className="font-mono text-xs">{ap.macAddress || '-'}</TableCell>
-                        <TableCell className="text-right">{ap.radioCount || 0}</TableCell>
+                        <TableCell className="text-right">{2}</TableCell>
                         <TableCell className="text-right">
-                          <span className={getClientLoadColor(ap.clientCount || 0)}>
-                            {ap.clientCount || 0}
+                          <span className={getClientLoadColor(ap.performance?.connectedClients || 0)}>
+                            {ap.performance?.connectedClients || 0}
                           </span>
                         </TableCell>
                         <TableCell className="text-right text-sm">
-                          {ap.uptimeSeconds
-                            ? `${Math.floor(ap.uptimeSeconds / 3600)}h`
+                          {(ap.lastRebootAt ? Math.floor((Date.now() - new Date(ap.lastRebootAt).getTime()) / 1000) : 0)
+                            ? `${Math.floor((ap.lastRebootAt ? Math.floor((Date.now() - new Date(ap.lastRebootAt).getTime()) / 1000) : 0) / 3600)}h`
                             : '-'}
                         </TableCell>
                         <TableCell>

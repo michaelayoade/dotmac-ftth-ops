@@ -440,7 +440,33 @@ class AlarmArchivalService:
                 if f.path.endswith(".json.gz") and not f.path.endswith("_manifest.json")
             ]
 
-            # TODO: Add date filtering if needed
+            # Apply date filtering if provided
+            if start_date or end_date:
+                filtered_archives = []
+                for archive_path in archives:
+                    # Extract timestamp from filename: alarms_YYYYMMDD_HHMMSS.json.gz
+                    filename = archive_path.split("/")[-1]
+                    if filename.startswith("alarms_") and len(filename) > 22:
+                        try:
+                            # Parse timestamp: alarms_20240101_120000.json.gz
+                            timestamp_str = filename[7:22]  # YYYYMMDD_HHMMSS
+                            archive_date = datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
+
+                            # Check date range
+                            if start_date and archive_date < start_date:
+                                continue
+                            if end_date and archive_date > end_date:
+                                continue
+
+                            filtered_archives.append(archive_path)
+                        except (ValueError, IndexError):
+                            # If we can't parse the date, include it to be safe
+                            filtered_archives.append(archive_path)
+                    else:
+                        # Include files with unexpected format
+                        filtered_archives.append(archive_path)
+
+                archives = filtered_archives
 
             logger.info(
                 "alarm_archival.list_complete",

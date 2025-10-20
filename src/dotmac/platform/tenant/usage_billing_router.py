@@ -19,7 +19,7 @@ from .usage_billing_integration import (
     TenantUsageBillingIntegration,
 )
 
-router = APIRouter(prefix="/api/v1/usage", tags=["Tenant Usage Billing"])
+router = APIRouter(prefix="/usage", tags=["Tenant Usage Billing"])
 
 
 # Dependencies

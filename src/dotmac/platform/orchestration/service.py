@@ -16,6 +16,9 @@ from .models import (
     WorkflowStepStatus,
     WorkflowType,
 )
+
+# Alias for convenience in queries
+Workflow = OrchestrationWorkflow
 from .saga import SagaOrchestrator
 from .schemas import (
     ActivateServiceRequest,

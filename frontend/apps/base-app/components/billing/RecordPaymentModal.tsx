@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { apiClient } from "@/lib/api/client";
 import {
   DollarSign,
   CreditCard,
@@ -66,7 +67,7 @@ export function RecordPaymentModal({
     method: "bank_transfer",
     reference: "",
     description: "",
-    payment_date: new Date().toISOString().split("T")[0],
+    payment_date: new Date().toISOString().split("T")[0] ?? "",
     apply_to_invoices: [],
   });
 
@@ -181,18 +182,41 @@ export function RecordPaymentModal({
         })),
       };
 
-      // TODO: Replace with actual API call
-      // await recordPayment(paymentData, receiptFile);
-      console.log("Recording payment:", paymentData);
-      console.log("Receipt file:", receiptFile?.name);
+      // Record payment via API
+      try {
+        // If receipt file is provided, upload it first
+        let receiptUrl: string | undefined;
+        if (receiptFile) {
+          const formData = new FormData();
+          formData.append('file', receiptFile);
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+          const uploadResponse = await apiClient.post('/billing/receipts/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
 
-      toast({
-        title: "Payment Recorded",
-        description: `Payment of ${formatCurrency(paymentAmount)} has been successfully recorded.`,
-      });
+          receiptUrl = uploadResponse.data?.url;
+        }
+
+        // Record payment with receipt URL
+        await apiClient.post('/billing/payments', {
+          ...paymentData,
+          receipt_url: receiptUrl,
+        });
+
+        toast({
+          title: "Payment Recorded",
+          description: `Payment of ${formatCurrency(paymentAmount)} has been successfully recorded.`,
+        });
+      } catch (error) {
+        console.error('Failed to record payment:', error);
+        toast({
+          title: "Payment Failed",
+          description: error instanceof Error ? error.message : 'Failed to record payment. Please try again.',
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
 
       // Reset form
       setFormData({
@@ -200,7 +224,7 @@ export function RecordPaymentModal({
         method: "bank_transfer",
         reference: "",
         description: "",
-        payment_date: new Date().toISOString().split("T")[0],
+        payment_date: new Date().toISOString().split("T")[0] ?? "",
         apply_to_invoices: [],
       });
       setReceiptFile(null);

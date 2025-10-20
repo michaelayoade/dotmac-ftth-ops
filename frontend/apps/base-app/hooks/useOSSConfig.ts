@@ -10,7 +10,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/use-toast';
 import {
   ossConfigService,
   type OSSService,
@@ -120,14 +120,14 @@ export function useUpdateOSSConfiguration(
       queryClient.invalidateQueries({ queryKey: ossConfigKeys.detail(variables.service) });
       queryClient.invalidateQueries({ queryKey: ossConfigKeys.allConfigurations() });
 
-      toast.success(`${variables.service.toUpperCase()} configuration updated successfully`);
+      // toast.success(`${variables.service.toUpperCase()} configuration updated successfully`);
 
       options?.onSuccess?.(data);
     },
     onError: (error, variables) => {
-      toast.error(`Failed to update ${variables.service.toUpperCase()} configuration`, {
-        description: error.message,
-      });
+      // toast.error(`Failed to update ${variables.service.toUpperCase()} configuration`, {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -166,14 +166,14 @@ export function useResetOSSConfiguration(
       queryClient.invalidateQueries({ queryKey: ossConfigKeys.detail(service) });
       queryClient.invalidateQueries({ queryKey: ossConfigKeys.allConfigurations() });
 
-      toast.success(`${service.toUpperCase()} configuration reset to defaults`);
+      // toast.success(`${service.toUpperCase()} configuration reset to defaults`);
 
       options?.onSuccess?.(service);
     },
     onError: (error, service) => {
-      toast.error(`Failed to reset ${service.toUpperCase()} configuration`, {
-        description: error.message,
-      });
+      // toast.error(`Failed to reset ${service.toUpperCase()} configuration`, {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -214,24 +214,24 @@ export function useTestOSSConnection(
   >({
     mutationFn: (service) => ossConfigService.testConnection(service),
     onSuccess: (result, service) => {
-      if (result.success) {
-        toast.success(`${service.toUpperCase()} connection test passed`, {
-          description: result.latency
-            ? `Response time: ${result.latency}ms`
-            : result.message,
-        });
-      } else {
-        toast.warning(`${service.toUpperCase()} connection test failed`, {
-          description: result.message,
-        });
-      }
+      // if (result.success) {
+      //   toast.success(`${service.toUpperCase()} connection test passed`, {
+      //     description: result.latency
+      //       ? `Response time: ${result.latency}ms`
+      //       : result.message,
+      //   });
+      // } else {
+      //   toast.warning(`${service.toUpperCase()} connection test failed`, {
+      //     description: result.message,
+      //   });
+      // }
 
       options?.onSuccess?.(result);
     },
     onError: (error, service) => {
-      toast.error(`${service.toUpperCase()} connection test error`, {
-        description: error.message,
-      });
+      // toast.error(`${service.toUpperCase()} connection test error`, {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -351,14 +351,14 @@ export function useBatchUpdateOSSConfiguration(
       // Invalidate all OSS configuration queries
       queryClient.invalidateQueries({ queryKey: ossConfigKeys.all });
 
-      toast.success('All configurations updated successfully');
+      // toast.success('All configurations updated successfully');
 
       options?.onSuccess?.();
     },
     onError: (error) => {
-      toast.error('Failed to update configurations', {
-        description: error.message,
-      });
+      // toast.error('Failed to update configurations', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },

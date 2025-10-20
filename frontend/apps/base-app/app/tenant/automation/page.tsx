@@ -111,13 +111,15 @@ function JobStatusBadge({ status }: { status: string }) {
     },
   };
 
-  const config = statusConfig[status.toLowerCase()] || statusConfig.pending;
-  const Icon = config.icon;
+  const normalizedStatus = status.toLowerCase() as keyof typeof statusConfig;
+  const configRecord =
+    (statusConfig[normalizedStatus] ?? statusConfig.pending)!;
+  const Icon = configRecord.icon;
 
   return (
-    <Badge variant="outline" className={`flex items-center gap-1 ${config.className}`}>
+    <Badge variant="outline" className={`flex items-center gap-1 ${configRecord.className}`}>
       <Icon className="h-3 w-3" />
-      {config.label}
+      {configRecord.label}
     </Badge>
   );
 }

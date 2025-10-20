@@ -18,7 +18,7 @@ import {
   TrendingUp,
   XCircle,
 } from "lucide-react";
-import { EnhancedDataTable, type ColumnDef, type BulkAction, type QuickFilter } from "@/components/ui/EnhancedDataTable";
+import { EnhancedDataTable, type ColumnDef, type BulkAction, type QuickFilter, type Row } from "@/components/ui/EnhancedDataTable";
 import { UniversalChart } from "@dotmac/primitives";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useRBAC } from "@/contexts/RBACContext";
@@ -53,39 +53,39 @@ export default function DunningDashboardPage() {
       id: 'name',
       header: 'Campaign',
       accessorKey: 'name',
-      cell: (campaign) => (
+      cell: ({ row }: { row: Row<DunningCampaign> }) => (
         <div>
-          <div className="font-medium">{campaign.name}</div>
-          <div className="text-xs text-muted-foreground">{campaign.description || 'No description'}</div>
+          <div className="font-medium">{row.original.name}</div>
+          <div className="text-xs text-muted-foreground">{row.original.description || 'No description'}</div>
         </div>
       ),
     },
     {
       id: 'trigger',
       header: 'Trigger',
-      cell: (campaign) => (
+      cell: ({ row }: { row: Row<DunningCampaign> }) => (
         <div className="text-sm">
-          After {campaign.trigger_after_days} day{campaign.trigger_after_days !== 1 ? 's' : ''} overdue
+          After {row.original.trigger_after_days} day{row.original.trigger_after_days !== 1 ? 's' : ''} overdue
         </div>
       ),
     },
     {
       id: 'actions',
       header: 'Actions',
-      cell: (campaign) => (
+      cell: ({ row }: { row: Row<DunningCampaign> }) => (
         <div className="text-sm">
-          {campaign.actions.length} step{campaign.actions.length !== 1 ? 's' : ''}
+          {row.original.actions.length} step{row.original.actions.length !== 1 ? 's' : ''}
         </div>
       ),
     },
     {
       id: 'executions',
       header: 'Executions',
-      cell: (campaign) => (
+      cell: ({ row }: { row: Row<DunningCampaign> }) => (
         <div>
-          <div className="text-sm font-medium">{campaign.total_executions}</div>
+          <div className="text-sm font-medium">{row.original.total_executions}</div>
           <div className="text-xs text-muted-foreground">
-            {campaign.successful_executions} successful
+            {row.original.successful_executions} successful
           </div>
         </div>
       ),
@@ -93,9 +93,9 @@ export default function DunningDashboardPage() {
     {
       id: 'recovered',
       header: 'Recovered',
-      cell: (campaign) => (
+      cell: ({ row }: { row: Row<DunningCampaign> }) => (
         <div className="text-sm font-medium text-green-600">
-          {formatCurrency(campaign.total_recovered_amount, 'USD')}
+          {formatCurrency(row.original.total_recovered_amount, 'USD')}
         </div>
       ),
     },
@@ -103,9 +103,9 @@ export default function DunningDashboardPage() {
       id: 'status',
       header: 'Status',
       accessorKey: 'is_active',
-      cell: (campaign) => (
-        <Badge variant={campaign.is_active ? 'success' : 'secondary'}>
-          {campaign.is_active ? 'Active' : 'Paused'}
+      cell: ({ row }: { row: Row<DunningCampaign> }) => (
+        <Badge variant={row.original.is_active ? 'success' : 'secondary'}>
+          {row.original.is_active ? 'Active' : 'Paused'}
         </Badge>
       ),
     },
@@ -113,8 +113,8 @@ export default function DunningDashboardPage() {
       id: 'priority',
       header: 'Priority',
       accessorKey: 'priority',
-      cell: (campaign) => (
-        <div className="text-sm">{campaign.priority}</div>
+      cell: ({ row }: { row: Row<DunningCampaign> }) => (
+        <div className="text-sm">{row.original.priority}</div>
       ),
     },
   ], []);
@@ -124,33 +124,33 @@ export default function DunningDashboardPage() {
     {
       id: 'customer',
       header: 'Customer',
-      cell: (execution) => (
+      cell: ({ row }: { row: Row<DunningExecution> }) => (
         <div>
-          <div className="text-sm font-medium">{execution.subscription_id}</div>
-          <div className="text-xs text-muted-foreground">{execution.customer_id.slice(0, 8)}...</div>
+          <div className="text-sm font-medium">{row.original.subscription_id}</div>
+          <div className="text-xs text-muted-foreground">{row.original.customer_id.slice(0, 8)}...</div>
         </div>
       ),
     },
     {
       id: 'campaign',
       header: 'Campaign',
-      cell: (execution) => {
-        const campaign = campaigns.find(c => c.id === execution.campaign_id);
-        return <div className="text-sm">{campaign?.name || execution.campaign_id.slice(0, 8)}</div>;
+      cell: ({ row }: { row: Row<DunningExecution> }) => {
+        const campaign = campaigns.find(c => c.id === row.original.campaign_id);
+        return <div className="text-sm">{campaign?.name || row.original.campaign_id.slice(0, 8)}</div>;
       },
     },
     {
       id: 'progress',
       header: 'Progress',
-      cell: (execution) => (
+      cell: ({ row }: { row: Row<DunningExecution> }) => (
         <div>
           <div className="text-sm">
-            Step {execution.current_step + 1} of {execution.total_steps}
+            Step {row.original.current_step + 1} of {row.original.total_steps}
           </div>
           <div className="w-full bg-secondary rounded-full h-1.5 mt-1">
             <div
               className="bg-primary h-1.5 rounded-full"
-              style={{ width: `${((execution.current_step + 1) / execution.total_steps) * 100}%` }}
+              style={{ width: `${((row.original.current_step + 1) / row.original.total_steps) * 100}%` }}
             />
           </div>
         </div>
@@ -159,14 +159,14 @@ export default function DunningDashboardPage() {
     {
       id: 'amount',
       header: 'Amount',
-      cell: (execution) => (
+      cell: ({ row }: { row: Row<DunningExecution> }) => (
         <div>
           <div className="text-sm font-medium">
-            {formatCurrency(execution.outstanding_amount, 'USD')}
+            {formatCurrency(row.original.outstanding_amount, 'USD')}
           </div>
-          {execution.recovered_amount > 0 && (
+          {row.original.recovered_amount > 0 && (
             <div className="text-xs text-green-600">
-              {formatCurrency(execution.recovered_amount, 'USD')} recovered
+              {formatCurrency(row.original.recovered_amount, 'USD')} recovered
             </div>
           )}
         </div>
@@ -176,35 +176,35 @@ export default function DunningDashboardPage() {
       id: 'status',
       header: 'Status',
       accessorKey: 'status',
-      cell: (execution) => (
+      cell: ({ row }: { row: Row<DunningExecution> }) => (
         <Badge variant={
-          execution.status === 'completed' ? 'success' :
-          execution.status === 'failed' ? 'destructive' :
-          execution.status === 'canceled' ? 'secondary' :
-          execution.status === 'in_progress' ? 'default' :
+          row.original.status === 'completed' ? 'success' :
+          row.original.status === 'failed' ? 'destructive' :
+          row.original.status === 'canceled' ? 'secondary' :
+          row.original.status === 'in_progress' ? 'default' :
           'secondary'
         }>
-          {execution.status}
+          {row.original.status}
         </Badge>
       ),
     },
     {
       id: 'started',
       header: 'Started',
-      cell: (execution) => (
+      cell: ({ row }: { row: Row<DunningExecution> }) => (
         <div className="text-sm">
-          {new Date(execution.started_at).toLocaleDateString()}
+          {new Date(row.original.started_at).toLocaleDateString()}
         </div>
       ),
     },
     {
       id: 'next_action',
       header: 'Next Action',
-      cell: (execution) => (
+      cell: ({ row }: { row: Row<DunningExecution> }) => (
         <div className="text-xs text-muted-foreground">
-          {execution.next_action_at
-            ? new Date(execution.next_action_at).toLocaleString()
-            : execution.completed_at
+          {row.original.next_action_at
+            ? new Date(row.original.next_action_at).toLocaleString()
+            : row.original.completed_at
             ? 'Completed'
             : 'N/A'}
         </div>
@@ -260,15 +260,15 @@ export default function DunningDashboardPage() {
   const campaignQuickFilters: QuickFilter<DunningCampaign>[] = useMemo(() => [
     {
       label: 'Active',
-      filter: (campaign) => campaign.is_active,
+      filter: (campaign: DunningCampaign) => campaign.is_active,
     },
     {
       label: 'Paused',
-      filter: (campaign) => !campaign.is_active,
+      filter: (campaign: DunningCampaign) => !campaign.is_active,
     },
     {
       label: 'High Priority',
-      filter: (campaign) => campaign.priority >= 50,
+      filter: (campaign: DunningCampaign) => campaign.priority >= 50,
     },
   ], []);
 
@@ -276,19 +276,19 @@ export default function DunningDashboardPage() {
   const executionQuickFilters: QuickFilter<DunningExecution>[] = useMemo(() => [
     {
       label: 'In Progress',
-      filter: (execution) => execution.status === 'in_progress',
+      filter: (execution: DunningExecution) => execution.status === 'in_progress',
     },
     {
       label: 'Pending',
-      filter: (execution) => execution.status === 'pending',
+      filter: (execution: DunningExecution) => execution.status === 'pending',
     },
     {
       label: 'Failed',
-      filter: (execution) => execution.status === 'failed',
+      filter: (execution: DunningExecution) => execution.status === 'failed',
     },
     {
       label: 'Completed',
-      filter: (execution) => execution.status === 'completed',
+      filter: (execution: DunningExecution) => execution.status === 'completed',
     },
   ], []);
 
@@ -457,12 +457,14 @@ export default function DunningDashboardPage() {
               </div>
             ) : (
               <UniversalChart
-                type="line"
-                data={chartData}
-                series={recoveryChartSeries}
-                categories={recoveryChartCategories}
-                height={300}
-                yAxisFormatter={(value) => `$${value.toFixed(0)}`}
+                {...{
+                  type: "line",
+                  data: chartData,
+                  series: recoveryChartSeries,
+                  categories: recoveryChartCategories,
+                  height: 300,
+                  yAxisFormatter: (value: number) => `$${value.toFixed(0)}`
+                } as any}
               />
             )}
           </div>
@@ -503,7 +505,7 @@ export default function DunningDashboardPage() {
               searchConfig={campaignSearchConfig}
               isLoading={isLoading}
               emptyMessage="No campaigns found"
-              getRowId={(campaign) => campaign.id}
+              getRowId={(campaign: any) => campaign.id}
             />
           </CardContent>
         </Card>
@@ -524,7 +526,7 @@ export default function DunningDashboardPage() {
               searchConfig={executionSearchConfig}
               isLoading={isLoading}
               emptyMessage="No executions found"
-              getRowId={(execution) => execution.id}
+              getRowId={(execution: any) => execution.id}
             />
           </CardContent>
         </Card>

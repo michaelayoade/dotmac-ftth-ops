@@ -168,7 +168,7 @@ class PerformanceResponse(BaseModel):  # BaseModel resolves to Any in isolation
 # Router
 # ============================================================
 
-traces_router = APIRouter(prefix="/api/v1/observability", )
+traces_router = APIRouter(prefix="/observability", )
 
 
 # ============================================================

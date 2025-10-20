@@ -106,6 +106,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/api/v1/auth/rbac/my-permissions",  # Allow authenticated users to fetch their permissions
             "/api/v1/secrets/health",  # Vault health check is public
             "/api/v1/health",  # Health check endpoint (also available at /health)
+            "/api/v1/monitoring/alerts/webhook",  # Alertmanager webhook doesn't provide tenant context
         }
         # Paths where tenant is optional (middleware runs but doesn't require tenant)
         self.optional_tenant_paths = {

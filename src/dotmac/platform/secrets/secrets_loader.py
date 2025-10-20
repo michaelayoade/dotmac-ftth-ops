@@ -104,10 +104,6 @@ SECRETS_MAPPING = {
     # ============================================================
     # Vault token (for token renewal)
     "vault.token": "vault/token",
-    # ============================================================
-    # Observability & Monitoring (CONFIDENTIAL)
-    # ============================================================
-    "observability.sentry_dsn": "observability/sentry_dsn",
 }
 
 # Additional Vault paths for secrets not directly mapped to settings

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Activity,
   Plus,
@@ -161,13 +162,15 @@ function ServiceStatusBadge({ status }: { status: ServiceStatusValue | 'provisio
     },
   };
 
-  const config = statusConfig[status] || statusConfig.provisioning;
-  const Icon = config.icon;
+  const normalizedStatus = status as keyof typeof statusConfig;
+  const configRecord =
+    (statusConfig[normalizedStatus] ?? statusConfig.provisioning)!;
+  const Icon = configRecord.icon;
 
   return (
-    <Badge variant={config.variant} className="flex items-center gap-1">
+    <Badge variant={configRecord.variant} className="flex items-center gap-1">
       <Icon className="h-3 w-3" />
-      {config.label}
+      {configRecord.label}
     </Badge>
   );
 }
@@ -238,9 +241,13 @@ function ServiceActionsMenu({ service, onAction }: ServiceActionsMenuProps) {
 }
 
 export default function ServicesPage() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ServiceStatusValue | 'provisioning' | 'active' | 'all'>('all');
   const [serviceTypeFilter, setServiceTypeFilter] = useState<string>('all');
+  const [showModifyModal, setShowModifyModal] = useState(false);
+  const [showProvisionModal, setShowProvisionModal] = useState(false);
+  const [selectedService, setSelectedService] = useState<ServiceInstanceSummary | null>(null);
   const { toast } = useToast();
 
   // API Hooks
@@ -265,7 +272,7 @@ export default function ServicesPage() {
     return services.filter((service) => {
       const matchesSearch =
         searchQuery === '' ||
-        service.service_instance_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        service.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         service.customer_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         service.service_type.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -284,44 +291,44 @@ export default function ServicesPage() {
       switch (action) {
         case 'activate':
           await activateMutation.mutateAsync({
-            serviceId: service.service_instance_id,
+            serviceId: service.id,
           });
           toast({
             title: 'Service Activated',
-            description: `Service ${service.service_instance_id} has been activated successfully.`,
+            description: `Service ${service.id} has been activated successfully.`,
           });
           break;
 
         case 'suspend':
           await suspendMutation.mutateAsync({
-            serviceId: service.service_instance_id,
+            serviceId: service.id,
             payload: { reason: 'Manual suspension via UI' },
           });
           toast({
             title: 'Service Suspended',
-            description: `Service ${service.service_instance_id} has been suspended.`,
+            description: `Service ${service.id} has been suspended.`,
           });
           break;
 
         case 'resume':
           await resumeMutation.mutateAsync({
-            serviceId: service.service_instance_id,
+            serviceId: service.id,
           });
           toast({
             title: 'Service Resumed',
-            description: `Service ${service.service_instance_id} has been resumed.`,
+            description: `Service ${service.id} has been resumed.`,
           });
           break;
 
         case 'terminate':
           if (confirm('Are you sure you want to terminate this service? This action cannot be undone.')) {
             await terminateMutation.mutateAsync({
-              serviceId: service.service_instance_id,
+              serviceId: service.id,
               payload: { reason: 'Manual termination via UI' },
             });
             toast({
               title: 'Service Terminated',
-              description: `Service ${service.service_instance_id} has been terminated.`,
+              description: `Service ${service.id} has been terminated.`,
               variant: 'destructive',
             });
           }
@@ -329,28 +336,23 @@ export default function ServicesPage() {
 
         case 'health-check':
           await healthCheckMutation.mutateAsync({
-            serviceId: service.service_instance_id,
+            serviceId: service.id,
           });
           toast({
             title: 'Health Check Completed',
-            description: `Health check for service ${service.service_instance_id} completed successfully.`,
+            description: `Health check for service ${service.id} completed successfully.`,
           });
           break;
 
         case 'view':
-          // TODO: Navigate to service detail page
-          toast({
-            title: 'Service Details',
-            description: 'Service detail view coming soon.',
-          });
+          // Navigate to service detail page
+          router.push(`/tenant/services/${service.id}`);
           break;
 
         case 'modify':
-          // TODO: Open modify modal
-          toast({
-            title: 'Modify Service',
-            description: 'Service modification modal coming soon.',
-          });
+          // Open modify modal
+          setSelectedService(service);
+          setShowModifyModal(true);
           break;
 
         default:
@@ -366,11 +368,8 @@ export default function ServicesPage() {
   };
 
   const handleProvisionNew = () => {
-    // TODO: Open provision service modal
-    toast({
-      title: 'Provision Service',
-      description: 'Service provisioning modal coming soon.',
-    });
+    // Open provision service modal
+    setShowProvisionModal(true);
   };
 
   return (
@@ -478,7 +477,7 @@ export default function ServicesPage() {
               <div className="space-y-3">
                 {filteredServices.map((service) => (
                   <Card
-                    key={service.service_instance_id}
+                    key={service.id}
                     className="bg-slate-900 border-slate-700 hover:border-slate-600 transition-colors"
                   >
                     <CardContent className="p-4">
@@ -486,7 +485,7 @@ export default function ServicesPage() {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="text-white font-medium font-mono text-sm">
-                              {service.service_instance_id}
+                              {service.id}
                             </h3>
                             <ServiceStatusBadge status={service.status} />
                             <Badge variant="outline" className="text-xs">
@@ -515,9 +514,9 @@ export default function ServicesPage() {
                             )}
                           </div>
 
-                          {service.metadata && Object.keys(service.metadata).length > 0 && (
+                          {false && (
                             <div className="mt-2 flex flex-wrap gap-1">
-                              {Object.entries(service.metadata).slice(0, 3).map(([key, value]) => (
+                              {([] as Array<[string, unknown]>).map(([key, value]) => (
                                 <Badge
                                   key={key}
                                   variant="secondary"

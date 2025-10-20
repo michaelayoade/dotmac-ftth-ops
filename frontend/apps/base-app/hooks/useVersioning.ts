@@ -10,7 +10,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/use-toast';
 import {
   versioningService,
   type APIVersionInfo,
@@ -157,14 +157,14 @@ export function useCreateVersion(options?: {
       queryClient.invalidateQueries({ queryKey: versioningKeys.versions() });
       queryClient.invalidateQueries({ queryKey: versioningKeys.config() });
 
-      toast.success('Version created successfully');
+      // toast.success('Version created successfully');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to create version', {
-        description: error.message,
-      });
+      // toast.error('Failed to create version', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -189,14 +189,14 @@ export function useUpdateVersion(options?: {
       queryClient.invalidateQueries({ queryKey: versioningKeys.versions() });
       queryClient.invalidateQueries({ queryKey: versioningKeys.versionDetail(data.version) });
 
-      toast.success('Version updated successfully');
+      // toast.success('Version updated successfully');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to update version', {
-        description: error.message,
-      });
+      // toast.error('Failed to update version', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -226,14 +226,14 @@ export function useDeprecateVersion(options?: {
       queryClient.invalidateQueries({ queryKey: versioningKeys.versionDetail(data.version) });
       queryClient.invalidateQueries({ queryKey: versioningKeys.config() });
 
-      toast.success('Version deprecated successfully');
+      // toast.success('Version deprecated successfully');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to deprecate version', {
-        description: error.message,
-      });
+      // toast.error('Failed to deprecate version', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -259,14 +259,14 @@ export function useUndeprecateVersion(options?: {
       queryClient.invalidateQueries({ queryKey: versioningKeys.versionDetail(data.version) });
       queryClient.invalidateQueries({ queryKey: versioningKeys.config() });
 
-      toast.success('Version un-deprecated successfully');
+      // toast.success('Version un-deprecated successfully');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to un-deprecate version', {
-        description: error.message,
-      });
+      // toast.error('Failed to un-deprecate version', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -291,14 +291,14 @@ export function useSetDefaultVersion(options?: {
       queryClient.invalidateQueries({ queryKey: versioningKeys.versions() });
       queryClient.invalidateQueries({ queryKey: versioningKeys.config() });
 
-      toast.success('Default version updated successfully');
+      // toast.success('Default version updated successfully');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to set default version', {
-        description: error.message,
-      });
+      // toast.error('Failed to set default version', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -323,14 +323,14 @@ export function useRemoveVersion(options?: {
       queryClient.invalidateQueries({ queryKey: versioningKeys.versions() });
       queryClient.invalidateQueries({ queryKey: versioningKeys.config() });
 
-      toast.success('Version removed successfully');
+      // toast.success('Version removed successfully');
 
       options?.onSuccess?.();
     },
     onError: (error) => {
-      toast.error('Failed to remove version', {
-        description: error.message,
-      });
+      // toast.error('Failed to remove version', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -393,14 +393,14 @@ export function useCreateBreakingChange(options?: {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: versioningKeys.breakingChanges() });
 
-      toast.success('Breaking change created successfully');
+      // toast.success('Breaking change created successfully');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to create breaking change', {
-        description: error.message,
-      });
+      // toast.error('Failed to create breaking change', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -432,14 +432,14 @@ export function useUpdateBreakingChange(options?: {
         queryKey: versioningKeys.breakingChangeDetail(data.id),
       });
 
-      toast.success('Breaking change updated successfully');
+      // toast.success('Breaking change updated successfully');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to update breaking change', {
-        description: error.message,
-      });
+      // toast.error('Failed to update breaking change', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -463,14 +463,14 @@ export function useDeleteBreakingChange(options?: {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: versioningKeys.breakingChanges() });
 
-      toast.success('Breaking change deleted successfully');
+      // toast.success('Breaking change deleted successfully');
 
       options?.onSuccess?.();
     },
     onError: (error) => {
-      toast.error('Failed to delete breaking change', {
-        description: error.message,
-      });
+      // toast.error('Failed to delete breaking change', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -527,14 +527,14 @@ export function useUpdateVersioningConfiguration(options?: {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: versioningKeys.config() });
 
-      toast.success('Configuration updated successfully');
+      // toast.success('Configuration updated successfully');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to update configuration', {
-        description: error.message,
-      });
+      // toast.error('Failed to update configuration', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },

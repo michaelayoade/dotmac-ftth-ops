@@ -382,7 +382,7 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
             <Checkbox
               id="setAsDefault"
               checked={setAsDefault}
-              onCheckedChange={(checked) => setSetAsDefault(checked as boolean)}
+              onChange={(e) => setSetAsDefault(e.target.checked)}
             />
             <label
               htmlFor="setAsDefault"

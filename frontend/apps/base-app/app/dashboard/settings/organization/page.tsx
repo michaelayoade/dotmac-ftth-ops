@@ -754,11 +754,11 @@ export default function OrganizationSettingsPage() {
                 <div>
                   <p className="font-medium text-foreground dark:text-white">Current Plan</p>
                   <p className="text-sm text-foreground dark:text-muted-foreground">
-                    You are on the {tenantService.getPlanDisplayName(tenant.plan)} plan
+                    You are on the {tenantService.getPlanDisplayName(tenant.plan ?? 'free')} plan
                   </p>
                 </div>
                 <Badge variant="default" className="text-lg px-3 py-1">
-                  {tenantService.getPlanDisplayName(tenant.plan)}
+                  {tenantService.getPlanDisplayName(tenant.plan ?? 'free')}
                 </Badge>
               </div>
 

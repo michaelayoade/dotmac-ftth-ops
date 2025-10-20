@@ -168,7 +168,7 @@ class License(BaseModel):
     reseller_id: Mapped[str | None] = mapped_column(
         String(36), nullable=True, index=True
     )
-    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False)
 
     # License ownership
     issued_to: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -252,7 +252,7 @@ class LicenseTemplate(BaseModel):
         String(50), ForeignKey("billing_products.product_id"), nullable=False, index=True
     )
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False)
 
     # License configuration
     license_type: Mapped[LicenseType] = mapped_column(SQLEnum(LicenseType), nullable=False)
@@ -316,7 +316,7 @@ class Activation(BaseModel):
     )
 
     # Device fingerprint
-    device_fingerprint: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    device_fingerprint: Mapped[str] = mapped_column(String(255), nullable=False)
     machine_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     hardware_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     mac_address: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -354,7 +354,7 @@ class Activation(BaseModel):
     usage_metrics: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
 
     # Tenant
-    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
@@ -398,7 +398,7 @@ class LicenseOrder(BaseModel):
         String(36), ForeignKey("customers.id"), nullable=True, index=True
     )
     reseller_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
-    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False)
 
     # Template
     template_id: Mapped[str] = mapped_column(
@@ -477,7 +477,7 @@ class ComplianceAudit(BaseModel):
     )
     product_ids: Mapped[list[str]] = mapped_column(JSON, nullable=False)
     audit_scope: Mapped[AuditScope] = mapped_column(SQLEnum(AuditScope), nullable=False)
-    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False)
 
     # Status
     status: Mapped[AuditStatus] = mapped_column(
@@ -536,11 +536,11 @@ class ComplianceViolation(BaseModel):
 
     # Violation classification
     violation_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    severity: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    severity: Mapped[str] = mapped_column(String(20), nullable=False)
     license_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("licenses.id"), nullable=False, index=True
     )
-    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False)
 
     # Details
     description: Mapped[str] = mapped_column(Text, nullable=False)
@@ -595,9 +595,9 @@ class LicenseEventLog(BaseModel):
 
     # Event classification
     event_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    license_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    license_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     activation_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
-    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(50), nullable=False)
 
     # Actor
     user_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)

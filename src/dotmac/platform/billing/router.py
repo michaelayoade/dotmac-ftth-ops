@@ -20,7 +20,7 @@ from .usage.router import router as usage_router
 from .webhooks.router import router as webhook_router
 
 # Create main billing router - no prefix here as it's added in main router registration
-router = APIRouter(prefix="/api/v1/billing", tags=["Billing"])
+router = APIRouter(prefix="/billing", tags=["Billing"])
 
 # Include sub-routers with hierarchical tags for better API docs organization
 router.include_router(invoice_router, prefix="", tags=["Billing - Invoices"])

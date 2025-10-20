@@ -73,6 +73,22 @@ class VoidInvoiceRequest(BaseModel):
     reason: str = Field(..., min_length=1, max_length=500, description="Reason for voiding")
 
 
+class SendInvoiceEmailRequest(BaseModel):
+    """Send invoice email request model"""
+
+    model_config = ConfigDict()
+
+    email: str | None = Field(None, description="Override recipient email (uses invoice billing_email if not provided)")
+
+
+class SendPaymentReminderRequest(BaseModel):
+    """Send payment reminder request model"""
+
+    model_config = ConfigDict()
+
+    message: str | None = Field(None, max_length=1000, description="Custom reminder message")
+
+
 class ApplyCreditRequest(BaseModel):
     """Apply credit to invoice request model"""
 
@@ -262,6 +278,82 @@ async def void_invoice(
             tenant_id, invoice_id, reason=void_data.reason, voided_by=current_user.user_id
         )
         return invoice
+    except InvoiceNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
+    except InvalidInvoiceStatusError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{invoice_id}/send", status_code=status.HTTP_200_OK)
+async def send_invoice_email(
+    invoice_id: str,
+    send_data: SendInvoiceEmailRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: UserInfo = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Send invoice email to customer"""
+
+    tenant_id = get_tenant_id_from_request(request)
+    invoice_service = InvoiceService(db)
+
+    try:
+        success = await invoice_service.send_invoice_email(
+            tenant_id, invoice_id, recipient_email=send_data.email
+        )
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send invoice email"
+            )
+
+        # Get invoice to return details
+        invoice = await invoice_service.get_invoice(tenant_id, invoice_id)
+        recipient = send_data.email or (invoice.billing_email if invoice else "unknown")
+
+        return {
+            "success": True,
+            "message": f"Invoice email sent successfully to {recipient}",
+            "invoice_id": invoice_id,
+        }
+    except InvoiceNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
+
+
+@router.post("/{invoice_id}/remind", status_code=status.HTTP_200_OK)
+async def send_payment_reminder(
+    invoice_id: str,
+    reminder_data: SendPaymentReminderRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: UserInfo = Depends(get_current_user),
+) -> dict[str, Any]:
+    """Send payment reminder for invoice"""
+
+    tenant_id = get_tenant_id_from_request(request)
+    invoice_service = InvoiceService(db)
+
+    try:
+        success = await invoice_service.send_payment_reminder(
+            tenant_id, invoice_id, custom_message=reminder_data.message
+        )
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to send payment reminder"
+            )
+
+        # Get invoice to return details
+        invoice = await invoice_service.get_invoice(tenant_id, invoice_id)
+        invoice_number = invoice.invoice_number if invoice else invoice_id
+
+        return {
+            "success": True,
+            "message": f"Payment reminder sent successfully for invoice {invoice_number}",
+            "invoice_id": invoice_id,
+        }
     except InvoiceNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
     except InvalidInvoiceStatusError as e:

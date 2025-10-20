@@ -38,6 +38,10 @@ def get_database_url() -> str:
     if override_url:
         return override_url
 
+    legacy_env_url = os.getenv("DATABASE_URL")
+    if legacy_env_url:
+        return legacy_env_url
+
     if settings.database.url:
         return str(settings.database.url)
 

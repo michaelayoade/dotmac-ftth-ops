@@ -63,6 +63,7 @@ export function ChurnAnalysisChart() {
   const latestData = data[data.length - 1];
   const avgChurnRate = data.reduce((sum, d) => sum + d.churnRate, 0) / data.length;
   const totalChurned = data.reduce((sum, d) => sum + d.churnedCustomers, 0);
+  const netGrowthValue = latestData?.netGrowth ?? 0;
 
   const handleExport = () => {
     const csvContent = [
@@ -127,10 +128,10 @@ export function ChurnAnalysisChart() {
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Current Churn Rate</p>
             <p className="text-2xl font-bold text-red-500">
-              {latestData?.churnRate.toFixed(2)}%
+              {(latestData ? latestData.churnRate.toFixed(2) : "0.00")}%
             </p>
             <p className="text-xs text-muted-foreground">
-              {latestData?.churnedCustomers} customers
+              {(latestData?.churnedCustomers ?? 0)} customers
             </p>
           </div>
           <div className="space-y-1">
@@ -155,11 +156,11 @@ export function ChurnAnalysisChart() {
             <p className="text-sm text-muted-foreground">Net Growth</p>
             <p
               className={`text-2xl font-bold ${
-                latestData?.netGrowth >= 0 ? "text-green-500" : "text-red-500"
+                netGrowthValue >= 0 ? "text-green-500" : "text-red-500"
               }`}
             >
-              {latestData?.netGrowth >= 0 ? "+" : ""}
-              {latestData?.netGrowth}
+              {netGrowthValue >= 0 ? "+" : ""}
+              {netGrowthValue.toFixed(0)}
             </p>
             <p className="text-xs text-muted-foreground">
               Current month

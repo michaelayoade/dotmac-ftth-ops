@@ -1,7 +1,7 @@
 """add internet service plans tables
 
 Revision ID: 8a9b0c1d2e3f
-Revises: 2025_10_16_0600
+Revises: 7f8e9d0a1b2c
 Create Date: 2025-10-16 12:00:00.000000
 
 """

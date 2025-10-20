@@ -371,6 +371,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
       const interval = setInterval(fetchLeads, options.refreshInterval || 60000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [options.autoRefresh, options.refreshInterval, fetchLeads]);
 
   const createLead = useCallback(async (data: LeadCreateRequest): Promise<Lead | null> => {
@@ -644,6 +645,17 @@ export function useQuotes(options: UseQuotesOptions = {}) {
     }
   }, []);
 
+  const deleteQuote = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      await apiClient.delete(`/crm/quotes/${id}`);
+      setQuotes((prev) => prev.filter((q) => q.id !== id));
+      return true;
+    } catch (err) {
+      console.error('Failed to delete quote:', err);
+      return false;
+    }
+  }, []);
+
   return {
     quotes,
     isLoading,
@@ -653,6 +665,7 @@ export function useQuotes(options: UseQuotesOptions = {}) {
     sendQuote,
     acceptQuote,
     rejectQuote,
+    deleteQuote,
   };
 }
 

@@ -41,7 +41,6 @@ import {
 } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { VOLTHAAlarm, VOLTHAAlarmListResponse, AlarmSeverity } from "@/types/voltha";
-import { useWebSocketEvent, WebSocketEventType } from "@/lib/websocket/hooks";
 
 interface AlarmPerformanceMonitoringProps {
   deviceId?: string;
@@ -55,18 +54,6 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
   const [severityFilter, setSeverityFilter] = useState<string>("all");
   const [stateFilter, setStateFilter] = useState<string>("all");
   const [acknowledgedAlarms, setAcknowledgedAlarms] = useState<Set<string>>(new Set());
-
-  // WebSocket integration for real-time alarm updates
-  useWebSocketEvent(WebSocketEventType.NETWORK_ALERT, (message) => {
-    if (message.data.source === "voltha") {
-      loadAlarms();
-      toast({
-        title: "New VOLTHA Alert",
-        description: message.data.description || "A new alarm has been raised",
-        variant: message.data.severity === "CRITICAL" ? "destructive" : "default",
-      });
-    }
-  });
 
   const loadAlarms = useCallback(async () => {
     setLoading(true);

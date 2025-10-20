@@ -17,7 +17,7 @@ from dotmac.platform.jobs.models import JobExecutionMode, JobPriority
 from dotmac.platform.jobs.scheduler_service import SchedulerService
 from dotmac.platform.redis_client import RedisClientType, get_redis_client
 
-router = APIRouter(prefix="/api/v1/jobs/scheduler", tags=["Job Scheduler"])
+router = APIRouter(prefix="/jobs/scheduler", tags=["Job Scheduler"])
 
 
 # =============================================================================

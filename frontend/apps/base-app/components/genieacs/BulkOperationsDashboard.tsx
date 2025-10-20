@@ -183,11 +183,13 @@ export function BulkOperationsDashboard() {
       cancelled: { variant: "outline", icon: Pause, color: "text-gray-600" },
     };
 
-    const style = styles[status] || styles.pending;
-    const Icon = style.icon;
+    const normalizedStatus = status as keyof typeof styles;
+    const styleRecord =
+      (styles[normalizedStatus] ?? styles.pending)!;
+    const Icon = styleRecord.icon;
 
     return (
-      <Badge variant={style.variant}>
+      <Badge variant={styleRecord.variant}>
         <Icon className="w-3 h-3 mr-1" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>

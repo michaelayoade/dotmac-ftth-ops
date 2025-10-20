@@ -17,6 +17,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from dotmac.platform.auth.core import UserInfo
+from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.auth.platform_admin import require_platform_admin
 from dotmac.platform.auth.rbac_dependencies import require_any_role
 from dotmac.platform.db import get_async_session
@@ -678,6 +680,7 @@ async def get_current_subscription(
 async def add_addon_to_current_subscription(
     addon_request: AddAddonRequest,
     tenant: Tenant = Depends(get_current_tenant),
+    current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_session),
 ):
     """Add an add-on module to current subscription."""
@@ -709,7 +712,7 @@ async def add_addon_to_current_subscription(
         await service.add_addon_to_subscription(
             subscription_id=subscription.id,
             module_id=addon_request.module_id,
-            activated_by=None,  # TODO: Get from JWT
+            activated_by=current_user.user_id,
         )
 
         # Reload with relationships
@@ -738,6 +741,7 @@ async def add_addon_to_current_subscription(
 async def remove_addon_from_current_subscription(
     addon_request: RemoveAddonRequest,
     tenant: Tenant = Depends(get_current_tenant),
+    current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_session),
 ):
     """Remove an add-on module from current subscription."""
@@ -769,7 +773,7 @@ async def remove_addon_from_current_subscription(
         await service.remove_addon_from_subscription(
             subscription_id=subscription.id,
             module_id=addon_request.module_id,
-            deactivated_by=None,  # TODO: Get from JWT
+            deactivated_by=current_user.user_id,
         )
 
         # Reload with relationships

@@ -260,11 +260,13 @@ export function FirmwareManagement() {
       cancelled: { variant: "outline", icon: Pause, color: "text-gray-600" },
     };
 
-    const style = styles[status] || styles.pending;
-    const Icon = style.icon;
+    const normalizedStatus = status as keyof typeof styles;
+    const styleRecord =
+      (styles[normalizedStatus] ?? styles.pending)!;
+    const Icon = styleRecord.icon;
 
     return (
-      <Badge variant={style.variant}>
+      <Badge variant={styleRecord.variant}>
         <Icon className="w-3 h-3 mr-1" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
@@ -286,11 +288,13 @@ export function FirmwareManagement() {
       in_progress: { variant: "default", icon: Loader2 },
     };
 
-    const style = styles[status] || styles.pending;
-    const Icon = style.icon;
+    const normalizedStatus = status as keyof typeof styles;
+    const styleRecord =
+      (styles[normalizedStatus] ?? styles.pending)!;
+    const Icon = styleRecord.icon;
 
     return (
-      <Badge variant={style.variant} className="text-xs">
+      <Badge variant={styleRecord.variant} className="text-xs">
         <Icon className={`w-3 h-3 mr-1 ${status === "in_progress" ? "animate-spin" : ""}`} />
         {status.charAt(0).toUpperCase() + status.slice(1).replace("_", " ")}
       </Badge>

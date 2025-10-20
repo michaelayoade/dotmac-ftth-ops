@@ -16,7 +16,7 @@ export function TenantSelector() {
     setIsOpen(false);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string | undefined) => {
     switch (status) {
       case 'active':
         return 'bg-green-500/10 text-green-500 dark:bg-green-500/20';

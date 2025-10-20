@@ -157,7 +157,7 @@ export function BankAccountDialog({
               <Label htmlFor="account_nickname">Nickname (optional)</Label>
               <Input
                 id="account_nickname"
-                value={formData.account_nickname}
+                value={formData.account_nickname ?? ""}
                 onChange={(e) => setFormData({ ...formData, account_nickname: e.target.value })}
                 placeholder="Operating Account"
               />
@@ -195,7 +195,7 @@ export function BankAccountDialog({
             <Label htmlFor="bank_address">Bank Address</Label>
             <Input
               id="bank_address"
-              value={formData.bank_address}
+              value={formData.bank_address ?? ""}
               onChange={(e) => setFormData({ ...formData, bank_address: e.target.value })}
               placeholder="123 Main St, City, State, ZIP"
             />
@@ -257,7 +257,7 @@ export function BankAccountDialog({
               <Label htmlFor="routing_number">Routing Number</Label>
               <Input
                 id="routing_number"
-                value={formData.routing_number}
+                value={formData.routing_number ?? ""}
                 onChange={(e) => setFormData({ ...formData, routing_number: e.target.value })}
                 disabled={isEdit}
                 placeholder="123456789"
@@ -268,7 +268,7 @@ export function BankAccountDialog({
               <Label htmlFor="swift_code">SWIFT/BIC Code</Label>
               <Input
                 id="swift_code"
-                value={formData.swift_code}
+                value={formData.swift_code ?? ""}
                 onChange={(e) => setFormData({ ...formData, swift_code: e.target.value.toUpperCase() })}
                 disabled={isEdit}
                 maxLength={11}
@@ -280,7 +280,7 @@ export function BankAccountDialog({
               <Label htmlFor="iban">IBAN</Label>
               <Input
                 id="iban"
-                value={formData.iban}
+                value={formData.iban ?? ""}
                 onChange={(e) => setFormData({ ...formData, iban: e.target.value.toUpperCase() })}
                 disabled={isEdit}
                 maxLength={34}
@@ -323,7 +323,7 @@ export function BankAccountDialog({
             <Label htmlFor="notes">Internal Notes</Label>
             <Textarea
               id="notes"
-              value={formData.notes}
+              value={formData.notes ?? ""}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="Add any internal notes about this account..."
               rows={3}

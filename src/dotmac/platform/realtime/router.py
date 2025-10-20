@@ -23,7 +23,7 @@ from dotmac.platform.realtime.websocket_authenticated import (
 )
 from dotmac.platform.redis_client import RedisClientType, get_redis_client
 
-router = APIRouter(prefix="/api/v1/realtime", tags=["Real-Time"])
+router = APIRouter(prefix="/realtime", tags=["Real-Time"])
 
 
 # =============================================================================

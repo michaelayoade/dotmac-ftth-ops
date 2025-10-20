@@ -125,7 +125,7 @@ export default function SubscriptionsPage() {
     status: sub.status.toLowerCase() as Subscription['status'],
     amount: sub.plan?.price || 0,
     currency: sub.plan?.currency || 'USD',
-    billing_cycle: (sub.plan?.billingCycle as Subscription['billing_cycle']) || 'monthly',
+    billing_cycle: (sub.plan?.billingCycle?.toLowerCase() as Subscription['billing_cycle']) || 'monthly',
     current_period_start: sub.currentPeriodStart,
     current_period_end: sub.currentPeriodEnd,
     trial_end: sub.trialEnd || undefined,
@@ -133,7 +133,7 @@ export default function SubscriptionsPage() {
     created_at: sub.createdAt,
     next_billing_date: sub.currentPeriodEnd,
     payment_method: 'Card on file',
-    mrr: sub.plan?.billingCycle === 'monthly' ? (sub.plan?.price || 0) : 0,
+    mrr: sub.plan?.billingCycle?.toLowerCase() === 'monthly' ? (sub.plan?.price || 0) : 0,
   }));
 
   // Metrics from GraphQL

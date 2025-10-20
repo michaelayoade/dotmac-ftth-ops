@@ -22,7 +22,7 @@ from dotmac.platform.jobs.schemas import (
 from dotmac.platform.jobs.service import JobService
 from dotmac.platform.redis_client import RedisClientType, get_redis_client
 
-router = APIRouter(prefix="/api/v1/jobs", tags=["Jobs"])
+router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
 
 # =============================================================================

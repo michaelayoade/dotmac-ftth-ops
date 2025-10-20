@@ -36,7 +36,7 @@ from .service import WirelessService
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/wireless", tags=["Wireless Infrastructure"])
+router = APIRouter(prefix="/wireless", tags=["Wireless Infrastructure"])
 
 
 def get_wireless_service(

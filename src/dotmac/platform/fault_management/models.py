@@ -97,7 +97,7 @@ class Alarm(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in is
 
     # Primary identifiers
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False)
     alarm_id: Mapped[str] = mapped_column(
         String(255), nullable=False, index=True
     )  # External alarm ID
@@ -123,12 +123,12 @@ class Alarm(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any in is
     resource_name: Mapped[str] = mapped_column(String(500), nullable=True)
 
     # Customer impact
-    customer_id: Mapped[UUID] = mapped_column(nullable=True, index=True)
+    customer_id: Mapped[UUID] = mapped_column(nullable=True)
     customer_name: Mapped[str] = mapped_column(String(500), nullable=True)
     subscriber_count: Mapped[int] = mapped_column(Integer, default=0)  # Affected subscribers
 
     # Correlation
-    correlation_id: Mapped[UUID] = mapped_column(nullable=True, index=True)  # Groups related alarms
+    correlation_id: Mapped[UUID] = mapped_column(nullable=True)  # Groups related alarms
     correlation_action: Mapped[CorrelationAction] = mapped_column(
         Enum(CorrelationAction), default=CorrelationAction.NONE
     )
@@ -192,7 +192,7 @@ class AlarmNote(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any i
     __tablename__ = "alarm_notes"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False)
     alarm_id: Mapped[UUID] = mapped_column(ForeignKey("alarms.id"), nullable=False, index=True)
 
     note: Mapped[str] = mapped_column(Text, nullable=False)
@@ -213,7 +213,7 @@ class AlarmRule(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any i
     __tablename__ = "alarm_rules"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False)
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
@@ -250,7 +250,7 @@ class SLADefinition(BaseModel):  # type: ignore[misc]  # BaseModel resolves to A
     __tablename__ = "sla_definitions"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False)
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
@@ -304,13 +304,13 @@ class SLAInstance(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any
     __tablename__ = "sla_instances"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False)
     sla_definition_id: Mapped[UUID] = mapped_column(
         ForeignKey("sla_definitions.id"), nullable=False, index=True
     )
 
     # Associated entities
-    customer_id: Mapped[UUID] = mapped_column(nullable=True, index=True)
+    customer_id: Mapped[UUID] = mapped_column(nullable=True)
     customer_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     service_id: Mapped[UUID] = mapped_column(nullable=True, index=True)
     service_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -367,7 +367,7 @@ class SLABreach(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any i
     __tablename__ = "sla_breaches"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False)
     sla_instance_id: Mapped[UUID] = mapped_column(
         ForeignKey("sla_instances.id"), nullable=False, index=True
     )
@@ -393,7 +393,7 @@ class SLABreach(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any i
     ticket_id: Mapped[UUID] = mapped_column(nullable=True, index=True)
 
     # Resolution
-    resolved: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    resolved: Mapped[bool] = mapped_column(Boolean, default=False)
     resolved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
     resolution_notes: Mapped[str] = mapped_column(Text, nullable=True)
 
@@ -424,7 +424,7 @@ class MaintenanceWindow(BaseModel):  # type: ignore[misc]  # BaseModel resolves 
     __tablename__ = "maintenance_windows"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False)
 
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)

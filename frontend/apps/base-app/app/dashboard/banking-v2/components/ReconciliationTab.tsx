@@ -28,18 +28,18 @@ import { ReconciliationWizard } from "./ReconciliationWizard";
 export function ReconciliationTab() {
   const [showWizard, setShowWizard] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState({
-    start: new Date(new Date().setDate(1)).toISOString().split("T")[0], // First day of month
-    end: new Date().toISOString().split("T")[0], // Today
+    start: new Date(new Date().setDate(1)).toISOString().slice(0, 10), // First day of month
+    end: new Date().toISOString().slice(0, 10), // Today
   });
 
   const { data: reconciliations, isLoading: isLoadingReconciliations } = useReconciliations({
-    date_from: selectedPeriod.start,
-    date_to: selectedPeriod.end,
+    start_date: selectedPeriod.start,
+    end_date: selectedPeriod.end,
   });
 
   const { data: summary, isLoading: isLoadingSummary } = useReconciliationSummary({
-    date_from: selectedPeriod.start,
-    date_to: selectedPeriod.end,
+    bank_account_id: undefined,
+    days: undefined,
   });
 
   const getStatusBadge = (status: string) => {
@@ -99,7 +99,7 @@ export function ReconciliationTab() {
             <CardContent>
               <div className="flex items-center gap-2">
                 <FileText className="h-4 w-4 text-blue-500" />
-                <span className="text-2xl font-bold">{summary.total_sessions}</span>
+                <span className="text-2xl font-bold">{summary.total_reconciliations}</span>
               </div>
             </CardContent>
           </Card>
@@ -107,13 +107,13 @@ export function ReconciliationTab() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Payments Reconciled
+                Completed
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span className="text-2xl font-bold">{summary.total_payments_reconciled}</span>
+                <span className="text-2xl font-bold">{summary.completed_reconciliations}</span>
               </div>
             </CardContent>
           </Card>
@@ -121,14 +121,14 @@ export function ReconciliationTab() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Amount
+                Average Discrepancy
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-purple-500" />
                 <span className="text-2xl font-bold">
-                  ${summary.total_amount_reconciled.toFixed(2)}
+                  ${summary.avg_discrepancy.toFixed(2)}
                 </span>
               </div>
             </CardContent>
@@ -137,13 +137,13 @@ export function ReconciliationTab() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Discrepancies
+                Total Discrepancy
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-orange-500" />
-                <span className="text-2xl font-bold">{summary.total_discrepancies}</span>
+                <span className="text-2xl font-bold">${summary.total_discrepancy.toFixed(2)}</span>
               </div>
             </CardContent>
           </Card>
@@ -151,7 +151,7 @@ export function ReconciliationTab() {
       )}
 
       {/* Reconciliation Sessions Table */}
-      {!reconciliations || reconciliations.length === 0 ? (
+      {!reconciliations || !reconciliations.reconciliations || reconciliations.reconciliations.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="h-12 w-12 text-muted-foreground mb-4" />
@@ -189,7 +189,7 @@ export function ReconciliationTab() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reconciliations.map((session) => (
+                  {reconciliations.reconciliations.map((session: any) => (
                     <TableRow key={session.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">

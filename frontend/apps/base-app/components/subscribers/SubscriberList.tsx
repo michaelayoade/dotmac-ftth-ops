@@ -8,7 +8,7 @@
 
 import { useMemo } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { EnhancedDataTable } from '@/components/ui/EnhancedDataTable';
+import { EnhancedDataTable, BulkAction } from '@/components/ui/EnhancedDataTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,6 +36,8 @@ interface SubscriberListProps {
   onSuspend?: (subscriber: Subscriber) => void;
   onActivate?: (subscriber: Subscriber) => void;
   onRowClick?: (subscriber: Subscriber) => void;
+  bulkActions?: BulkAction<Subscriber>[];
+  enableBulkActions?: boolean;
 }
 
 // ============================================================================
@@ -85,7 +87,7 @@ const getConnectionTypeLabel = (type: ConnectionType): string => {
     case 'hybrid':
       return 'Hybrid';
     default:
-      return type.toUpperCase();
+      return (type as string).toUpperCase();
   }
 };
 
@@ -102,6 +104,8 @@ export function SubscriberList({
   onSuspend,
   onActivate,
   onRowClick,
+  bulkActions = [],
+  enableBulkActions = false,
 }: SubscriberListProps) {
   const columns = useMemo<ColumnDef<Subscriber>[]>(
     () => [
@@ -265,11 +269,13 @@ export function SubscriberList({
     <EnhancedDataTable
       columns={columns}
       data={subscribers}
-      loading={isLoading}
-      enableRowSelection={true}
-      enableColumnFilters={true}
-      enableSorting={true}
-      enablePagination={true}
+      isLoading={isLoading}
+      selectable={enableBulkActions}
+      bulkActions={bulkActions}
+      searchable={true}
+      searchPlaceholder="Search subscribers..."
+      searchColumn="name"
+      paginated={true}
       onRowClick={onRowClick}
       emptyMessage="No subscribers found"
       className="w-full"

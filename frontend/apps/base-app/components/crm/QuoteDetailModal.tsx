@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 import {
   Dialog,
@@ -31,6 +31,7 @@ import {
   Building,
 } from "lucide-react";
 import { QuotePDFGenerator } from "@/lib/pdf/quote-pdf";
+import { apiClient } from "@/lib/api/client";
 
 interface QuoteDetailModalProps {
   isOpen: boolean;
@@ -50,6 +51,36 @@ export function QuoteDetailModal({
   const { toast } = useToast();
   const { sendQuote, acceptQuote, rejectQuote, deleteQuote } = useQuotes();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState<any>(null);
+
+  // Fetch company info from settings
+  useEffect(() => {
+    const fetchCompanyInfo = async () => {
+      try {
+        const response = await apiClient.get('/settings/company');
+        if (response.data) {
+          setCompanyInfo(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch company info:', error);
+        // Use fallback data if API fails
+        setCompanyInfo({
+          name: "Your ISP Company",
+          address: "123 Main Street",
+          city: "Your City",
+          state: "ST",
+          zip: "12345",
+          phone: "(555) 123-4567",
+          email: "sales@yourisp.com",
+          website: "www.yourisp.com",
+        });
+      }
+    };
+
+    if (isOpen && quote) {
+      fetchCompanyInfo();
+    }
+  }, [isOpen, quote]);
 
   if (!quote) return null;
 
@@ -143,13 +174,17 @@ export function QuoteDetailModal({
 
     setIsProcessing(true);
     try {
-      await deleteQuote(quote.id);
-      toast({
-        title: "Quote Deleted",
-        description: `Quote ${quote.quote_number} has been deleted.`,
-      });
-      if (onUpdate) onUpdate();
-      onClose();
+      const success = await deleteQuote(quote.id);
+      if (success) {
+        toast({
+          title: "Quote Deleted",
+          description: `Quote ${quote.quote_number} has been deleted successfully.`,
+        });
+        if (onUpdate) onUpdate();
+        onClose();
+      } else {
+        throw new Error("Delete operation failed");
+      }
     } catch (error) {
       console.error("Failed to delete quote:", error);
       toast({
@@ -167,8 +202,8 @@ export function QuoteDetailModal({
     try {
       const generator = new QuotePDFGenerator();
 
-      // TODO: Replace with actual company info from settings/config
-      const companyInfo = {
+      // Use fetched company info or fallback
+      const company = companyInfo || {
         name: "Your ISP Company",
         address: "123 Main Street",
         city: "Your City",
@@ -182,28 +217,28 @@ export function QuoteDetailModal({
       // Map Quote type to QuoteData expected by PDF generator
       const quoteData = {
         quote_number: quote.quote_number,
-        customer_name: quote.lead_name || `Lead ${quote.lead_id}`,
-        customer_email: quote.lead_email,
-        customer_phone: quote.lead_phone,
-        service_address: quote.service_address,
-        plan_name: quote.plan_name || "Internet Service",
-        bandwidth_down: quote.bandwidth_down,
-        bandwidth_up: quote.bandwidth_up,
+        customer_name: "N/A",
+        customer_email: "N/A",
+        customer_phone: "N/A",
+        service_address: "N/A",
+        plan_name: quote.service_plan_name || "Internet Service",
+        bandwidth_down: quote.bandwidth,
+        bandwidth_up: quote.bandwidth,
         monthly_charge: quote.monthly_recurring_charge,
         installation_fee: quote.installation_fee,
         equipment_fee: quote.equipment_fee,
-        deposit: quote.deposit,
+        deposit: 0,
         contract_term_months: quote.contract_term_months,
-        promotional_discount: quote.promotional_discount_amount,
-        promotional_months: quote.promotional_discount_months,
+        promotional_discount: quote.promo_monthly_discount,
+        promotional_months: quote.promo_discount_months,
         valid_until: quote.valid_until || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         created_at: quote.created_at,
         notes: quote.notes,
-        terms: quote.terms,
+        terms: quote.notes,
       };
 
       await generator.downloadQuotePDF({
-        company: companyInfo,
+        company: company,
         quote: quoteData,
       });
 
@@ -240,19 +275,19 @@ export function QuoteDetailModal({
   const totalUpfront = upfrontCost + lineItemsTotal;
 
   const monthlyWithDiscount =
-    quote.promotional_discount_amount &&
-    quote.promotional_discount_months &&
-    quote.promotional_discount_amount > 0 &&
-    quote.promotional_discount_months > 0
-      ? quote.monthly_recurring_charge - quote.promotional_discount_amount
+    quote.promo_monthly_discount &&
+    quote.promo_discount_months &&
+    quote.promo_monthly_discount > 0 &&
+    quote.promo_discount_months > 0
+      ? quote.monthly_recurring_charge - quote.promo_monthly_discount
       : quote.monthly_recurring_charge;
 
   const firstYearCost =
     totalUpfront +
-    (quote.promotional_discount_months && quote.promotional_discount_amount
-      ? monthlyWithDiscount * quote.promotional_discount_months +
+    (quote.promo_discount_months && quote.promo_monthly_discount
+      ? monthlyWithDiscount * quote.promo_discount_months +
         quote.monthly_recurring_charge *
-          (12 - quote.promotional_discount_months)
+          (12 - quote.promo_discount_months)
       : quote.monthly_recurring_charge * 12);
 
   return (
@@ -360,10 +395,10 @@ export function QuoteDetailModal({
                 <p className="text-sm text-muted-foreground">Service Plan</p>
                 <p className="font-medium text-lg">{quote.service_plan_name}</p>
               </div>
-              {quote.service_bandwidth && (
+              {quote.bandwidth && (
                 <div>
                   <p className="text-sm text-muted-foreground">Bandwidth</p>
-                  <p className="font-medium">{quote.service_bandwidth}</p>
+                  <p className="font-medium">{quote.bandwidth}</p>
                 </div>
               )}
             </div>
@@ -382,14 +417,14 @@ export function QuoteDetailModal({
                   <p className="text-sm text-muted-foreground">
                     Monthly Recurring Charge
                   </p>
-                  {quote.promotional_discount_amount &&
-                    quote.promotional_discount_months &&
-                    quote.promotional_discount_amount > 0 &&
-                    quote.promotional_discount_months > 0 && (
+                  {quote.promo_monthly_discount &&
+                    quote.promo_discount_months &&
+                    quote.promo_monthly_discount > 0 &&
+                    quote.promo_discount_months > 0 && (
                       <p className="text-xs text-emerald-400 mt-1">
                         ${monthlyWithDiscount.toFixed(2)}/month for first{" "}
-                        {quote.promotional_discount_months} months (
-                        {quote.promotional_discount_description})
+                        {quote.promo_discount_months} months (
+                        {quote.notes})
                       </p>
                     )}
                 </div>
@@ -526,12 +561,12 @@ export function QuoteDetailModal({
                   $
                   {(
                     totalUpfront +
-                    (quote.promotional_discount_months &&
-                    quote.promotional_discount_amount
-                      ? monthlyWithDiscount * quote.promotional_discount_months +
+                    (quote.promo_discount_months &&
+                    quote.promo_monthly_discount
+                      ? monthlyWithDiscount * quote.promo_discount_months +
                         quote.monthly_recurring_charge *
                           (quote.contract_term_months -
-                            quote.promotional_discount_months)
+                            quote.promo_discount_months)
                       : quote.monthly_recurring_charge * quote.contract_term_months)
                   ).toFixed(2)}
                 </p>
@@ -551,8 +586,8 @@ export function QuoteDetailModal({
 
           {/* E-Signature (if accepted) */}
           {quote.status === "accepted" &&
-            quote.e_signature_name &&
-            quote.e_signature_date && (
+            quote.signature_data?.name &&
+            quote.signature_data?.date && (
               <div>
                 <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
                   <CheckCircle className="h-5 w-5 text-emerald-400" />
@@ -563,20 +598,20 @@ export function QuoteDetailModal({
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Signed By</span>
                       <span className="font-medium">
-                        {quote.e_signature_name}
+                        {quote.signature_data?.name}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Date</span>
                       <span className="font-medium">
-                        {new Date(quote.e_signature_date).toLocaleString()}
+                        {new Date(quote.signature_data?.date).toLocaleString()}
                       </span>
                     </div>
-                    {quote.e_signature_ip_address && (
+                    {quote.signature_data?.ip_address && (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">IP Address</span>
                         <span className="font-mono text-xs">
-                          {quote.e_signature_ip_address}
+                          {quote.signature_data?.ip_address}
                         </span>
                       </div>
                     )}

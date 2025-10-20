@@ -299,23 +299,23 @@ export default function NotificationTemplatesPage() {
     () => [
       {
         label: 'Active',
-        filter: (template) => template.is_active,
+        filter: (template: CommunicationTemplate) => template.is_active,
       },
       {
         label: 'Inactive',
-        filter: (template) => !template.is_active,
+        filter: (template: CommunicationTemplate) => !template.is_active,
       },
       {
         label: 'Email',
-        filter: (template) => template.type === 'email',
+        filter: (template: CommunicationTemplate) => template.type === 'email',
       },
       {
         label: 'SMS',
-        filter: (template) => template.type === 'sms',
+        filter: (template: CommunicationTemplate) => template.type === 'sms',
       },
       {
         label: 'High Usage',
-        filter: (template) => template.usage_count > 100,
+        filter: (template: CommunicationTemplate) => template.usage_count > 100,
       },
     ],
     []

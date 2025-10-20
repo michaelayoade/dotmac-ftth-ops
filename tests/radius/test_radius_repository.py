@@ -299,3 +299,99 @@ class TestRADIUSRepository:
         # Try to retrieve from tenant 2
         nas = await repo.get_nas_by_id(test_tenant_2.id, nas1.id)
         assert nas is None
+
+    async def test_list_nas_devices(self, async_db_session, test_tenant):
+        """Test listing NAS devices with pagination"""
+        repo = RADIUSRepository(async_db_session)
+
+        # Create multiple NAS devices
+        for i in range(5):
+            await repo.create_nas(
+                test_tenant.id, f"192.168.1.{i+1}", f"router{i:02d}", "mikrotik", "secret"
+            )
+
+        # List with pagination
+        nas_devices = await repo.list_nas_devices(test_tenant.id, skip=0, limit=3)
+        assert len(nas_devices) == 3
+
+    async def test_update_nas(self, async_db_session, test_tenant):
+        """Test updating NAS device"""
+        repo = RADIUSRepository(async_db_session)
+
+        # Create NAS
+        nas = await repo.create_nas(
+            test_tenant.id, "192.168.1.1", "router01", "mikrotik", "oldsecret"
+        )
+
+        # Update
+        updated = await repo.update_nas(nas, secret="newsecret", description="Updated router")
+        assert updated.secret == "newsecret"
+        assert updated.description == "Updated router"
+
+    async def test_delete_nas(self, async_db_session, test_tenant):
+        """Test deleting NAS device"""
+        repo = RADIUSRepository(async_db_session)
+
+        # Create NAS
+        nas = await repo.create_nas(
+            test_tenant.id, "192.168.1.1", "router01", "mikrotik", "secret"
+        )
+
+        # Delete
+        deleted = await repo.delete_nas(test_tenant.id, nas.id)
+        assert deleted is True
+
+        # Verify deleted
+        nas_check = await repo.get_nas_by_id(test_tenant.id, nas.id)
+        assert nas_check is None
+
+    async def test_list_bandwidth_profiles(self, async_db_session, test_tenant):
+        """Test listing bandwidth profiles"""
+        repo = RADIUSRepository(async_db_session)
+
+        # Create multiple profiles
+        for i in range(3):
+            await repo.create_bandwidth_profile(
+                test_tenant.id,
+                f"profile-{i}mbps",
+                f"{i} Mbps Plan",
+                i * 1000,
+                i * 500,
+            )
+
+        # List
+        profiles = await repo.list_bandwidth_profiles(test_tenant.id)
+        assert len(profiles) >= 3
+
+    async def test_update_bandwidth_profile(self, async_db_session, test_tenant):
+        """Test updating bandwidth profile"""
+        repo = RADIUSRepository(async_db_session)
+
+        # Create profile
+        profile = await repo.create_bandwidth_profile(
+            test_tenant.id, "profile-10mbps", "10 Mbps", 10000, 2000
+        )
+
+        # Update
+        updated = await repo.update_bandwidth_profile(
+            profile, download_rate_kbps=20000, name="20 Mbps Plan"
+        )
+        assert updated.download_rate_kbps == 20000
+        assert updated.name == "20 Mbps Plan"
+
+    async def test_delete_bandwidth_profile(self, async_db_session, test_tenant):
+        """Test deleting bandwidth profile"""
+        repo = RADIUSRepository(async_db_session)
+
+        # Create profile
+        await repo.create_bandwidth_profile(
+            test_tenant.id, "profile-10mbps", "10 Mbps", 10000, 2000
+        )
+
+        # Delete
+        deleted = await repo.delete_bandwidth_profile(test_tenant.id, "profile-10mbps")
+        assert deleted is True
+
+        # Verify deleted
+        profile = await repo.get_bandwidth_profile(test_tenant.id, "profile-10mbps")
+        assert profile is None

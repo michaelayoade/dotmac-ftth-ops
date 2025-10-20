@@ -177,7 +177,7 @@ export function WireGuardServerForm({
               ipv4Value={serverIPv4 || ''}
               ipv6Value={serverIPv6 || ''}
               onIPv4Change={(value) => setValue('server_ipv4', value)}
-              onIPv6Change={(value) => setValue('server_ipv6', value || undefined)}
+              onIPv6Change={(value) => setValue('server_ipv6', value || null)}
               requireAtLeastOne={true}
               useCIDR={true}
               ipv4Error={errors.server_ipv4?.message}

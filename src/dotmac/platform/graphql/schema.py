@@ -19,6 +19,7 @@ from dotmac.platform.graphql.queries.tenant import TenantQueries
 from dotmac.platform.graphql.queries.user import UserQueries
 from dotmac.platform.graphql.queries.wireless import WirelessQueries
 from dotmac.platform.graphql.subscriptions.customer import CustomerSubscriptions
+from dotmac.platform.graphql.subscriptions.network import NetworkSubscriptions
 
 
 @strawberry.type
@@ -81,7 +82,7 @@ class Mutation(OrchestrationMutations):
 
 
 @strawberry.type
-class RealtimeSubscription(CustomerSubscriptions):
+class RealtimeSubscription(CustomerSubscriptions, NetworkSubscriptions):
     """
     Root GraphQL subscription type for real-time updates.
 
@@ -91,6 +92,8 @@ class RealtimeSubscription(CustomerSubscriptions):
     - Support ticket updates (created, assigned, resolved)
     - Customer activities (timeline updates)
     - Customer notes (create, update, delete)
+    - Network device updates (status, metrics, health)
+    - Network alert notifications (triggered, acknowledged, resolved)
 
     WebSocket endpoint: ws://host/graphql
     Uses Redis pub/sub for event broadcasting.

@@ -5,7 +5,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from './useAuth';
+import { apiClient } from '@/lib/api/client';
 import type {
   InternetServicePlan,
   InternetServicePlanCreate,
@@ -56,8 +56,6 @@ export const internetPlanKeys = {
  * List internet service plans with optional filters
  */
 export function useInternetPlans(params: ListPlansParams = {}) {
-  const { apiClient } = useAuth();
-
   return useQuery({
     queryKey: internetPlanKeys.list(params),
     queryFn: async () => {
@@ -84,7 +82,6 @@ export function useInternetPlans(params: ListPlansParams = {}) {
  * Get a single internet service plan by ID
  */
 export function useInternetPlan(planId: string | undefined) {
-  const { apiClient } = useAuth();
 
   return useQuery({
     queryKey: internetPlanKeys.detail(planId!),
@@ -101,7 +98,6 @@ export function useInternetPlan(planId: string | undefined) {
  * Get a plan by unique plan code
  */
 export function useInternetPlanByCode(planCode: string | undefined) {
-  const { apiClient } = useAuth();
 
   return useQuery({
     queryKey: internetPlanKeys.byCode(planCode!),
@@ -120,7 +116,6 @@ export function useInternetPlanByCode(planCode: string | undefined) {
  * Create a new internet service plan
  */
 export function useCreateInternetPlan() {
-  const { apiClient } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -139,7 +134,6 @@ export function useCreateInternetPlan() {
  * Update an internet service plan
  */
 export function useUpdateInternetPlan() {
-  const { apiClient } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -168,7 +162,6 @@ export function useUpdateInternetPlan() {
  * Archive (soft delete) an internet service plan
  */
 export function useDeleteInternetPlan() {
-  const { apiClient } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -187,7 +180,6 @@ export function useDeleteInternetPlan() {
  * Get plan statistics (subscriptions, MRR)
  */
 export function usePlanStatistics(planId: string | undefined) {
-  const { apiClient } = useAuth();
 
   return useQuery({
     queryKey: internetPlanKeys.statistics(planId!),
@@ -210,7 +202,6 @@ export function usePlanStatistics(planId: string | undefined) {
  * Validate a plan configuration with usage simulation
  */
 export function useValidatePlan() {
-  const { apiClient } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -238,7 +229,6 @@ export function useValidatePlan() {
  * Compare multiple plans side-by-side
  */
 export function useComparePlans() {
-  const { apiClient } = useAuth();
 
   return useMutation({
     mutationFn: async (planIds: string[]) => {
@@ -256,7 +246,6 @@ export function useComparePlans() {
  * Subscribe a customer to a plan
  */
 export function useSubscribeToPlan() {
-  const { apiClient } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -292,7 +281,6 @@ export function usePlanSubscriptions(
   planId: string | undefined,
   params: Omit<ListSubscriptionsParams, 'plan_id'> = {}
 ) {
-  const { apiClient } = useAuth();
 
   const fullParams: ListSubscriptionsParams = {
     ...params,
@@ -321,7 +309,6 @@ export function usePlanSubscriptions(
  * Get a single subscription by ID
  */
 export function usePlanSubscription(subscriptionId: string | undefined) {
-  const { apiClient } = useAuth();
 
   return useQuery({
     queryKey: internetPlanKeys.subscriptions.detail(subscriptionId!),
@@ -343,7 +330,6 @@ export function useCustomerSubscriptions(
   customerId: string | undefined,
   params: Omit<ListSubscriptionsParams, 'customer_id'> = {}
 ) {
-  const { apiClient } = useAuth();
 
   const fullParams: ListSubscriptionsParams = {
     ...params,
@@ -372,7 +358,6 @@ export function useCustomerSubscriptions(
  * Update subscription usage
  */
 export function useUpdateSubscriptionUsage() {
-  const { apiClient } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -408,7 +393,6 @@ export function useUpdateSubscriptionUsage() {
  * Reset subscription usage for new billing period
  */
 export function useResetSubscriptionUsage() {
-  const { apiClient } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({

@@ -244,6 +244,10 @@ export interface FirmwareUpgradeSchedule {
   scheduled_at: DateString;
   timezone: string;
   max_concurrent: number;
+  total_devices: number;
+  completed_devices: number;
+  failed_devices: number;
+  pending_devices?: number;
   status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
   created_at?: DateString;
   started_at?: DateString;

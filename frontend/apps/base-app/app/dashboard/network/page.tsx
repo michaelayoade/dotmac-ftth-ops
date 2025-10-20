@@ -61,7 +61,7 @@ export default function NetworkOverviewPage() {
       status: (netboxHealth?.healthy ? 'online' : 'maintenance') as NetworkNode['status'],
     }));
 
-  const mapCenter = topologyNodes.length
+  const mapCenter = topologyNodes.length > 0 && topologyNodes[0]
     ? topologyNodes[0].coordinates
     : { lat: 0, lng: 0 };
 
@@ -159,7 +159,7 @@ export default function NetworkOverviewPage() {
               height={360}
               variant="admin"
               showLegend
-              onNodeSelect={(node) => console.log('Selected node:', node)}
+              onNodeSelect={(node: any) => console.log('Selected node:', node)}
             />
           ) : (
             <p className="text-sm text-muted-foreground">

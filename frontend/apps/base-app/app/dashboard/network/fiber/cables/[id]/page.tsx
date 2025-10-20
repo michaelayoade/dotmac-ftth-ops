@@ -568,7 +568,7 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                           <div className="text-xs text-muted-foreground">ID: {splice.spliceId}</div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant={splice.isActive ? 'default' : 'secondary'}>
+                          <Badge variant={splice.status === 'ACTIVE' ? 'default' : 'secondary'}>
                             {formatFiberType(splice.status)}
                           </Badge>
                           <Link href={`/dashboard/network/fiber/splices/${splice.id}`}>
@@ -597,7 +597,7 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                         </div>
                         <div>
                           <div className="text-muted-foreground mb-1">Cables Connected</div>
-                          <div className="font-medium">{splice.cableCount}</div>
+                          <div className="font-medium">{splice.totalSplices}</div>
                         </div>
                       </div>
                     </div>

@@ -31,7 +31,7 @@ from .service import OrchestrationService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/orchestration", tags=["orchestration"])
+router = APIRouter(prefix="/orchestration", tags=["orchestration"])
 
 
 def get_orchestration_service(

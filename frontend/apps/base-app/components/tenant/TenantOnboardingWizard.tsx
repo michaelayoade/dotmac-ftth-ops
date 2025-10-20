@@ -148,7 +148,9 @@ export function TenantOnboardingWizard({
 
   const updateInvitation = (index: number, field: "email" | "role", value: string) => {
     const updated = [...invitations];
-    updated[index][field] = value;
+    if (updated[index]) {
+      updated[index][field] = value;
+    }
     setInvitations(updated);
   };
 
@@ -162,7 +164,9 @@ export function TenantOnboardingWizard({
 
   const updateCustomSetting = (index: number, field: "key" | "value", value: string) => {
     const updated = [...customSettings];
-    updated[index][field] = value;
+    if (updated[index]) {
+      updated[index][field] = value;
+    }
     setCustomSettings(updated);
   };
 
@@ -227,7 +231,10 @@ export function TenantOnboardingWizard({
     const steps: WizardStep[] = ["tenant", "admin", "config", "invitations", "review"];
     const currentIndex = steps.indexOf(currentStep);
     if (currentIndex < steps.length - 1) {
-      setCurrentStep(steps[currentIndex + 1]);
+      const nextStep = steps[currentIndex + 1];
+      if (nextStep) {
+        setCurrentStep(nextStep);
+      }
     }
   };
 
@@ -235,7 +242,10 @@ export function TenantOnboardingWizard({
     const steps: WizardStep[] = ["tenant", "admin", "config", "invitations", "review"];
     const currentIndex = steps.indexOf(currentStep);
     if (currentIndex > 0) {
-      setCurrentStep(steps[currentIndex - 1]);
+      const prevStep = steps[currentIndex - 1];
+      if (prevStep) {
+        setCurrentStep(prevStep);
+      }
     }
   };
 

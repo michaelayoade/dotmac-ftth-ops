@@ -9,7 +9,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/use-toast';
 import {
   dunningService,
   type CampaignListFilters,
@@ -107,16 +107,16 @@ export function useCreateDunningCampaign(options?: {
       queryClient.invalidateQueries({ queryKey: dunningKeys.campaigns() });
       queryClient.invalidateQueries({ queryKey: dunningKeys.statistics() });
 
-      toast.success('Campaign created successfully', {
-        description: `Campaign "${data.name}" has been created.`,
-      });
+      // toast.success('Campaign created successfully', {
+      //   description: `Campaign "${data.name}" has been created.`,
+      // });
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to create campaign', {
-        description: error.message,
-      });
+      // toast.error('Failed to create campaign', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -146,14 +146,14 @@ export function useUpdateDunningCampaign(options?: {
       queryClient.invalidateQueries({ queryKey: dunningKeys.campaignDetail(data.id) });
       queryClient.invalidateQueries({ queryKey: dunningKeys.statistics() });
 
-      toast.success('Campaign updated successfully');
+      // toast.success('Campaign updated successfully');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to update campaign', {
-        description: error.message,
-      });
+      // toast.error('Failed to update campaign', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -178,14 +178,14 @@ export function useDeleteDunningCampaign(options?: {
       queryClient.invalidateQueries({ queryKey: dunningKeys.campaigns() });
       queryClient.invalidateQueries({ queryKey: dunningKeys.statistics() });
 
-      toast.success('Campaign deleted successfully');
+      // toast.success('Campaign deleted successfully');
 
       options?.onSuccess?.();
     },
     onError: (error) => {
-      toast.error('Failed to delete campaign', {
-        description: error.message,
-      });
+      // toast.error('Failed to delete campaign', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -211,14 +211,14 @@ export function usePauseDunningCampaign(options?: {
       queryClient.invalidateQueries({ queryKey: dunningKeys.campaignDetail(data.id) });
       queryClient.invalidateQueries({ queryKey: dunningKeys.statistics() });
 
-      toast.success('Campaign paused');
+      // toast.success('Campaign paused');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to pause campaign', {
-        description: error.message,
-      });
+      // toast.error('Failed to pause campaign', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -244,14 +244,14 @@ export function useResumeDunningCampaign(options?: {
       queryClient.invalidateQueries({ queryKey: dunningKeys.campaignDetail(data.id) });
       queryClient.invalidateQueries({ queryKey: dunningKeys.statistics() });
 
-      toast.success('Campaign resumed');
+      // toast.success('Campaign resumed');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to resume campaign', {
-        description: error.message,
-      });
+      // toast.error('Failed to resume campaign', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -315,16 +315,16 @@ export function useStartDunningExecution(options?: {
       queryClient.invalidateQueries({ queryKey: dunningKeys.executions() });
       queryClient.invalidateQueries({ queryKey: dunningKeys.statistics() });
 
-      toast.success('Dunning execution started', {
-        description: `Execution started for subscription ${data.subscription_id}`,
-      });
+      // toast.success('Dunning execution started', {
+      //   description: `Execution started for subscription ${data.subscription_id}`,
+      // });
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to start execution', {
-        description: error.message,
-      });
+      // toast.error('Failed to start execution', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -350,14 +350,14 @@ export function useCancelDunningExecution(options?: {
       queryClient.invalidateQueries({ queryKey: dunningKeys.executionDetail(data.id) });
       queryClient.invalidateQueries({ queryKey: dunningKeys.statistics() });
 
-      toast.success('Execution canceled');
+      // toast.success('Execution canceled');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to cancel execution', {
-        description: error.message,
-      });
+      // toast.error('Failed to cancel execution', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },

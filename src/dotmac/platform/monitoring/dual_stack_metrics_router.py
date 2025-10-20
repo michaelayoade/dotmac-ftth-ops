@@ -24,7 +24,7 @@ from dotmac.platform.monitoring.dual_stack_metrics import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/metrics/dual-stack", tags=["Dual-Stack Metrics"])
+router = APIRouter(prefix="/metrics/dual-stack", tags=["Dual-Stack Metrics"])
 
 
 class MetricsResponse(BaseModel):

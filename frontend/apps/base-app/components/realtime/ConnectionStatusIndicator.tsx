@@ -189,7 +189,9 @@ function StatusBadge({
     },
   };
 
-  const { icon: Icon, color, textColor, label, animate } = config[status];
+  const configItem = config[status];
+  const { icon: Icon, color, textColor, label } = configItem;
+  const animate = 'animate' in configItem ? configItem.animate : '';
 
   if (!showLabel) {
     return (

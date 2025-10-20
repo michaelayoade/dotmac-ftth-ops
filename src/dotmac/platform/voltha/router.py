@@ -36,7 +36,7 @@ from dotmac.platform.voltha.schemas import (
 )
 from dotmac.platform.voltha.service import VOLTHAService
 
-router = APIRouter(prefix="/api/v1/voltha", tags=["VOLTHA"])
+router = APIRouter(prefix="/voltha", tags=["VOLTHA"])
 
 
 # =============================================================================

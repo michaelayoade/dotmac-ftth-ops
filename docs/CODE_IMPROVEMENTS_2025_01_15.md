@@ -402,7 +402,7 @@ poetry run black --check src/dotmac/platform
 
 ## Contributors
 
-- Claude Code Assistant
+- DotMac Engineering Team
 - Based on comprehensive codebase review and best practices
 
 ## Changelog

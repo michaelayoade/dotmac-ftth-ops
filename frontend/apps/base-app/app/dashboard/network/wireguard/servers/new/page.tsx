@@ -37,9 +37,9 @@ export default function CreateServerPage() {
     metadata: {},
   });
 
-  const [dnsInput, setDnsInput] = useState(formData.dns_servers.join(', '));
+  const [dnsInput, setDnsInput] = useState((formData.dns_servers ?? []).join(', '));
   const [allowedIpsInput, setAllowedIpsInput] = useState(
-    formData.allowed_ips.join(', ')
+    (formData.allowed_ips ?? []).join(', ')
   );
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
@@ -56,11 +56,12 @@ export default function CreateServerPage() {
       errors.public_endpoint = 'Public endpoint is required';
     }
 
-    if (formData.listen_port < 1 || formData.listen_port > 65535) {
+    const listenPort = formData.listen_port ?? 0;
+    if (listenPort < 1 || listenPort > 65535) {
       errors.listen_port = 'Port must be between 1 and 65535';
     }
 
-    if (!formData.server_ipv4.trim()) {
+    if (!formData.server_ipv4?.trim()) {
       errors.server_ipv4 = 'Server IPv4 address is required';
     } else if (!isValidCIDR(formData.server_ipv4)) {
       errors.server_ipv4 = 'Invalid IPv4 CIDR format (e.g., 10.10.0.1/24)';
@@ -70,15 +71,16 @@ export default function CreateServerPage() {
       errors.server_ipv6 = 'Invalid IPv6 CIDR format';
     }
 
-    if (formData.max_peers < 1 || formData.max_peers > 65535) {
+    const maxPeers = formData.max_peers ?? 0;
+    if (maxPeers < 1 || maxPeers > 65535) {
       errors.max_peers = 'Max peers must be between 1 and 65535';
     }
 
-    if (formData.dns_servers.length === 0) {
+    if ((formData.dns_servers?.length ?? 0) === 0) {
       errors.dns_servers = 'At least one DNS server is required';
     }
 
-    if (formData.allowed_ips.length === 0) {
+    if ((formData.allowed_ips?.length ?? 0) === 0) {
       errors.allowed_ips = 'At least one allowed IP range is required';
     }
 
@@ -267,9 +269,9 @@ export default function CreateServerPage() {
               </label>
               <input
                 type="number"
-                value={formData.listen_port}
+                value={formData.listen_port ?? ''}
                 onChange={(e) =>
-                  handleFieldChange('listen_port', parseInt(e.target.value))
+                  handleFieldChange('listen_port', parseInt(e.target.value) || undefined)
                 }
                 min={1}
                 max={65535}
@@ -295,7 +297,7 @@ export default function CreateServerPage() {
                 </label>
                 <input
                   type="text"
-                  value={formData.server_ipv4}
+                  value={formData.server_ipv4 ?? ''}
                   onChange={(e) =>
                     handleFieldChange('server_ipv4', e.target.value)
                   }
@@ -347,9 +349,9 @@ export default function CreateServerPage() {
               </label>
               <input
                 type="number"
-                value={formData.max_peers}
+                value={formData.max_peers ?? ''}
                 onChange={(e) =>
-                  handleFieldChange('max_peers', parseInt(e.target.value))
+                  handleFieldChange('max_peers', parseInt(e.target.value) || undefined)
                 }
                 min={1}
                 max={65535}

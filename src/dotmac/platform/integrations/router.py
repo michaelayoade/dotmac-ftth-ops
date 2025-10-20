@@ -16,7 +16,7 @@ from . import (
 from .models import IntegrationListResponse, IntegrationResponse
 
 logger = structlog.get_logger(__name__)
-integrations_router = APIRouter(prefix="/api/v1/integrations", )
+integrations_router = APIRouter(prefix="/integrations", )
 
 
 @integrations_router.get("", response_model=IntegrationListResponse)

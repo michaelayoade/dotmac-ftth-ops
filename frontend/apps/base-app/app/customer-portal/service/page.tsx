@@ -158,38 +158,44 @@ export default function CustomerServicePage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-2xl font-bold">{currentPlan.name}</h3>
-              <p className="text-3xl font-bold text-primary mt-2">
-                {formatCurrency(currentPlan.price)}
-                <span className="text-base font-normal text-muted-foreground">/month</span>
-              </p>
-            </div>
-
-            <div className="flex gap-8 py-4">
+          {currentPlan ? (
+            <div className="space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground">Download Speed</p>
-                <p className="text-xl font-bold text-blue-500">{currentPlan.speed_down}</p>
+                <h3 className="text-2xl font-bold">{currentPlan.name}</h3>
+                <p className="text-3xl font-bold text-primary mt-2">
+                  {formatCurrency(currentPlan.price)}
+                  <span className="text-base font-normal text-muted-foreground">/month</span>
+                </p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Upload Speed</p>
-                <p className="text-xl font-bold text-green-500">{currentPlan.speed_up}</p>
-              </div>
-            </div>
 
-            <div>
-              <p className="text-sm font-medium mb-2">Features:</p>
-              <div className="grid grid-cols-2 gap-2">
-                {currentPlan.features.map((feature) => (
+              <div className="flex gap-8 py-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Download Speed</p>
+                  <p className="text-xl font-bold text-blue-500">{currentPlan.speed_down}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Upload Speed</p>
+                  <p className="text-xl font-bold text-green-500">{currentPlan.speed_up}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm font-medium mb-2">Features:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {currentPlan.features.map((feature) => (
                   <div key={feature} className="flex items-center gap-2 text-sm">
                     <CheckCircle className="h-4 w-4 text-green-500" />
                     <span>{feature}</span>
                   </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No service plan information available</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 

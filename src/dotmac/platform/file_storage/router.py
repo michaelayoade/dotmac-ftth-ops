@@ -34,7 +34,7 @@ from dotmac.platform.tenant import get_current_tenant_id
 logger = structlog.get_logger(__name__)
 
 # Create router
-file_storage_router = APIRouter(prefix="/api/v1/files/storage", )
+file_storage_router = APIRouter(prefix="/files/storage", )
 storage_router = file_storage_router  # Alias for backward compatibility
 
 # Get service instance

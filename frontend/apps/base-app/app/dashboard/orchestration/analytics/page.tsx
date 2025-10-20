@@ -249,15 +249,15 @@ function PerformanceMetrics({ workflows }: { workflows: any[] }) {
       </div>
       <div className="p-4 border border-border rounded-lg">
         <p className="text-xs text-muted-foreground mb-1">P50 (Median)</p>
-        <p className="text-xl font-bold text-foreground">{formatDuration(metrics.p50)}</p>
+        <p className="text-xl font-bold text-foreground">{formatDuration(metrics.p50 ?? 0)}</p>
       </div>
       <div className="p-4 border border-border rounded-lg">
         <p className="text-xs text-muted-foreground mb-1">P95</p>
-        <p className="text-xl font-bold text-foreground">{formatDuration(metrics.p95)}</p>
+        <p className="text-xl font-bold text-foreground">{formatDuration(metrics.p95 ?? 0)}</p>
       </div>
       <div className="p-4 border border-border rounded-lg">
         <p className="text-xs text-muted-foreground mb-1">P99</p>
-        <p className="text-xl font-bold text-foreground">{formatDuration(metrics.p99)}</p>
+        <p className="text-xl font-bold text-foreground">{formatDuration(metrics.p99 ?? 0)}</p>
       </div>
       <div className="p-4 border border-border rounded-lg">
         <p className="text-xs text-muted-foreground mb-1">Total Executed</p>

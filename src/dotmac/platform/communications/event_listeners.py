@@ -438,6 +438,194 @@ async def send_trial_ending_reminder(event: Event) -> None:
 
 
 # ============================================================================
+# Customer Event Handlers
+# ============================================================================
+
+
+@subscribe("customer.churned")  # type: ignore[misc]
+async def send_exit_survey_email(event: Event) -> None:
+    """
+    Send exit survey email when a customer churns.
+
+    This enhances customer experience during churn by collecting feedback
+    that can be used to improve the product and reduce future churn.
+
+    Args:
+        event: Customer churned event
+    """
+    from datetime import UTC
+    from dotmac.platform.communications.models import ExitSurveyResponse
+    from dotmac.platform.db import get_session_dependency
+
+    customer_id = event.payload.get("customer_id")
+    customer_email = event.payload.get("customer_email")
+    previous_status = event.payload.get("previous_status")
+    new_status = event.payload.get("new_status")
+    subscriptions_canceled = event.payload.get("subscriptions_canceled", 0)
+    churned_at_str = event.payload.get("churned_at")
+
+    logger.info(
+        "Processing customer.churned event for exit survey",
+        customer_id=customer_id,
+        subscriptions_canceled=subscriptions_canceled,
+        event_id=event.event_id,
+    )
+
+    # Skip if no email provided
+    if not customer_email:
+        logger.warning(
+            "No customer email available for exit survey",
+            customer_id=customer_id,
+        )
+        return
+
+    try:
+        from datetime import datetime
+
+        # Parse churned_at timestamp
+        churned_at = None
+        if churned_at_str:
+            try:
+                churned_at = datetime.fromisoformat(churned_at_str.replace('Z', '+00:00'))
+            except (ValueError, AttributeError):
+                churned_at = datetime.now(UTC)
+
+        # Generate unique survey link
+        survey_token = event.event_id[:16]  # Use event ID prefix as token
+        survey_url = f"https://survey.dotmac.com/exit?token={survey_token}&customer={customer_id}"
+
+        # Create survey response record in database
+        async for db_session in get_session_dependency():
+            try:
+                survey_response = ExitSurveyResponse(
+                    survey_token=survey_token,
+                    customer_id=customer_id,
+                    customer_email=customer_email,
+                    churned_at=churned_at,
+                    previous_status=previous_status,
+                    subscriptions_canceled=subscriptions_canceled,
+                    survey_sent_at=datetime.now(UTC),
+                    metadata_={
+                        "event_id": event.event_id,
+                        "new_status": new_status,
+                        "survey_url": survey_url,
+                    },
+                )
+
+                db_session.add(survey_response)
+                await db_session.commit()
+
+                logger.info(
+                    "Exit survey response record created",
+                    survey_token=survey_token,
+                    customer_id=customer_id,
+                )
+            except Exception as db_error:
+                logger.error(
+                    "Failed to create survey response record",
+                    customer_id=customer_id,
+                    error=str(db_error),
+                )
+                # Continue with email sending even if DB insert fails
+            finally:
+                break  # Exit the async generator after first iteration
+
+        email_service = EmailService()
+
+        # Create personalized HTML email with exit survey
+        message = _email_html_message(
+            recipient=customer_email,
+            subject="We Value Your Feedback - Help Us Improve",
+            html_body=(
+                f"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                        .header {{ background-color: #4A90E2; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }}
+                        .content {{ background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }}
+                        .survey-button {{ display: inline-block; background-color: #4A90E2; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }}
+                        .survey-button:hover {{ background-color: #357ABD; }}
+                        .questions {{ background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #4A90E2; }}
+                        .question {{ margin: 15px 0; }}
+                        .footer {{ text-align: center; color: #666; font-size: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; }}
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1>We're Sorry to See You Go</h1>
+                        </div>
+                        <div class="content">
+                            <p>Dear Valued Customer,</p>
+
+                            <p>We noticed that you recently canceled your subscription with us. While we're sorry to see you leave,
+                            we'd greatly appreciate your feedback to help us improve our service for future customers.</p>
+
+                            <p><strong>Your feedback matters!</strong> Please take 2 minutes to complete our exit survey.</p>
+
+                            <div style="text-align: center;">
+                                <a href="{survey_url}" class="survey-button">Take the Exit Survey</a>
+                            </div>
+
+                            <div class="questions">
+                                <p><strong>The survey will help us understand:</strong></p>
+                                <div class="question">✓ Why you decided to leave</div>
+                                <div class="question">✓ What we could have done better</div>
+                                <div class="question">✓ What features or improvements would bring you back</div>
+                                <div class="question">✓ Your overall experience with our service</div>
+                            </div>
+
+                            <p><strong>Your responses are anonymous and confidential.</strong> We review all feedback carefully
+                            to continuously improve our product and service.</p>
+
+                            <p>If you have any immediate concerns or would like to discuss your experience,
+                            please don't hesitate to contact our support team at support@dotmac.com.</p>
+
+                            <p><strong>Thinking of coming back?</strong> You're always welcome to reactivate your account
+                            anytime. We'd love to have you back!</p>
+
+                            <p>Thank you for being part of our community. We wish you all the best.</p>
+
+                            <p>Best regards,<br>
+                            <strong>The DotMac Team</strong></p>
+                        </div>
+                        <div class="footer">
+                            <p>This email was sent because your account status changed to: {new_status}</p>
+                            <p>Customer ID: {customer_id}</p>
+                            <p>&copy; 2025 DotMac. All rights reserved.</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """
+            ),
+        )
+
+        await email_service.send_email(message)
+
+        logger.info(
+            "Exit survey email sent successfully",
+            customer_id=customer_id,
+            customer_email=customer_email,
+            survey_url=survey_url,
+        )
+
+    except (SMTPException, OSError, RuntimeError, ValueError) as e:
+        logger.error(
+            "Failed to send exit survey email",
+            customer_id=customer_id,
+            customer_email=customer_email,
+            error=str(e),
+            exc_info=True,
+        )
+        # Don't raise - we don't want to fail the churn process if email fails
+        # Just log the error for monitoring
+
+
+# ============================================================================
 # Initialization
 # ============================================================================
 
@@ -459,6 +647,7 @@ def init_communications_event_listeners() -> None:
             "send_subscription_welcome_email",
             "send_subscription_cancelled_email",
             "send_trial_ending_reminder",
+            "send_exit_survey_email",
         ],
     )
 

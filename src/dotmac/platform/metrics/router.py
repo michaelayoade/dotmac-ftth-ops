@@ -14,7 +14,7 @@ from dotmac.platform.metrics.schemas import DashboardMetrics, SubscriberKPIs
 from dotmac.platform.metrics.service import MetricsService
 from dotmac.platform.redis_client import RedisClientType, get_redis_client
 
-router = APIRouter(prefix="/api/v1/metrics", tags=["Metrics"])
+router = APIRouter(prefix="/metrics", tags=["Metrics"])
 
 
 # =============================================================================

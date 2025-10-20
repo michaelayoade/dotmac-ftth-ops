@@ -11,8 +11,9 @@
  * - Event-driven (only updates when data changes)
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useApolloClient, gql, useSubscription } from '@apollo/client';
 import { useToast } from '@/components/ui/use-toast';
 import {
   useNetworkOverviewGraphQL,
@@ -20,13 +21,87 @@ import {
   useDeviceDetailGraphQL,
   useNetworkAlertListGraphQL,
 } from '@/hooks/useNetworkGraphQL';
-import type {
-  DeviceHealth,
-  NetworkAlert,
-  DeviceType,
-  DeviceStatus,
-  AlertSeverity,
-} from '@/types/network-monitoring';
+import {
+  DeviceTypeEnum,
+  type DeviceHealth,
+  type NetworkAlert,
+  type DeviceStatusEnum,
+  type AlertSeverityEnum,
+} from '@/lib/graphql/generated';
+
+// ============================================================================
+// GraphQL Subscription Documents
+// ============================================================================
+
+/**
+ * Device Updates Subscription
+ * Receives real-time updates when device status or metrics change
+ */
+const DEVICE_UPDATES_SUBSCRIPTION = gql`
+  subscription DeviceUpdates($deviceType: DeviceTypeEnum, $status: DeviceStatusEnum) {
+    deviceUpdated(deviceType: $deviceType, status: $status) {
+      deviceId
+      deviceName
+      deviceType
+      status
+      ipAddress
+      firmwareVersion
+      model
+      location
+      tenantId
+
+      # Health metrics
+      cpuUsagePercent
+      memoryUsagePercent
+      temperatureCelsius
+      powerStatus
+      pingLatencyMs
+      packetLossPercent
+      uptimeSeconds
+      uptimeDays
+      lastSeen
+      isHealthy
+
+      # Update metadata
+      changeType
+      previousValue
+      newValue
+      updatedAt
+    }
+  }
+`;
+
+/**
+ * Network Alert Updates Subscription
+ * Receives real-time updates when alerts are triggered, acknowledged, or resolved
+ */
+const NETWORK_ALERT_UPDATES_SUBSCRIPTION = gql`
+  subscription NetworkAlertUpdates($severity: AlertSeverityEnum, $deviceId: String) {
+    networkAlertUpdated(severity: $severity, deviceId: $deviceId) {
+      action
+      alert {
+        alertId
+        alertRuleId
+        severity
+        title
+        description
+        deviceName
+        deviceId
+        deviceType
+        metricName
+        currentValue
+        thresholdValue
+        triggeredAt
+        acknowledgedAt
+        resolvedAt
+        isActive
+        isAcknowledged
+        tenantId
+      }
+      updatedAt
+    }
+  }
+`;
 
 // ============================================================================
 // Real-Time Network Overview
@@ -60,8 +135,8 @@ export function useNetworkOverviewRealtime() {
 // ============================================================================
 
 interface UseDevicesRealtimeParams {
-  deviceType?: DeviceType;
-  status?: DeviceStatus;
+  deviceType?: DeviceTypeEnum;
+  status?: DeviceStatusEnum;
 }
 
 export function useNetworkDevicesRealtime(params: UseDevicesRealtimeParams = {}) {
@@ -89,45 +164,101 @@ export function useNetworkDevicesRealtime(params: UseDevicesRealtimeParams = {})
       const deviceMap = new Map<string, DeviceHealth>();
       devices.forEach((device: any) => {
         deviceMap.set(device.deviceId, {
+          __typename: 'DeviceHealth',
           deviceId: device.deviceId,
           deviceName: device.deviceName,
-          deviceType: device.deviceType as DeviceType,
-          status: device.status as DeviceStatus,
+          deviceType: device.deviceType,
+          status: device.status,
           ipAddress: device.ipAddress || '',
-          macAddress: device.macAddress,
-          manufacturer: device.manufacturer,
-          model: device.model,
-          serialNumber: device.serialNumber,
           firmwareVersion: device.firmwareVersion,
           cpuUsagePercent: device.cpuUsagePercent,
           memoryUsagePercent: device.memoryUsagePercent,
-          temperature: device.temperature,
+          temperatureCelsius: device.temperatureCelsius,
           uptimeSeconds: device.uptimeSeconds,
-          lastSeenAt: device.lastSeenAt ? new Date(device.lastSeenAt) : undefined,
+          uptimeDays: device.uptimeDays,
+          lastSeen: device.lastSeen,
           isHealthy: device.isHealthy,
           location: device.location,
-          tags: device.tags || [],
+          model: device.model,
+          powerStatus: device.powerStatus,
+          packetLossPercent: device.packetLossPercent,
+          pingLatencyMs: device.pingLatencyMs,
+          tenantId: device.tenantId,
         });
       });
       setRealtimeDevices(deviceMap);
     }
   }, [devices]);
 
-  // TODO: Add GraphQL subscription for device updates
-  // This will be implemented after code generation
-  // useDeviceUpdatesSubscription({
-  //   onUpdate: (update) => {
-  //     setRealtimeDevices(prev => {
-  //       const newMap = new Map(prev);
-  //       newMap.set(update.deviceId, update);
-  //       return newMap;
-  //     });
-  //     toast({
-  //       title: 'Device Updated',
-  //       description: `${update.deviceName} status: ${update.status}`,
-  //     });
-  //   }
-  // });
+  // GraphQL subscription for real-time device updates
+  const previousStatusRef = useRef<Map<string, DeviceStatusEnum>>(new Map());
+
+  const { data: subscriptionData } = useSubscription(DEVICE_UPDATES_SUBSCRIPTION, {
+    variables: {
+      deviceType: params.deviceType,
+      status: params.status,
+    },
+    skip: !devices || devices.length === 0, // Only subscribe after initial load
+    onData: ({ data }) => {
+      if (data?.data?.deviceUpdated) {
+        const update = data.data.deviceUpdated;
+
+        // Update the realtime devices map
+        setRealtimeDevices((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(update.deviceId, {
+            __typename: 'DeviceHealth',
+            deviceId: update.deviceId,
+            deviceName: update.deviceName,
+            deviceType: update.deviceType,
+            status: update.status,
+            ipAddress: update.ipAddress || '',
+            firmwareVersion: update.firmwareVersion,
+            cpuUsagePercent: update.cpuUsagePercent,
+            memoryUsagePercent: update.memoryUsagePercent,
+            temperatureCelsius: update.temperatureCelsius,
+            uptimeSeconds: update.uptimeSeconds,
+            uptimeDays: update.uptimeDays,
+            lastSeen: update.lastSeen,
+            isHealthy: update.isHealthy,
+            location: update.location,
+            model: update.model,
+            powerStatus: update.powerStatus,
+            packetLossPercent: update.packetLossPercent,
+            pingLatencyMs: update.pingLatencyMs,
+            tenantId: update.tenantId,
+          });
+          return newMap;
+        });
+
+        // Show toast notification for important status changes
+        const previousStatus = previousStatusRef.current.get(update.deviceId);
+        const hasStatusChanged = previousStatus && previousStatus !== update.status;
+
+        if (hasStatusChanged) {
+          const isHealthChange =
+            (previousStatus === 'online' && update.status === 'offline') ||
+            (previousStatus === 'offline' && update.status === 'online');
+
+          if (isHealthChange) {
+            toast({
+              title: update.status === 'online' ? 'Device Online' : 'Device Offline',
+              description: `${update.deviceName} is now ${update.status}`,
+              variant: update.status === 'online' ? 'default' : 'destructive',
+            });
+          }
+        }
+
+        // Update previous status tracking
+        previousStatusRef.current.set(update.deviceId, update.status);
+      }
+    },
+    onError: (error) => {
+      console.error('Device subscription error:', error);
+      // Don't show toast for subscription errors to avoid spam
+      // Fallback polling will continue to work
+    },
+  });
 
   return {
     data: Array.from(realtimeDevices.values()),
@@ -142,7 +273,7 @@ export function useNetworkDevicesRealtime(params: UseDevicesRealtimeParams = {})
 // Real-Time Device Detail with Live Metrics
 // ============================================================================
 
-export function useDeviceHealthRealtime(deviceId: string | undefined, deviceType?: DeviceType) {
+export function useDeviceHealthRealtime(deviceId: string | undefined, deviceType?: DeviceTypeEnum) {
   const { toast } = useToast();
 
   const {
@@ -153,7 +284,7 @@ export function useDeviceHealthRealtime(deviceId: string | undefined, deviceType
     refetch,
   } = useDeviceDetailGraphQL({
     deviceId: deviceId || '',
-    deviceType: deviceType || 'OLT',
+    deviceType: deviceType || DeviceTypeEnum.Olt,
     enabled: !!deviceId,
     pollInterval: 10000, // Fast polling for device details
   });
@@ -166,26 +297,14 @@ export function useDeviceHealthRealtime(deviceId: string | undefined, deviceType
   }, [device?.status]);
 
   return {
-    data: device ? {
-      deviceId: device.deviceId,
-      deviceName: device.deviceName,
-      deviceType: device.deviceType as DeviceType,
-      status: device.status as DeviceStatus,
-      ipAddress: device.ipAddress || '',
-      cpuUsagePercent: device.cpuUsagePercent,
-      memoryUsagePercent: device.memoryUsagePercent,
-      temperature: device.temperature,
-      uptimeSeconds: device.uptimeSeconds,
-      lastSeenAt: device.lastSeenAt ? new Date(device.lastSeenAt) : undefined,
-      isHealthy: device.isHealthy,
-    } : null,
+    data: device,
     traffic: traffic ? {
       deviceId: traffic.deviceId,
-      totalIngressMbps: traffic.totalIngressMbps,
-      totalEgressMbps: traffic.totalEgressMbps,
-      averageLatencyMs: traffic.averageLatencyMs,
-      packetLossPercent: traffic.packetLossPercent,
-      errorRate: traffic.errorRate,
+      totalIngressMbps: traffic.currentRateInMbps,
+      totalEgressMbps: traffic.currentRateOutMbps,
+      averageLatencyMs: 0,
+      packetLossPercent: 0,
+      errorRate: 0,
       timestamp: new Date(traffic.timestamp),
     } : null,
     isLoading,
@@ -199,12 +318,13 @@ export function useDeviceHealthRealtime(deviceId: string | undefined, deviceType
 // ============================================================================
 
 interface UseAlertsRealtimeParams {
-  severity?: AlertSeverity;
+  severity?: AlertSeverityEnum;
   activeOnly?: boolean;
 }
 
 export function useNetworkAlertsRealtime(params: UseAlertsRealtimeParams = {}) {
   const { toast } = useToast();
+  const [realtimeAlerts, setRealtimeAlerts] = useState<Map<string, NetworkAlert>>(new Map());
 
   const {
     alerts,
@@ -217,34 +337,77 @@ export function useNetworkAlertsRealtime(params: UseAlertsRealtimeParams = {}) {
     pageSize: 100,
     severity: params.severity,
     activeOnly: params.activeOnly ?? true,
-    pollInterval: 15000, // Polling every 15s
+    pollInterval: 15000, // Fallback polling every 15s
   });
 
-  // Show toast for new critical alerts
+  // Initialize realtime alerts map
   useEffect(() => {
-    if (alerts) {
-      const criticalAlerts = alerts.filter((alert: any) => alert.severity === 'critical');
-      if (criticalAlerts.length > 0) {
-        // Could track previous count and show toast for new ones
-      }
+    if (alerts && alerts.length > 0) {
+      const alertMap = new Map<string, NetworkAlert>();
+      alerts.forEach((alert: any) => {
+        alertMap.set(alert.alertId, alert);
+      });
+      setRealtimeAlerts(alertMap);
     }
   }, [alerts]);
 
+  // GraphQL subscription for real-time alert updates
+  const { data: subscriptionData } = useSubscription(NETWORK_ALERT_UPDATES_SUBSCRIPTION, {
+    variables: {
+      severity: params.severity,
+    },
+    skip: !alerts || alerts.length === 0, // Only subscribe after initial load
+    onData: ({ data }) => {
+      if (data?.data?.networkAlertUpdated) {
+        const { action, alert, updatedAt } = data.data.networkAlertUpdated;
+
+        // Update the realtime alerts map
+        setRealtimeAlerts((prev) => {
+          const newMap = new Map(prev);
+
+          if (action === 'created' || action === 'updated') {
+            newMap.set(alert.alertId, alert);
+          } else if (action === 'deleted' || action === 'resolved') {
+            // For resolved alerts, update if activeOnly is false, otherwise remove
+            if (params.activeOnly === false) {
+              newMap.set(alert.alertId, alert);
+            } else {
+              newMap.delete(alert.alertId);
+            }
+          }
+
+          return newMap;
+        });
+
+        // Show toast notification for new critical alerts
+        if (action === 'created' && alert.severity === 'critical') {
+          toast({
+            title: 'Critical Alert',
+            description: `${alert.deviceName}: ${alert.title}`,
+            variant: 'destructive',
+          });
+        } else if (action === 'created' && alert.severity === 'warning') {
+          toast({
+            title: 'Warning Alert',
+            description: `${alert.deviceName}: ${alert.title}`,
+          });
+        } else if (action === 'resolved') {
+          toast({
+            title: 'Alert Resolved',
+            description: `${alert.deviceName}: ${alert.title}`,
+          });
+        }
+      }
+    },
+    onError: (error) => {
+      console.error('Alert subscription error:', error);
+      // Don't show toast for subscription errors to avoid spam
+      // Fallback polling will continue to work
+    },
+  });
+
   return {
-    data: alerts ? alerts.map((alert: any) => ({
-      id: alert.id,
-      deviceId: alert.deviceId,
-      deviceName: alert.deviceName,
-      alertType: alert.alertType,
-      severity: alert.severity as AlertSeverity,
-      message: alert.message || alert.description,
-      description: alert.description,
-      isActive: alert.isActive,
-      acknowledgedAt: alert.acknowledgedAt ? new Date(alert.acknowledgedAt) : undefined,
-      acknowledgedBy: alert.acknowledgedBy,
-      createdAt: new Date(alert.createdAt),
-      resolvedAt: alert.resolvedAt ? new Date(alert.resolvedAt) : undefined,
-    })) : [],
+    data: Array.from(realtimeAlerts.values()),
     total,
     isLoading,
     error,
@@ -283,11 +446,92 @@ export function useNetworkDashboardRealtime() {
 // ============================================================================
 
 export function useWebSocketStatus() {
+  const client = useApolloClient();
   const [isConnected, setIsConnected] = useState(true);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const { toast } = useToast();
 
-  // TODO: Monitor Apollo Client WebSocket connection
-  // This will be implemented after Apollo Client setup for subscriptions
+  useEffect(() => {
+    // Monitor Apollo Client link state
+    // Note: When WebSocket link is added to client.ts, this will automatically
+    // track the WebSocket connection status through the Apollo link chain
+
+    let attempts = 0;
+    const maxAttempts = 5;
+
+    // Check if client is available and responsive
+    const checkConnection = async () => {
+      try {
+        // Try a simple introspection query to check connectivity
+        await client.query({
+          query: client.cache.extract() ? undefined as any : undefined as any,
+          fetchPolicy: 'network-only',
+        });
+
+        setIsConnected(true);
+        setReconnectAttempts(0);
+        attempts = 0;
+      } catch (error) {
+        console.error('GraphQL connection check failed:', error);
+        setIsConnected(false);
+        attempts++;
+        setReconnectAttempts(attempts);
+
+        if (attempts <= maxAttempts) {
+          toast({
+            title: 'Connection Lost',
+            description: `Attempting to reconnect... (${attempts}/${maxAttempts})`,
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Connection Failed',
+            description: 'Maximum reconnection attempts reached. Please refresh the page.',
+            variant: 'destructive',
+          });
+        }
+      }
+    };
+
+    // Initial check
+    checkConnection();
+
+    // Periodic connection check (every 30 seconds)
+    const interval = setInterval(checkConnection, 30000);
+
+    // Listen for online/offline events
+    const handleOnline = () => {
+      setIsConnected(true);
+      setReconnectAttempts(0);
+      attempts = 0;
+      toast({
+        title: 'Connection Restored',
+        description: 'Network connection is back online',
+      });
+    };
+
+    const handleOffline = () => {
+      setIsConnected(false);
+      toast({
+        title: 'Connection Lost',
+        description: 'Network connection is offline',
+        variant: 'destructive',
+      });
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+    }
+
+    return () => {
+      clearInterval(interval);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      }
+    };
+  }, [client, toast]);
 
   return {
     isConnected,

@@ -49,7 +49,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { UniversalMap } from "@dotmac/primitives";
-import type { MapMarker, MapPath, MapPolygon } from "@dotmac/primitives";
+
+// Define Map types locally
+interface MapMarker {
+  id: string;
+  position: { lat: number; lng: number };
+  title?: string;
+  type?: string;
+}
+
+interface MapPath {
+  id: string;
+  path: Array<{ lat: number; lng: number }>;
+  strokeColor?: string;
+  strokeWeight?: number;
+}
+
+interface MapPolygon {
+  id: string;
+  paths: Array<{ lat: number; lng: number }>;
+  fillColor?: string;
+  strokeColor?: string;
+}
 import {
   useAccessPoints,
   useWirelessClients,
@@ -214,7 +235,7 @@ export default function WirelessInfrastructurePage() {
       onClick: () => {
         selectFeature("coverage_zone", zone.id);
       },
-    }));
+    })) as unknown as MapPolygon[];
   }, [coverageZones, viewState.layers, selectFeature]);
 
   // Convert clients to map markers (if visible)
@@ -471,14 +492,16 @@ export default function WirelessInfrastructurePage() {
           <CardContent>
             <div className="h-[600px] rounded-lg overflow-hidden border">
               <UniversalMap
-                center={viewState.center}
-                zoom={viewState.zoom}
-                markers={allMarkers}
-                polygons={coveragePolygons}
-                onMarkerClick={(marker) => {
-                  const ap = accessPoints.find((a) => a.id === marker.id);
-                  if (ap) setSelectedAP(ap);
-                }}
+                {...{
+                  center: viewState.center,
+                  zoom: viewState.zoom,
+                  markers: allMarkers as any,
+                  polygons: coveragePolygons,
+                  onMarkerClick: (marker: any) => {
+                    const ap = accessPoints.find((a) => a.id === marker.id);
+                    if (ap) setSelectedAP(ap);
+                  },
+                } as any}
               />
             </div>
           </CardContent>

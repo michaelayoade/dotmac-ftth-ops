@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import { MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Type declaration for Google Maps API
+declare const google: any;
+
 export interface AddressComponents {
   streetNumber?: string;
   route?: string;
@@ -144,7 +147,7 @@ export function AddressAutocomplete({
                 input: query,
                 types: ["address"],
               },
-              (predictions, status) => {
+              (predictions: any, status: any) => {
                 if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
                   resolve(predictions);
                 } else {
@@ -176,7 +179,7 @@ export function AddressAutocomplete({
       longitude: placeResult.geometry?.location?.lng(),
     };
 
-    placeResult.address_components?.forEach((component) => {
+    placeResult.address_components?.forEach((component: any) => {
       const types = component.types;
 
       if (types.includes("street_number")) {
@@ -223,7 +226,7 @@ export function AddressAutocomplete({
               placeId,
               fields: ["address_components", "formatted_address", "geometry"],
             },
-            (place, status) => {
+            (place: any, status: any) => {
               if (status === google.maps.places.PlacesServiceStatus.OK && place) {
                 resolve(place);
               } else {
@@ -287,7 +290,9 @@ export function AddressAutocomplete({
         e.preventDefault();
         if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
           const selected = suggestions[selectedIndex];
-          handleSelectAddress(selected.place_id, selected.description);
+          if (selected) {
+            handleSelectAddress(selected.place_id, selected.description);
+          }
         }
         break;
       case "Escape":

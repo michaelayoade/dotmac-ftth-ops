@@ -53,6 +53,7 @@ export interface UpdateAddonQuantityRequest {
 
 export interface CancelAddonRequest {
   cancel_at_period_end: boolean;
+  cancel_immediately?: boolean;
   reason?: string;
 }
 

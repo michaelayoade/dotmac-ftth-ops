@@ -109,8 +109,11 @@ export function LiveSessionMonitor() {
           const sessions = Array.from(newSessions.values());
 
           if (sessions.length > 0) {
-            // Update a random session
-            const randomSession = sessions[Math.floor(Math.random() * sessions.length)];
+            const randomIndex = Math.floor(Math.random() * sessions.length);
+            const randomSession = sessions[randomIndex];
+            if (!randomSession) {
+              return newSessions;
+            }
             randomSession.upload_bytes += Math.random() * 1024 * 1024 * 5;
             randomSession.download_bytes += Math.random() * 1024 * 1024 * 10;
             randomSession.session_time_seconds += 5;
@@ -124,6 +127,7 @@ export function LiveSessionMonitor() {
 
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [isConnected]);
 
   const sessionsArray = Array.from(activeSessions.values()).sort(

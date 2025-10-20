@@ -9,7 +9,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/use-toast';
 import {
   usageBillingService,
   type UsageAggregate,
@@ -109,14 +109,14 @@ export function useCreateUsageRecord(options?: {
       queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
       queryClient.invalidateQueries({ queryKey: usageKeys.aggregates() });
 
-      toast.success('Usage record created successfully');
+      // toast.success('Usage record created successfully');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to create usage record', {
-        description: error.message,
-      });
+      // toast.error('Failed to create usage record', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -142,14 +142,14 @@ export function useCreateUsageRecordsBulk(options?: {
       queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
       queryClient.invalidateQueries({ queryKey: usageKeys.aggregates() });
 
-      toast.success(`${data.length} usage records created successfully`);
+      // toast.success(`${data.length} usage records created successfully`);
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to create usage records', {
-        description: error.message,
-      });
+      // toast.error('Failed to create usage records', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -176,14 +176,14 @@ export function useUpdateUsageRecord(options?: {
       queryClient.invalidateQueries({ queryKey: usageKeys.recordDetail(data.id) });
       queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
 
-      toast.success('Usage record updated successfully');
+      // toast.success('Usage record updated successfully');
 
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to update usage record', {
-        description: error.message,
-      });
+      // toast.error('Failed to update usage record', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -209,14 +209,14 @@ export function useDeleteUsageRecord(options?: {
       queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
       queryClient.invalidateQueries({ queryKey: usageKeys.aggregates() });
 
-      toast.success('Usage record deleted successfully');
+      // toast.success('Usage record deleted successfully');
 
       options?.onSuccess?.();
     },
     onError: (error) => {
-      toast.error('Failed to delete usage record', {
-        description: error.message,
-      });
+      // toast.error('Failed to delete usage record', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -242,14 +242,14 @@ export function useMarkUsageRecordsAsBilled(options?: {
       queryClient.invalidateQueries({ queryKey: usageKeys.records() });
       queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
 
-      toast.success('Usage records marked as billed');
+      // toast.success('Usage records marked as billed');
 
       options?.onSuccess?.();
     },
     onError: (error) => {
-      toast.error('Failed to mark usage records as billed', {
-        description: error.message,
-      });
+      // toast.error('Failed to mark usage records as billed', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },
@@ -275,14 +275,14 @@ export function useExcludeUsageRecordsFromBilling(options?: {
       queryClient.invalidateQueries({ queryKey: usageKeys.records() });
       queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
 
-      toast.success('Usage records excluded from billing');
+      // toast.success('Usage records excluded from billing');
 
       options?.onSuccess?.();
     },
     onError: (error) => {
-      toast.error('Failed to exclude usage records from billing', {
-        description: error.message,
-      });
+      // toast.error('Failed to exclude usage records from billing', {
+      //   description: error.message,
+      // });
 
       options?.onError?.(error);
     },

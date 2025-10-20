@@ -8,8 +8,10 @@ by managing configuration files and executing wg commands.
 import asyncio
 import ipaddress
 import logging
+import tempfile
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -421,15 +423,40 @@ AllowedIPs = {', '.join(allowed_ips)}
             ",".join(allowed_ips),
         ]
 
+        # Handle preshared key if provided
         if preshared_key:
-            # Write preshared key to temp file and reference it
-            # (wg set requires file path for preshared key)
-            pass  # TODO: Implement if needed
+            # wg requires preshared key to be in a file, so write to temp file
+            # Create temp file in /tmp inside container (will be cleaned up by OS)
+            temp_filename = f"/tmp/psk_{public_key[:8]}.tmp"
 
-        try:
-            await self._docker_exec(command)
-        except Exception as e:
-            raise WireGuardClientError(f"Failed to add peer: {e}") from e
+            try:
+                # Write preshared key to temp file in container
+                write_cmd = ["sh", "-c", f"echo '{preshared_key}' > {temp_filename}"]
+                await self._docker_exec(write_cmd)
+
+                # Add preshared-key argument to command
+                command.extend(["preshared-key", temp_filename])
+
+                # Execute wg set command
+                await self._docker_exec(command)
+
+                # Clean up temp file
+                cleanup_cmd = ["rm", "-f", temp_filename]
+                await self._docker_exec(cleanup_cmd)
+            except Exception as e:
+                # Attempt cleanup even on failure
+                try:
+                    cleanup_cmd = ["rm", "-f", temp_filename]
+                    await self._docker_exec(cleanup_cmd)
+                except Exception:
+                    pass  # Ignore cleanup errors
+                raise WireGuardClientError(f"Failed to add peer with preshared key: {e}") from e
+        else:
+            # No preshared key, execute command normally
+            try:
+                await self._docker_exec(command)
+            except Exception as e:
+                raise WireGuardClientError(f"Failed to add peer: {e}") from e
 
     async def remove_peer_from_interface(self, public_key: str) -> None:
         """

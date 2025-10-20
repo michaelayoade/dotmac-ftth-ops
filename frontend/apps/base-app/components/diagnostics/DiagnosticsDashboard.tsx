@@ -265,7 +265,7 @@ export function DiagnosticsDashboard({ subscriberId, hasONU = false, hasCPE = fa
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Action initiated</AlertTitle>
                         <AlertDescription>
-                          {result.recommendations[0].message}
+                          {result.recommendations[0]?.message}
                         </AlertDescription>
                       </Alert>
                     )}

@@ -52,23 +52,23 @@ export function CreateQuoteModal({
   const { leads } = useLeads();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("service");
+  const [validUntilDays, setValidUntilDays] = useState(30);
 
   // Form state
   const [formData, setFormData] = useState<QuoteCreateRequest>({
     lead_id: leadId || "",
     service_plan_name: "",
-    service_bandwidth: "",
+    bandwidth: "",
     monthly_recurring_charge: 0,
     installation_fee: 0,
     equipment_fee: 0,
     activation_fee: 0,
     contract_term_months: 12,
     early_termination_fee: 0,
-    promotional_discount_description: "",
-    promotional_discount_amount: 0,
-    promotional_discount_months: 0,
+    promo_discount_months: 0,
+    promo_monthly_discount: 0,
     line_items: [],
-    valid_until_days: 30,
+    valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     notes: "",
   });
 
@@ -87,19 +87,18 @@ export function CreateQuoteModal({
       setFormData({
         lead_id: quote.lead_id,
         service_plan_name: quote.service_plan_name,
-        service_bandwidth: quote.service_bandwidth || "",
+        bandwidth: quote.bandwidth || "",
         monthly_recurring_charge: quote.monthly_recurring_charge,
         installation_fee: quote.installation_fee,
         equipment_fee: quote.equipment_fee,
         activation_fee: quote.activation_fee,
         contract_term_months: quote.contract_term_months,
         early_termination_fee: quote.early_termination_fee || 0,
-        promotional_discount_description: quote.promotional_discount_description || "",
-        promotional_discount_amount: quote.promotional_discount_amount || 0,
-        promotional_discount_months: quote.promotional_discount_months || 0,
-        line_items: quote.line_items || [],
-        valid_until_days: 30,
-        notes: quote.notes || "",
+        promo_discount_months: quote.promo_discount_months || 0,
+        promo_monthly_discount: quote.promo_monthly_discount || 0,
+        line_items: [],
+        valid_until: quote.valid_until,
+        notes: "",
       });
 
       if (quote.line_items && Array.isArray(quote.line_items)) {
@@ -110,34 +109,36 @@ export function CreateQuoteModal({
 
   // Calculate totals
   const calculations = useMemo(() => {
-    const upfrontCost =
-      formData.installation_fee + formData.equipment_fee + formData.activation_fee;
+    const installationFee = formData.installation_fee ?? 0;
+    const equipmentFee = formData.equipment_fee ?? 0;
+    const activationFee = formData.activation_fee ?? 0;
+    const upfrontCost = installationFee + equipmentFee + activationFee;
 
     const lineItemsTotal = lineItems.reduce((sum, item) => sum + item.total, 0);
 
     const totalUpfront = upfrontCost + lineItemsTotal;
 
+    const promoDiscount = formData.promo_monthly_discount ?? 0;
+    const promoMonths = formData.promo_discount_months ?? 0;
     const monthlyWithDiscount =
-      formData.promotional_discount_amount > 0 &&
-      formData.promotional_discount_months > 0
-        ? formData.monthly_recurring_charge - formData.promotional_discount_amount
+      promoDiscount > 0 && promoMonths > 0
+        ? formData.monthly_recurring_charge - promoDiscount
         : formData.monthly_recurring_charge;
 
     const firstYearCost =
       totalUpfront +
-      (formData.promotional_discount_months > 0
-        ? monthlyWithDiscount * formData.promotional_discount_months +
-          formData.monthly_recurring_charge *
-            (12 - formData.promotional_discount_months)
+      (promoMonths > 0
+        ? monthlyWithDiscount * promoMonths +
+          formData.monthly_recurring_charge * (12 - promoMonths)
         : formData.monthly_recurring_charge * 12);
 
+    const contractTermMonths = formData.contract_term_months ?? 12;
     const contractTotalCost =
       totalUpfront +
-      (formData.promotional_discount_months > 0
-        ? monthlyWithDiscount * formData.promotional_discount_months +
-          formData.monthly_recurring_charge *
-            (formData.contract_term_months - formData.promotional_discount_months)
-        : formData.monthly_recurring_charge * formData.contract_term_months);
+      (promoMonths > 0
+        ? monthlyWithDiscount * promoMonths +
+          formData.monthly_recurring_charge * (contractTermMonths - promoMonths)
+        : formData.monthly_recurring_charge * contractTermMonths);
 
     return {
       upfrontCost,
@@ -197,20 +198,20 @@ export function CreateQuoteModal({
       setFormData({
         lead_id: leadId || "",
         service_plan_name: "",
-        service_bandwidth: "",
+        bandwidth: "",
         monthly_recurring_charge: 0,
         installation_fee: 0,
         equipment_fee: 0,
         activation_fee: 0,
         contract_term_months: 12,
         early_termination_fee: 0,
-        promotional_discount_description: "",
-        promotional_discount_amount: 0,
-        promotional_discount_months: 0,
+        promo_monthly_discount: 0,
+        promo_discount_months: 0,
         line_items: [],
-        valid_until_days: 30,
+        valid_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         notes: "",
       });
+      setValidUntilDays(30);
       setLineItems([]);
       setActiveTab("service");
 
@@ -300,14 +301,14 @@ export function CreateQuoteModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="service_bandwidth">
+                <Label htmlFor="bandwidth">
                   Bandwidth <span className="text-red-500">*</span>
                 </Label>
                 <Input
-                  id="service_bandwidth"
-                  value={formData.service_bandwidth}
+                  id="bandwidth"
+                  value={formData.bandwidth}
                   onChange={(e) =>
-                    setFormData({ ...formData, service_bandwidth: e.target.value })
+                    setFormData({ ...formData, bandwidth: e.target.value })
                   }
                   placeholder="e.g., 500 Mbps / 500 Mbps"
                   required
@@ -352,7 +353,7 @@ export function CreateQuoteModal({
                       type="number"
                       step="0.01"
                       min="0"
-                      value={formData.installation_fee}
+                      value={(formData.installation_fee ?? 0)}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -374,7 +375,7 @@ export function CreateQuoteModal({
                       type="number"
                       step="0.01"
                       min="0"
-                      value={formData.equipment_fee}
+                      value={(formData.equipment_fee ?? 0)}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -396,7 +397,7 @@ export function CreateQuoteModal({
                       type="number"
                       step="0.01"
                       min="0"
-                      value={formData.activation_fee}
+                      value={(formData.activation_fee ?? 0)}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -538,7 +539,7 @@ export function CreateQuoteModal({
                     Contract Term (Months) <span className="text-red-500">*</span>
                   </Label>
                   <Select
-                    value={formData.contract_term_months.toString()}
+                    value={(formData.contract_term_months ?? 12).toString()}
                     onValueChange={(value) =>
                       setFormData({
                         ...formData,
@@ -570,7 +571,7 @@ export function CreateQuoteModal({
                       type="number"
                       step="0.01"
                       min="0"
-                      value={formData.early_termination_fee}
+                      value={(formData.early_termination_fee ?? 0)}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -589,16 +590,16 @@ export function CreateQuoteModal({
                 <Label>Promotional Discount (Optional)</Label>
 
                 <div className="space-y-2">
-                  <Label htmlFor="promotional_discount_description">
+                  <Label htmlFor="notes">
                     Discount Description
                   </Label>
                   <Input
-                    id="promotional_discount_description"
-                    value={formData.promotional_discount_description}
+                    id="notes"
+                    value={formData.notes}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        promotional_discount_description: e.target.value,
+                        notes: e.target.value,
                       })
                     }
                     placeholder="e.g., New Customer Promo, Holiday Special"
@@ -607,21 +608,21 @@ export function CreateQuoteModal({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="promotional_discount_amount">
+                    <Label htmlFor="promo_monthly_discount">
                       Discount Amount
                     </Label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
-                        id="promotional_discount_amount"
+                        id="promo_monthly_discount"
                         type="number"
                         step="0.01"
                         min="0"
-                        value={formData.promotional_discount_amount}
+                        value={formData.promo_monthly_discount}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            promotional_discount_amount:
+                            promo_monthly_discount:
                               parseFloat(e.target.value) || 0,
                           })
                         }
@@ -632,18 +633,18 @@ export function CreateQuoteModal({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="promotional_discount_months">
+                    <Label htmlFor="promo_discount_months">
                       Discount Duration (Months)
                     </Label>
                     <Input
-                      id="promotional_discount_months"
+                      id="promo_discount_months"
                       type="number"
                       min="0"
-                      value={formData.promotional_discount_months}
+                      value={formData.promo_discount_months}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          promotional_discount_months:
+                          promo_discount_months:
                             parseInt(e.target.value) || 0,
                         })
                       }
@@ -652,19 +653,19 @@ export function CreateQuoteModal({
                   </div>
                 </div>
 
-                {formData.promotional_discount_amount > 0 &&
-                  formData.promotional_discount_months > 0 && (
+                {(formData.promo_monthly_discount ?? 0) > 0 &&
+                  (formData.promo_discount_months ?? 0) > 0 && (
                     <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded">
                       <p>
                         <strong>Discounted Monthly Rate:</strong> $
                         {calculations.monthlyWithDiscount.toFixed(2)} for the first{" "}
-                        {formData.promotional_discount_months} month(s)
+                        {formData.promo_discount_months ?? 0} month(s)
                       </p>
                       <p className="mt-1">
                         <strong>Total Savings:</strong> $
                         {(
-                          formData.promotional_discount_amount *
-                          formData.promotional_discount_months
+                          (formData.promo_monthly_discount ?? 0) *
+                          (formData.promo_discount_months ?? 0)
                         ).toFixed(2)}
                       </p>
                     </div>
@@ -672,17 +673,14 @@ export function CreateQuoteModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="valid_until_days">Quote Valid For (Days)</Label>
+                <Label htmlFor="validUntilDays">Quote Valid For (Days)</Label>
                 <Select
-                  value={formData.valid_until_days?.toString() || "30"}
+                  value={validUntilDays?.toString() || "30"}
                   onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      valid_until_days: parseInt(value),
-                    })
+                    setValidUntilDays(parseInt(value))
                   }
                 >
-                  <SelectTrigger id="valid_until_days">
+                  <SelectTrigger id="validUntilDays">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -726,7 +724,7 @@ export function CreateQuoteModal({
                       </p>
                       <p className="font-medium">{formData.service_plan_name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {formData.service_bandwidth}
+                        {formData.bandwidth}
                       </p>
                     </div>
 
@@ -741,11 +739,11 @@ export function CreateQuoteModal({
                           /month
                         </span>
                       </p>
-                      {formData.promotional_discount_amount > 0 &&
-                        formData.promotional_discount_months > 0 && (
+                      {(formData.promo_monthly_discount ?? 0) > 0 &&
+                        (formData.promo_discount_months ?? 0) > 0 && (
                           <p className="text-sm text-emerald-400 mt-1">
                             ${calculations.monthlyWithDiscount.toFixed(2)}/month for
-                            first {formData.promotional_discount_months} months
+                            first {formData.promo_discount_months ?? 0} months
                           </p>
                         )}
                     </div>
@@ -759,22 +757,22 @@ export function CreateQuoteModal({
                         ${calculations.totalUpfront.toFixed(2)}
                       </p>
                       <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                        {formData.installation_fee > 0 && (
+                        {(formData.installation_fee ?? 0) > 0 && (
                           <div className="flex justify-between">
                             <span>Installation Fee:</span>
-                            <span>${formData.installation_fee.toFixed(2)}</span>
+                            <span>${(formData.installation_fee ?? 0).toFixed(2)}</span>
                           </div>
                         )}
-                        {formData.equipment_fee > 0 && (
+                        {(formData.equipment_fee ?? 0) > 0 && (
                           <div className="flex justify-between">
                             <span>Equipment Fee:</span>
-                            <span>${formData.equipment_fee.toFixed(2)}</span>
+                            <span>${(formData.equipment_fee ?? 0).toFixed(2)}</span>
                           </div>
                         )}
-                        {formData.activation_fee > 0 && (
+                        {(formData.activation_fee ?? 0) > 0 && (
                           <div className="flex justify-between">
                             <span>Activation Fee:</span>
-                            <span>${formData.activation_fee.toFixed(2)}</span>
+                            <span>${(formData.activation_fee ?? 0).toFixed(2)}</span>
                           </div>
                         )}
                         {lineItems.map((item, index) => (
@@ -795,14 +793,14 @@ export function CreateQuoteModal({
                         <div className="flex justify-between">
                           <span>Contract Length:</span>
                           <span className="font-medium">
-                            {formData.contract_term_months} months
+                            {(formData.contract_term_months ?? 12)} months
                           </span>
                         </div>
-                        {formData.early_termination_fee > 0 && (
+                        {(formData.early_termination_fee ?? 0) > 0 && (
                           <div className="flex justify-between">
                             <span>Early Termination Fee:</span>
                             <span className="font-medium">
-                              ${formData.early_termination_fee.toFixed(2)}
+                              ${(formData.early_termination_fee ?? 0).toFixed(2)}
                             </span>
                           </div>
                         )}

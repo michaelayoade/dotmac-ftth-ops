@@ -31,9 +31,9 @@ import {
 import type {
   CashPaymentCreate,
   CheckPaymentCreate,
-  BankTransferPaymentCreate,
-  MobileMoneyPaymentCreate,
-  PaymentMethodType,
+  BankTransferCreate,
+  ManualPaymentBase,
+  MobileMoneyCreate,
 } from "@/lib/services/bank-accounts-service";
 
 interface PaymentRecordDialogProps {
@@ -43,6 +43,41 @@ interface PaymentRecordDialogProps {
 }
 
 type PaymentMethod = "cash" | "check" | "bank_transfer" | "mobile_money";
+
+interface CommonPaymentFormData {
+  customer_id: string;
+  invoice_id: string;
+  amount: string;
+  currency: string;
+  payment_date: string;
+  notes: string;
+}
+
+interface CashPaymentFormData {
+  cash_register_id: string;
+  denomination_breakdown: string;
+  cashier_name: string;
+}
+
+interface CheckPaymentFormData {
+  check_number: string;
+  bank_name: string;
+  check_date: string;
+}
+
+interface BankTransferFormData {
+  bank_account_id: string;
+  sender_account_name: string;
+  sender_account_number: string;
+  sender_bank_name: string;
+  transaction_reference: string;
+}
+
+interface MobileMoneyFormData {
+  provider: string;
+  sender_phone: string;
+  transaction_id: string;
+}
 
 export function PaymentRecordDialog({
   open,
@@ -60,30 +95,31 @@ export function PaymentRecordDialog({
   const recordMobileMoney = useRecordMobileMoneyPayment();
 
   // Common form data
-  const [commonData, setCommonData] = useState({
+  const [commonData, setCommonData] = useState<CommonPaymentFormData>({
     customer_id: "",
     invoice_id: "",
     amount: "",
     currency: "USD",
-    payment_date: new Date().toISOString().split("T")[0],
+    payment_date: new Date().toISOString().slice(0, 10),
     notes: "",
   });
 
   // Cash-specific data
-  const [cashData, setCashData] = useState({
+  const [cashData, setCashData] = useState<CashPaymentFormData>({
     cash_register_id: "",
     denomination_breakdown: "",
+    cashier_name: "",
   });
 
   // Check-specific data
-  const [checkData, setCheckData] = useState({
+  const [checkData, setCheckData] = useState<CheckPaymentFormData>({
     check_number: "",
     bank_name: "",
-    check_date: new Date().toISOString().split("T")[0],
+    check_date: new Date().toISOString().slice(0, 10),
   });
 
   // Bank transfer-specific data
-  const [bankTransferData, setBankTransferData] = useState({
+  const [bankTransferData, setBankTransferData] = useState<BankTransferFormData>({
     bank_account_id: "",
     sender_account_name: "",
     sender_account_number: "",
@@ -92,7 +128,7 @@ export function PaymentRecordDialog({
   });
 
   // Mobile money-specific data
-  const [mobileMoneyData, setMobileMoneyData] = useState({
+  const [mobileMoneyData, setMobileMoneyData] = useState<MobileMoneyFormData>({
     provider: "",
     sender_phone: "",
     transaction_id: "",
@@ -108,28 +144,42 @@ export function PaymentRecordDialog({
     setReceiptFile(null);
   };
 
+  const buildBasePayment = (): Omit<ManualPaymentBase, "payment_method"> | null => {
+    const amountValue = Number.parseFloat(commonData.amount);
+    if (Number.isNaN(amountValue)) {
+      return null;
+    }
+
+    const base = {
+      customer_id: commonData.customer_id.trim(),
+      invoice_id: commonData.invoice_id ? commonData.invoice_id.trim() : null,
+      amount: amountValue,
+      currency: commonData.currency || undefined,
+      payment_date: commonData.payment_date,
+      notes: commonData.notes ? commonData.notes : null,
+    } satisfies Omit<ManualPaymentBase, "payment_method">;
+
+    return base;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const basePayment = {
-      customer_id: parseInt(commonData.customer_id),
-      invoice_id: commonData.invoice_id ? parseInt(commonData.invoice_id) : undefined,
-      amount: parseFloat(commonData.amount),
-      currency: commonData.currency,
-      payment_date: commonData.payment_date,
-      notes: commonData.notes || undefined,
-      receipt_file: receiptFile || undefined,
-    };
+    const basePayment = buildBasePayment();
+    if (!basePayment) {
+      return;
+    }
 
     try {
       switch (paymentMethod) {
         case "cash": {
           const cashPayment: CashPaymentCreate = {
             ...basePayment,
-            cash_register_id: cashData.cash_register_id ? parseInt(cashData.cash_register_id) : undefined,
-            denomination_breakdown: cashData.denomination_breakdown
-              ? JSON.parse(cashData.denomination_breakdown)
-              : undefined,
+            payment_method: "cash",
+            cash_register_id: cashData.cash_register_id
+              ? cashData.cash_register_id
+              : null,
+            cashier_name: cashData.cashier_name ? cashData.cashier_name : null,
           };
           await recordCash.mutateAsync(cashPayment);
           break;
@@ -138,33 +188,48 @@ export function PaymentRecordDialog({
         case "check": {
           const checkPayment: CheckPaymentCreate = {
             ...basePayment,
+            payment_method: "check",
+            received_date: checkData.check_date,
             check_number: checkData.check_number,
-            bank_name: checkData.bank_name,
-            check_date: checkData.check_date,
+            check_bank_name: checkData.bank_name || null,
           };
           await recordCheck.mutateAsync(checkPayment);
           break;
         }
 
         case "bank_transfer": {
-          const bankTransferPayment: BankTransferPaymentCreate = {
+          const bankTransferPayment: BankTransferCreate = {
             ...basePayment,
-            bank_account_id: parseInt(bankTransferData.bank_account_id),
-            sender_account_name: bankTransferData.sender_account_name,
-            sender_account_number: bankTransferData.sender_account_number || undefined,
-            sender_bank_name: bankTransferData.sender_bank_name || undefined,
-            transaction_reference: bankTransferData.transaction_reference || undefined,
+            payment_method: "bank_transfer",
+            bank_account_id: bankTransferData.bank_account_id
+              ? Number.parseInt(bankTransferData.bank_account_id, 10)
+              : null,
+            sender_name: bankTransferData.sender_account_name
+              ? bankTransferData.sender_account_name
+              : null,
+            sender_bank: bankTransferData.sender_bank_name
+              ? bankTransferData.sender_bank_name
+              : null,
+            sender_account_last_four: bankTransferData.sender_account_number
+              ? bankTransferData.sender_account_number.slice(-4)
+              : null,
+            external_reference: bankTransferData.transaction_reference
+              ? bankTransferData.transaction_reference
+              : null,
           };
           await recordBankTransfer.mutateAsync(bankTransferPayment);
           break;
         }
 
         case "mobile_money": {
-          const mobileMoneyPayment: MobileMoneyPaymentCreate = {
+          const mobileMoneyPayment: MobileMoneyCreate = {
             ...basePayment,
-            provider: mobileMoneyData.provider,
-            sender_phone: mobileMoneyData.sender_phone,
-            transaction_id: mobileMoneyData.transaction_id,
+            payment_method: "mobile_money",
+            mobile_provider: mobileMoneyData.provider,
+            mobile_number: mobileMoneyData.sender_phone,
+            external_reference: mobileMoneyData.transaction_id
+              ? mobileMoneyData.transaction_id
+              : null,
           };
           await recordMobileMoney.mutateAsync(mobileMoneyPayment);
           break;
@@ -184,14 +249,14 @@ export function PaymentRecordDialog({
       invoice_id: "",
       amount: "",
       currency: "USD",
-      payment_date: new Date().toISOString().split("T")[0],
+      payment_date: new Date().toISOString().slice(0, 10),
       notes: "",
     });
-    setCashData({ cash_register_id: "", denomination_breakdown: "" });
+    setCashData({ cash_register_id: "", denomination_breakdown: "", cashier_name: "" });
     setCheckData({
       check_number: "",
       bank_name: "",
-      check_date: new Date().toISOString().split("T")[0],
+      check_date: new Date().toISOString().slice(0, 10),
     });
     setBankTransferData({
       bank_account_id: "",

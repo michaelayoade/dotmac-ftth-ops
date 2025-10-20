@@ -297,7 +297,7 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
               <div className="p-4 bg-red-50 border border-red-200 rounded">
                 <p className="font-semibold text-red-900 mb-2">Issues:</p>
                 <ul className="space-y-1">
-                  {health.issues.map((issue, idx) => (
+                  {health.issues.map((issue: string, idx: number) => (
                     <li key={idx} className="text-sm text-red-800">
                       • {issue}
                     </li>
@@ -532,7 +532,7 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
           </div>
         ) : (
           <div className="space-y-3">
-            {peers.slice(0, 10).map((peer) => (
+            {peers.slice(0, 10).map((peer: any) => (
               <PeerListItem key={peer.id} peer={peer} />
             ))}
             {server.current_peers > 10 && (

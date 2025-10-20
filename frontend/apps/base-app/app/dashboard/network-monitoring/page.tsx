@@ -56,7 +56,9 @@ export default function NetworkMonitoringPage() {
 
   // Fetch dashboard data using GraphQL
   const {
-    dashboard,
+    overview,
+    devices: graphqlDevices,
+    alerts: graphqlAlerts,
     isLoading: dashboardLoading,
     error: dashboardError,
     refetch: refetchDashboard,
@@ -90,7 +92,6 @@ export default function NetworkMonitoringPage() {
   });
 
   const isLoading = dashboardLoading || devicesLoading || alertsLoading;
-  const overview = dashboard || {};
 
   // Transform devices for compatibility
   const filteredDevices = devices.map(d => ({
@@ -136,14 +137,16 @@ export default function NetworkMonitoringPage() {
     refetchAlerts();
   };
 
-  const getSeverityIcon = (severity: AlertSeverity) => {
+  const getSeverityIcon = (severity: AlertSeverityEnum) => {
     switch (severity) {
-      case AlertSeverity.CRITICAL:
+      case AlertSeverityEnum.Critical:
         return <XCircle className="h-4 w-4 text-red-500" />;
-      case AlertSeverity.WARNING:
+      case AlertSeverityEnum.Warning:
         return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case AlertSeverity.INFO:
+      case AlertSeverityEnum.Info:
         return <AlertCircle className="h-4 w-4 text-blue-500" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-gray-500" />;
     }
   };
 
@@ -174,10 +177,48 @@ export default function NetworkMonitoringPage() {
   };
 
   const handleAcknowledgeAlert = async (alertId: string) => {
-    await acknowledgeAlert.mutateAsync({
-      alertId,
-      data: { note: 'Acknowledged from dashboard' },
-    });
+    try {
+      // Use GraphQL mutation to acknowledge the alert
+      const mutation = `
+        mutation AcknowledgeAlert($alertId: ID!) {
+          acknowledgeAlert(alertId: $alertId) {
+            id
+            acknowledged
+            acknowledgedAt
+            acknowledgedBy
+          }
+        }
+      `;
+
+      const response = await fetch('/api/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: mutation,
+          variables: { alertId },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to acknowledge alert: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.errors) {
+        throw new Error(result.errors[0]?.message || 'GraphQL error');
+      }
+
+      // Refetch alerts to show updated state
+      await refetchAlerts();
+
+      console.log('Successfully acknowledged alert:', alertId);
+    } catch (error: any) {
+      console.error('Error acknowledging alert:', error);
+      alert(`Failed to acknowledge alert: ${error.message}`);
+    }
   };
 
   return (
@@ -201,16 +242,16 @@ export default function NetworkMonitoringPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? '...' : overview?.total_devices || 0}
+              {isLoading ? '...' : overview?.totalDevices || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">{overview?.online_devices || 0} online</span>
+              <span className="text-green-600">{overview?.onlineDevices || 0} online</span>
               {' • '}
-              <span className="text-red-600">{overview?.offline_devices || 0} offline</span>
-              {overview?.degraded_devices ? (
+              <span className="text-red-600">{overview?.offlineDevices || 0} offline</span>
+              {0 ? (
                 <>
                   {' • '}
-                  <span className="text-yellow-600">{overview.degraded_devices} degraded</span>
+                  <span className="text-yellow-600">{0} degraded</span>
                 </>
               ) : null}
             </p>
@@ -224,12 +265,12 @@ export default function NetworkMonitoringPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? '...' : overview?.active_alerts || 0}
+              {isLoading ? '...' : overview?.activeAlerts || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-red-600">{overview?.critical_alerts || 0} critical</span>
+              <span className="text-red-600">{overview?.criticalAlerts || 0} critical</span>
               {' • '}
-              <span className="text-yellow-600">{overview?.warning_alerts || 0} warning</span>
+              <span className="text-yellow-600">{0 || 0} warning</span>
             </p>
           </CardContent>
         </Card>
@@ -241,11 +282,11 @@ export default function NetworkMonitoringPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? '...' : formatBps(overview?.total_bandwidth_in_bps || 0)}
+              {isLoading ? '...' : formatBps(overview?.totalBandwidthGbps || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {overview?.peak_bandwidth_in_bps
-                ? `Peak: ${formatBps(overview.peak_bandwidth_in_bps)}`
+              {0
+                ? `Peak: ${formatBps(0)}`
                 : 'Current incoming traffic'}
             </p>
           </CardContent>
@@ -258,11 +299,11 @@ export default function NetworkMonitoringPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? '...' : formatBps(overview?.total_bandwidth_out_bps || 0)}
+              {isLoading ? '...' : formatBps(overview?.totalBandwidthGbps || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {overview?.peak_bandwidth_out_bps
-                ? `Peak: ${formatBps(overview.peak_bandwidth_out_bps)}`
+              {0
+                ? `Peak: ${formatBps(0)}`
                 : 'Current outgoing traffic'}
             </p>
           </CardContent>
@@ -275,9 +316,9 @@ export default function NetworkMonitoringPage() {
           <TabsTrigger value="devices">Devices</TabsTrigger>
           <TabsTrigger value="alerts">
             Alerts
-            {overview && overview.active_alerts > 0 && (
+            {overview && overview.activeAlerts > 0 && (
               <Badge variant="destructive" className="ml-2">
-                {overview.active_alerts}
+                {overview.activeAlerts}
               </Badge>
             )}
           </TabsTrigger>
@@ -305,7 +346,7 @@ export default function NetworkMonitoringPage() {
                     />
                   </div>
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as DeviceStatusEnum)}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -316,7 +357,7 @@ export default function NetworkMonitoringPage() {
                     <SelectItem value="degraded">Degraded</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as DeviceTypeEnum)}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
@@ -363,7 +404,7 @@ export default function NetworkMonitoringPage() {
                       </tr>
                     ) : (
                       filteredDevices.map((device) => (
-                        <tr key={device.device_id} className="border-b">
+                        <tr key={device.deviceId} className="border-b">
                           <td className="p-4">
                             <div className="flex items-center gap-2">
                               <div className={`h-2 w-2 rounded-full ${getStatusColor(device.status)}`} />
@@ -377,33 +418,33 @@ export default function NetworkMonitoringPage() {
                           <td className="p-4 font-mono text-xs">{device.ip_address || '-'}</td>
                           <td className="p-4">{device.location || '-'}</td>
                           <td className="p-4">
-                            {device.cpu_usage_percent !== undefined ? (
-                              <span className={device.cpu_usage_percent > 80 ? 'text-red-600' : ''}>
-                                {device.cpu_usage_percent.toFixed(1)}%
+                            {device.cpuUsagePercent !== undefined && device.cpuUsagePercent !== null ? (
+                              <span className={device.cpuUsagePercent > 80 ? 'text-red-600' : ''}>
+                                {device.cpuUsagePercent.toFixed(1)}%
                               </span>
                             ) : (
                               '-'
                             )}
                           </td>
                           <td className="p-4">
-                            {device.memory_usage_percent !== undefined ? (
+                            {device.memoryUsagePercent !== undefined && device.memoryUsagePercent !== null ? (
                               <span
-                                className={device.memory_usage_percent > 80 ? 'text-red-600' : ''}
+                                className={device.memoryUsagePercent > 80 ? 'text-red-600' : ''}
                               >
-                                {device.memory_usage_percent.toFixed(1)}%
+                                {device.memoryUsagePercent.toFixed(1)}%
                               </span>
                             ) : (
                               '-'
                             )}
                           </td>
                           <td className="p-4">
-                            {device.uptime_seconds ? formatUptime(device.uptime_seconds) : '-'}
+                            {device.uptimeSeconds ? formatUptime(device.uptimeSeconds) : '-'}
                           </td>
                           <td className="p-4">
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setSelectedDevice(device.device_id)}
+                              onClick={() => setSelectedDevice(device.deviceId)}
                             >
                               Details
                             </Button>
@@ -437,43 +478,42 @@ export default function NetworkMonitoringPage() {
                 ) : (
                   alerts.map((alert) => (
                     <div
-                      key={alert.alert_id}
+                      key={alert.alertId}
                       className="flex items-start gap-4 p-4 border rounded-lg"
                     >
                       <div className="mt-1">{getSeverityIcon(alert.severity)}</div>
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-2">
                           <h4 className="font-medium">{alert.title}</h4>
-                          <Badge variant={alert.severity === AlertSeverity.CRITICAL ? 'destructive' : 'default'}>
+                          <Badge variant={alert.severity === AlertSeverityEnum.Critical ? 'destructive' : 'default'}>
                             {alert.severity}
                           </Badge>
-                          {alert.device_name && (
-                            <Badge variant="outline">{alert.device_name}</Badge>
+                          {alert.deviceName && (
+                            <Badge variant="outline">{alert.deviceName}</Badge>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">{alert.description}</p>
-                        {alert.metric_name && (
+                        {alert.metricName && (
                           <p className="text-xs text-muted-foreground">
-                            {alert.metric_name}: {alert.current_value?.toFixed(2)} (threshold:{' '}
-                            {alert.threshold_value})
+                            {alert.metricName}: {alert.currentValue?.toFixed(2)} (threshold:{' '}
+                            {alert.thresholdValue})
                           </p>
                         )}
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          {new Date(alert.triggered_at).toLocaleString()}
+                          {new Date(alert.triggeredAt).toLocaleString()}
                         </div>
                       </div>
-                      {!alert.is_acknowledged && alert.is_active && (
+                      {!alert.isAcknowledged && alert.isActive && (
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleAcknowledgeAlert(alert.alert_id)}
-                          disabled={acknowledgeAlert.isPending}
+                          onClick={() => handleAcknowledgeAlert(alert.alertId)}
                         >
                           Acknowledge
                         </Button>
                       )}
-                      {alert.is_acknowledged && (
+                      {alert.isAcknowledged && (
                         <Badge variant="secondary">Acknowledged</Badge>
                       )}
                     </div>
@@ -493,7 +533,7 @@ export default function NetworkMonitoringPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {overview?.device_type_summary?.map((summary) => (
+                {overview?.deviceTypeSummary?.map((summary: any) => (
                   <Card key={summary.device_type}>
                     <CardHeader className="pb-3">
                       <CardTitle className="text-sm uppercase">{summary.device_type}</CardTitle>

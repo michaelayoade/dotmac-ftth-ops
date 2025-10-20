@@ -50,7 +50,7 @@ from dotmac.platform.netbox.service import NetBoxService
 from dotmac.platform.tenant.dependencies import TenantAdminAccess
 from dotmac.platform.tenant.oss_config import OSSService, get_service_config
 
-router = APIRouter(prefix="/api/v1/netbox", tags=["NetBox"])
+router = APIRouter(prefix="/netbox", tags=["NetBox"])
 
 
 # =============================================================================

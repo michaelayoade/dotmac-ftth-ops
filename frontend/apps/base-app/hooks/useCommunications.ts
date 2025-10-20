@@ -12,7 +12,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/use-toast';
 import { communicationsService } from '@/lib/services/communications-service';
 import type {
   // Requests
@@ -89,11 +89,11 @@ export function useSendEmail(options?: {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: communicationsKeys.logs.all });
       queryClient.invalidateQueries({ queryKey: communicationsKeys.stats.overview({}) });
-      toast.success('Email sent successfully');
+      // toast.success('Email sent successfully');
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to send email', { description: error.message });
+      // toast.error('Failed to send email', { description: error.message });
       options?.onError?.(error);
     },
   });
@@ -113,11 +113,11 @@ export function useQueueEmail(options?: {
     mutationFn: (data) => communicationsService.queueEmail(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: communicationsKeys.logs.all });
-      toast.success('Email queued successfully');
+      // toast.success('Email queued successfully');
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to queue email', { description: error.message });
+      // toast.error('Failed to queue email', { description: error.message });
       options?.onError?.(error);
     },
   });
@@ -167,11 +167,11 @@ export function useCreateTemplate(options?: {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: communicationsKeys.templates.all });
       queryClient.invalidateQueries({ queryKey: communicationsKeys.stats.metrics() });
-      toast.success('Template created successfully');
+      // toast.success('Template created successfully');
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to create template', { description: error.message });
+      // toast.error('Failed to create template', { description: error.message });
       options?.onError?.(error);
     },
   });
@@ -192,11 +192,11 @@ export function useUpdateTemplate(options?: {
     onSuccess: (data, { id }) => {
       queryClient.invalidateQueries({ queryKey: communicationsKeys.templates.detail(id) });
       queryClient.invalidateQueries({ queryKey: communicationsKeys.templates.all });
-      toast.success('Template updated successfully');
+      // toast.success('Template updated successfully');
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to update template', { description: error.message });
+      // toast.error('Failed to update template', { description: error.message });
       options?.onError?.(error);
     },
   });
@@ -218,11 +218,11 @@ export function useDeleteTemplate(options?: {
       queryClient.invalidateQueries({ queryKey: communicationsKeys.templates.all });
       queryClient.invalidateQueries({ queryKey: communicationsKeys.stats.metrics() });
       queryClient.removeQueries({ queryKey: communicationsKeys.templates.detail(id) });
-      toast.success('Template deleted successfully');
+      // toast.success('Template deleted successfully');
       options?.onSuccess?.();
     },
     onError: (error) => {
-      toast.error('Failed to delete template', { description: error.message });
+      // toast.error('Failed to delete template', { description: error.message });
       options?.onError?.(error);
     },
   });
@@ -242,7 +242,7 @@ export function useRenderTemplate(options?: {
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to render template', { description: error.message });
+      // toast.error('Failed to render template', { description: error.message });
       options?.onError?.(error);
     },
   });
@@ -262,7 +262,7 @@ export function useQuickRender(options?: {
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to render template', { description: error.message });
+      // toast.error('Failed to render template', { description: error.message });
       options?.onError?.(error);
     },
   });
@@ -314,11 +314,11 @@ export function useQueueBulk(options?: {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: communicationsKeys.bulk.all });
       queryClient.invalidateQueries({ queryKey: communicationsKeys.stats.overview({}) });
-      toast.success('Bulk operation queued successfully');
+      // toast.success('Bulk operation queued successfully');
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to queue bulk operation', { description: error.message });
+      // toast.error('Failed to queue bulk operation', { description: error.message });
       options?.onError?.(error);
     },
   });
@@ -354,11 +354,11 @@ export function useCancelBulk(options?: {
     onSuccess: (data, id) => {
       queryClient.invalidateQueries({ queryKey: communicationsKeys.bulk.detail(id) });
       queryClient.invalidateQueries({ queryKey: communicationsKeys.bulk.all });
-      toast.success('Bulk operation cancelled');
+      // toast.success('Bulk operation cancelled');
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to cancel bulk operation', { description: error.message });
+      // toast.error('Failed to cancel bulk operation', { description: error.message });
       options?.onError?.(error);
     },
   });

@@ -168,7 +168,7 @@ export function WireGuardPeerForm({
               <Checkbox
                 id="manual_ip"
                 checked={manualIP}
-                onCheckedChange={(checked) => setManualIP(checked as boolean)}
+                onChange={(e) => setManualIP(e.target.checked)}
               />
               <Label htmlFor="manual_ip">
                 Manually assign IP addresses
@@ -189,7 +189,7 @@ export function WireGuardPeerForm({
                 <IPCIDRInput
                   label="IPv4 Address (CIDR)"
                   value={peerIPv4 || ''}
-                  onChange={(value) => setValue('peer_ipv4', value || undefined)}
+                  onChange={(value) => setValue('peer_ipv4', value || null)}
                   allowIPv4={true}
                   allowIPv6={false}
                   placeholder="10.8.0.2/32"
@@ -200,7 +200,7 @@ export function WireGuardPeerForm({
                   <IPCIDRInput
                     label="IPv6 Address (CIDR)"
                     value={peerIPv6 || ''}
-                    onChange={(value) => setValue('peer_ipv6', value || undefined)}
+                    onChange={(value) => setValue('peer_ipv6', value || null)}
                     allowIPv4={false}
                     allowIPv6={true}
                     placeholder="fd00:8::2/128"
@@ -219,7 +219,7 @@ export function WireGuardPeerForm({
               <Checkbox
                 id="generate_keys"
                 checked={generateKeys}
-                onCheckedChange={(checked) => setValue('generate_keys', checked as boolean)}
+                onChange={(e) => setValue('generate_keys', e.target.checked)}
               />
               <Label htmlFor="generate_keys">
                 Automatically generate keys

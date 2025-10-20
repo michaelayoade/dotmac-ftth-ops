@@ -100,7 +100,7 @@ export default function WireGuardPeersPage() {
   };
 
   // Client-side search filter
-  const filteredPeers = peers.filter((peer) =>
+  const filteredPeers = peers.filter((peer: WireGuardPeer) =>
     searchTerm
       ? peer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         peer.peer_ipv4.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -214,7 +214,7 @@ export default function WireGuardPeersPage() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredPeers.map((peer) => (
+          {filteredPeers.map((peer: WireGuardPeer) => (
             <PeerCard
               key={peer.id}
               peer={peer}

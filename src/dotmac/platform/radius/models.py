@@ -43,7 +43,8 @@ class INET(TypeDecorator[str]):
 
 
 if TYPE_CHECKING:
-    pass
+    from dotmac.platform.subscribers.models import Subscriber
+    from dotmac.platform.tenant.models import Tenant
 
 
 class RadCheck(Base):  # type: ignore[misc]

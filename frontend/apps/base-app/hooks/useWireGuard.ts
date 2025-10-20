@@ -5,7 +5,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from './useAuth';
+import { apiClient } from '@/lib/api/client';
 import type {
   ListPeersParams,
   ListServersParams,
@@ -63,8 +63,6 @@ export const wireGuardKeys = {
  * List WireGuard servers with optional filters
  */
 export function useWireGuardServers(params: ListServersParams = {}) {
-  const { apiClient } = useAuth();
-
   return useQuery({
     queryKey: wireGuardKeys.servers.list(params),
     queryFn: async () => {
@@ -86,8 +84,6 @@ export function useWireGuardServers(params: ListServersParams = {}) {
  * Get a single WireGuard server by ID
  */
 export function useWireGuardServer(serverId: string | undefined) {
-  const { apiClient } = useAuth();
-
   return useQuery({
     queryKey: wireGuardKeys.servers.detail(serverId!),
     queryFn: async () => {
@@ -105,7 +101,7 @@ export function useWireGuardServer(serverId: string | undefined) {
  * Get server health status
  */
 export function useServerHealth(serverId: string | undefined) {
-  const { apiClient } = useAuth();
+  
 
   return useQuery({
     queryKey: wireGuardKeys.servers.health(serverId!),
@@ -125,7 +121,7 @@ export function useServerHealth(serverId: string | undefined) {
  * Create a new WireGuard server
  */
 export function useCreateWireGuardServer() {
-  const { apiClient } = useAuth();
+  
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -147,7 +143,7 @@ export function useCreateWireGuardServer() {
  * Update a WireGuard server
  */
 export function useUpdateWireGuardServer() {
-  const { apiClient } = useAuth();
+  
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -178,7 +174,7 @@ export function useUpdateWireGuardServer() {
  * Delete a WireGuard server (soft delete)
  */
 export function useDeleteWireGuardServer() {
-  const { apiClient } = useAuth();
+  
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -201,7 +197,7 @@ export function useDeleteWireGuardServer() {
  * List WireGuard peers with optional filters
  */
 export function useWireGuardPeers(params: ListPeersParams = {}) {
-  const { apiClient } = useAuth();
+  
 
   return useQuery({
     queryKey: wireGuardKeys.peers.list(params),
@@ -227,7 +223,7 @@ export function useWireGuardPeers(params: ListPeersParams = {}) {
  * Get a single WireGuard peer by ID
  */
 export function useWireGuardPeer(peerId: string | undefined) {
-  const { apiClient } = useAuth();
+  
 
   return useQuery({
     queryKey: wireGuardKeys.peers.detail(peerId!),
@@ -246,7 +242,7 @@ export function useWireGuardPeer(peerId: string | undefined) {
  * Get peer configuration file
  */
 export function usePeerConfig(peerId: string | undefined, enabled: boolean = false) {
-  const { apiClient } = useAuth();
+  
 
   return useQuery({
     queryKey: wireGuardKeys.peers.config(peerId!),
@@ -265,7 +261,7 @@ export function usePeerConfig(peerId: string | undefined, enabled: boolean = fal
  * Create a new WireGuard peer
  */
 export function useCreateWireGuardPeer() {
-  const { apiClient } = useAuth();
+  
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -287,7 +283,7 @@ export function useCreateWireGuardPeer() {
  * Update a WireGuard peer
  */
 export function useUpdateWireGuardPeer() {
-  const { apiClient } = useAuth();
+  
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -321,7 +317,7 @@ export function useUpdateWireGuardPeer() {
  * Delete a WireGuard peer (soft delete)
  */
 export function useDeleteWireGuardPeer() {
-  const { apiClient } = useAuth();
+  
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -341,7 +337,7 @@ export function useDeleteWireGuardPeer() {
  * Regenerate peer configuration (new keypair)
  */
 export function useRegeneratePeerConfig() {
-  const { apiClient } = useAuth();
+  
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -366,7 +362,7 @@ export function useRegeneratePeerConfig() {
  * Create multiple peers in bulk
  */
 export function useCreateBulkPeers() {
-  const { apiClient } = useAuth();
+  
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -379,9 +375,12 @@ export function useCreateBulkPeers() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: wireGuardKeys.peers.lists() });
-      queryClient.invalidateQueries({
-        queryKey: wireGuardKeys.servers.detail(data.peers[0]?.server_id),
-      });
+      const serverId = data.peers[0]?.server_id;
+      if (serverId) {
+        queryClient.invalidateQueries({
+          queryKey: wireGuardKeys.servers.detail(serverId),
+        });
+      }
       queryClient.invalidateQueries({ queryKey: wireGuardKeys.dashboard() });
     },
   });
@@ -395,7 +394,7 @@ export function useCreateBulkPeers() {
  * Sync peer statistics from WireGuard container
  */
 export function useSyncPeerStats() {
-  const { apiClient } = useAuth();
+  
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -421,7 +420,7 @@ export function useSyncPeerStats() {
  * Get dashboard statistics
  */
 export function useDashboardStats() {
-  const { apiClient } = useAuth();
+  
 
   return useQuery({
     queryKey: wireGuardKeys.dashboard(),
@@ -444,7 +443,7 @@ export function useDashboardStats() {
  * Provision VPN service for a customer (one-click setup)
  */
 export function useProvisionVPNService() {
-  const { apiClient } = useAuth();
+  
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -471,7 +470,7 @@ export function useProvisionVPNService() {
  * Download peer configuration file
  */
 export function useDownloadPeerConfig() {
-  const { apiClient } = useAuth();
+  
 
   return useMutation({
     mutationFn: async (peerId: string) => {
@@ -500,7 +499,7 @@ export function useDownloadPeerConfig() {
  * Get peer QR code (future implementation)
  */
 export function usePeerQRCode(peerId: string | undefined, enabled: boolean = false) {
-  const { apiClient } = useAuth();
+  
 
   return useQuery({
     queryKey: [...wireGuardKeys.peers.all, 'qr-code', peerId],

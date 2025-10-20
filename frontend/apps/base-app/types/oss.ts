@@ -38,14 +38,14 @@ export interface RadiusSession {
 
 export interface ServiceStatistics {
   total_services: number;
-  active_services: number;
-  provisioning_services: number;
-  suspended_services: number;
-  terminated_services: number;
-  failed_services: number;
+  active_count: number;
+  provisioning_count: number;
+  suspended_count: number;
+  terminated_count: number;
+  failed_count: number;
   services_by_type: Record<string, number>;
-  healthy_services: number;
-  degraded_services: number;
+  healthy_count: number;
+  degraded_count: number;
   average_uptime: number;
   active_workflows: number;
   failed_workflows: number;

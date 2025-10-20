@@ -310,7 +310,7 @@ function ServerCard({
               </div>
               {health.issues.length > 0 && (
                 <div className="mt-2 text-xs text-red-600">
-                  {health.issues.map((issue, idx) => (
+                  {health.issues.map((issue: string, idx: number) => (
                     <p key={idx}>• {issue}</p>
                   ))}
                 </div>

@@ -13,7 +13,7 @@ from ..settings import Settings, get_settings
 router = APIRouter(prefix="/platform")
 
 # Separate router for endpoints without /platform prefix
-health_router = APIRouter(prefix="/api/v1", )
+health_router = APIRouter(prefix="", )
 
 
 @router.get("/config")

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useSiteSurveys } from "@/hooks/useCRM";
 import type { SiteSurvey, Serviceability } from "@/hooks/useCRM";
+import { apiClient } from "@/lib/api/client";
 import {
   Dialog,
   DialogContent,
@@ -145,6 +146,26 @@ export function CompleteSurveyModal({
     );
   };
 
+  const uploadPhoto = async (photo: PhotoUpload): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', photo.file);
+    formData.append('description', photo.description);
+    formData.append('category', 'site_survey');
+
+    try {
+      const response = await apiClient.post('/storage/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      return response.data?.url || response.data?.file_url || '';
+    } catch (error) {
+      console.error('Failed to upload photo:', error);
+      throw error;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -162,6 +183,42 @@ export function CompleteSurveyModal({
     setIsSubmitting(true);
 
     try {
+      // Upload photos to storage first
+      let photoUrls: Array<{ url: string; description: string; timestamp: string }> = [];
+
+      if (photos.length > 0) {
+        toast({
+          title: "Uploading Photos",
+          description: `Uploading ${photos.length} photo(s)...`,
+        });
+
+        const uploadPromises = photos.map(async (photo) => {
+          try {
+            const url = await uploadPhoto(photo);
+            return {
+              url,
+              description: photo.description,
+              timestamp: new Date().toISOString(),
+            };
+          } catch (error) {
+            console.error(`Failed to upload photo ${photo.id}:`, error);
+            // Continue with other photos even if one fails
+            return null;
+          }
+        });
+
+        const uploadedPhotos = await Promise.all(uploadPromises);
+        photoUrls = uploadedPhotos.filter((p): p is { url: string; description: string; timestamp: string } => p !== null);
+
+        if (photoUrls.length < photos.length) {
+          toast({
+            title: "Warning",
+            description: `${photos.length - photoUrls.length} photo(s) failed to upload`,
+            variant: "destructive",
+          });
+        }
+      }
+
       const completionData = {
         serviceability: formData.serviceability as Serviceability,
         nearest_fiber_distance_meters: formData.nearest_fiber_distance_meters
@@ -184,12 +241,7 @@ export function CompleteSurveyModal({
           : [],
         recommendations: formData.recommendations || undefined,
         obstacles: formData.obstacles || undefined,
-        // TODO: In a real implementation, upload photos to storage and include URLs
-        photos: photos.map((p) => ({
-          url: p.preview, // This would be replaced with actual uploaded URL
-          description: p.description,
-          timestamp: new Date().toISOString(),
-        })),
+        photos: photoUrls,
       };
 
       const success = await completeSurvey(survey.id, completionData);

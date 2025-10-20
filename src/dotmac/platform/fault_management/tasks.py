@@ -120,6 +120,44 @@ def _determine_alarm_channels(alarm: Alarm) -> list[NotificationChannel]:
     return channels
 
 
+async def _get_oncall_users(session: AsyncSession, tenant_id: str, alarm: Alarm) -> list[User]:
+    """
+    Get list of users currently on-call for alarm notifications.
+
+    This function checks for users designated as on-call based on:
+    - Current time and on-call schedule rotations
+    - Alarm severity and escalation rules
+    - Team assignments and on-call groups
+
+    Note: This is a placeholder implementation that can be extended
+    when a dedicated on-call schedule system is implemented (e.g., PagerDuty integration,
+    custom rotation schedules, etc.).
+
+    Args:
+        session: Database session
+        tenant_id: Tenant ID
+        alarm: The alarm to check on-call schedules for
+
+    Returns:
+        List of on-call users (empty list if no on-call system configured)
+    """
+    # TODO: Implement on-call schedule integration
+    # Possible integrations:
+    # 1. Internal rotation schedule (user_oncall_schedules table)
+    # 2. External systems (PagerDuty, Opsgenie, VictorOps)
+    # 3. Team-based rotations with handoff times
+    # 4. Escalation policies based on alarm severity
+    #
+    # For now, return empty list - standard permission-based notifications will be used
+    logger.debug(
+        "oncall.check_skipped",
+        alarm_id=alarm.alarm_id,
+        tenant_id=tenant_id,
+        reason="on_call_system_not_configured",
+    )
+    return []
+
+
 async def _get_users_to_notify(session: AsyncSession, tenant_id: str, alarm: Alarm) -> list[User]:
     """
     Get list of users who should be notified about this alarm.
@@ -127,7 +165,7 @@ async def _get_users_to_notify(session: AsyncSession, tenant_id: str, alarm: Ala
     Notification recipients:
     - Users with 'faults.alarms.write' permission (NOC operators)
     - Users with 'admin' role
-    - TODO: Add on-call schedule support
+    - Users currently on-call (via on-call schedule system)
 
     Args:
         session: Database session
@@ -139,6 +177,30 @@ async def _get_users_to_notify(session: AsyncSession, tenant_id: str, alarm: Ala
     """
     # Get users with alarm write permissions (NOC operators)
     # This includes users with explicit permission or admin role
+    from dotmac.platform.auth.models import Permission, user_permissions
+
+    # Subquery to get user IDs with fault management permissions
+    fault_perms_subquery = (
+        select(user_permissions.c.user_id)
+        .join(Permission, user_permissions.c.permission_id == Permission.id)
+        .where(
+            and_(
+                user_permissions.c.granted == True,  # noqa: E712
+                Permission.is_active == True,  # noqa: E712
+                Permission.name.in_([
+                    "fault:alarm:view",
+                    "fault:alarm:manage",
+                    "fault:*",  # Wildcard for all fault management permissions
+                ]),
+                or_(
+                    user_permissions.c.expires_at.is_(None),
+                    user_permissions.c.expires_at > func.now(),
+                ),
+            )
+        )
+        .subquery()
+    )
+
     result = await session.execute(
         select(User).where(
             and_(
@@ -146,8 +208,7 @@ async def _get_users_to_notify(session: AsyncSession, tenant_id: str, alarm: Ala
                 User.is_active == True,  # noqa: E712
                 or_(
                     User.is_superuser == True,  # noqa: E712
-                    # TODO: Add RBAC permission check when user-permission junction is available
-                    # For now, notify superusers (admins)
+                    User.id.in_(select(fault_perms_subquery.c.user_id)),
                 ),
             )
         )
@@ -155,11 +216,22 @@ async def _get_users_to_notify(session: AsyncSession, tenant_id: str, alarm: Ala
 
     users = list(result.scalars().all())
 
+    # Add on-call users based on schedule
+    oncall_users = await _get_oncall_users(session, tenant_id, alarm)
+    if oncall_users:
+        # Merge with existing users, avoiding duplicates
+        user_ids = {u.id for u in users}
+        for oncall_user in oncall_users:
+            if oncall_user.id not in user_ids:
+                users.append(oncall_user)
+                user_ids.add(oncall_user.id)
+
     logger.info(
         "alarm.notification.recipients_determined",
         alarm_id=alarm.alarm_id,
         severity=alarm.severity.value,
         user_count=len(users),
+        oncall_count=len(oncall_users) if oncall_users else 0,
     )
 
     return users

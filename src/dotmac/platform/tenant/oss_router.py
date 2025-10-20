@@ -21,7 +21,7 @@ from dotmac.platform.tenant.oss_schemas import (
     OSSServiceConfigUpdate,
 )
 
-router = APIRouter(prefix="/api/v1/tenant/oss", tags=["Tenant OSS"])
+router = APIRouter(prefix="/tenant/oss", tags=["Tenant OSS"])
 
 
 @router.get(

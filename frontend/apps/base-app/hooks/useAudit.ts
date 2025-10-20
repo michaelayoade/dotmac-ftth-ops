@@ -12,7 +12,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useToast } from '@/components/ui/use-toast';
 import { auditService } from '@/lib/services/audit-service';
 import type {
   AuditActivity,
@@ -143,15 +143,15 @@ export function useExportAuditLogs(options?: {
   return useMutation<AuditExportResponse, Error, AuditExportRequest>({
     mutationFn: (request) => auditService.exportLogs(request),
     onSuccess: (data) => {
-      toast.success('Audit export initiated', {
-        description: 'Your export will be ready shortly',
-      });
+      // toast.success('Audit export initiated', {
+      //   description: 'Your export will be ready shortly',
+      // });
       options?.onSuccess?.(data);
     },
     onError: (error) => {
-      toast.error('Failed to export audit logs', {
-        description: error.message,
-      });
+      // toast.error('Failed to export audit logs', {
+      //   description: error.message,
+      // });
       options?.onError?.(error);
     },
   });

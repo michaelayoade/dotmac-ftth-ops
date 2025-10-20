@@ -71,6 +71,7 @@ export interface ProrationPreview {
 
 export interface PlanChangeRequest {
   new_plan_id: string;
+  billing_cycle?: string;
   proration_behavior?: 'prorate' | 'none' | 'always_invoice';
   reason?: string;
 }

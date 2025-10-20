@@ -148,7 +148,7 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
             {/* Cancellation Type */}
             <div className="space-y-3">
               <Label>When would you like to cancel?</Label>
-              <RadioGroup value={cancelationType} onValueChange={(value) => setCancelationType(value as any)}>
+              <RadioGroup value={cancelationType} onValueChange={(value: string) => setCancelationType(value as any)}>
                 <div className="flex items-start space-x-3 rounded-md border p-4 hover:bg-muted/50 cursor-pointer">
                   <RadioGroupItem value="at_period_end" id="at_period_end" className="mt-1" />
                   <label htmlFor="at_period_end" className="flex-1 cursor-pointer">

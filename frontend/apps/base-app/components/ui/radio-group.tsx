@@ -1,9 +1,40 @@
 import * as React from 'react';
 
-export const RadioGroup = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className = '', ...props }, ref) => (
-    <div ref={ref} className={`grid gap-2 ${className}`} {...props} />
-  )
+interface RadioGroupProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> {
+  value?: string;
+  onValueChange?: (value: string) => void;
+  defaultValue?: string;
+  name?: string;
+}
+
+export const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
+  ({ className = '', value, onValueChange, defaultValue, name, children, ...props }, ref) => {
+    const [internalValue, setInternalValue] = React.useState(defaultValue);
+    const currentValue = value !== undefined ? value : internalValue;
+
+    const handleChange = React.useCallback((newValue: string) => {
+      if (value === undefined) {
+        setInternalValue(newValue);
+      }
+      onValueChange?.(newValue);
+    }, [value, onValueChange]);
+
+    return (
+      <div ref={ref} className={`grid gap-2 ${className}`} {...props}>
+        {React.Children.map(children, (child) => {
+          if (React.isValidElement(child) && child.type === RadioGroupItem) {
+            return React.cloneElement(child, {
+              ...child.props,
+              name: name || 'radio-group',
+              checked: child.props.value === currentValue,
+              onChange: () => handleChange(child.props.value),
+            } as any);
+          }
+          return child;
+        })}
+      </div>
+    );
+  }
 );
 RadioGroup.displayName = 'RadioGroup';
 

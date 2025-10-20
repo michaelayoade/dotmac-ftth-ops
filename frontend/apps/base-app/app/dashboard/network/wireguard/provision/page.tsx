@@ -63,6 +63,8 @@ export default function ProvisionVPNPage() {
   const [result, setResult] = useState<ProvisioningResult | null>(null);
 
   const [formData, setFormData] = useState<VPNProvisionRequest>({
+    customer_id: '',
+    peer_name: '',
     server_name: '',
     server_location: '',
     listen_port: 51820,
@@ -97,8 +99,8 @@ export default function ProvisionVPNPage() {
     }
 
     if (
-      formData.initial_peer_count < 0 ||
-      formData.initial_peer_count > 10
+      (formData.initial_peer_count ?? 0) < 0 ||
+      (formData.initial_peer_count ?? 0) > 10
     ) {
       newErrors.initial_peer_count = 'Peer count must be between 0 and 10';
     }
@@ -126,13 +128,13 @@ export default function ProvisionVPNPage() {
         setResult({
           server_id: data.server.id,
           server_name: data.server.name,
-          peer_ids: data.peers.map((p) => p.id),
-          peer_names: data.peers.map((p) => p.peer_name),
+          peer_ids: data.peers?.map((p: any) => p.id) ?? [],
+          peer_names: data.peers?.map((p: any) => p.peer_name) ?? [],
         });
         setStep('success');
         toast({
           title: 'VPN Service Provisioned',
-          description: `Server "${data.server.name}" and ${data.peers.length} peer(s) created successfully`,
+          description: `Server "${data.server.name}" and ${data.peers?.length ?? 0} peer(s) created successfully`,
         });
       },
       onError: (error: any) => {
@@ -147,9 +149,9 @@ export default function ProvisionVPNPage() {
   };
 
   const handleChange = (field: keyof VPNProvisionRequest, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev: VPNProvisionRequest) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors((prev) => {
+      setErrors((prev: any) => {
         const newErrors = { ...prev };
         delete newErrors[field];
         return newErrors;
@@ -310,7 +312,7 @@ export default function ProvisionVPNPage() {
                   )}
                 </div>
 
-                {formData.initial_peer_count > 0 && (
+                {(formData.initial_peer_count ?? 0) > 0 && (
                   <div className="space-y-2">
                     <Label htmlFor="peer_name_prefix">Peer Name Prefix</Label>
                     <Input

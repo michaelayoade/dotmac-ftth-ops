@@ -44,11 +44,11 @@ export function IPCalculator() {
     const isPrivate = isPrivateIPv4(ip);
 
     const firstUsable = network
-      ? network.split('.').slice(0, 3).join('.') + '.' + (parseInt(network.split('.')[3]) + 1)
+      ? network.split('.').slice(0, 3).join('.') + '.' + (parseInt(network.split('.')[3] ?? '0') + 1)
       : null;
 
     const lastUsable = broadcast
-      ? broadcast.split('.').slice(0, 3).join('.') + '.' + (parseInt(broadcast.split('.')[3]) - 1)
+      ? broadcast.split('.').slice(0, 3).join('.') + '.' + (parseInt(broadcast.split('.')[3] ?? '255') - 1)
       : null;
 
     // Calculate wildcard mask

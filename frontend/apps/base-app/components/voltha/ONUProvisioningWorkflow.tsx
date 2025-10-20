@@ -165,7 +165,7 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
     setSelectedONU(null);
     setProvisionForm({
       serial_number: "",
-      parent_device_id: olts.length > 0 ? olts[0].root_device_id || "" : "",
+      parent_device_id: olts.length > 0 ? (olts[0]?.root_device_id || "") : "",
       parent_port_no: 0,
       vlan: 100,
     });

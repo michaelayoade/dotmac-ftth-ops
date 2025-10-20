@@ -688,6 +688,150 @@ Best regards,
             )
             return False
 
+    async def send_payment_reminder(
+        self, tenant_id: str, invoice_id: str, custom_message: str | None = None
+    ) -> bool:
+        """
+        Send payment reminder email for overdue or unpaid invoice.
+
+        Args:
+            tenant_id: Tenant identifier
+            invoice_id: Invoice identifier
+            custom_message: Optional custom message to include in reminder
+
+        Returns:
+            True if reminder sent successfully, False otherwise
+
+        Raises:
+            InvoiceNotFoundError: If invoice doesn't exist
+            InvalidInvoiceStatusError: If invoice is not in remindable status
+        """
+        invoice = await self._get_invoice_entity(tenant_id, invoice_id)
+        if not invoice:
+            raise InvoiceNotFoundError(f"Invoice {invoice_id} not found")
+
+        # Check if invoice is in remindable status
+        if invoice.status not in [InvoiceStatus.OPEN, InvoiceStatus.OVERDUE, InvoiceStatus.PARTIALLY_PAID]:
+            raise InvalidInvoiceStatusError(
+                f"Cannot send reminder for invoice with status: {invoice.status.value}"
+            )
+
+        # Determine recipient email
+        email = invoice.billing_email
+        if not email:
+            logger.warning(
+                "Cannot send payment reminder - no email address",
+                tenant_id=tenant_id,
+                invoice_id=invoice_id,
+            )
+            return False
+
+        try:
+            # Use communications module to send email
+            from dotmac.platform.communications.email_service import EmailMessage, get_email_service
+            from dotmac.platform.settings import settings
+
+            app_name = getattr(settings, "app_name", "DotMac Platform")
+            subject = f"Payment Reminder: Invoice {invoice.invoice_number}"
+
+            # Determine urgency based on status
+            urgency_note = ""
+            if invoice.status == InvoiceStatus.OVERDUE:
+                urgency_note = "\n\n⚠️ URGENT: This invoice is now OVERDUE. Please arrange payment immediately to avoid service interruption."
+
+            # Build custom message section
+            custom_msg_section = ""
+            if custom_message:
+                custom_msg_section = f"\n\nMessage from billing team:\n{custom_message}\n"
+
+            # Create email content
+            content = f"""
+Dear Customer,
+
+This is a friendly reminder that you have an outstanding invoice:
+
+Invoice Number: {invoice.invoice_number}
+Amount Due: {invoice.currency} {invoice.remaining_balance or invoice.total_amount}
+Original Amount: {invoice.currency} {invoice.total_amount}
+Due Date: {invoice.due_date.strftime("%Y-%m-%d") if invoice.due_date else "N/A"}
+Status: {invoice.status.value.upper()}{urgency_note}{custom_msg_section}
+
+Please arrange payment at your earliest convenience.
+
+If you have already made payment, please disregard this reminder.
+
+Thank you for your business!
+
+Best regards,
+{app_name} Team
+""".strip()
+
+            html_urgency = ""
+            if invoice.status == InvoiceStatus.OVERDUE:
+                html_urgency = '<p style="color: #dc2626; font-weight: bold;">⚠️ URGENT: This invoice is now OVERDUE. Please arrange payment immediately to avoid service interruption.</p>'
+
+            html_custom_msg = ""
+            if custom_message:
+                html_custom_msg = f'<div style="margin: 20px 0; padding: 15px; background-color: #f3f4f6; border-left: 4px solid #3b82f6;"><strong>Message from billing team:</strong><p>{custom_message}</p></div>'
+
+            html_content = f"""
+<h2>Payment Reminder</h2>
+<p>This is a friendly reminder that you have an outstanding invoice:</p>
+
+<table style="margin: 20px 0; border-collapse: collapse;">
+    <tr><td style="padding: 8px; font-weight: bold;">Invoice Number:</td><td style="padding: 8px;">{invoice.invoice_number}</td></tr>
+    <tr><td style="padding: 8px; font-weight: bold;">Amount Due:</td><td style="padding: 8px;">{invoice.currency} {invoice.remaining_balance or invoice.total_amount}</td></tr>
+    <tr><td style="padding: 8px; font-weight: bold;">Original Amount:</td><td style="padding: 8px;">{invoice.currency} {invoice.total_amount}</td></tr>
+    <tr><td style="padding: 8px; font-weight: bold;">Due Date:</td><td style="padding: 8px;">{invoice.due_date.strftime("%Y-%m-%d") if invoice.due_date else "N/A"}</td></tr>
+    <tr><td style="padding: 8px; font-weight: bold;">Status:</td><td style="padding: 8px;">{invoice.status.value.upper()}</td></tr>
+</table>
+
+{html_urgency}
+{html_custom_msg}
+
+<p>Please arrange payment at your earliest convenience.</p>
+<p><em>If you have already made payment, please disregard this reminder.</em></p>
+<p>Thank you for your business!</p>
+""".strip()
+
+            message = EmailMessage(
+                to=[email],
+                subject=subject,
+                text_body=content,
+                html_body=html_content,
+            )
+
+            email_service = get_email_service()
+            response = await email_service.send_email(message)
+
+            success: bool = response.status == "sent"
+            if success:
+                logger.info(
+                    "Payment reminder sent successfully",
+                    tenant_id=tenant_id,
+                    invoice_id=invoice_id,
+                    recipient=email,
+                    invoice_status=invoice.status.value,
+                )
+            else:
+                logger.warning(
+                    "Payment reminder failed to send",
+                    tenant_id=tenant_id,
+                    invoice_id=invoice_id,
+                    recipient=email,
+                )
+
+            return success
+
+        except Exception as e:
+            logger.error(
+                "Failed to send payment reminder",
+                tenant_id=tenant_id,
+                invoice_id=invoice_id,
+                error=str(e),
+            )
+            return False
+
     async def apply_payment_to_invoice(
         self, tenant_id: str, invoice_id: str, payment_id: str, amount: Decimal
     ) -> Invoice:

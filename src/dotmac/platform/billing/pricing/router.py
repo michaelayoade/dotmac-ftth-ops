@@ -25,7 +25,7 @@ from .models import (
 )
 from .service import PricingEngine as PricingService
 
-router = APIRouter(prefix="/api/v1/billing/pricing", tags=["Billing - Pricing"])
+router = APIRouter(prefix="/billing/pricing", tags=["Billing - Pricing"])
 
 
 # Pricing Rules Management

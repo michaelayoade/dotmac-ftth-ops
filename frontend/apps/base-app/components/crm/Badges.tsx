@@ -50,7 +50,7 @@ export function LeadPriorityBadge({ priority }: { priority: Lead["priority"] }) 
     3: { label: "Low", className: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
   };
 
-  const { label, className } = config[priority] ?? config[3];
+  const { label, className } = config[priority] ?? config[3] ?? { label: "Low", className: "bg-slate-500/20 text-slate-300 border-slate-500/30" };
 
   return <Badge className={className}>{label}</Badge>;
 }

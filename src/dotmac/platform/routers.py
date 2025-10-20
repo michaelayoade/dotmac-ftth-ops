@@ -55,7 +55,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.auth.router",
         router_name="auth_router",
-        prefix="/api/v1/auth",
+        prefix="/api/v1",  # Module has /auth prefix
         tags=["Authentication"],
         requires_auth=False,  # Auth router doesn't require auth
         description="Authentication endpoints",
@@ -63,7 +63,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.auth.rbac_read_router",
         router_name="router",
-        prefix="/api/v1/auth/rbac",
+        prefix="/api/v1",  # Module has /auth/rbac prefix
         tags=["RBAC"],
         requires_auth=True,
         description="RBAC read-only endpoints for frontend",
@@ -71,7 +71,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.auth.rbac_router",
         router_name="router",
-        prefix="/api/v1/auth/rbac/admin",
+        prefix="/api/v1",  # Module has /auth/rbac/admin prefix
         tags=["RBAC - Admin"],
         requires_auth=True,
         description="RBAC admin endpoints (create/update/delete roles and permissions)",
@@ -79,7 +79,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.auth.platform_admin_router",
         router_name="router",
-        prefix="/api/v1/admin/platform",
+        prefix="/api/v1",  # Module has /admin/platform prefix
         tags=["Platform Administration"],
         requires_auth=True,  # Uses require_platform_admin internally
         description="Cross-tenant platform administration (super admin only)",
@@ -94,56 +94,56 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.analytics.router",
         router_name="analytics_router",
-        prefix="/api/v1/analytics",
+        prefix="/api/v1",  # Module has /analytics prefix
         tags=["Analytics"],
         description="Analytics and metrics endpoints",
     ),
     RouterConfig(
         module_path="dotmac.platform.file_storage.router",
         router_name="file_storage_router",
-        prefix="/api/v1/files/storage",
+        prefix="/api/v1",  # Module has /files/storage prefix
         tags=["File Storage"],
         description="File storage management",
     ),
     RouterConfig(
         module_path="dotmac.platform.communications.router",
         router_name="router",
-        prefix="/api/v1/communications",
+        prefix="/api/v1",  # Module has /communications prefix
         tags=["Communications"],
         description="Communications API with email, templates, and background tasks",
     ),
     RouterConfig(
         module_path="dotmac.platform.search.router",
         router_name="search_router",
-        prefix="/api/v1/search",
+        prefix="/api/v1",  # Module has /search prefix
         tags=["Search"],
         description="Search functionality",
     ),
     RouterConfig(
         module_path="dotmac.platform.data_transfer.router",
         router_name="data_transfer_router",
-        prefix="/api/v1/data-transfer",
+        prefix="/api/v1",  # Module has /data-transfer prefix
         tags=["Data Transfer"],
         description="Data import/export operations",
     ),
     RouterConfig(
         module_path="dotmac.platform.data_import.router",
         router_name="router",
-        prefix="/api/v1/data-import",
+        prefix="/api/v1",  # Module has /data-import prefix
         tags=["Data Import"],
         description="File-based data import operations (CSV, JSON)",
     ),
     RouterConfig(
         module_path="dotmac.platform.user_management.router",
         router_name="user_router",
-        prefix="/api/v1/users",
+        prefix="/api/v1",  # Module has /users prefix
         tags=["User Management"],
         description="User management endpoints",
     ),
     RouterConfig(
         module_path="dotmac.platform.user_management.team_router",
         router_name="router",
-        prefix="/api/v1/teams",
+        prefix="/api/v1",  # Module has /teams prefix
         tags=["Team Management"],
         description="Team and team member management",
         requires_auth=True,
@@ -151,7 +151,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.tenant.router",
         router_name="router",
-        prefix="/api/v1/tenants",
+        prefix="/api/v1",  # Module has /tenant prefix
         tags=["Tenant Management"],
         description="Multi-tenant organization management",
         requires_auth=True,
@@ -160,7 +160,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.tenant.router",
         router_name="router",
-        prefix="/api/v1/tenant",
+        prefix="/api/v1",  # Module has /tenant prefix
         tags=["Tenant Management"],
         description="Legacy tenant endpoints (singular prefix)",
         requires_auth=True,
@@ -168,7 +168,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.tenant.onboarding_router",
         router_name="router",
-        prefix="/api/v1/tenants",
+        prefix="/api/v1",  # Module has /tenants prefix
         tags=["Tenant Onboarding"],
         description="Tenant onboarding automation",
         requires_auth=True,
@@ -176,7 +176,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.tenant.domain_verification_router",
         router_name="router",
-        prefix="/api/v1/tenants",
+        prefix="/api/v1",  # Module has /tenants prefix
         tags=["Tenant - Domain Verification"],
         description="Custom domain verification for tenants",
         requires_auth=True,
@@ -184,7 +184,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.tenant.usage_billing_router",
         router_name="router",
-        prefix="/api/v1/usage",
+        prefix="/api/v1",  # Module has /usage prefix
         tags=["Tenant Usage Billing"],
         description="Usage tracking and billing integration",
         requires_auth=True,
@@ -192,7 +192,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.tenant.oss_router",
         router_name="router",
-        prefix="/api/v1/tenant/oss",
+        prefix="/api/v1",  # Module has /tenant/oss prefix
         tags=["Tenant OSS"],
         description="Tenant-specific OSS integration configuration",
         requires_auth=True,
@@ -200,35 +200,35 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.feature_flags.router",
         router_name="feature_flags_router",
-        prefix="/api/v1/feature-flags",
+        prefix="/api/v1",  # Module has /feature-flags prefix
         tags=["Feature Flags"],
         description="Feature flags management",
     ),
     RouterConfig(
         module_path="dotmac.platform.customer_management.router",
         router_name="router",
-        prefix="/api/v1/customers",
+        prefix="/api/v1",  # Module has /customers prefix
         tags=["Customer Management"],
         description="Customer relationship management",
     ),
     RouterConfig(
         module_path="dotmac.platform.contacts.router",
         router_name="router",
-        prefix="/api/v1/contacts",
+        prefix="/api/v1",  # Module has /contacts prefix
         tags=["Contacts"],
         description="Contact management system",
     ),
     RouterConfig(
         module_path="dotmac.platform.auth.api_keys_router",
         router_name="router",
-        prefix="/api/v1/auth/api-keys",
+        prefix="/api/v1",  # Module has /auth/api-keys prefix
         tags=["API Keys"],
         description="API key management",
     ),
     RouterConfig(
         module_path="dotmac.platform.webhooks.router",
         router_name="router",
-        prefix="/api/v1/webhooks",
+        prefix="/api/v1",  # Module has /webhooks prefix
         tags=["Webhooks"],
         description="Generic webhook subscription and event management",
         requires_auth=True,
@@ -236,7 +236,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.billing.router",
         router_name="router",
-        prefix="/api/v1/billing",
+        prefix="/api/v1",  # Module has /billing prefix
         tags=["Billing"],
         description="Billing and payment management",
     ),
@@ -258,14 +258,14 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.audit.router",
         router_name="router",
-        prefix="/api/v1/audit",
+        prefix="/api/v1",  # Module has /audit prefix
         tags=["Audit"],
         description="Audit trails and activity tracking",
     ),
     RouterConfig(
         module_path="dotmac.platform.metrics.router",
         router_name="router",
-        prefix="/api/v1/metrics",
+        prefix="/api/v1",  # Module has /metrics prefix
         tags=["Metrics"],
         description="ISP metrics and KPIs with caching",
         requires_auth=True,
@@ -273,7 +273,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.realtime.router",
         router_name="router",
-        prefix="/api/v1/realtime",
+        prefix="/api/v1",  # Module has /realtime prefix
         tags=["Real-Time"],
         description="Real-time updates via SSE and WebSocket",
         requires_auth=True,
@@ -281,7 +281,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.rate_limit.router",
         router_name="router",
-        prefix="/api/v1/rate-limits",
+        prefix="/api/v1",  # Module has /rate-limits prefix
         tags=["Rate Limiting"],
         description="Rate limit rule management and monitoring",
         requires_auth=True,
@@ -289,7 +289,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.jobs.router",
         router_name="router",
-        prefix="/api/v1/jobs",
+        prefix="/api/v1",  # Module has /jobs prefix
         tags=["Jobs"],
         description="Async job tracking and management",
         requires_auth=True,
@@ -297,7 +297,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.jobs.scheduler_router",
         router_name="router",
-        prefix="/api/v1/jobs/scheduler",
+        prefix="/api/v1",  # Module has /jobs/scheduler prefix
         tags=["Job Scheduler"],
         description="Scheduled jobs and job chain management",
         requires_auth=True,
@@ -321,7 +321,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.billing.subscriptions.router",
         router_name="router",
-        prefix="/api/v1/billing/subscriptions",
+        prefix="/api/v1",  # Module has /billing/subscriptions prefix
         tags=["Billing - Subscriptions"],
         description="Subscription management",
         requires_auth=True,
@@ -329,7 +329,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.billing.pricing.router",
         router_name="router",
-        prefix="/api/v1/billing/pricing",
+        prefix="/api/v1",  # Module has /billing/pricing prefix
         tags=["Billing - Pricing"],
         description="Pricing engine and rules",
         requires_auth=True,
@@ -337,7 +337,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.billing.bank_accounts.router",
         router_name="router",
-        prefix="/api/v1/billing/bank-accounts",
+        prefix="/api/v1",  # Module has /billing/bank-accounts prefix
         tags=["Billing - Bank Accounts"],
         description="Bank accounts and manual payments",
         requires_auth=True,
@@ -345,7 +345,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.billing.settings.router",
         router_name="router",
-        prefix="/api/v1/billing/settings",
+        prefix="/api/v1/billing",  # Module has /settings prefix
         tags=["Billing - Settings"],
         description="Billing configuration and settings",
         requires_auth=True,
@@ -353,7 +353,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.billing.reconciliation_router",
         router_name="router",
-        prefix="/api/v1/billing/reconciliations",
+        prefix="/api/v1/billing",  # Module has /reconciliations prefix
         tags=["Billing - Reconciliation"],
         description="Payment reconciliation and recovery",
         requires_auth=True,
@@ -361,7 +361,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.billing.dunning.router",
         router_name="router",
-        prefix="/api/v1/billing/dunning",
+        prefix="/api/v1",  # Module has /billing/dunning prefix
         tags=["Billing - Dunning"],
         description="Dunning and collections management",
         requires_auth=True,
@@ -377,7 +377,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.billing.invoicing.router",
         router_name="router",
-        prefix="/api/v1/billing/invoices",
+        prefix="/api/v1/billing",  # Module has /invoices prefix
         tags=["Billing - Invoices"],
         description="Invoice creation and management",
         requires_auth=True,
@@ -385,7 +385,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.billing.invoicing.money_router",
         router_name="router",
-        prefix="/api/v1/billing/invoices/money",
+        prefix="/api/v1/billing/invoices",  # Module has /money prefix
         tags=["Billing - Invoices (Money)"],
         description="Money-based invoice operations with PDF generation",
         requires_auth=True,
@@ -425,7 +425,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.monitoring.logs_router",
         router_name="logs_router",
-        prefix="/api/v1/monitoring",
+        prefix="/api/v1",  # Module has /monitoring prefix
         tags=["Monitoring - Logs"],
         description="Application logs with filtering and search",
         requires_auth=True,
@@ -433,15 +433,23 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.monitoring.traces_router",
         router_name="traces_router",
-        prefix="/api/v1/observability",
+        prefix="/api/v1",  # Module has /observability prefix
         tags=["Observability - Traces"],
         description="Distributed traces, metrics, and performance data",
         requires_auth=True,
     ),
     RouterConfig(
+        module_path="dotmac.platform.monitoring.alert_router",
+        router_name="router",
+        prefix="/api/v1/monitoring",  # Module has /alerts prefix
+        tags=["Monitoring - Alerts"],
+        description="Alert webhook receiver and channel management",
+        requires_auth=False,  # Webhook endpoint doesn't require auth, but management endpoints do (checked internally)
+    ),
+    RouterConfig(
         module_path="dotmac.platform.partner_management.router",
         router_name="router",
-        prefix="/api/v1/partners",
+        prefix="/api/v1",  # Module has /partners prefix
         tags=["Partner Management"],
         description="Partner relationship management",
         requires_auth=True,
@@ -449,7 +457,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.partner_management.portal_router",
         router_name="router",
-        prefix="/api/v1/partners/portal",
+        prefix="/api/v1/partners",  # Module has /portal prefix
         tags=["Partner Portal"],
         description="Partner self-service portal",
         requires_auth=True,
@@ -457,7 +465,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.partner_management.revenue_router",
         router_name="router",
-        prefix="/api/v1/partners/revenue",
+        prefix="/api/v1/partners",  # Module has /revenue prefix
         tags=["Partner Revenue"],
         description="Partner revenue sharing and commissions",
         requires_auth=True,
@@ -465,7 +473,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.ticketing.router",
         router_name="router",
-        prefix="/api/v1/tickets",
+        prefix="/api/v1",  # Module has /tickets prefix
         tags=["Ticketing"],
         description="Cross-organization ticketing workflows",
         requires_auth=True,
@@ -473,15 +481,23 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.wireless.router",
         router_name="router",
-        prefix="/api/v1/wireless",
+        prefix="/api/v1",  # Module has /wireless prefix
         tags=["Wireless Infrastructure"],
         description="Wireless network infrastructure management (APs, radios, coverage zones)",
         requires_auth=True,
     ),
     RouterConfig(
+        module_path="dotmac.platform.fiber.router",
+        router_name="router",
+        prefix="/api/v1",  # Module has /fiber prefix
+        tags=["Fiber Infrastructure"],
+        description="Fiber optic network infrastructure management (cables, splice points, distribution points)",
+        requires_auth=True,
+    ),
+    RouterConfig(
         module_path="dotmac.platform.monitoring_metrics_router",
         router_name="logs_router",
-        prefix="/api/v1/logs",
+        prefix="/api/v1",  # Module has /logs prefix
         tags=["Logs"],
         description="Application logs and error monitoring",
         requires_auth=True,
@@ -489,7 +505,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.monitoring_metrics_router",
         router_name="metrics_router",
-        prefix="/api/v1/metrics",
+        prefix="/api/v1",  # Module has /metrics prefix
         tags=["Metrics"],
         description="Performance and resource metrics",
         requires_auth=True,
@@ -577,7 +593,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.integrations.router",
         router_name="integrations_router",
-        prefix="/api/v1/integrations",
+        prefix="/api/v1",  # Module has /integrations prefix
         tags=["Integrations"],
         description="External service integrations (Email, SMS, Storage, etc.)",
         requires_auth=True,
@@ -585,7 +601,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.radius.router",
         router_name="router",
-        prefix="/api/v1/radius",
+        prefix="/api/v1",  # Module has /radius prefix
         tags=["RADIUS"],
         description="RADIUS subscriber management and session tracking",
         requires_auth=True,
@@ -593,7 +609,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.netbox.router",
         router_name="router",
-        prefix="/api/v1/netbox",
+        prefix="/api/v1",  # Module has /netbox prefix
         tags=["NetBox"],
         description="NetBox IPAM and DCIM integration",
         requires_auth=True,
@@ -601,7 +617,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.genieacs.router",
         router_name="router",
-        prefix="/api/v1/genieacs",
+        prefix="/api/v1",  # Module has /genieacs prefix
         tags=["GenieACS"],
         description="GenieACS CPE management (TR-069/CWMP)",
         requires_auth=True,
@@ -609,7 +625,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.voltha.router",
         router_name="router",
-        prefix="/api/v1/voltha",
+        prefix="/api/v1",  # Module has /voltha prefix
         tags=["VOLTHA"],
         description="VOLTHA PON network management (OLT/ONU)",
         requires_auth=True,
@@ -617,7 +633,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.ansible.router",
         router_name="router",
-        prefix="/api/v1/ansible",
+        prefix="/api/v1",  # Module has /ansible prefix
         tags=["Ansible"],
         description="Ansible AWX automation workflows",
         requires_auth=True,
@@ -633,7 +649,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.crm.router",
         router_name="router",
-        prefix="/api/v1/crm",
+        prefix="/api/v1",  # Module has /crm prefix
         tags=["CRM"],
         description="Lead management, quotes, and site surveys",
         requires_auth=True,
@@ -689,7 +705,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.deployment.router",
         router_name="router",
-        prefix="/api/v1/deployments",
+        prefix="/api/v1",  # Module has /deployments prefix
         tags=["Deployment Orchestration"],
         description="Multi-tenant deployment provisioning and lifecycle management",
         requires_auth=True,
@@ -705,7 +721,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.sales.router",
         router_name="router",
-        prefix="/api/v1/orders",
+        prefix="/api/v1",  # Module has /orders prefix
         tags=["Sales - Orders"],
         description="Order processing and service activation (authenticated)",
         requires_auth=True,
@@ -713,7 +729,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.sales.router",
         router_name="public_router",
-        prefix="/api/public/orders",
+        prefix="",  # Module has full /api/public/orders path
         tags=["Sales - Public Orders"],
         description="Public order creation and status checking (no auth required)",
         requires_auth=False,

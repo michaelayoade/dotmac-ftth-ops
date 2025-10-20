@@ -251,6 +251,7 @@ export function useWirelessClientDetailGraphQL(options: UseWirelessClientDetailO
 
 export interface UseWirelessClientsByAccessPointOptions {
   accessPointId: string;
+  limit?: number;
   enabled?: boolean;
   pollInterval?: number;
 }
@@ -321,6 +322,7 @@ export interface UseCoverageZoneListOptions {
   limit?: number;
   offset?: number;
   siteId?: string;
+  search?: string;
   enabled?: boolean;
   pollInterval?: number;
 }
@@ -330,6 +332,7 @@ export function useCoverageZoneListGraphQL(options: UseCoverageZoneListOptions =
     limit = 50,
     offset = 0,
     siteId,
+    search,
     enabled = true,
     pollInterval = 60000, // 60 seconds - coverage zones change less frequently
   } = options;
@@ -483,8 +486,8 @@ export function useChannelUtilizationGraphQL(options: UseChannelUtilizationOptio
   } = options;
 
   const { data, loading, error, refetch } = useChannelUtilizationQuery({
-    variables: { siteId, band },
-    skip: !enabled || !siteId,
+    variables: { siteId, frequencyBand: band! },
+    skip: !enabled || !siteId || !band,
     pollInterval,
     fetchPolicy: 'cache-and-network',
   });

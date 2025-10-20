@@ -53,7 +53,8 @@ export default function CustomerDashboard() {
   }
 
   const totalUsage = usage ? usage.upload_gb + usage.download_gb : 0;
-  const usagePercentage = usage && usage.limit_gb ? (totalUsage / usage.limit_gb) * 100 : 0;
+  const usageLimit = usage?.limit_gb ?? 0;
+  const usagePercentage = usageLimit > 0 ? (totalUsage / usageLimit) * 100 : 0;
 
   // Get current balance from most recent unpaid invoice
   const currentBalance = invoices
@@ -141,7 +142,7 @@ export default function CustomerDashboard() {
               {totalUsage.toFixed(1)} GB
             </div>
             <p className="text-xs text-muted-foreground">
-              {usagePercentage.toFixed(1)}% of {usage.currentMonth.limit_gb} GB
+              {usagePercentage.toFixed(1)}% of {usageLimit} GB
             </p>
           </CardContent>
         </Card>
@@ -247,25 +248,25 @@ export default function CustomerDashboard() {
             </div>
 
             {/* Last Payment */}
-            {invoices && invoices.length > 0 && (
+            {invoices && invoices.length > 0 && invoices[0] && (
               <div className="space-y-2 text-sm">
                 <p className="font-medium">Recent Invoice</p>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount:</span>
                   <span className={`font-medium ${
-                    invoices[0].status === "paid" ? "text-green-500" : "text-yellow-500"
+                    invoices[0]?.status === "paid" ? "text-green-500" : "text-yellow-500"
                   }`}>
-                    {formatCurrency(invoices[0].amount)}
+                    {formatCurrency(invoices[0]?.amount ?? 0)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Status:</span>
-                  <span className="font-medium capitalize">{invoices[0].status}</span>
+                  <span className="font-medium capitalize">{invoices[0]?.status ?? 'unknown'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date:</span>
                   <span className="font-medium">
-                    {new Date(invoices[0].created_at).toLocaleDateString()}
+                    {invoices[0]?.created_at ? new Date(invoices[0].created_at).toLocaleDateString() : 'N/A'}
                   </span>
                 </div>
               </div>

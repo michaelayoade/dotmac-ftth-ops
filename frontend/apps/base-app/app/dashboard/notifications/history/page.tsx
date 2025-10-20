@@ -341,31 +341,31 @@ export default function NotificationHistoryPage() {
     () => [
       {
         label: 'Failed',
-        filter: (log) => log.status === 'failed' || log.status === 'bounced',
+        filter: (log: CommunicationLog) => log.status === 'failed' || log.status === 'bounced',
       },
       {
         label: 'Pending',
-        filter: (log) => log.status === 'pending',
+        filter: (log: CommunicationLog) => log.status === 'pending',
       },
       {
         label: 'Delivered',
-        filter: (log) => log.status === 'delivered',
+        filter: (log: CommunicationLog) => log.status === 'delivered',
       },
       {
         label: 'Email',
-        filter: (log) => log.type === 'email',
+        filter: (log: CommunicationLog) => log.type === 'email',
       },
       {
         label: 'SMS',
-        filter: (log) => log.type === 'sms',
+        filter: (log: CommunicationLog) => log.type === 'sms',
       },
       {
         label: 'Has Errors',
-        filter: (log) => !!log.error_message,
+        filter: (log: CommunicationLog) => !!log.error_message,
       },
       {
         label: 'Retried',
-        filter: (log) => log.retry_count > 0,
+        filter: (log: CommunicationLog) => log.retry_count > 0,
       },
     ],
     []

@@ -76,7 +76,7 @@ export default function AddonsPage() {
       filtered = filtered.filter(
         (addon) =>
           addon.name.toLowerCase().includes(query) ||
-          addon.description.toLowerCase().includes(query)
+          (addon.description?.toLowerCase() ?? '').includes(query)
       );
     }
 
@@ -118,6 +118,7 @@ export default function AddonsPage() {
     try {
       const request: CancelAddonRequest = {
         cancel_immediately: cancelImmediately,
+        cancel_at_period_end: !cancelImmediately,
       };
       await cancelAddon(addonToCancel, request);
       setCancelModalOpen(false);

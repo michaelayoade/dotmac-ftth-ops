@@ -15,17 +15,17 @@ import {
   JobControl,
   CampaignControl,
 } from '../lib/realtime/websocket-client';
-import type {
-  AlertEvent,
-  BaseEvent,
+import {
   ConnectionStatus,
-  EventHandler,
-  EventType,
-  JobProgressEvent,
-  ONUStatusEvent,
-  RADIUSSessionEvent,
-  SubscriberEvent,
-  TicketEvent,
+  type AlertEvent,
+  type BaseEvent,
+  type EventHandler,
+  type EventType,
+  type JobProgressEvent,
+  type ONUStatusEvent,
+  type RADIUSSessionEvent,
+  type SubscriberEvent,
+  type TicketEvent,
 } from '../types/realtime';
 
 // Get API base URL from environment
@@ -46,7 +46,7 @@ export function useSSE<T extends BaseEvent>(
   enabled = true
 ) {
   const { user } = useAuth();
-  const [status, setStatus] = useState<ConnectionStatus>('disconnected');
+  const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED);
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<SSEClient | null>(null);
 
@@ -67,9 +67,9 @@ export function useSSE<T extends BaseEvent>(
     const client = new SSEClient({
       endpoint,
       token,
-      onOpen: () => setStatus('connected'),
+      onOpen: () => setStatus(ConnectionStatus.CONNECTED),
       onError: () => {
-        setStatus('error');
+        setStatus(ConnectionStatus.ERROR);
         setError('Connection error');
       },
       reconnect: true,
@@ -185,7 +185,7 @@ export function useRADIUSSessionEvents(
  */
 export function useWebSocket(endpoint: string, enabled = true) {
   const { user } = useAuth();
-  const [status, setStatus] = useState<ConnectionStatus>('disconnected');
+  const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED);
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<WebSocketClient | null>(null);
 
@@ -205,12 +205,12 @@ export function useWebSocket(endpoint: string, enabled = true) {
     const client = new WebSocketClient({
       endpoint,
       token,
-      onOpen: () => setStatus('connected'),
+      onOpen: () => setStatus(ConnectionStatus.CONNECTED),
       onError: () => {
-        setStatus('error');
+        setStatus(ConnectionStatus.ERROR);
         setError('Connection error');
       },
-      onClose: () => setStatus('disconnected'),
+      onClose: () => setStatus(ConnectionStatus.DISCONNECTED),
       reconnect: true,
       maxReconnectAttempts: 10,
       heartbeatInterval: 30000,
@@ -280,6 +280,7 @@ export function useSessionsWebSocket(
       const unsubscribe = subscribe('*', handler);
       return unsubscribe;
     }
+    return undefined;
   }, [rest.isConnected, subscribe, handler]);
 
   return rest;
@@ -311,6 +312,7 @@ export function useJobWebSocket(jobId: string | null, enabled = true) {
       });
       return unsubscribe;
     }
+    return undefined;
   }, [rest.isConnected, subscribe]);
 
   const cancelJob = useCallback(() => {
@@ -366,6 +368,7 @@ export function useCampaignWebSocket(
       });
       return unsubscribe;
     }
+    return undefined;
   }, [rest.isConnected, subscribe]);
 
   const cancelCampaign = useCallback(() => {
@@ -464,12 +467,12 @@ export function useRealtimeHealth() {
   const anyError = Object.values(statuses).some((status) => status === 'error');
 
   const overallStatus: ConnectionStatus = allConnected
-    ? 'connected'
+    ? ConnectionStatus.CONNECTED
     : anyError
-      ? 'error'
+      ? ConnectionStatus.ERROR
       : anyConnecting
-        ? 'connecting'
-        : 'disconnected';
+        ? ConnectionStatus.CONNECTING
+        : ConnectionStatus.DISCONNECTED;
 
   return {
     overallStatus,

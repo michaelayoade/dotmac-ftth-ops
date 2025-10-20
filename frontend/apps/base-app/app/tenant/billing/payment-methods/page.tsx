@@ -109,6 +109,8 @@ export default function PaymentMethodsPage() {
     try {
       const request: VerifyPaymentMethodRequest = {
         verification_amounts: [parseFloat(microdeposit1), parseFloat(microdeposit2)],
+        verification_code1: microdeposit1,
+        verification_code2: microdeposit2,
       };
       await verifyPaymentMethod(paymentMethodToVerify, request);
       setVerifyModalOpen(false);

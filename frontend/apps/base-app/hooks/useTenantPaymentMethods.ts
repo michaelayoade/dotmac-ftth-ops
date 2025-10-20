@@ -54,7 +54,12 @@ export interface AddPaymentMethodRequest {
   // Tokens from Stripe.js
   card_token?: string;
   bank_token?: string;
+  bank_account_token?: string;
   wallet_token?: string;
+
+  // Bank account details
+  bank_name?: string;
+  bank_account_type?: string;
 
   // Billing details
   billing_name?: string;
@@ -85,6 +90,7 @@ export interface UpdatePaymentMethodRequest {
 export interface VerifyPaymentMethodRequest {
   verification_code1: string;
   verification_code2: string;
+  verification_amounts?: number[];
 }
 
 // ============================================================================

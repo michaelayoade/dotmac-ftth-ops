@@ -4,6 +4,7 @@ Customer Management API Router.
 Provides RESTful endpoints for customer management operations.
 """
 
+from datetime import UTC, datetime
 from typing import Annotated, Any
 from uuid import UUID
 
@@ -33,12 +34,13 @@ from dotmac.platform.customer_management.schemas import (
     CustomerSegmentResponse,
     CustomerUpdate,
 )
+from dotmac.platform.customer_management.models import CustomerStatus
 from dotmac.platform.customer_management.service import CustomerService
 from dotmac.platform.db import get_session_dependency
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/api/v1/customers", tags=["Customer Management"])
+router = APIRouter(prefix="/customers", tags=["Customer Management"])
 
 
 def _convert_customer_to_response(customer: Any) -> CustomerResponse:
@@ -60,6 +62,300 @@ async def get_customer_service(
 ) -> CustomerService:
     """Get customer service instance."""
     return CustomerService(session)
+
+
+async def _execute_customer_search(
+    service: CustomerService, params: CustomerSearchParams
+) -> CustomerListResponse:
+    """Shared helper to run customer search and build response."""
+    customers, total = await service.search_customers(params)
+
+    has_next = (params.page * params.page_size) < total
+    has_prev = params.page > 1
+
+    return CustomerListResponse(
+        customers=[_convert_customer_to_response(c) for c in customers],
+        total=total,
+        page=params.page,
+        page_size=params.page_size,
+        has_next=has_next,
+        has_prev=has_prev,
+    )
+
+
+async def _handle_status_lifecycle_events(
+    customer_id: UUID,
+    old_status: str,
+    new_status: str,
+    customer_email: str,
+    session: AsyncSession,
+) -> None:
+    """
+    Handle service lifecycle events based on customer status changes.
+
+    Args:
+        customer_id: Customer UUID
+        old_status: Previous customer status
+        new_status: New customer status
+        customer_email: Customer email for notifications
+        session: Database session
+    """
+    try:
+        # Handle suspension events
+        if new_status == CustomerStatus.SUSPENDED.value and old_status != CustomerStatus.SUSPENDED.value:
+            logger.info(
+                "Customer suspended - triggering service suspension",
+                customer_id=str(customer_id),
+                customer_email=customer_email,
+            )
+
+            # Implement service suspension logic
+            from sqlalchemy import select
+            from dotmac.platform.billing.models import BillingSubscriptionTable
+            from dotmac.platform.billing.subscriptions.service import SubscriptionService
+            from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
+            from dotmac.platform.events.bus import get_event_bus
+
+            # Query customer's active subscriptions
+            subscription_stmt = select(BillingSubscriptionTable).where(
+                BillingSubscriptionTable.customer_id == str(customer_id),
+                BillingSubscriptionTable.status.in_([
+                    SubscriptionStatus.ACTIVE.value,
+                    SubscriptionStatus.TRIALING.value,
+                ])
+            )
+            subscription_result = await session.execute(subscription_stmt)
+            active_subscriptions = subscription_result.scalars().all()
+
+            if active_subscriptions:
+                subscription_service = SubscriptionService(session)
+
+                for subscription in active_subscriptions:
+                    # Store original status in metadata for restoration
+                    original_status = subscription.status
+
+                    # Update subscription to suspended
+                    from sqlalchemy import update
+                    update_stmt = (
+                        update(BillingSubscriptionTable)
+                        .where(BillingSubscriptionTable.subscription_id == subscription.subscription_id)
+                        .values(
+                            status=SubscriptionStatus.PAUSED.value,
+                            metadata_json={
+                                **(subscription.metadata_json or {}),
+                                "suspension": {
+                                    "suspended_at": datetime.now(UTC).isoformat(),
+                                    "original_status": original_status,
+                                    "reason": "customer_suspended",
+                                }
+                            }
+                        )
+                    )
+                    await session.execute(update_stmt)
+
+                    logger.info(
+                        "Subscription suspended",
+                        subscription_id=subscription.subscription_id,
+                        customer_id=str(customer_id),
+                    )
+
+                await session.commit()
+
+            # Emit suspension event
+            event_bus = get_event_bus()
+            await event_bus.publish(
+                event_type="customer.suspended",
+                data={
+                    "customer_id": str(customer_id),
+                    "customer_email": customer_email,
+                    "suspended_at": datetime.now(UTC).isoformat(),
+                    "subscriptions_suspended": len(active_subscriptions),
+                }
+            )
+
+            logger.info(
+                "Service suspension completed",
+                customer_id=str(customer_id),
+                subscriptions_suspended=len(active_subscriptions),
+            )
+
+        # Handle reactivation events
+        elif new_status == CustomerStatus.ACTIVE.value and old_status == CustomerStatus.SUSPENDED.value:
+            logger.info(
+                "Customer reactivated - triggering service restoration",
+                customer_id=str(customer_id),
+                customer_email=customer_email,
+            )
+
+            # Implement service reactivation logic
+            from sqlalchemy import select, update
+            from dotmac.platform.billing.models import BillingSubscriptionTable
+            from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
+            from dotmac.platform.events.bus import get_event_bus
+
+            # Query customer's suspended subscriptions
+            subscription_stmt = select(BillingSubscriptionTable).where(
+                BillingSubscriptionTable.customer_id == str(customer_id),
+                BillingSubscriptionTable.status == SubscriptionStatus.PAUSED.value
+            )
+            subscription_result = await session.execute(subscription_stmt)
+            suspended_subscriptions = subscription_result.scalars().all()
+
+            if suspended_subscriptions:
+                for subscription in suspended_subscriptions:
+                    # Restore original status from metadata or default to ACTIVE
+                    metadata = subscription.metadata_json or {}
+                    suspension_info = metadata.get("suspension", {})
+                    original_status = suspension_info.get("original_status", SubscriptionStatus.ACTIVE.value)
+
+                    # Remove suspension info from metadata
+                    updated_metadata = {**metadata}
+                    if "suspension" in updated_metadata:
+                        updated_metadata["reactivation"] = {
+                            "reactivated_at": datetime.now(UTC).isoformat(),
+                            "previous_suspension": updated_metadata.pop("suspension"),
+                        }
+
+                    # Update subscription to restored status
+                    update_stmt = (
+                        update(BillingSubscriptionTable)
+                        .where(BillingSubscriptionTable.subscription_id == subscription.subscription_id)
+                        .values(
+                            status=original_status,
+                            metadata_json=updated_metadata
+                        )
+                    )
+                    await session.execute(update_stmt)
+
+                    logger.info(
+                        "Subscription reactivated",
+                        subscription_id=subscription.subscription_id,
+                        customer_id=str(customer_id),
+                        restored_status=original_status,
+                    )
+
+                await session.commit()
+
+            # Emit reactivation event
+            event_bus = get_event_bus()
+            await event_bus.publish(
+                event_type="customer.reactivated",
+                data={
+                    "customer_id": str(customer_id),
+                    "customer_email": customer_email,
+                    "reactivated_at": datetime.now(UTC).isoformat(),
+                    "subscriptions_reactivated": len(suspended_subscriptions),
+                }
+            )
+
+            logger.info(
+                "Service reactivation completed",
+                customer_id=str(customer_id),
+                subscriptions_reactivated=len(suspended_subscriptions),
+            )
+
+        # Handle inactive/churned transitions
+        elif new_status in [CustomerStatus.INACTIVE.value, CustomerStatus.CHURNED.value]:
+            logger.info(
+                "Customer marked as inactive/churned",
+                customer_id=str(customer_id),
+                new_status=new_status,
+                customer_email=customer_email,
+            )
+
+            # Implement churn handling logic
+            from sqlalchemy import select, update
+            from dotmac.platform.billing.models import BillingSubscriptionTable
+            from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
+            from dotmac.platform.billing.subscriptions.service import SubscriptionService
+            from dotmac.platform.events.bus import get_event_bus
+
+            # Query customer's active subscriptions
+            subscription_stmt = select(BillingSubscriptionTable).where(
+                BillingSubscriptionTable.customer_id == str(customer_id),
+                BillingSubscriptionTable.status.in_([
+                    SubscriptionStatus.ACTIVE.value,
+                    SubscriptionStatus.TRIALING.value,
+                    SubscriptionStatus.PAUSED.value,
+                ])
+            )
+            subscription_result = await session.execute(subscription_stmt)
+            active_subscriptions = subscription_result.scalars().all()
+
+            if active_subscriptions:
+                subscription_service = SubscriptionService(session)
+                canceled_count = 0
+
+                for subscription in active_subscriptions:
+                    try:
+                        # Use the cancel_subscription service method
+                        # This handles proper cancellation logic including proration
+                        tenant_id = subscription.tenant_id if hasattr(subscription, 'tenant_id') else "default"
+
+                        await subscription_service.cancel_subscription(
+                            subscription_id=subscription.subscription_id,
+                            tenant_id=tenant_id,
+                            cancel_immediately=False,  # Cancel at period end for churned customers
+                            reason=f"Customer churned - status changed to {new_status}",
+                        )
+
+                        canceled_count += 1
+
+                        logger.info(
+                            "Subscription canceled due to churn",
+                            subscription_id=subscription.subscription_id,
+                            customer_id=str(customer_id),
+                        )
+                    except Exception as e:
+                        logger.error(
+                            "Failed to cancel subscription during churn",
+                            subscription_id=subscription.subscription_id,
+                            customer_id=str(customer_id),
+                            error=str(e),
+                        )
+
+                await session.commit()
+
+                logger.info(
+                    "Subscription cancellations completed",
+                    customer_id=str(customer_id),
+                    canceled_count=canceled_count,
+                )
+
+            # Emit churn event with analytics data
+            # This will trigger the exit survey email via event listener
+            event_bus = get_event_bus()
+            await event_bus.publish(
+                event_type="customer.churned",
+                data={
+                    "customer_id": str(customer_id),
+                    "customer_email": customer_email,
+                    "churned_at": datetime.now(UTC).isoformat(),
+                    "previous_status": old_status,
+                    "new_status": new_status,
+                    "subscriptions_canceled": len(active_subscriptions),
+                }
+            )
+
+            # Exit survey email is automatically sent by the event listener
+            # See: communications/event_listeners.py::send_exit_survey_email
+
+            logger.info(
+                "Churn handling completed",
+                customer_id=str(customer_id),
+                status=new_status,
+            )
+
+    except Exception as e:
+        # Log error but don't fail the status update
+        logger.error(
+            "Failed to handle status lifecycle events",
+            customer_id=str(customer_id),
+            old_status=old_status,
+            new_status=new_status,
+            error=str(e),
+            exc_info=True,
+        )
 
 
 @router.post("/", response_model=CustomerResponse, status_code=status.HTTP_201_CREATED)
@@ -107,6 +403,21 @@ async def create_customer(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create customer",
         ) from exc
+
+
+@router.get("", response_model=CustomerListResponse, summary="List customers")
+@router.get("/", response_model=CustomerListResponse, include_in_schema=False)
+async def list_customers(
+    params: Annotated[CustomerSearchParams, Depends()],
+    service: Annotated[CustomerService, Depends(get_customer_service)],
+    _current_user: Annotated[UserInfo, Depends(get_current_user)],
+) -> CustomerListResponse:
+    """
+    List customers with optional filtering via query parameters.
+
+    Supports the same filters as the POST /customers/search endpoint.
+    """
+    return await _execute_customer_search(service, params)
 
 
 @router.get("/{customer_id}", response_model=CustomerResponse)
@@ -231,7 +542,7 @@ async def delete_customer(
 async def search_customers(
     params: CustomerSearchParams,
     service: Annotated[CustomerService, Depends(get_customer_service)],
-    current_user: Annotated[UserInfo, Depends(get_current_user)],
+    _current_user: Annotated[UserInfo, Depends(get_current_user)],
 ) -> CustomerListResponse:
     """
     Search and filter customers.
@@ -240,19 +551,7 @@ async def search_customers(
     Requires authentication.
     """
     try:
-        customers, total = await service.search_customers(params)
-
-        has_next = (params.page * params.page_size) < total
-        has_prev = params.page > 1
-
-        return CustomerListResponse(
-            customers=[_convert_customer_to_response(c) for c in customers],
-            total=total,
-            page=params.page,
-            page_size=params.page_size,
-            has_next=has_next,
-            has_prev=has_prev,
-        )
+        return await _execute_customer_search(service, params)
     except HTTPException:
         # Re-raise HTTP exceptions without wrapping
         raise
@@ -698,9 +997,14 @@ async def update_customer_status(
             },
         )
 
-        # TODO: Trigger service lifecycle events based on status
-        # - If suspended: suspend services, send notification
-        # - If reactivated: reactivate services, send welcome back notification
+        # Trigger service lifecycle events based on status change
+        await _handle_status_lifecycle_events(
+            customer_id=customer.id,
+            old_status=old_status,
+            new_status=new_status,
+            customer_email=customer.email,
+            session=service.session,
+        )
 
         logger.info(
             "Customer status updated",

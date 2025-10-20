@@ -117,7 +117,7 @@ class WirelessDevice(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ig
     manufacturer: Mapped[str | None] = mapped_column(String(100))
     model: Mapped[str | None] = mapped_column(String(100))
     serial_number: Mapped[str | None] = mapped_column(String(100), unique=True)
-    mac_address: Mapped[str | None] = mapped_column(String(17), index=True)
+    mac_address: Mapped[str | None] = mapped_column(String(17))
     firmware_version: Mapped[str | None] = mapped_column(String(50))
 
     # Network configuration
@@ -252,7 +252,7 @@ class WirelessRadio(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
 
     __table_args__ = (
         Index("ix_wireless_radios_tenant_device", "tenant_id", "device_id"),
-        Index("ix_wireless_radios_frequency", "frequency"),
+        # Note: frequency field already has index=True on line 209
     )
 
 
@@ -410,7 +410,8 @@ class WirelessClient(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     )
 
     # Client identification
-    mac_address: Mapped[str] = mapped_column(String(17), nullable=False, index=True)
+    # Note: mac_address is indexed via ix_wireless_clients_mac in __table_args__ (line 453)
+    mac_address: Mapped[str] = mapped_column(String(17), nullable=False)
     ip_address: Mapped[str | None] = mapped_column(String(45))
     hostname: Mapped[str | None] = mapped_column(String(255))
 
@@ -420,7 +421,8 @@ class WirelessClient(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     channel: Mapped[int | None] = mapped_column(Integer)
 
     # Connection status
-    connected: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
+    # Note: connected field is indexed via composite index in __table_args__ (line 454)
+    connected: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     connection_duration_seconds: Mapped[int | None] = mapped_column(Integer)

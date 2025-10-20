@@ -79,6 +79,7 @@ class BillingService:
         order_id: int | str,
         amount: Decimal | str | float,
         payment_method: str,
+        currency: str | None = None,
     ) -> dict[str, Any]:
         """
         Process a payment for an order using the plugin system.
@@ -90,18 +91,45 @@ class BillingService:
             order_id: Order ID
             amount: Payment amount
             payment_method: Payment method (e.g., "credit_card", "bank_transfer")
+            currency: Currency code (e.g., "USD", "NGN"). If not provided, will try to fetch from quote/order.
 
         Returns:
             Dict with payment_id, status, transaction_id
         """
         import secrets
         from datetime import datetime
+        from uuid import UUID
 
         amount_decimal = Decimal(str(amount)) if not isinstance(amount, Decimal) else amount
         amount_float = float(amount_decimal)
 
+        # Get currency from context if not provided
+        if not currency:
+            try:
+                # Try to interpret order_id as a quote UUID and fetch currency
+                from sqlalchemy import select
+                from ..crm.models import Quote
+
+                try:
+                    quote_uuid = UUID(order_id) if isinstance(order_id, str) else UUID(str(order_id))
+                    quote_stmt = select(Quote).where(Quote.id == quote_uuid)
+                    quote_result = await self.db.execute(quote_stmt)
+                    quote = quote_result.scalar_one_or_none()
+                    if quote and hasattr(quote, 'currency'):
+                        currency = quote.currency
+                        logger.info(f"Currency retrieved from quote: {currency}")
+                except (ValueError, AttributeError):
+                    pass
+            except Exception as e:
+                logger.warning(f"Could not fetch currency from order context: {e}")
+
+            # Default to USD if still not found
+            if not currency:
+                currency = "USD"
+                logger.info("Using default currency: USD")
+
         logger.info(
-            f"Processing payment for order {order_id}, amount {amount_decimal}, method {payment_method}"
+            f"Processing payment for order {order_id}, amount {amount_decimal} {currency}, method {payment_method}"
         )
 
         # Try to use payment plugin if available
@@ -129,7 +157,7 @@ class BillingService:
                 # Process payment through plugin
                 plugin_result = await payment_plugin.process_payment(
                     amount=amount_float,
-                    currency="USD",  # TODO: Get from order/context
+                    currency=currency,
                     payment_method=payment_method,
                     metadata={
                         "order_id": str(order_id),

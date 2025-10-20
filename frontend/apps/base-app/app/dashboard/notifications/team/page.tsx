@@ -169,7 +169,7 @@ export default function TeamNotificationPage() {
             {/* Target Mode Selection */}
             <div className="space-y-3">
               <Label>Target Mode</Label>
-              <RadioGroup value={targetMode} onValueChange={(v) => setTargetMode(v as TargetMode)}>
+              <RadioGroup value={targetMode} onValueChange={(v: string) => setTargetMode(v as TargetMode)}>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="role" id="role" />
                   <Label htmlFor="role" className="font-normal cursor-pointer">

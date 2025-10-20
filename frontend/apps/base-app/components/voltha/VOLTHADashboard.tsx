@@ -75,7 +75,7 @@ export function VOLTHADashboard() {
       setONUs(onusRes.data.devices.filter(d => !d.root));
       setAlarms(alarmsRes.data.alarms || []);
 
-      if (oltsRes.data.logical_devices.length > 0 && !selectedOLT) {
+      if (oltsRes.data.logical_devices.length > 0 && !selectedOLT && oltsRes.data.logical_devices[0]) {
         setSelectedOLT(oltsRes.data.logical_devices[0].id);
       }
     } catch (err: any) {

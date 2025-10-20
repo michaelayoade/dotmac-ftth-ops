@@ -71,9 +71,9 @@ export function LeadDetailModal({
   onUpdate,
 }: LeadDetailModalProps) {
   const { toast } = useToast();
-  const { updateLead, qualifyLead, disqualifyLead, convertLead } = useLeads();
+  const { updateLead, qualifyLead, disqualifyLead, convertToCustomer } = useLeads();
   const { quotes, refetch: refetchQuotes } = useQuotes({ leadId: lead?.id });
-  const { siteSurveys, refetch: refetchSurveys } = useSiteSurveys({
+  const { surveys, refetch: refetchSurveys } = useSiteSurveys({
     leadId: lead?.id,
   });
 
@@ -176,7 +176,7 @@ export function LeadDetailModal({
     if (!confirmed) return;
 
     try {
-      await convertLead(lead.id);
+      await convertToCustomer(lead.id);
       toast({
         title: "Lead Converted",
         description: `${lead.first_name} ${lead.last_name} is now a customer!`,
@@ -297,7 +297,7 @@ export function LeadDetailModal({
               Quotes {quotes?.length ? `(${quotes.length})` : ""}
             </TabsTrigger>
             <TabsTrigger value="surveys">
-              Surveys {siteSurveys?.length ? `(${siteSurveys.length})` : ""}
+              Surveys {surveys?.length ? `(${surveys.length})` : ""}
             </TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
@@ -504,19 +504,19 @@ export function LeadDetailModal({
                   <div>
                     <Label>Serviceability Status</Label>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {lead.is_serviceable === "yes" && (
+                      {(lead.is_serviceable as any) === "yes" && (
                         <span className="text-emerald-400 flex items-center gap-1">
                           <CheckCircle2 className="h-4 w-4" />
                           Serviceable - Ready to proceed
                         </span>
                       )}
-                      {lead.is_serviceable === "no" && (
+                      {(lead.is_serviceable as any) === "no" && (
                         <span className="text-red-400 flex items-center gap-1">
                           <XCircle className="h-4 w-4" />
                           Not Serviceable - Outside coverage area
                         </span>
                       )}
-                      {lead.is_serviceable === "pending" && (
+                      {(lead.is_serviceable as any) === "pending" && (
                         <span className="text-amber-400 flex items-center gap-1">
                           <Clock className="h-4 w-4" />
                           Pending - Awaiting site survey
@@ -621,10 +621,10 @@ export function LeadDetailModal({
                     })}
                   </p>
                 </div>
-                {lead.assigned_to_user_id && (
+                {lead.assigned_to_id && (
                   <div className="space-y-2">
                     <Label>Assigned To</Label>
-                    <p className="text-sm">User #{lead.assigned_to_user_id}</p>
+                    <p className="text-sm">User #{lead.assigned_to_id}</p>
                   </div>
                 )}
                 {lead.partner_id && (
@@ -718,9 +718,9 @@ export function LeadDetailModal({
                         addSuffix: true,
                       })}
                     </p>
-                    {lead.converted_customer_id && (
+                    {lead.converted_to_customer_id && (
                       <p className="text-sm mt-1">
-                        Customer ID: {lead.converted_customer_id}
+                        Customer ID: {lead.converted_to_customer_id}
                       </p>
                     )}
                   </div>
@@ -750,7 +750,7 @@ export function LeadDetailModal({
                           {quote.service_plan_name}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          {quote.service_bandwidth}
+                          {quote.bandwidth}
                         </p>
                         <div className="flex items-center gap-4 mt-2">
                           <div className="flex items-center gap-1">
@@ -794,9 +794,9 @@ export function LeadDetailModal({
 
           {/* Tab 4: Surveys */}
           <TabsContent value="surveys" className="space-y-4 mt-4">
-            {siteSurveys && siteSurveys.length > 0 ? (
+            {surveys && surveys.length > 0 ? (
               <div className="space-y-3">
-                {siteSurveys.map((survey) => (
+                {surveys.map((survey: any) => (
                   <div
                     key={survey.id}
                     className="border rounded-lg p-4 hover:border-primary/50 transition-colors cursor-pointer"

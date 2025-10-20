@@ -19,17 +19,17 @@ import {
 import { useRBAC } from '@/contexts/RBACContext';
 import {
   useServiceAreaListGraphQL,
-  type ServiceAreaType,
 } from '@/hooks/useFiberGraphQL';
+import { ServiceAreaType } from '@/lib/graphql/generated';
 import { platformConfig } from '@/lib/config';
 import { MapPin, Search, Filter, ChevronLeft, ChevronRight, Cable, TrendingUp, Home } from 'lucide-react';
 import Link from 'next/link';
 
 const SERVICE_AREA_TYPES: ServiceAreaType[] = [
-  'RESIDENTIAL',
-  'COMMERCIAL',
-  'INDUSTRIAL',
-  'MIXED',
+  ServiceAreaType.Residential,
+  ServiceAreaType.Commercial,
+  ServiceAreaType.Industrial,
+  ServiceAreaType.Mixed,
 ];
 
 export default function ServiceAreasPage() {
@@ -50,7 +50,6 @@ export default function ServiceAreasPage() {
     loading,
     error,
     refetch,
-    fetchMore,
   } = useServiceAreaListGraphQL({
     limit,
     offset,
@@ -78,7 +77,6 @@ export default function ServiceAreasPage() {
     if (hasNextPage) {
       const newOffset = offset + limit;
       setOffset(newOffset);
-      fetchMore(newOffset);
     }
   };
 
@@ -86,7 +84,6 @@ export default function ServiceAreasPage() {
     if (offset > 0) {
       const newOffset = Math.max(0, offset - limit);
       setOffset(newOffset);
-      fetchMore(newOffset);
     }
   };
 

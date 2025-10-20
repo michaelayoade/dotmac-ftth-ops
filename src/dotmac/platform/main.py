@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import Any
 
+import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -15,18 +16,29 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.responses import Response
 
+from dotmac.platform.api.app_boundary_middleware import (
+    AppBoundaryMiddleware,
+    SingleTenantMiddleware,
+)
 from dotmac.platform.audit import AuditContextMiddleware
+from dotmac.platform.auth.billing_permissions import ensure_billing_rbac
 from dotmac.platform.auth.exceptions import AuthError, get_http_status
 from dotmac.platform.auth.isp_permissions import ensure_isp_rbac
 from dotmac.platform.core.rate_limiting import get_limiter
 from dotmac.platform.db import AsyncSessionLocal, init_db
+from dotmac.platform.monitoring.error_middleware import (
+    ErrorTrackingMiddleware,
+    RequestMetricsMiddleware,
+)
 from dotmac.platform.monitoring.health_checks import HealthChecker, ensure_infrastructure_running
+from dotmac.platform.platform_app import platform_app
 from dotmac.platform.redis_client import init_redis, shutdown_redis
 from dotmac.platform.routers import get_api_info, register_routers
 from dotmac.platform.secrets import load_secrets_from_vault_sync
 from dotmac.platform.settings import settings
 from dotmac.platform.telemetry import setup_telemetry
 from dotmac.platform.tenant import TenantMiddleware
+from dotmac.platform.tenant_app import tenant_app
 
 
 def rate_limit_handler(request: Request, exc: Exception) -> Response:
@@ -167,13 +179,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         if settings.environment == "production":
             logger.warning("redis.production.unavailable", emoji="⚠️")
 
-    # Seed ISP RBAC permissions/roles after database init
+    # Seed RBAC permissions/roles after database init
     try:
         async with AsyncSessionLocal() as session:
             await ensure_isp_rbac(session)
-        logger.info("rbac.isp_permissions.seeded", emoji="✅")
+            logger.info("rbac.isp_permissions.seeded", emoji="✅")
+            await ensure_billing_rbac(session)
+            logger.info("rbac.billing_permissions.seeded", emoji="✅")
     except Exception as e:
-        logger.error("rbac.isp_permissions.failed", error=str(e), emoji="❌")
+        logger.error("rbac.permissions.failed", error=str(e), emoji="❌")
         if settings.environment == "production":
             raise
 
@@ -196,6 +210,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
 def create_application() -> FastAPI:
     """Create and configure the FastAPI application."""
+    # Get logger
+    logger = structlog.get_logger(__name__)
+
     # Create FastAPI app
     app = FastAPI(
         title="DotMac Platform Services",
@@ -209,9 +226,25 @@ def create_application() -> FastAPI:
     # Add GZip compression
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-    # Add tenant middleware BEFORE audit middleware
-    # This ensures tenant context is set before audit logs are created
+    # Add error tracking middleware (should be early in the chain)
+    # Tracks HTTP errors and exceptions in Prometheus
+    if settings.observability.enable_metrics:
+        app.add_middleware(ErrorTrackingMiddleware)
+        app.add_middleware(RequestMetricsMiddleware)
+
+    # Add tenant middleware BEFORE other middleware
+    # This ensures tenant context is set before boundary checks
     app.add_middleware(TenantMiddleware)
+
+    # Add single-tenant middleware if in single-tenant mode
+    # This automatically sets fixed tenant_id from config
+    if settings.DEPLOYMENT_MODE == "single_tenant":
+        app.add_middleware(SingleTenantMiddleware)
+
+    # Add app boundary middleware to enforce platform/tenant route separation
+    # This runs after tenant context is set but before audit logging
+    # NOTE: Auth middleware runs via route dependencies, so user context is set in request.state
+    app.add_middleware(AppBoundaryMiddleware)
 
     # Add audit context middleware for user tracking
     app.add_middleware(AuditContextMiddleware)
@@ -234,7 +267,39 @@ def create_application() -> FastAPI:
     # Add auth error handler for proper status codes (401 for auth, 403 for authz)
     app.add_exception_handler(AuthError, auth_error_handler)
 
-    # Register all API routers
+    # Mount sub-applications based on deployment mode
+    logger.info(
+        "mounting_applications",
+        deployment_mode=settings.DEPLOYMENT_MODE,
+        enable_platform_routes=settings.ENABLE_PLATFORM_ROUTES,
+    )
+
+    if settings.DEPLOYMENT_MODE == "single_tenant":
+        # Single-tenant mode: Only mount tenant app (no platform routes)
+        logger.info("single_tenant_mode.mounting_tenant_app_only")
+        app.mount("/api/v1", tenant_app)  # Mount at /api/v1 for backward compatibility
+
+    elif settings.DEPLOYMENT_MODE == "hybrid":
+        # Hybrid mode: Could be control plane OR tenant instance
+        # Control plane: platform app only
+        # Tenant instance: tenant app only
+        # Determined by ENABLE_PLATFORM_ROUTES setting
+        if settings.ENABLE_PLATFORM_ROUTES:
+            logger.info("hybrid_mode.control_plane.mounting_platform_app")
+            app.mount("/api/platform/v1", platform_app)
+        else:
+            logger.info("hybrid_mode.tenant_instance.mounting_tenant_app")
+            app.mount("/api/tenant/v1", tenant_app)
+
+    else:  # multi_tenant (default)
+        # Multi-tenant SaaS mode: Mount both apps
+        logger.info("multi_tenant_mode.mounting_both_apps")
+        app.mount("/api/platform/v1", platform_app)
+        app.mount("/api/tenant/v1", tenant_app)
+
+    # Register shared routers (auth, webhooks, etc.) - available in all modes
+    # NOTE: For Phase 2, we're keeping the old router registration for shared routes
+    # This will be refactored in Phase 3
     register_routers(app)
 
     # Health check endpoint (public - no auth required)

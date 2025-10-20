@@ -144,6 +144,20 @@ try:
 except (ImportError, ValueError):
     HAS_DATABASE_BASE = False
 
+# Pre-import all models to prevent SQLAlchemy relationship resolution errors
+# This must happen BEFORE any test code runs that instantiates entities
+# The _import_base_and_models() function is called from fixtures, but tests
+# using mocks don't call those fixtures, so we need to import here too
+if HAS_DATABASE_BASE:
+    try:
+        # Import essential models that have cross-dependencies
+        from dotmac.platform.tenant.models import Tenant  # noqa: F401
+        from dotmac.platform.customer_management.models import Customer  # noqa: F401
+        from dotmac.platform.subscribers.models import Subscriber  # noqa: F401
+        from dotmac.platform.radius.models import RadCheck  # noqa: F401
+    except ImportError:
+        pass  # Models not available, tests will handle gracefully
+
 
 def _import_base_and_models():
     """Import Base and all models.

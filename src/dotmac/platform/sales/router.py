@@ -40,7 +40,7 @@ from .service import ActivationOrchestrator, OrderProcessingService
 public_router = APIRouter(prefix="/api/public/orders", )
 
 # Internal router (authentication required)
-router = APIRouter(prefix="/api/v1/orders", )
+router = APIRouter(prefix="/orders", )
 
 
 def get_order_service(

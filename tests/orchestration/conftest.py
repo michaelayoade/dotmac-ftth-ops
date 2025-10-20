@@ -15,6 +15,7 @@ from dotmac.platform.orchestration.models import (
     WorkflowStepStatus,
     WorkflowType,
 )
+from dotmac.platform.tenant.models import Tenant, TenantStatus, TenantPlanType
 
 
 @pytest.fixture
@@ -278,6 +279,36 @@ def sample_workflow_stats():
             "terminate_service": 5
         }
     }
+
+
+@pytest.fixture
+async def test_tenant(async_db_session):
+    """Create a test tenant for orchestration tests."""
+    tenant = Tenant(
+        id="tenant-orchestration-test",
+        name="Test ISP Orchestration",
+        slug="test-orch",
+        status=TenantStatus.ACTIVE,
+        plan_type=TenantPlanType.PROFESSIONAL,
+    )
+    async_db_session.add(tenant)
+    await async_db_session.flush()
+    return tenant
+
+
+@pytest.fixture
+async def test_tenant_2(async_db_session):
+    """Create a second test tenant for isolation tests."""
+    tenant = Tenant(
+        id="tenant-orchestration-test-2",
+        name="Test ISP Orchestration 2",
+        slug="test-orch-2",
+        status=TenantStatus.ACTIVE,
+        plan_type=TenantPlanType.PROFESSIONAL,
+    )
+    async_db_session.add(tenant)
+    await async_db_session.flush()
+    return tenant
 
 
 @pytest.fixture

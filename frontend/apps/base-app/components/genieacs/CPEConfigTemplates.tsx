@@ -357,10 +357,12 @@ export function CPEConfigTemplates() {
       custom: { variant: "outline", color: "bg-gray-100 text-gray-800" },
     };
 
-    const style = styles[category] || styles.custom;
+    const normalizedCategory = category as keyof typeof styles;
+    const styleRecord =
+      (styles[normalizedCategory] ?? styles.custom)!;
 
     return (
-      <Badge variant={style.variant} className={style.color}>
+      <Badge variant={styleRecord.variant} className={styleRecord.color}>
         {category.charAt(0).toUpperCase() + category.slice(1)}
       </Badge>
     );

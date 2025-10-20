@@ -57,6 +57,7 @@ interface SLAComplianceData {
 const mockAlarms: Alarm[] = [
   {
     id: '1',
+    tenant_id: 'demo-alpha',
     alarm_id: 'ALM-001',
     severity: 'critical',
     status: 'active',
@@ -68,13 +69,19 @@ const mockAlarms: Alarm[] = [
     resource_name: 'ONU-001-ABC',
     customer_name: 'John Doe',
     subscriber_count: 1,
+    correlation_action: 'investigate',
     first_occurrence: new Date(Date.now() - 3600000).toISOString(),
     last_occurrence: new Date().toISOString(),
     occurrence_count: 3,
     is_root_cause: true,
+    tags: {},
+    metadata: {},
+    created_at: new Date(Date.now() - 3600000).toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: '2',
+    tenant_id: 'demo-alpha',
     alarm_id: 'ALM-002',
     severity: 'major',
     status: 'acknowledged',
@@ -84,14 +91,20 @@ const mockAlarms: Alarm[] = [
     resource_type: 'olt',
     resource_name: 'OLT-CORE-01',
     subscriber_count: 45,
+    correlation_action: 'monitor',
     first_occurrence: new Date(Date.now() - 7200000).toISOString(),
     last_occurrence: new Date(Date.now() - 1800000).toISOString(),
     occurrence_count: 12,
     acknowledged_at: new Date(Date.now() - 3000000).toISOString(),
     is_root_cause: false,
+    tags: {},
+    metadata: {},
+    created_at: new Date(Date.now() - 7200000).toISOString(),
+    updated_at: new Date(Date.now() - 1800000).toISOString(),
   },
   {
     id: '3',
+    tenant_id: 'demo-alpha',
     alarm_id: 'ALM-003',
     severity: 'minor',
     status: 'active',
@@ -101,10 +114,15 @@ const mockAlarms: Alarm[] = [
     resource_type: 'device',
     resource_name: 'SW-DIST-02',
     subscriber_count: 0,
+    correlation_action: 'auto-remediate',
     first_occurrence: new Date(Date.now() - 86400000).toISOString(),
     last_occurrence: new Date(Date.now() - 86400000).toISOString(),
     occurrence_count: 1,
     is_root_cause: true,
+    tags: {},
+    metadata: {},
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 86400000).toISOString(),
   },
 ];
 
@@ -167,7 +185,7 @@ export default function FaultManagementPage() {
         active: apiStatistics.active_alarms,
         critical: apiStatistics.critical_alarms,
         acknowledged: apiStatistics.acknowledged_alarms,
-        totalImpacted: 0, // TODO: Add to API statistics
+        totalImpacted: apiStatistics.total_impacted_subscribers || 0,
       };
     }
 
@@ -441,18 +459,20 @@ export default function FaultManagementPage() {
         </CardHeader>
         <CardContent>
           <UniversalChart
-            type="bar"
-            data={mockFrequencyData}
-            series={[
-              { key: 'critical', name: 'Critical', color: '#dc2626' },
-              { key: 'major', name: 'Major', color: '#f97316' },
-              { key: 'minor', name: 'Minor', color: '#eab308' },
-              { key: 'warning', name: 'Warning', color: '#facc15' },
-              { key: 'info', name: 'Info', color: '#3b82f6' },
-            ]}
-            xAxis={{ dataKey: 'hour' }}
-            height={300}
-            stacked
+            {...{
+              type: "bar",
+              data: mockFrequencyData,
+              series: [
+                { key: 'critical', name: 'Critical', color: '#dc2626' },
+                { key: 'major', name: 'Major', color: '#f97316' },
+                { key: 'minor', name: 'Minor', color: '#eab308' },
+                { key: 'warning', name: 'Warning', color: '#facc15' },
+                { key: 'info', name: 'Info', color: '#3b82f6' },
+              ],
+              xAxis: { dataKey: 'hour' },
+              height: 300,
+              stacked: true,
+            } as any}
           />
         </CardContent>
       </Card>
@@ -467,21 +487,23 @@ export default function FaultManagementPage() {
         </CardHeader>
         <CardContent>
           <UniversalChart
-            type="line"
-            data={mockSLAData}
-            series={[
-              { key: 'compliance', name: 'Actual Compliance', type: 'area', color: '#10b981' },
-              { key: 'target', name: 'Target (99.9%)', strokeDashArray: '5 5', color: '#6b7280' },
-            ]}
-            xAxis={{ dataKey: 'date' }}
-            yAxis={{
-              left: {
-                format: (v) => `${v.toFixed(1)}%`,
-                domain: [95, 100]
-              }
-            }}
-            height={300}
-            smooth
+            {...{
+              type: "line",
+              data: mockSLAData,
+              series: [
+                { key: 'compliance', name: 'Actual Compliance', type: 'area', color: '#10b981' },
+                { key: 'target', name: 'Target (99.9%)', strokeDashArray: '5 5', color: '#6b7280' },
+              ],
+              xAxis: { dataKey: 'date' },
+              yAxis: {
+                left: {
+                  format: (v: number) => `${v.toFixed(1)}%`,
+                  domain: [95, 100]
+                }
+              },
+              height: 300,
+              smooth: true,
+            } as any}
           />
         </CardContent>
       </Card>

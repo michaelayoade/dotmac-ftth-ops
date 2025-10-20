@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { FileText, Download, Save, Eye } from "lucide-react";
+import { apiClient } from "@/lib/api/client";
 
 interface ReportConfig {
   name: string;
@@ -73,7 +74,7 @@ export function CustomReportBuilder() {
     }));
   };
 
-  const handleSaveReport = () => {
+  const handleSaveReport = async () => {
     if (!config.name.trim()) {
       toast({
         title: "Validation Error",
@@ -92,16 +93,32 @@ export function CustomReportBuilder() {
       return;
     }
 
-    // TODO: Save to backend
-    console.log("Saving report:", config);
+    try {
+      // Save report configuration to backend
+      await apiClient.post('/analytics/reports', {
+        name: config.name,
+        description: config.description,
+        date_range: config.dateRange,
+        metrics: config.metrics,
+        group_by: config.groupBy,
+        filters: config.filters,
+      });
 
-    toast({
-      title: "Report Saved",
-      description: `Custom report "${config.name}" has been saved successfully.`,
-    });
+      toast({
+        title: "Report Saved",
+        description: `Custom report "${config.name}" has been saved successfully.`,
+      });
+    } catch (error) {
+      console.error('Failed to save report:', error);
+      toast({
+        title: "Save Failed",
+        description: error instanceof Error ? error.message : "Failed to save report. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleGenerateReport = () => {
+  const handleGenerateReport = async () => {
     if (config.metrics.length === 0) {
       toast({
         title: "Validation Error",
@@ -111,13 +128,36 @@ export function CustomReportBuilder() {
       return;
     }
 
-    // TODO: Generate and show report
-    console.log("Generating report:", config);
+    try {
+      // Generate report data from backend
+      const response = await apiClient.post('/analytics/reports/generate', {
+        date_range: config.dateRange,
+        metrics: config.metrics,
+        group_by: config.groupBy,
+        filters: config.filters,
+      });
 
-    toast({
-      title: "Report Generated",
-      description: "Your custom report is ready to view.",
-    });
+      const reportData = response.data;
+
+      // Display the generated report
+      // Note: In a real implementation, this would open a modal or navigate to a report view
+      console.log("Generated report data:", reportData);
+
+      toast({
+        title: "Report Generated",
+        description: `Your custom report is ready with ${reportData.dataPoints || 0} data points.`,
+      });
+
+      // Optional: Store report data in state for display
+      // setGeneratedReport(reportData);
+    } catch (error) {
+      console.error('Failed to generate report:', error);
+      toast({
+        title: "Generation Failed",
+        description: error instanceof Error ? error.message : "Failed to generate report. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleExportReport = () => {
@@ -159,7 +199,7 @@ export function CustomReportBuilder() {
     if (!acc[metric.category]) {
       acc[metric.category] = [];
     }
-    acc[metric.category].push(metric);
+    acc[metric.category]?.push(metric);
     return acc;
   }, {} as Record<string, typeof availableMetrics>);
 
@@ -255,7 +295,7 @@ export function CustomReportBuilder() {
                       <Checkbox
                         id={metric.id}
                         checked={config.metrics.includes(metric.id)}
-                        onCheckedChange={() => handleMetricToggle(metric.id)}
+                        onChange={() => handleMetricToggle(metric.id)}
                       />
                       <label
                         htmlFor={metric.id}

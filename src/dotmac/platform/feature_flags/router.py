@@ -26,7 +26,7 @@ from dotmac.platform.feature_flags import (
 
 logger = structlog.get_logger(__name__)
 
-feature_flags_router = APIRouter(prefix="/api/v1/feature-flags", tags=["Feature Flags"])
+feature_flags_router = APIRouter(prefix="/feature-flags", tags=["Feature Flags"])
 
 
 def _require_authenticated_user(current_user: UserInfo | None) -> UserInfo:

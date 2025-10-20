@@ -6,10 +6,17 @@ Provides secure, multi-tenant WebSocket handlers for real-time communication.
 
 import asyncio
 import json
+from uuid import UUID
 
 import structlog
 from fastapi import WebSocket, WebSocketDisconnect
+from sqlalchemy import and_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.billing.dunning.models import DunningCampaign
+from dotmac.platform.db import async_session_maker
+from dotmac.platform.jobs.models import Job
+from dotmac.platform.radius.models import RadAcct
 from dotmac.platform.realtime.auth import (
     AuthenticatedWebSocketConnection,
     WebSocketAuthError,
@@ -72,14 +79,39 @@ async def handle_sessions_ws_authenticated(websocket: WebSocket, redis: RedisCli
                 elif data.get("type") == "query_session":
                     session_id = data.get("session_id")
                     if session_id:
-                        # TODO: Query session from database
-                        await connection.send_json(
-                            {
-                                "type": "session_info",
-                                "session_id": session_id,
-                                "status": "active",
-                            }
-                        )
+                        # Query session from database with tenant isolation
+                        async with async_session_maker() as db:
+                            query = select(RadAcct).where(
+                                and_(
+                                    RadAcct.acctsessionid == session_id,
+                                    RadAcct.tenant_id == user_info.tenant_id,
+                                )
+                            )
+                            result = await db.execute(query)
+                            session = result.scalar_one_or_none()
+
+                            if session:
+                                await connection.send_json(
+                                    {
+                                        "type": "session_info",
+                                        "session_id": session_id,
+                                        "username": session.username,
+                                        "status": "active" if session.is_active else "inactive",
+                                        "start_time": session.acctstarttime.isoformat() if session.acctstarttime else None,
+                                        "stop_time": session.acctstoptime.isoformat() if session.acctstoptime else None,
+                                        "nas_ip": session.nasipaddress,
+                                        "input_bytes": session.acctinputoctets,
+                                        "output_bytes": session.acctoutputoctets,
+                                    }
+                                )
+                            else:
+                                await connection.send_json(
+                                    {
+                                        "type": "error",
+                                        "message": "Session not found or access denied",
+                                        "session_id": session_id,
+                                    }
+                                )
 
         except WebSocketDisconnect:
             logger.info(
@@ -136,8 +168,26 @@ async def handle_job_ws_authenticated(
             required_permissions=["jobs.read"],
         )
 
-        # TODO: Validate job belongs to user's tenant
-        # This should query the database to check job.tenant_id == user_info.tenant_id
+        # Validate job belongs to user's tenant
+        async with async_session_maker() as db:
+            query = select(Job).where(
+                and_(
+                    Job.job_id == job_id,
+                    Job.tenant_id == user_info.tenant_id,
+                )
+            )
+            result = await db.execute(query)
+            job = result.scalar_one_or_none()
+
+            if not job:
+                logger.warning(
+                    "websocket.job.access_denied",
+                    job_id=job_id,
+                    tenant_id=user_info.tenant_id,
+                    user_id=user_info.user_id,
+                )
+                await websocket.close(code=1008, reason="Job not found or access denied")
+                return
 
         # Authorize access to this specific job
         await authorize_websocket_resource(
@@ -292,8 +342,38 @@ async def handle_campaign_ws_authenticated(
             required_permissions=["campaigns.read", "firmware.campaigns.read"],
         )
 
-        # TODO: Validate campaign belongs to user's tenant
-        # This should query the database to check campaign.tenant_id == user_info.tenant_id
+        # Validate campaign belongs to user's tenant
+        try:
+            campaign_uuid = UUID(campaign_id)
+        except ValueError:
+            logger.warning(
+                "websocket.campaign.invalid_id",
+                campaign_id=campaign_id,
+                tenant_id=user_info.tenant_id,
+                user_id=user_info.user_id,
+            )
+            await websocket.close(code=1008, reason="Invalid campaign ID format")
+            return
+
+        async with async_session_maker() as db:
+            query = select(DunningCampaign).where(
+                and_(
+                    DunningCampaign.id == campaign_uuid,
+                    DunningCampaign.tenant_id == user_info.tenant_id,
+                )
+            )
+            result = await db.execute(query)
+            campaign = result.scalar_one_or_none()
+
+            if not campaign:
+                logger.warning(
+                    "websocket.campaign.access_denied",
+                    campaign_id=campaign_id,
+                    tenant_id=user_info.tenant_id,
+                    user_id=user_info.user_id,
+                )
+                await websocket.close(code=1008, reason="Campaign not found or access denied")
+                return
 
         # Authorize access to this specific campaign
         await authorize_websocket_resource(

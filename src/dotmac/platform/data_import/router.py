@@ -29,7 +29,7 @@ from dotmac.platform.data_import.schemas import (
 )
 from dotmac.platform.database import get_async_session as get_db
 
-router = APIRouter(prefix="/api/v1/data-import", tags=["Data Import"])
+router = APIRouter(prefix="/data-import", tags=["Data Import"])
 
 
 @router.post("/upload/{entity_type}")

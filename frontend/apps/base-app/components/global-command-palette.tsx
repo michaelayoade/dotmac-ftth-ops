@@ -61,7 +61,7 @@ export function GlobalCommandPalette() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Debounced search results
-  const { results, isLoading } = useDebouncedSearch(searchQuery);
+  const { data: results, isLoading } = useDebouncedSearch(searchQuery);
 
   // Recent searches from localStorage
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -271,11 +271,11 @@ export function GlobalCommandPalette() {
         )}
 
         {/* Search Results */}
-        {searchQuery && results.length > 0 && (
+        {searchQuery && results?.results && results.results.length > 0 && (
           <>
             {!searchQuery && <CommandSeparator />}
             <CommandGroup heading="Search Results">
-              {results.map((result) => {
+              {results.results.map((result: any) => {
                 // Determine icon based on entity type
                 const Icon =
                   result.type === 'customer'

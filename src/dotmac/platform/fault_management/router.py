@@ -42,7 +42,7 @@ from dotmac.platform.fault_management.service import AlarmService
 from dotmac.platform.fault_management.sla_service import SLAMonitoringService
 from dotmac.platform.tenant.dependencies import TenantAdminAccess
 
-router = APIRouter(prefix="/api/v1/faults", tags=["Fault Management"])
+router = APIRouter(prefix="/faults", tags=["Fault Management"])
 
 
 # =============================================================================

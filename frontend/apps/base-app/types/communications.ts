@@ -543,7 +543,9 @@ export function extractTemplateVariables(template: string): string[] {
   let match;
 
   while ((match = variableRegex.exec(template)) !== null) {
-    variables.add(match[1]);
+    if (match[1]) {
+      variables.add(match[1]);
+    }
   }
 
   return Array.from(variables);

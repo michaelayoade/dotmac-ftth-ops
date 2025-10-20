@@ -20,7 +20,7 @@ from dotmac.platform.db import get_session_dependency
 from dotmac.platform.tenant.dependencies import TenantAdminAccess
 from dotmac.platform.tenant.oss_config import OSSService, get_service_config
 
-router = APIRouter(prefix="/api/v1/ansible", tags=["Ansible"])
+router = APIRouter(prefix="/ansible", tags=["Ansible"])
 
 
 async def get_awx_service(

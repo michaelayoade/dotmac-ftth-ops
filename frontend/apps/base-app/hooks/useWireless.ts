@@ -60,14 +60,13 @@ export function useAccessPoints(options: UseAccessPointsOptions = {}) {
       if (options.limit) params.append('limit', options.limit.toString());
 
       // Backend endpoint is /devices
-      const response = await apiClient.get<any[]>(
+      const response = await apiClient.get<AccessPoint[]>(
         `/wireless/devices?${params.toString()}`
       );
 
-      // Transform backend WirelessDevice to frontend AccessPoint
-      const transformedAPs = response.data.map(mapDeviceToAccessPoint);
-      setAccessPoints(transformedAPs);
-      return transformedAPs;
+      // Backend already returns AccessPoint format
+      setAccessPoints(response.data);
+      return response.data;
     } catch (err: any) {
       const error = new Error(err.response?.data?.detail || 'Failed to fetch access points');
       setError(error);

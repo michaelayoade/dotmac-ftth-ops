@@ -92,9 +92,64 @@ export default function CustomerUsagePage() {
     upload: Math.random() * 2,
   }));
 
-  const handleDownloadReport = () => {
-    // TODO: Generate and download PDF report
-    console.log("Downloading usage report...");
+  const handleDownloadReport = async () => {
+    try {
+      // Prepare report data
+      const reportData = {
+        period: {
+          start: usage?.period_start,
+          end: usage?.period_end,
+        },
+        summary: {
+          total_gb: currentMonth.total_gb,
+          download_gb: currentMonth.download_gb,
+          upload_gb: currentMonth.upload_gb,
+          limit_gb: currentMonth.limit_gb,
+          usage_percentage: usagePercentage,
+          days_remaining: currentMonth.days_remaining,
+        },
+        daily_usage: dailyUsage,
+        hourly_usage: hourlyUsage,
+        time_range: timeRange,
+      };
+
+      // Call API to generate PDF report
+      const response = await fetch('/api/customer/usage/report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reportData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to generate report: ${response.statusText}`);
+      }
+
+      // Get the PDF blob
+      const blob = await response.blob();
+
+      // Generate filename with current date
+      const dateStr = format(new Date(), 'yyyy-MM-dd');
+      const filename = `usage-report-${dateStr}.pdf`;
+
+      // Create a download link and trigger download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      console.log(`Usage report downloaded: ${filename}`);
+    } catch (error) {
+      console.error('Error downloading usage report:', error);
+      alert(`Failed to download report: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   return (
