@@ -4,9 +4,9 @@
  * Schedule deployment operations for future execution (one-time or recurring)
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Calendar,
   Clock,
@@ -16,7 +16,7 @@ import {
   Loader2,
   Info,
   Repeat,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   useScheduledDeployments,
   getOperationLabel,
@@ -27,48 +27,48 @@ import {
   type ScheduledDeploymentRequest,
   type DeploymentTemplate,
   type DeploymentInstance,
-} from '@/hooks/useScheduledDeployments';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/hooks/useScheduledDeployments";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useRBAC } from '@/contexts/RBACContext';
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useRBAC } from "@/contexts/RBACContext";
 
-type ScheduleType = 'one_time' | 'recurring';
+type ScheduleType = "one_time" | "recurring";
 
 export default function ScheduledDeploymentPage() {
   const { hasPermission } = useRBAC();
-  const canSchedule = hasPermission('deployment.schedule.create') || hasPermission('admin');
+  const canSchedule = hasPermission("deployment.schedule.create") || hasPermission("admin");
 
   const { scheduleDeployment, fetchTemplates, fetchInstances, isLoading, error } =
     useScheduledDeployments();
 
   // Form state
-  const [operation, setOperation] = useState<DeploymentOperation>('upgrade');
-  const [scheduleType, setScheduleType] = useState<ScheduleType>('one_time');
-  const [scheduledAt, setScheduledAt] = useState('');
-  const [cronExpression, setCronExpression] = useState('');
-  const [intervalSeconds, setIntervalSeconds] = useState('');
+  const [operation, setOperation] = useState<DeploymentOperation>("upgrade");
+  const [scheduleType, setScheduleType] = useState<ScheduleType>("one_time");
+  const [scheduledAt, setScheduledAt] = useState("");
+  const [cronExpression, setCronExpression] = useState("");
+  const [intervalSeconds, setIntervalSeconds] = useState("");
 
   // Operation-specific state
-  const [selectedInstance, setSelectedInstance] = useState<string>('');
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
-  const [upgradeVersion, setUpgradeVersion] = useState('');
+  const [selectedInstance, setSelectedInstance] = useState<string>("");
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [upgradeVersion, setUpgradeVersion] = useState("");
   const [rollbackOnFailure, setRollbackOnFailure] = useState(true);
-  const [cpuCores, setCpuCores] = useState('');
-  const [memoryGb, setMemoryGb] = useState('');
-  const [storageGb, setStorageGb] = useState('');
+  const [cpuCores, setCpuCores] = useState("");
+  const [memoryGb, setMemoryGb] = useState("");
+  const [storageGb, setStorageGb] = useState("");
 
   // Data
   const [templates, setTemplates] = useState<DeploymentTemplate[]>([]);
@@ -88,7 +88,7 @@ export default function ScheduledDeploymentPage() {
         setTemplates(templatesData);
         setInstances(instancesData);
       } catch (err) {
-        console.error('Failed to load data:', err);
+        console.error("Failed to load data:", err);
       }
     };
     loadData();
@@ -110,7 +110,7 @@ export default function ScheduledDeploymentPage() {
       };
 
       // Add schedule-specific parameters
-      if (scheduleType === 'recurring') {
+      if (scheduleType === "recurring") {
         if (cronExpression) {
           request.cron_expression = cronExpression;
         } else if (intervalSeconds) {
@@ -119,25 +119,25 @@ export default function ScheduledDeploymentPage() {
       }
 
       // Add operation-specific parameters
-      if (operation !== 'provision') {
+      if (operation !== "provision") {
         request.instance_id = parseInt(selectedInstance);
       }
 
-      if (operation === 'provision') {
+      if (operation === "provision") {
         request.provision_request = {
           template_id: parseInt(selectedTemplate),
-          environment: 'production',
+          environment: "production",
         };
       }
 
-      if (operation === 'upgrade') {
+      if (operation === "upgrade") {
         request.upgrade_request = {
           to_version: upgradeVersion,
           rollback_on_failure: rollbackOnFailure,
         };
       }
 
-      if (operation === 'scale') {
+      if (operation === "scale") {
         request.scale_request = {};
         if (cpuCores) request.scale_request.cpu_cores = parseInt(cpuCores);
         if (memoryGb) request.scale_request.memory_gb = parseInt(memoryGb);
@@ -148,30 +148,30 @@ export default function ScheduledDeploymentPage() {
       setSuccessResponse(response);
 
       // Reset form
-      setScheduledAt('');
-      setCronExpression('');
-      setIntervalSeconds('');
-      setUpgradeVersion('');
-      setCpuCores('');
-      setMemoryGb('');
-      setStorageGb('');
+      setScheduledAt("");
+      setCronExpression("");
+      setIntervalSeconds("");
+      setUpgradeVersion("");
+      setCpuCores("");
+      setMemoryGb("");
+      setStorageGb("");
     } catch (err) {
-      console.error('Failed to schedule deployment:', err);
+      console.error("Failed to schedule deployment:", err);
     }
   };
 
   const isFormValid = () => {
     if (!scheduledAt) return false;
 
-    if (scheduleType === 'recurring') {
+    if (scheduleType === "recurring") {
       if (!cronExpression && !intervalSeconds) return false;
       if (cronExpression && !isValidCronExpression(cronExpression)) return false;
     }
 
-    if (operation === 'provision' && !selectedTemplate) return false;
-    if (operation !== 'provision' && !selectedInstance) return false;
-    if (operation === 'upgrade' && !upgradeVersion) return false;
-    if (operation === 'scale' && !cpuCores && !memoryGb && !storageGb) return false;
+    if (operation === "provision" && !selectedTemplate) return false;
+    if (operation !== "provision" && !selectedInstance) return false;
+    if (operation === "upgrade" && !upgradeVersion) return false;
+    if (operation === "scale" && !cpuCores && !memoryGb && !storageGb) return false;
 
     return true;
   };
@@ -232,16 +232,17 @@ export default function ScheduledDeploymentPage() {
       <Card>
         <CardHeader>
           <CardTitle>Schedule Details</CardTitle>
-          <CardDescription>
-            Configure deployment operation and schedule
-          </CardDescription>
+          <CardDescription>Configure deployment operation and schedule</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Operation Selection */}
             <div className="space-y-2">
               <Label htmlFor="operation">Operation *</Label>
-              <Select value={operation} onValueChange={(v) => setOperation(v as DeploymentOperation)}>
+              <Select
+                value={operation}
+                onValueChange={(v) => setOperation(v as DeploymentOperation)}
+              >
                 <SelectTrigger id="operation">
                   <SelectValue />
                 </SelectTrigger>
@@ -254,9 +255,7 @@ export default function ScheduledDeploymentPage() {
                   <SelectItem value="destroy">Destroy Deployment</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-sm text-muted-foreground">
-                {getOperationDescription(operation)}
-              </p>
+              <p className="text-sm text-muted-foreground">{getOperationDescription(operation)}</p>
             </div>
 
             {/* Schedule Type */}
@@ -284,7 +283,7 @@ export default function ScheduledDeploymentPage() {
             {/* Scheduled At */}
             <div className="space-y-2">
               <Label htmlFor="scheduled-at">
-                {scheduleType === 'one_time' ? 'Execute At' : 'First Execution At'} *
+                {scheduleType === "one_time" ? "Execute At" : "First Execution At"} *
               </Label>
               <Input
                 id="scheduled-at"
@@ -296,7 +295,7 @@ export default function ScheduledDeploymentPage() {
             </div>
 
             {/* Recurring Schedule Options */}
-            {scheduleType === 'recurring' && (
+            {scheduleType === "recurring" && (
               <Tabs defaultValue="cron" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="cron">Cron Expression</TabsTrigger>
@@ -310,7 +309,7 @@ export default function ScheduledDeploymentPage() {
                     value={cronExpression}
                     onChange={(e) => {
                       setCronExpression(e.target.value);
-                      setIntervalSeconds('');
+                      setIntervalSeconds("");
                     }}
                     placeholder="0 2 * * 0"
                   />
@@ -327,7 +326,7 @@ export default function ScheduledDeploymentPage() {
                         size="sm"
                         onClick={() => {
                           setCronExpression(example.value);
-                          setIntervalSeconds('');
+                          setIntervalSeconds("");
                         }}
                         className="mr-2 mb-2"
                       >
@@ -345,7 +344,7 @@ export default function ScheduledDeploymentPage() {
                     value={intervalSeconds}
                     onChange={(e) => {
                       setIntervalSeconds(e.target.value);
-                      setCronExpression('');
+                      setCronExpression("");
                     }}
                     placeholder="3600"
                     min="60"
@@ -359,7 +358,7 @@ export default function ScheduledDeploymentPage() {
             )}
 
             {/* Instance/Template Selection */}
-            {operation === 'provision' ? (
+            {operation === "provision" ? (
               <div className="space-y-2">
                 <Label htmlFor="template">Deployment Template *</Label>
                 <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
@@ -394,7 +393,7 @@ export default function ScheduledDeploymentPage() {
             )}
 
             {/* Operation-Specific Fields */}
-            {operation === 'upgrade' && (
+            {operation === "upgrade" && (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="version">Target Version *</Label>
@@ -421,7 +420,7 @@ export default function ScheduledDeploymentPage() {
               </div>
             )}
 
-            {operation === 'scale' && (
+            {operation === "scale" && (
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="cpu">CPU Cores</Label>
@@ -491,10 +490,19 @@ export default function ScheduledDeploymentPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="text-blue-800 dark:text-blue-200 space-y-2">
-          <p><strong>One-Time:</strong> Deployment executes once at the specified time</p>
-          <p><strong>Recurring:</strong> Deployment executes on schedule (cron or interval)</p>
-          <p><strong>Retry Policy:</strong> Failed deployments retry up to 2 times with 5-minute delays</p>
-          <p><strong>Timeout:</strong> Operations timeout after 1 hour</p>
+          <p>
+            <strong>One-Time:</strong> Deployment executes once at the specified time
+          </p>
+          <p>
+            <strong>Recurring:</strong> Deployment executes on schedule (cron or interval)
+          </p>
+          <p>
+            <strong>Retry Policy:</strong> Failed deployments retry up to 2 times with 5-minute
+            delays
+          </p>
+          <p>
+            <strong>Timeout:</strong> Operations timeout after 1 hour
+          </p>
         </CardContent>
       </Card>
     </div>

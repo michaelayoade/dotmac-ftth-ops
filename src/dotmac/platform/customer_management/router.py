@@ -406,7 +406,6 @@ async def create_customer(
 
 
 @router.get("", response_model=CustomerListResponse, summary="List customers")
-@router.get("/", response_model=CustomerListResponse, include_in_schema=False)
 async def list_customers(
     params: Annotated[CustomerSearchParams, Depends()],
     service: Annotated[CustomerService, Depends(get_customer_service)],

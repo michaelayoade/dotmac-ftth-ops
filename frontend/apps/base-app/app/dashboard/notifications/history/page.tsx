@@ -5,9 +5,9 @@
  * filtering, and retry capabilities.
  */
 
-'use client';
+"use client";
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from "react";
 import {
   Mail,
   MessageSquare,
@@ -20,60 +20,60 @@ import {
   XCircle,
   Clock,
   AlertTriangle,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   useCommunicationLogs,
   type CommunicationLog,
   type CommunicationType,
   type CommunicationStatus,
-} from '@/hooks/useNotifications';
-import { EnhancedDataTable, type ColumnDef, type BulkAction, type QuickFilter } from '@/components/ui/EnhancedDataTable';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/hooks/useNotifications";
+import {
+  EnhancedDataTable,
+  type ColumnDef,
+  type BulkAction,
+  type QuickFilter,
+} from "@/components/ui/EnhancedDataTable";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { useRBAC } from '@/contexts/RBACContext';
-import { formatDistanceToNow, format } from 'date-fns';
-import { CommunicationDetailModal } from '@/components/notifications/CommunicationDetailModal';
+} from "@/components/ui/select";
+import { useRBAC } from "@/contexts/RBACContext";
+import { formatDistanceToNow, format } from "date-fns";
+import { CommunicationDetailModal } from "@/components/notifications/CommunicationDetailModal";
 
 export default function NotificationHistoryPage() {
   const { hasPermission } = useRBAC();
-  const canRead = hasPermission('notifications.read') || hasPermission('admin');
+  const canRead = hasPermission("notifications.read") || hasPermission("admin");
 
   // Filters
-  const [typeFilter, setTypeFilter] = useState<CommunicationType | ''>('');
-  const [statusFilter, setStatusFilter] = useState<CommunicationStatus | ''>('');
-  const [recipientFilter, setRecipientFilter] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [typeFilter, setTypeFilter] = useState<CommunicationType | "">("");
+  const [statusFilter, setStatusFilter] = useState<CommunicationStatus | "">("");
+  const [recipientFilter, setRecipientFilter] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 50;
 
-  const {
-    logs,
-    total,
-    isLoading,
-    error,
-    refetch,
-    retryFailedCommunication,
-  } = useCommunicationLogs({
-    type: typeFilter || undefined,
-    status: statusFilter || undefined,
-    recipient: recipientFilter || undefined,
-    startDate: startDate || undefined,
-    endDate: endDate || undefined,
-    page,
-    pageSize,
-  });
+  const { logs, total, isLoading, error, refetch, retryFailedCommunication } = useCommunicationLogs(
+    {
+      type: typeFilter || undefined,
+      status: statusFilter || undefined,
+      recipient: recipientFilter || undefined,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
+      page,
+      pageSize,
+    },
+  );
 
   const [selectedLog, setSelectedLog] = useState<CommunicationLog | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -81,11 +81,11 @@ export default function NotificationHistoryPage() {
   // Statistics
   const stats = useMemo(() => {
     // In production, these would come from a separate stats endpoint
-    const totalSent = logs.filter((l) => l.status === 'sent' || l.status === 'delivered').length;
-    const totalFailed = logs.filter((l) => l.status === 'failed' || l.status === 'bounced').length;
-    const totalPending = logs.filter((l) => l.status === 'pending').length;
-    const emailCount = logs.filter((l) => l.type === 'email').length;
-    const smsCount = logs.filter((l) => l.type === 'sms').length;
+    const totalSent = logs.filter((l) => l.status === "sent" || l.status === "delivered").length;
+    const totalFailed = logs.filter((l) => l.status === "failed" || l.status === "bounced").length;
+    const totalPending = logs.filter((l) => l.status === "pending").length;
+    const emailCount = logs.filter((l) => l.type === "email").length;
+    const smsCount = logs.filter((l) => l.type === "sms").length;
 
     return {
       totalSent,
@@ -93,10 +93,7 @@ export default function NotificationHistoryPage() {
       totalPending,
       emailCount,
       smsCount,
-      deliveryRate:
-        logs.length > 0
-          ? ((totalSent / logs.length) * 100).toFixed(1)
-          : '0.0',
+      deliveryRate: logs.length > 0 ? ((totalSent / logs.length) * 100).toFixed(1) : "0.0",
     };
   }, [logs]);
 
@@ -106,7 +103,7 @@ export default function NotificationHistoryPage() {
       setSelectedLog(log);
       setIsDetailModalOpen(true);
     },
-    [setIsDetailModalOpen, setSelectedLog]
+    [setIsDetailModalOpen, setSelectedLog],
   );
 
   const handleRetry = useCallback(
@@ -117,21 +114,21 @@ export default function NotificationHistoryPage() {
 
       const success = await retryFailedCommunication(log.id);
       if (success) {
-        alert('Communication queued for retry');
+        alert("Communication queued for retry");
         refetch();
       } else {
-        alert('Failed to retry communication');
+        alert("Failed to retry communication");
       }
     },
-    [refetch, retryFailedCommunication]
+    [refetch, retryFailedCommunication],
   );
 
   const columns: ColumnDef<CommunicationLog>[] = useMemo(
     () => [
       {
-        id: 'type',
-        header: 'Type',
-        accessorKey: 'type',
+        id: "type",
+        header: "Type",
+        accessorKey: "type",
         cell: ({ row }) => {
           const typeIcons = {
             email: Mail,
@@ -140,10 +137,10 @@ export default function NotificationHistoryPage() {
             webhook: Webhook,
           };
           const typeColors = {
-            email: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-            sms: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-            push: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-            webhook: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
+            email: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+            sms: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+            push: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+            webhook: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
           };
 
           const Icon = typeIcons[row.original.type];
@@ -157,9 +154,9 @@ export default function NotificationHistoryPage() {
         },
       },
       {
-        id: 'recipient',
-        header: 'Recipient',
-        accessorKey: 'recipient',
+        id: "recipient",
+        header: "Recipient",
+        accessorKey: "recipient",
         cell: ({ row }) => (
           <div className="flex flex-col">
             <span className="font-medium text-sm">{row.original.recipient}</span>
@@ -172,9 +169,9 @@ export default function NotificationHistoryPage() {
         ),
       },
       {
-        id: 'template',
-        header: 'Template',
-        accessorKey: 'template_name',
+        id: "template",
+        header: "Template",
+        accessorKey: "template_name",
         cell: ({ row }) =>
           row.original.template_name ? (
             <span className="text-sm">{row.original.template_name}</span>
@@ -183,34 +180,34 @@ export default function NotificationHistoryPage() {
           ),
       },
       {
-        id: 'status',
-        header: 'Status',
-        accessorKey: 'status',
+        id: "status",
+        header: "Status",
+        accessorKey: "status",
         cell: ({ row }) => {
           const statusConfig = {
             pending: {
               icon: Clock,
-              className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+              className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
             },
             sent: {
               icon: CheckCircle2,
-              className: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+              className: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
             },
             delivered: {
               icon: CheckCircle2,
-              className: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+              className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
             },
             failed: {
               icon: XCircle,
-              className: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+              className: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
             },
             bounced: {
               icon: AlertTriangle,
-              className: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+              className: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
             },
             cancelled: {
               icon: XCircle,
-              className: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+              className: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
             },
           };
 
@@ -226,9 +223,9 @@ export default function NotificationHistoryPage() {
         },
       },
       {
-        id: 'provider',
-        header: 'Provider',
-        accessorKey: 'provider',
+        id: "provider",
+        header: "Provider",
+        accessorKey: "provider",
         cell: ({ row }) =>
           row.original.provider ? (
             <span className="text-sm">{row.original.provider}</span>
@@ -237,17 +234,19 @@ export default function NotificationHistoryPage() {
           ),
       },
       {
-        id: 'sent_at',
-        header: 'Sent',
-        accessorKey: 'sent_at',
+        id: "sent_at",
+        header: "Sent",
+        accessorKey: "sent_at",
         cell: ({ row }) =>
           row.original.sent_at ? (
             <div className="flex flex-col">
               <span className="text-sm">
-                {formatDistanceToNow(new Date(row.original.sent_at), { addSuffix: true })}
+                {formatDistanceToNow(new Date(row.original.sent_at), {
+                  addSuffix: true,
+                })}
               </span>
               <span className="text-xs text-muted-foreground">
-                {format(new Date(row.original.sent_at), 'MMM d, HH:mm')}
+                {format(new Date(row.original.sent_at), "MMM d, HH:mm")}
               </span>
             </div>
           ) : (
@@ -255,18 +254,18 @@ export default function NotificationHistoryPage() {
           ),
       },
       {
-        id: 'retry_count',
-        header: 'Retries',
-        accessorKey: 'retry_count',
+        id: "retry_count",
+        header: "Retries",
+        accessorKey: "retry_count",
         cell: ({ row }) => (
           <span className="text-sm">
-            {row.original.retry_count > 0 ? row.original.retry_count : '-'}
+            {row.original.retry_count > 0 ? row.original.retry_count : "-"}
           </span>
         ),
       },
       {
-        id: 'actions',
-        header: 'Actions',
+        id: "actions",
+        header: "Actions",
         cell: ({ row }) => (
           <div className="flex items-center gap-1">
             <Button
@@ -277,7 +276,7 @@ export default function NotificationHistoryPage() {
             >
               <Eye className="h-4 w-4" />
             </Button>
-            {(row.original.status === 'failed' || row.original.status === 'bounced') && (
+            {(row.original.status === "failed" || row.original.status === "bounced") && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -291,98 +290,94 @@ export default function NotificationHistoryPage() {
         ),
       },
     ],
-    [handleRetry, handleViewDetails]
+    [handleRetry, handleViewDetails],
   );
 
   // Bulk actions
   const bulkActions: BulkAction<CommunicationLog>[] = useMemo(
     () => [
       {
-        label: 'Retry Failed',
+        label: "Retry Failed",
         icon: RefreshCw,
         action: async (selected) => {
           const failedLogs = selected.filter(
-            (log) => log.status === 'failed' || log.status === 'bounced'
+            (log) => log.status === "failed" || log.status === "bounced",
           );
 
           if (failedLogs.length === 0) {
-            alert('No failed communications to retry');
+            alert("No failed communications to retry");
             return;
           }
 
-          if (
-            confirm(
-              `Retry ${failedLogs.length} failed communication(s)?`
-            )
-          ) {
+          if (confirm(`Retry ${failedLogs.length} failed communication(s)?`)) {
             for (const log of failedLogs) {
               await retryFailedCommunication(log.id);
             }
             refetch();
           }
         },
-        variant: 'default',
+        variant: "default",
       },
       {
-        label: 'Export Selected',
+        label: "Export Selected",
         icon: Download,
         action: async (selected) => {
           const csv = convertToCSV(selected);
-          downloadCSV(csv, 'communication-logs.csv');
+          downloadCSV(csv, "communication-logs.csv");
         },
-        variant: 'outline',
+        variant: "outline",
       },
     ],
-    [retryFailedCommunication, refetch]
+    [retryFailedCommunication, refetch],
   );
 
   // Quick filters
   const quickFilters: QuickFilter<CommunicationLog>[] = useMemo(
     () => [
       {
-        label: 'Failed',
-        filter: (log: CommunicationLog) => log.status === 'failed' || log.status === 'bounced',
+        label: "Failed",
+        filter: (log: CommunicationLog) => log.status === "failed" || log.status === "bounced",
       },
       {
-        label: 'Pending',
-        filter: (log: CommunicationLog) => log.status === 'pending',
+        label: "Pending",
+        filter: (log: CommunicationLog) => log.status === "pending",
       },
       {
-        label: 'Delivered',
-        filter: (log: CommunicationLog) => log.status === 'delivered',
+        label: "Delivered",
+        filter: (log: CommunicationLog) => log.status === "delivered",
       },
       {
-        label: 'Email',
-        filter: (log: CommunicationLog) => log.type === 'email',
+        label: "Email",
+        filter: (log: CommunicationLog) => log.type === "email",
       },
       {
-        label: 'SMS',
-        filter: (log: CommunicationLog) => log.type === 'sms',
+        label: "SMS",
+        filter: (log: CommunicationLog) => log.type === "sms",
       },
       {
-        label: 'Has Errors',
+        label: "Has Errors",
         filter: (log: CommunicationLog) => !!log.error_message,
       },
       {
-        label: 'Retried',
+        label: "Retried",
         filter: (log: CommunicationLog) => log.retry_count > 0,
       },
     ],
-    []
+    [],
   );
 
   // Handlers
   const handleExportAll = () => {
     const csv = convertToCSV(logs);
-    downloadCSV(csv, 'communication-logs-all.csv');
+    downloadCSV(csv, "communication-logs-all.csv");
   };
 
   const handleClearFilters = () => {
-    setTypeFilter('');
-    setStatusFilter('');
-    setRecipientFilter('');
-    setStartDate('');
-    setEndDate('');
+    setTypeFilter("");
+    setStatusFilter("");
+    setRecipientFilter("");
+    setStartDate("");
+    setEndDate("");
     setPage(1);
   };
 
@@ -640,25 +635,34 @@ export default function NotificationHistoryPage() {
 
 // Helper functions
 function convertToCSV(logs: CommunicationLog[]): string {
-  const headers = ['Type', 'Recipient', 'Subject', 'Status', 'Sent At', 'Provider', 'Retry Count', 'Error'];
+  const headers = [
+    "Type",
+    "Recipient",
+    "Subject",
+    "Status",
+    "Sent At",
+    "Provider",
+    "Retry Count",
+    "Error",
+  ];
   const rows = logs.map((log) => [
     log.type,
     log.recipient,
-    log.subject || '',
+    log.subject || "",
     log.status,
-    log.sent_at || '',
-    log.provider || '',
+    log.sent_at || "",
+    log.provider || "",
     log.retry_count.toString(),
-    log.error_message || '',
+    log.error_message || "",
   ]);
 
-  return [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(',')).join('\n');
+  return [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n");
 }
 
 function downloadCSV(csv: string, filename: string) {
-  const blob = new Blob([csv], { type: 'text/csv' });
+  const blob = new Blob([csv], { type: "text/csv" });
   const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = filename;
   a.click();

@@ -8,8 +8,16 @@ and invitations to optimize performance.
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+from typing import TYPE_CHECKING, Any
 
 import strawberry
+
+if TYPE_CHECKING:
+    from typing import TypeAlias
+
+    JSONScalar: TypeAlias = Any
+else:
+    from strawberry.scalars import JSON as JSONScalar
 
 from dotmac.platform.graphql.types.common import BillingCycleEnum
 
@@ -72,7 +80,7 @@ class TenantSetting:
     updated_at: datetime
 
     @classmethod
-    def from_model(cls, setting: any) -> "TenantSetting":
+    def from_model(cls, setting: Any) -> "TenantSetting":
         """Convert SQLAlchemy model to GraphQL type."""
         return cls(
             id=setting.id,
@@ -99,10 +107,10 @@ class TenantUsageRecord:
     storage_gb: Decimal
     active_users: int
     bandwidth_gb: Decimal
-    metrics: strawberry.scalars.JSON
+    metrics: JSONScalar
 
     @classmethod
-    def from_model(cls, usage: any) -> "TenantUsageRecord":
+    def from_model(cls, usage: Any) -> "TenantUsageRecord":
         """Convert SQLAlchemy model to GraphQL type."""
         return cls(
             id=usage.id,
@@ -134,7 +142,7 @@ class TenantInvitation:
     is_pending: bool
 
     @classmethod
-    def from_model(cls, invitation: any) -> "TenantInvitation":
+    def from_model(cls, invitation: Any) -> "TenantInvitation":
         """Convert SQLAlchemy model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(invitation.id)),
@@ -195,9 +203,9 @@ class Tenant:
     primary_color: str | None
 
     # Metadata (optional, can be large)
-    features: strawberry.scalars.JSON | None
-    settings_json: strawberry.scalars.JSON | None
-    custom_metadata: strawberry.scalars.JSON | None
+    features: JSONScalar | None
+    settings_json: JSONScalar | None
+    custom_metadata: JSONScalar | None
 
     # Timestamps
     created_at: datetime
@@ -215,7 +223,7 @@ class Tenant:
     invitations: list[TenantInvitation] = strawberry.field(default_factory=list)
 
     @classmethod
-    def from_model(cls, tenant: any, include_metadata: bool = False) -> "Tenant":
+    def from_model(cls, tenant: Any, include_metadata: bool = False) -> "Tenant":
         """Convert SQLAlchemy Tenant model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(tenant.id)),

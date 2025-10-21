@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import React from "react";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   TrendingUp,
   TrendingDown,
@@ -14,7 +14,7 @@ import {
   AlertTriangle,
   CheckCircle,
   Info,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface UsageMetric {
   name: string;
@@ -24,7 +24,7 @@ interface UsageMetric {
   icon: React.ReactNode;
   trend?: {
     value: number;
-    direction: 'up' | 'down';
+    direction: "up" | "down";
     period: string;
   };
 }
@@ -45,24 +45,24 @@ export const UsageAnalyticsDashboard: React.FC<UsageAnalyticsDashboardProps> = (
     return Math.min((current / limit) * 100, 100);
   };
 
-  const getUsageStatus = (percentage: number): 'safe' | 'warning' | 'critical' => {
-    if (percentage >= 90) return 'critical';
-    if (percentage >= 75) return 'warning';
-    return 'safe';
+  const getUsageStatus = (percentage: number): "safe" | "warning" | "critical" => {
+    if (percentage >= 90) return "critical";
+    if (percentage >= 75) return "warning";
+    return "safe";
   };
 
   const formatNumber = (num: number, unit: string): string => {
-    if (unit === 'GB') {
-      return (num / (1024 ** 3)).toFixed(2);
+    if (unit === "GB") {
+      return (num / 1024 ** 3).toFixed(2);
     }
     return num.toLocaleString();
   };
 
   const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -85,7 +85,7 @@ export const UsageAnalyticsDashboard: React.FC<UsageAnalyticsDashboardProps> = (
           const status = getUsageStatus(percentage);
 
           return (
-            <Card key={metric.name} className={status === 'critical' ? 'border-red-500' : ''}>
+            <Card key={metric.name} className={status === "critical" ? "border-red-500" : ""}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -94,19 +94,19 @@ export const UsageAnalyticsDashboard: React.FC<UsageAnalyticsDashboardProps> = (
                     </div>
                     <CardTitle className="text-base">{metric.name}</CardTitle>
                   </div>
-                  {status === 'critical' && (
+                  {status === "critical" && (
                     <Badge className="bg-red-500/10 text-red-500 border-red-500/20">
                       <AlertTriangle className="w-3 h-3 mr-1" />
                       Critical
                     </Badge>
                   )}
-                  {status === 'warning' && (
+                  {status === "warning" && (
                     <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
                       <AlertTriangle className="w-3 h-3 mr-1" />
                       Warning
                     </Badge>
                   )}
-                  {status === 'safe' && (
+                  {status === "safe" && (
                     <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
                       <CheckCircle className="w-3 h-3 mr-1" />
                       Healthy
@@ -123,25 +123,23 @@ export const UsageAnalyticsDashboard: React.FC<UsageAnalyticsDashboardProps> = (
                       {formatNumber(metric.current, metric.unit)}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {metric.limit ? (
-                        `of ${formatNumber(metric.limit, metric.unit)} ${metric.unit}`
-                      ) : (
-                        metric.unit
-                      )}
+                      {metric.limit
+                        ? `of ${formatNumber(metric.limit, metric.unit)} ${metric.unit}`
+                        : metric.unit}
                     </span>
                   </div>
 
                   {/* Trend Indicator */}
                   {metric.trend && (
                     <div className="flex items-center gap-1 mt-2">
-                      {metric.trend.direction === 'up' ? (
+                      {metric.trend.direction === "up" ? (
                         <TrendingUp className="w-4 h-4 text-green-500" />
                       ) : (
                         <TrendingDown className="w-4 h-4 text-red-500" />
                       )}
                       <span
                         className={`text-sm ${
-                          metric.trend.direction === 'up' ? 'text-green-500' : 'text-red-500'
+                          metric.trend.direction === "up" ? "text-green-500" : "text-red-500"
                         }`}
                       >
                         {metric.trend.value}% vs {metric.trend.period}
@@ -156,17 +154,17 @@ export const UsageAnalyticsDashboard: React.FC<UsageAnalyticsDashboardProps> = (
                     <Progress
                       value={percentage}
                       className={
-                        status === 'critical'
-                          ? '[&>div]:bg-red-500'
-                          : status === 'warning'
-                          ? '[&>div]:bg-yellow-500'
-                          : ''
+                        status === "critical"
+                          ? "[&>div]:bg-red-500"
+                          : status === "warning"
+                            ? "[&>div]:bg-yellow-500"
+                            : ""
                       }
                     />
                     <div className="flex justify-between text-xs text-muted-foreground">
                       <span>{percentage.toFixed(1)}% used</span>
                       <span>
-                        {formatNumber(metric.limit - metric.current, metric.unit)} {metric.unit}{' '}
+                        {formatNumber(metric.limit - metric.current, metric.unit)} {metric.unit}{" "}
                         remaining
                       </span>
                     </div>
@@ -187,26 +185,28 @@ export const UsageAnalyticsDashboard: React.FC<UsageAnalyticsDashboardProps> = (
       </div>
 
       {/* Usage Alerts */}
-      {metrics.some((m) => getUsageStatus(calculateUsagePercentage(m.current, m.limit)) === 'critical') && (
+      {metrics.some(
+        (m) => getUsageStatus(calculateUsagePercentage(m.current, m.limit)) === "critical",
+      ) && (
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Usage limit reached:</strong> You&apos;ve exceeded 90% of your plan limits for one or
-            more resources. Consider upgrading your plan to avoid service interruptions.
+            <strong>Usage limit reached:</strong> You&apos;ve exceeded 90% of your plan limits for
+            one or more resources. Consider upgrading your plan to avoid service interruptions.
           </AlertDescription>
         </Alert>
       )}
 
       {metrics.some(
         (m) =>
-          getUsageStatus(calculateUsagePercentage(m.current, m.limit)) === 'warning' &&
-          getUsageStatus(calculateUsagePercentage(m.current, m.limit)) !== 'critical'
+          getUsageStatus(calculateUsagePercentage(m.current, m.limit)) === "warning" &&
+          getUsageStatus(calculateUsagePercentage(m.current, m.limit)) !== "critical",
       ) && (
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <strong>Approaching limit:</strong> You&apos;re using more than 75% of your plan limits. You may
-            want to upgrade soon to ensure uninterrupted service.
+            <strong>Approaching limit:</strong> You&apos;re using more than 75% of your plan limits.
+            You may want to upgrade soon to ensure uninterrupted service.
           </AlertDescription>
         </Alert>
       )}
@@ -257,39 +257,39 @@ export const UsageAnalyticsDashboard: React.FC<UsageAnalyticsDashboardProps> = (
 export const UsageAnalyticsDashboardExample: React.FC = () => {
   const sampleMetrics: UsageMetric[] = [
     {
-      name: 'Active Users',
+      name: "Active Users",
       current: 42,
       limit: 50,
-      unit: 'users',
+      unit: "users",
       icon: <Users className="w-5 h-5 text-primary" />,
       trend: {
         value: 12,
-        direction: 'up',
-        period: 'last month',
+        direction: "up",
+        period: "last month",
       },
     },
     {
-      name: 'Storage Used',
+      name: "Storage Used",
       current: 85 * 1024 ** 3, // 85 GB in bytes
       limit: 100 * 1024 ** 3, // 100 GB
-      unit: 'GB',
+      unit: "GB",
       icon: <Database className="w-5 h-5 text-primary" />,
       trend: {
         value: 8,
-        direction: 'up',
-        period: 'last month',
+        direction: "up",
+        period: "last month",
       },
     },
     {
-      name: 'API Calls',
+      name: "API Calls",
       current: 875000,
       limit: 1000000,
-      unit: 'calls',
+      unit: "calls",
       icon: <Zap className="w-5 h-5 text-primary" />,
       trend: {
         value: 5,
-        direction: 'down',
-        period: 'last month',
+        direction: "down",
+        period: "last month",
       },
     },
   ];

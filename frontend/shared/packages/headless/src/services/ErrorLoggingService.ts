@@ -3,7 +3,7 @@
  * Provides comprehensive error logging, metrics, and distributed tracing
  */
 
-import { EnhancedISPError, type ErrorContext, ErrorCode } from '../utils/enhancedErrorHandling';
+import { EnhancedISPError, type ErrorContext, ErrorCode } from "../utils/enhancedErrorHandling";
 
 // Structured log entry for enhanced error tracking
 export interface ErrorLogEntry {
@@ -72,7 +72,7 @@ export interface ErrorLoggingConfig {
   enableRemoteLogging: boolean;
   enableMetrics: boolean;
   enableTracing: boolean;
-  logLevel: 'debug' | 'info' | 'warn' | 'error' | 'critical';
+  logLevel: "debug" | "info" | "warn" | "error" | "critical";
   batchSize: number;
   flushInterval: number; // milliseconds
   maxRetries: number;
@@ -97,11 +97,11 @@ class ErrorLoggingService {
 
   constructor(config: Partial<ErrorLoggingConfig> = {}) {
     this.config = {
-      enableConsoleLogging: process.env.NODE_ENV === 'development',
+      enableConsoleLogging: process.env.NODE_ENV === "development",
       enableRemoteLogging: true,
       enableMetrics: true,
       enableTracing: true,
-      logLevel: 'error',
+      logLevel: "error",
       batchSize: 10,
       flushInterval: 30000, // 30 seconds
       maxRetries: 3,
@@ -134,7 +134,7 @@ class ErrorLoggingService {
       this.logBuffer.push(logEntry);
 
       // Immediate flush for critical errors
-      if (error.severity === 'critical') {
+      if (error.severity === "critical") {
         this.flushLogs();
       }
     }
@@ -160,11 +160,11 @@ class ErrorLoggingService {
     error: EnhancedISPError,
     requestDuration: number,
     requestPayload?: any,
-    responsePayload?: any
+    responsePayload?: any,
   ): void {
     const apiContext: Partial<ErrorLogEntry> = {
       operation: `${method} ${url}`,
-      resource: 'api_endpoint',
+      resource: "api_endpoint",
       duration: requestDuration,
       metadata: {
         httpMethod: method,
@@ -184,8 +184,8 @@ class ErrorLoggingService {
     error: EnhancedISPError,
     businessProcess: string,
     workflowStep: string,
-    customerImpact: 'none' | 'low' | 'medium' | 'high' | 'critical',
-    metadata: Record<string, any> = {}
+    customerImpact: "none" | "low" | "medium" | "high" | "critical",
+    metadata: Record<string, any> = {},
   ): void {
     const businessContext: Partial<ErrorLogEntry> = {
       businessProcess,
@@ -206,7 +206,7 @@ class ErrorLoggingService {
 
     // Filter recent errors for rate calculation
     const recentErrors = this.logBuffer.filter(
-      (entry) => new Date(entry.timestamp).getTime() > oneMinuteAgo
+      (entry) => new Date(entry.timestamp).getTime() > oneMinuteAgo,
     );
 
     const errorCounts = new Map<ErrorCode, number>();
@@ -215,7 +215,7 @@ class ErrorLoggingService {
     let criticalCount = 0;
 
     this.logBuffer.forEach((entry) => {
-      if (entry.severity === 'critical') criticalCount++;
+      if (entry.severity === "critical") criticalCount++;
 
       errorCounts.set(entry.errorCode, (errorCounts.get(entry.errorCode) || 0) + 1);
       categoryCounts.set(entry.category, (categoryCounts.get(entry.category) || 0) + 1);
@@ -266,7 +266,7 @@ class ErrorLoggingService {
     } catch (error) {
       // Put logs back in buffer on failure
       this.logBuffer.unshift(...logsToSend);
-      console.error('Failed to flush error logs:', error);
+      console.error("Failed to flush error logs:", error);
     }
   }
 
@@ -289,7 +289,7 @@ class ErrorLoggingService {
     // Generate insights
     if (metrics.criticalErrorCount > 0) {
       insights.push(
-        `${metrics.criticalErrorCount} critical errors detected requiring immediate attention`
+        `${metrics.criticalErrorCount} critical errors detected requiring immediate attention`,
       );
     }
 
@@ -301,7 +301,7 @@ class ErrorLoggingService {
     const customerImpactCritical = metrics.customerImpactDistribution.critical || 0;
     if (customerImpactHigh + customerImpactCritical > 0) {
       insights.push(
-        `${customerImpactHigh + customerImpactCritical} errors with high customer impact`
+        `${customerImpactHigh + customerImpactCritical} errors with high customer impact`,
       );
     }
 
@@ -314,7 +314,7 @@ class ErrorLoggingService {
 
   private createLogEntry(
     error: EnhancedISPError,
-    additionalContext: Partial<ErrorLogEntry>
+    additionalContext: Partial<ErrorLogEntry>,
   ): ErrorLogEntry {
     const errorResponse = error.toEnhancedResponse();
 
@@ -345,8 +345,8 @@ class ErrorLoggingService {
       technicalDetails: errorResponse.details.debugInfo,
 
       // Browser context
-      url: typeof window !== 'undefined' ? window.location.href : 'unknown',
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+      url: typeof window !== "undefined" ? window.location.href : "unknown",
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
 
       // Additional context
       tags: errorResponse.context.tags,
@@ -385,9 +385,9 @@ class ErrorLoggingService {
   }
 
   private logToConsole(logEntry: ErrorLogEntry): void {
-    const logLevel = logEntry.severity === 'critical' ? 'error' : 'warn';
+    const logLevel = logEntry.severity === "critical" ? "error" : "warn";
 
-    console[logLevel]('🚨 Enhanced ISP Error:', {
+    console[logLevel]("🚨 Enhanced ISP Error:", {
       id: logEntry.errorId,
       code: logEntry.errorCode,
       message: logEntry.message,
@@ -415,9 +415,9 @@ class ErrorLoggingService {
 
   private async sendLogsToEndpoint(logs: ErrorLogEntry[], endpoint: string): Promise<void> {
     const response = await fetch(endpoint, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ logs }),
     });
@@ -433,23 +433,23 @@ class ErrorLoggingService {
       const traceSpan = {
         traceId: logEntry.traceId,
         spanId: logEntry.spanId || this.generateSpanId(),
-        operationName: logEntry.operation || 'error',
+        operationName: logEntry.operation || "error",
         startTime: new Date(logEntry.timestamp).getTime() * 1000, // microseconds
         duration: logEntry.duration ? logEntry.duration * 1000 : 0,
         tags: {
           error: true,
-          'error.code': logEntry.errorCode,
-          'error.severity': logEntry.severity,
-          'service.name': logEntry.service || 'isp-frontend',
-          component: logEntry.component || 'unknown',
+          "error.code": logEntry.errorCode,
+          "error.severity": logEntry.severity,
+          "service.name": logEntry.service || "isp-frontend",
+          component: logEntry.component || "unknown",
         },
         logs: [
           {
             timestamp: new Date(logEntry.timestamp).getTime() * 1000,
             fields: [
-              { key: 'event', value: 'error' },
-              { key: 'error.message', value: logEntry.message },
-              { key: 'error.stack', value: logEntry.stackTrace },
+              { key: "event", value: "error" },
+              { key: "error.message", value: logEntry.message },
+              { key: "error.stack", value: logEntry.stackTrace },
             ],
           },
         ],
@@ -457,11 +457,11 @@ class ErrorLoggingService {
 
       // Send trace asynchronously
       fetch(this.config.endpoints.traces, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ spans: [traceSpan] }),
       }).catch((error) => {
-        console.warn('Failed to send trace:', error);
+        console.warn("Failed to send trace:", error);
       });
     }
   }
@@ -470,15 +470,15 @@ class ErrorLoggingService {
     if (!payload) return payload;
 
     // Remove sensitive fields
-    const sensitiveFields = ['password', 'token', 'secret', 'key', 'auth', 'credit_card'];
+    const sensitiveFields = ["password", "token", "secret", "key", "auth", "credit_card"];
 
-    if (typeof payload === 'object') {
+    if (typeof payload === "object") {
       const sanitized = { ...payload };
 
       for (const key in sanitized) {
         if (sensitiveFields.some((field) => key.toLowerCase().includes(field))) {
-          sanitized[key] = '[REDACTED]';
-        } else if (typeof sanitized[key] === 'object') {
+          sanitized[key] = "[REDACTED]";
+        } else if (typeof sanitized[key] === "object") {
           sanitized[key] = this.sanitizePayload(sanitized[key]);
         }
       }
@@ -501,8 +501,8 @@ class ErrorLoggingService {
   }
 
   private setupNetworkStatusListener(): void {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('online', () => {
+    if (typeof window !== "undefined") {
+      window.addEventListener("online", () => {
         this.isOnline = true;
         // Flush pending logs when coming back online
         if (this.logBuffer.length > 0) {
@@ -510,7 +510,7 @@ class ErrorLoggingService {
         }
       });
 
-      window.addEventListener('offline', () => {
+      window.addEventListener("offline", () => {
         this.isOnline = false;
       });
 

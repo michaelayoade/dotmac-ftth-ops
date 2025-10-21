@@ -19,41 +19,41 @@ import {
   useQueryClient,
   type UseQueryOptions,
   type QueryKey,
-} from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { useToast } from '@/components/ui/use-toast';
-import { extractDataOrThrow } from '@/lib/api/response-helpers';
+} from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { useToast } from "@/components/ui/use-toast";
+import { extractDataOrThrow } from "@/lib/api/response-helpers";
 
 // ============================================
 // Types matching backend plugins/schema models
 // ============================================
 
 export type FieldType =
-  | 'string'
-  | 'text'
-  | 'integer'
-  | 'float'
-  | 'boolean'
-  | 'select'
-  | 'multi_select'
-  | 'secret'
-  | 'url'
-  | 'email'
-  | 'phone'
-  | 'json'
-  | 'array';
+  | "string"
+  | "text"
+  | "integer"
+  | "float"
+  | "boolean"
+  | "select"
+  | "multi_select"
+  | "secret"
+  | "url"
+  | "email"
+  | "phone"
+  | "json"
+  | "array";
 
 export type PluginType =
-  | 'notification'
-  | 'payment'
-  | 'storage'
-  | 'search'
-  | 'authentication'
-  | 'integration'
-  | 'analytics'
-  | 'workflow';
+  | "notification"
+  | "payment"
+  | "storage"
+  | "search"
+  | "authentication"
+  | "integration"
+  | "analytics"
+  | "workflow";
 
-export type PluginStatus = 'registered' | 'configured' | 'active' | 'inactive' | 'error';
+export type PluginStatus = "registered" | "configured" | "active" | "inactive" | "error";
 
 export interface SelectOption {
   value: string;
@@ -121,7 +121,7 @@ export interface PluginListResponse {
 
 export interface PluginHealthCheck {
   plugin_instance_id: string;
-  status: 'healthy' | 'unhealthy' | 'unknown' | 'error';
+  status: "healthy" | "unhealthy" | "unknown" | "error";
   message?: string | null;
   details: Record<string, any>;
   timestamp: string;
@@ -164,20 +164,20 @@ export interface TestConnectionRequest {
 
 type QueryOptions<TData, TKey extends QueryKey> = Omit<
   UseQueryOptions<TData, Error, TData, TKey>,
-  'queryKey' | 'queryFn'
+  "queryKey" | "queryFn"
 >;
 
 /**
  * Fetch all available plugins
  */
 export function useAvailablePlugins(
-  options?: QueryOptions<PluginConfig[], ['plugins', 'available']>
+  options?: QueryOptions<PluginConfig[], ["plugins", "available"]>,
 ) {
-  return useQuery<PluginConfig[], Error, PluginConfig[], ['plugins', 'available']>({
-    queryKey: ['plugins', 'available'],
+  return useQuery<PluginConfig[], Error, PluginConfig[], ["plugins", "available"]>({
+    queryKey: ["plugins", "available"],
     queryFn: async () => {
-      const response = await apiClient.get<PluginConfig[]>('/plugins');
-      return extractDataOrThrow(response, 'Failed to load available plugins');
+      const response = await apiClient.get<PluginConfig[]>("/plugins");
+      return extractDataOrThrow(response, "Failed to load available plugins");
     },
     ...options,
   });
@@ -187,13 +187,13 @@ export function useAvailablePlugins(
  * Fetch all plugin instances
  */
 export function usePluginInstances(
-  options?: QueryOptions<PluginListResponse, ['plugins', 'instances']>
+  options?: QueryOptions<PluginListResponse, ["plugins", "instances"]>,
 ) {
-  return useQuery<PluginListResponse, Error, PluginListResponse, ['plugins', 'instances']>({
-    queryKey: ['plugins', 'instances'],
+  return useQuery<PluginListResponse, Error, PluginListResponse, ["plugins", "instances"]>({
+    queryKey: ["plugins", "instances"],
     queryFn: async () => {
-      const response = await apiClient.get<PluginListResponse>('/plugins/instances');
-      return extractDataOrThrow(response, 'Failed to load plugin instances');
+      const response = await apiClient.get<PluginListResponse>("/plugins/instances");
+      return extractDataOrThrow(response, "Failed to load plugin instances");
     },
     ...options,
   });
@@ -204,20 +204,24 @@ export function usePluginInstances(
  */
 export function usePluginSchema(
   pluginName: string,
-  options?: QueryOptions<{ schema: PluginConfig; instance_id: string | null }, ['plugins', 'schema', string]>
+  options?: QueryOptions<
+    { schema: PluginConfig; instance_id: string | null },
+    ["plugins", "schema", string]
+  >,
 ) {
   return useQuery<
     { schema: PluginConfig; instance_id: string | null },
     Error,
     { schema: PluginConfig; instance_id: string | null },
-    ['plugins', 'schema', string]
+    ["plugins", "schema", string]
   >({
-    queryKey: ['plugins', 'schema', pluginName],
+    queryKey: ["plugins", "schema", pluginName],
     queryFn: async () => {
-      const response = await apiClient.get<{ schema: PluginConfig; instance_id: string | null }>(
-        `/plugins/${pluginName}/schema`
-      );
-      return extractDataOrThrow(response, 'Failed to load plugin schema');
+      const response = await apiClient.get<{
+        schema: PluginConfig;
+        instance_id: string | null;
+      }>(`/plugins/${pluginName}/schema`);
+      return extractDataOrThrow(response, "Failed to load plugin schema");
     },
     enabled: !!pluginName,
     ...options,
@@ -229,13 +233,13 @@ export function usePluginSchema(
  */
 export function usePluginInstance(
   instanceId: string,
-  options?: QueryOptions<PluginInstance, ['plugins', 'instances', string]>
+  options?: QueryOptions<PluginInstance, ["plugins", "instances", string]>,
 ) {
-  return useQuery<PluginInstance, Error, PluginInstance, ['plugins', 'instances', string]>({
-    queryKey: ['plugins', 'instances', instanceId],
+  return useQuery<PluginInstance, Error, PluginInstance, ["plugins", "instances", string]>({
+    queryKey: ["plugins", "instances", instanceId],
     queryFn: async () => {
       const response = await apiClient.get<PluginInstance>(`/plugins/instances/${instanceId}`);
-      return extractDataOrThrow(response, 'Failed to load plugin instance');
+      return extractDataOrThrow(response, "Failed to load plugin instance");
     },
     enabled: !!instanceId,
     ...options,
@@ -247,20 +251,23 @@ export function usePluginInstance(
  */
 export function usePluginConfiguration(
   instanceId: string,
-  options?: QueryOptions<PluginConfigurationResponse, ['plugins', 'instances', string, 'configuration']>
+  options?: QueryOptions<
+    PluginConfigurationResponse,
+    ["plugins", "instances", string, "configuration"]
+  >,
 ) {
   return useQuery<
     PluginConfigurationResponse,
     Error,
     PluginConfigurationResponse,
-    ['plugins', 'instances', string, 'configuration']
+    ["plugins", "instances", string, "configuration"]
   >({
-    queryKey: ['plugins', 'instances', instanceId, 'configuration'],
+    queryKey: ["plugins", "instances", instanceId, "configuration"],
     queryFn: async () => {
       const response = await apiClient.get<PluginConfigurationResponse>(
-        `/plugins/instances/${instanceId}/configuration`
+        `/plugins/instances/${instanceId}/configuration`,
       );
-      return extractDataOrThrow(response, 'Failed to load plugin configuration');
+      return extractDataOrThrow(response, "Failed to load plugin configuration");
     },
     enabled: !!instanceId,
     ...options,
@@ -280,22 +287,22 @@ export function useCreatePluginInstance() {
 
   return useMutation({
     mutationFn: async (data: CreatePluginInstanceRequest) => {
-      const response = await apiClient.post<PluginInstance>('/plugins/instances', data);
-      return extractDataOrThrow(response, 'Failed to create plugin instance');
+      const response = await apiClient.post<PluginInstance>("/plugins/instances", data);
+      return extractDataOrThrow(response, "Failed to create plugin instance");
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['plugins', 'instances'] });
+      queryClient.invalidateQueries({ queryKey: ["plugins", "instances"] });
 
       toast({
-        title: 'Plugin instance created',
+        title: "Plugin instance created",
         description: `${data.instance_name} was created successfully.`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Creation failed',
-        description: error.response?.data?.detail || 'Failed to create plugin instance',
-        variant: 'destructive',
+        title: "Creation failed",
+        description: error.response?.data?.detail || "Failed to create plugin instance",
+        variant: "destructive",
       });
     },
   });
@@ -318,27 +325,29 @@ export function useUpdatePluginConfiguration() {
     }) => {
       const response = await apiClient.put<{ message: string }>(
         `/plugins/instances/${instanceId}/configuration`,
-        data
+        data,
       );
-      return extractDataOrThrow(response, 'Failed to update plugin configuration');
+      return extractDataOrThrow(response, "Failed to update plugin configuration");
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['plugins', 'instances'] });
-      queryClient.invalidateQueries({ queryKey: ['plugins', 'instances', variables.instanceId] });
+      queryClient.invalidateQueries({ queryKey: ["plugins", "instances"] });
       queryClient.invalidateQueries({
-        queryKey: ['plugins', 'instances', variables.instanceId, 'configuration'],
+        queryKey: ["plugins", "instances", variables.instanceId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["plugins", "instances", variables.instanceId, "configuration"],
       });
 
       toast({
-        title: 'Configuration updated',
-        description: 'Plugin configuration was updated successfully.',
+        title: "Configuration updated",
+        description: "Plugin configuration was updated successfully.",
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Update failed',
-        description: error.response?.data?.detail || 'Failed to update configuration',
-        variant: 'destructive',
+        title: "Update failed",
+        description: error.response?.data?.detail || "Failed to update configuration",
+        variant: "destructive",
       });
     },
   });
@@ -356,22 +365,22 @@ export function useDeletePluginInstance() {
       const response = await apiClient.delete(`/plugins/instances/${instanceId}`);
       // Check for successful status codes (2xx)
       if (response.status < 200 || response.status >= 300) {
-        throw new Error('Failed to delete plugin instance');
+        throw new Error("Failed to delete plugin instance");
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plugins', 'instances'] });
+      queryClient.invalidateQueries({ queryKey: ["plugins", "instances"] });
 
       toast({
-        title: 'Plugin instance deleted',
-        description: 'Plugin instance was removed successfully.',
+        title: "Plugin instance deleted",
+        description: "Plugin instance was removed successfully.",
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Deletion failed',
-        description: error.response?.data?.detail || 'Failed to delete plugin instance',
-        variant: 'destructive',
+        title: "Deletion failed",
+        description: error.response?.data?.detail || "Failed to delete plugin instance",
+        variant: "destructive",
       });
     },
   });
@@ -391,9 +400,9 @@ export function useTestPluginConnection() {
     }) => {
       const response = await apiClient.post<PluginTestResult>(
         `/plugins/instances/${instanceId}/test`,
-        { configuration: configuration || null }
+        { configuration: configuration || null },
       );
-      return extractDataOrThrow(response, 'Failed to test plugin connection');
+      return extractDataOrThrow(response, "Failed to test plugin connection");
     },
   });
 }
@@ -403,15 +412,20 @@ export function useTestPluginConnection() {
  */
 export function usePluginHealthCheck(
   instanceId: string,
-  options?: QueryOptions<PluginHealthCheck, ['plugins', 'instances', string, 'health']>
+  options?: QueryOptions<PluginHealthCheck, ["plugins", "instances", string, "health"]>,
 ) {
-  return useQuery<PluginHealthCheck, Error, PluginHealthCheck, ['plugins', 'instances', string, 'health']>({
-    queryKey: ['plugins', 'instances', instanceId, 'health'],
+  return useQuery<
+    PluginHealthCheck,
+    Error,
+    PluginHealthCheck,
+    ["plugins", "instances", string, "health"]
+  >({
+    queryKey: ["plugins", "instances", instanceId, "health"],
     queryFn: async () => {
       const response = await apiClient.get<PluginHealthCheck>(
-        `/plugins/instances/${instanceId}/health`
+        `/plugins/instances/${instanceId}/health`,
       );
-      return extractDataOrThrow(response, 'Failed to load plugin health');
+      return extractDataOrThrow(response, "Failed to load plugin health");
     },
     enabled: !!instanceId,
     refetchInterval: 60000, // Refresh every minute
@@ -425,10 +439,13 @@ export function usePluginHealthCheck(
 export function useBulkHealthCheck() {
   return useMutation({
     mutationFn: async (instanceIds?: string[] | null) => {
-      const response = await apiClient.post<PluginHealthCheck[]>('/plugins/instances/health-check', {
-        instance_ids: instanceIds || null,
-      });
-      return extractDataOrThrow(response, 'Failed to run plugin health check');
+      const response = await apiClient.post<PluginHealthCheck[]>(
+        "/plugins/instances/health-check",
+        {
+          instance_ids: instanceIds || null,
+        },
+      );
+      return extractDataOrThrow(response, "Failed to run plugin health check");
     },
   });
 }
@@ -442,24 +459,25 @@ export function useRefreshPlugins() {
 
   return useMutation({
     mutationFn: async () => {
-      const response = await apiClient.post<{ message: string; available_plugins: number }>(
-        '/plugins/refresh'
-      );
-      return extractDataOrThrow(response, 'Failed to refresh plugins');
+      const response = await apiClient.post<{
+        message: string;
+        available_plugins: number;
+      }>("/plugins/refresh");
+      return extractDataOrThrow(response, "Failed to refresh plugins");
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['plugins', 'available'] });
+      queryClient.invalidateQueries({ queryKey: ["plugins", "available"] });
 
       toast({
-        title: 'Plugins refreshed',
+        title: "Plugins refreshed",
         description: `Found ${data.available_plugins} available plugins.`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Refresh failed',
-        description: error.response?.data?.detail || 'Failed to refresh plugins',
-        variant: 'destructive',
+        title: "Refresh failed",
+        description: error.response?.data?.detail || "Failed to refresh plugins",
+        variant: "destructive",
       });
     },
   });
@@ -474,11 +492,11 @@ export function useRefreshPlugins() {
  */
 export function getStatusColor(status: PluginStatus): string {
   const colors: Record<PluginStatus, string> = {
-    registered: 'bg-gray-500/15 text-gray-300 border border-gray-500/30',
-    configured: 'bg-blue-500/15 text-blue-300 border border-blue-500/30',
-    active: 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30',
-    inactive: 'bg-yellow-500/15 text-yellow-300 border border-yellow-500/30',
-    error: 'bg-red-500/15 text-red-300 border border-red-500/30',
+    registered: "bg-gray-500/15 text-gray-300 border border-gray-500/30",
+    configured: "bg-blue-500/15 text-blue-300 border border-blue-500/30",
+    active: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
+    inactive: "bg-yellow-500/15 text-yellow-300 border border-yellow-500/30",
+    error: "bg-red-500/15 text-red-300 border border-red-500/30",
   };
   return colors[status] || colors.registered;
 }
@@ -488,10 +506,10 @@ export function getStatusColor(status: PluginStatus): string {
  */
 export function getHealthStatusColor(status: string): string {
   const colors = {
-    healthy: 'text-emerald-400',
-    unhealthy: 'text-red-400',
-    unknown: 'text-gray-400',
-    error: 'text-red-500',
+    healthy: "text-emerald-400",
+    unhealthy: "text-red-400",
+    unknown: "text-gray-400",
+    error: "text-red-500",
   } as const;
 
   if (status in colors) {
@@ -508,7 +526,7 @@ export function groupFields(fields: FieldSpec[]): Record<string, FieldSpec[]> {
   const grouped: Record<string, FieldSpec[]> = {};
 
   fields.forEach((field) => {
-    const group = field.group || 'General';
+    const group = field.group || "General";
     if (!grouped[group]) {
       grouped[group] = [];
     }
@@ -530,21 +548,21 @@ export function groupFields(fields: FieldSpec[]): Record<string, FieldSpec[]> {
  * Format last seen/updated timestamp
  */
 export function formatTimestamp(timestamp: string | null | undefined): string {
-  if (!timestamp) return 'Never';
+  if (!timestamp) return "Never";
 
   const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
 
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
 
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 30) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+  if (diffDays < 30) return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
 
   return date.toLocaleDateString();
 }

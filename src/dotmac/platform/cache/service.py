@@ -42,10 +42,11 @@ class CacheService:
         if self.redis is None:
             import redis.asyncio as aioredis
 
+            redis_url = settings.redis.redis_url
             self.redis = cast(
                 RedisClientType,
                 await aioredis.from_url(
-                    settings.redis_url,
+                    redis_url,
                     encoding="utf-8",
                     decode_responses=False,  # We'll handle encoding
                 ),

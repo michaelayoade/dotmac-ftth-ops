@@ -9,17 +9,17 @@
 // ============================================================================
 
 export enum WireGuardServerStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  DEGRADED = 'degraded',
-  MAINTENANCE = 'maintenance',
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  DEGRADED = "degraded",
+  MAINTENANCE = "maintenance",
 }
 
 export enum WireGuardPeerStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  DISABLED = 'disabled',
-  EXPIRED = 'expired',
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  DISABLED = "disabled",
+  EXPIRED = "expired",
 }
 
 // ============================================================================
@@ -228,7 +228,7 @@ export interface WireGuardPeerQRCodeResponse {
 
 export interface WireGuardServerHealthResponse {
   server_id: string;
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   is_active: boolean;
   interface_status: string;
   active_peers: number;
@@ -387,31 +387,31 @@ export type PeerStatusColor = {
 };
 
 export const SERVER_STATUS_COLORS: ServerStatusColor = {
-  [WireGuardServerStatus.ACTIVE]: 'bg-green-500',
-  [WireGuardServerStatus.INACTIVE]: 'bg-gray-500',
-  [WireGuardServerStatus.DEGRADED]: 'bg-yellow-500',
-  [WireGuardServerStatus.MAINTENANCE]: 'bg-blue-500',
+  [WireGuardServerStatus.ACTIVE]: "bg-green-500",
+  [WireGuardServerStatus.INACTIVE]: "bg-gray-500",
+  [WireGuardServerStatus.DEGRADED]: "bg-yellow-500",
+  [WireGuardServerStatus.MAINTENANCE]: "bg-blue-500",
 };
 
 export const PEER_STATUS_COLORS: PeerStatusColor = {
-  [WireGuardPeerStatus.ACTIVE]: 'bg-green-500',
-  [WireGuardPeerStatus.INACTIVE]: 'bg-gray-500',
-  [WireGuardPeerStatus.DISABLED]: 'bg-red-500',
-  [WireGuardPeerStatus.EXPIRED]: 'bg-orange-500',
+  [WireGuardPeerStatus.ACTIVE]: "bg-green-500",
+  [WireGuardPeerStatus.INACTIVE]: "bg-gray-500",
+  [WireGuardPeerStatus.DISABLED]: "bg-red-500",
+  [WireGuardPeerStatus.EXPIRED]: "bg-orange-500",
 };
 
 // Helper function to format bytes
 export function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
 // Helper function to get time ago
 export function getTimeAgo(date: string | null): string {
-  if (!date) return 'Never';
+  if (!date) return "Never";
   const now = new Date().getTime();
   const then = new Date(date).getTime();
   const diff = now - then;

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Plus,
   Webhook,
@@ -18,18 +18,18 @@ import {
   CheckCircle,
   XCircle,
   Zap,
-} from 'lucide-react';
-import { useWebhooks, WebhookSubscription } from '@/hooks/useWebhooks';
-import { CreateWebhookModal } from '@/components/webhooks/CreateWebhookModal';
-import { WebhookDetailModal } from '@/components/webhooks/WebhookDetailModal';
-import { DeleteConfirmModal } from '@/components/webhooks/DeleteConfirmModal';
-import { TestWebhookModal } from '@/components/webhooks/TestWebhookModal';
+} from "lucide-react";
+import { useWebhooks, WebhookSubscription } from "@/hooks/useWebhooks";
+import { CreateWebhookModal } from "@/components/webhooks/CreateWebhookModal";
+import { WebhookDetailModal } from "@/components/webhooks/WebhookDetailModal";
+import { DeleteConfirmModal } from "@/components/webhooks/DeleteConfirmModal";
+import { TestWebhookModal } from "@/components/webhooks/TestWebhookModal";
 
 export default function WebhooksPage() {
   const { webhooks, loading, error, deleteWebhook } = useWebhooks();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [eventFilter, setEventFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [eventFilter, setEventFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedWebhook, setSelectedWebhook] = useState<WebhookSubscription | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -73,74 +73,78 @@ export default function WebhooksPage() {
         setShowDeleteModal(false);
         setWebhookToDelete(null);
       } catch (error) {
-        console.error('Failed to delete webhook:', error);
+        console.error("Failed to delete webhook:", error);
       }
     }
   };
 
   // Filter webhooks based on search and filters
-  const filteredWebhooks = webhooks.filter(webhook => {
-    const matchesSearch = searchQuery === '' ||
+  const filteredWebhooks = webhooks.filter((webhook) => {
+    const matchesSearch =
+      searchQuery === "" ||
       webhook.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       webhook.url.toLowerCase().includes(searchQuery.toLowerCase()) ||
       webhook.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesEvent = eventFilter === 'all' ||
-      webhook.events.includes(eventFilter);
+    const matchesEvent = eventFilter === "all" || webhook.events.includes(eventFilter);
 
-    const matchesStatus = statusFilter === 'all' ||
-      (statusFilter === 'active' && webhook.is_active) ||
-      (statusFilter === 'inactive' && !webhook.is_active);
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && webhook.is_active) ||
+      (statusFilter === "inactive" && !webhook.is_active);
 
     return matchesSearch && matchesEvent && matchesStatus;
   });
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getStatusColor = (webhook: WebhookSubscription) => {
     if (!webhook.is_active) {
-      return 'text-muted-foreground bg-card0/20 border-border/30';
+      return "text-muted-foreground bg-card0/20 border-border/30";
     }
 
-    const failureRate = (webhook.total_deliveries ?? 0) > 0
-      ? ((webhook.failed_deliveries ?? 0) / (webhook.total_deliveries ?? 0)) * 100
-      : 0;
+    const failureRate =
+      (webhook.total_deliveries ?? 0) > 0
+        ? ((webhook.failed_deliveries ?? 0) / (webhook.total_deliveries ?? 0)) * 100
+        : 0;
 
     if (failureRate > 20) {
-      return 'text-red-400 bg-red-500/20 border-red-500/30';
+      return "text-red-400 bg-red-500/20 border-red-500/30";
     } else if (failureRate > 10) {
-      return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30';
+      return "text-yellow-400 bg-yellow-500/20 border-yellow-500/30";
     } else {
-      return 'text-green-400 bg-green-500/20 border-green-500/30';
+      return "text-green-400 bg-green-500/20 border-green-500/30";
     }
   };
 
   const getStatusText = (webhook: WebhookSubscription) => {
-    if (!webhook.is_active) return 'Inactive';
+    if (!webhook.is_active) return "Inactive";
 
-    const failureRate = (webhook.total_deliveries ?? 0) > 0
-      ? ((webhook.failed_deliveries ?? 0) / (webhook.total_deliveries ?? 0)) * 100
-      : 0;
+    const failureRate =
+      (webhook.total_deliveries ?? 0) > 0
+        ? ((webhook.failed_deliveries ?? 0) / (webhook.total_deliveries ?? 0)) * 100
+        : 0;
 
-    if (failureRate > 20) return 'Issues';
-    if (failureRate > 10) return 'Warning';
-    return 'Healthy';
+    if (failureRate > 20) return "Issues";
+    if (failureRate > 10) return "Warning";
+    return "Healthy";
   };
 
   const getStatusIcon = (webhook: WebhookSubscription) => {
     if (!webhook.is_active) return XCircle;
 
-    const failureRate = (webhook.total_deliveries ?? 0) > 0
-      ? ((webhook.failed_deliveries ?? 0) / (webhook.total_deliveries ?? 0)) * 100
-      : 0;
+    const failureRate =
+      (webhook.total_deliveries ?? 0) > 0
+        ? ((webhook.failed_deliveries ?? 0) / (webhook.total_deliveries ?? 0)) * 100
+        : 0;
 
     if (failureRate > 20) return XCircle;
     if (failureRate > 10) return AlertTriangle;
@@ -148,7 +152,7 @@ export default function WebhooksPage() {
   };
 
   // Get unique events for filter dropdown
-  const availableEvents = [...new Set(webhooks.flatMap(webhook => webhook.events))];
+  const availableEvents = [...new Set(webhooks.flatMap((webhook) => webhook.events))];
 
   if (error) {
     return (
@@ -210,7 +214,9 @@ export default function WebhooksPage() {
               >
                 <option value="all">All Events</option>
                 {availableEvents.map((event) => (
-                  <option key={event} value={event}>{event}</option>
+                  <option key={event} value={event}>
+                    {event}
+                  </option>
                 ))}
               </select>
             </div>
@@ -238,13 +244,12 @@ export default function WebhooksPage() {
             <div className="p-8 text-center">
               <Webhook className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">
-                {webhooks.length === 0 ? 'No webhooks yet' : 'No matching webhooks'}
+                {webhooks.length === 0 ? "No webhooks yet" : "No matching webhooks"}
               </h3>
               <p className="text-muted-foreground mb-4">
                 {webhooks.length === 0
-                  ? 'Create your first webhook to start receiving event notifications.'
-                  : 'Try adjusting your search criteria or filters.'
-                }
+                  ? "Create your first webhook to start receiving event notifications."
+                  : "Try adjusting your search criteria or filters."}
               </p>
               {webhooks.length === 0 && (
                 <button
@@ -262,17 +267,14 @@ export default function WebhooksPage() {
                 const StatusIcon = getStatusIcon(webhook);
 
                 return (
-                  <div
-                    key={webhook.id}
-                    className="p-6 hover:bg-accent/50 transition-colors"
-                  >
+                  <div key={webhook.id} className="p-6 hover:bg-accent/50 transition-colors">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-medium text-foreground">
-                            {webhook.name}
-                          </h3>
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(webhook)}`}>
+                          <h3 className="text-lg font-medium text-foreground">{webhook.name}</h3>
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(webhook)}`}
+                          >
                             <StatusIcon className="h-3 w-3" />
                             {getStatusText(webhook)}
                           </span>
@@ -325,17 +327,28 @@ export default function WebhooksPage() {
 
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <div className="text-center">
-                              <div className="font-medium text-foreground">{webhook.total_deliveries}</div>
+                              <div className="font-medium text-foreground">
+                                {webhook.total_deliveries}
+                              </div>
                               <div className="text-xs">Total</div>
                             </div>
                             <div className="text-center">
-                              <div className="font-medium text-red-600 dark:text-red-400">{webhook.failed_deliveries}</div>
+                              <div className="font-medium text-red-600 dark:text-red-400">
+                                {webhook.failed_deliveries}
+                              </div>
                               <div className="text-xs">Failed</div>
                             </div>
                             <div className="text-center">
                               <div className="font-medium text-green-600 dark:text-green-400">
-                                {(webhook.total_deliveries ?? 0) > 0 ?
-                                  Math.round((((webhook.total_deliveries ?? 0) - (webhook.failed_deliveries ?? 0)) / (webhook.total_deliveries ?? 0)) * 100) : 100}%
+                                {(webhook.total_deliveries ?? 0) > 0
+                                  ? Math.round(
+                                      (((webhook.total_deliveries ?? 0) -
+                                        (webhook.failed_deliveries ?? 0)) /
+                                        (webhook.total_deliveries ?? 0)) *
+                                        100,
+                                    )
+                                  : 100}
+                                %
                               </div>
                               <div className="text-xs">Success</div>
                             </div>

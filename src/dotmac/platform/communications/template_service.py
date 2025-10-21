@@ -6,7 +6,7 @@ Provides template functionality using Jinja2.
 
 import os
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Mapping
 from uuid import uuid4
 
 import structlog
@@ -152,7 +152,7 @@ class TemplateService:
             return True
         return False
 
-    def render_template(self, template_id: str, data: dict[str, Any]) -> RenderedTemplate:
+    def render_template(self, template_id: str, data: Mapping[str, Any]) -> RenderedTemplate:
         """Render a template with data."""
         template_data = self.get_template(template_id)
         if not template_data:

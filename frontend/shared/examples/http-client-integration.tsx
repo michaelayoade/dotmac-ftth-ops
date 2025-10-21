@@ -1,37 +1,40 @@
 /**
  * Example: HTTP Client Integration
- * 
+ *
  * This file demonstrates how to integrate the @dotmac/http-client package
  * into management and ISP portal applications.
  */
 
-import { useEffect, useState } from 'react';
-import { 
-  HttpClient, 
-  createTenantClient, 
+import { useEffect, useState } from "react";
+import {
+  HttpClient,
+  createTenantClient,
   createAuthClient,
-  type ApiResponse 
-} from '@dotmac/http-client';
+  type ApiResponse,
+} from "@dotmac/http-client";
 
 // 1. Basic HTTP Client Setup (Global Instance)
-export const apiClient = createAuthClient({
-  tokenSource: 'cookie',
-  tokenKey: 'access_token',
-  refreshTokenKey: 'refresh_token'
-}, {
-  baseURL: process.env.NEXT_PUBLIC_API_URL || '/api',
-  timeout: 30000,
-  retries: 3
-}).setTenantFromHostname();
+export const apiClient = createAuthClient(
+  {
+    tokenSource: "cookie",
+    tokenKey: "access_token",
+    refreshTokenKey: "refresh_token",
+  },
+  {
+    baseURL: process.env.NEXT_PUBLIC_API_URL || "/api",
+    timeout: 30000,
+    retries: 3,
+  },
+).setTenantFromHostname();
 
 // 2. React Hook for API Calls with Error Handling
 export function useApiCall<T>(
   endpoint: string,
-  options?: { 
+  options?: {
     immediate?: boolean;
     skipAuth?: boolean;
     skipTenantId?: boolean;
-  }
+  },
 ) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(options?.immediate !== false);
@@ -45,12 +48,12 @@ export function useApiCall<T>(
       const response: ApiResponse<T> = await apiClient.get(endpoint, {
         ...config,
         skipAuth: options?.skipAuth,
-        skipTenantId: options?.skipTenantId
+        skipTenantId: options?.skipTenantId,
       });
-      
+
       setData(response.data);
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      setError(err.message || "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -70,19 +73,19 @@ interface Customer {
   id: string;
   name: string;
   email: string;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
 }
 
 export function CustomerManagement() {
-  const { data: customers, loading, error, refetch } = useApiCall<Customer[]>('/customers');
+  const { data: customers, loading, error, refetch } = useApiCall<Customer[]>("/customers");
 
-  const createCustomer = async (customerData: Omit<Customer, 'id'>) => {
+  const createCustomer = async (customerData: Omit<Customer, "id">) => {
     try {
-      const response = await apiClient.post<Customer>('/customers', customerData);
-      
+      const response = await apiClient.post<Customer>("/customers", customerData);
+
       // Refresh the list after creation
       refetch();
-      
+
       return response.data;
     } catch (error: any) {
       throw new Error(error.message);
@@ -92,10 +95,10 @@ export function CustomerManagement() {
   const updateCustomer = async (id: string, updates: Partial<Customer>) => {
     try {
       const response = await apiClient.patch<Customer>(`/customers/${id}`, updates);
-      
+
       // Refresh the list after update
       refetch();
-      
+
       return response.data;
     } catch (error: any) {
       throw new Error(error.message);
@@ -105,7 +108,7 @@ export function CustomerManagement() {
   const deleteCustomer = async (id: string) => {
     try {
       await apiClient.delete(`/customers/${id}`);
-      
+
       // Refresh the list after deletion
       refetch();
     } catch (error: any) {
@@ -121,8 +124,8 @@ export function CustomerManagement() {
       create: createCustomer,
       update: updateCustomer,
       delete: deleteCustomer,
-      refresh: refetch
-    }
+      refresh: refetch,
+    },
   };
 }
 
@@ -134,26 +137,26 @@ export class TenantAwareApiService {
     if (tenantId) {
       // Specific tenant client
       this.client = createTenantClient(tenantId, {
-        baseURL: process.env.NEXT_PUBLIC_API_URL || '/api'
+        baseURL: process.env.NEXT_PUBLIC_API_URL || "/api",
       }).enableAuth();
     } else {
       // Auto-detect tenant from hostname
       this.client = HttpClient.createFromHostname({
-        baseURL: process.env.NEXT_PUBLIC_API_URL || '/api'
+        baseURL: process.env.NEXT_PUBLIC_API_URL || "/api",
       }).enableAuth();
     }
   }
 
   async getUsers() {
-    return this.client.get('/users');
+    return this.client.get("/users");
   }
 
   async getBilling() {
-    return this.client.get('/billing');
+    return this.client.get("/billing");
   }
 
   async getNetworkStatus() {
-    return this.client.get('/network/status');
+    return this.client.get("/network/status");
   }
 
   // Switch tenant context
@@ -172,34 +175,34 @@ export async function robustApiCall<T>(
   options?: {
     maxRetries?: number;
     retryDelay?: number;
-  }
+  },
 ): Promise<T> {
   const client = createAuthClient();
-  
+
   try {
     const response = await client.get<T>(endpoint, {
-      skipRetry: false // Enable retry logic
+      skipRetry: false, // Enable retry logic
     });
-    
+
     return response.data;
   } catch (error: any) {
     // Custom error handling based on error type
     if (error.status === 401) {
       // Redirect to login
-      window.location.href = '/login';
+      window.location.href = "/login";
       throw error;
     }
-    
+
     if (error.status === 403) {
       // Show access denied message
-      throw new Error('Access denied. Please contact your administrator.');
+      throw new Error("Access denied. Please contact your administrator.");
     }
-    
+
     if (error.status >= 500) {
       // Server error - show user-friendly message
-      throw new Error('Server temporarily unavailable. Please try again later.');
+      throw new Error("Server temporarily unavailable. Please try again later.");
     }
-    
+
     // Re-throw other errors as-is
     throw error;
   }
@@ -209,28 +212,26 @@ export async function robustApiCall<T>(
 export async function uploadFile(
   file: File,
   endpoint: string,
-  onProgress?: (progress: number) => void
+  onProgress?: (progress: number) => void,
 ) {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append("file", file);
 
   const client = createAuthClient();
-  
+
   try {
     const response = await client.post(endpoint, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        "Content-Type": "multipart/form-data",
       },
       onUploadProgress: (progressEvent) => {
         if (progressEvent.total) {
-          const percentCompleted = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           onProgress?.(percentCompleted);
         }
-      }
+      },
     });
-    
+
     return response.data;
   } catch (error: any) {
     throw new Error(`Upload failed: ${error.message}`);
@@ -241,21 +242,24 @@ export async function uploadFile(
 export const clients = {
   // Default client with auto-tenant detection
   default: apiClient,
-  
+
   // Management platform client (specific tenant)
-  management: createTenantClient('management', {
-    baseURL: process.env.NEXT_PUBLIC_MANAGEMENT_API_URL
+  management: createTenantClient("management", {
+    baseURL: process.env.NEXT_PUBLIC_MANAGEMENT_API_URL,
   }).enableAuth(),
-  
+
   // Public API client (no auth)
   public: HttpClient.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
   }),
-  
+
   // Admin client with elevated permissions
-  admin: createAuthClient({
-    tokenKey: 'admin_token'
-  }, {
-    baseURL: process.env.NEXT_PUBLIC_ADMIN_API_URL
-  })
+  admin: createAuthClient(
+    {
+      tokenKey: "admin_token",
+    },
+    {
+      baseURL: process.env.NEXT_PUBLIC_ADMIN_API_URL,
+    },
+  ),
 };

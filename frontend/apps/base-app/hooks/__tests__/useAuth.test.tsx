@@ -4,17 +4,17 @@
  * Tests authentication flow, user state management, and permissions
  */
 
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useAuth, AuthProvider } from '../useAuth';
-import { authService } from '@/lib/api/services/auth.service';
-import { apiClient } from '@/lib/api/client';
-import { ReactNode } from 'react';
-import type { AxiosResponse, AxiosRequestConfig } from 'axios';
+import { renderHook, act, waitFor } from "@testing-library/react";
+import { useAuth, AuthProvider } from "../useAuth";
+import { authService } from "@/lib/api/services/auth.service";
+import { apiClient } from "@/lib/api/client";
+import { ReactNode } from "react";
+import type { AxiosResponse, AxiosRequestConfig } from "axios";
 
 // Mock dependencies
-jest.mock('@/lib/api/services/auth.service');
-jest.mock('@/lib/api-client');
-jest.mock('next/navigation', () => ({
+jest.mock("@/lib/api/services/auth.service");
+jest.mock("@/lib/api-client");
+jest.mock("next/navigation", () => ({
   useRouter: () => ({
     push: jest.fn(),
     replace: jest.fn(),
@@ -29,7 +29,7 @@ const createAxiosResponse = <T,>(data: T, config: AxiosRequestConfig = {}): Axio
   return {
     data,
     status: 200,
-    statusText: 'OK',
+    statusText: "OK",
     headers: {},
     config,
     request: undefined,
@@ -37,17 +37,15 @@ const createAxiosResponse = <T,>(data: T, config: AxiosRequestConfig = {}): Axio
 };
 
 // Wrapper component for testing
-const wrapper = ({ children }: { children: ReactNode }) => (
-  <AuthProvider>{children}</AuthProvider>
-);
+const wrapper = ({ children }: { children: ReactNode }) => <AuthProvider>{children}</AuthProvider>;
 
-describe('useAuth Hook', () => {
+describe("useAuth Hook", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('Initial State', () => {
-    it('should start with loading state', () => {
+  describe("Initial State", () => {
+    it("should start with loading state", () => {
       mockAuthService.getCurrentUser.mockResolvedValue({
         success: false,
         data: null,
@@ -60,11 +58,11 @@ describe('useAuth Hook', () => {
       expect(result.current.error).toBe(null);
     });
 
-    it('should load authenticated user on mount', async () => {
+    it("should load authenticated user on mount", async () => {
       const mockUser = {
-        id: '123',
-        username: 'testuser',
-        email: 'test@example.com',
+        id: "123",
+        username: "testuser",
+        email: "test@example.com",
       };
 
       mockAuthService.getCurrentUser.mockResolvedValue({
@@ -74,8 +72,8 @@ describe('useAuth Hook', () => {
 
       mockApiClient.get.mockResolvedValue(
         createAxiosResponse({
-          effective_permissions: [{ name: 'read:users' }],
-        })
+          effective_permissions: [{ name: "read:users" }],
+        }),
       );
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -85,16 +83,16 @@ describe('useAuth Hook', () => {
       });
 
       expect(result.current.user).toEqual(mockUser);
-      expect(result.current.permissions).toHaveProperty('effective_permissions');
+      expect(result.current.permissions).toHaveProperty("effective_permissions");
     });
   });
 
-  describe('Login', () => {
-    it('should successfully login user', async () => {
+  describe("Login", () => {
+    it("should successfully login user", async () => {
       const mockUser = {
-        id: '123',
-        username: 'testuser',
-        email: 'test@example.com',
+        id: "123",
+        username: "testuser",
+        email: "test@example.com",
       };
 
       mockAuthService.getCurrentUser.mockResolvedValue({
@@ -106,9 +104,9 @@ describe('useAuth Hook', () => {
         success: true,
         data: {
           user: mockUser,
-          access_token: 'mock-token',
-          refresh_token: 'mock-refresh-token',
-          token_type: 'bearer',
+          access_token: "mock-token",
+          refresh_token: "mock-refresh-token",
+          token_type: "bearer",
           expires_in: 3600,
         },
       });
@@ -116,7 +114,7 @@ describe('useAuth Hook', () => {
       mockApiClient.get.mockResolvedValue(
         createAxiosResponse({
           effective_permissions: [],
-        })
+        }),
       );
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -126,12 +124,12 @@ describe('useAuth Hook', () => {
       });
 
       await act(async () => {
-        await result.current.login('testuser', 'password123');
+        await result.current.login("testuser", "password123");
       });
 
       expect(mockAuthService.login).toHaveBeenCalledWith({
-        username: 'testuser',
-        password: 'password123',
+        username: "testuser",
+        password: "password123",
       });
 
       await waitFor(() => {
@@ -140,15 +138,13 @@ describe('useAuth Hook', () => {
       });
     });
 
-    it('should handle login error', async () => {
+    it("should handle login error", async () => {
       mockAuthService.getCurrentUser.mockResolvedValue({
         success: false,
         data: null,
       });
 
-      mockAuthService.login.mockRejectedValue(
-        new Error('Invalid credentials')
-      );
+      mockAuthService.login.mockRejectedValue(new Error("Invalid credentials"));
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -158,7 +154,7 @@ describe('useAuth Hook', () => {
 
       await act(async () => {
         try {
-          await result.current.login('testuser', 'wrong-password');
+          await result.current.login("testuser", "wrong-password");
         } catch (error) {
           // Expected to throw
         }
@@ -169,12 +165,12 @@ describe('useAuth Hook', () => {
     });
   });
 
-  describe('Logout', () => {
-    it('should successfully logout user', async () => {
+  describe("Logout", () => {
+    it("should successfully logout user", async () => {
       const mockUser = {
-        id: '123',
-        username: 'testuser',
-        email: 'test@example.com',
+        id: "123",
+        username: "testuser",
+        email: "test@example.com",
       };
 
       mockAuthService.getCurrentUser.mockResolvedValue({
@@ -182,9 +178,7 @@ describe('useAuth Hook', () => {
         data: mockUser,
       });
 
-      mockApiClient.get.mockResolvedValue(
-        createAxiosResponse({ effective_permissions: [] })
-      );
+      mockApiClient.get.mockResolvedValue(createAxiosResponse({ effective_permissions: [] }));
 
       mockAuthService.logout.mockResolvedValue(undefined);
 
@@ -204,19 +198,16 @@ describe('useAuth Hook', () => {
     });
   });
 
-  describe('Permissions', () => {
-    it('should load user permissions after login', async () => {
+  describe("Permissions", () => {
+    it("should load user permissions after login", async () => {
       const mockUser = {
-        id: '123',
-        username: 'testuser',
-        email: 'test@example.com',
+        id: "123",
+        username: "testuser",
+        email: "test@example.com",
       };
 
       const mockPermissions = {
-        effective_permissions: [
-          { name: 'read:users' },
-          { name: 'write:users' },
-        ],
+        effective_permissions: [{ name: "read:users" }, { name: "write:users" }],
       };
 
       mockAuthService.getCurrentUser.mockResolvedValue({
@@ -224,9 +215,7 @@ describe('useAuth Hook', () => {
         data: mockUser,
       });
 
-      mockApiClient.get.mockResolvedValue(
-        createAxiosResponse(mockPermissions)
-      );
+      mockApiClient.get.mockResolvedValue(createAxiosResponse(mockPermissions));
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -235,16 +224,14 @@ describe('useAuth Hook', () => {
       });
 
       expect(result.current.permissions).toEqual(mockPermissions);
-      expect(mockApiClient.get).toHaveBeenCalledWith(
-        '/api/v1/auth/rbac/my-permissions'
-      );
+      expect(mockApiClient.get).toHaveBeenCalledWith("/api/v1/auth/rbac/my-permissions");
     });
 
-    it('should handle permission loading failure gracefully', async () => {
+    it("should handle permission loading failure gracefully", async () => {
       const mockUser = {
-        id: '123',
-        username: 'testuser',
-        email: 'test@example.com',
+        id: "123",
+        username: "testuser",
+        email: "test@example.com",
       };
 
       mockAuthService.getCurrentUser.mockResolvedValue({
@@ -252,9 +239,7 @@ describe('useAuth Hook', () => {
         data: mockUser,
       });
 
-      mockApiClient.get.mockRejectedValue(
-        new Error('Failed to fetch permissions')
-      );
+      mockApiClient.get.mockRejectedValue(new Error("Failed to fetch permissions"));
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -268,11 +253,9 @@ describe('useAuth Hook', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    it('should set error state on authentication failure', async () => {
-      mockAuthService.getCurrentUser.mockRejectedValue(
-        new Error('Network error')
-      );
+  describe("Error Handling", () => {
+    it("should set error state on authentication failure", async () => {
+      mockAuthService.getCurrentUser.mockRejectedValue(new Error("Network error"));
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -284,18 +267,18 @@ describe('useAuth Hook', () => {
     });
   });
 
-  describe('User Refresh', () => {
-    it('should refresh user data', async () => {
+  describe("User Refresh", () => {
+    it("should refresh user data", async () => {
       const initialUser = {
-        id: '123',
-        username: 'testuser',
-        email: 'test@example.com',
+        id: "123",
+        username: "testuser",
+        email: "test@example.com",
       };
 
       const updatedUser = {
-        id: '123',
-        username: 'testuser',
-        email: 'newemail@example.com',
+        id: "123",
+        username: "testuser",
+        email: "newemail@example.com",
       };
 
       mockAuthService.getCurrentUser
@@ -308,9 +291,7 @@ describe('useAuth Hook', () => {
           data: updatedUser,
         });
 
-      mockApiClient.get.mockResolvedValue(
-        createAxiosResponse({ effective_permissions: [] })
-      );
+      mockApiClient.get.mockResolvedValue(createAxiosResponse({ effective_permissions: [] }));
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 

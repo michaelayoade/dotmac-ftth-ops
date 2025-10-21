@@ -8,8 +8,8 @@
  * - Managing executions (start/cancel)
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/components/ui/use-toast';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
 import {
   dunningService,
   type CampaignListFilters,
@@ -22,7 +22,7 @@ import {
   type DunningRecoveryChartData,
   type DunningStatistics,
   type ExecutionListFilters,
-} from '@/lib/services/dunning-service';
+} from "@/lib/services/dunning-service";
 
 // Re-export types for convenience
 export type {
@@ -38,16 +38,16 @@ export type {
 // ============================================
 
 export const dunningKeys = {
-  all: ['dunning'] as const,
-  campaigns: () => [...dunningKeys.all, 'campaigns'] as const,
+  all: ["dunning"] as const,
+  campaigns: () => [...dunningKeys.all, "campaigns"] as const,
   campaign: (filters: CampaignListFilters) => [...dunningKeys.campaigns(), filters] as const,
   campaignDetail: (id: string) => [...dunningKeys.campaigns(), id] as const,
-  executions: () => [...dunningKeys.all, 'executions'] as const,
+  executions: () => [...dunningKeys.all, "executions"] as const,
   execution: (filters: ExecutionListFilters) => [...dunningKeys.executions(), filters] as const,
   executionDetail: (id: string) => [...dunningKeys.executions(), id] as const,
-  statistics: () => [...dunningKeys.all, 'statistics'] as const,
-  campaignStats: (id: string) => [...dunningKeys.statistics(), 'campaign', id] as const,
-  recoveryChart: (days: number) => [...dunningKeys.all, 'recovery-chart', days] as const,
+  statistics: () => [...dunningKeys.all, "statistics"] as const,
+  campaignStats: (id: string) => [...dunningKeys.statistics(), "campaign", id] as const,
+  recoveryChart: (days: number) => [...dunningKeys.all, "recovery-chart", days] as const,
 };
 
 // ============================================
@@ -135,15 +135,13 @@ export function useUpdateDunningCampaign(options?: {
 }) {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    DunningCampaign,
-    Error,
-    { campaignId: string; data: DunningCampaignUpdate }
-  >({
+  return useMutation<DunningCampaign, Error, { campaignId: string; data: DunningCampaignUpdate }>({
     mutationFn: ({ campaignId, data }) => dunningService.updateCampaign(campaignId, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: dunningKeys.campaigns() });
-      queryClient.invalidateQueries({ queryKey: dunningKeys.campaignDetail(data.id) });
+      queryClient.invalidateQueries({
+        queryKey: dunningKeys.campaignDetail(data.id),
+      });
       queryClient.invalidateQueries({ queryKey: dunningKeys.statistics() });
 
       // toast.success('Campaign updated successfully');
@@ -208,7 +206,9 @@ export function usePauseDunningCampaign(options?: {
     mutationFn: (campaignId) => dunningService.pauseCampaign(campaignId),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: dunningKeys.campaigns() });
-      queryClient.invalidateQueries({ queryKey: dunningKeys.campaignDetail(data.id) });
+      queryClient.invalidateQueries({
+        queryKey: dunningKeys.campaignDetail(data.id),
+      });
       queryClient.invalidateQueries({ queryKey: dunningKeys.statistics() });
 
       // toast.success('Campaign paused');
@@ -241,7 +241,9 @@ export function useResumeDunningCampaign(options?: {
     mutationFn: (campaignId) => dunningService.resumeCampaign(campaignId),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: dunningKeys.campaigns() });
-      queryClient.invalidateQueries({ queryKey: dunningKeys.campaignDetail(data.id) });
+      queryClient.invalidateQueries({
+        queryKey: dunningKeys.campaignDetail(data.id),
+      });
       queryClient.invalidateQueries({ queryKey: dunningKeys.statistics() });
 
       // toast.success('Campaign resumed');
@@ -347,7 +349,9 @@ export function useCancelDunningExecution(options?: {
     mutationFn: ({ executionId, reason }) => dunningService.cancelExecution(executionId, reason),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: dunningKeys.executions() });
-      queryClient.invalidateQueries({ queryKey: dunningKeys.executionDetail(data.id) });
+      queryClient.invalidateQueries({
+        queryKey: dunningKeys.executionDetail(data.id),
+      });
       queryClient.invalidateQueries({ queryKey: dunningKeys.statistics() });
 
       // toast.success('Execution canceled');
@@ -432,7 +436,6 @@ export function useDunningOperations() {
     resumeCampaign: (campaignId: string) => resumeCampaign.mutateAsync(campaignId),
     cancelExecution: (executionId: string, reason: string) =>
       cancelExecution.mutateAsync({ executionId, reason }),
-    isLoading:
-      pauseCampaign.isPending || resumeCampaign.isPending || cancelExecution.isPending,
+    isLoading: pauseCampaign.isPending || resumeCampaign.isPending || cancelExecution.isPending,
   };
 }

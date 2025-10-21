@@ -1,8 +1,9 @@
 """Search service interfaces."""
 
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Protocol, runtime_checkable
+from typing import Any
 
 
 class SearchType(str, Enum):
@@ -68,28 +69,34 @@ class SearchResponse:
     took_ms: int | None = None
 
 
-@runtime_checkable
-class SearchBackend(Protocol):
-    """Search backend interface."""
+class SearchBackend(ABC):
+    """Abstract base class for search backends."""
 
+    @abstractmethod
     async def index(self, index_name: str, doc_id: str, document: dict[str, Any]) -> bool:
         """Index a document."""
 
+    @abstractmethod
     async def search(self, index_name: str, query: SearchQuery) -> SearchResponse:
         """Search documents."""
 
+    @abstractmethod
     async def delete(self, index_name: str, doc_id: str) -> bool:
         """Delete a document."""
 
+    @abstractmethod
     async def update(self, index_name: str, doc_id: str, document: dict[str, Any]) -> bool:
         """Update a document."""
 
+    @abstractmethod
     async def bulk_index(self, index_name: str, documents: list[dict[str, Any]]) -> int:
         """Bulk index documents."""
 
+    @abstractmethod
     async def create_index(self, index_name: str, mappings: dict[str, Any] | None = None) -> bool:
         """Create an index."""
 
+    @abstractmethod
     async def delete_index(self, index_name: str) -> bool:
         """Delete an index."""
 

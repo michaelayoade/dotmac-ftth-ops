@@ -4,9 +4,9 @@
  * Demonstrates how to integrate the NotificationCenter component.
  */
 
-'use client';
+"use client";
 
-import { NotificationCenter, NotificationBadge } from './NotificationCenter';
+import { NotificationCenter, NotificationBadge } from "./NotificationCenter";
 
 // ============================================================================
 // Example 1: Basic Usage in Header
@@ -118,7 +118,12 @@ export function MobileResponsiveHeader() {
       <div className="md:hidden">
         <button className="p-2">
           <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 6h16M4 12h16M4 18h16"
+            />
           </svg>
         </button>
       </div>

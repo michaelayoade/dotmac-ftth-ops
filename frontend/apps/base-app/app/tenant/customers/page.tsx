@@ -1,5 +1,5 @@
-'use client';
+"use client";
 
-import TenantCustomersView from '@/components/tenant/TenantCustomersView';
+import TenantCustomersView from "@/components/tenant/TenantCustomersView";
 
 export default TenantCustomersView;

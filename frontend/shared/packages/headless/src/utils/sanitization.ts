@@ -12,32 +12,32 @@ export interface SanitizationOptions {
 class InputSanitizer {
   // Default allowed HTML tags for rich text content
   private readonly DEFAULT_ALLOWED_TAGS = [
-    'p',
-    'br',
-    'strong',
-    'b',
-    'em',
-    'i',
-    'u',
-    'ul',
-    'ol',
-    'li',
-    'h1',
-    'h2',
-    'h3',
-    'h4',
-    'h5',
-    'h6',
-    'blockquote',
-    'pre',
-    'code',
+    "p",
+    "br",
+    "strong",
+    "b",
+    "em",
+    "i",
+    "u",
+    "ul",
+    "ol",
+    "li",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "blockquote",
+    "pre",
+    "code",
   ];
 
   // Default allowed attributes
   private readonly DEFAULT_ALLOWED_ATTRIBUTES: Record<string, string[]> = {
-    a: ['href', 'title'],
-    img: ['src', 'alt', 'title', 'width', 'height'],
-    '*': ['class'], // Allow class on all elements
+    a: ["href", "title"],
+    img: ["src", "alt", "title", "width", "height"],
+    "*": ["class"], // Allow class on all elements
   };
 
   // Dangerous patterns that should always be removed
@@ -64,10 +64,10 @@ class InputSanitizer {
     input: string,
     options: SanitizationOptions = {
       // Implementation pending
-    }
+    },
   ): string {
-    if (!input || typeof input !== 'string') {
-      return '';
+    if (!input || typeof input !== "string") {
+      return "";
     }
 
     const {
@@ -86,7 +86,7 @@ class InputSanitizer {
 
     // Remove dangerous patterns first
     for (const pattern of this.DANGEROUS_PATTERNS) {
-      sanitized = sanitized.replace(pattern, '');
+      sanitized = sanitized.replace(pattern, "");
     }
 
     if (stripAll) {
@@ -104,8 +104,8 @@ class InputSanitizer {
    * Sanitize plain text input
    */
   sanitizeText(input: string, maxLength?: number): string {
-    if (!input || typeof input !== 'string') {
-      return '';
+    if (!input || typeof input !== "string") {
+      return "";
     }
 
     let sanitized = input;
@@ -128,12 +128,12 @@ class InputSanitizer {
    * Sanitize URL to prevent XSS and ensure it's safe
    */
   sanitizeURL(url: string): string | null {
-    if (!url || typeof url !== 'string') {
+    if (!url || typeof url !== "string") {
       return null;
     }
 
     // Remove whitespace and control characters
-    const cleaned = url.trim().replace(/[\x00-\x1F\x7F]/g, '');
+    const cleaned = url.trim().replace(/[\x00-\x1F\x7F]/g, "");
 
     // Check for javascript: or data: URLs
     if (cleaned.match(/^(javascript|data|vbscript):/i)) {
@@ -143,7 +143,7 @@ class InputSanitizer {
     // Validate URL format
     if (!this.URL_REGEX.test(cleaned)) {
       // If it doesn't start with http/https, it might be a relative URL
-      if (cleaned.startsWith('/') && !cleaned.includes('..')) {
+      if (cleaned.startsWith("/") && !cleaned.includes("..")) {
         return cleaned;
       }
       return null;
@@ -156,7 +156,7 @@ class InputSanitizer {
    * Sanitize email address
    */
   sanitizeEmail(email: string): string | null {
-    if (!email || typeof email !== 'string') {
+    if (!email || typeof email !== "string") {
       return null;
     }
 
@@ -176,12 +176,12 @@ class InputSanitizer {
    * Sanitize phone number
    */
   sanitizePhone(phone: string): string | null {
-    if (!phone || typeof phone !== 'string') {
+    if (!phone || typeof phone !== "string") {
       return null;
     }
 
     // Remove all non-digit characters except + for international numbers
-    const cleaned = phone.replace(/[^\d+]/g, '');
+    const cleaned = phone.replace(/[^\d+]/g, "");
 
     // Basic phone number validation (10-15 digits)
     if (cleaned.length < 10 || cleaned.length > 15) {
@@ -195,8 +195,8 @@ class InputSanitizer {
    * Sanitize SQL input to prevent injection (basic protection)
    */
   sanitizeSQLInput(input: string): string {
-    if (!input || typeof input !== 'string') {
-      return '';
+    if (!input || typeof input !== "string") {
+      return "";
     }
 
     // Remove SQL injection patterns
@@ -207,7 +207,7 @@ class InputSanitizer {
 
     let sanitized = input;
     for (const pattern of sqlPatterns) {
-      sanitized = sanitized.replace(pattern, '');
+      sanitized = sanitized.replace(pattern, "");
     }
 
     return sanitized.trim();
@@ -217,7 +217,7 @@ class InputSanitizer {
    * Strip all HTML tags
    */
   private stripAllTags(html: string): string {
-    return html.replace(/<[^>]*>/g, '');
+    return html.replace(/<[^>]*>/g, "");
   }
 
   /**
@@ -226,7 +226,7 @@ class InputSanitizer {
   private cleanAllowedTags(
     html: string,
     allowedTags: string[],
-    allowedAttributes: Record<string, string[]>
+    allowedAttributes: Record<string, string[]>,
   ): string {
     // This is a basic implementation. For production, consider using a library like DOMPurify
 
@@ -237,7 +237,7 @@ class InputSanitizer {
       const tag = tagName.toLowerCase();
 
       if (!allowedTags.includes(tag)) {
-        return '';
+        return "";
       }
 
       // Clean attributes for allowed tags
@@ -251,15 +251,15 @@ class InputSanitizer {
   private cleanAttributes(
     tagHTML: string,
     tagName: string,
-    allowedAttributes: Record<string, string[]>
+    allowedAttributes: Record<string, string[]>,
   ): string {
     const allowedForTag = allowedAttributes[tagName] || [];
-    const allowedForAll = allowedAttributes['*'] || [];
+    const allowedForAll = allowedAttributes["*"] || [];
     const allAllowed = [...allowedForTag, ...allowedForAll];
 
     if (allAllowed.length === 0) {
       // Return tag without attributes
-      return tagHTML.replace(/\s+[^>]*/, '');
+      return tagHTML.replace(/\s+[^>]*/, "");
     }
 
     // This is a simplified implementation
@@ -268,7 +268,7 @@ class InputSanitizer {
       if (allAllowed.includes(attrName.toLowerCase())) {
         return match;
       }
-      return '';
+      return "";
     });
   }
 
@@ -277,14 +277,14 @@ class InputSanitizer {
    */
   private decodeHTMLEntities(text: string): string {
     const entityMap: Record<string, string> = {
-      '&amp;': '&',
-      '&lt;': '<',
-      '&gt;': '>',
-      '&quot;': '"',
-      '&#x27;': "'",
-      '&#x2F;': '/',
-      '&#x60;': '`',
-      '&#x3D;': '=',
+      "&amp;": "&",
+      "&lt;": "<",
+      "&gt;": ">",
+      "&quot;": '"',
+      "&#x27;": "'",
+      "&#x2F;": "/",
+      "&#x60;": "`",
+      "&#x3D;": "=",
     };
 
     return text.replace(/&[#\w]+;/g, (entity) => {
@@ -296,19 +296,19 @@ class InputSanitizer {
    * Escape HTML to prevent XSS
    */
   escapeHTML(text: string): string {
-    if (!text || typeof text !== 'string') {
-      return '';
+    if (!text || typeof text !== "string") {
+      return "";
     }
 
     const entityMap: Record<string, string> = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#x27;',
-      '/': '&#x2F;',
-      '`': '&#x60;',
-      '=': '&#x3D;',
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#x27;",
+      "/": "&#x2F;",
+      "`": "&#x60;",
+      "=": "&#x3D;",
     };
 
     return text.replace(/[&<>"'`=/]/g, (char) => {
@@ -321,14 +321,14 @@ class InputSanitizer {
    */
   sanitizeJSON(input: string): object | null {
     try {
-      if (!input || typeof input !== 'string') {
+      if (!input || typeof input !== "string") {
         return null;
       }
 
       // Remove dangerous patterns
       let cleaned = input;
       for (const pattern of this.DANGEROUS_PATTERNS) {
-        cleaned = cleaned.replace(pattern, '');
+        cleaned = cleaned.replace(pattern, "");
       }
 
       // Additional validation can be added here
@@ -347,22 +347,22 @@ class InputSanitizer {
     };
 
     for (const [key, value] of Object.entries(data)) {
-      if (typeof value === 'string') {
+      if (typeof value === "string") {
         // Sanitize based on field type (heuristic)
-        if (key.toLowerCase().includes('email')) {
+        if (key.toLowerCase().includes("email")) {
           sanitized[key] = this.sanitizeEmail(value);
-        } else if (key.toLowerCase().includes('phone')) {
+        } else if (key.toLowerCase().includes("phone")) {
           sanitized[key] = this.sanitizePhone(value);
-        } else if (key.toLowerCase().includes('url') || key.toLowerCase().includes('link')) {
+        } else if (key.toLowerCase().includes("url") || key.toLowerCase().includes("link")) {
           sanitized[key] = this.sanitizeURL(value);
-        } else if (key.toLowerCase().includes('html') || key.toLowerCase().includes('content')) {
+        } else if (key.toLowerCase().includes("html") || key.toLowerCase().includes("content")) {
           sanitized[key] = this.sanitizeHTML(value);
         } else {
           sanitized[key] = this.sanitizeText(value, 1000); // Default max length
         }
       } else if (Array.isArray(value)) {
         sanitized[key] = value.map((item) =>
-          typeof item === 'string' ? this.sanitizeText(item, 1000) : item
+          typeof item === "string" ? this.sanitizeText(item, 1000) : item,
         );
       } else {
         sanitized[key] = value;

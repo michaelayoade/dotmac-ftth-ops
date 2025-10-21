@@ -1,12 +1,21 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Mail, Send, Clock, CheckCircle, XCircle, AlertCircle, TrendingUp, Users } from 'lucide-react';
-import Link from 'next/link';
-import { useCommunicationStats, useCommunicationLogs } from '@/hooks/useCommunications';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Mail,
+  Send,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
+import { useCommunicationStats, useCommunicationLogs } from "@/hooks/useCommunications";
 
 interface EmailDisplay {
   id: string;
@@ -24,45 +33,53 @@ interface EmailDisplay {
 export function CommunicationsDashboard() {
   // Fetch real data from API using hooks
   const { data: statsData, isLoading: statsLoading } = useCommunicationStats();
-  const { data: emailsData, isLoading: emailsLoading } = useCommunicationLogs({ page: 1, page_size: 10, sort_by: 'created_at', sort_order: 'desc' });
+  const { data: emailsData, isLoading: emailsLoading } = useCommunicationLogs({
+    page: 1,
+    page_size: 10,
+    sort_by: "created_at",
+    sort_order: "desc",
+  });
 
-  const stats = statsData ? {
-    totalSent: statsData.total_sent,
-    queued: statsData.by_status?.queued || 0,
-    failed: statsData.total_failed,
-    delivered: statsData.total_delivered,
-    deliveryRate: statsData.delivery_rate,
-    avgSendTime: 0, // Not available in current stats
-  } : {
-    totalSent: 0,
-    queued: 0,
-    failed: 0,
-    delivered: 0,
-    deliveryRate: 0,
-    avgSendTime: 0,
-  };
+  const stats = statsData
+    ? {
+        totalSent: statsData.total_sent,
+        queued: statsData.by_status?.queued || 0,
+        failed: statsData.total_failed,
+        delivered: statsData.total_delivered,
+        deliveryRate: statsData.delivery_rate,
+        avgSendTime: 0, // Not available in current stats
+      }
+    : {
+        totalSent: 0,
+        queued: 0,
+        failed: 0,
+        delivered: 0,
+        deliveryRate: 0,
+        avgSendTime: 0,
+      };
 
-  const recentEmails: EmailDisplay[] = emailsData?.logs.map(log => ({
-    id: log.id,
-    subject: log.subject || 'No subject',
-    recipient: log.recipient_email || 'Unknown',
-    status: log.status,
-    sentAt: new Date(log.created_at),
-  })) || [];
+  const recentEmails: EmailDisplay[] =
+    emailsData?.logs.map((log) => ({
+      id: log.id,
+      subject: log.subject || "No subject",
+      recipient: log.recipient_email || "Unknown",
+      status: log.status,
+      sentAt: new Date(log.created_at),
+    })) || [];
 
   const templates = [
-    { id: '1', name: 'Welcome Email', usageCount: 145 },
-    { id: '2', name: 'Payment Reminder', usageCount: 89 },
-    { id: '3', name: 'Service Update', usageCount: 67 },
+    { id: "1", name: "Welcome Email", usageCount: 145 },
+    { id: "2", name: "Payment Reminder", usageCount: 89 },
+    { id: "3", name: "Service Update", usageCount: 67 },
   ];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'delivered':
+      case "delivered":
         return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case 'failed':
+      case "failed":
         return <XCircle className="h-4 w-4 text-red-600" />;
-      case 'queued':
+      case "queued":
         return <Clock className="h-4 w-4 text-amber-600" />;
       default:
         return <AlertCircle className="h-4 w-4 text-gray-600" />;
@@ -71,16 +88,12 @@ export function CommunicationsDashboard() {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      delivered: 'default',
-      failed: 'destructive',
-      queued: 'secondary',
+      delivered: "default",
+      failed: "destructive",
+      queued: "secondary",
     } as const;
 
-    return (
-      <Badge variant={variants[status as keyof typeof variants] || 'outline'}>
-        {status}
-      </Badge>
-    );
+    return <Badge variant={variants[status as keyof typeof variants] || "outline"}>{status}</Badge>;
   };
 
   const formatTime = (date: Date) => {
@@ -204,9 +217,7 @@ export function CommunicationsDashboard() {
               </div>
               <div className="mt-4 flex justify-center">
                 <Button variant="outline" asChild>
-                  <Link href="/dashboard/operations/communications/history">
-                    View All Emails
-                  </Link>
+                  <Link href="/dashboard/operations/communications/history">View All Emails</Link>
                 </Button>
               </div>
             </CardContent>
@@ -265,9 +276,7 @@ export function CommunicationsDashboard() {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Delivery Rate</span>
-                    <span className="text-sm text-muted-foreground">
-                      {stats.deliveryRate}%
-                    </span>
+                    <span className="text-sm text-muted-foreground">{stats.deliveryRate}%</span>
                   </div>
                   <div className="w-full bg-secondary rounded-full h-2">
                     <div

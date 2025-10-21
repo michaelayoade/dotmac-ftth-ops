@@ -22,6 +22,7 @@ from dotmac.platform.api.app_boundary_middleware import (
 )
 from dotmac.platform.audit import AuditContextMiddleware
 from dotmac.platform.auth.billing_permissions import ensure_billing_rbac
+from dotmac.platform.auth.bootstrap import ensure_default_admin_user
 from dotmac.platform.auth.exceptions import AuthError, get_http_status
 from dotmac.platform.auth.isp_permissions import ensure_isp_rbac
 from dotmac.platform.core.rate_limiting import get_limiter
@@ -74,10 +75,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         )
         raise RuntimeError(str(e)) from e
 
-    # Setup telemetry first to enable structured logging
-    setup_telemetry(app)
-
-    # Get structured logger after telemetry setup
+    # Get structured logger (telemetry configured during app creation)
     import structlog
 
     logger = structlog.get_logger(__name__)
@@ -132,7 +130,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     # Fail fast in production if required services are missing
     if not all_healthy:
-        if failed_services and settings.environment == "production":
+        if failed_services and settings.is_production:
             logger.error(
                 "service.startup.failed",
                 failed_services=failed_services,
@@ -154,7 +152,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     except Exception as e:
         logger.warning("secrets.load.failed", source="vault", error=str(e), emoji="⚠️")
         # Continue with default values in development, fail in production
-        if settings.environment == "production":
+        if settings.is_production:
             logger.error("secrets.load.production_failure", error=str(e))
             raise
 
@@ -165,7 +163,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     except Exception as e:
         logger.error("database.init.failed", error=str(e), emoji="❌")
         # Continue in development, fail in production
-        if settings.environment == "production":
+        if settings.is_production:
             raise
 
     # Initialize Redis
@@ -176,7 +174,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.error("redis.init.failed", error=str(e), emoji="❌")
         # Continue in development, fail in production if Redis is critical
         # Allow graceful degradation for features that can work without Redis
-        if settings.environment == "production":
+        if settings.is_production:
             logger.warning("redis.production.unavailable", emoji="⚠️")
 
     # Seed RBAC permissions/roles after database init
@@ -188,8 +186,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
             logger.info("rbac.billing_permissions.seeded", emoji="✅")
     except Exception as e:
         logger.error("rbac.permissions.failed", error=str(e), emoji="❌")
-        if settings.environment == "production":
+        if settings.is_production:
             raise
+
+    # Provision development admin user
+    try:
+        await ensure_default_admin_user()
+        logger.info("auth.default_admin.ready", emoji="🛠️")
+    except Exception as e:
+        logger.warning("auth.default_admin.failed", error=str(e), emoji="⚠️")
 
     logger.info("service.startup.complete", healthy=all_healthy, emoji="🎉")
 
@@ -210,18 +215,21 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
 def create_application() -> FastAPI:
     """Create and configure the FastAPI application."""
-    # Get logger
-    logger = structlog.get_logger(__name__)
-
     # Create FastAPI app
     app = FastAPI(
         title="DotMac Platform Services",
         description="Unified platform services providing auth, secrets, and observability",
         version=settings.app_version,
         lifespan=lifespan,
-        docs_url="/docs" if settings.environment != "production" else None,
-        redoc_url="/redoc" if settings.environment != "production" else None,
+        docs_url="/docs" if not settings.is_production else None,
+        redoc_url="/redoc" if not settings.is_production else None,
     )
+
+    # Configure telemetry early so middleware instrumentation happens before startup events.
+    setup_telemetry(app)
+
+    # Get logger after telemetry is configured
+    logger = structlog.get_logger(__name__)
 
     # Add GZip compression
     app.add_middleware(GZipMiddleware, minimum_size=1000)
@@ -359,10 +367,15 @@ def create_application() -> FastAPI:
 
     # Metrics endpoint (if metrics enabled)
     if settings.observability.enable_metrics:
-        from prometheus_client import make_asgi_app
+        from prometheus_client import CONTENT_TYPE_LATEST, generate_latest, make_asgi_app
 
         metrics_app = make_asgi_app()
-        app.mount("/metrics", metrics_app)
+        app.mount("/metrics/", metrics_app)
+
+        @app.get("/metrics", include_in_schema=False)
+        async def metrics_root() -> Response:
+            """Serve Prometheus metrics without redirect."""
+            return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
     return app
 
@@ -382,6 +395,6 @@ if __name__ == "__main__":
         "dotmac.platform.main:app",
         host=settings.host,
         port=settings.port,
-        reload=settings.environment == "development",
+        reload=settings.is_development,
         log_level=settings.observability.log_level.value.lower(),
     )

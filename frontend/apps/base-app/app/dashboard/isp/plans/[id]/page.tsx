@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * ISP Internet Service Plan Details Page
@@ -6,10 +6,10 @@
  * Displays comprehensive details about a specific internet service plan.
  */
 
-import { useParams, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
   Edit,
@@ -26,14 +26,14 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   useInternetPlan,
   usePlanStatistics,
   useDeleteInternetPlan,
-} from '../../../../../hooks/useInternetPlans';
-import Link from 'next/link';
-import type { InternetServicePlan } from '../../../../../types/internet-plans';
+} from "../../../../../hooks/useInternetPlans";
+import Link from "next/link";
+import type { InternetServicePlan } from "../../../../../types/internet-plans";
 
 export default function PlanDetailsPage() {
   const params = useParams();
@@ -45,17 +45,13 @@ export default function PlanDetailsPage() {
   const { mutate: deletePlan, isPending: deleting } = useDeleteInternetPlan();
 
   const handleDelete = () => {
-    if (
-      !confirm(
-        'Are you sure you want to archive this plan? This action cannot be undone.'
-      )
-    ) {
+    if (!confirm("Are you sure you want to archive this plan? This action cannot be undone.")) {
       return;
     }
 
     deletePlan(planId, {
       onSuccess: () => {
-        router.push('/dashboard/isp/plans');
+        router.push("/dashboard/isp/plans");
       },
     });
   };
@@ -161,13 +157,11 @@ export default function PlanDetailsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Validation Status</p>
-                <p className="text-lg font-bold">
-                  {plan.validation_status || 'Not Validated'}
-                </p>
+                <p className="text-lg font-bold">{plan.validation_status || "Not Validated"}</p>
               </div>
-              {plan.validation_status === 'passed' ? (
+              {plan.validation_status === "passed" ? (
                 <CheckCircle className="h-10 w-10 text-green-500" />
-              ) : plan.validation_status === 'failed' ? (
+              ) : plan.validation_status === "failed" ? (
                 <XCircle className="h-10 w-10 text-red-500" />
               ) : (
                 <Clock className="h-10 w-10 text-gray-400" />
@@ -251,7 +245,7 @@ export default function PlanDetailsPage() {
             <div className="p-4 bg-gray-50 rounded">
               <p className="text-sm text-muted-foreground mb-1">Throttle Policy</p>
               <p className="text-lg font-semibold capitalize">
-                {plan.throttle_policy.replace(/_/g, ' ')}
+                {plan.throttle_policy.replace(/_/g, " ")}
               </p>
             </div>
             {plan.throttled_download_speed && (
@@ -267,8 +261,7 @@ export default function PlanDetailsPage() {
             <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
               <p className="font-medium">Overage Charges</p>
               <p className="text-sm">
-                {plan.currency} {plan.overage_price_per_unit.toFixed(2)} per{' '}
-                {plan.overage_unit}
+                {plan.currency} {plan.overage_price_per_unit.toFixed(2)} per {plan.overage_unit}
               </p>
             </div>
           )}
@@ -325,9 +318,7 @@ export default function PlanDetailsPage() {
             {plan.unrestricted_speed_multiplier && (
               <div className="flex items-center justify-between p-4 bg-blue-50 rounded">
                 <span className="font-medium">Speed Multiplier</span>
-                <span className="text-lg font-semibold">
-                  {plan.unrestricted_speed_multiplier}x
-                </span>
+                <span className="text-lg font-semibold">{plan.unrestricted_speed_multiplier}x</span>
               </div>
             )}
           </div>
@@ -365,14 +356,10 @@ export default function PlanDetailsPage() {
         <div className="grid gap-4 md:grid-cols-2 mt-4">
           <div className="p-4 bg-gray-50 rounded">
             <p className="text-sm text-muted-foreground mb-1">Minimum Contract</p>
-            <p className="text-lg font-semibold">
-              {plan.minimum_contract_months} months
-            </p>
+            <p className="text-lg font-semibold">{plan.minimum_contract_months} months</p>
           </div>
           <div className="p-4 bg-gray-50 rounded">
-            <p className="text-sm text-muted-foreground mb-1">
-              Early Termination Fee
-            </p>
+            <p className="text-sm text-muted-foreground mb-1">Early Termination Fee</p>
             <p className="text-lg font-semibold">
               {plan.currency} {plan.early_termination_fee.toFixed(2)}
             </p>
@@ -384,29 +371,13 @@ export default function PlanDetailsPage() {
       <Card className="p-6">
         <h2 className="text-xl font-bold mb-4">Technical Specifications</h2>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-          <SpecItem
-            label="IPv4 Included"
-            value={plan.ipv4_included}
-            type="boolean"
-          />
-          <SpecItem
-            label="IPv6 Included"
-            value={plan.ipv6_included}
-            type="boolean"
-          />
-          <SpecItem
-            label="Static IP"
-            value={plan.static_ip_included}
-            type="boolean"
-          />
+          <SpecItem label="IPv4 Included" value={plan.ipv4_included} type="boolean" />
+          <SpecItem label="IPv6 Included" value={plan.ipv6_included} type="boolean" />
+          <SpecItem label="Static IP" value={plan.static_ip_included} type="boolean" />
           {plan.static_ip_included && (
             <SpecItem label="Static IP Count" value={plan.static_ip_count} />
           )}
-          <SpecItem
-            label="Router Included"
-            value={plan.router_included}
-            type="boolean"
-          />
+          <SpecItem label="Router Included" value={plan.router_included} type="boolean" />
           <SpecItem
             label="Installation Included"
             value={plan.installation_included}
@@ -416,16 +387,9 @@ export default function PlanDetailsPage() {
             <SpecItem label="Contention Ratio" value={plan.contention_ratio} />
           )}
           {plan.technical_support_level && (
-            <SpecItem
-              label="Support Level"
-              value={plan.technical_support_level}
-            />
+            <SpecItem label="Support Level" value={plan.technical_support_level} />
           )}
-          <SpecItem
-            label="Traffic Shaping"
-            value={plan.traffic_shaping_enabled}
-            type="boolean"
-          />
+          <SpecItem label="Traffic Shaping" value={plan.traffic_shaping_enabled} type="boolean" />
         </div>
       </Card>
 
@@ -479,24 +443,18 @@ export default function PlanDetailsPage() {
         <div className="grid gap-3 md:grid-cols-2">
           <div>
             <p className="text-sm text-muted-foreground">Created</p>
-            <p className="font-medium">
-              {new Date(plan.created_at).toLocaleString()}
-            </p>
+            <p className="font-medium">{new Date(plan.created_at).toLocaleString()}</p>
           </div>
           {plan.updated_at && (
             <div>
               <p className="text-sm text-muted-foreground">Last Updated</p>
-              <p className="font-medium">
-                {new Date(plan.updated_at).toLocaleString()}
-              </p>
+              <p className="font-medium">{new Date(plan.updated_at).toLocaleString()}</p>
             </div>
           )}
           {plan.last_validated_at && (
             <div>
               <p className="text-sm text-muted-foreground">Last Validated</p>
-              <p className="font-medium">
-                {new Date(plan.last_validated_at).toLocaleString()}
-              </p>
+              <p className="font-medium">{new Date(plan.last_validated_at).toLocaleString()}</p>
             </div>
           )}
         </div>
@@ -512,16 +470,16 @@ export default function PlanDetailsPage() {
 function SpecItem({
   label,
   value,
-  type = 'text',
+  type = "text",
 }: {
   label: string;
   value: unknown;
-  type?: 'text' | 'boolean';
+  type?: "text" | "boolean";
 }) {
   return (
     <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
       <span className="text-sm font-medium">{label}</span>
-      {type === 'boolean' ? (
+      {type === "boolean" ? (
         value ? (
           <CheckCircle className="h-5 w-5 text-green-500" />
         ) : (

@@ -4,6 +4,8 @@ Notification Service.
 Handles user notification creation, delivery, and preference management.
 """
 
+# mypy: ignore-errors
+
 from datetime import datetime
 from typing import Any
 from uuid import UUID

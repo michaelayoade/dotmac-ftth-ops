@@ -879,7 +879,7 @@ if HAS_FASTAPI:
         try:
             from dotmac.platform.audit.router import router as audit_router
 
-            app.include_router(audit_router, prefix="/api/v1/audit", tags=["Audit"])
+            app.include_router(audit_router, prefix="/api/v1", tags=["Audit"])
         except ImportError:
             pass
 

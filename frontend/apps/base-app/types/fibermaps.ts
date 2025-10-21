@@ -24,34 +24,29 @@ export interface GeoPath {
 // ============================================================================
 
 export type FiberCableType =
-  | 'single_mode'
-  | 'multi_mode'
-  | 'armored'
-  | 'aerial'
-  | 'underground'
-  | 'submarine';
+  | "single_mode"
+  | "multi_mode"
+  | "armored"
+  | "aerial"
+  | "underground"
+  | "submarine";
 
 export type FiberCableStatus =
-  | 'active'
-  | 'inactive'
-  | 'planned'
-  | 'under_construction'
-  | 'maintenance'
-  | 'damaged';
+  | "active"
+  | "inactive"
+  | "planned"
+  | "under_construction"
+  | "maintenance"
+  | "damaged";
 
 export type SplicePointType =
-  | 'fusion_splice'
-  | 'mechanical_splice'
-  | 'connector'
-  | 'distribution_point'
-  | 'patch_panel';
+  | "fusion_splice"
+  | "mechanical_splice"
+  | "connector"
+  | "distribution_point"
+  | "patch_panel";
 
-export type ConduitType =
-  | 'pvc'
-  | 'hdpe'
-  | 'metal'
-  | 'concrete'
-  | 'direct_buried';
+export type ConduitType = "pvc" | "hdpe" | "metal" | "concrete" | "direct_buried";
 
 // ============================================================================
 // Fiber Cable
@@ -103,7 +98,7 @@ export interface SplicePoint {
   cables: string[]; // IDs of cables connected at this point
   splice_count: number;
   capacity: number;
-  status: 'operational' | 'maintenance' | 'fault';
+  status: "operational" | "maintenance" | "fault";
   enclosure_type?: string;
   installation_date?: string;
   access_notes?: string;
@@ -132,7 +127,7 @@ export interface Conduit {
   diameter_mm: number;
   capacity: number; // Number of cables it can hold
   occupied: number; // Number of cables currently in it
-  status: 'available' | 'full' | 'maintenance' | 'damaged';
+  status: "available" | "full" | "maintenance" | "damaged";
   cables: string[]; // IDs of cables in this conduit
   depth_meters?: number; // For underground conduits
   height_meters?: number; // For aerial conduits
@@ -149,7 +144,7 @@ export interface Conduit {
 export interface DistributionPoint {
   id: string;
   name: string;
-  type: 'fdt' | 'fdh' | 'splice_closure' | 'cabinet';
+  type: "fdt" | "fdh" | "splice_closure" | "cabinet";
   coordinates: Coordinates;
   capacity: number;
   ports_used: number;
@@ -160,10 +155,10 @@ export interface DistributionPoint {
     radius_meters: number;
     customer_count: number;
   };
-  status: 'active' | 'inactive' | 'maintenance';
+  status: "active" | "inactive" | "maintenance";
   installation_date?: string;
   address?: string;
-  access_type?: 'pole' | 'ground' | 'underground' | 'building';
+  access_type?: "pole" | "ground" | "underground" | "building";
   photos?: string[];
   created_at: string;
   updated_at: string;
@@ -176,10 +171,10 @@ export interface DistributionPoint {
 export interface ServiceArea {
   id: string;
   name: string;
-  type: 'residential' | 'commercial' | 'industrial' | 'rural';
+  type: "residential" | "commercial" | "industrial" | "rural";
   boundary: GeoPath; // Polygon boundary
   center: Coordinates;
-  coverage_status: 'covered' | 'partial' | 'planned' | 'not_covered';
+  coverage_status: "covered" | "partial" | "planned" | "not_covered";
   fiber_availability: boolean;
   population?: number;
   premises_count?: number;
@@ -198,7 +193,7 @@ export interface ServiceArea {
 export interface FiberRoute {
   id: string;
   name: string;
-  status: 'planned' | 'approved' | 'in_progress' | 'completed' | 'cancelled';
+  status: "planned" | "approved" | "in_progress" | "completed" | "cancelled";
   path: GeoPath;
   start_point: {
     name: string;
@@ -211,13 +206,13 @@ export interface FiberRoute {
   estimated_length_meters: number;
   proposed_fiber_count: number;
   estimated_cost?: number;
-  installation_method?: 'aerial' | 'underground' | 'directional_drilling' | 'trenching';
+  installation_method?: "aerial" | "underground" | "directional_drilling" | "trenching";
   permits_required?: string[];
   waypoints?: {
     id: string;
     name: string;
     coordinates: Coordinates;
-    type: 'pole' | 'manhole' | 'splice_point' | 'distribution_point';
+    type: "pole" | "manhole" | "splice_point" | "distribution_point";
   }[];
   created_by?: string;
   created_at: string;
@@ -231,9 +226,9 @@ export interface FiberRoute {
 export interface NetworkElement {
   id: string;
   name: string;
-  type: 'pop' | 'olt' | 'olt_shelf' | 'aggregation_switch' | 'core_router';
+  type: "pop" | "olt" | "olt_shelf" | "aggregation_switch" | "core_router";
   coordinates: Coordinates;
-  status: 'active' | 'inactive' | 'maintenance' | 'planned';
+  status: "active" | "inactive" | "maintenance" | "planned";
   capacity: {
     total_ports?: number;
     used_ports?: number;
@@ -254,9 +249,9 @@ export interface NetworkElement {
 
 export interface MaintenanceRecord {
   id: string;
-  type: 'inspection' | 'repair' | 'upgrade' | 'emergency' | 'preventive';
-  status: 'scheduled' | 'in_progress' | 'completed' | 'cancelled';
-  asset_type: 'cable' | 'splice_point' | 'conduit' | 'distribution_point';
+  type: "inspection" | "repair" | "upgrade" | "emergency" | "preventive";
+  status: "scheduled" | "in_progress" | "completed" | "cancelled";
+  asset_type: "cable" | "splice_point" | "conduit" | "distribution_point";
   asset_id: string;
   scheduled_date: string;
   completed_date?: string;
@@ -277,7 +272,13 @@ export interface MaintenanceRecord {
 export interface MapLayer {
   id: string;
   name: string;
-  type: 'cables' | 'splice_points' | 'conduits' | 'distribution_points' | 'service_areas' | 'network_elements';
+  type:
+    | "cables"
+    | "splice_points"
+    | "conduits"
+    | "distribution_points"
+    | "service_areas"
+    | "network_elements";
   visible: boolean;
   color?: string;
   opacity?: number;
@@ -289,7 +290,13 @@ export interface MapViewState {
   zoom: number;
   layers: MapLayer[];
   selectedFeatures: {
-    type: 'cable' | 'splice_point' | 'conduit' | 'distribution_point' | 'service_area' | 'network_element';
+    type:
+      | "cable"
+      | "splice_point"
+      | "conduit"
+      | "distribution_point"
+      | "service_area"
+      | "network_element";
     id: string;
   }[];
 }
@@ -355,7 +362,7 @@ export interface CreateFiberCableRequest {
   start_point_id: string;
   end_point_id: string;
   installation_date?: string;
-  specifications?: FiberCable['specifications'];
+  specifications?: FiberCable["specifications"];
 }
 
 export interface CreateSplicePointRequest {
@@ -369,9 +376,9 @@ export interface CreateSplicePointRequest {
 
 export interface CreateDistributionPointRequest {
   name: string;
-  type: DistributionPoint['type'];
+  type: DistributionPoint["type"];
   coordinates: Coordinates;
   capacity: number;
   address?: string;
-  access_type?: DistributionPoint['access_type'];
+  access_type?: DistributionPoint["access_type"];
 }

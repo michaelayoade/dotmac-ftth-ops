@@ -35,7 +35,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useManualPayments, useVerifyPayment } from "@/hooks/useBankAccounts";
-import type { ManualPaymentResponse, PaymentMethodType } from "@/lib/services/bank-accounts-service";
+import type {
+  ManualPaymentResponse,
+  PaymentMethodType,
+} from "@/lib/services/bank-accounts-service";
 import { PaymentRecordDialog } from "./PaymentRecordDialog";
 import { format } from "date-fns";
 
@@ -103,11 +106,7 @@ export function ManualPaymentsTab() {
       other: "Other",
     };
 
-    return (
-      <Badge variant="outline">
-        {labels[method] || method}
-      </Badge>
-    );
+    return <Badge variant="outline">{labels[method] || method}</Badge>;
   };
 
   const handleVerify = async (paymentId: number) => {
@@ -225,18 +224,24 @@ export function ManualPaymentsTab() {
             </div>
           </div>
 
-          {(filters.search || filters.status !== "all" || filters.method !== "all" || filters.startDate || filters.endDate) && (
+          {(filters.search ||
+            filters.status !== "all" ||
+            filters.method !== "all" ||
+            filters.startDate ||
+            filters.endDate) && (
             <div className="mt-4">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setFilters({
-                  status: "all",
-                  method: "all",
-                  search: "",
-                  startDate: "",
-                  endDate: "",
-                })}
+                onClick={() =>
+                  setFilters({
+                    status: "all",
+                    method: "all",
+                    search: "",
+                    startDate: "",
+                    endDate: "",
+                  })
+                }
               >
                 Clear Filters
               </Button>
@@ -266,9 +271,7 @@ export function ManualPaymentsTab() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Payments ({payments.length})</CardTitle>
-            <CardDescription>
-              All manual payments recorded in the system
-            </CardDescription>
+            <CardDescription>All manual payments recorded in the system</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
@@ -305,7 +308,9 @@ export function ManualPaymentsTab() {
                       <TableCell>
                         <div>
                           <p className="text-sm font-medium">{payment.customer_id || "N/A"}</p>
-                          <p className="text-xs text-muted-foreground">{payment.external_reference || ""}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {payment.external_reference || ""}
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell>{getMethodBadge(payment.payment_method)}</TableCell>
@@ -341,11 +346,7 @@ export function ManualPaymentsTab() {
                             </Button>
                           )}
                           {payment.receipt_url && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              asChild
-                            >
+                            <Button size="sm" variant="ghost" asChild>
                               <a
                                 href={payment.receipt_url}
                                 target="_blank"

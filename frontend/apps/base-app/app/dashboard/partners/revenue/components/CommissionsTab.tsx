@@ -46,10 +46,26 @@ export function CommissionsTab() {
 
   const getStatusBadge = (status: CommissionStatus) => {
     const config = {
-      pending: { variant: "secondary" as const, icon: Clock, color: "text-yellow-600" },
-      approved: { variant: "default" as const, icon: CheckCircle2, color: "text-blue-600" },
-      paid: { variant: "default" as const, icon: CheckCircle2, color: "text-green-600" },
-      rejected: { variant: "destructive" as const, icon: XCircle, color: "text-red-600" },
+      pending: {
+        variant: "secondary" as const,
+        icon: Clock,
+        color: "text-yellow-600",
+      },
+      approved: {
+        variant: "default" as const,
+        icon: CheckCircle2,
+        color: "text-blue-600",
+      },
+      paid: {
+        variant: "default" as const,
+        icon: CheckCircle2,
+        color: "text-green-600",
+      },
+      rejected: {
+        variant: "destructive" as const,
+        icon: XCircle,
+        color: "text-red-600",
+      },
     };
 
     const { variant, icon: Icon, color } = config[status];
@@ -106,70 +122,48 @@ export function CommissionsTab() {
           <CardContent>
             <div className="flex items-center gap-2">
               <Receipt className="h-4 w-4 text-purple-500" />
-              <span className="text-2xl font-bold">
-                {formatCurrency(totalAmount)}
-              </span>
+              <span className="text-2xl font-bold">{formatCurrency(totalAmount)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {commissions?.length || 0} events
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">{commissions?.length || 0} events</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pending
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-yellow-500" />
-              <span className="text-2xl font-bold">
-                {formatCurrency(pendingAmount)}
-              </span>
+              <span className="text-2xl font-bold">{formatCurrency(pendingAmount)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Awaiting approval
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">Awaiting approval</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Approved
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Approved</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-blue-500" />
-              <span className="text-2xl font-bold">
-                {formatCurrency(approvedAmount)}
-              </span>
+              <span className="text-2xl font-bold">{formatCurrency(approvedAmount)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Ready for payout
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">Ready for payout</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Paid
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Paid</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-green-500" />
-              <span className="text-2xl font-bold">
-                {formatCurrency(paidAmount)}
-              </span>
+              <span className="text-2xl font-bold">{formatCurrency(paidAmount)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Paid out
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">Paid out</p>
           </CardContent>
         </Card>
       </div>
@@ -223,9 +217,7 @@ export function CommissionsTab() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Commission Events</CardTitle>
-            <CardDescription>
-              All commission events for your partnership
-            </CardDescription>
+            <CardDescription>All commission events for your partnership</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
@@ -299,15 +291,11 @@ export function CommissionsTab() {
       {commissions && commissions.length >= pageSize && (
         <div className="flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
-            Showing {(page - 1) * pageSize + 1} to{" "}
-            {Math.min(page * pageSize, commissions.length)} commissions
+            Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, commissions.length)}{" "}
+            commissions
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setPage(page - 1)}
-              disabled={page === 1}
-            >
+            <Button variant="outline" onClick={() => setPage(page - 1)} disabled={page === 1}>
               Previous
             </Button>
             <Button

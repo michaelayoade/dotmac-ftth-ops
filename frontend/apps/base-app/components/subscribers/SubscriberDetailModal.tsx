@@ -4,22 +4,17 @@
  * Comprehensive modal for viewing and managing subscriber details
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   User,
   MapPin,
@@ -37,11 +32,11 @@ import {
   AlertCircle,
   CheckCircle,
   Ban,
-  XCircle
-} from 'lucide-react';
-import { format } from 'date-fns';
-import type { Subscriber, SubscriberStatus, ConnectionType } from '@/hooks/useSubscribers';
-import { useSubscriberServices } from '@/hooks/useSubscribers';
+  XCircle,
+} from "lucide-react";
+import { format } from "date-fns";
+import type { Subscriber, SubscriberStatus, ConnectionType } from "@/hooks/useSubscribers";
+import { useSubscriberServices } from "@/hooks/useSubscribers";
 
 interface SubscriberDetailModalProps {
   subscriber: Subscriber | null;
@@ -55,23 +50,23 @@ interface SubscriberDetailModalProps {
 
 const getStatusColor = (status: SubscriberStatus): string => {
   const colors: Record<SubscriberStatus, string> = {
-    active: 'bg-green-100 text-green-800 border-green-200',
-    suspended: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    pending: 'bg-blue-100 text-blue-800 border-blue-200',
-    inactive: 'bg-gray-100 text-gray-800 border-gray-200',
-    terminated: 'bg-red-100 text-red-800 border-red-200',
+    active: "bg-green-100 text-green-800 border-green-200",
+    suspended: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    pending: "bg-blue-100 text-blue-800 border-blue-200",
+    inactive: "bg-gray-100 text-gray-800 border-gray-200",
+    terminated: "bg-red-100 text-red-800 border-red-200",
   };
-  return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+  return colors[status] || "bg-gray-100 text-gray-800 border-gray-200";
 };
 
 const getConnectionTypeColor = (type: ConnectionType): string => {
   const colors: Record<ConnectionType, string> = {
-    ftth: 'bg-purple-100 text-purple-800',
-    fttb: 'bg-blue-100 text-blue-800',
-    wireless: 'bg-cyan-100 text-cyan-800',
-    hybrid: 'bg-orange-100 text-orange-800',
+    ftth: "bg-purple-100 text-purple-800",
+    fttb: "bg-blue-100 text-blue-800",
+    wireless: "bg-cyan-100 text-cyan-800",
+    hybrid: "bg-orange-100 text-orange-800",
   };
-  return colors[type] || 'bg-gray-100 text-gray-800';
+  return colors[type] || "bg-gray-100 text-gray-800";
 };
 
 export function SubscriberDetailModal({
@@ -81,12 +76,14 @@ export function SubscriberDetailModal({
   onUpdate,
   onSuspend,
   onActivate,
-  onTerminate
+  onTerminate,
 }: SubscriberDetailModalProps) {
-  const [activeTab, setActiveTab] = useState('details');
-  const { services, isLoading: servicesLoading, refetch: refetchServices } = useSubscriberServices(
-    subscriber?.id || null
-  );
+  const [activeTab, setActiveTab] = useState("details");
+  const {
+    services,
+    isLoading: servicesLoading,
+    refetch: refetchServices,
+  } = useSubscriberServices(subscriber?.id || null);
 
   useEffect(() => {
     if (open && subscriber) {
@@ -100,14 +97,14 @@ export function SubscriberDetailModal({
     const data = {
       subscriber,
       services,
-      exported_at: new Date().toISOString()
+      exported_at: new Date().toISOString(),
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: 'application/json'
+      type: "application/json",
     });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `subscriber-${subscriber.subscriber_id}-${Date.now()}.json`;
     document.body.appendChild(a);
@@ -162,32 +159,20 @@ export function SubscriberDetailModal({
 
         {/* Quick Actions */}
         <div className="flex gap-2 py-2">
-          {subscriber.status === 'active' && onSuspend && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onSuspend(subscriber)}
-            >
+          {subscriber.status === "active" && onSuspend && (
+            <Button size="sm" variant="outline" onClick={() => onSuspend(subscriber)}>
               <Ban className="h-4 w-4 mr-2" />
               Suspend
             </Button>
           )}
-          {(subscriber.status === 'suspended' || subscriber.status === 'pending') && onActivate && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onActivate(subscriber)}
-            >
+          {(subscriber.status === "suspended" || subscriber.status === "pending") && onActivate && (
+            <Button size="sm" variant="outline" onClick={() => onActivate(subscriber)}>
               <CheckCircle className="h-4 w-4 mr-2" />
               Activate
             </Button>
           )}
-          {subscriber.status !== 'terminated' && onTerminate && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onTerminate(subscriber)}
-            >
+          {subscriber.status !== "terminated" && onTerminate && (
+            <Button size="sm" variant="outline" onClick={() => onTerminate(subscriber)}>
               <XCircle className="h-4 w-4 mr-2" />
               Terminate
             </Button>
@@ -208,7 +193,11 @@ export function SubscriberDetailModal({
         <Separator />
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex-1 flex flex-col overflow-hidden"
+        >
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="services">
@@ -280,7 +269,8 @@ export function SubscriberDetailModal({
                     <div className="text-sm">
                       <p>{subscriber.service_address}</p>
                       <p>
-                        {subscriber.service_city}, {subscriber.service_state} {subscriber.service_postal_code}
+                        {subscriber.service_city}, {subscriber.service_state}{" "}
+                        {subscriber.service_postal_code}
                       </p>
                       <p>{subscriber.service_country}</p>
                     </div>
@@ -301,7 +291,7 @@ export function SubscriberDetailModal({
                         <div className="flex items-center gap-2 mt-1">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
                           <p className="text-sm">
-                            {format(new Date(subscriber.installation_date), 'PPP')}
+                            {format(new Date(subscriber.installation_date), "PPP")}
                           </p>
                         </div>
                       </div>
@@ -368,7 +358,7 @@ export function SubscriberDetailModal({
                           <CardTitle className="text-base">{service.service_name}</CardTitle>
                           <CardDescription>{service.service_type}</CardDescription>
                         </div>
-                        <Badge variant={service.status === 'active' ? 'default' : 'secondary'}>
+                        <Badge variant={service.status === "active" ? "default" : "secondary"}>
                           {service.status.toUpperCase()}
                         </Badge>
                       </div>
@@ -389,14 +379,16 @@ export function SubscriberDetailModal({
                           <div>
                             <Label className="text-xs text-muted-foreground">Activated</Label>
                             <p className="text-sm mt-1">
-                              {format(new Date(service.activation_date), 'PP')}
+                              {format(new Date(service.activation_date), "PP")}
                             </p>
                           </div>
                         )}
                         {service.static_ip && (
                           <div>
                             <Label className="text-xs text-muted-foreground">Static IP</Label>
-                            <Badge variant="outline" className="mt-1">Enabled</Badge>
+                            <Badge variant="outline" className="mt-1">
+                              Enabled
+                            </Badge>
                           </div>
                         )}
                       </div>
@@ -459,7 +451,9 @@ export function SubscriberDetailModal({
                     {subscriber.ipv6_address && (
                       <div>
                         <Label className="text-xs text-muted-foreground">IPv6 Address</Label>
-                        <p className="text-sm font-mono mt-1 break-all">{subscriber.ipv6_address}</p>
+                        <p className="text-sm font-mono mt-1 break-all">
+                          {subscriber.ipv6_address}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -489,7 +483,7 @@ export function SubscriberDetailModal({
                       <div>
                         <Label className="text-xs text-muted-foreground">Last Online</Label>
                         <p className="text-sm mt-1">
-                          {format(new Date(subscriber.last_online), 'PPp')}
+                          {format(new Date(subscriber.last_online), "PPp")}
                         </p>
                       </div>
                     )}
@@ -510,7 +504,7 @@ export function SubscriberDetailModal({
                       <div>
                         <Label className="text-xs text-muted-foreground">Start Date</Label>
                         <p className="text-sm mt-1">
-                          {format(new Date(subscriber.subscription_start_date), 'PP')}
+                          {format(new Date(subscriber.subscription_start_date), "PP")}
                         </p>
                       </div>
                     )}
@@ -518,7 +512,7 @@ export function SubscriberDetailModal({
                       <div>
                         <Label className="text-xs text-muted-foreground">End Date</Label>
                         <p className="text-sm mt-1">
-                          {format(new Date(subscriber.subscription_end_date), 'PP')}
+                          {format(new Date(subscriber.subscription_end_date), "PP")}
                         </p>
                       </div>
                     )}

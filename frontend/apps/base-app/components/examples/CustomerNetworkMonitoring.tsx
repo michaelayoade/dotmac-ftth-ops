@@ -13,11 +13,11 @@
  * Created: 2025-10-16
  */
 
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useCustomerNetworkStatusUpdatedSubscription } from '@/lib/graphql/generated';
-import { useToast } from '@/components/ui/use-toast';
+import { useEffect, useState } from "react";
+import { useCustomerNetworkStatusUpdatedSubscription } from "@/lib/graphql/generated";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Props {
   customerId: string;
@@ -25,7 +25,9 @@ interface Props {
 
 export function CustomerNetworkMonitoring({ customerId }: Props) {
   const { toast } = useToast();
-  const [connectionQuality, setConnectionQuality] = useState<'excellent' | 'good' | 'fair' | 'poor'>('good');
+  const [connectionQuality, setConnectionQuality] = useState<
+    "excellent" | "good" | "fair" | "poor"
+  >("good");
 
   // Subscribe to real-time network status updates
   const { data, loading, error } = useCustomerNetworkStatusUpdatedSubscription({
@@ -36,34 +38,34 @@ export function CustomerNetworkMonitoring({ customerId }: Props) {
       if (!update) return;
 
       // Show toast notification for status changes
-      if (update.connectionStatus === 'offline') {
+      if (update.connectionStatus === "offline") {
         toast({
-          title: 'Connection Lost',
-          description: 'Customer connection has gone offline',
-          variant: 'destructive',
+          title: "Connection Lost",
+          description: "Customer connection has gone offline",
+          variant: "destructive",
         });
-      } else if (update.connectionStatus === 'online') {
+      } else if (update.connectionStatus === "online") {
         toast({
-          title: 'Connection Restored',
-          description: 'Customer connection is back online',
+          title: "Connection Restored",
+          description: "Customer connection is back online",
         });
       }
 
       // Show toast for poor signal quality
       if (update.signalStrength && update.signalStrength < 50) {
         toast({
-          title: 'Poor Signal Quality',
+          title: "Poor Signal Quality",
           description: `Signal strength dropped to ${update.signalStrength}%`,
-          variant: 'destructive',
+          variant: "destructive",
         });
       }
 
       // Update connection quality indicator
       if (update.signalStrength) {
-        if (update.signalStrength >= 80) setConnectionQuality('excellent');
-        else if (update.signalStrength >= 60) setConnectionQuality('good');
-        else if (update.signalStrength >= 40) setConnectionQuality('fair');
-        else setConnectionQuality('poor');
+        if (update.signalStrength >= 80) setConnectionQuality("excellent");
+        else if (update.signalStrength >= 60) setConnectionQuality("good");
+        else if (update.signalStrength >= 40) setConnectionQuality("fair");
+        else setConnectionQuality("poor");
       }
     },
   });
@@ -101,15 +103,20 @@ export function CustomerNetworkMonitoring({ customerId }: Props) {
   }
 
   const statusColor =
-    networkStatus.connectionStatus === 'online' ? 'bg-green-500' :
-    networkStatus.connectionStatus === 'degraded' ? 'bg-yellow-500' :
-    'bg-red-500';
+    networkStatus.connectionStatus === "online"
+      ? "bg-green-500"
+      : networkStatus.connectionStatus === "degraded"
+        ? "bg-yellow-500"
+        : "bg-red-500";
 
   const qualityColor =
-    connectionQuality === 'excellent' ? 'text-green-600' :
-    connectionQuality === 'good' ? 'text-blue-600' :
-    connectionQuality === 'fair' ? 'text-yellow-600' :
-    'text-red-600';
+    connectionQuality === "excellent"
+      ? "text-green-600"
+      : connectionQuality === "good"
+        ? "text-blue-600"
+        : connectionQuality === "fair"
+          ? "text-yellow-600"
+          : "text-red-600";
 
   return (
     <div className="space-y-4">
@@ -139,7 +146,7 @@ export function CustomerNetworkMonitoring({ customerId }: Props) {
         <div className="p-4 border rounded-lg bg-card">
           <div className="text-xs text-muted-foreground mb-1">Signal Strength</div>
           <div className={`text-2xl font-bold ${qualityColor}`}>
-            {networkStatus.signalStrength ?? 'N/A'}%
+            {networkStatus.signalStrength ?? "N/A"}%
           </div>
           <div className="text-xs mt-1 capitalize">{connectionQuality}</div>
         </div>
@@ -148,7 +155,7 @@ export function CustomerNetworkMonitoring({ customerId }: Props) {
         <div className="p-4 border rounded-lg bg-card">
           <div className="text-xs text-muted-foreground mb-1">Download</div>
           <div className="text-2xl font-bold">
-            {networkStatus.downloadSpeedMbps?.toFixed(1) ?? 'N/A'}
+            {networkStatus.downloadSpeedMbps?.toFixed(1) ?? "N/A"}
           </div>
           <div className="text-xs mt-1">Mbps</div>
         </div>
@@ -157,7 +164,7 @@ export function CustomerNetworkMonitoring({ customerId }: Props) {
         <div className="p-4 border rounded-lg bg-card">
           <div className="text-xs text-muted-foreground mb-1">Upload</div>
           <div className="text-2xl font-bold">
-            {networkStatus.uploadSpeedMbps?.toFixed(1) ?? 'N/A'}
+            {networkStatus.uploadSpeedMbps?.toFixed(1) ?? "N/A"}
           </div>
           <div className="text-xs mt-1">Mbps</div>
         </div>
@@ -165,9 +172,7 @@ export function CustomerNetworkMonitoring({ customerId }: Props) {
         {/* Latency */}
         <div className="p-4 border rounded-lg bg-card">
           <div className="text-xs text-muted-foreground mb-1">Latency</div>
-          <div className="text-2xl font-bold">
-            {networkStatus.latencyMs ?? 'N/A'}
-          </div>
+          <div className="text-2xl font-bold">{networkStatus.latencyMs ?? "N/A"}</div>
           <div className="text-xs mt-1">ms</div>
         </div>
       </div>
@@ -178,18 +183,18 @@ export function CustomerNetworkMonitoring({ customerId }: Props) {
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
             <span className="text-muted-foreground">IPv4 Address:</span>
-            <div className="font-mono">{networkStatus.ipv4Address ?? 'N/A'}</div>
+            <div className="font-mono">{networkStatus.ipv4Address ?? "N/A"}</div>
           </div>
           <div>
             <span className="text-muted-foreground">MAC Address:</span>
-            <div className="font-mono">{networkStatus.macAddress ?? 'N/A'}</div>
+            <div className="font-mono">{networkStatus.macAddress ?? "N/A"}</div>
           </div>
           <div>
             <span className="text-muted-foreground">Uptime:</span>
             <div>
               {networkStatus.uptimeSeconds
                 ? `${Math.floor(networkStatus.uptimeSeconds / 3600)}h ${Math.floor((networkStatus.uptimeSeconds % 3600) / 60)}m`
-                : 'N/A'}
+                : "N/A"}
             </div>
           </div>
           <div>
@@ -197,7 +202,7 @@ export function CustomerNetworkMonitoring({ customerId }: Props) {
             <div>
               {networkStatus.packetLoss !== null && networkStatus.packetLoss !== undefined
                 ? `${(networkStatus.packetLoss * 100).toFixed(2)}%`
-                : 'N/A'}
+                : "N/A"}
             </div>
           </div>
         </div>
@@ -205,7 +210,8 @@ export function CustomerNetworkMonitoring({ customerId }: Props) {
 
       {/* Last Update Timestamp */}
       <div className="text-xs text-center text-muted-foreground">
-        Last updated: {networkStatus.updatedAt ? new Date(networkStatus.updatedAt).toLocaleTimeString() : 'N/A'}
+        Last updated:{" "}
+        {networkStatus.updatedAt ? new Date(networkStatus.updatedAt).toLocaleTimeString() : "N/A"}
       </div>
     </div>
   );

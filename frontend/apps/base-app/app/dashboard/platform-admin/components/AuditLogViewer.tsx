@@ -1,27 +1,33 @@
-"use client"
+"use client";
 
-import { useState, useCallback } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Shield, Clock, ChevronLeft, ChevronRight, ExternalLink, AlertCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { useToast } from "@/components/ui/use-toast"
-import { AuditLogFilters, type AuditFilters } from "./AuditLogFilters"
-import Link from "next/link"
-import { useAuditActivities } from "@/hooks/useAudit"
-import type { AuditActivity, ActivitySeverity } from "@/types/audit"
-import { SEVERITY_COLORS, formatActivityType, getActivityIcon } from "@/types/audit"
+import { useState, useCallback } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Shield, Clock, ChevronLeft, ChevronRight, ExternalLink, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { AuditLogFilters, type AuditFilters } from "./AuditLogFilters";
+import Link from "next/link";
+import { useAuditActivities } from "@/hooks/useAudit";
+import type { AuditActivity, ActivitySeverity } from "@/types/audit";
+import { SEVERITY_COLORS, formatActivityType, getActivityIcon } from "@/types/audit";
 
-const ITEMS_PER_PAGE = 50
+const ITEMS_PER_PAGE = 50;
 
 export function AuditLogViewer() {
-  const [filters, setFilters] = useState<AuditFilters>({})
-  const [currentPage, setCurrentPage] = useState(1)
-  const { toast } = useToast()
+  const [filters, setFilters] = useState<AuditFilters>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const { toast } = useToast();
 
   // Use React Query hook for data fetching
-  const { data: auditData, isLoading, error, refetch, isRefetching } = useAuditActivities(
+  const {
+    data: auditData,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+  } = useAuditActivities(
     {
       user_id: filters.userId,
       activity_type: filters.activityType,
@@ -32,87 +38,87 @@ export function AuditLogViewer() {
       page: currentPage,
       per_page: ITEMS_PER_PAGE,
     },
-    true
-  )
+    true,
+  );
 
   const handleRefresh = useCallback(async () => {
-    await refetch()
+    await refetch();
     toast({
-      title: 'Refreshed',
-      description: 'Audit log has been refreshed successfully',
-    })
-  }, [refetch, toast])
+      title: "Refreshed",
+      description: "Audit log has been refreshed successfully",
+    });
+  }, [refetch, toast]);
 
   const handleFilterChange = useCallback((newFilters: AuditFilters) => {
-    setFilters(newFilters)
-    setCurrentPage(1) // Reset to first page when filters change
-  }, [])
+    setFilters(newFilters);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, []);
 
   const handleExport = useCallback(
-    (format: 'csv' | 'json') => {
-      const activities = auditData?.activities || []
+    (format: "csv" | "json") => {
+      const activities = auditData?.activities || [];
 
-      if (format === 'json') {
+      if (format === "json") {
         const blob = new Blob([JSON.stringify(activities, null, 2)], {
-          type: 'application/json',
-        })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `audit-log-${new Date().toISOString()}.json`
-        a.click()
-        URL.revokeObjectURL(url)
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `audit-log-${new Date().toISOString()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
       } else {
         // CSV format
         const headers = [
-          'Timestamp',
-          'Activity Type',
-          'Severity',
-          'User ID',
-          'Tenant ID',
-          'Action',
-          'Resource Type',
-          'Resource ID',
-          'IP Address',
-          'Description',
-        ]
+          "Timestamp",
+          "Activity Type",
+          "Severity",
+          "User ID",
+          "Tenant ID",
+          "Action",
+          "Resource Type",
+          "Resource ID",
+          "IP Address",
+          "Description",
+        ];
         const rows = activities.map((activity) => [
           activity.timestamp,
           activity.activity_type,
           activity.severity,
-          activity.user_id || '',
+          activity.user_id || "",
           activity.tenant_id,
           activity.action,
-          activity.resource_type || '',
-          activity.resource_id || '',
-          activity.ip_address || '',
+          activity.resource_type || "",
+          activity.resource_id || "",
+          activity.ip_address || "",
           activity.description,
-        ])
+        ]);
         const csvContent = [
-          headers.join(','),
-          ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-        ].join('\n')
+          headers.join(","),
+          ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+        ].join("\n");
 
-        const blob = new Blob([csvContent], { type: 'text/csv' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `audit-log-${new Date().toISOString()}.csv`
-        a.click()
-        URL.revokeObjectURL(url)
+        const blob = new Blob([csvContent], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `audit-log-${new Date().toISOString()}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
       }
 
       toast({
-        title: 'Export Successful',
+        title: "Export Successful",
         description: `Exported ${activities.length} audit log entries as ${format.toUpperCase()}`,
-      })
+      });
     },
-    [auditData, toast]
-  )
+    [auditData, toast],
+  );
 
-  const activities = auditData?.activities || []
-  const totalPages = auditData?.total_pages || 0
-  const total = auditData?.total || 0
+  const activities = auditData?.activities || [];
+  const totalPages = auditData?.total_pages || 0;
+  const total = auditData?.total || 0;
 
   return (
     <Card>
@@ -127,9 +133,7 @@ export function AuditLogViewer() {
               Recent platform administrator actions across all tenants
             </CardDescription>
           </div>
-          <Badge variant="outline">
-            {total} total activities
-          </Badge>
+          <Badge variant="outline">{total} total activities</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -148,7 +152,9 @@ export function AuditLogViewer() {
             <div>
               <h4 className="font-semibold text-red-900">Unable to load audit log</h4>
               <p className="text-sm text-red-700 mt-1">
-                {error instanceof Error ? error.message : 'An error occurred while fetching audit activities'}
+                {error instanceof Error
+                  ? error.message
+                  : "An error occurred while fetching audit activities"}
               </p>
             </div>
           </div>
@@ -167,8 +173,8 @@ export function AuditLogViewer() {
               <p>No audit activities found</p>
               <p className="text-sm mt-1">
                 {total === 0
-                  ? 'Platform admin actions will be logged here for compliance'
-                  : 'Try adjusting your filters'}
+                  ? "Platform admin actions will be logged here for compliance"
+                  : "Try adjusting your filters"}
               </p>
             </div>
           ) : (
@@ -184,7 +190,7 @@ export function AuditLogViewer() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between pt-4 border-t">
             <p className="text-sm text-muted-foreground">
-              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{' '}
+              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{" "}
               {Math.min(currentPage * ITEMS_PER_PAGE, total)} of {total} entries
             </p>
             <div className="flex items-center gap-2">
@@ -214,7 +220,7 @@ export function AuditLogViewer() {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // ============================================================================
@@ -222,8 +228,8 @@ export function AuditLogViewer() {
 // ============================================================================
 
 function AuditActivityCard({ activity }: { activity: AuditActivity }) {
-  const icon = getActivityIcon(activity.activity_type)
-  const severityColor = SEVERITY_COLORS[activity.severity]
+  const icon = getActivityIcon(activity.activity_type);
+  const severityColor = SEVERITY_COLORS[activity.severity];
 
   return (
     <div className="border rounded-lg p-4 hover:bg-accent/50 transition-colors">
@@ -231,9 +237,7 @@ function AuditActivityCard({ activity }: { activity: AuditActivity }) {
         {/* Icon and Content */}
         <div className="flex items-start gap-3 flex-1">
           {/* Activity Icon */}
-          <div className="text-2xl flex-shrink-0 mt-1">
-            {icon}
-          </div>
+          <div className="text-2xl flex-shrink-0 mt-1">{icon}</div>
 
           {/* Main Content */}
           <div className="flex-1 min-w-0">
@@ -242,9 +246,7 @@ function AuditActivityCard({ activity }: { activity: AuditActivity }) {
               <Badge variant="outline" className="font-mono text-xs">
                 {formatActivityType(activity.activity_type)}
               </Badge>
-              <Badge className={severityColor}>
-                {activity.severity.toUpperCase()}
-              </Badge>
+              <Badge className={severityColor}>{activity.severity.toUpperCase()}</Badge>
               {activity.tenant_id && (
                 <Badge variant="secondary" className="font-mono text-xs">
                   Tenant: {activity.tenant_id.slice(0, 8)}...
@@ -275,7 +277,9 @@ function AuditActivityCard({ activity }: { activity: AuditActivity }) {
                   <span>Resource:</span>
                   <span className="font-mono">{activity.resource_type}</span>
                   {activity.resource_id && (
-                    <span className="font-mono text-xs">({activity.resource_id.slice(0, 8)}...)</span>
+                    <span className="font-mono text-xs">
+                      ({activity.resource_id.slice(0, 8)}...)
+                    </span>
                   )}
                 </div>
               )}
@@ -317,5 +321,5 @@ function AuditActivityCard({ activity }: { activity: AuditActivity }) {
         </div>
       </div>
     </div>
-  )
+  );
 }

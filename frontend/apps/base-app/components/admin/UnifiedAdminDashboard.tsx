@@ -1,13 +1,7 @@
 "use client";
 
 import { useDashboardData } from "@/lib/graphql/graphql-hooks";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -38,9 +32,7 @@ export function UnifiedAdminDashboard() {
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Error loading dashboard</AlertTitle>
-        <AlertDescription>
-          {error.message || "Failed to fetch dashboard data"}
-        </AlertDescription>
+        <AlertDescription>{error.message || "Failed to fetch dashboard data"}</AlertDescription>
       </Alert>
     );
   }
@@ -80,9 +72,7 @@ export function UnifiedAdminDashboard() {
                   ) : (
                     <>
                       <TrendingDown className="w-3 h-3 text-red-600" />
-                      <span className="text-red-600">
-                        {tenantMetrics.growthRate.toFixed(1)}%
-                      </span>
+                      <span className="text-red-600">{tenantMetrics.growthRate.toFixed(1)}%</span>
                     </>
                   )}
                   <span className="ml-1">from last period</span>
@@ -103,9 +93,7 @@ export function UnifiedAdminDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {tenantMetrics?.activeTenants || 0}
-            </div>
+            <div className="text-2xl font-bold">{tenantMetrics?.activeTenants || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">
               of {tenantMetrics?.totalTenants || 0} total tenants
             </p>
@@ -147,8 +135,8 @@ export function UnifiedAdminDashboard() {
               {paymentMetrics?.successRate?.toFixed(1) || 0}%
             </div>
             <p className="text-xs text-muted-foreground mt-1">
-              {paymentMetrics?.successfulPayments || 0} of{" "}
-              {paymentMetrics?.totalPayments || 0} succeeded
+              {paymentMetrics?.successfulPayments || 0} of {paymentMetrics?.totalPayments || 0}{" "}
+              succeeded
             </p>
           </CardContent>
         </Card>
@@ -160,9 +148,7 @@ export function UnifiedAdminDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Revenue Overview</CardTitle>
-            <CardDescription>
-              Breakdown of payment activity and totals
-            </CardDescription>
+            <CardDescription>Breakdown of payment activity and totals</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -173,9 +159,7 @@ export function UnifiedAdminDashboard() {
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Average per payment
-                </span>
+                <span className="text-sm text-muted-foreground">Average per payment</span>
                 <span className="text-sm">
                   ${paymentMetrics?.averagePaymentAmount?.toFixed(2) || 0}
                 </span>
@@ -194,35 +178,27 @@ export function UnifiedAdminDashboard() {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Failed</span>
                 <div className="flex items-center gap-2">
-                  <Badge variant="destructive">
-                    {paymentMetrics?.failedPayments || 0}
-                  </Badge>
+                  <Badge variant="destructive">{paymentMetrics?.failedPayments || 0}</Badge>
                 </div>
               </div>
             </div>
 
-            {paymentMetrics?.topPaymentMethods &&
-              paymentMetrics.topPaymentMethods.length > 0 && (
-                <div className="space-y-2 pt-2 border-t">
-                  <h4 className="text-sm font-medium">Top Payment Methods</h4>
-                  {paymentMetrics.topPaymentMethods.slice(0, 3).map((method: any) => (
-                    <div
-                      key={method.method}
-                      className="flex items-center justify-between text-sm"
-                    >
+            {paymentMetrics?.topPaymentMethods && paymentMetrics.topPaymentMethods.length > 0 && (
+              <div className="space-y-2 pt-2 border-t">
+                <h4 className="text-sm font-medium">Top Payment Methods</h4>
+                {paymentMetrics.topPaymentMethods.slice(0, 3).map((method: any) => (
+                  <div key={method.method} className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">{method.method}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{method.count}</span>
                       <span className="text-muted-foreground">
-                        {method.method}
+                        (${method.totalAmount.toLocaleString()})
                       </span>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{method.count}</span>
-                        <span className="text-muted-foreground">
-                          (${method.totalAmount.toLocaleString()})
-                        </span>
-                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -230,9 +206,7 @@ export function UnifiedAdminDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>Tenant Status</CardTitle>
-            <CardDescription>
-              Distribution of tenant account statuses
-            </CardDescription>
+            <CardDescription>Distribution of tenant account statuses</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
@@ -242,17 +216,13 @@ export function UnifiedAdminDashboard() {
                   <span className="text-sm font-medium">Active</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold">
-                    {tenantMetrics?.activeTenants || 0}
-                  </span>
+                  <span className="text-2xl font-bold">{tenantMetrics?.activeTenants || 0}</span>
                   <span className="text-sm text-muted-foreground">
                     (
                     {tenantMetrics?.totalTenants
-                      ? (
-                          (tenantMetrics.activeTenants /
-                            tenantMetrics.totalTenants) *
-                          100
-                        ).toFixed(0)
+                      ? ((tenantMetrics.activeTenants / tenantMetrics.totalTenants) * 100).toFixed(
+                          0,
+                        )
                       : 0}
                     %)
                   </span>
@@ -264,9 +234,7 @@ export function UnifiedAdminDashboard() {
                   <div className="w-3 h-3 rounded-full bg-blue-500" />
                   <span className="text-sm font-medium">Trial</span>
                 </div>
-                <span className="text-lg font-semibold">
-                  {tenantMetrics?.trialTenants || 0}
-                </span>
+                <span className="text-lg font-semibold">{tenantMetrics?.trialTenants || 0}</span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -282,17 +250,13 @@ export function UnifiedAdminDashboard() {
 
             <div className="pt-4 border-t space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Avg Revenue per Tenant
-                </span>
+                <span className="text-sm text-muted-foreground">Avg Revenue per Tenant</span>
                 <span className="text-sm font-medium">
                   ${tenantMetrics?.averageRevenuePerTenant?.toFixed(2) || 0}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Churn Rate
-                </span>
+                <span className="text-sm text-muted-foreground">Churn Rate</span>
                 <span className="text-sm font-medium">
                   {tenantMetrics?.churnRate?.toFixed(2) || 0}%
                 </span>
@@ -306,18 +270,14 @@ export function UnifiedAdminDashboard() {
       <Card>
         <CardHeader>
           <CardTitle>Customer Insights</CardTitle>
-          <CardDescription>
-            Key metrics about customer base and retention
-          </CardDescription>
+          <CardDescription>Key metrics about customer base and retention</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-6 md:grid-cols-3">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">
-                  Total Customers
-                </span>
+                <span className="text-sm font-medium text-muted-foreground">Total Customers</span>
               </div>
               <div className="text-3xl font-bold">
                 {customerMetrics?.totalCustomers?.toLocaleString() || 0}
@@ -330,9 +290,7 @@ export function UnifiedAdminDashboard() {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">
-                  Retention Rate
-                </span>
+                <span className="text-sm font-medium text-muted-foreground">Retention Rate</span>
               </div>
               <div className="text-3xl font-bold">
                 {customerMetrics?.retentionRate?.toFixed(1) || 0}%

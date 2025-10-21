@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { Activity, RefreshCw } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { Activity, RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface LiveIndicatorProps {
   lastUpdated?: Date | null;
@@ -15,9 +15,9 @@ export function LiveIndicator({
   lastUpdated,
   isRefreshing = false,
   onRefresh,
-  className = '',
+  className = "",
 }: LiveIndicatorProps) {
-  const [timeAgo, setTimeAgo] = React.useState('');
+  const [timeAgo, setTimeAgo] = React.useState("");
 
   React.useEffect(() => {
     if (!lastUpdated) return;
@@ -27,7 +27,7 @@ export function LiveIndicator({
       const seconds = Math.floor((now.getTime() - lastUpdated.getTime()) / 1000);
 
       if (seconds < 10) {
-        setTimeAgo('just now');
+        setTimeAgo("just now");
       } else if (seconds < 60) {
         setTimeAgo(`${seconds}s ago`);
       } else if (seconds < 3600) {
@@ -46,7 +46,7 @@ export function LiveIndicator({
   }, [lastUpdated]);
 
   return (
-    <div className={cn('flex items-center gap-2 text-sm', className)}>
+    <div className={cn("flex items-center gap-2 text-sm", className)}>
       {/* Live indicator */}
       <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-green-500/10 text-green-500 dark:bg-green-500/20">
         <Activity className="h-3 w-3 animate-pulse" />
@@ -66,13 +66,13 @@ export function LiveIndicator({
           onClick={onRefresh}
           disabled={isRefreshing}
           className={cn(
-            'p-1 rounded hover:bg-accent dark:hover:bg-muted transition-colors',
-            'text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-white',
-            isRefreshing && 'cursor-not-allowed opacity-50'
+            "p-1 rounded hover:bg-accent dark:hover:bg-muted transition-colors",
+            "text-muted-foreground dark:text-muted-foreground hover:text-foreground dark:hover:text-white",
+            isRefreshing && "cursor-not-allowed opacity-50",
           )}
           aria-label="Refresh"
         >
-          <RefreshCw className={cn('h-4 w-4', isRefreshing && 'animate-spin')} />
+          <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
         </button>
       )}
     </div>

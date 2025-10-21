@@ -8,43 +8,23 @@
 // Enums (matching backend)
 // ============================================================================
 
-export type DeviceType =
-  | 'access_point'
-  | 'radio'
-  | 'antenna'
-  | 'cpe'
-  | 'backhaul'
-  | 'tower';
+export type DeviceType = "access_point" | "radio" | "antenna" | "cpe" | "backhaul" | "tower";
 
-export type DeviceStatus =
-  | 'online'
-  | 'offline'
-  | 'degraded'
-  | 'maintenance'
-  | 'decommissioned';
+export type DeviceStatus = "online" | "offline" | "degraded" | "maintenance" | "decommissioned";
 
-export type Frequency =
-  | '2.4GHz'
-  | '5GHz'
-  | '6GHz'
-  | '60GHz'
-  | 'custom';
+export type Frequency = "2.4GHz" | "5GHz" | "6GHz" | "60GHz" | "custom";
 
 export type RadioProtocol =
-  | '802.11n'
-  | '802.11ac'
-  | '802.11ax'
-  | '802.11ax_6ghz'
-  | '802.11be'
-  | 'wimax'
-  | 'lte'
-  | 'custom';
+  | "802.11n"
+  | "802.11ac"
+  | "802.11ax"
+  | "802.11ax_6ghz"
+  | "802.11be"
+  | "wimax"
+  | "lte"
+  | "custom";
 
-export type CoverageType =
-  | 'primary'
-  | 'secondary'
-  | 'dead_zone'
-  | 'interference';
+export type CoverageType = "primary" | "secondary" | "dead_zone" | "interference";
 
 // ============================================================================
 // Wireless Device
@@ -159,7 +139,7 @@ export interface CoverageZone {
 
   // GeoJSON polygon
   geometry: {
-    type: 'Polygon';
+    type: "Polygon";
     coordinates: number[][][];
   };
 
@@ -433,7 +413,7 @@ export interface CreateCoverageZoneRequest {
   coverage_type?: CoverageType;
 
   geometry: {
-    type: 'Polygon';
+    type: "Polygon";
     coordinates: number[][][];
   };
 

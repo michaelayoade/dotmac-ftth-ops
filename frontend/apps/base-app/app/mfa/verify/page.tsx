@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useEffect, useState } from "react";
@@ -60,12 +60,19 @@ export default function MfaVerifyPage() {
 
     try {
       await verify2FA.mutateAsync({ token });
-      toast({ title: "Verification successful", description: "Multi-factor authentication is enabled." });
+      toast({
+        title: "Verification successful",
+        description: "Multi-factor authentication is enabled.",
+      });
       router.push("/dashboard");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Verification failed. Try again.";
       setError(message);
-      toast({ title: "Verification failed", description: message, variant: "destructive" });
+      toast({
+        title: "Verification failed",
+        description: message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -101,7 +108,8 @@ export default function MfaVerifyPage() {
           </Badge>
           <h1 className="text-3xl font-semibold text-foreground">Verify your identity</h1>
           <p className="text-muted-foreground">
-            Enter the six-digit verification code from your authenticator app or a backup code to finish enabling MFA.
+            Enter the six-digit verification code from your authenticator app or a backup code to
+            finish enabling MFA.
           </p>
         </div>
 
@@ -110,9 +118,12 @@ export default function MfaVerifyPage() {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
               <Shield className="h-5 w-5 text-primary" />
             </div>
-            <CardTitle className="text-xl font-semibold text-foreground">Multi-factor challenge</CardTitle>
+            <CardTitle className="text-xl font-semibold text-foreground">
+              Multi-factor challenge
+            </CardTitle>
             <CardDescription>
-              This additional step keeps your administrator account secure. Codes refresh every 30 seconds.
+              This additional step keeps your administrator account secure. Codes refresh every 30
+              seconds.
             </CardDescription>
           </CardHeader>
 
@@ -120,7 +131,10 @@ export default function MfaVerifyPage() {
             <form className="space-y-5" onSubmit={handleSubmit}>
               {!useBackupCode ? (
                 <div className="space-y-2">
-                  <Label htmlFor="verification-code" className="text-sm font-medium text-foreground">
+                  <Label
+                    htmlFor="verification-code"
+                    className="text-sm font-medium text-foreground"
+                  >
                     Verification code
                   </Label>
                   <Input
@@ -170,7 +184,8 @@ export default function MfaVerifyPage() {
                     className="text-center text-base tracking-wider"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Backup codes can only be used once. Generate new codes from the security settings after logging in.
+                    Backup codes can only be used once. Generate new codes from the security
+                    settings after logging in.
                   </p>
                 </div>
               )}

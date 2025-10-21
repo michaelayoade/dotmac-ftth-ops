@@ -15,9 +15,9 @@ export interface ErrorContext {
 
 export interface ErrorBreadcrumb {
   timestamp: Date;
-  category: 'navigation' | 'user' | 'network' | 'console' | 'error';
+  category: "navigation" | "user" | "network" | "console" | "error";
   message: string;
-  level: 'info' | 'warn' | 'error' | 'debug';
+  level: "info" | "warn" | "error" | "debug";
   data?: Record<string, any>;
 }
 
@@ -25,8 +25,8 @@ export interface TrackedError {
   id: string;
   message: string;
   stack?: string;
-  type: 'javascript' | 'react' | 'network' | 'custom';
-  level: 'error' | 'warning' | 'info';
+  type: "javascript" | "react" | "network" | "custom";
+  level: "error" | "warning" | "info";
   timestamp: Date;
   url: string;
   userAgent: string;
@@ -39,7 +39,7 @@ export interface TrackedError {
 
 export interface ErrorTrackingConfig {
   enabled: boolean;
-  environment: 'development' | 'staging' | 'production';
+  environment: "development" | "staging" | "production";
   maxBreadcrumbs: number;
   captureConsole: boolean;
   captureNetwork: boolean;
@@ -61,22 +61,22 @@ class ErrorTrackingService {
   constructor(config: Partial<ErrorTrackingConfig> = {}) {
     this.config = {
       enabled: true,
-      environment: 'production',
+      environment: "production",
       maxBreadcrumbs: 100,
       captureConsole: true,
       captureNetwork: true,
       captureUnhandledRejections: true,
       sampleRate: 1.0,
       endpoints: {
-        errors: '/api/errors',
-        performance: '/api/performance',
+        errors: "/api/errors",
+        performance: "/api/performance",
       },
       ...config,
     };
   }
 
   initialize(): void {
-    if (this.isInitialized || !this.config.enabled || typeof window === 'undefined') {
+    if (this.isInitialized || !this.config.enabled || typeof window === "undefined") {
       return;
     }
 
@@ -87,9 +87,9 @@ class ErrorTrackingService {
 
     this.isInitialized = true;
     this.addBreadcrumb({
-      category: 'error',
-      message: 'Error tracking initialized',
-      level: 'info',
+      category: "error",
+      message: "Error tracking initialized",
+      level: "info",
     });
   }
 
@@ -97,7 +97,7 @@ class ErrorTrackingService {
     this.context = { ...this.context, ...context };
   }
 
-  addBreadcrumb(breadcrumb: Omit<ErrorBreadcrumb, 'timestamp'>): void {
+  addBreadcrumb(breadcrumb: Omit<ErrorBreadcrumb, "timestamp">): void {
     this.breadcrumbs.push({
       ...breadcrumb,
       timestamp: new Date(),
@@ -110,11 +110,11 @@ class ErrorTrackingService {
 
   captureError(error: Error | string, context?: Partial<ErrorContext>): string {
     if (!this.config.enabled || Math.random() > this.config.sampleRate) {
-      return '';
+      return "";
     }
 
     const errorId = this.generateErrorId();
-    const trackedError: TrackedError = this.createTrackedError(error, 'custom', context, errorId);
+    const trackedError: TrackedError = this.createTrackedError(error, "custom", context, errorId);
 
     if (this.config.beforeSend) {
       const processedError = this.config.beforeSend(trackedError);
@@ -133,21 +133,21 @@ class ErrorTrackingService {
 
   captureMessage(
     message: string,
-    level: 'error' | 'warning' | 'info' = 'info',
-    context?: Partial<ErrorContext>
+    level: "error" | "warning" | "info" = "info",
+    context?: Partial<ErrorContext>,
   ): string {
     const errorId = this.generateErrorId();
     const trackedError: TrackedError = {
       id: errorId,
       message,
-      type: 'custom',
+      type: "custom",
       level,
       timestamp: new Date(),
       url: window.location.href,
       userAgent: navigator.userAgent,
       context: { ...this.context, ...context },
       breadcrumbs: [...this.breadcrumbs],
-      fingerprint: this.generateFingerprint(message, 'custom'),
+      fingerprint: this.generateFingerprint(message, "custom"),
       tags: this.extractTags(context),
       extra: {},
     };
@@ -158,8 +158,8 @@ class ErrorTrackingService {
 
   private setupGlobalErrorHandlers(): void {
     // JavaScript runtime errors
-    window.addEventListener('error', (event) => {
-      const trackedError = this.createTrackedError(event.error || event.message, 'javascript', {
+    window.addEventListener("error", (event) => {
+      const trackedError = this.createTrackedError(event.error || event.message, "javascript", {
         component: event.filename,
         metadata: {
           line: event.lineno,
@@ -171,11 +171,11 @@ class ErrorTrackingService {
 
     // Unhandled promise rejections
     if (this.config.captureUnhandledRejections) {
-      window.addEventListener('unhandledrejection', (event) => {
+      window.addEventListener("unhandledrejection", (event) => {
         const error =
           event.reason instanceof Error ? event.reason : new Error(String(event.reason));
-        const trackedError = this.createTrackedError(error, 'javascript', {
-          metadata: { type: 'unhandled_promise_rejection' },
+        const trackedError = this.createTrackedError(error, "javascript", {
+          metadata: { type: "unhandled_promise_rejection" },
         });
         this.sendError(trackedError);
       });
@@ -188,13 +188,13 @@ class ErrorTrackingService {
     const originalFetch = window.fetch;
     window.fetch = async (...args) => {
       const [resource, config] = args;
-      const url = typeof resource === 'string' ? resource : resource.url;
+      const url = typeof resource === "string" ? resource : resource.url;
 
       this.addBreadcrumb({
-        category: 'network',
-        message: `Fetch ${config?.method || 'GET'} ${url}`,
-        level: 'info',
-        data: { url, method: config?.method || 'GET' },
+        category: "network",
+        message: `Fetch ${config?.method || "GET"} ${url}`,
+        level: "info",
+        data: { url, method: config?.method || "GET" },
       });
 
       try {
@@ -202,9 +202,9 @@ class ErrorTrackingService {
 
         if (!response.ok) {
           this.addBreadcrumb({
-            category: 'network',
+            category: "network",
             message: `HTTP ${response.status} ${url}`,
-            level: response.status >= 500 ? 'error' : 'warn',
+            level: response.status >= 500 ? "error" : "warn",
             data: {
               url,
               status: response.status,
@@ -226,14 +226,14 @@ class ErrorTrackingService {
         return response;
       } catch (error) {
         this.addBreadcrumb({
-          category: 'network',
+          category: "network",
           message: `Network error: ${url}`,
-          level: 'error',
+          level: "error",
           data: { url, error: error.message },
         });
 
         this.captureError(error, {
-          metadata: { url, type: 'network_error' },
+          metadata: { url, type: "network_error" },
         });
 
         throw error;
@@ -246,16 +246,16 @@ class ErrorTrackingService {
 
     const originalConsole = { ...console };
 
-    ['error', 'warn', 'info', 'debug'].forEach((level) => {
+    ["error", "warn", "info", "debug"].forEach((level) => {
       console[level] = (...args) => {
         this.addBreadcrumb({
-          category: 'console',
-          message: args.join(' '),
+          category: "console",
+          message: args.join(" "),
           level: level as any,
           data: { args },
         });
 
-        if (level === 'error') {
+        if (level === "error") {
           const error = args.find((arg) => arg instanceof Error);
           if (error) {
             this.captureError(error);
@@ -269,9 +269,9 @@ class ErrorTrackingService {
 
   private setupNavigationTracking(): void {
     this.addBreadcrumb({
-      category: 'navigation',
+      category: "navigation",
       message: `Navigation to ${window.location.pathname}`,
-      level: 'info',
+      level: "info",
       data: { url: window.location.href },
     });
 
@@ -282,9 +282,9 @@ class ErrorTrackingService {
     history.pushState = function (...args) {
       originalPushState.apply(history, args);
       ErrorTrackingService.getInstance().addBreadcrumb({
-        category: 'navigation',
+        category: "navigation",
         message: `Navigation to ${location.pathname}`,
-        level: 'info',
+        level: "info",
         data: { url: location.href },
       });
     };
@@ -292,18 +292,18 @@ class ErrorTrackingService {
     history.replaceState = function (...args) {
       originalReplaceState.apply(history, args);
       ErrorTrackingService.getInstance().addBreadcrumb({
-        category: 'navigation',
+        category: "navigation",
         message: `Navigation to ${location.pathname}`,
-        level: 'info',
+        level: "info",
         data: { url: location.href },
       });
     };
 
-    window.addEventListener('popstate', () => {
+    window.addEventListener("popstate", () => {
       this.addBreadcrumb({
-        category: 'navigation',
+        category: "navigation",
         message: `Navigation to ${location.pathname}`,
-        level: 'info',
+        level: "info",
         data: { url: location.href },
       });
     });
@@ -311,11 +311,11 @@ class ErrorTrackingService {
 
   private createTrackedError(
     error: Error | string,
-    type: TrackedError['type'],
+    type: TrackedError["type"],
     context?: Partial<ErrorContext>,
-    errorId?: string
+    errorId?: string,
   ): TrackedError {
-    const message = typeof error === 'string' ? error : error.message;
+    const message = typeof error === "string" ? error : error.message;
     const stack = error instanceof Error ? error.stack : undefined;
 
     return {
@@ -323,7 +323,7 @@ class ErrorTrackingService {
       message,
       stack,
       type,
-      level: 'error',
+      level: "error",
       timestamp: new Date(),
       url: window.location.href,
       userAgent: navigator.userAgent,
@@ -366,9 +366,9 @@ class ErrorTrackingService {
   private extractExtra(error: any): Record<string, any> {
     const extra: Record<string, any> = {};
 
-    if (error && typeof error === 'object') {
+    if (error && typeof error === "object") {
       Object.keys(error).forEach((key) => {
-        if (key !== 'message' && key !== 'stack' && key !== 'name') {
+        if (key !== "message" && key !== "stack" && key !== "name") {
           extra[key] = error[key];
         }
       });
@@ -380,18 +380,18 @@ class ErrorTrackingService {
   private async sendError(error: TrackedError): Promise<void> {
     try {
       await fetch(this.config.endpoints.errors, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(error),
       });
     } catch (sendError) {
-      console.error('Failed to send error to tracking service:', sendError);
+      console.error("Failed to send error to tracking service:", sendError);
 
       // Store in localStorage as fallback
       try {
-        const storedErrors = JSON.parse(localStorage.getItem('errorTracking') || '[]');
+        const storedErrors = JSON.parse(localStorage.getItem("errorTracking") || "[]");
         storedErrors.push(error);
 
         // Keep only last 10 errors
@@ -399,9 +399,9 @@ class ErrorTrackingService {
           storedErrors.splice(0, storedErrors.length - 10);
         }
 
-        localStorage.setItem('errorTracking', JSON.stringify(storedErrors));
+        localStorage.setItem("errorTracking", JSON.stringify(storedErrors));
       } catch (storageError) {
-        console.error('Failed to store error in localStorage:', storageError);
+        console.error("Failed to store error in localStorage:", storageError);
       }
     }
   }
@@ -409,7 +409,7 @@ class ErrorTrackingService {
   // React Error Boundary integration
   captureComponentError(error: Error, errorInfo: { componentStack: string }): string {
     return this.captureError(error, {
-      component: 'React Error Boundary',
+      component: "React Error Boundary",
       metadata: { componentStack: errorInfo.componentStack },
     });
   }

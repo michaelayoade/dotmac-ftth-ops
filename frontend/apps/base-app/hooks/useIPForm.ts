@@ -4,9 +4,9 @@
  * Custom hooks for managing IP address forms with validation
  */
 
-import { useCallback } from 'react';
-import { UseFormReturn, FieldValues, Path } from 'react-hook-form';
-import { z } from 'zod';
+import { useCallback } from "react";
+import { UseFormReturn, FieldValues, Path } from "react-hook-form";
+import { z } from "zod";
 import {
   ipv4Schema,
   ipv6Schema,
@@ -14,7 +14,7 @@ import {
   ipv6CIDRSchema,
   dualStackIPSchema,
   dualStackCIDRSchema,
-} from '@/lib/validations/ip-address';
+} from "@/lib/validations/ip-address";
 
 /**
  * Hook for managing a single IP address field
@@ -26,7 +26,7 @@ export function useIPAddressField<T extends FieldValues>(
     allowIPv4?: boolean;
     allowIPv6?: boolean;
     useCIDR?: boolean;
-  } = {}
+  } = {},
 ) {
   const { allowIPv4 = true, allowIPv6 = true, useCIDR = false } = options;
 
@@ -40,7 +40,7 @@ export function useIPAddressField<T extends FieldValues>(
         shouldDirty: true,
       });
     },
-    [form, fieldName]
+    [form, fieldName],
   );
 
   const handleBlur = useCallback(() => {
@@ -79,7 +79,7 @@ export function useDualStackIPFields<T extends FieldValues>(
   options: {
     requireAtLeastOne?: boolean;
     useCIDR?: boolean;
-  } = {}
+  } = {},
 ) {
   const { requireAtLeastOne = true, useCIDR = false } = options;
 
@@ -101,7 +101,7 @@ export function useDualStackIPFields<T extends FieldValues>(
         form.trigger([ipv4FieldName, ipv6FieldName]);
       }
     },
-    [form, ipv4FieldName, ipv6FieldName, requireAtLeastOne]
+    [form, ipv4FieldName, ipv6FieldName, requireAtLeastOne],
   );
 
   const handleIPv6Change = useCallback(
@@ -116,7 +116,7 @@ export function useDualStackIPFields<T extends FieldValues>(
         form.trigger([ipv4FieldName, ipv6FieldName]);
       }
     },
-    [form, ipv4FieldName, ipv6FieldName, requireAtLeastOne]
+    [form, ipv4FieldName, ipv6FieldName, requireAtLeastOne],
   );
 
   const handleIPv4Blur = useCallback(() => {
@@ -150,8 +150,8 @@ export function createDualStackValidator(requireAtLeastOne: boolean = true) {
   return (ipv4: string | null | undefined, ipv6: string | null | undefined) => {
     if (!requireAtLeastOne) return true;
 
-    const hasIPv4 = ipv4 && ipv4.trim() !== '';
-    const hasIPv6 = ipv6 && ipv6.trim() !== '';
+    const hasIPv4 = ipv4 && ipv4.trim() !== "";
+    const hasIPv6 = ipv6 && ipv6.trim() !== "";
 
     return hasIPv4 || hasIPv6;
   };
@@ -163,13 +163,13 @@ export function createDualStackValidator(requireAtLeastOne: boolean = true) {
 export function createIPFieldRegistration(
   allowIPv4: boolean = true,
   allowIPv6: boolean = true,
-  required: boolean = false
+  required: boolean = false,
 ) {
   return {
-    required: required ? 'IP address is required' : false,
+    required: required ? "IP address is required" : false,
     validate: (value: string) => {
       if (!value && !required) return true;
-      if (!value && required) return 'IP address is required';
+      if (!value && required) return "IP address is required";
 
       // Use the appropriate schema for validation
       let schema;
@@ -182,7 +182,7 @@ export function createIPFieldRegistration(
       }
 
       const result = schema.safeParse(value);
-      return result.success || result.error?.errors[0]?.message || 'Invalid IP address';
+      return result.success || result.error?.errors[0]?.message || "Invalid IP address";
     },
   };
 }

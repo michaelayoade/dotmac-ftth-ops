@@ -106,9 +106,7 @@ export function ReconciliationTab() {
 
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Completed
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
@@ -127,9 +125,7 @@ export function ReconciliationTab() {
             <CardContent>
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4 text-purple-500" />
-                <span className="text-2xl font-bold">
-                  ${summary.avg_discrepancy.toFixed(2)}
-                </span>
+                <span className="text-2xl font-bold">${summary.avg_discrepancy.toFixed(2)}</span>
               </div>
             </CardContent>
           </Card>
@@ -151,7 +147,9 @@ export function ReconciliationTab() {
       )}
 
       {/* Reconciliation Sessions Table */}
-      {!reconciliations || !reconciliations.reconciliations || reconciliations.reconciliations.length === 0 ? (
+      {!reconciliations ||
+      !reconciliations.reconciliations ||
+      reconciliations.reconciliations.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="h-12 w-12 text-muted-foreground mb-4" />
@@ -169,9 +167,7 @@ export function ReconciliationTab() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Reconciliation Sessions</CardTitle>
-            <CardDescription>
-              All reconciliation sessions for the selected period
-            </CardDescription>
+            <CardDescription>All reconciliation sessions for the selected period</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">

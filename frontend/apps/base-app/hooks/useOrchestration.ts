@@ -4,41 +4,41 @@
  * Custom hooks for interacting with the orchestration API
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '@/lib/api/client';
+import { useState, useEffect, useCallback } from "react";
+import { apiClient } from "@/lib/api/client";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export type WorkflowType =
-  | 'provision_subscriber'
-  | 'deprovision_subscriber'
-  | 'activate_service'
-  | 'suspend_service'
-  | 'terminate_service'
-  | 'change_service_plan'
-  | 'update_network_config'
-  | 'migrate_subscriber';
+  | "provision_subscriber"
+  | "deprovision_subscriber"
+  | "activate_service"
+  | "suspend_service"
+  | "terminate_service"
+  | "change_service_plan"
+  | "update_network_config"
+  | "migrate_subscriber";
 
 export type WorkflowStatus =
-  | 'pending'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'rolling_back'
-  | 'rolled_back'
-  | 'compensated';
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "rolling_back"
+  | "rolled_back"
+  | "compensated";
 
 export type WorkflowStepStatus =
-  | 'pending'
-  | 'running'
-  | 'completed'
-  | 'failed'
-  | 'skipped'
-  | 'compensating'
-  | 'compensated'
-  | 'compensation_failed';
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "skipped"
+  | "compensating"
+  | "compensated"
+  | "compensation_failed";
 
 export interface WorkflowStep {
   id: number;
@@ -108,12 +108,12 @@ export function useOrchestrationStats() {
   const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get<WorkflowStatistics>('/orchestration/stats');
+      const response = await apiClient.get<WorkflowStatistics>("/orchestration/stats");
       setStats(response.data);
       setError(null);
     } catch (err: any) {
-      console.error('Failed to fetch orchestration stats:', err);
-      setError(err.response?.data?.detail || 'Failed to fetch statistics');
+      console.error("Failed to fetch orchestration stats:", err);
+      setError(err.response?.data?.detail || "Failed to fetch statistics");
     } finally {
       setLoading(false);
     }
@@ -170,18 +170,17 @@ export function useWorkflows(options: UseWorkflowsOptions = {}) {
       if (status) params.status = status;
       if (workflowType) params.workflow_type = workflowType;
 
-      const response = await apiClient.get<WorkflowListResponse>(
-        '/orchestration/workflows',
-        { params }
-      );
+      const response = await apiClient.get<WorkflowListResponse>("/orchestration/workflows", {
+        params,
+      });
 
       setWorkflows(response.data.workflows);
       setTotal(response.data.total);
       setTotalPages(response.data.total_pages);
       setError(null);
     } catch (err: any) {
-      console.error('Failed to fetch workflows:', err);
-      setError(err.response?.data?.detail || 'Failed to fetch workflows');
+      console.error("Failed to fetch workflows:", err);
+      setError(err.response?.data?.detail || "Failed to fetch workflows");
     } finally {
       setLoading(false);
     }
@@ -229,14 +228,12 @@ export function useWorkflow(workflowId: string | null, autoRefresh = false) {
 
     try {
       setLoading(true);
-      const response = await apiClient.get<Workflow>(
-        `/orchestration/workflows/${workflowId}`
-      );
+      const response = await apiClient.get<Workflow>(`/orchestration/workflows/${workflowId}`);
       setWorkflow(response.data);
       setError(null);
     } catch (err: any) {
-      console.error('Failed to fetch workflow:', err);
-      setError(err.response?.data?.detail || 'Failed to fetch workflow');
+      console.error("Failed to fetch workflow:", err);
+      setError(err.response?.data?.detail || "Failed to fetch workflow");
     } finally {
       setLoading(false);
     }
@@ -249,7 +246,7 @@ export function useWorkflow(workflowId: string | null, autoRefresh = false) {
   // Auto-refresh for running workflows
   useEffect(() => {
     if (!autoRefresh || !workflowId) return;
-    if (workflow?.status === 'completed' || workflow?.status === 'failed') return;
+    if (workflow?.status === "completed" || workflow?.status === "failed") return;
 
     const interval = setInterval(() => {
       fetchWorkflow();
@@ -281,8 +278,8 @@ export function useRetryWorkflow() {
       await apiClient.post(`/orchestration/workflows/${workflowId}/retry`);
       return true;
     } catch (err: any) {
-      console.error('Failed to retry workflow:', err);
-      setError(err.response?.data?.detail || 'Failed to retry workflow');
+      console.error("Failed to retry workflow:", err);
+      setError(err.response?.data?.detail || "Failed to retry workflow");
       return false;
     } finally {
       setLoading(false);
@@ -311,8 +308,8 @@ export function useCancelWorkflow() {
       await apiClient.post(`/orchestration/workflows/${workflowId}/cancel`);
       return true;
     } catch (err: any) {
-      console.error('Failed to cancel workflow:', err);
-      setError(err.response?.data?.detail || 'Failed to cancel workflow');
+      console.error("Failed to cancel workflow:", err);
+      setError(err.response?.data?.detail || "Failed to cancel workflow");
       return false;
     } finally {
       setLoading(false);
@@ -349,23 +346,22 @@ export function useExportWorkflows() {
       setError(null);
 
       const params = new URLSearchParams();
-      if (options.workflowType) params.append('workflow_type', options.workflowType);
-      if (options.status) params.append('status', options.status);
-      if (options.dateFrom) params.append('date_from', options.dateFrom);
-      if (options.dateTo) params.append('date_to', options.dateTo);
-      if (options.limit) params.append('limit', options.limit.toString());
+      if (options.workflowType) params.append("workflow_type", options.workflowType);
+      if (options.status) params.append("status", options.status);
+      if (options.dateFrom) params.append("date_from", options.dateFrom);
+      if (options.dateTo) params.append("date_to", options.dateTo);
+      if (options.limit) params.append("limit", options.limit.toString());
 
-      const response = await apiClient.get(
-        `/orchestration/export/csv?${params.toString()}`,
-        { responseType: 'blob' }
-      );
+      const response = await apiClient.get(`/orchestration/export/csv?${params.toString()}`, {
+        responseType: "blob",
+      });
 
       // Create blob and download
-      const blob = new Blob([response.data], { type: 'text/csv' });
+      const blob = new Blob([response.data], { type: "text/csv" });
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `workflows_export_${new Date().toISOString().split('T')[0]}.csv`;
+      link.download = `workflows_export_${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -373,8 +369,8 @@ export function useExportWorkflows() {
 
       return true;
     } catch (err: any) {
-      console.error('Failed to export workflows as CSV:', err);
-      setError(err.response?.data?.detail || 'Failed to export workflows');
+      console.error("Failed to export workflows as CSV:", err);
+      setError(err.response?.data?.detail || "Failed to export workflows");
       return false;
     } finally {
       setLoading(false);
@@ -387,26 +383,25 @@ export function useExportWorkflows() {
       setError(null);
 
       const params = new URLSearchParams();
-      if (options.workflowType) params.append('workflow_type', options.workflowType);
-      if (options.status) params.append('status', options.status);
-      if (options.dateFrom) params.append('date_from', options.dateFrom);
-      if (options.dateTo) params.append('date_to', options.dateTo);
-      if (options.limit) params.append('limit', options.limit.toString());
+      if (options.workflowType) params.append("workflow_type", options.workflowType);
+      if (options.status) params.append("status", options.status);
+      if (options.dateFrom) params.append("date_from", options.dateFrom);
+      if (options.dateTo) params.append("date_to", options.dateTo);
+      if (options.limit) params.append("limit", options.limit.toString());
       if (options.includeSteps !== undefined) {
-        params.append('include_steps', options.includeSteps.toString());
+        params.append("include_steps", options.includeSteps.toString());
       }
 
-      const response = await apiClient.get(
-        `/orchestration/export/json?${params.toString()}`,
-        { responseType: 'blob' }
-      );
+      const response = await apiClient.get(`/orchestration/export/json?${params.toString()}`, {
+        responseType: "blob",
+      });
 
       // Create blob and download
-      const blob = new Blob([response.data], { type: 'application/json' });
+      const blob = new Blob([response.data], { type: "application/json" });
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `workflows_export_${new Date().toISOString().split('T')[0]}.json`;
+      link.download = `workflows_export_${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -414,8 +409,8 @@ export function useExportWorkflows() {
 
       return true;
     } catch (err: any) {
-      console.error('Failed to export workflows as JSON:', err);
-      setError(err.response?.data?.detail || 'Failed to export workflows');
+      console.error("Failed to export workflows as JSON:", err);
+      setError(err.response?.data?.detail || "Failed to export workflows");
       return false;
     } finally {
       setLoading(false);

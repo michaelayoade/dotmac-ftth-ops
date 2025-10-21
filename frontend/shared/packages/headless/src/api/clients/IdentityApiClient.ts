@@ -3,7 +3,7 @@
  * Handles customer, user, and authentication operations
  */
 
-import { BaseApiClient } from './BaseApiClient';
+import { BaseApiClient } from "./BaseApiClient";
 import type {
   PaginatedResponse,
   QueryParams,
@@ -11,7 +11,7 @@ import type {
   UserData,
   CreateCustomerRequest,
   UpdateCustomerRequest,
-} from '../types/api';
+} from "../types/api";
 
 export class IdentityApiClient extends BaseApiClient {
   constructor(baseURL: string, defaultHeaders: Record<string, string> = {}) {
@@ -20,7 +20,7 @@ export class IdentityApiClient extends BaseApiClient {
 
   // Customer operations
   async getCustomers(params?: QueryParams): Promise<PaginatedResponse<CustomerData>> {
-    return this.get('/api/identity/customers', { params });
+    return this.get("/api/identity/customers", { params });
   }
 
   async getCustomer(customerId: string, params?: QueryParams): Promise<{ data: CustomerData }> {
@@ -28,12 +28,12 @@ export class IdentityApiClient extends BaseApiClient {
   }
 
   async createCustomer(data: CreateCustomerRequest): Promise<{ data: CustomerData }> {
-    return this.post('/api/identity/customers', data);
+    return this.post("/api/identity/customers", data);
   }
 
   async updateCustomer(
     customerId: string,
-    data: UpdateCustomerRequest
+    data: UpdateCustomerRequest,
   ): Promise<{ data: CustomerData }> {
     return this.put(`/api/identity/customers/${customerId}`, data);
   }
@@ -44,7 +44,7 @@ export class IdentityApiClient extends BaseApiClient {
 
   // User operations
   async getUsers(params?: QueryParams): Promise<PaginatedResponse<UserData>> {
-    return this.get('/api/identity/users', { params });
+    return this.get("/api/identity/users", { params });
   }
 
   async getUser(userId: string): Promise<{ data: UserData }> {
@@ -52,7 +52,7 @@ export class IdentityApiClient extends BaseApiClient {
   }
 
   async createUser(data: any): Promise<{ data: UserData }> {
-    return this.post('/api/identity/users', data);
+    return this.post("/api/identity/users", data);
   }
 
   async updateUser(userId: string, data: any): Promise<{ data: UserData }> {
@@ -65,14 +65,16 @@ export class IdentityApiClient extends BaseApiClient {
 
   // Authentication operations
   async authenticate(credentials: any): Promise<{ data: any }> {
-    return this.post('/api/identity/auth/login', credentials);
+    return this.post("/api/identity/auth/login", credentials);
   }
 
   async logout(): Promise<{ success: boolean }> {
-    return this.post('/api/identity/auth/logout', {});
+    return this.post("/api/identity/auth/logout", {});
   }
 
   async refreshToken(refreshToken: string): Promise<{ data: any }> {
-    return this.post('/api/identity/auth/refresh', { refresh_token: refreshToken });
+    return this.post("/api/identity/auth/refresh", {
+      refresh_token: refreshToken,
+    });
   }
 }

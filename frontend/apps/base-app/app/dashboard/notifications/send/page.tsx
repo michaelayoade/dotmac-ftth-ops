@@ -5,10 +5,10 @@
  * with filtering, template selection, and scheduling options.
  */
 
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { Send, Calendar, Users, Filter, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+import { useState, useMemo } from "react";
+import { Send, Calendar, Users, Filter, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import {
   useBulkNotifications,
   useNotificationTemplates,
@@ -16,48 +16,48 @@ import {
   type NotificationChannel,
   type CommunicationType,
   type BulkNotificationResponse,
-} from '@/hooks/useNotifications';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/hooks/useNotifications";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useRBAC } from '@/contexts/RBACContext';
-import { formatDistanceToNow } from 'date-fns';
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useRBAC } from "@/contexts/RBACContext";
+import { formatDistanceToNow } from "date-fns";
 
 export default function BulkNotificationSenderPage() {
   const { hasPermission } = useRBAC();
-  const canWrite = hasPermission('notifications.write') || hasPermission('admin');
+  const canWrite = hasPermission("notifications.write") || hasPermission("admin");
 
   const { sendBulkNotification, getBulkJobStatus, isLoading } = useBulkNotifications();
   const { templates } = useNotificationTemplates({ activeOnly: true });
 
   // Form state
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
-  const [channels, setChannels] = useState<NotificationChannel[]>(['email']);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [channels, setChannels] = useState<NotificationChannel[]>(["email"]);
   const [recipientFilter, setRecipientFilter] = useState({
-    subscriberIds: '',
-    customerIds: '',
+    subscriberIds: "",
+    customerIds: "",
     status: [] as string[],
     connectionType: [] as string[],
   });
-  const [scheduleAt, setScheduleAt] = useState<string>('');
+  const [scheduleAt, setScheduleAt] = useState<string>("");
   const [useCustomMessage, setUseCustomMessage] = useState(false);
   const [customMessage, setCustomMessage] = useState({
-    title: '',
-    message: '',
-    priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
+    title: "",
+    message: "",
+    priority: "medium" as "low" | "medium" | "high" | "urgent",
   });
 
   // Job tracking
@@ -69,11 +69,11 @@ export default function BulkNotificationSenderPage() {
 
     // Map channels to template types
     const channelTypeMap: Record<NotificationChannel, CommunicationType[]> = {
-      email: ['email'],
-      sms: ['sms'],
-      push: ['push'],
-      webhook: ['webhook'],
-      in_app: ['email'], // In-app can use any template
+      email: ["email"],
+      sms: ["sms"],
+      push: ["push"],
+      webhook: ["webhook"],
+      in_app: ["email"], // In-app can use any template
     };
 
     const allowedTypes = channels.flatMap((ch) => channelTypeMap[ch] || []);
@@ -84,13 +84,13 @@ export default function BulkNotificationSenderPage() {
   const estimatedRecipients = useMemo(() => {
     let count = 0;
     if (recipientFilter.subscriberIds) {
-      count += recipientFilter.subscriberIds.split(',').filter((id) => id.trim()).length;
+      count += recipientFilter.subscriberIds.split(",").filter((id) => id.trim()).length;
     }
     if (recipientFilter.customerIds) {
-      count += recipientFilter.customerIds.split(',').filter((id) => id.trim()).length;
+      count += recipientFilter.customerIds.split(",").filter((id) => id.trim()).length;
     }
     // In a real app, you'd query the backend for the count based on filters
-    return count > 0 ? count : 'All subscribers';
+    return count > 0 ? count : "All subscribers";
   }, [recipientFilter]);
 
   const handleChannelToggle = (channel: NotificationChannel, checked: boolean) => {
@@ -131,12 +131,12 @@ export default function BulkNotificationSenderPage() {
 
   const handleSend = async () => {
     if (channels.length === 0) {
-      alert('Please select at least one channel');
+      alert("Please select at least one channel");
       return;
     }
 
     if (!useCustomMessage && !selectedTemplate) {
-      alert('Please select a template or compose a custom message');
+      alert("Please select a template or compose a custom message");
       return;
     }
 
@@ -145,10 +145,10 @@ export default function BulkNotificationSenderPage() {
       schedule_at: scheduleAt || undefined,
       recipient_filter: {
         subscriber_ids: recipientFilter.subscriberIds
-          ? recipientFilter.subscriberIds.split(',').map((id) => id.trim())
+          ? recipientFilter.subscriberIds.split(",").map((id) => id.trim())
           : undefined,
         customer_ids: recipientFilter.customerIds
-          ? recipientFilter.customerIds.split(',').map((id) => id.trim())
+          ? recipientFilter.customerIds.split(",").map((id) => id.trim())
           : undefined,
         status: recipientFilter.status.length > 0 ? recipientFilter.status : undefined,
         connection_type:
@@ -158,8 +158,8 @@ export default function BulkNotificationSenderPage() {
 
     if (useCustomMessage) {
       request.custom_notification = {
-        user_id: '', // Will be set by backend per recipient
-        type: 'custom',
+        user_id: "", // Will be set by backend per recipient
+        type: "custom",
         title: customMessage.title,
         message: customMessage.message,
         priority: customMessage.priority,
@@ -176,23 +176,23 @@ export default function BulkNotificationSenderPage() {
         alert(
           `Notification queued successfully! Job ID: ${result.job_id}\n` +
             `Recipients: ${result.total_recipients}\n` +
-            `Status: ${result.status}`
+            `Status: ${result.status}`,
         );
 
         // Reset form
-        setSelectedTemplate('');
+        setSelectedTemplate("");
         setRecipientFilter({
-          subscriberIds: '',
-          customerIds: '',
+          subscriberIds: "",
+          customerIds: "",
           status: [],
           connectionType: [],
         });
-        setScheduleAt('');
-        setCustomMessage({ title: '', message: '', priority: 'medium' });
+        setScheduleAt("");
+        setCustomMessage({ title: "", message: "", priority: "medium" });
       }
     } catch (err) {
-      console.error('Failed to send bulk notification:', err);
-      alert('Failed to send notification. Please try again.');
+      console.error("Failed to send bulk notification:", err);
+      alert("Failed to send notification. Please try again.");
     }
   };
 
@@ -238,8 +238,8 @@ export default function BulkNotificationSenderPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Tabs
-                value={useCustomMessage ? 'custom' : 'template'}
-                onValueChange={(v) => setUseCustomMessage(v === 'custom')}
+                value={useCustomMessage ? "custom" : "template"}
+                onValueChange={(v) => setUseCustomMessage(v === "custom")}
               >
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="template">Use Template</TabsTrigger>
@@ -271,10 +271,7 @@ export default function BulkNotificationSenderPage() {
                     </Select>
                     {selectedTemplate && (
                       <p className="text-xs text-muted-foreground">
-                        {
-                          availableTemplates.find((t) => t.id === selectedTemplate)
-                            ?.description
-                        }
+                        {availableTemplates.find((t) => t.id === selectedTemplate)?.description}
                       </p>
                     )}
                   </div>
@@ -287,7 +284,10 @@ export default function BulkNotificationSenderPage() {
                       id="title"
                       value={customMessage.title}
                       onChange={(e) =>
-                        setCustomMessage({ ...customMessage, title: e.target.value })
+                        setCustomMessage({
+                          ...customMessage,
+                          title: e.target.value,
+                        })
                       }
                       placeholder="e.g., Important Service Update"
                     />
@@ -299,7 +299,10 @@ export default function BulkNotificationSenderPage() {
                       id="message"
                       value={customMessage.message}
                       onChange={(e) =>
-                        setCustomMessage({ ...customMessage, message: e.target.value })
+                        setCustomMessage({
+                          ...customMessage,
+                          message: e.target.value,
+                        })
                       }
                       placeholder="Enter your message..."
                       rows={6}
@@ -341,10 +344,8 @@ export default function BulkNotificationSenderPage() {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="email"
-                    checked={channels.includes('email')}
-                    onChange={(e) =>
-                      handleChannelToggle('email', e.target.checked)
-                    }
+                    checked={channels.includes("email")}
+                    onChange={(e) => handleChannelToggle("email", e.target.checked)}
                   />
                   <Label htmlFor="email" className="flex-1 cursor-pointer">
                     <div className="flex items-center gap-2">
@@ -357,10 +358,8 @@ export default function BulkNotificationSenderPage() {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="sms"
-                    checked={channels.includes('sms')}
-                    onChange={(e) =>
-                      handleChannelToggle('sms', e.target.checked)
-                    }
+                    checked={channels.includes("sms")}
+                    onChange={(e) => handleChannelToggle("sms", e.target.checked)}
                   />
                   <Label htmlFor="sms" className="flex-1 cursor-pointer">
                     <div className="flex items-center gap-2">
@@ -373,10 +372,8 @@ export default function BulkNotificationSenderPage() {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="in_app"
-                    checked={channels.includes('in_app')}
-                    onChange={(e) =>
-                      handleChannelToggle('in_app', e.target.checked)
-                    }
+                    checked={channels.includes("in_app")}
+                    onChange={(e) => handleChannelToggle("in_app", e.target.checked)}
                   />
                   <Label htmlFor="in_app" className="flex-1 cursor-pointer">
                     <div className="flex items-center gap-2">
@@ -389,10 +386,8 @@ export default function BulkNotificationSenderPage() {
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="push"
-                    checked={channels.includes('push')}
-                    onChange={(e) =>
-                      handleChannelToggle('push', e.target.checked)
-                    }
+                    checked={channels.includes("push")}
+                    onChange={(e) => handleChannelToggle("push", e.target.checked)}
                   />
                   <Label htmlFor="push" className="flex-1 cursor-pointer">
                     <div className="flex items-center gap-2">
@@ -409,9 +404,7 @@ export default function BulkNotificationSenderPage() {
           <Card>
             <CardHeader>
               <CardTitle>Recipients</CardTitle>
-              <CardDescription>
-                Specify who should receive this notification
-              </CardDescription>
+              <CardDescription>Specify who should receive this notification</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Subscriber IDs */}
@@ -421,7 +414,10 @@ export default function BulkNotificationSenderPage() {
                   id="subscriber-ids"
                   value={recipientFilter.subscriberIds}
                   onChange={(e) =>
-                    setRecipientFilter({ ...recipientFilter, subscriberIds: e.target.value })
+                    setRecipientFilter({
+                      ...recipientFilter,
+                      subscriberIds: e.target.value,
+                    })
                   }
                   placeholder="e.g., sub_123, sub_456, sub_789"
                   rows={2}
@@ -435,7 +431,10 @@ export default function BulkNotificationSenderPage() {
                   id="customer-ids"
                   value={recipientFilter.customerIds}
                   onChange={(e) =>
-                    setRecipientFilter({ ...recipientFilter, customerIds: e.target.value })
+                    setRecipientFilter({
+                      ...recipientFilter,
+                      customerIds: e.target.value,
+                    })
                   }
                   placeholder="e.g., cus_123, cus_456, cus_789"
                   rows={2}
@@ -446,14 +445,12 @@ export default function BulkNotificationSenderPage() {
               <div className="space-y-2">
                 <Label>Filter by Subscriber Status</Label>
                 <div className="space-y-2">
-                  {['active', 'suspended', 'pending'].map((status) => (
+                  {["active", "suspended", "pending"].map((status) => (
                     <div key={status} className="flex items-center space-x-2">
                       <Checkbox
                         id={`status-${status}`}
                         checked={recipientFilter.status.includes(status)}
-                        onChange={(e) =>
-                          handleStatusToggle(status, e.target.checked)
-                        }
+                        onChange={(e) => handleStatusToggle(status, e.target.checked)}
                       />
                       <Label htmlFor={`status-${status}`} className="cursor-pointer capitalize">
                         {status}
@@ -467,14 +464,12 @@ export default function BulkNotificationSenderPage() {
               <div className="space-y-2">
                 <Label>Filter by Connection Type</Label>
                 <div className="space-y-2">
-                  {['ftth', 'wireless', 'dsl'].map((type) => (
+                  {["ftth", "wireless", "dsl"].map((type) => (
                     <div key={type} className="flex items-center space-x-2">
                       <Checkbox
                         id={`type-${type}`}
                         checked={recipientFilter.connectionType.includes(type)}
-                        onChange={(e) =>
-                          handleConnectionTypeToggle(type, e.target.checked)
-                        }
+                        onChange={(e) => handleConnectionTypeToggle(type, e.target.checked)}
                       />
                       <Label htmlFor={`type-${type}`} className="cursor-pointer uppercase">
                         {type}
@@ -505,9 +500,7 @@ export default function BulkNotificationSenderPage() {
                   value={scheduleAt}
                   onChange={(e) => setScheduleAt(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Leave empty to send immediately
-                </p>
+                <p className="text-xs text-muted-foreground">Leave empty to send immediately</p>
               </div>
             </CardContent>
           </Card>
@@ -524,7 +517,7 @@ export default function BulkNotificationSenderPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Channels</span>
-                  <span className="font-medium">{channels.length || 'None'}</span>
+                  <span className="font-medium">{channels.length || "None"}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Recipients</span>
@@ -532,18 +525,11 @@ export default function BulkNotificationSenderPage() {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Delivery</span>
-                  <span className="font-medium">
-                    {scheduleAt ? 'Scheduled' : 'Immediate'}
-                  </span>
+                  <span className="font-medium">{scheduleAt ? "Scheduled" : "Immediate"}</span>
                 </div>
               </div>
 
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={handleSend}
-                disabled={isLoading}
-              >
+              <Button className="w-full" size="lg" onClick={handleSend} disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Clock className="mr-2 h-4 w-4 animate-spin" />
@@ -603,10 +589,10 @@ export default function BulkNotificationSenderPage() {
 // Helper component for job status badge
 function JobStatusBadge({ status }: { status: string }) {
   const statusConfig = {
-    queued: { icon: Clock, className: 'bg-blue-100 text-blue-800' },
-    processing: { icon: Clock, className: 'bg-yellow-100 text-yellow-800' },
-    completed: { icon: CheckCircle2, className: 'bg-green-100 text-green-800' },
-    failed: { icon: AlertCircle, className: 'bg-red-100 text-red-800' },
+    queued: { icon: Clock, className: "bg-blue-100 text-blue-800" },
+    processing: { icon: Clock, className: "bg-yellow-100 text-yellow-800" },
+    completed: { icon: CheckCircle2, className: "bg-green-100 text-green-800" },
+    failed: { icon: AlertCircle, className: "bg-red-100 text-red-800" },
   };
 
   const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.queued;

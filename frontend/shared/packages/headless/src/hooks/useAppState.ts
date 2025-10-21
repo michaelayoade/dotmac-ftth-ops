@@ -3,14 +3,14 @@
  * Provides specialized hooks for common state patterns
  */
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from "react";
 import {
   useAppStore,
   FilterState,
   PaginationState,
   SelectionState,
   LoadingState,
-} from '@dotmac/headless/stores';
+} from "@dotmac/headless/stores";
 
 // Main app state hook
 export const useAppState = () => useAppStore();
@@ -43,35 +43,35 @@ export const useAppNotifications = () => {
 
   const activeNotifications = useMemo(
     () => notifications.filter((n) => !n.dismissed),
-    [notifications]
+    [notifications],
   );
 
   const addSuccess = useCallback(
     (message: string) => {
-      addNotification({ type: 'success', message });
+      addNotification({ type: "success", message });
     },
-    [addNotification]
+    [addNotification],
   );
 
   const addError = useCallback(
     (message: string) => {
-      addNotification({ type: 'error', message });
+      addNotification({ type: "error", message });
     },
-    [addNotification]
+    [addNotification],
   );
 
   const addWarning = useCallback(
     (message: string) => {
-      addNotification({ type: 'warning', message });
+      addNotification({ type: "warning", message });
     },
-    [addNotification]
+    [addNotification],
   );
 
   const addInfo = useCallback(
     (message: string) => {
-      addNotification({ type: 'info', message });
+      addNotification({ type: "info", message });
     },
-    [addNotification]
+    [addNotification],
   );
 
   return {
@@ -100,7 +100,7 @@ export const useFilters = (context: string) => {
     (updates: Partial<FilterState>) => {
       updateFilters(context, updates);
     },
-    [context, updateFilters]
+    [context, updateFilters],
   );
 
   const resetFilter = useCallback(() => {
@@ -111,43 +111,43 @@ export const useFilters = (context: string) => {
     (term: string) => {
       setSearchTerm(context, term);
     },
-    [context, setSearchTerm]
+    [context, setSearchTerm],
   );
 
   const setStatus = useCallback(
     (status: string) => {
       setStatusFilter(context, status);
     },
-    [context, setStatusFilter]
+    [context, setStatusFilter],
   );
 
   const setSort = useCallback(
-    (sortBy: string, sortOrder: 'asc' | 'desc' = 'asc') => {
+    (sortBy: string, sortOrder: "asc" | "desc" = "asc") => {
       setSorting(context, sortBy, sortOrder);
     },
-    [context, setSorting]
+    [context, setSorting],
   );
 
   const setRange = useCallback(
     (start: Date | null, end: Date | null) => {
       setDateRange(context, start, end);
     },
-    [context, setDateRange]
+    [context, setDateRange],
   );
 
   const toggleSort = useCallback(
     (sortBy: string) => {
-      const currentOrder = filterState.sortBy === sortBy ? filterState.sortOrder : 'asc';
-      const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+      const currentOrder = filterState.sortBy === sortBy ? filterState.sortOrder : "asc";
+      const newOrder = currentOrder === "asc" ? "desc" : "asc";
       setSort(sortBy, newOrder);
     },
-    [filterState.sortBy, filterState.sortOrder, setSort]
+    [filterState.sortBy, filterState.sortOrder, setSort],
   );
 
   const hasActiveFilters = useMemo(() => {
     return (
-      filterState.searchTerm !== '' ||
-      filterState.statusFilter !== 'all' ||
+      filterState.searchTerm !== "" ||
+      filterState.statusFilter !== "all" ||
       filterState.dateRange?.start !== null ||
       filterState.dateRange?.end !== null ||
       Object.keys(filterState.customFilters).length > 0
@@ -179,28 +179,28 @@ export const usePagination = (context: string) => {
     (updates: Partial<PaginationState>) => {
       updatePagination(context, updates);
     },
-    [context, updatePagination]
+    [context, updatePagination],
   );
 
   const goToPage = useCallback(
     (page: number) => {
       setCurrentPage(context, page);
     },
-    [context, setCurrentPage]
+    [context, setCurrentPage],
   );
 
   const changeItemsPerPage = useCallback(
     (itemsPerPage: number) => {
       setItemsPerPage(context, itemsPerPage);
     },
-    [context, setItemsPerPage]
+    [context, setItemsPerPage],
   );
 
   const setTotal = useCallback(
     (totalItems: number) => {
       setTotalItems(context, totalItems);
     },
-    [context, setTotalItems]
+    [context, setTotalItems],
   );
 
   const nextPage = useCallback(() => {
@@ -229,7 +229,7 @@ export const usePagination = (context: string) => {
   const startItem = (paginationState.currentPage - 1) * paginationState.itemsPerPage + 1;
   const endItem = Math.min(
     paginationState.currentPage * paginationState.itemsPerPage,
-    paginationState.totalItems
+    paginationState.totalItems,
   );
 
   return {
@@ -262,14 +262,14 @@ export const useSelection = <T = any>(context: string) => {
     (item: T, multiple = false) => {
       selectItem<T>(context, item, multiple);
     },
-    [context, selectItem]
+    [context, selectItem],
   );
 
   const deselect = useCallback(
     (item: T) => {
       deselectItem<T>(context, item);
     },
-    [context, deselectItem]
+    [context, deselectItem],
   );
 
   const toggleItem = useCallback(
@@ -281,14 +281,14 @@ export const useSelection = <T = any>(context: string) => {
         select(item, multiple);
       }
     },
-    [selectionState.selectedItems, select, deselect]
+    [selectionState.selectedItems, select, deselect],
   );
 
   const toggleAll = useCallback(
     (allItems: T[]) => {
       toggleSelectAll<T>(context, allItems);
     },
-    [context, toggleSelectAll]
+    [context, toggleSelectAll],
   );
 
   const clear = useCallback(() => {
@@ -299,7 +299,7 @@ export const useSelection = <T = any>(context: string) => {
     (item: T) => {
       return selectionState.selectedItems.includes(item);
     },
-    [selectionState.selectedItems]
+    [selectionState.selectedItems],
   );
 
   const hasSelection = selectionState.selectedItems.length > 0;
@@ -330,7 +330,7 @@ export const useLoading = (context: string) => {
     (operationId?: string) => {
       setLoading(context, true, operationId);
     },
-    [context, setLoading]
+    [context, setLoading],
   );
 
   const stopLoading = useCallback(() => {
@@ -342,7 +342,7 @@ export const useLoading = (context: string) => {
     (error: string) => {
       setError(context, error);
     },
-    [context, setError]
+    [context, setError],
   );
 
   const clearError = useCallback(() => {
@@ -353,7 +353,7 @@ export const useLoading = (context: string) => {
     (updates: Partial<LoadingState>) => {
       updateLoading(context, updates);
     },
-    [context, updateLoading]
+    [context, updateLoading],
   );
 
   return {
@@ -418,9 +418,9 @@ export const useFormState = (context: string) => {
     async (
       submitFn: () => Promise<void>,
       {
-        successMessage = 'Operation completed successfully',
-        errorMessage = 'Operation failed',
-      } = {}
+        successMessage = "Operation completed successfully",
+        errorMessage = "Operation failed",
+      } = {},
     ) => {
       loading.startLoading();
       try {
@@ -433,7 +433,7 @@ export const useFormState = (context: string) => {
         addError(errorMsg);
       }
     },
-    [loading, addSuccess, addError]
+    [loading, addSuccess, addError],
   );
 
   return {

@@ -4,26 +4,26 @@
  * Refactored using composition pattern for better maintainability
  */
 
-import { useContext, createContext, useMemo } from 'react';
+import { useContext, createContext, useMemo } from "react";
 import {
   TenantSession,
   TenantPermissions,
   TenantLimitsUsage,
   TenantBranding,
   TenantNotification,
-} from '../types/tenant';
+} from "../types/tenant";
 
 // Import focused sub-hooks
-import { useTenantSession } from './tenant/useTenantSession';
-import { useTenantPermissions } from './tenant/useTenantPermissions';
-import { useTenantLimits } from './tenant/useTenantLimits';
-import { useTenantSettings } from './tenant/useTenantSettings';
-import { useTenantNotifications } from './tenant/useTenantNotifications';
+import { useTenantSession } from "./tenant/useTenantSession";
+import { useTenantPermissions } from "./tenant/useTenantPermissions";
+import { useTenantLimits } from "./tenant/useTenantLimits";
+import { useTenantSettings } from "./tenant/useTenantSettings";
+import { useTenantNotifications } from "./tenant/useTenantNotifications";
 
 interface ISPTenantContextValue {
   // Current tenant session
   session: TenantSession | null;
-  tenant: TenantSession['tenant'] | null;
+  tenant: TenantSession["tenant"] | null;
   isLoading: boolean;
   error: string | null;
 
@@ -60,7 +60,7 @@ interface ISPTenantContextValue {
   markNotificationRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   dismissNotification: (notificationId: string) => Promise<void>;
-  addNotification: (notification: Omit<TenantNotification, 'id' | 'created_at'>) => void;
+  addNotification: (notification: Omit<TenantNotification, "id" | "created_at">) => void;
 }
 
 const ISPTenantContext = createContext<ISPTenantContextValue | null>(null);
@@ -72,7 +72,7 @@ const ISPTenantContext = createContext<ISPTenantContextValue | null>(null);
 export function useISPTenant(): ISPTenantContextValue {
   const context = useContext(ISPTenantContext);
   if (!context) {
-    throw new Error('useISPTenant must be used within an ISPTenantProvider');
+    throw new Error("useISPTenant must be used within an ISPTenantProvider");
   }
   return context;
 }

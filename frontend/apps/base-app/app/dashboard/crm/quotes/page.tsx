@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useCallback, useMemo, useState } from "react";
@@ -31,15 +31,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { EnhancedDataTable, type ColumnDef, type BulkAction } from "@/components/ui/EnhancedDataTable";
+import {
+  EnhancedDataTable,
+  type ColumnDef,
+  type BulkAction,
+} from "@/components/ui/EnhancedDataTable";
 import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
-import {
-  useQuotes,
-  type Quote,
-  type QuoteStatus,
-} from "@/hooks/useCRM";
+import { useQuotes, type Quote, type QuoteStatus } from "@/hooks/useCRM";
 import { QuoteStatusBadge } from "@/components/crm/Badges";
 import { CreateQuoteModal } from "@/components/crm/CreateQuoteModal";
 import { QuoteDetailModal } from "@/components/crm/QuoteDetailModal";
@@ -78,7 +78,18 @@ export default function QuotesPage() {
 
   // Statistics
   const stats = useMemo(() => {
-    if (!quotes) return { total: 0, draft: 0, sent: 0, accepted: 0, rejected: 0, expired: 0, acceptanceRate: 0, totalMRR: 0, expiringThisWeek: 0 };
+    if (!quotes)
+      return {
+        total: 0,
+        draft: 0,
+        sent: 0,
+        accepted: 0,
+        rejected: 0,
+        expired: 0,
+        acceptanceRate: 0,
+        totalMRR: 0,
+        expiringThisWeek: 0,
+      };
 
     const total = quotes.length;
     const draft = quotes.filter((q) => q.status === "draft").length;
@@ -101,7 +112,17 @@ export default function QuotesPage() {
       return daysUntilExpiry <= 7 && daysUntilExpiry >= 0;
     }).length;
 
-    return { total, draft, sent, accepted, rejected, expired, acceptanceRate, totalMRR, expiringThisWeek };
+    return {
+      total,
+      draft,
+      sent,
+      accepted,
+      rejected,
+      expired,
+      acceptanceRate,
+      totalMRR,
+      expiringThisWeek,
+    };
   }, [quotes]);
 
   // Filtered quotes for search
@@ -114,7 +135,7 @@ export default function QuotesPage() {
       (quote) =>
         quote.quote_number.toLowerCase().includes(query) ||
         quote.service_plan_name.toLowerCase().includes(query) ||
-        quote.bandwidth?.toLowerCase().includes(query)
+        quote.bandwidth?.toLowerCase().includes(query),
     );
   }, [quotes, searchQuery]);
 
@@ -150,7 +171,7 @@ export default function QuotesPage() {
       setSelectedQuote(quote);
       setIsDetailModalOpen(true);
     },
-    [setIsDetailModalOpen, setSelectedQuote]
+    [setIsDetailModalOpen, setSelectedQuote],
   );
 
   const handleEditQuote = useCallback(
@@ -158,7 +179,7 @@ export default function QuotesPage() {
       setSelectedQuote(quote);
       setIsCreateModalOpen(true);
     },
-    [setIsCreateModalOpen, setSelectedQuote]
+    [setIsCreateModalOpen, setSelectedQuote],
   );
 
   const handleSendQuote = useCallback(
@@ -179,13 +200,13 @@ export default function QuotesPage() {
         });
       }
     },
-    [refetch, sendQuote, toast]
+    [refetch, sendQuote, toast],
   );
 
   const handleDeleteQuote = useCallback(
     async (quote: Quote) => {
       const confirmed = confirm(
-        `Are you sure you want to delete quote ${quote.quote_number}? This action cannot be undone.`
+        `Are you sure you want to delete quote ${quote.quote_number}? This action cannot be undone.`,
       );
       if (!confirmed) return;
 
@@ -205,7 +226,7 @@ export default function QuotesPage() {
         });
       }
     },
-    [deleteQuote, refetch, toast]
+    [deleteQuote, refetch, toast],
   );
 
   const columns: ColumnDef<Quote>[] = useMemo(
@@ -214,9 +235,7 @@ export default function QuotesPage() {
         id: "quote_number",
         header: "Quote #",
         accessorKey: "quote_number",
-        cell: ({ row }) => (
-          <span className="font-mono text-sm">{row.original.quote_number}</span>
-        ),
+        cell: ({ row }) => <span className="font-mono text-sm">{row.original.quote_number}</span>,
       },
       {
         id: "service",
@@ -225,9 +244,7 @@ export default function QuotesPage() {
           <div className="flex flex-col">
             <span className="font-medium text-sm">{row.original.service_plan_name}</span>
             {row.original.bandwidth && (
-              <span className="text-xs text-muted-foreground">
-                {row.original.bandwidth}
-              </span>
+              <span className="text-xs text-muted-foreground">{row.original.bandwidth}</span>
             )}
           </div>
         ),
@@ -238,9 +255,7 @@ export default function QuotesPage() {
         cell: ({ row }) => (
           <div className="flex items-center gap-1">
             <DollarSign className="h-3 w-3 text-muted-foreground" />
-            <span className="font-medium">
-              ${row.original.monthly_recurring_charge.toFixed(2)}
-            </span>
+            <span className="font-medium">${row.original.monthly_recurring_charge.toFixed(2)}</span>
           </div>
         ),
       },
@@ -263,10 +278,13 @@ export default function QuotesPage() {
         id: "sent_at",
         header: "Sent",
         cell: ({ row }) => {
-          if (!row.original.sent_at) return <span className="text-xs text-muted-foreground">Not sent</span>;
+          if (!row.original.sent_at)
+            return <span className="text-xs text-muted-foreground">Not sent</span>;
           return (
             <span className="text-xs text-muted-foreground">
-              {formatDistanceToNow(new Date(row.original.sent_at), { addSuffix: true })}
+              {formatDistanceToNow(new Date(row.original.sent_at), {
+                addSuffix: true,
+              })}
             </span>
           );
         },
@@ -275,7 +293,8 @@ export default function QuotesPage() {
         id: "valid_until",
         header: "Valid Until",
         cell: ({ row }) => {
-          if (!row.original.valid_until) return <span className="text-xs text-muted-foreground">N/A</span>;
+          if (!row.original.valid_until)
+            return <span className="text-xs text-muted-foreground">N/A</span>;
 
           const validUntil = new Date(row.original.valid_until);
           const today = new Date();
@@ -300,9 +319,7 @@ export default function QuotesPage() {
           }
 
           return (
-            <span className="text-xs text-muted-foreground">
-              {validUntil.toLocaleDateString()}
-            </span>
+            <span className="text-xs text-muted-foreground">{validUntil.toLocaleDateString()}</span>
           );
         },
       },
@@ -345,7 +362,7 @@ export default function QuotesPage() {
         ),
       },
     ],
-    [handleDeleteQuote, handleEditQuote, handleSendQuote, handleViewQuote]
+    [handleDeleteQuote, handleEditQuote, handleSendQuote, handleViewQuote],
   );
 
   // Bulk actions
@@ -384,7 +401,7 @@ export default function QuotesPage() {
       icon: Trash2,
       action: async (selectedQuotes) => {
         const confirmed = confirm(
-          `Are you sure you want to delete ${selectedQuotes.length} quote(s)? This action cannot be undone.`
+          `Are you sure you want to delete ${selectedQuotes.length} quote(s)? This action cannot be undone.`,
         );
         if (!confirmed) return;
 
@@ -441,9 +458,7 @@ export default function QuotesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Quotes</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage pricing proposals and service quotes
-          </p>
+          <p className="text-muted-foreground mt-1">Manage pricing proposals and service quotes</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleExport}>
@@ -459,26 +474,10 @@ export default function QuotesPage() {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        <MetricCardEnhanced
-          title="Total Quotes"
-          value={stats.total}
-          icon={FileText}
-        />
-        <MetricCardEnhanced
-          title="Draft"
-          value={stats.draft}
-          icon={Edit}
-        />
-        <MetricCardEnhanced
-          title="Sent"
-          value={stats.sent}
-          icon={Send}
-        />
-        <MetricCardEnhanced
-          title="Accepted"
-          value={stats.accepted}
-          icon={CheckCircle}
-        />
+        <MetricCardEnhanced title="Total Quotes" value={stats.total} icon={FileText} />
+        <MetricCardEnhanced title="Draft" value={stats.draft} icon={Edit} />
+        <MetricCardEnhanced title="Sent" value={stats.sent} icon={Send} />
+        <MetricCardEnhanced title="Accepted" value={stats.accepted} icon={CheckCircle} />
         <MetricCardEnhanced
           title="Acceptance Rate"
           value={`${stats.acceptanceRate}%`}
@@ -505,11 +504,7 @@ export default function QuotesPage() {
                   Follow up with leads to close deals before quotes expire
                 </p>
               </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setQuickFilter("expiring_soon")}
-              >
+              <Button size="sm" variant="outline" onClick={() => setQuickFilter("expiring_soon")}>
                 View Expiring
               </Button>
             </div>
@@ -543,9 +538,7 @@ export default function QuotesPage() {
         <Button
           variant={quickFilter === "expiring_soon" ? "default" : "outline"}
           size="sm"
-          onClick={() =>
-            setQuickFilter(quickFilter === "expiring_soon" ? null : "expiring_soon")
-          }
+          onClick={() => setQuickFilter(quickFilter === "expiring_soon" ? null : "expiring_soon")}
         >
           <Clock className="h-4 w-4 mr-1" />
           Expiring Soon ({stats.expiringThisWeek})
@@ -672,9 +665,7 @@ function convertToCSV(quotes: Quote[]): string {
     quote.created_at,
   ]);
 
-  return [headers, ...rows]
-    .map((row) => row.map((cell) => `"${cell}"`).join(","))
-    .join("\n");
+  return [headers, ...rows].map((row) => row.map((cell) => `"${cell}"`).join(",")).join("\n");
 }
 
 function downloadCSV(csv: string, filename: string) {

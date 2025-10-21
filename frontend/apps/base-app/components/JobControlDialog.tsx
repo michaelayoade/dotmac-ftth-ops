@@ -4,9 +4,9 @@
  * Provides UI for controlling jobs via WebSocket (cancel, pause, resume)
  */
 
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,12 +14,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
-import { Job, useCancelJob } from '@/hooks/useJobs';
-import { AlertCircle, Loader2, PauseCircle, PlayCircle, XCircle } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import { Job, useCancelJob } from "@/hooks/useJobs";
+import { AlertCircle, Loader2, PauseCircle, PlayCircle, XCircle } from "lucide-react";
 
 interface JobControlDialogProps {
   job: Job | null;
@@ -39,15 +39,15 @@ export function JobControlDialog({ job, open, onOpenChange }: JobControlDialogPr
     try {
       await cancelJob.mutateAsync(job.id);
       toast({
-        title: 'Job cancelled',
+        title: "Job cancelled",
         description: `Job "${job.title}" has been cancelled successfully.`,
       });
       onOpenChange(false);
     } catch (error) {
       toast({
-        title: 'Cancel failed',
-        description: error instanceof Error ? error.message : 'Failed to cancel job',
-        variant: 'destructive',
+        title: "Cancel failed",
+        description: error instanceof Error ? error.message : "Failed to cancel job",
+        variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
@@ -56,23 +56,23 @@ export function JobControlDialog({ job, open, onOpenChange }: JobControlDialogPr
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'running':
-        return 'default';
-      case 'completed':
-        return 'outline';
-      case 'failed':
-      case 'cancelled':
-        return 'destructive';
-      case 'paused':
-        return 'secondary';
+      case "running":
+        return "default";
+      case "completed":
+        return "outline";
+      case "failed":
+      case "cancelled":
+        return "destructive";
+      case "paused":
+        return "secondary";
       default:
-        return 'secondary';
+        return "secondary";
     }
   };
 
-  const canCancel = ['pending', 'running', 'paused'].includes(job.status);
-  const canPause = job.status === 'running';
-  const canResume = job.status === 'paused';
+  const canCancel = ["pending", "running", "paused"].includes(job.status);
+  const canPause = job.status === "running";
+  const canResume = job.status === "paused";
 
   const progress = job.items_total > 0 ? (job.items_processed / job.items_total) * 100 : 0;
 
@@ -81,9 +81,7 @@ export function JobControlDialog({ job, open, onOpenChange }: JobControlDialogPr
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Job Control</DialogTitle>
-          <DialogDescription>
-            Manage and control job execution
-          </DialogDescription>
+          <DialogDescription>Manage and control job execution</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -91,19 +89,15 @@ export function JobControlDialog({ job, open, onOpenChange }: JobControlDialogPr
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-foreground">{job.title}</h3>
-              <Badge variant={getStatusColor(job.status)}>
-                {job.status.toUpperCase()}
-              </Badge>
+              <Badge variant={getStatusColor(job.status)}>{job.status.toUpperCase()}</Badge>
             </div>
 
-            {job.description && (
-              <p className="text-sm text-muted-foreground">{job.description}</p>
-            )}
+            {job.description && <p className="text-sm text-muted-foreground">{job.description}</p>}
 
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-muted-foreground">Job Type:</span>
-                <span className="ml-2 font-medium">{job.job_type.replace(/_/g, ' ')}</span>
+                <span className="ml-2 font-medium">{job.job_type.replace(/_/g, " ")}</span>
               </div>
               <div>
                 <span className="text-muted-foreground">Created By:</span>
@@ -112,20 +106,20 @@ export function JobControlDialog({ job, open, onOpenChange }: JobControlDialogPr
               <div>
                 <span className="text-muted-foreground">Started:</span>
                 <span className="ml-2 font-medium">
-                  {job.started_at ? new Date(job.started_at).toLocaleString() : 'Not started'}
+                  {job.started_at ? new Date(job.started_at).toLocaleString() : "Not started"}
                 </span>
               </div>
               <div>
                 <span className="text-muted-foreground">Completed:</span>
                 <span className="ml-2 font-medium">
-                  {job.completed_at ? new Date(job.completed_at).toLocaleString() : 'In progress'}
+                  {job.completed_at ? new Date(job.completed_at).toLocaleString() : "In progress"}
                 </span>
               </div>
             </div>
           </div>
 
           {/* Progress */}
-          {job.status === 'running' && (
+          {job.status === "running" && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Progress</span>
@@ -182,8 +176,8 @@ export function JobControlDialog({ job, open, onOpenChange }: JobControlDialogPr
                 disabled={isProcessing}
                 onClick={() => {
                   toast({
-                    title: 'Pause not implemented',
-                    description: 'Job pause functionality is coming soon',
+                    title: "Pause not implemented",
+                    description: "Job pause functionality is coming soon",
                   });
                 }}
               >
@@ -199,8 +193,8 @@ export function JobControlDialog({ job, open, onOpenChange }: JobControlDialogPr
                 disabled={isProcessing}
                 onClick={() => {
                   toast({
-                    title: 'Resume not implemented',
-                    description: 'Job resume functionality is coming soon',
+                    title: "Resume not implemented",
+                    description: "Job resume functionality is coming soon",
                   });
                 }}
               >

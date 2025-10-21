@@ -4,9 +4,9 @@
  * Integrates with DotMac backend auth system
  */
 
-import jwt from 'jsonwebtoken';
-import type { User, AuthTokens, PortalType } from '../types';
-import { getAuthSecurity } from '../config/authSettings';
+import jwt from "jsonwebtoken";
+import type { User, AuthTokens, PortalType } from "../types";
+import { getAuthSecurity } from "../config/authSettings";
 
 export interface TokenPayload {
   userId: string;
@@ -39,12 +39,12 @@ export class TokenService {
   static createTokens(
     user: User,
     portalType: PortalType,
-    securityContext?: SecurityContext
+    securityContext?: SecurityContext,
   ): AuthTokens {
     const config = this.getConfig();
     const now = Math.floor(Date.now() / 1000);
 
-    const payload: Omit<TokenPayload, 'iat' | 'exp' | 'iss' | 'aud'> = {
+    const payload: Omit<TokenPayload, "iat" | "exp" | "iss" | "aud"> = {
       userId: user.id,
       email: user.email,
       tenantId: user.tenantId,
@@ -56,7 +56,7 @@ export class TokenService {
     const accessToken = jwt.sign(
       {
         ...payload,
-        type: 'access',
+        type: "access",
         ctx: securityContext,
       },
       config.jwtSecret,
@@ -65,7 +65,7 @@ export class TokenService {
         issuer: config.jwtIssuer,
         audience: config.jwtAudience,
         subject: user.id,
-      }
+      },
     );
 
     const refreshToken = jwt.sign(
@@ -73,7 +73,7 @@ export class TokenService {
         userId: user.id,
         tenantId: user.tenantId,
         portalType,
-        type: 'refresh',
+        type: "refresh",
       },
       config.jwtRefreshSecret,
       {
@@ -81,7 +81,7 @@ export class TokenService {
         issuer: config.jwtIssuer,
         audience: config.jwtAudience,
         subject: user.id,
-      }
+      },
     );
 
     // Calculate expiration timestamp
@@ -92,17 +92,17 @@ export class TokenService {
       accessToken,
       refreshToken,
       expiresAt,
-      tokenType: 'Bearer',
+      tokenType: "Bearer",
     };
   }
 
   /**
    * Verify and decode JWT token
    */
-  static verifyToken(token: string, type: 'access' | 'refresh' = 'access'): TokenPayload | null {
+  static verifyToken(token: string, type: "access" | "refresh" = "access"): TokenPayload | null {
     try {
       const config = this.getConfig();
-      const secret = type === 'access' ? config.jwtSecret : config.jwtRefreshSecret;
+      const secret = type === "access" ? config.jwtSecret : config.jwtRefreshSecret;
 
       const decoded = jwt.verify(token, secret, {
         issuer: config.jwtIssuer,
@@ -116,15 +116,15 @@ export class TokenService {
 
       // Validate required fields
       if (!decoded.userId || !decoded.tenantId || !decoded.portalType) {
-        throw new Error('Missing required token fields');
+        throw new Error("Missing required token fields");
       }
 
       return {
         userId: decoded.userId!,
-        email: decoded.email || '',
+        email: decoded.email || "",
         tenantId: decoded.tenantId!,
         portalType: decoded.portalType as PortalType,
-        role: decoded.role || '',
+        role: decoded.role || "",
         permissions: decoded.permissions || [],
         iat: decoded.iat!,
         exp: decoded.exp!,
@@ -132,7 +132,7 @@ export class TokenService {
         aud: decoded.aud!,
       };
     } catch (error) {
-      console.error('Token verification failed:', error);
+      console.error("Token verification failed:", error);
       return null;
     }
   }
@@ -142,25 +142,25 @@ export class TokenService {
    */
   static extractTokenFromRequest(request: Request): string | null {
     // Try Authorization header first
-    const authHeader = request.headers.get('Authorization');
-    if (authHeader?.startsWith('Bearer ')) {
+    const authHeader = request.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
       return authHeader.substring(7);
     }
 
     // Try cookie (for web browsers)
-    const cookieHeader = request.headers.get('Cookie');
+    const cookieHeader = request.headers.get("Cookie");
     if (cookieHeader) {
       const config = this.getConfig();
-      const cookies = cookieHeader.split(';').reduce(
+      const cookies = cookieHeader.split(";").reduce(
         (acc, cookie) => {
-          const [key, value] = cookie.trim().split('=');
+          const [key, value] = cookie.trim().split("=");
           acc[key] = value;
           return acc;
         },
-        {} as Record<string, string>
+        {} as Record<string, string>,
       );
 
-      return cookies[config.cookieName] || cookies['auth-token'] || null;
+      return cookies[config.cookieName] || cookies["auth-token"] || null;
     }
 
     return null;
@@ -172,13 +172,13 @@ export class TokenService {
   static getSecurityContext(request: Request): SecurityContext {
     return {
       ipAddress:
-        request.headers.get('x-forwarded-for') ||
-        request.headers.get('x-real-ip') ||
-        request.headers.get('remote-addr') ||
-        'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
+        request.headers.get("x-forwarded-for") ||
+        request.headers.get("x-real-ip") ||
+        request.headers.get("remote-addr") ||
+        "unknown",
+      userAgent: request.headers.get("user-agent") || "unknown",
       timestamp: Date.now(),
-      sessionId: request.headers.get('x-session-id') || undefined,
+      sessionId: request.headers.get("x-session-id") || undefined,
     };
   }
 
@@ -212,9 +212,9 @@ export class TokenService {
    */
   static async refreshAccessToken(
     refreshToken: string,
-    getUserById: (userId: string, tenantId: string) => Promise<User | null>
+    getUserById: (userId: string, tenantId: string) => Promise<User | null>,
   ): Promise<AuthTokens | null> {
-    const payload = this.verifyToken(refreshToken, 'refresh');
+    const payload = this.verifyToken(refreshToken, "refresh");
     if (!payload) return null;
 
     // Get current user data

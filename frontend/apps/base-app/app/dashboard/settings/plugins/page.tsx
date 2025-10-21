@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from "react";
 import {
   Puzzle,
   Plus,
@@ -13,11 +13,11 @@ import {
   Edit,
   Activity,
   Search,
-  Loader2
-} from 'lucide-react';
-import { PluginForm } from './components/PluginForm';
-import { PluginCard } from './components/PluginCard';
-import { PluginHealthDashboard } from './components/PluginHealthDashboard';
+  Loader2,
+} from "lucide-react";
+import { PluginForm } from "./components/PluginForm";
+import { PluginCard } from "./components/PluginCard";
+import { PluginHealthDashboard } from "./components/PluginHealthDashboard";
 import {
   useAvailablePlugins,
   usePluginInstances,
@@ -34,17 +34,17 @@ import {
   type PluginStatus,
   type CreatePluginInstanceRequest,
   type PluginTestResult,
-} from '@/hooks/usePlugins';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+} from "@/hooks/usePlugins";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
-type ViewMode = 'grid' | 'list' | 'health';
+type ViewMode = "grid" | "list" | "health";
 
 export default function PluginsPage() {
   // State management
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<PluginType | 'all'>('all');
-  const [filterStatus, setFilterStatus] = useState<PluginStatus | 'all'>('all');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState<PluginType | "all">("all");
+  const [filterStatus, setFilterStatus] = useState<PluginStatus | "all">("all");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   // Modal states
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -82,7 +82,7 @@ export default function PluginsPage() {
       const result = await bulkHealthCheck.mutateAsync(undefined);
       setHealthChecks(result);
     } catch (error) {
-      console.error('Failed to load health checks:', error);
+      console.error("Failed to load health checks:", error);
     }
   }, [bulkHealthCheck]);
 
@@ -100,7 +100,10 @@ export default function PluginsPage() {
     await loadHealthChecks();
   };
 
-  const handleUpdateInstance = async (instanceId: string, configuration: Record<string, unknown>) => {
+  const handleUpdateInstance = async (
+    instanceId: string,
+    configuration: Record<string, unknown>,
+  ) => {
     await updateConfiguration.mutateAsync({
       instanceId,
       data: { configuration },
@@ -110,17 +113,17 @@ export default function PluginsPage() {
   };
 
   const handleDeleteInstance = async (instanceId: string) => {
-    if (!confirm('Are you sure you want to delete this plugin instance? This cannot be undone.')) {
+    if (!confirm("Are you sure you want to delete this plugin instance? This cannot be undone.")) {
       return;
     }
 
     await deleteInstance.mutateAsync(instanceId);
-    setHealthChecks(prev => prev.filter(health => health.plugin_instance_id !== instanceId));
+    setHealthChecks((prev) => prev.filter((health) => health.plugin_instance_id !== instanceId));
   };
 
   const handleTestConnection = async (
     instanceId: string,
-    testConfig?: Record<string, unknown>
+    testConfig?: Record<string, unknown>,
   ): Promise<PluginTestResult> => {
     const result = await testConnection.mutateAsync({
       instanceId,
@@ -135,38 +138,40 @@ export default function PluginsPage() {
   };
 
   const handleTypeFilterChange = (value: string) => {
-    if (value === 'all') {
-      setFilterType('all');
+    if (value === "all") {
+      setFilterType("all");
       return;
     }
     setFilterType(value as PluginType);
   };
 
   const handleStatusFilterChange = (value: string) => {
-    if (value === 'all') {
-      setFilterStatus('all');
+    if (value === "all") {
+      setFilterStatus("all");
       return;
     }
     setFilterStatus(value as PluginStatus);
   };
 
   // Filter functions
-  const filteredPlugins = availablePlugins.filter(plugin => {
-    const matchesSearch = plugin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         plugin.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === 'all' || plugin.type === filterType;
+  const filteredPlugins = availablePlugins.filter((plugin) => {
+    const matchesSearch =
+      plugin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      plugin.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === "all" || plugin.type === filterType;
     return matchesSearch && matchesType;
   });
 
-  const filteredInstances = pluginInstances.filter(instance => {
-    const matchesSearch = instance.plugin_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         instance.instance_name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || instance.status === filterStatus;
+  const filteredInstances = pluginInstances.filter((instance) => {
+    const matchesSearch =
+      instance.plugin_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      instance.instance_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === "all" || instance.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
   const getHealthStatus = (instanceId: string) => {
-    return healthChecks.find(health => health.plugin_instance_id === instanceId);
+    return healthChecks.find((health) => health.plugin_instance_id === instanceId);
   };
 
   const isLoading = loadingPlugins || loadingInstances;
@@ -191,9 +196,7 @@ export default function PluginsPage() {
         <div className="max-w-7xl mx-auto">
           <Alert variant="destructive">
             <XCircle className="h-4 w-4" />
-            <AlertDescription>
-              {error.message || 'Failed to load plugin data'}
-            </AlertDescription>
+            <AlertDescription>{error.message || "Failed to load plugin data"}</AlertDescription>
           </Alert>
         </div>
       </div>
@@ -221,7 +224,9 @@ export default function PluginsPage() {
                 disabled={refreshPlugins.isPending}
                 className="px-3 py-2 text-sm border border-border text-muted-foreground rounded-lg hover:bg-accent transition-colors flex items-center gap-2 disabled:opacity-50"
               >
-                <RefreshCw className={`h-4 w-4 ${refreshPlugins.isPending ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 ${refreshPlugins.isPending ? "animate-spin" : ""}`}
+                />
                 Refresh
               </button>
               <button
@@ -241,7 +246,9 @@ export default function PluginsPage() {
             <div className="flex items-center gap-3">
               <Puzzle className="h-8 w-8 text-sky-500" />
               <div>
-                <div className="text-2xl font-semibold text-foreground">{availablePlugins.length}</div>
+                <div className="text-2xl font-semibold text-foreground">
+                  {availablePlugins.length}
+                </div>
                 <div className="text-sm text-muted-foreground">Available Plugins</div>
               </div>
             </div>
@@ -250,7 +257,9 @@ export default function PluginsPage() {
             <div className="flex items-center gap-3">
               <Settings className="h-8 w-8 text-emerald-500" />
               <div>
-                <div className="text-2xl font-semibold text-foreground">{pluginInstances.length}</div>
+                <div className="text-2xl font-semibold text-foreground">
+                  {pluginInstances.length}
+                </div>
                 <div className="text-sm text-muted-foreground">Active Instances</div>
               </div>
             </div>
@@ -260,7 +269,7 @@ export default function PluginsPage() {
               <CheckCircle className="h-8 w-8 text-emerald-500" />
               <div>
                 <div className="text-2xl font-semibold text-foreground">
-                  {healthChecks.filter(h => h.status === 'healthy').length}
+                  {healthChecks.filter((h) => h.status === "healthy").length}
                 </div>
                 <div className="text-sm text-muted-foreground">Healthy</div>
               </div>
@@ -271,7 +280,7 @@ export default function PluginsPage() {
               <AlertTriangle className="h-8 w-8 text-amber-500" />
               <div>
                 <div className="text-2xl font-semibold text-foreground">
-                  {healthChecks.filter(h => h.status !== 'healthy').length}
+                  {healthChecks.filter((h) => h.status !== "healthy").length}
                 </div>
                 <div className="text-sm text-muted-foreground">Issues</div>
               </div>
@@ -293,15 +302,15 @@ export default function PluginsPage() {
               />
             </div>
             <select
-              value={viewMode === 'grid' ? filterType : filterStatus}
+              value={viewMode === "grid" ? filterType : filterStatus}
               onChange={(e) =>
-                viewMode === 'grid'
+                viewMode === "grid"
                   ? handleTypeFilterChange(e.target.value)
                   : handleStatusFilterChange(e.target.value)
               }
               className="px-3 py-2 bg-card border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
             >
-              {viewMode === 'grid' ? (
+              {viewMode === "grid" ? (
                 <>
                   <option value="all">All Types</option>
                   <option value="notification">Notification</option>
@@ -327,9 +336,11 @@ export default function PluginsPage() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setViewMode('grid')}
+              onClick={() => setViewMode("grid")}
               className={`p-2 rounded-md transition-colors ${
-                viewMode === 'grid' ? 'bg-sky-500 text-white' : 'bg-accent text-muted-foreground hover:text-foreground'
+                viewMode === "grid"
+                  ? "bg-sky-500 text-white"
+                  : "bg-accent text-muted-foreground hover:text-foreground"
               }`}
             >
               <div className="grid grid-cols-2 gap-0.5 w-4 h-4">
@@ -340,9 +351,11 @@ export default function PluginsPage() {
               </div>
             </button>
             <button
-              onClick={() => setViewMode('list')}
+              onClick={() => setViewMode("list")}
               className={`p-2 rounded-md transition-colors ${
-                viewMode === 'list' ? 'bg-sky-500 text-white' : 'bg-accent text-muted-foreground hover:text-foreground'
+                viewMode === "list"
+                  ? "bg-sky-500 text-white"
+                  : "bg-accent text-muted-foreground hover:text-foreground"
               }`}
             >
               <div className="space-y-1 w-4 h-4">
@@ -352,9 +365,11 @@ export default function PluginsPage() {
               </div>
             </button>
             <button
-              onClick={() => setViewMode('health')}
+              onClick={() => setViewMode("health")}
               className={`p-2 rounded-md transition-colors ${
-                viewMode === 'health' ? 'bg-sky-500 text-white' : 'bg-accent text-muted-foreground hover:text-foreground'
+                viewMode === "health"
+                  ? "bg-sky-500 text-white"
+                  : "bg-accent text-muted-foreground hover:text-foreground"
               }`}
             >
               <Activity className="w-4 h-4" />
@@ -363,13 +378,13 @@ export default function PluginsPage() {
         </div>
 
         {/* Content based on view mode */}
-        {viewMode === 'health' ? (
+        {viewMode === "health" ? (
           <PluginHealthDashboard
             instances={pluginInstances}
             healthChecks={healthChecks}
             onRefresh={loadHealthChecks}
           />
-        ) : viewMode === 'grid' && !showCreateForm ? (
+        ) : viewMode === "grid" && !showCreateForm ? (
           <div>
             <h2 className="text-lg font-semibold text-foreground mb-4">Available Plugins</h2>
             {filteredPlugins.length === 0 ? (
@@ -382,7 +397,7 @@ export default function PluginsPage() {
                   <PluginCard
                     key={plugin.name}
                     plugin={plugin}
-                    instances={pluginInstances.filter(inst => inst.plugin_name === plugin.name)}
+                    instances={pluginInstances.filter((inst) => inst.plugin_name === plugin.name)}
                     onInstall={(plugin) => {
                       setSelectedPlugin(plugin as any);
                       setShowCreateForm(true);
@@ -399,24 +414,35 @@ export default function PluginsPage() {
               <div className="text-center py-12 text-muted-foreground">
                 {pluginInstances.length === 0
                   ? 'No plugin instances configured yet. Click "Add Plugin" to get started.'
-                  : 'No instances match your search criteria.'}
+                  : "No instances match your search criteria."}
               </div>
             ) : (
               <div className="space-y-4">
                 {filteredInstances.map((instance) => {
                   const healthStatus = getHealthStatus(instance.id);
                   return (
-                    <div key={instance.id} className="bg-card/50 border border-border rounded-lg p-4">
+                    <div
+                      key={instance.id}
+                      className="bg-card/50 border border-border rounded-lg p-4"
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${
-                            healthStatus?.status === 'healthy' ? 'bg-emerald-500' :
-                            healthStatus?.status === 'unhealthy' ? 'bg-rose-500' :
-                            'bg-amber-500'
-                          }`} />
+                          <div
+                            className={`w-3 h-3 rounded-full ${
+                              healthStatus?.status === "healthy"
+                                ? "bg-emerald-500"
+                                : healthStatus?.status === "unhealthy"
+                                  ? "bg-rose-500"
+                                  : "bg-amber-500"
+                            }`}
+                          />
                           <div>
-                            <h3 className="font-medium text-foreground">{instance.instance_name}</h3>
-                            <p className="text-sm text-muted-foreground">{instance.plugin_name} • {instance.status}</p>
+                            <h3 className="font-medium text-foreground">
+                              {instance.instance_name}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {instance.plugin_name} • {instance.status}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -469,7 +495,9 @@ export default function PluginsPage() {
             instance={editingInstance}
             onSubmit={(data) => handleUpdateInstance(editingInstance.id, data.configuration)}
             onCancel={() => setEditingInstance(null)}
-            onTestConnection={(_, testConfig) => handleTestConnection(editingInstance.id, testConfig)}
+            onTestConnection={(_, testConfig) =>
+              handleTestConnection(editingInstance.id, testConfig)
+            }
             availablePlugins={availablePlugins}
           />
         )}

@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { EnhancedDataTable, BulkAction } from '@/components/ui/EnhancedDataTable';
-import { createSortableHeader } from '@/components/ui/data-table';
-import { UniversalChart } from '@dotmac/primitives';
+import { useState, useMemo } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { EnhancedDataTable, BulkAction } from "@/components/ui/EnhancedDataTable";
+import { createSortableHeader } from "@/components/ui/data-table";
+import { UniversalChart } from "@dotmac/primitives";
 import {
   Activity,
   Download,
@@ -15,22 +15,22 @@ import {
   TrendingUp,
   Database,
   DollarSign,
-} from 'lucide-react';
-import { ColumnDef } from '@tanstack/react-table';
-import { useRBAC } from '@/contexts/RBACContext';
+} from "lucide-react";
+import { ColumnDef } from "@tanstack/react-table";
+import { useRBAC } from "@/contexts/RBACContext";
 import {
   useUsageRecords,
   useUsageStatistics,
   useUsageOperations,
   useUsageChartData,
   type UsageRecord,
-} from '@/hooks/useUsageBilling';
+} from "@/hooks/useUsageBilling";
 
 // ============================================================================
 // Types (imported from useUsageBilling)
 // ============================================================================
 
-import type { UsageType, BilledStatus } from '@/hooks/useUsageBilling';
+import type { UsageType, BilledStatus } from "@/hooks/useUsageBilling";
 
 // Define UsageStats type locally
 interface UsageStats {
@@ -54,88 +54,88 @@ interface UsageChartData {
 
 const mockUsageRecords: UsageRecord[] = [
   {
-    id: 'usage-001',
-    tenant_id: 'demo-alpha',
-    subscription_id: 'sub-001',
-    customer_id: 'cust-001',
-    customer_name: 'John Doe',
-    usage_type: 'data_transfer',
+    id: "usage-001",
+    tenant_id: "demo-alpha",
+    subscription_id: "sub-001",
+    customer_id: "cust-001",
+    customer_name: "John Doe",
+    usage_type: "data_transfer",
     quantity: 150.5,
-    unit: 'GB',
+    unit: "GB",
     unit_price: 10, // $0.10/GB
     total_amount: 1505, // $15.05
-    currency: 'USD',
+    currency: "USD",
     period_start: new Date(Date.now() - 86400000).toISOString(),
     period_end: new Date().toISOString(),
-    billed_status: 'pending',
-    source_system: 'radius',
-    description: 'Internet data usage',
+    billed_status: "pending",
+    source_system: "radius",
+    description: "Internet data usage",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
-    id: 'usage-002',
-    tenant_id: 'demo-alpha',
-    subscription_id: 'sub-002',
-    customer_id: 'cust-002',
-    customer_name: 'Jane Smith',
-    usage_type: 'voice_minutes',
+    id: "usage-002",
+    tenant_id: "demo-alpha",
+    subscription_id: "sub-002",
+    customer_id: "cust-002",
+    customer_name: "Jane Smith",
+    usage_type: "voice_minutes",
     quantity: 120,
-    unit: 'minutes',
+    unit: "minutes",
     unit_price: 5, // $0.05/min
     total_amount: 600, // $6.00
-    currency: 'USD',
+    currency: "USD",
     period_start: new Date(Date.now() - 172800000).toISOString(),
     period_end: new Date(Date.now() - 86400000).toISOString(),
-    billed_status: 'billed',
-    invoice_id: 'inv-001',
+    billed_status: "billed",
+    invoice_id: "inv-001",
     billed_at: new Date(Date.now() - 43200000).toISOString(),
-    source_system: 'api',
-    description: 'VoIP call minutes',
+    source_system: "api",
+    description: "VoIP call minutes",
     created_at: new Date(Date.now() - 172800000).toISOString(),
     updated_at: new Date(Date.now() - 43200000).toISOString(),
   },
   {
-    id: 'usage-003',
-    tenant_id: 'demo-alpha',
-    subscription_id: 'sub-003',
-    customer_id: 'cust-003',
-    customer_name: 'Bob Johnson',
-    usage_type: 'overage_gb',
+    id: "usage-003",
+    tenant_id: "demo-alpha",
+    subscription_id: "sub-003",
+    customer_id: "cust-003",
+    customer_name: "Bob Johnson",
+    usage_type: "overage_gb",
     quantity: 50,
-    unit: 'GB',
+    unit: "GB",
     unit_price: 20, // $0.20/GB overage
     total_amount: 1000, // $10.00
-    currency: 'USD',
+    currency: "USD",
     period_start: new Date(Date.now() - 259200000).toISOString(),
     period_end: new Date(Date.now() - 172800000).toISOString(),
-    billed_status: 'pending',
-    source_system: 'radius',
-    description: 'Data overage charges',
-    service_location: '123 Main St, City, ST 12345',
+    billed_status: "pending",
+    source_system: "radius",
+    description: "Data overage charges",
+    service_location: "123 Main St, City, ST 12345",
     created_at: new Date(Date.now() - 259200000).toISOString(),
     updated_at: new Date(Date.now() - 259200000).toISOString(),
   },
   {
-    id: 'usage-004',
-    tenant_id: 'demo-alpha',
-    subscription_id: 'sub-001',
-    customer_id: 'cust-001',
-    customer_name: 'John Doe',
-    usage_type: 'equipment_rental',
+    id: "usage-004",
+    tenant_id: "demo-alpha",
+    subscription_id: "sub-001",
+    customer_id: "cust-001",
+    customer_name: "John Doe",
+    usage_type: "equipment_rental",
     quantity: 1,
-    unit: 'month',
+    unit: "month",
     unit_price: 500, // $5.00/month
     total_amount: 500, // $5.00
-    currency: 'USD',
+    currency: "USD",
     period_start: new Date(Date.now() - 86400000 * 30).toISOString(),
     period_end: new Date().toISOString(),
-    billed_status: 'billed',
-    invoice_id: 'inv-002',
+    billed_status: "billed",
+    invoice_id: "inv-002",
     billed_at: new Date(Date.now() - 86400000).toISOString(),
-    source_system: 'api',
-    description: 'ONT equipment rental',
-    device_id: 'ONT-12345',
+    source_system: "api",
+    description: "ONT equipment rental",
+    device_id: "ONT-12345",
     created_at: new Date(Date.now() - 86400000 * 30).toISOString(),
     updated_at: new Date(Date.now() - 86400000).toISOString(),
   },
@@ -152,7 +152,10 @@ const mockUsageStats: UsageStats = {
 const mockUsageChartData: UsageChartData[] = Array.from({ length: 7 }, (_, i) => {
   const date = new Date(Date.now() - (6 - i) * 86400000);
   return {
-    date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    date: date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    }),
     data_transfer: Math.floor(Math.random() * 200) + 100,
     voice_minutes: Math.floor(Math.random() * 150) + 50,
     bandwidth_gb: Math.floor(Math.random() * 100) + 50,
@@ -166,17 +169,22 @@ const mockUsageChartData: UsageChartData[] = Array.from({ length: 7 }, (_, i) =>
 
 export default function UsageBillingPage() {
   const { hasPermission } = useRBAC();
-  const hasBillingAccess = hasPermission('billing.read');
+  const hasBillingAccess = hasPermission("billing.read");
   const [selectedUsageRecord, setSelectedUsageRecord] = useState<UsageRecord | null>(null);
-  const [invoiceIdForBilling, setInvoiceIdForBilling] = useState<string>('');
+  const [invoiceIdForBilling, setInvoiceIdForBilling] = useState<string>("");
 
   // API Hooks
-  const { data: apiRecords = [], isLoading: recordsLoading, error: recordsError, refetch } = useUsageRecords({
+  const {
+    data: apiRecords = [],
+    isLoading: recordsLoading,
+    error: recordsError,
+    refetch,
+  } = useUsageRecords({
     limit: 100,
   });
   const { data: apiStatistics, isLoading: statsLoading } = useUsageStatistics();
   const { data: apiChartData = [], isLoading: chartLoading } = useUsageChartData({
-    period_type: 'daily',
+    period_type: "daily",
     days: 7,
   });
   const { markAsBilled, excludeFromBilling, isLoading: operationsLoading } = useUsageOperations();
@@ -200,12 +208,14 @@ export default function UsageBillingPage() {
     return {
       totalRecords: usageRecords.length,
       totalAmount: usageRecords.reduce((sum, r) => sum + r.total_amount, 0) / 100,
-      pendingAmount: usageRecords
-        .filter(r => r.billed_status === 'pending')
-        .reduce((sum, r) => sum + r.total_amount, 0) / 100,
-      billedAmount: usageRecords
-        .filter(r => r.billed_status === 'billed')
-        .reduce((sum, r) => sum + r.total_amount, 0) / 100,
+      pendingAmount:
+        usageRecords
+          .filter((r) => r.billed_status === "pending")
+          .reduce((sum, r) => sum + r.total_amount, 0) / 100,
+      billedAmount:
+        usageRecords
+          .filter((r) => r.billed_status === "billed")
+          .reduce((sum, r) => sum + r.total_amount, 0) / 100,
     };
   }, [apiStatistics, usageRecords]);
 
@@ -215,41 +225,41 @@ export default function UsageBillingPage() {
 
   const columns: ColumnDef<UsageRecord>[] = [
     {
-      accessorKey: 'customer_name',
-      header: createSortableHeader('Customer'),
+      accessorKey: "customer_name",
+      header: createSortableHeader("Customer"),
       cell: ({ row }) => (
         <div>
-          <div className="font-medium">{row.getValue('customer_name') || row.original.customer_id}</div>
+          <div className="font-medium">
+            {row.getValue("customer_name") || row.original.customer_id}
+          </div>
           <div className="text-xs text-muted-foreground">{row.original.subscription_id}</div>
         </div>
       ),
     },
     {
-      accessorKey: 'usage_type',
-      header: 'Usage Type',
+      accessorKey: "usage_type",
+      header: "Usage Type",
       cell: ({ row }) => {
-        const usageType = row.getValue('usage_type') as UsageType;
+        const usageType = row.getValue("usage_type") as UsageType;
         const usageTypeLabels: Record<UsageType, string> = {
-          data_transfer: 'Data Transfer',
-          voice_minutes: 'Voice Minutes',
-          sms_count: 'SMS',
-          bandwidth_gb: 'Bandwidth',
-          overage_gb: 'Data Overage',
-          static_ip: 'Static IP',
-          equipment_rental: 'Equipment Rental',
-          installation_fee: 'Installation',
-          custom: 'Custom',
+          data_transfer: "Data Transfer",
+          voice_minutes: "Voice Minutes",
+          sms_count: "SMS",
+          bandwidth_gb: "Bandwidth",
+          overage_gb: "Data Overage",
+          static_ip: "Static IP",
+          equipment_rental: "Equipment Rental",
+          installation_fee: "Installation",
+          custom: "Custom",
         };
-        return (
-          <Badge variant="outline">{usageTypeLabels[usageType]}</Badge>
-        );
+        return <Badge variant="outline">{usageTypeLabels[usageType]}</Badge>;
       },
     },
     {
-      accessorKey: 'quantity',
-      header: createSortableHeader('Quantity'),
+      accessorKey: "quantity",
+      header: createSortableHeader("Quantity"),
       cell: ({ row }) => {
-        const quantity = row.getValue('quantity') as number;
+        const quantity = row.getValue("quantity") as number;
         const unit = row.original.unit;
         return (
           <div className="text-sm">
@@ -259,10 +269,10 @@ export default function UsageBillingPage() {
       },
     },
     {
-      accessorKey: 'total_amount',
-      header: createSortableHeader('Amount'),
+      accessorKey: "total_amount",
+      header: createSortableHeader("Amount"),
       cell: ({ row }) => {
-        const amount = row.getValue('total_amount') as number;
+        const amount = row.getValue("total_amount") as number;
         const currency = row.original.currency;
         const displayAmount = amount / 100;
         return (
@@ -273,53 +283,47 @@ export default function UsageBillingPage() {
       },
     },
     {
-      accessorKey: 'period_start',
-      header: createSortableHeader('Period'),
+      accessorKey: "period_start",
+      header: createSortableHeader("Period"),
       cell: ({ row }) => {
-        const start = new Date(row.getValue('period_start'));
+        const start = new Date(row.getValue("period_start"));
         const end = new Date(row.original.period_end);
         return (
           <div className="text-sm">
             <div>{start.toLocaleDateString()}</div>
-            <div className="text-xs text-muted-foreground">
-              to {end.toLocaleDateString()}
-            </div>
+            <div className="text-xs text-muted-foreground">to {end.toLocaleDateString()}</div>
           </div>
         );
       },
     },
     {
-      accessorKey: 'billed_status',
-      header: 'Status',
+      accessorKey: "billed_status",
+      header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue('billed_status') as BilledStatus;
+        const status = row.getValue("billed_status") as BilledStatus;
         const statusConfig = {
-          pending: { color: 'bg-yellow-500 text-black', label: 'Pending' },
-          billed: { color: 'bg-green-500 text-white', label: 'Billed' },
-          error: { color: 'bg-red-500 text-white', label: 'Error' },
-          excluded: { color: 'bg-gray-500 text-white', label: 'Excluded' },
+          pending: { color: "bg-yellow-500 text-black", label: "Pending" },
+          billed: { color: "bg-green-500 text-white", label: "Billed" },
+          error: { color: "bg-red-500 text-white", label: "Error" },
+          excluded: { color: "bg-gray-500 text-white", label: "Excluded" },
         };
         const { color, label } = statusConfig[status];
         return <Badge className={color}>{label}</Badge>;
       },
     },
     {
-      accessorKey: 'invoice_id',
-      header: 'Invoice',
+      accessorKey: "invoice_id",
+      header: "Invoice",
       cell: ({ row }) => {
-        const invoiceId = row.getValue('invoice_id') as string | undefined;
-        return (
-          <div className="text-sm text-muted-foreground">
-            {invoiceId || '—'}
-          </div>
-        );
+        const invoiceId = row.getValue("invoice_id") as string | undefined;
+        return <div className="text-sm text-muted-foreground">{invoiceId || "—"}</div>;
       },
     },
     {
-      accessorKey: 'source_system',
-      header: 'Source',
+      accessorKey: "source_system",
+      header: "Source",
       cell: ({ row }) => {
-        const source = row.getValue('source_system') as string;
+        const source = row.getValue("source_system") as string;
         return (
           <Badge variant="outline" className="text-xs">
             {source.toUpperCase()}
@@ -335,58 +339,60 @@ export default function UsageBillingPage() {
 
   const bulkActions: BulkAction<UsageRecord>[] = [
     {
-      label: 'Mark as Billed',
+      label: "Mark as Billed",
       icon: Receipt,
       action: async (selected) => {
         // Prompt for invoice ID
-        const invoiceId = prompt('Enter the invoice ID to associate with these usage records:');
+        const invoiceId = prompt("Enter the invoice ID to associate with these usage records:");
 
-        if (!invoiceId || invoiceId.trim() === '') {
-          alert('Invoice ID is required to mark usage records as billed.');
+        if (!invoiceId || invoiceId.trim() === "") {
+          alert("Invoice ID is required to mark usage records as billed.");
           return;
         }
 
-        const usageIds = selected.map(r => r.id);
+        const usageIds = selected.map((r) => r.id);
         const success = await markAsBilled(usageIds, invoiceId.trim());
 
         if (success) {
           // Refetch data to show updated records
           await refetch();
-          alert(`Successfully marked ${selected.length} usage record(s) as billed to invoice ${invoiceId}`);
+          alert(
+            `Successfully marked ${selected.length} usage record(s) as billed to invoice ${invoiceId}`,
+          );
         } else {
-          alert('Failed to mark usage records as billed. Please try again.');
+          alert("Failed to mark usage records as billed. Please try again.");
         }
       },
-      disabled: (selected) => selected.every(r => r.billed_status !== 'pending'),
+      disabled: (selected) => selected.every((r) => r.billed_status !== "pending"),
     },
     {
-      label: 'Exclude from Billing',
+      label: "Exclude from Billing",
       icon: Database,
       action: async (selected) => {
-        const usageIds = selected.map(r => r.id);
+        const usageIds = selected.map((r) => r.id);
         const success = await excludeFromBilling(usageIds);
 
         if (success) {
           // Refetch data to show updated records
           await refetch();
         } else {
-          alert('Failed to exclude usage records from billing. Please try again.');
+          alert("Failed to exclude usage records from billing. Please try again.");
         }
       },
     },
     {
-      label: 'Download CSV',
+      label: "Download CSV",
       icon: Download,
       action: async (selected) => {
         try {
           // Prepare usage record IDs for download
-          const usageIds = selected.map(r => r.id);
+          const usageIds = selected.map((r) => r.id);
 
           // Call API to generate CSV
-          const response = await fetch('/api/billing/usage/export', {
-            method: 'POST',
+          const response = await fetch("/api/billing/usage/export", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({ usage_ids: usageIds }),
           });
@@ -400,9 +406,9 @@ export default function UsageBillingPage() {
 
           // Create a download link and trigger download
           const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
+          const link = document.createElement("a");
           link.href = url;
-          link.download = `usage-records-${new Date().toISOString().split('T')[0]}.csv`;
+          link.download = `usage-records-${new Date().toISOString().split("T")[0]}.csv`;
           document.body.appendChild(link);
           link.click();
 
@@ -412,8 +418,8 @@ export default function UsageBillingPage() {
 
           alert(`Successfully downloaded ${selected.length} usage record(s)`);
         } catch (error) {
-          console.error('Failed to download usage records:', error);
-          alert(`Failed to download: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          console.error("Failed to download usage records:", error);
+          alert(`Failed to download: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
       },
     },
@@ -446,9 +452,7 @@ export default function UsageBillingPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Error: {recordsError.message}
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">Error: {recordsError.message}</p>
             <Button onClick={() => refetch()}>
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
@@ -471,7 +475,7 @@ export default function UsageBillingPage() {
         </div>
         <div className="flex gap-2">
           <Button onClick={() => refetch()} variant="outline" disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button>
@@ -489,9 +493,7 @@ export default function UsageBillingPage() {
             <CardTitle className="text-3xl">{statistics.totalRecords}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xs text-muted-foreground">
-              All usage records
-            </div>
+            <div className="text-xs text-muted-foreground">All usage records</div>
           </CardContent>
         </Card>
 
@@ -503,9 +505,7 @@ export default function UsageBillingPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xs text-muted-foreground">
-              All usage charges
-            </div>
+            <div className="text-xs text-muted-foreground">All usage charges</div>
           </CardContent>
         </Card>
 
@@ -517,9 +517,7 @@ export default function UsageBillingPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xs text-muted-foreground">
-              Awaiting invoicing
-            </div>
+            <div className="text-xs text-muted-foreground">Awaiting invoicing</div>
           </CardContent>
         </Card>
 
@@ -531,9 +529,7 @@ export default function UsageBillingPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xs text-muted-foreground">
-              Invoiced charges
-            </div>
+            <div className="text-xs text-muted-foreground">Invoiced charges</div>
           </CardContent>
         </Card>
       </div>
@@ -544,9 +540,7 @@ export default function UsageBillingPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Usage Trends (Last 7 Days)</CardTitle>
-              <CardDescription>
-                Metered usage by type over time
-              </CardDescription>
+              <CardDescription>Metered usage by type over time</CardDescription>
             </div>
             <TrendingUp className="h-5 w-5 text-muted-foreground" />
           </div>
@@ -559,20 +553,36 @@ export default function UsageBillingPage() {
               </div>
             ) : (
               <UniversalChart
-                {...{
+                {...({
                   type: "line",
                   data: apiChartData.length > 0 ? apiChartData : mockUsageChartData,
                   series: [
-                    { key: 'data_transfer', name: 'Data Transfer (GB)', color: '#3b82f6' },
-                    { key: 'voice_minutes', name: 'Voice Minutes', color: '#10b981' },
-                    { key: 'bandwidth_gb', name: 'Bandwidth (GB)', color: '#f59e0b' },
-                    { key: 'overage_gb', name: 'Overage (GB)', color: '#ef4444' },
+                    {
+                      key: "data_transfer",
+                      name: "Data Transfer (GB)",
+                      color: "#3b82f6",
+                    },
+                    {
+                      key: "voice_minutes",
+                      name: "Voice Minutes",
+                      color: "#10b981",
+                    },
+                    {
+                      key: "bandwidth_gb",
+                      name: "Bandwidth (GB)",
+                      color: "#f59e0b",
+                    },
+                    {
+                      key: "overage_gb",
+                      name: "Overage (GB)",
+                      color: "#ef4444",
+                    },
                   ],
                   xAxisLabel: "Date",
                   yAxisLabel: "Usage",
                   showLegend: true,
                   showGrid: true,
-                } as any}
+                } as any)}
               />
             )}
           </div>
@@ -598,34 +608,44 @@ export default function UsageBillingPage() {
             bulkActions={bulkActions}
             exportable
             exportFilename="usage-records"
-            exportColumns={['customer_name', 'usage_type', 'quantity', 'unit', 'total_amount', 'period_start', 'period_end', 'billed_status', 'invoice_id']}
+            exportColumns={[
+              "customer_name",
+              "usage_type",
+              "quantity",
+              "unit",
+              "total_amount",
+              "period_start",
+              "period_end",
+              "billed_status",
+              "invoice_id",
+            ]}
             filterable
             filters={[
               {
-                column: 'usage_type',
-                label: 'Usage Type',
-                type: 'select',
+                column: "usage_type",
+                label: "Usage Type",
+                type: "select",
                 options: [
-                  { label: 'Data Transfer', value: 'data_transfer' },
-                  { label: 'Voice Minutes', value: 'voice_minutes' },
-                  { label: 'SMS', value: 'sms_count' },
-                  { label: 'Bandwidth', value: 'bandwidth_gb' },
-                  { label: 'Data Overage', value: 'overage_gb' },
-                  { label: 'Static IP', value: 'static_ip' },
-                  { label: 'Equipment Rental', value: 'equipment_rental' },
-                  { label: 'Installation', value: 'installation_fee' },
-                  { label: 'Custom', value: 'custom' },
+                  { label: "Data Transfer", value: "data_transfer" },
+                  { label: "Voice Minutes", value: "voice_minutes" },
+                  { label: "SMS", value: "sms_count" },
+                  { label: "Bandwidth", value: "bandwidth_gb" },
+                  { label: "Data Overage", value: "overage_gb" },
+                  { label: "Static IP", value: "static_ip" },
+                  { label: "Equipment Rental", value: "equipment_rental" },
+                  { label: "Installation", value: "installation_fee" },
+                  { label: "Custom", value: "custom" },
                 ],
               },
               {
-                column: 'billed_status',
-                label: 'Status',
-                type: 'select',
+                column: "billed_status",
+                label: "Status",
+                type: "select",
                 options: [
-                  { label: 'Pending', value: 'pending' },
-                  { label: 'Billed', value: 'billed' },
-                  { label: 'Error', value: 'error' },
-                  { label: 'Excluded', value: 'excluded' },
+                  { label: "Pending", value: "pending" },
+                  { label: "Billed", value: "billed" },
+                  { label: "Error", value: "error" },
+                  { label: "Excluded", value: "excluded" },
                 ],
               },
             ]}

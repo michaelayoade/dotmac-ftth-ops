@@ -42,7 +42,9 @@ export default function PartnerCustomerManagement({
         tenantId,
       });
 
-      alert(`Customer created successfully!\nCustomer ID: ${result.customer_id}\nQuota remaining: ${result.quota_remaining}`);
+      alert(
+        `Customer created successfully!\nCustomer ID: ${result.customer_id}\nQuota remaining: ${result.quota_remaining}`,
+      );
 
       // Reset form
       setFormData({
@@ -99,7 +101,10 @@ export default function PartnerCustomerManagement({
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="first_name" className="block text-sm font-medium text-foreground mb-1">
+                <label
+                  htmlFor="first_name"
+                  className="block text-sm font-medium text-foreground mb-1"
+                >
                   First Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -113,7 +118,10 @@ export default function PartnerCustomerManagement({
               </div>
 
               <div>
-                <label htmlFor="last_name" className="block text-sm font-medium text-foreground mb-1">
+                <label
+                  htmlFor="last_name"
+                  className="block text-sm font-medium text-foreground mb-1"
+                >
                   Last Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -157,7 +165,10 @@ export default function PartnerCustomerManagement({
             </div>
 
             <div>
-              <label htmlFor="company_name" className="block text-sm font-medium text-foreground mb-1">
+              <label
+                htmlFor="company_name"
+                className="block text-sm font-medium text-foreground mb-1"
+              >
                 Company Name
               </label>
               <input
@@ -171,7 +182,10 @@ export default function PartnerCustomerManagement({
 
             {/* Addresses */}
             <div>
-              <label htmlFor="service_address" className="block text-sm font-medium text-foreground mb-1">
+              <label
+                htmlFor="service_address"
+                className="block text-sm font-medium text-foreground mb-1"
+              >
                 Service Address
               </label>
               <input
@@ -184,7 +198,10 @@ export default function PartnerCustomerManagement({
             </div>
 
             <div>
-              <label htmlFor="billing_address" className="block text-sm font-medium text-foreground mb-1">
+              <label
+                htmlFor="billing_address"
+                className="block text-sm font-medium text-foreground mb-1"
+              >
                 Billing Address
               </label>
               <input
@@ -215,7 +232,10 @@ export default function PartnerCustomerManagement({
               </div>
 
               <div>
-                <label htmlFor="engagement_type" className="block text-sm font-medium text-foreground mb-1">
+                <label
+                  htmlFor="engagement_type"
+                  className="block text-sm font-medium text-foreground mb-1"
+                >
                   Engagement Type
                 </label>
                 <select
@@ -232,7 +252,10 @@ export default function PartnerCustomerManagement({
             </div>
 
             <div>
-              <label htmlFor="commission_rate" className="block text-sm font-medium text-foreground mb-1">
+              <label
+                htmlFor="commission_rate"
+                className="block text-sm font-medium text-foreground mb-1"
+              >
                 Custom Commission Rate (%)
               </label>
               <input
@@ -243,9 +266,11 @@ export default function PartnerCustomerManagement({
                 step="0.01"
                 value={customCommissionRate ?? ""}
                 onChange={(e) =>
-                  setCustomCommissionRate(e.target.value ? parseFloat(e.target.value) / 100 : undefined)
+                  setCustomCommissionRate(
+                    e.target.value ? parseFloat(e.target.value) / 100 : undefined,
+                  )
                 }
-                placeholder="Leave empty to use partner&apos;s default rate"
+                placeholder="Leave empty to use partner's default rate"
                 className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <p className="text-xs text-muted-foreground mt-1">
@@ -255,17 +280,10 @@ export default function PartnerCustomerManagement({
 
             {/* Form Actions */}
             <div className="flex justify-end gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowForm(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={createPartnerCustomer.isPending}
-              >
+              <Button type="submit" disabled={createPartnerCustomer.isPending}>
                 {createPartnerCustomer.isPending ? "Creating..." : "Create Customer"}
               </Button>
             </div>

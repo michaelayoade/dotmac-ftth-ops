@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { use } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { use } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -15,15 +15,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { useRBAC } from '@/contexts/RBACContext';
+} from "@/components/ui/table";
+import { useRBAC } from "@/contexts/RBACContext";
 import {
   useAccessPointDetailGraphQL,
   useWirelessClientsByAccessPointGraphQL,
   getSignalQualityLabel,
   getFrequencyBandLabel,
-} from '@/hooks/useWirelessGraphQL';
-import { platformConfig } from '@/lib/config';
+} from "@/hooks/useWirelessGraphQL";
+import { platformConfig } from "@/lib/config";
 import {
   Wifi,
   MapPin,
@@ -34,8 +34,8 @@ import {
   RefreshCw,
   Signal,
   Zap,
-} from 'lucide-react';
-import Link from 'next/link';
+} from "lucide-react";
+import Link from "next/link";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -44,7 +44,7 @@ interface PageProps {
 export default function AccessPointDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const { hasPermission } = useRBAC();
-  const hasWirelessAccess = platformConfig.features.enableNetwork && hasPermission('isp.ipam.read');
+  const hasWirelessAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
 
   // Fetch access point details
   const {
@@ -120,36 +120,39 @@ export default function AccessPointDetailPage({ params }: PageProps) {
   }
 
   const formatStatus = (status: string) => {
-    return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+    return status
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'ONLINE':
-        return 'default';
-      case 'OFFLINE':
-        return 'destructive';
-      case 'DEGRADED':
-        return 'secondary';
-      case 'MAINTENANCE':
-        return 'secondary';
+      case "ONLINE":
+        return "default";
+      case "OFFLINE":
+        return "destructive";
+      case "DEGRADED":
+        return "secondary";
+      case "MAINTENANCE":
+        return "secondary";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'ONLINE':
-        return 'text-green-600';
-      case 'OFFLINE':
-        return 'text-red-600';
-      case 'DEGRADED':
-        return 'text-amber-600';
-      case 'MAINTENANCE':
-        return 'text-blue-600';
+      case "ONLINE":
+        return "text-green-600";
+      case "OFFLINE":
+        return "text-red-600";
+      case "DEGRADED":
+        return "text-amber-600";
+      case "MAINTENANCE":
+        return "text-blue-600";
       default:
-        return 'text-gray-600';
+        return "text-gray-600";
     }
   };
 
@@ -172,7 +175,7 @@ export default function AccessPointDetailPage({ params }: PageProps) {
             <div>
               <h1 className="text-2xl font-semibold text-foreground">{accessPoint.name}</h1>
               <p className="text-sm text-muted-foreground">
-                {accessPoint.siteName || 'Unknown Site'} • {accessPoint.ipAddress}
+                {accessPoint.siteName || "Unknown Site"} • {accessPoint.ipAddress}
               </p>
             </div>
           </div>
@@ -196,7 +199,9 @@ export default function AccessPointDetailPage({ params }: PageProps) {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{accessPoint.performance?.connectedClients ?? 0}</div>
+            <div className="text-2xl font-bold">
+              {accessPoint.performance?.connectedClients ?? 0}
+            </div>
             <p className="text-xs text-muted-foreground">Active connections</p>
           </CardContent>
         </Card>
@@ -220,14 +225,16 @@ export default function AccessPointDetailPage({ params }: PageProps) {
           <CardContent>
             <div className="text-2xl font-bold">
               {accessPoint.lastRebootAt
-                ? Math.floor((Date.now() - new Date(accessPoint.lastRebootAt).getTime()) / (1000 * 86400))
+                ? Math.floor(
+                    (Date.now() - new Date(accessPoint.lastRebootAt).getTime()) / (1000 * 86400),
+                  )
                 : 0}
               d
             </div>
             <p className="text-xs text-muted-foreground">
               {accessPoint.lastRebootAt
-                ? `${Math.floor(((Date.now() - new Date(accessPoint.lastRebootAt).getTime()) / 1000 % 86400) / 3600)}h uptime`
-                : 'No data'}
+                ? `${Math.floor((((Date.now() - new Date(accessPoint.lastRebootAt).getTime()) / 1000) % 86400) / 3600)}h uptime`
+                : "No data"}
             </p>
           </CardContent>
         </Card>
@@ -269,18 +276,21 @@ export default function AccessPointDetailPage({ params }: PageProps) {
                   <span className="font-medium">{accessPoint.name}</span>
 
                   <span className="text-muted-foreground">Status:</span>
-                  <Badge variant={getStatusBadgeVariant(accessPoint.status) as any} className="w-fit">
+                  <Badge
+                    variant={getStatusBadgeVariant(accessPoint.status) as any}
+                    className="w-fit"
+                  >
                     {formatStatus(accessPoint.status)}
                   </Badge>
 
                   <span className="text-muted-foreground">Site:</span>
-                  <span>{accessPoint.siteName || '-'}</span>
+                  <span>{accessPoint.siteName || "-"}</span>
 
                   <span className="text-muted-foreground">IP Address:</span>
-                  <span className="font-mono text-xs">{accessPoint.ipAddress || '-'}</span>
+                  <span className="font-mono text-xs">{accessPoint.ipAddress || "-"}</span>
 
                   <span className="text-muted-foreground">MAC Address:</span>
-                  <span className="font-mono text-xs">{accessPoint.macAddress || '-'}</span>
+                  <span className="font-mono text-xs">{accessPoint.macAddress || "-"}</span>
 
                   {accessPoint.model && (
                     <>
@@ -308,7 +318,9 @@ export default function AccessPointDetailPage({ params }: PageProps) {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <div className="text-muted-foreground mb-1">Connected Clients</div>
-                    <div className="text-2xl font-bold">{accessPoint.performance?.connectedClients ?? 0}</div>
+                    <div className="text-2xl font-bold">
+                      {accessPoint.performance?.connectedClients ?? 0}
+                    </div>
                   </div>
                   <div>
                     <div className="text-muted-foreground mb-1">Radio Count</div>
@@ -318,8 +330,8 @@ export default function AccessPointDetailPage({ params }: PageProps) {
                     <div className="text-muted-foreground mb-1">Uptime</div>
                     <div className="font-medium">
                       {accessPoint.lastRebootAt
-                        ? `${Math.floor((Date.now() - new Date(accessPoint.lastRebootAt).getTime()) / (1000 * 86400))}d ${Math.floor(((Date.now() - new Date(accessPoint.lastRebootAt).getTime()) / 1000 % 86400) / 3600)}h`
-                        : '-'}
+                        ? `${Math.floor((Date.now() - new Date(accessPoint.lastRebootAt).getTime()) / (1000 * 86400))}d ${Math.floor((((Date.now() - new Date(accessPoint.lastRebootAt).getTime()) / 1000) % 86400) / 3600)}h`
+                        : "-"}
                     </div>
                   </div>
                   <div>
@@ -327,7 +339,7 @@ export default function AccessPointDetailPage({ params }: PageProps) {
                     <div className="font-medium">
                       {accessPoint.lastSeenAt
                         ? new Date(accessPoint.lastSeenAt).toLocaleString()
-                        : '-'}
+                        : "-"}
                     </div>
                   </div>
                 </div>
@@ -387,29 +399,27 @@ export default function AccessPointDetailPage({ params }: PageProps) {
                     <div key={index} className="p-4 rounded-lg border">
                       <div className="flex items-center justify-between mb-3">
                         <div className="font-medium">{radio.radioName || `Radio ${index + 1}`}</div>
-                        <Badge variant={radio.enabled ? 'default' : 'secondary'}>
-                          {radio.enabled ? 'Enabled' : 'Disabled'}
+                        <Badge variant={radio.enabled ? "default" : "secondary"}>
+                          {radio.enabled ? "Enabled" : "Disabled"}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                         <div>
                           <div className="text-muted-foreground mb-1">Frequency</div>
                           <div className="font-medium">
-                            {radio.frequencyBand ? getFrequencyBandLabel(radio.frequencyBand) : '-'}
+                            {radio.frequencyBand ? getFrequencyBandLabel(radio.frequencyBand) : "-"}
                           </div>
                         </div>
                         <div>
                           <div className="text-muted-foreground mb-1">Channel</div>
                           <div className="font-medium">
-                            {radio.channel
-                              ? `${radio.channel} (${radio.channelWidthMhz}MHz)`
-                              : '-'}
+                            {radio.channel ? `${radio.channel} (${radio.channelWidthMhz}MHz)` : "-"}
                           </div>
                         </div>
                         <div>
                           <div className="text-muted-foreground mb-1">TX Power</div>
                           <div className="font-medium">
-                            {radio.transmitPowerDbm ? `${radio.transmitPowerDbm} dBm` : '-'}
+                            {radio.transmitPowerDbm ? `${radio.transmitPowerDbm} dBm` : "-"}
                           </div>
                         </div>
                         <div>
@@ -458,23 +468,23 @@ export default function AccessPointDetailPage({ params }: PageProps) {
                     </TableHeader>
                     <TableBody>
                       {clients.map((client) => {
-                        const duration = 0
-                          ? Math.floor(0 / 60)
-                          : 0;
+                        const duration = 0 ? Math.floor(0 / 60) : 0;
                         const signalQuality = getSignalQualityLabel(client.signalStrengthDbm);
 
                         return (
                           <TableRow key={client.id}>
                             <TableCell className="font-mono text-xs">{client.macAddress}</TableCell>
                             <TableCell className="font-mono text-xs">
-                              {client.ipAddress || '-'}
+                              {client.ipAddress || "-"}
                             </TableCell>
-                            <TableCell>{client.hostname || '-'}</TableCell>
-                            <TableCell>{client.ssid || '-'}</TableCell>
+                            <TableCell>{client.hostname || "-"}</TableCell>
+                            <TableCell>{client.ssid || "-"}</TableCell>
                             <TableCell>
                               <div className="space-y-1">
                                 <div className="text-xs">
-                                  {client.signalStrengthDbm ? `${client.signalStrengthDbm} dBm` : '-'}
+                                  {client.signalStrengthDbm
+                                    ? `${client.signalStrengthDbm} dBm`
+                                    : "-"}
                                 </div>
                                 <Badge variant="outline" className="text-xs">
                                   {signalQuality}
@@ -504,26 +514,28 @@ export default function AccessPointDetailPage({ params }: PageProps) {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <div className="text-muted-foreground mb-1">Site Name</div>
-                  <div className="font-medium">{accessPoint.siteName || '-'}</div>
+                  <div className="font-medium">{accessPoint.siteName || "-"}</div>
                 </div>
                 {accessPoint.location && (
                   <>
                     <div>
                       <div className="text-muted-foreground mb-1">Latitude</div>
                       <div className="font-mono text-xs">
-                        {accessPoint.location.coordinates?.latitude?.toFixed(6) || '-'}
+                        {accessPoint.location.coordinates?.latitude?.toFixed(6) || "-"}
                       </div>
                     </div>
                     <div>
                       <div className="text-muted-foreground mb-1">Longitude</div>
                       <div className="font-mono text-xs">
-                        {accessPoint.location.coordinates?.longitude?.toFixed(6) || '-'}
+                        {accessPoint.location.coordinates?.longitude?.toFixed(6) || "-"}
                       </div>
                     </div>
                     {accessPoint.location.coordinates?.altitude && (
                       <div>
                         <div className="text-muted-foreground mb-1">Altitude</div>
-                        <div className="font-medium">{accessPoint.location.coordinates?.altitude}m</div>
+                        <div className="font-medium">
+                          {accessPoint.location.coordinates?.altitude}m
+                        </div>
                       </div>
                     )}
                   </>
@@ -535,11 +547,9 @@ export default function AccessPointDetailPage({ params }: PageProps) {
                 <div className="h-96 rounded-lg border bg-muted flex items-center justify-center">
                   <div className="text-center space-y-2">
                     <MapPin className="h-8 w-8 mx-auto text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
-                      Map view will be displayed here
-                    </p>
+                    <p className="text-sm text-muted-foreground">Map view will be displayed here</p>
                     <p className="text-xs text-muted-foreground">
-                      {accessPoint.location.coordinates?.latitude?.toFixed(6)},{' '}
+                      {accessPoint.location.coordinates?.latitude?.toFixed(6)},{" "}
                       {accessPoint.location.coordinates?.longitude?.toFixed(6)}
                     </p>
                   </div>

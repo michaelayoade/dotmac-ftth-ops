@@ -35,7 +35,7 @@ export interface TokenPair {
  */
 class SecureTokenManager {
   // Valid token signing algorithms (whitelist)
-  private readonly VALID_ALGORITHMS = ['RS256', 'ES256', 'HS256'];
+  private readonly VALID_ALGORITHMS = ["RS256", "ES256", "HS256"];
 
   /**
    * SECURITY ERROR: Client-side token storage is forbidden
@@ -43,8 +43,8 @@ class SecureTokenManager {
    */
   setTokens(_tokenPair: TokenPair, _csrfToken?: string): never {
     throw new Error(
-      'SECURITY VIOLATION: Client-side token storage is forbidden. ' +
-        'Tokens must be set via server actions using httpOnly cookies.'
+      "SECURITY VIOLATION: Client-side token storage is forbidden. " +
+        "Tokens must be set via server actions using httpOnly cookies.",
     );
   }
 
@@ -54,8 +54,8 @@ class SecureTokenManager {
    */
   getAccessToken(): never {
     throw new Error(
-      'SECURITY: Tokens are in httpOnly cookies and not accessible to client-side JavaScript. ' +
-        'Use server actions to perform authenticated requests.'
+      "SECURITY: Tokens are in httpOnly cookies and not accessible to client-side JavaScript. " +
+        "Use server actions to perform authenticated requests.",
     );
   }
 
@@ -65,8 +65,8 @@ class SecureTokenManager {
    */
   getRefreshToken(): never {
     throw new Error(
-      'SECURITY: Refresh tokens are in httpOnly cookies and not accessible to client-side JavaScript. ' +
-        'Use server actions to refresh tokens.'
+      "SECURITY: Refresh tokens are in httpOnly cookies and not accessible to client-side JavaScript. " +
+        "Use server actions to refresh tokens.",
     );
   }
 
@@ -76,8 +76,8 @@ class SecureTokenManager {
    */
   getCSRFToken(): never {
     throw new Error(
-      'SECURITY: CSRF tokens are in httpOnly cookies and not accessible to client-side JavaScript. ' +
-        'Use server actions to get CSRF tokens.'
+      "SECURITY: CSRF tokens are in httpOnly cookies and not accessible to client-side JavaScript. " +
+        "Use server actions to get CSRF tokens.",
     );
   }
 
@@ -87,8 +87,8 @@ class SecureTokenManager {
    */
   clearTokens(): never {
     throw new Error(
-      'SECURITY: Use server actions to clear tokens (logout). ' +
-        'Client-side JavaScript cannot access httpOnly cookies.'
+      "SECURITY: Use server actions to clear tokens (logout). " +
+        "Client-side JavaScript cannot access httpOnly cookies.",
     );
   }
 
@@ -97,7 +97,7 @@ class SecureTokenManager {
    */
   decodeTokenPayload(token: string): TokenPayload | null {
     try {
-      const parts = token.split('.');
+      const parts = token.split(".");
       if (parts.length !== 3) {
         return null;
       }
@@ -107,7 +107,7 @@ class SecureTokenManager {
       if (!payload) {
         return null;
       }
-      const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+      const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
       return JSON.parse(decoded) as TokenPayload;
     } catch (_error) {
       return null;
@@ -117,18 +117,18 @@ class SecureTokenManager {
   // Token validation composition helpers
   private static TokenValidationHelpers = {
     validateTokenParts: (token: string): boolean => {
-      const parts = token.split('.');
+      const parts = token.split(".");
       return parts.length === 3;
     },
 
     decodeTokenHeader: (token: string): { alg: string } | null => {
       try {
-        const parts = token.split('.');
+        const parts = token.split(".");
         const header = parts[0];
         if (!header) {
           return null;
         }
-        const headerB64 = header.replace(/-/g, '+').replace(/_/g, '/');
+        const headerB64 = header.replace(/-/g, "+").replace(/_/g, "/");
         return JSON.parse(atob(headerB64));
       } catch {
         return null;
@@ -143,7 +143,7 @@ class SecureTokenManager {
     },
 
     validateRequiredFields: (payload: TokenPayload): boolean => {
-      const requiredFields = ['sub', 'iat', 'exp', 'aud', 'iss'];
+      const requiredFields = ["sub", "iat", "exp", "aud", "iss"];
       const hasAllFields = requiredFields.every((field) => payload[field as keyof TokenPayload]);
 
       if (!hasAllFields) {
@@ -153,7 +153,7 @@ class SecureTokenManager {
     },
 
     validateIssuer: (issuer: string): boolean => {
-      const expectedIssuer = process.env.NEXT_PUBLIC_JWT_ISSUER || 'dotmac-platform';
+      const expectedIssuer = process.env.NEXT_PUBLIC_JWT_ISSUER || "dotmac-platform";
       if (issuer !== expectedIssuer) {
         return false;
       }
@@ -161,7 +161,7 @@ class SecureTokenManager {
     },
 
     validateAudience: (audience: string): boolean => {
-      const expectedAudience = process.env.NEXT_PUBLIC_JWT_AUDIENCE || 'dotmac-frontend';
+      const expectedAudience = process.env.NEXT_PUBLIC_JWT_AUDIENCE || "dotmac-frontend";
       if (audience !== expectedAudience) {
         return false;
       }
@@ -232,11 +232,11 @@ class SecureTokenManager {
    * SECURITY: Token refresh must be handled by server actions
    */
   async refreshTokens(
-    _apiRefreshFunction: (refreshToken: string) => Promise<TokenPair>
+    _apiRefreshFunction: (refreshToken: string) => Promise<TokenPair>,
   ): Promise<never> {
     throw new Error(
-      'SECURITY: Token refresh must be handled by server actions. ' +
-        'Use refreshTokenAction() from server actions instead.'
+      "SECURITY: Token refresh must be handled by server actions. " +
+        "Use refreshTokenAction() from server actions instead.",
     );
   }
 
@@ -287,7 +287,7 @@ class SecureTokenManager {
    */
   setupAutoRefresh(
     _refreshFn: (token: string) => Promise<TokenPair>,
-    _onAuthFailure: () => Promise<void>
+    _onAuthFailure: () => Promise<void>,
   ): () => void {
     // Return a cleanup function (no-op for stub)
     return () => {};

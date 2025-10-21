@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useRBAC } from '@/contexts/RBACContext';
-import { useFiberDashboardGraphQL } from '@/hooks/useFiberGraphQL';
-import { platformConfig } from '@/lib/config';
-import { Activity, AlertTriangle, Cable, MapPin, TrendingUp } from 'lucide-react';
-import Link from 'next/link';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { useRBAC } from "@/contexts/RBACContext";
+import { useFiberDashboardGraphQL } from "@/hooks/useFiberGraphQL";
+import { platformConfig } from "@/lib/config";
+import { Activity, AlertTriangle, Cable, MapPin, TrendingUp } from "lucide-react";
+import Link from "next/link";
 
 export default function FiberInfrastructurePage() {
   const { hasPermission } = useRBAC();
-  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission('isp.ipam.read');
+  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
 
   const {
     dashboard,
@@ -111,7 +111,9 @@ export default function FiberInfrastructurePage() {
               <div className="text-2xl font-bold text-muted-foreground">Loading...</div>
             ) : (
               <>
-                <div className="text-2xl font-bold">{analytics?.networkHealthScore.toFixed(0)}%</div>
+                <div className="text-2xl font-bold">
+                  {analytics?.networkHealthScore.toFixed(0)}%
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {cablesRequiringAttention.length} cables need attention
                 </p>
@@ -196,11 +198,11 @@ export default function FiberInfrastructurePage() {
                       <div className="text-sm font-medium">Health: {cable.healthScore}%</div>
                       <Badge
                         variant={
-                          cable.healthStatus === 'CRITICAL'
-                            ? 'destructive'
-                            : cable.healthStatus === 'POOR'
-                              ? 'destructive'
-                              : 'secondary'
+                          cable.healthStatus === "CRITICAL"
+                            ? "destructive"
+                            : cable.healthStatus === "POOR"
+                              ? "destructive"
+                              : "secondary"
                         }
                       >
                         {cable.healthStatus}
@@ -241,7 +243,10 @@ export default function FiberInfrastructurePage() {
             ) : (
               <div className="space-y-3">
                 {topCables.map((cable) => (
-                  <div key={cable.id} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div
+                    key={cable.id}
+                    className="flex items-center justify-between p-3 rounded-lg border"
+                  >
                     <div className="space-y-1 flex-1">
                       <div className="font-medium">{cable.name}</div>
                       <div className="text-xs text-muted-foreground">
@@ -249,7 +254,9 @@ export default function FiberInfrastructurePage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-lg font-bold">{cable.capacityUtilizationPercent.toFixed(1)}%</div>
+                      <div className="text-lg font-bold">
+                        {cable.capacityUtilizationPercent.toFixed(1)}%
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -274,11 +281,16 @@ export default function FiberInfrastructurePage() {
             {loading && distributionPointsNearCapacity.length === 0 ? (
               <p className="text-sm text-muted-foreground">Loading distribution points...</p>
             ) : distributionPointsNearCapacity.length === 0 ? (
-              <p className="text-sm text-muted-foreground">All distribution points have adequate capacity.</p>
+              <p className="text-sm text-muted-foreground">
+                All distribution points have adequate capacity.
+              </p>
             ) : (
               <div className="space-y-3">
                 {distributionPointsNearCapacity.slice(0, 5).map((point) => (
-                  <div key={point.id} className="flex items-center justify-between p-3 rounded-lg border">
+                  <div
+                    key={point.id}
+                    className="flex items-center justify-between p-3 rounded-lg border"
+                  >
                     <div className="space-y-1 flex-1">
                       <div className="font-medium">{point.name}</div>
                       <div className="text-xs text-muted-foreground">

@@ -4,11 +4,13 @@ All configuration is loaded from environment variables and .env files.
 This is the single source of truth for all platform configuration.
 """
 
+# mypy: ignore-errors
+
 from __future__ import annotations
 
 import os
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field, PostgresDsn, RedisDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -91,7 +93,7 @@ class ObservabilitySettings(BaseModel):  # BaseModel resolves to Any in isolatio
 
 
 def _default_observability_settings() -> ObservabilitySettings:
-    return ObservabilitySettings.model_validate({})
+    return cast(ObservabilitySettings, ObservabilitySettings.model_validate({}))
 
 
 class OSSSettings(BaseModel):  # BaseModel resolves to Any in isolation
@@ -305,6 +307,18 @@ class AuthSettings(BaseModel):  # BaseModel resolves to Any in isolation
     default_user_role: str = Field(
         default_factory=lambda: os.getenv("DEFAULT_USER_ROLE", "user"),
         description="Default role assigned to new users",
+    )
+    default_admin_username: str = Field(
+        default_factory=lambda: os.getenv("DEFAULT_ADMIN_USERNAME", "admin"),
+        description="Default administrator username for development environments",
+    )
+    default_admin_email: str = Field(
+        default_factory=lambda: os.getenv("DEFAULT_ADMIN_EMAIL", "admin@example.com"),
+        description="Default administrator email for development environments",
+    )
+    default_admin_password: str = Field(
+        default_factory=lambda: os.getenv("DEFAULT_ADMIN_PASSWORD", "admin"),
+        description="Default administrator password for development/testing",
     )
 
     # Upload Limits

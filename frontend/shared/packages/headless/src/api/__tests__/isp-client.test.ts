@@ -3,15 +3,15 @@
  * Comprehensive test suite for the refactored ISP API client composition
  */
 
-import { ISPApiClient } from '../isp-client';
-import { IdentityApiClient } from '../clients/IdentityApiClient';
-import { NetworkingApiClient } from '../clients/NetworkingApiClient';
-import { BillingApiClient } from '../clients/BillingApiClient';
+import { ISPApiClient } from "../isp-client";
+import { IdentityApiClient } from "../clients/IdentityApiClient";
+import { NetworkingApiClient } from "../clients/NetworkingApiClient";
+import { BillingApiClient } from "../clients/BillingApiClient";
 
 // Mock the individual API clients
-jest.mock('../clients/IdentityApiClient');
-jest.mock('../clients/NetworkingApiClient');
-jest.mock('../clients/BillingApiClient');
+jest.mock("../clients/IdentityApiClient");
+jest.mock("../clients/NetworkingApiClient");
+jest.mock("../clients/BillingApiClient");
 
 const MockedIdentityApiClient = IdentityApiClient as jest.MockedClass<typeof IdentityApiClient>;
 const MockedNetworkingApiClient = NetworkingApiClient as jest.MockedClass<
@@ -19,57 +19,57 @@ const MockedNetworkingApiClient = NetworkingApiClient as jest.MockedClass<
 >;
 const MockedBillingApiClient = BillingApiClient as jest.MockedClass<typeof BillingApiClient>;
 
-describe('ISPApiClient', () => {
+describe("ISPApiClient", () => {
   let client: ISPApiClient;
-  const baseURL = 'https://api.test.com';
-  const authToken = 'test-auth-token';
+  const baseURL = "https://api.test.com";
+  const authToken = "test-auth-token";
 
   beforeEach(() => {
     jest.clearAllMocks();
     client = new ISPApiClient(baseURL, authToken);
   });
 
-  describe('Initialization', () => {
-    it('should initialize with correct configuration', () => {
+  describe("Initialization", () => {
+    it("should initialize with correct configuration", () => {
       expect(client).toBeInstanceOf(ISPApiClient);
       expect(client.identity).toBeInstanceOf(IdentityApiClient);
       expect(client.networking).toBeInstanceOf(NetworkingApiClient);
       expect(client.billing).toBeInstanceOf(BillingApiClient);
     });
 
-    it('should pass correct parameters to sub-clients', () => {
+    it("should pass correct parameters to sub-clients", () => {
       expect(MockedIdentityApiClient).toHaveBeenCalledWith(
         baseURL,
         expect.objectContaining({
           Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-          'X-API-Version': '1.0',
-        })
+          "Content-Type": "application/json",
+          "X-API-Version": "1.0",
+        }),
       );
 
       expect(MockedNetworkingApiClient).toHaveBeenCalledWith(
         baseURL,
         expect.objectContaining({
           Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-          'X-API-Version': '1.0',
-        })
+          "Content-Type": "application/json",
+          "X-API-Version": "1.0",
+        }),
       );
 
       expect(MockedBillingApiClient).toHaveBeenCalledWith(
         baseURL,
         expect.objectContaining({
           Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-          'X-API-Version': '1.0',
-        })
+          "Content-Type": "application/json",
+          "X-API-Version": "1.0",
+        }),
       );
     });
 
-    it('should handle custom headers', () => {
+    it("should handle custom headers", () => {
       const customHeaders = {
-        'X-Custom-Header': 'custom-value',
-        'X-Tenant-ID': 'tenant_123',
+        "X-Custom-Header": "custom-value",
+        "X-Tenant-ID": "tenant_123",
       };
 
       const clientWithCustomHeaders = new ISPApiClient(baseURL, authToken, customHeaders);
@@ -78,18 +78,18 @@ describe('ISPApiClient', () => {
         baseURL,
         expect.objectContaining({
           Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-          'X-API-Version': '1.0',
-          'X-Custom-Header': 'custom-value',
-          'X-Tenant-ID': 'tenant_123',
-        })
+          "Content-Type": "application/json",
+          "X-API-Version": "1.0",
+          "X-Custom-Header": "custom-value",
+          "X-Tenant-ID": "tenant_123",
+        }),
       );
     });
   });
 
-  describe('Authentication Token Management', () => {
-    it('should update auth token across all clients', () => {
-      const newToken = 'new-auth-token';
+  describe("Authentication Token Management", () => {
+    it("should update auth token across all clients", () => {
+      const newToken = "new-auth-token";
 
       // Mock the updateAuthToken method on all sub-clients
       const identityUpdateSpy = jest.fn();
@@ -107,21 +107,21 @@ describe('ISPApiClient', () => {
       expect(billingUpdateSpy).toHaveBeenCalledWith(newToken);
     });
 
-    it('should handle empty or null tokens', () => {
+    it("should handle empty or null tokens", () => {
       const updateSpy = jest.fn();
       client.identity.updateAuthToken = updateSpy;
 
-      client.updateAuthToken('');
-      expect(updateSpy).toHaveBeenCalledWith('');
+      client.updateAuthToken("");
+      expect(updateSpy).toHaveBeenCalledWith("");
 
       client.updateAuthToken(null as any);
       expect(updateSpy).toHaveBeenCalledWith(null);
     });
   });
 
-  describe('Tenant Context Management', () => {
-    it('should set tenant context across all clients', () => {
-      const tenantId = 'tenant_456';
+  describe("Tenant Context Management", () => {
+    it("should set tenant context across all clients", () => {
+      const tenantId = "tenant_456";
 
       const identitySetTenantSpy = jest.fn();
       const networkingSetTenantSpy = jest.fn();
@@ -139,8 +139,8 @@ describe('ISPApiClient', () => {
     });
   });
 
-  describe('Global Configuration', () => {
-    it('should set global timeout across all clients', () => {
+  describe("Global Configuration", () => {
+    it("should set global timeout across all clients", () => {
       const timeout = 30000;
 
       const identitySetTimeoutSpy = jest.fn();
@@ -158,7 +158,7 @@ describe('ISPApiClient', () => {
       expect(billingSetTimeoutSpy).toHaveBeenCalledWith(timeout);
     });
 
-    it('should enable/disable debug mode across all clients', () => {
+    it("should enable/disable debug mode across all clients", () => {
       const debugMode = true;
 
       const identityDebugSpy = jest.fn();
@@ -177,8 +177,8 @@ describe('ISPApiClient', () => {
     });
   });
 
-  describe('Client Module Access', () => {
-    it('should provide access to identity client methods', () => {
+  describe("Client Module Access", () => {
+    it("should provide access to identity client methods", () => {
       // Mock some identity methods
       const getCustomersSpy = jest.fn().mockResolvedValue({ data: [] });
       client.identity.getCustomers = getCustomersSpy;
@@ -188,38 +188,38 @@ describe('ISPApiClient', () => {
       expect(getCustomersSpy).toHaveBeenCalledWith({ page: 1, limit: 10 });
     });
 
-    it('should provide access to networking client methods', () => {
+    it("should provide access to networking client methods", () => {
       const getDevicesSpy = jest.fn().mockResolvedValue({ data: [] });
       client.networking.getDevices = getDevicesSpy;
 
-      client.networking.getDevices({ status: 'online' });
+      client.networking.getDevices({ status: "online" });
 
-      expect(getDevicesSpy).toHaveBeenCalledWith({ status: 'online' });
+      expect(getDevicesSpy).toHaveBeenCalledWith({ status: "online" });
     });
 
-    it('should provide access to billing client methods', () => {
+    it("should provide access to billing client methods", () => {
       const getInvoicesSpy = jest.fn().mockResolvedValue({ data: [] });
       client.billing.getInvoices = getInvoicesSpy;
 
-      client.billing.getInvoices({ customer_id: 'cust_123' });
+      client.billing.getInvoices({ customer_id: "cust_123" });
 
-      expect(getInvoicesSpy).toHaveBeenCalledWith({ customer_id: 'cust_123' });
+      expect(getInvoicesSpy).toHaveBeenCalledWith({ customer_id: "cust_123" });
     });
   });
 
-  describe('Error Handling', () => {
-    it('should handle initialization errors', () => {
+  describe("Error Handling", () => {
+    it("should handle initialization errors", () => {
       MockedIdentityApiClient.mockImplementation(() => {
-        throw new Error('Identity client initialization failed');
+        throw new Error("Identity client initialization failed");
       });
 
       expect(() => {
         new ISPApiClient(baseURL, authToken);
-      }).toThrow('Identity client initialization failed');
+      }).toThrow("Identity client initialization failed");
     });
 
-    it('should handle method call errors gracefully', async () => {
-      const errorMessage = 'Network error';
+    it("should handle method call errors gracefully", async () => {
+      const errorMessage = "Network error";
       const getCustomersError = jest.fn().mockRejectedValue(new Error(errorMessage));
       client.identity.getCustomers = getCustomersError;
 
@@ -227,17 +227,17 @@ describe('ISPApiClient', () => {
     });
   });
 
-  describe('Cross-Client Integration', () => {
-    it('should support cross-client operations', async () => {
+  describe("Cross-Client Integration", () => {
+    it("should support cross-client operations", async () => {
       // Mock methods that might be used together
       const getCustomerSpy = jest.fn().mockResolvedValue({
-        data: { id: 'cust_123', name: 'Test Customer' },
+        data: { id: "cust_123", name: "Test Customer" },
       });
       const getCustomerInvoicesSpy = jest.fn().mockResolvedValue({
-        data: [{ id: 'inv_123', amount: 2999 }],
+        data: [{ id: "inv_123", amount: 2999 }],
       });
       const getCustomerDevicesSpy = jest.fn().mockResolvedValue({
-        data: [{ id: 'dev_123', name: 'Router 1' }],
+        data: [{ id: "dev_123", name: "Router 1" }],
       });
 
       client.identity.getCustomer = getCustomerSpy;
@@ -245,7 +245,7 @@ describe('ISPApiClient', () => {
       client.networking.getCustomerDevices = getCustomerDevicesSpy;
 
       // Simulate a cross-client operation
-      const customerId = 'cust_123';
+      const customerId = "cust_123";
 
       const customer = await client.identity.getCustomer(customerId);
       const invoices = await client.billing.getCustomerInvoices(customerId);
@@ -261,8 +261,8 @@ describe('ISPApiClient', () => {
     });
   });
 
-  describe('Request Interceptors', () => {
-    it('should support adding request interceptors', () => {
+  describe("Request Interceptors", () => {
+    it("should support adding request interceptors", () => {
       const interceptor = jest.fn((config) => config);
 
       const identityAddInterceptorSpy = jest.fn();
@@ -280,7 +280,7 @@ describe('ISPApiClient', () => {
       expect(billingAddInterceptorSpy).toHaveBeenCalledWith(interceptor);
     });
 
-    it('should support adding response interceptors', () => {
+    it("should support adding response interceptors", () => {
       const interceptor = jest.fn((response) => response);
 
       const identityAddInterceptorSpy = jest.fn();
@@ -299,11 +299,11 @@ describe('ISPApiClient', () => {
     });
   });
 
-  describe('Health Check', () => {
-    it('should perform health check on all clients', async () => {
-      const identityHealthSpy = jest.fn().mockResolvedValue({ status: 'healthy' });
-      const networkingHealthSpy = jest.fn().mockResolvedValue({ status: 'healthy' });
-      const billingHealthSpy = jest.fn().mockResolvedValue({ status: 'healthy' });
+  describe("Health Check", () => {
+    it("should perform health check on all clients", async () => {
+      const identityHealthSpy = jest.fn().mockResolvedValue({ status: "healthy" });
+      const networkingHealthSpy = jest.fn().mockResolvedValue({ status: "healthy" });
+      const billingHealthSpy = jest.fn().mockResolvedValue({ status: "healthy" });
 
       client.identity.healthCheck = identityHealthSpy;
       client.networking.healthCheck = networkingHealthSpy;
@@ -315,16 +315,16 @@ describe('ISPApiClient', () => {
       expect(networkingHealthSpy).toHaveBeenCalled();
       expect(billingHealthSpy).toHaveBeenCalled();
 
-      expect(healthResults.identity.status).toBe('healthy');
-      expect(healthResults.networking.status).toBe('healthy');
-      expect(healthResults.billing.status).toBe('healthy');
-      expect(healthResults.overall).toBe('healthy');
+      expect(healthResults.identity.status).toBe("healthy");
+      expect(healthResults.networking.status).toBe("healthy");
+      expect(healthResults.billing.status).toBe("healthy");
+      expect(healthResults.overall).toBe("healthy");
     });
 
-    it('should detect unhealthy clients', async () => {
-      const identityHealthSpy = jest.fn().mockResolvedValue({ status: 'healthy' });
-      const networkingHealthSpy = jest.fn().mockRejectedValue(new Error('Network down'));
-      const billingHealthSpy = jest.fn().mockResolvedValue({ status: 'healthy' });
+    it("should detect unhealthy clients", async () => {
+      const identityHealthSpy = jest.fn().mockResolvedValue({ status: "healthy" });
+      const networkingHealthSpy = jest.fn().mockRejectedValue(new Error("Network down"));
+      const billingHealthSpy = jest.fn().mockResolvedValue({ status: "healthy" });
 
       client.identity.healthCheck = identityHealthSpy;
       client.networking.healthCheck = networkingHealthSpy;
@@ -332,15 +332,15 @@ describe('ISPApiClient', () => {
 
       const healthResults = await client.healthCheck();
 
-      expect(healthResults.identity.status).toBe('healthy');
-      expect(healthResults.networking.status).toBe('unhealthy');
-      expect(healthResults.billing.status).toBe('healthy');
-      expect(healthResults.overall).toBe('degraded');
+      expect(healthResults.identity.status).toBe("healthy");
+      expect(healthResults.networking.status).toBe("unhealthy");
+      expect(healthResults.billing.status).toBe("healthy");
+      expect(healthResults.overall).toBe("degraded");
     });
   });
 
-  describe('Batch Operations', () => {
-    it('should support batch operations across clients', async () => {
+  describe("Batch Operations", () => {
+    it("should support batch operations across clients", async () => {
       const batchCustomers = jest.fn().mockResolvedValue({
         data: { success: 5, failed: 0 },
       });
@@ -352,8 +352,8 @@ describe('ISPApiClient', () => {
       client.billing.batchCreateInvoices = batchInvoices;
 
       const operations = [
-        { client: 'identity', method: 'batchCreateCustomers', params: [{}] },
-        { client: 'billing', method: 'batchCreateInvoices', params: [{}] },
+        { client: "identity", method: "batchCreateCustomers", params: [{}] },
+        { client: "billing", method: "batchCreateInvoices", params: [{}] },
       ];
 
       const results = await client.batchOperations(operations);
@@ -364,8 +364,8 @@ describe('ISPApiClient', () => {
     });
   });
 
-  describe('Rate Limiting', () => {
-    it('should handle rate limiting across all clients', () => {
+  describe("Rate Limiting", () => {
+    it("should handle rate limiting across all clients", () => {
       const rateLimitSpy = jest.fn();
 
       client.identity.setRateLimit = rateLimitSpy;
@@ -380,12 +380,12 @@ describe('ISPApiClient', () => {
     });
   });
 
-  describe('Client Factory', () => {
-    it('should create client with factory method', () => {
+  describe("Client Factory", () => {
+    it("should create client with factory method", () => {
       const config = {
-        baseURL: 'https://api.test.com',
-        authToken: 'test-token',
-        headers: { 'X-Custom': 'value' },
+        baseURL: "https://api.test.com",
+        authToken: "test-token",
+        headers: { "X-Custom": "value" },
       };
 
       const factoryClient = ISPApiClient.create(config);
@@ -393,14 +393,14 @@ describe('ISPApiClient', () => {
       expect(factoryClient).toBeInstanceOf(ISPApiClient);
     });
 
-    it('should validate configuration in factory method', () => {
+    it("should validate configuration in factory method", () => {
       expect(() => {
         ISPApiClient.create({} as any);
-      }).toThrow('baseURL is required');
+      }).toThrow("baseURL is required");
 
       expect(() => {
-        ISPApiClient.create({ baseURL: 'invalid-url' } as any);
-      }).toThrow('Invalid baseURL format');
+        ISPApiClient.create({ baseURL: "invalid-url" } as any);
+      }).toThrow("Invalid baseURL format");
     });
   });
 });

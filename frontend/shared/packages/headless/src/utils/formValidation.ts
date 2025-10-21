@@ -28,47 +28,47 @@ export interface ValidationResult {
 export const validationRules = {
   email: {
     validate: (value: unknown) => {
-      if (typeof value !== 'string') return false;
+      if (typeof value !== "string") return false;
       const emailRegex = /^[^\s@]+@[^\s@]+.[^\s@]+$/;
       return emailRegex.test(value);
     },
-    message: 'Please enter a valid email address',
+    message: "Please enter a valid email address",
   },
 
   minLength: (length: number) => ({
-    validate: (value: unknown) => typeof value === 'string' && value.length >= length,
+    validate: (value: unknown) => typeof value === "string" && value.length >= length,
     message: `Must be at least ${length} characters long`,
   }),
 
   maxLength: (length: number) => ({
-    validate: (value: unknown) => typeof value === 'string' && value.length <= length,
+    validate: (value: unknown) => typeof value === "string" && value.length <= length,
     message: `Must be no more than ${length} characters long`,
   }),
 
   strongPassword: {
     validate: (value: unknown) => {
-      if (typeof value !== 'string') return false;
+      if (typeof value !== "string") return false;
       // At least 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special char
       const strongPasswordRegex =
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
       return strongPasswordRegex.test(value);
     },
     message:
-      'Password must contain at least 8 characters with uppercase, lowercase, number, and special character',
+      "Password must contain at least 8 characters with uppercase, lowercase, number, and special character",
   },
 
   phoneNumber: {
     validate: (value: unknown) => {
-      if (typeof value !== 'string') return false;
+      if (typeof value !== "string") return false;
       const phoneRegex = /^\+?[\d\s\-()]{10,}$/;
       return phoneRegex.test(value);
     },
-    message: 'Please enter a valid phone number',
+    message: "Please enter a valid phone number",
   },
 
   url: {
     validate: (value: unknown) => {
-      if (typeof value !== 'string') return false;
+      if (typeof value !== "string") return false;
       try {
         new URL(value);
         return true;
@@ -76,41 +76,41 @@ export const validationRules = {
         return false;
       }
     },
-    message: 'Please enter a valid URL',
+    message: "Please enter a valid URL",
   },
 
   numeric: {
     validate: (value: unknown) =>
-      typeof value === 'string' && !Number.isNaN(Number(value)) && !Number.isNaN(parseFloat(value)),
-    message: 'Must be a valid number',
+      typeof value === "string" && !Number.isNaN(Number(value)) && !Number.isNaN(parseFloat(value)),
+    message: "Must be a valid number",
   },
 
   positiveNumber: {
     validate: (value: unknown) => {
-      if (typeof value !== 'string') return false;
+      if (typeof value !== "string") return false;
       const num = parseFloat(value);
       return !Number.isNaN(num) && num > 0;
     },
-    message: 'Must be a positive number',
+    message: "Must be a positive number",
   },
 
   integer: {
     validate: (value: unknown) => {
-      if (typeof value !== 'string') return false;
+      if (typeof value !== "string") return false;
       const num = parseInt(value, 10);
       return !Number.isNaN(num) && num.toString() === value;
     },
-    message: 'Must be a whole number',
+    message: "Must be a whole number",
   },
 
   alphanumeric: {
-    validate: (value: unknown) => typeof value === 'string' && /^[a-zA-Z0-9]+$/.test(value),
-    message: 'Must contain only letters and numbers',
+    validate: (value: unknown) => typeof value === "string" && /^[a-zA-Z0-9]+$/.test(value),
+    message: "Must contain only letters and numbers",
   },
 
   noWhitespace: {
-    validate: (value: unknown) => typeof value === 'string' && !/\s/.test(value),
-    message: 'Must not contain spaces',
+    validate: (value: unknown) => typeof value === "string" && !/\s/.test(value),
+    message: "Must not contain spaces",
   },
 
   matchField: (fieldName: string, getFieldValue: (name: string) => any) => ({
@@ -145,7 +145,7 @@ export class FormValidator {
     if (fieldConfig.required && this.isEmpty(value)) {
       errors.push({
         field: fieldName,
-        message: 'This field is required',
+        message: "This field is required",
       });
       return errors; // Don't run other validations if required and empty
     }
@@ -184,7 +184,7 @@ export class FormValidator {
 
       if (errors.length > 0) {
         allErrors.push(...errors);
-        fieldErrors[fieldName] = errors[0]?.message || 'Validation error'; // Show first error for each field
+        fieldErrors[fieldName] = errors[0]?.message || "Validation error"; // Show first error for each field
       }
     }
 
@@ -204,13 +204,13 @@ export class FormValidator {
     if (value === null || value === undefined) {
       return true;
     }
-    if (typeof value === 'string') {
-      return value.trim() === '';
+    if (typeof value === "string") {
+      return value.trim() === "";
     }
     if (Array.isArray(value)) {
       return value.length === 0;
     }
-    if (typeof value === 'object') {
+    if (typeof value === "object") {
       return Object.keys(value).length === 0;
     }
     return false;
@@ -278,7 +278,7 @@ export const commonValidators = {
             // This would need access to the form data context
             return true; // Implement in component
           },
-          message: 'Passwords must match',
+          message: "Passwords must match",
         },
       ],
     },
@@ -321,7 +321,7 @@ export const commonValidators = {
       rules: [
         {
           validate: (_value: unknown) => true, // Implement in component
-          message: 'Passwords must match',
+          message: "Passwords must match",
         },
       ],
     },
@@ -332,11 +332,11 @@ export const commonValidators = {
 export function formatValidationMessage(
   fieldName: string,
   message: string,
-  customFieldNames?: Record<string, string>
+  customFieldNames?: Record<string, string>,
 ): string {
   const displayName =
     customFieldNames?.[fieldName] ||
-    fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace(/([A-Z])/g, ' $1');
+    fieldName.charAt(0).toUpperCase() + fieldName.slice(1).replace(/([A-Z])/g, " $1");
 
   return message.replace(/this field/i, displayName.toLowerCase());
 }

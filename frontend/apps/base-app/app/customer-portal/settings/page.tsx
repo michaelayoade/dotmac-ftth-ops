@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState, useEffect } from "react";
@@ -11,23 +11,18 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Settings,
-  User,
-  Bell,
-  Lock,
-  Mail,
-  Phone,
-  MapPin,
-  Save,
-  Loader2,
-} from "lucide-react";
+import { Settings, User, Bell, Lock, Mail, Phone, MapPin, Save, Loader2 } from "lucide-react";
 import { useCustomerProfile, useCustomerSettings } from "@/hooks/useCustomerPortal";
 
 export default function CustomerSettingsPage() {
   const { toast } = useToast();
   const { profile: customerProfile, loading: profileLoading, updateProfile } = useCustomerProfile();
-  const { settings: customerSettings, loading: settingsLoading, updateSettings, changePassword } = useCustomerSettings();
+  const {
+    settings: customerSettings,
+    loading: settingsLoading,
+    updateSettings,
+    changePassword,
+  } = useCustomerSettings();
 
   const [profile, setProfile] = useState({
     firstName: "",
@@ -166,9 +161,7 @@ export default function CustomerSettingsPage() {
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your account preferences
-        </p>
+        <p className="text-muted-foreground">Manage your account preferences</p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-6">
@@ -186,9 +179,7 @@ export default function CustomerSettingsPage() {
                 <User className="h-5 w-5" />
                 Personal Information
               </CardTitle>
-              <CardDescription>
-                Update your personal details
-              </CardDescription>
+              <CardDescription>Update your personal details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
@@ -197,9 +188,7 @@ export default function CustomerSettingsPage() {
                   <Input
                     id="firstName"
                     value={profile.firstName}
-                    onChange={(e) =>
-                      setProfile({ ...profile, firstName: e.target.value })
-                    }
+                    onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -207,9 +196,7 @@ export default function CustomerSettingsPage() {
                   <Input
                     id="lastName"
                     value={profile.lastName}
-                    onChange={(e) =>
-                      setProfile({ ...profile, lastName: e.target.value })
-                    }
+                    onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
                   />
                 </div>
               </div>
@@ -223,9 +210,7 @@ export default function CustomerSettingsPage() {
                   id="email"
                   type="email"
                   value={profile.email}
-                  onChange={(e) =>
-                    setProfile({ ...profile, email: e.target.value })
-                  }
+                  onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                 />
               </div>
 
@@ -238,9 +223,7 @@ export default function CustomerSettingsPage() {
                   id="phone"
                   type="tel"
                   value={profile.phone}
-                  onChange={(e) =>
-                    setProfile({ ...profile, phone: e.target.value })
-                  }
+                  onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
                 />
               </div>
 
@@ -259,9 +242,7 @@ export default function CustomerSettingsPage() {
                 <MapPin className="h-5 w-5" />
                 Service Address
               </CardTitle>
-              <CardDescription>
-                Your internet service location
-              </CardDescription>
+              <CardDescription>Your internet service location</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -269,9 +250,7 @@ export default function CustomerSettingsPage() {
                 <Input
                   id="address"
                   value={profile.address}
-                  onChange={(e) =>
-                    setProfile({ ...profile, address: e.target.value })
-                  }
+                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
                 />
               </div>
 
@@ -281,9 +260,7 @@ export default function CustomerSettingsPage() {
                   <Input
                     id="city"
                     value={profile.city}
-                    onChange={(e) =>
-                      setProfile({ ...profile, city: e.target.value })
-                    }
+                    onChange={(e) => setProfile({ ...profile, city: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -291,9 +268,7 @@ export default function CustomerSettingsPage() {
                   <Input
                     id="state"
                     value={profile.state}
-                    onChange={(e) =>
-                      setProfile({ ...profile, state: e.target.value })
-                    }
+                    onChange={(e) => setProfile({ ...profile, state: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -301,9 +276,7 @@ export default function CustomerSettingsPage() {
                   <Input
                     id="zip"
                     value={profile.zip}
-                    onChange={(e) =>
-                      setProfile({ ...profile, zip: e.target.value })
-                    }
+                    onChange={(e) => setProfile({ ...profile, zip: e.target.value })}
                   />
                 </div>
               </div>
@@ -326,9 +299,7 @@ export default function CustomerSettingsPage() {
                 <Bell className="h-5 w-5" />
                 Email Notifications
               </CardTitle>
-              <CardDescription>
-                Manage your email notification preferences
-              </CardDescription>
+              <CardDescription>Manage your email notification preferences</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
@@ -342,7 +313,10 @@ export default function CustomerSettingsPage() {
                   id="emailBilling"
                   checked={notifications.emailBilling}
                   onCheckedChange={(checked) =>
-                    setNotifications({ ...notifications, emailBilling: checked })
+                    setNotifications({
+                      ...notifications,
+                      emailBilling: checked,
+                    })
                   }
                 />
               </div>
@@ -358,7 +332,10 @@ export default function CustomerSettingsPage() {
                   id="emailOutages"
                   checked={notifications.emailOutages}
                   onCheckedChange={(checked) =>
-                    setNotifications({ ...notifications, emailOutages: checked })
+                    setNotifications({
+                      ...notifications,
+                      emailOutages: checked,
+                    })
                   }
                 />
               </div>
@@ -390,9 +367,7 @@ export default function CustomerSettingsPage() {
                 <Phone className="h-5 w-5" />
                 SMS Notifications
               </CardTitle>
-              <CardDescription>
-                Manage your text message alerts
-              </CardDescription>
+              <CardDescription>Manage your text message alerts</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
@@ -406,7 +381,10 @@ export default function CustomerSettingsPage() {
                   id="smsUsageAlerts"
                   checked={notifications.smsUsageAlerts}
                   onCheckedChange={(checked) =>
-                    setNotifications({ ...notifications, smsUsageAlerts: checked })
+                    setNotifications({
+                      ...notifications,
+                      smsUsageAlerts: checked,
+                    })
                   }
                 />
               </div>
@@ -445,9 +423,7 @@ export default function CustomerSettingsPage() {
                 <Lock className="h-5 w-5" />
                 Change Password
               </CardTitle>
-              <CardDescription>
-                Update your account password
-              </CardDescription>
+              <CardDescription>Update your account password</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -457,7 +433,10 @@ export default function CustomerSettingsPage() {
                   type="password"
                   value={security.currentPassword}
                   onChange={(e) =>
-                    setSecurity({ ...security, currentPassword: e.target.value })
+                    setSecurity({
+                      ...security,
+                      currentPassword: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -468,13 +447,9 @@ export default function CustomerSettingsPage() {
                   id="newPassword"
                   type="password"
                   value={security.newPassword}
-                  onChange={(e) =>
-                    setSecurity({ ...security, newPassword: e.target.value })
-                  }
+                  onChange={(e) => setSecurity({ ...security, newPassword: e.target.value })}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Must be at least 8 characters long
-                </p>
+                <p className="text-xs text-muted-foreground">Must be at least 8 characters long</p>
               </div>
 
               <div className="space-y-2">
@@ -484,7 +459,10 @@ export default function CustomerSettingsPage() {
                   type="password"
                   value={security.confirmPassword}
                   onChange={(e) =>
-                    setSecurity({ ...security, confirmPassword: e.target.value })
+                    setSecurity({
+                      ...security,
+                      confirmPassword: e.target.value,
+                    })
                   }
                 />
               </div>
@@ -501,17 +479,13 @@ export default function CustomerSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Two-Factor Authentication</CardTitle>
-              <CardDescription>
-                Add an extra layer of security to your account
-              </CardDescription>
+              <CardDescription>Add an extra layer of security to your account</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Status: Not Enabled</p>
-                  <p className="text-sm text-muted-foreground">
-                    Protect your account with 2FA
-                  </p>
+                  <p className="text-sm text-muted-foreground">Protect your account with 2FA</p>
                 </div>
                 <Button>Enable 2FA</Button>
               </div>

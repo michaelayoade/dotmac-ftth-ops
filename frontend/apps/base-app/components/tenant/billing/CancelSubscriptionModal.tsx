@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,22 +8,22 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { TenantSubscription, SubscriptionCancelRequest } from '@/hooks/useTenantSubscription';
-import { format } from 'date-fns';
-import { AlertCircle, AlertTriangle, Info } from 'lucide-react';
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { TenantSubscription, SubscriptionCancelRequest } from "@/hooks/useTenantSubscription";
+import { format } from "date-fns";
+import { AlertCircle, AlertTriangle, Info } from "lucide-react";
 
 interface CancelSubscriptionModalProps {
   open: boolean;
@@ -35,14 +35,14 @@ interface CancelSubscriptionModalProps {
 }
 
 const cancellationReasons = [
-  { value: 'too_expensive', label: 'Too expensive' },
-  { value: 'missing_features', label: 'Missing features I need' },
-  { value: 'not_using', label: 'Not using the service enough' },
-  { value: 'switching_competitor', label: 'Switching to a competitor' },
-  { value: 'technical_issues', label: 'Too many technical issues' },
-  { value: 'customer_service', label: 'Poor customer service' },
-  { value: 'temporary_pause', label: 'Need a temporary break' },
-  { value: 'other', label: 'Other reason' },
+  { value: "too_expensive", label: "Too expensive" },
+  { value: "missing_features", label: "Missing features I need" },
+  { value: "not_using", label: "Not using the service enough" },
+  { value: "switching_competitor", label: "Switching to a competitor" },
+  { value: "technical_issues", label: "Too many technical issues" },
+  { value: "customer_service", label: "Poor customer service" },
+  { value: "temporary_pause", label: "Need a temporary break" },
+  { value: "other", label: "Other reason" },
 ];
 
 export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = ({
@@ -53,27 +53,29 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
   isCanceling = false,
   error = null,
 }) => {
-  const [cancelationType, setCancelationType] = useState<'immediate' | 'at_period_end'>('at_period_end');
-  const [reason, setReason] = useState<string>('');
-  const [feedback, setFeedback] = useState<string>('');
-  const [confirmationStep, setConfirmationStep] = useState<'details' | 'confirm'>('details');
+  const [cancelationType, setCancelationType] = useState<"immediate" | "at_period_end">(
+    "at_period_end",
+  );
+  const [reason, setReason] = useState<string>("");
+  const [feedback, setFeedback] = useState<string>("");
+  const [confirmationStep, setConfirmationStep] = useState<"details" | "confirm">("details");
 
   const resetForm = () => {
-    setCancelationType('at_period_end');
-    setReason('');
-    setFeedback('');
-    setConfirmationStep('details');
+    setCancelationType("at_period_end");
+    setReason("");
+    setFeedback("");
+    setConfirmationStep("details");
   };
 
   const handleNext = () => {
-    if (confirmationStep === 'details') {
-      setConfirmationStep('confirm');
+    if (confirmationStep === "details") {
+      setConfirmationStep("confirm");
     }
   };
 
   const handleBack = () => {
-    if (confirmationStep === 'confirm') {
-      setConfirmationStep('details');
+    if (confirmationStep === "confirm") {
+      setConfirmationStep("details");
     }
   };
 
@@ -82,7 +84,7 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
 
     try {
       const request: SubscriptionCancelRequest = {
-        cancel_at_period_end: cancelationType === 'at_period_end',
+        cancel_at_period_end: cancelationType === "at_period_end",
         reason: reason || undefined,
         feedback: feedback || undefined,
       };
@@ -91,19 +93,21 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
       resetForm();
       onOpenChange(false);
     } catch (err) {
-      console.error('Failed to cancel subscription:', err);
+      console.error("Failed to cancel subscription:", err);
     }
   };
 
   const calculateRefund = () => {
-    if (!subscription || cancelationType === 'at_period_end') return 0;
+    if (!subscription || cancelationType === "at_period_end") return 0;
 
     // Simplified proration calculation
     const periodStart = new Date(subscription.current_period_start);
     const periodEnd = new Date(subscription.current_period_end);
     const now = new Date();
 
-    const totalDays = Math.ceil((periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24));
+    const totalDays = Math.ceil(
+      (periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24),
+    );
     const remainingDays = Math.ceil((periodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
     if (remainingDays <= 0) return 0;
@@ -112,9 +116,9 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
     return Math.max(0, refundAmount);
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+  const formatCurrency = (amount: number, currency: string = "USD") => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency,
     }).format(amount);
   };
@@ -130,9 +134,9 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
             Cancel Subscription
           </DialogTitle>
           <DialogDescription>
-            {confirmationStep === 'details'
-              ? 'We\'re sorry to see you go. Please help us understand why you\'re canceling.'
-              : 'Please review and confirm your cancellation.'}
+            {confirmationStep === "details"
+              ? "We're sorry to see you go. Please help us understand why you're canceling."
+              : "Please review and confirm your cancellation."}
           </DialogDescription>
         </DialogHeader>
 
@@ -143,19 +147,23 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
           </Alert>
         )}
 
-        {confirmationStep === 'details' && (
+        {confirmationStep === "details" && (
           <div className="space-y-6">
             {/* Cancellation Type */}
             <div className="space-y-3">
               <Label>When would you like to cancel?</Label>
-              <RadioGroup value={cancelationType} onValueChange={(value: string) => setCancelationType(value as any)}>
+              <RadioGroup
+                value={cancelationType}
+                onValueChange={(value: string) => setCancelationType(value as any)}
+              >
                 <div className="flex items-start space-x-3 rounded-md border p-4 hover:bg-muted/50 cursor-pointer">
                   <RadioGroupItem value="at_period_end" id="at_period_end" className="mt-1" />
                   <label htmlFor="at_period_end" className="flex-1 cursor-pointer">
                     <div className="font-medium">Cancel at period end (Recommended)</div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      You&apos;ll retain access until {format(new Date(subscription.current_period_end), 'MMM d, yyyy')}.
-                      No refund will be issued.
+                      You&apos;ll retain access until{" "}
+                      {format(new Date(subscription.current_period_end), "MMM d, yyyy")}. No refund
+                      will be issued.
                     </div>
                   </label>
                 </div>
@@ -168,7 +176,9 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
                       Your subscription will end immediately.
                       {calculateRefund() > 0 && (
                         <span className="text-green-600 dark:text-green-400">
-                          {' '}Estimated refund: {formatCurrency(calculateRefund(), subscription.currency)}
+                          {" "}
+                          Estimated refund:{" "}
+                          {formatCurrency(calculateRefund(), subscription.currency)}
                         </span>
                       )}
                     </div>
@@ -205,25 +215,24 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
                 rows={4}
                 maxLength={1000}
               />
-              <p className="text-xs text-muted-foreground">
-                {feedback.length}/1000 characters
-              </p>
+              <p className="text-xs text-muted-foreground">{feedback.length}/1000 characters</p>
             </div>
 
             {/* Immediate Cancellation Warning */}
-            {cancelationType === 'immediate' && (
+            {cancelationType === "immediate" && (
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
                   <strong>Warning:</strong> Immediate cancellation will end your access right away.
-                  All data will be retained for 30 days in accordance with our data retention policy.
+                  All data will be retained for 30 days in accordance with our data retention
+                  policy.
                 </AlertDescription>
               </Alert>
             )}
           </div>
         )}
 
-        {confirmationStep === 'confirm' && (
+        {confirmationStep === "confirm" && (
           <div className="space-y-6">
             {/* Confirmation Summary */}
             <div className="rounded-md bg-muted p-4 space-y-3">
@@ -240,20 +249,20 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Cancellation Type</span>
                 <span className="text-sm font-medium">
-                  {cancelationType === 'at_period_end' ? 'At period end' : 'Immediate'}
+                  {cancelationType === "at_period_end" ? "At period end" : "Immediate"}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">
-                  {cancelationType === 'at_period_end' ? 'Access Until' : 'Cancels On'}
+                  {cancelationType === "at_period_end" ? "Access Until" : "Cancels On"}
                 </span>
                 <span className="text-sm font-medium">
-                  {cancelationType === 'at_period_end'
-                    ? format(new Date(subscription.current_period_end), 'MMM d, yyyy')
-                    : 'Immediately'}
+                  {cancelationType === "at_period_end"
+                    ? format(new Date(subscription.current_period_end), "MMM d, yyyy")
+                    : "Immediately"}
                 </span>
               </div>
-              {cancelationType === 'immediate' && calculateRefund() > 0 && (
+              {cancelationType === "immediate" && calculateRefund() > 0 && (
                 <div className="flex justify-between pt-2 border-t">
                   <span className="text-sm text-muted-foreground">Estimated Refund</span>
                   <span className="text-sm font-medium text-green-600 dark:text-green-400">
@@ -267,9 +276,9 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                <strong>Data Retention:</strong> Your data will be retained for 30 days after cancellation.
-                You can reactivate your subscription within this period to restore full access.
-                After 30 days, your data will be permanently deleted.
+                <strong>Data Retention:</strong> Your data will be retained for 30 days after
+                cancellation. You can reactivate your subscription within this period to restore
+                full access. After 30 days, your data will be permanently deleted.
               </AlertDescription>
             </Alert>
 
@@ -283,8 +292,9 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
                 <li>Team collaboration features</li>
                 {subscription.usage && (
                   <li>
-                    Current usage data ({subscription.usage.users?.current || 0} users,{' '}
-                    {((subscription.usage.storage?.current || 0) / 1024 / 1024 / 1024).toFixed(2)} GB storage)
+                    Current usage data ({subscription.usage.users?.current || 0} users,{" "}
+                    {((subscription.usage.storage?.current || 0) / 1024 / 1024 / 1024).toFixed(2)}{" "}
+                    GB storage)
                   </li>
                 )}
               </ul>
@@ -301,7 +311,7 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
         )}
 
         <DialogFooter>
-          {confirmationStep === 'details' ? (
+          {confirmationStep === "details" ? (
             <>
               <Button
                 variant="outline"
@@ -323,7 +333,7 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
                 Back
               </Button>
               <Button variant="destructive" onClick={handleConfirm} disabled={isCanceling}>
-                {isCanceling ? 'Canceling...' : 'Confirm Cancellation'}
+                {isCanceling ? "Canceling..." : "Confirm Cancellation"}
               </Button>
             </>
           )}

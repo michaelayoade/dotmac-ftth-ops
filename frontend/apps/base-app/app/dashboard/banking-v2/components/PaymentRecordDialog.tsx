@@ -79,11 +79,7 @@ interface MobileMoneyFormData {
   transaction_id: string;
 }
 
-export function PaymentRecordDialog({
-  open,
-  onOpenChange,
-  onSuccess,
-}: PaymentRecordDialogProps) {
+export function PaymentRecordDialog({ open, onOpenChange, onSuccess }: PaymentRecordDialogProps) {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
@@ -176,9 +172,7 @@ export function PaymentRecordDialog({
           const cashPayment: CashPaymentCreate = {
             ...basePayment,
             payment_method: "cash",
-            cash_register_id: cashData.cash_register_id
-              ? cashData.cash_register_id
-              : null,
+            cash_register_id: cashData.cash_register_id ? cashData.cash_register_id : null,
             cashier_name: cashData.cashier_name ? cashData.cashier_name : null,
           };
           await recordCash.mutateAsync(cashPayment);
@@ -252,7 +246,11 @@ export function PaymentRecordDialog({
       payment_date: new Date().toISOString().slice(0, 10),
       notes: "",
     });
-    setCashData({ cash_register_id: "", denomination_breakdown: "", cashier_name: "" });
+    setCashData({
+      cash_register_id: "",
+      denomination_breakdown: "",
+      cashier_name: "",
+    });
     setCheckData({
       check_number: "",
       bank_name: "",
@@ -316,7 +314,12 @@ export function PaymentRecordDialog({
                   id="customer_id"
                   type="number"
                   value={commonData.customer_id}
-                  onChange={(e) => setCommonData({ ...commonData, customer_id: e.target.value })}
+                  onChange={(e) =>
+                    setCommonData({
+                      ...commonData,
+                      customer_id: e.target.value,
+                    })
+                  }
                   required
                   placeholder="12345"
                 />
@@ -353,7 +356,12 @@ export function PaymentRecordDialog({
                 <Input
                   id="currency"
                   value={commonData.currency}
-                  onChange={(e) => setCommonData({ ...commonData, currency: e.target.value.toUpperCase() })}
+                  onChange={(e) =>
+                    setCommonData({
+                      ...commonData,
+                      currency: e.target.value.toUpperCase(),
+                    })
+                  }
                   required
                   maxLength={3}
                   placeholder="USD"
@@ -401,7 +409,12 @@ export function PaymentRecordDialog({
                     id="cash_register_id"
                     type="number"
                     value={cashData.cash_register_id}
-                    onChange={(e) => setCashData({ ...cashData, cash_register_id: e.target.value })}
+                    onChange={(e) =>
+                      setCashData({
+                        ...cashData,
+                        cash_register_id: e.target.value,
+                      })
+                    }
                     placeholder="123"
                   />
                 </div>
@@ -413,7 +426,12 @@ export function PaymentRecordDialog({
                   <Textarea
                     id="denomination_breakdown"
                     value={cashData.denomination_breakdown}
-                    onChange={(e) => setCashData({ ...cashData, denomination_breakdown: e.target.value })}
+                    onChange={(e) =>
+                      setCashData({
+                        ...cashData,
+                        denomination_breakdown: e.target.value,
+                      })
+                    }
                     placeholder='{"100": 5, "50": 2, "20": 10}'
                     rows={3}
                   />
@@ -431,7 +449,12 @@ export function PaymentRecordDialog({
                   <Input
                     id="check_number"
                     value={checkData.check_number}
-                    onChange={(e) => setCheckData({ ...checkData, check_number: e.target.value })}
+                    onChange={(e) =>
+                      setCheckData({
+                        ...checkData,
+                        check_number: e.target.value,
+                      })
+                    }
                     required
                     placeholder="1234567890"
                   />
@@ -468,7 +491,10 @@ export function PaymentRecordDialog({
                   <Select
                     value={bankTransferData.bank_account_id}
                     onValueChange={(value) =>
-                      setBankTransferData({ ...bankTransferData, bank_account_id: value })
+                      setBankTransferData({
+                        ...bankTransferData,
+                        bank_account_id: value,
+                      })
                     }
                   >
                     <SelectTrigger id="bank_account_id">
@@ -491,7 +517,10 @@ export function PaymentRecordDialog({
                     id="sender_account_name"
                     value={bankTransferData.sender_account_name}
                     onChange={(e) =>
-                      setBankTransferData({ ...bankTransferData, sender_account_name: e.target.value })
+                      setBankTransferData({
+                        ...bankTransferData,
+                        sender_account_name: e.target.value,
+                      })
                     }
                     required
                     placeholder="John Doe"
@@ -504,7 +533,10 @@ export function PaymentRecordDialog({
                     id="sender_account_number"
                     value={bankTransferData.sender_account_number}
                     onChange={(e) =>
-                      setBankTransferData({ ...bankTransferData, sender_account_number: e.target.value })
+                      setBankTransferData({
+                        ...bankTransferData,
+                        sender_account_number: e.target.value,
+                      })
                     }
                     placeholder="1234567890"
                   />
@@ -516,7 +548,10 @@ export function PaymentRecordDialog({
                     id="sender_bank_name"
                     value={bankTransferData.sender_bank_name}
                     onChange={(e) =>
-                      setBankTransferData({ ...bankTransferData, sender_bank_name: e.target.value })
+                      setBankTransferData({
+                        ...bankTransferData,
+                        sender_bank_name: e.target.value,
+                      })
                     }
                     placeholder="Second National Bank"
                   />
@@ -528,7 +563,10 @@ export function PaymentRecordDialog({
                     id="transaction_reference"
                     value={bankTransferData.transaction_reference}
                     onChange={(e) =>
-                      setBankTransferData({ ...bankTransferData, transaction_reference: e.target.value })
+                      setBankTransferData({
+                        ...bankTransferData,
+                        transaction_reference: e.target.value,
+                      })
                     }
                     placeholder="TXN123456789"
                   />
@@ -543,7 +581,12 @@ export function PaymentRecordDialog({
                   <Input
                     id="provider"
                     value={mobileMoneyData.provider}
-                    onChange={(e) => setMobileMoneyData({ ...mobileMoneyData, provider: e.target.value })}
+                    onChange={(e) =>
+                      setMobileMoneyData({
+                        ...mobileMoneyData,
+                        provider: e.target.value,
+                      })
+                    }
                     required
                     placeholder="M-Pesa, MTN Mobile Money, etc."
                   />
@@ -555,7 +598,12 @@ export function PaymentRecordDialog({
                     id="sender_phone"
                     type="tel"
                     value={mobileMoneyData.sender_phone}
-                    onChange={(e) => setMobileMoneyData({ ...mobileMoneyData, sender_phone: e.target.value })}
+                    onChange={(e) =>
+                      setMobileMoneyData({
+                        ...mobileMoneyData,
+                        sender_phone: e.target.value,
+                      })
+                    }
                     required
                     placeholder="+1234567890"
                   />
@@ -566,7 +614,12 @@ export function PaymentRecordDialog({
                   <Input
                     id="transaction_id"
                     value={mobileMoneyData.transaction_id}
-                    onChange={(e) => setMobileMoneyData({ ...mobileMoneyData, transaction_id: e.target.value })}
+                    onChange={(e) =>
+                      setMobileMoneyData({
+                        ...mobileMoneyData,
+                        transaction_id: e.target.value,
+                      })
+                    }
                     required
                     placeholder="MM123456789"
                   />
@@ -582,12 +635,7 @@ export function PaymentRecordDialog({
             {receiptFile ? (
               <div className="flex items-center gap-2 p-3 border rounded-md">
                 <span className="text-sm flex-1">{receiptFile.name}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRemoveFile}
-                >
+                <Button type="button" variant="ghost" size="sm" onClick={handleRemoveFile}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>

@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState, useEffect } from "react";
@@ -9,13 +9,7 @@ import { Metadata } from "next";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@/components/ui/use-toast";
 import { DiagnosticsDashboard } from "@/components/diagnostics/DiagnosticsDashboard";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -55,7 +49,7 @@ export default function DiagnosticsPage() {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearch();
     }
   };
@@ -74,9 +68,7 @@ export default function DiagnosticsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Select Subscriber</CardTitle>
-          <CardDescription>
-            Enter subscriber ID or username to run diagnostics
-          </CardDescription>
+          <CardDescription>Enter subscriber ID or username to run diagnostics</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
@@ -92,10 +84,7 @@ export default function DiagnosticsPage() {
               />
             </div>
             <div className="flex items-end">
-              <Button
-                onClick={handleSearch}
-                disabled={searching || !subscriberId.trim()}
-              >
+              <Button onClick={handleSearch} disabled={searching || !subscriberId.trim()}>
                 <Search className="w-4 h-4 mr-2" />
                 Search
               </Button>
@@ -144,12 +133,10 @@ export default function DiagnosticsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <Search className="w-16 h-16 text-gray-300 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">
-              Search for a subscriber
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Search for a subscriber</h3>
             <p className="text-gray-500 max-w-md">
-              Enter a subscriber ID or username above to start running network diagnostics
-              and troubleshooting tools.
+              Enter a subscriber ID or username above to start running network diagnostics and
+              troubleshooting tools.
             </p>
           </CardContent>
         </Card>

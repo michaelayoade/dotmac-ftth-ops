@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
@@ -54,7 +54,10 @@ export default function CustomerBillingPage() {
 
   // Calculate current balance from unpaid invoices
   const currentBalance = {
-    amount: invoices?.filter((inv) => inv.status !== "paid").reduce((sum, inv) => sum + inv.amount_due, 0) || 0,
+    amount:
+      invoices
+        ?.filter((inv) => inv.status !== "paid")
+        .reduce((sum, inv) => sum + inv.amount_due, 0) || 0,
     dueDate: invoices?.find((inv) => inv.status !== "paid")?.due_date || null,
     status: invoices?.some((inv) => inv.status !== "paid") ? "pending" : "paid",
   };
@@ -121,9 +124,9 @@ export default function CustomerBillingPage() {
 
       // Fetch the invoice PDF from the API
       const response = await fetch(`/api/customer/invoices/${invoiceId}/download`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/pdf',
+          "Content-Type": "application/pdf",
         },
       });
 
@@ -136,7 +139,7 @@ export default function CustomerBillingPage() {
 
       // Create a download link and trigger download
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = `invoice-${invoice.invoice_number}.pdf`;
       document.body.appendChild(link);
@@ -151,7 +154,7 @@ export default function CustomerBillingPage() {
         description: `Invoice ${invoice.invoice_number} has been downloaded.`,
       });
     } catch (error) {
-      console.error('Error downloading invoice:', error);
+      console.error("Error downloading invoice:", error);
       toast({
         title: "Download Failed",
         description: error instanceof Error ? error.message : "Failed to download invoice",
@@ -159,7 +162,6 @@ export default function CustomerBillingPage() {
       });
     }
   };
-
 
   const getStatusBadge = (status: string) => {
     const config = {
@@ -196,9 +198,7 @@ export default function CustomerBillingPage() {
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Billing & Payments</h1>
-        <p className="text-muted-foreground">
-          Manage your invoices and payment methods
-        </p>
+        <p className="text-muted-foreground">Manage your invoices and payment methods</p>
       </div>
 
       {/* Current Balance Card */}
@@ -213,9 +213,7 @@ export default function CustomerBillingPage() {
         <CardContent>
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-4xl font-bold">
-                {formatCurrency(currentBalance.amount)}
-              </p>
+              <p className="text-4xl font-bold">{formatCurrency(currentBalance.amount)}</p>
               {currentBalance.dueDate && (
                 <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
@@ -247,9 +245,7 @@ export default function CustomerBillingPage() {
                 <Receipt className="h-5 w-5" />
                 Invoices
               </CardTitle>
-              <CardDescription>
-                View and download your invoices
-              </CardDescription>
+              <CardDescription>View and download your invoices</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="border rounded-lg">
@@ -268,19 +264,13 @@ export default function CustomerBillingPage() {
                     {invoices && invoices.length > 0 ? (
                       invoices.map((invoice) => (
                         <TableRow key={invoice.invoice_id}>
-                          <TableCell className="font-medium">
-                            {invoice.invoice_number}
-                          </TableCell>
+                          <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
                           <TableCell>{invoice.description}</TableCell>
                           <TableCell className="text-right font-medium">
                             {formatCurrency(invoice.amount)}
                           </TableCell>
-                          <TableCell>
-                            {new Date(invoice.due_date).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            {getStatusBadge(invoice.status)}
-                          </TableCell>
+                          <TableCell>{new Date(invoice.due_date).toLocaleDateString()}</TableCell>
+                          <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
                               <Button
@@ -328,9 +318,7 @@ export default function CustomerBillingPage() {
                 <CheckCircle className="h-5 w-5" />
                 Payment History
               </CardTitle>
-              <CardDescription>
-                Your recent payment transactions
-              </CardDescription>
+              <CardDescription>Your recent payment transactions</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="border rounded-lg">
@@ -348,24 +336,22 @@ export default function CustomerBillingPage() {
                     {payments && payments.length > 0 ? (
                       payments.map((payment) => (
                         <TableRow key={payment.id}>
-                          <TableCell>
-                            {new Date(payment.date).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {payment.invoice_number}
-                          </TableCell>
+                          <TableCell>{new Date(payment.date).toLocaleDateString()}</TableCell>
+                          <TableCell className="font-medium">{payment.invoice_number}</TableCell>
                           <TableCell>{payment.method}</TableCell>
                           <TableCell className="text-right font-medium text-green-500">
                             {formatCurrency(payment.amount)}
                           </TableCell>
                           <TableCell>
-                            <Badge className={
-                              payment.status === "success"
-                                ? "bg-green-500/20 text-green-300 border-green-500/30"
-                                : payment.status === "pending"
-                                ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
-                                : "bg-red-500/20 text-red-300 border-red-500/30"
-                            }>
+                            <Badge
+                              className={
+                                payment.status === "success"
+                                  ? "bg-green-500/20 text-green-300 border-green-500/30"
+                                  : payment.status === "pending"
+                                    ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
+                                    : "bg-red-500/20 text-red-300 border-red-500/30"
+                              }
+                            >
                               <CheckCircle className="h-3 w-3 mr-1" />
                               {payment.status}
                             </Badge>
@@ -396,13 +382,9 @@ export default function CustomerBillingPage() {
                     <CreditCard className="h-5 w-5" />
                     Payment Methods
                   </CardTitle>
-                  <CardDescription>
-                    Manage your saved payment methods
-                  </CardDescription>
+                  <CardDescription>Manage your saved payment methods</CardDescription>
                 </div>
-                <Button>
-                  Add Payment Method
-                </Button>
+                <Button>Add Payment Method</Button>
               </div>
             </CardHeader>
             <CardContent>
@@ -452,21 +434,15 @@ export default function CustomerBillingPage() {
           <Card>
             <CardHeader>
               <CardTitle>AutoPay</CardTitle>
-              <CardDescription>
-                Set up automatic payments for your monthly bills
-              </CardDescription>
+              <CardDescription>Set up automatic payments for your monthly bills</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">AutoPay Status</p>
-                  <p className="text-sm text-muted-foreground">
-                    Currently disabled
-                  </p>
+                  <p className="text-sm text-muted-foreground">Currently disabled</p>
                 </div>
-                <Button variant="outline">
-                  Enable AutoPay
-                </Button>
+                <Button variant="outline">Enable AutoPay</Button>
               </div>
             </CardContent>
           </Card>

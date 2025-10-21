@@ -10,9 +10,9 @@ export class CSRFProtection {
   // Initialize CSRF protection by fetching token
   async initialize(): Promise<void> {
     try {
-      const response = await fetch('/api/auth/csrf', {
-        method: 'GET',
-        credentials: 'include',
+      const response = await fetch("/api/auth/csrf", {
+        method: "GET",
+        credentials: "include",
       });
 
       if (response.ok) {
@@ -21,7 +21,7 @@ export class CSRFProtection {
         this.tokenExpiry = Date.now() + (data.expiresIn || 60 * 60) * 1000; // Default 1 hour
       }
     } catch (error) {
-      console.warn('Failed to initialize CSRF protection:', error);
+      console.warn("Failed to initialize CSRF protection:", error);
     }
   }
 
@@ -56,7 +56,7 @@ export class CSRFProtection {
   // Get headers with CSRF token
   getHeaders(): Record<string, string> {
     const token = this.getToken();
-    return token ? { 'X-CSRF-Token': token } : {};
+    return token ? { "X-CSRF-Token": token } : {};
   }
 
   // Refresh CSRF token if needed

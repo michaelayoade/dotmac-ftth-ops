@@ -5,8 +5,8 @@
  * Used by Jest, Vitest, and Playwright tests.
  */
 
-import { setupServer } from 'msw/node';
-import { handlers, mockHandlers } from './handlers';
+import { setupServer } from "msw/node";
+import { handlers, mockHandlers } from "./handlers";
 
 /**
  * Create MSW server with proxy handlers (default)
@@ -34,19 +34,19 @@ export const mockServer = setupServer(...mockHandlers);
  * afterAll(() => server.close());
  * ```
  */
-export function setupMSWServer(mode: 'proxy' | 'mock' = 'proxy') {
-  const selectedServer = mode === 'proxy' ? server : mockServer;
+export function setupMSWServer(mode: "proxy" | "mock" = "proxy") {
+  const selectedServer = mode === "proxy" ? server : mockServer;
 
   return {
     start: () => {
       selectedServer.listen({
-        onUnhandledRequest: 'bypass', // Let unhandled requests pass through
+        onUnhandledRequest: "bypass", // Let unhandled requests pass through
       });
       console.log(`[MSW] Server started in ${mode} mode`);
     },
     stop: () => {
       selectedServer.close();
-      console.log('[MSW] Server stopped');
+      console.log("[MSW] Server stopped");
     },
     reset: () => {
       selectedServer.resetHandlers();

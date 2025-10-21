@@ -1,12 +1,12 @@
 // Export ISP Brand Theme System
-export * from './ISPBrandTheme';
+export * from "./ISPBrandTheme";
 
 // Export Universal Theme System (extends ISP Brand Theme)
-export * from './UniversalTheme';
+export * from "./UniversalTheme";
 
 // Legacy compatibility exports
-export { ISPThemeProvider as ThemeProvider } from './ISPBrandTheme';
-export { useISPTheme as useTheme } from './ISPBrandTheme';
+export { ISPThemeProvider as ThemeProvider } from "./ISPBrandTheme";
+export { useISPTheme as useTheme } from "./ISPBrandTheme";
 
 // New universal theme exports
 export {
@@ -14,4 +14,4 @@ export {
   useUniversalTheme,
   ThemeAware,
   PortalBrand,
-} from './UniversalTheme';
+} from "./UniversalTheme";

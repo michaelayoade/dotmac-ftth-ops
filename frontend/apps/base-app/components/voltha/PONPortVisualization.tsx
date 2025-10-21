@@ -13,21 +13,10 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PONPortMetrics, PONStatistics } from "@/types/voltha";
 
 interface PONPortVisualizationProps {
@@ -41,24 +30,27 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
   const [portStatistics, setPortStatistics] = useState<PONStatistics | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const loadPortStatistics = useCallback(async (portNo: number) => {
-    setLoading(true);
-    try {
-      const response = await apiClient.get<PONStatistics>(
-        `/api/v1/voltha/devices/${oltId}/ports/${portNo}/statistics`
-      );
-      setPortStatistics(response.data);
-    } catch (err) {
-      console.error("Failed to load port statistics", err);
-      toast({
-        title: "Failed to load statistics",
-        description: "Could not fetch PON port statistics",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [oltId, toast]);
+  const loadPortStatistics = useCallback(
+    async (portNo: number) => {
+      setLoading(true);
+      try {
+        const response = await apiClient.get<PONStatistics>(
+          `/api/v1/voltha/devices/${oltId}/ports/${portNo}/statistics`,
+        );
+        setPortStatistics(response.data);
+      } catch (err) {
+        console.error("Failed to load port statistics", err);
+        toast({
+          title: "Failed to load statistics",
+          description: "Could not fetch PON port statistics",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [oltId, toast],
+  );
 
   useEffect(() => {
     if (selectedPort !== null) {
@@ -189,7 +181,9 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
                     {opticalStatus && (
                       <div className="flex items-center gap-1 text-xs">
                         {opticalStatus.icon === TrendingUp && <TrendingUp className="w-3 h-3" />}
-                        {opticalStatus.icon === TrendingDown && <TrendingDown className="w-3 h-3" />}
+                        {opticalStatus.icon === TrendingDown && (
+                          <TrendingDown className="w-3 h-3" />
+                        )}
                         {opticalStatus.icon === Activity && <Activity className="w-3 h-3" />}
                         <span className={opticalStatus.color}>{opticalStatus.label}</span>
                       </div>
@@ -216,12 +210,8 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
       {selectedPort !== null && (
         <Card>
           <CardHeader>
-            <CardTitle>
-              Port {selectedPort} - Detailed Statistics
-            </CardTitle>
-            <CardDescription>
-              Real-time optical and traffic metrics
-            </CardDescription>
+            <CardTitle>Port {selectedPort} - Detailed Statistics</CardTitle>
+            <CardDescription>Real-time optical and traffic metrics</CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -240,28 +230,36 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
                     {portStatistics.rx_power !== undefined && (
                       <div className="space-y-1">
                         <div className="text-sm text-muted-foreground">RX Power</div>
-                        <div className="text-2xl font-bold">{portStatistics.rx_power.toFixed(2)}</div>
+                        <div className="text-2xl font-bold">
+                          {portStatistics.rx_power.toFixed(2)}
+                        </div>
                         <div className="text-xs text-muted-foreground">dBm</div>
                       </div>
                     )}
                     {portStatistics.tx_power !== undefined && (
                       <div className="space-y-1">
                         <div className="text-sm text-muted-foreground">TX Power</div>
-                        <div className="text-2xl font-bold">{portStatistics.tx_power.toFixed(2)}</div>
+                        <div className="text-2xl font-bold">
+                          {portStatistics.tx_power.toFixed(2)}
+                        </div>
                         <div className="text-xs text-muted-foreground">dBm</div>
                       </div>
                     )}
                     {portStatistics.temperature !== undefined && (
                       <div className="space-y-1">
                         <div className="text-sm text-muted-foreground">Temperature</div>
-                        <div className="text-2xl font-bold">{portStatistics.temperature.toFixed(1)}</div>
+                        <div className="text-2xl font-bold">
+                          {portStatistics.temperature.toFixed(1)}
+                        </div>
                         <div className="text-xs text-muted-foreground">°C</div>
                       </div>
                     )}
                     {portStatistics.voltage !== undefined && (
                       <div className="space-y-1">
                         <div className="text-sm text-muted-foreground">Voltage</div>
-                        <div className="text-2xl font-bold">{portStatistics.voltage.toFixed(2)}</div>
+                        <div className="text-2xl font-bold">
+                          {portStatistics.voltage.toFixed(2)}
+                        </div>
                         <div className="text-xs text-muted-foreground">V</div>
                       </div>
                     )}
@@ -315,7 +313,8 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
                 </div>
 
                 {/* Error Metrics */}
-                {(portStatistics.rx_errors !== undefined || portStatistics.tx_errors !== undefined) && (
+                {(portStatistics.rx_errors !== undefined ||
+                  portStatistics.tx_errors !== undefined) && (
                   <div>
                     <h4 className="font-medium mb-3 flex items-center gap-2">
                       <AlertCircle className="w-4 h-4" />
@@ -325,7 +324,9 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
                       {portStatistics.rx_errors !== undefined && (
                         <div className="space-y-1">
                           <div className="text-sm text-muted-foreground">RX Errors</div>
-                          <div className={`text-xl font-bold ${portStatistics.rx_errors > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          <div
+                            className={`text-xl font-bold ${portStatistics.rx_errors > 0 ? "text-red-600" : "text-green-600"}`}
+                          >
                             {portStatistics.rx_errors}
                           </div>
                         </div>
@@ -333,7 +334,9 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
                       {portStatistics.tx_errors !== undefined && (
                         <div className="space-y-1">
                           <div className="text-sm text-muted-foreground">TX Errors</div>
-                          <div className={`text-xl font-bold ${portStatistics.tx_errors > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          <div
+                            className={`text-xl font-bold ${portStatistics.tx_errors > 0 ? "text-red-600" : "text-green-600"}`}
+                          >
                             {portStatistics.tx_errors}
                           </div>
                         </div>
@@ -343,7 +346,8 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
                 )}
 
                 {/* FEC Metrics */}
-                {(portStatistics.fec_corrected !== undefined || portStatistics.fec_uncorrectable !== undefined) && (
+                {(portStatistics.fec_corrected !== undefined ||
+                  portStatistics.fec_uncorrectable !== undefined) && (
                   <div>
                     <h4 className="font-medium mb-3 flex items-center gap-2">
                       <Info className="w-4 h-4" />
@@ -359,7 +363,9 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
                       {portStatistics.fec_uncorrectable !== undefined && (
                         <div className="space-y-1">
                           <div className="text-sm text-muted-foreground">Uncorrectable Errors</div>
-                          <div className={`text-xl font-bold ${portStatistics.fec_uncorrectable > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          <div
+                            className={`text-xl font-bold ${portStatistics.fec_uncorrectable > 0 ? "text-red-600" : "text-green-600"}`}
+                          >
                             {portStatistics.fec_uncorrectable}
                           </div>
                         </div>
@@ -396,25 +402,25 @@ export function PONPortVisualization({ oltId, ponPorts }: PONPortVisualizationPr
             <div className="p-4 rounded-lg border bg-green-50 border-green-200">
               <div className="text-sm text-green-700 mb-1">Healthy Ports</div>
               <div className="text-2xl font-bold text-green-900">
-                {ponPorts.filter(p => getHealthScore(p) >= 90).length}
+                {ponPorts.filter((p) => getHealthScore(p) >= 90).length}
               </div>
             </div>
             <div className="p-4 rounded-lg border bg-yellow-50 border-yellow-200">
               <div className="text-sm text-yellow-700 mb-1">Fair Ports</div>
               <div className="text-2xl font-bold text-yellow-900">
-                {ponPorts.filter(p => getHealthScore(p) >= 70 && getHealthScore(p) < 90).length}
+                {ponPorts.filter((p) => getHealthScore(p) >= 70 && getHealthScore(p) < 90).length}
               </div>
             </div>
             <div className="p-4 rounded-lg border bg-orange-50 border-orange-200">
               <div className="text-sm text-orange-700 mb-1">Degraded Ports</div>
               <div className="text-2xl font-bold text-orange-900">
-                {ponPorts.filter(p => getHealthScore(p) >= 50 && getHealthScore(p) < 70).length}
+                {ponPorts.filter((p) => getHealthScore(p) >= 50 && getHealthScore(p) < 70).length}
               </div>
             </div>
             <div className="p-4 rounded-lg border bg-red-50 border-red-200">
               <div className="text-sm text-red-700 mb-1">Critical Ports</div>
               <div className="text-2xl font-bold text-red-900">
-                {ponPorts.filter(p => getHealthScore(p) < 50).length}
+                {ponPorts.filter((p) => getHealthScore(p) < 50).length}
               </div>
             </div>
           </div>

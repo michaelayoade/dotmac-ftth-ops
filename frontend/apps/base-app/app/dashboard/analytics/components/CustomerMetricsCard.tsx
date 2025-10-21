@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart } from '@/components/charts/BarChart';
-import { LineChart } from '@/components/charts/LineChart';
-import { useCustomerMetrics } from '@/lib/graphql/hooks';
-import { Users, UserPlus, UserMinus, TrendingUp } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart } from "@/components/charts/BarChart";
+import { LineChart } from "@/components/charts/LineChart";
+import { useCustomerMetrics } from "@/lib/graphql/hooks";
+import { Users, UserPlus, UserMinus, TrendingUp } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export function CustomerMetricsCard({ period = '30d' }: { period?: string }) {
+export function CustomerMetricsCard({ period = "30d" }: { period?: string }) {
   const { data, isLoading, error } = useCustomerMetrics(period);
 
   if (isLoading) {
@@ -50,9 +50,9 @@ export function CustomerMetricsCard({ period = '30d' }: { period?: string }) {
   };
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
@@ -69,9 +69,7 @@ export function CustomerMetricsCard({ period = '30d' }: { period?: string }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{metrics.totalCustomers}</div>
-            <p className="text-xs text-muted-foreground">
-              {metrics.activeCustomers} active
-            </p>
+            <p className="text-xs text-muted-foreground">{metrics.activeCustomers} active</p>
           </CardContent>
         </Card>
 
@@ -95,9 +93,7 @@ export function CustomerMetricsCard({ period = '30d' }: { period?: string }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatPercent(metrics.churnRate)}</div>
-            <p className="text-xs text-muted-foreground">
-              {metrics.churnedCustomers} churned
-            </p>
+            <p className="text-xs text-muted-foreground">{metrics.churnedCustomers} churned</p>
           </CardContent>
         </Card>
 
@@ -124,7 +120,7 @@ export function CustomerMetricsCard({ period = '30d' }: { period?: string }) {
           </CardHeader>
           <CardContent>
             <LineChart
-              data={metrics.customerTimeSeries.map(ts => ({
+              data={metrics.customerTimeSeries.map((ts) => ({
                 label: ts.label,
                 value: ts.value,
               }))}
@@ -146,7 +142,7 @@ export function CustomerMetricsCard({ period = '30d' }: { period?: string }) {
           </CardHeader>
           <CardContent>
             <BarChart
-              data={metrics.churnTimeSeries.map(ts => ({
+              data={metrics.churnTimeSeries.map((ts) => ({
                 label: ts.label,
                 value: ts.value,
               }))}

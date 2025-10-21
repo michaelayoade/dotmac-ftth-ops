@@ -1,13 +1,20 @@
-'use client';
+"use client";
 
-import { X, Download, Mail, Printer, FileText, Calendar, CreditCard, User } from 'lucide-react';
-import { Receipt } from '@/types/billing';
-import { formatCurrency } from '@/lib/utils/currency';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { X, Download, Mail, Printer, FileText, Calendar, CreditCard, User } from "lucide-react";
+import { Receipt } from "@/types/billing";
+import { formatCurrency } from "@/lib/utils/currency";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface ReceiptDetailModalProps {
   receipt: Receipt | null;
@@ -41,30 +48,19 @@ export default function ReceiptDetailModal({
             </DialogTitle>
             <div className="flex items-center gap-2">
               {onPrint && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onPrint(receipt)}
-                >
+                <Button variant="outline" size="sm" onClick={() => onPrint(receipt)}>
                   <Printer className="h-4 w-4 mr-2" />
                   Print
                 </Button>
               )}
               {onEmail && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onEmail(receipt)}
-                >
+                <Button variant="outline" size="sm" onClick={() => onEmail(receipt)}>
                   <Mail className="h-4 w-4 mr-2" />
                   Email
                 </Button>
               )}
               {onDownload && (
-                <Button
-                  size="sm"
-                  onClick={() => onDownload(receipt)}
-                >
+                <Button size="sm" onClick={() => onDownload(receipt)}>
                   <Download className="h-4 w-4 mr-2" />
                   Download PDF
                 </Button>
@@ -78,7 +74,9 @@ export default function ReceiptDetailModal({
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Customer Information</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                  Customer Information
+                </h3>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-muted-foreground" />
@@ -90,15 +88,20 @@ export default function ReceiptDetailModal({
                   </div>
                   {receipt.billing_address && Object.keys(receipt.billing_address).length > 0 && (
                     <div className="text-sm text-muted-foreground mt-2">
-                      {receipt.billing_address.street && <div>{receipt.billing_address.street}</div>}
+                      {receipt.billing_address.street && (
+                        <div>{receipt.billing_address.street}</div>
+                      )}
                       {receipt.billing_address.city && (
                         <div>
                           {receipt.billing_address.city}
                           {receipt.billing_address.state && `, ${receipt.billing_address.state}`}
-                          {receipt.billing_address.postal_code && ` ${receipt.billing_address.postal_code}`}
+                          {receipt.billing_address.postal_code &&
+                            ` ${receipt.billing_address.postal_code}`}
                         </div>
                       )}
-                      {receipt.billing_address.country && <div>{receipt.billing_address.country}</div>}
+                      {receipt.billing_address.country && (
+                        <div>{receipt.billing_address.country}</div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -120,16 +123,21 @@ export default function ReceiptDetailModal({
                     <span className="text-muted-foreground">Payment Method:</span>
                     <span className="flex items-center gap-1">
                       <CreditCard className="h-3 w-3 text-muted-foreground" />
-                      <span className="capitalize">{receipt.payment_method.replace('_', ' ')}</span>
+                      <span className="capitalize">{receipt.payment_method.replace("_", " ")}</span>
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Status:</span>
-                    <Badge variant={
-                      receipt.payment_status === 'completed' || receipt.payment_status === 'succeeded' ? 'success' :
-                      receipt.payment_status === 'failed' ? 'destructive' :
-                      'default'
-                    }>
+                    <Badge
+                      variant={
+                        receipt.payment_status === "completed" ||
+                        receipt.payment_status === "succeeded"
+                          ? "success"
+                          : receipt.payment_status === "failed"
+                            ? "destructive"
+                            : "default"
+                      }
+                    >
                       {receipt.payment_status}
                     </Badge>
                   </div>
@@ -187,7 +195,7 @@ export default function ReceiptDetailModal({
                           <div className="text-xs text-muted-foreground">({item.tax_rate}%)</div>
                         </div>
                       ) : (
-                        '-'
+                        "-"
                       )}
                     </TableCell>
                     <TableCell className="text-right font-medium">

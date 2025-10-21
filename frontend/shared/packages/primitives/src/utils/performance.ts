@@ -3,7 +3,7 @@
  * Tools for React performance optimization, memoization, and rendering efficiency
  */
 
-import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 
 // Performance monitoring types
 export interface PerformanceMetrics {
@@ -95,7 +95,7 @@ export const useRenderProfiler = (componentName: string, props?: any) => {
 // Memoization helpers
 export const createMemoizedSelector = <T, R>(
   selector: (data: T) => R,
-  dependencies: (data: T) => any[] = () => []
+  dependencies: (data: T) => any[] = () => [],
 ) => {
   let lastDeps: any[] = [];
   let lastResult: R;
@@ -125,7 +125,7 @@ export const useDeepMemo = <T>(factory: () => T, deps: any[]): T => {
   const deepEqual = (a: any[], b: any[]): boolean => {
     if (a.length !== b.length) return false;
     return a.every((val, index) => {
-      if (typeof val === 'object' && val !== null) {
+      if (typeof val === "object" && val !== null) {
         return JSON.stringify(val) === JSON.stringify(b[index]);
       }
       return val === b[index];
@@ -145,7 +145,7 @@ export const useDeepMemo = <T>(factory: () => T, deps: any[]): T => {
 // Throttled state updates
 export const useThrottledState = <T>(
   initialValue: T,
-  delay: number = 100
+  delay: number = 100,
 ): [T, (value: T) => void, T] => {
   const [state, setState] = useState<T>(initialValue);
   const [throttledState, setThrottledState] = useState<T>(initialValue);
@@ -163,7 +163,7 @@ export const useThrottledState = <T>(
         setThrottledState(value);
       }, delay);
     },
-    [delay]
+    [delay],
   );
 
   useEffect(() => {
@@ -180,7 +180,7 @@ export const useThrottledState = <T>(
 // Debounced state updates
 export const useDebouncedState = <T>(
   initialValue: T,
-  delay: number = 300
+  delay: number = 300,
 ): [T, (value: T) => void, T] => {
   const [state, setState] = useState<T>(initialValue);
   const [debouncedState, setDebouncedState] = useState<T>(initialValue);
@@ -198,7 +198,7 @@ export const useDebouncedState = <T>(
         setDebouncedState(value);
       }, delay);
     },
-    [delay]
+    [delay],
   );
 
   useEffect(() => {
@@ -215,7 +215,7 @@ export const useDebouncedState = <T>(
 // Lazy loading hook
 export const useLazyComponent = <T extends React.ComponentType<any>>(
   importFunction: () => Promise<{ default: T }>,
-  fallback?: React.ComponentType
+  fallback?: React.ComponentType,
 ) => {
   const [Component, setComponent] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
@@ -231,7 +231,7 @@ export const useLazyComponent = <T extends React.ComponentType<any>>(
       const module = await importFunction();
       setComponent(() => module.default);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to load component'));
+      setError(err instanceof Error ? err : new Error("Failed to load component"));
     } finally {
       setLoading(false);
     }
@@ -274,7 +274,7 @@ export const useVirtualizedList = <T>({
       item,
       index: visibleRange.start + index,
       style: {
-        position: 'absolute' as const,
+        position: "absolute" as const,
         top: (visibleRange.start + index) * itemHeight,
         height: itemHeight,
       },
@@ -301,21 +301,21 @@ export const analyzeBundleImpact = (componentName: string, size: number) => {
     component: componentName,
     size,
     percentage: 0,
-    recommendation: '',
+    recommendation: "",
   };
 
   // Calculate recommendations based on size
   if (size > 100000) {
     // > 100KB
-    impact.recommendation = 'Consider code splitting - component is large';
+    impact.recommendation = "Consider code splitting - component is large";
   } else if (size > 50000) {
     // > 50KB
-    impact.recommendation = 'Monitor size - consider lazy loading';
+    impact.recommendation = "Monitor size - consider lazy loading";
   } else if (size > 25000) {
     // > 25KB
-    impact.recommendation = 'Good size - check for unused dependencies';
+    impact.recommendation = "Good size - check for unused dependencies";
   } else {
-    impact.recommendation = 'Optimal size for immediate loading';
+    impact.recommendation = "Optimal size for immediate loading";
   }
 
   return impact;
@@ -331,7 +331,7 @@ export const useMemoryMonitor = (componentName: string) => {
 
   useEffect(() => {
     const checkMemory = () => {
-      if ('memory' in performance) {
+      if ("memory" in performance) {
         const memory = (performance as any).memory;
         const used = memory.usedJSHeapSize;
         const total = memory.totalJSHeapSize;
@@ -361,12 +361,12 @@ export const getPerformanceRecommendations = (profile: RenderProfile): string[] 
 
   // High render frequency
   if (profile.totalRenders > 100 && profile.avgRenderTime > 16) {
-    recommendations.push('Consider using React.memo() to prevent unnecessary re-renders');
+    recommendations.push("Consider using React.memo() to prevent unnecessary re-renders");
   }
 
   // Slow render times
   if (profile.avgRenderTime > 50) {
-    recommendations.push('Optimize expensive calculations with useMemo()');
+    recommendations.push("Optimize expensive calculations with useMemo()");
   }
 
   // Frequent props changes
@@ -374,14 +374,14 @@ export const getPerformanceRecommendations = (profile: RenderProfile): string[] 
     const recentChanges = profile.propsHistory.slice(-5);
     const changeFrequency = recentChanges.length / 5;
     if (changeFrequency > 0.8) {
-      recommendations.push('Stabilize props with useCallback() to reduce re-renders');
+      recommendations.push("Stabilize props with useCallback() to reduce re-renders");
     }
   }
 
   // Large render time variance
   const variance = profile.maxRenderTime - profile.minRenderTime;
   if (variance > 100) {
-    recommendations.push('Inconsistent render times - check for conditional heavy operations');
+    recommendations.push("Inconsistent render times - check for conditional heavy operations");
   }
 
   return recommendations;
@@ -406,8 +406,8 @@ export const generatePerformanceReport = (): {
       summary: {
         totalComponents: 0,
         avgRenderTime: 0,
-        slowestComponent: '',
-        fastestComponent: '',
+        slowestComponent: "",
+        fastestComponent: "",
         totalRenders: 0,
       },
       components: [],
@@ -417,10 +417,10 @@ export const generatePerformanceReport = (): {
 
   const avgRenderTime = profiles.reduce((sum, p) => sum + p.avgRenderTime, 0) / profiles.length;
   const slowest = profiles.reduce((prev, curr) =>
-    curr.avgRenderTime > prev.avgRenderTime ? curr : prev
+    curr.avgRenderTime > prev.avgRenderTime ? curr : prev,
   );
   const fastest = profiles.reduce((prev, curr) =>
-    curr.avgRenderTime < prev.avgRenderTime ? curr : prev
+    curr.avgRenderTime < prev.avgRenderTime ? curr : prev,
   );
   const totalRenders = profiles.reduce((sum, p) => sum + p.totalRenders, 0);
 

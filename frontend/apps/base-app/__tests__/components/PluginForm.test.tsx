@@ -1,16 +1,16 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { PluginForm } from '../../app/dashboard/settings/plugins/components/PluginForm';
-import type { FieldSpec, PluginConfig, PluginInstance, PluginTestResult } from '@/hooks/usePlugins';
+import React from "react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { PluginForm } from "../../app/dashboard/settings/plugins/components/PluginForm";
+import type { FieldSpec, PluginConfig, PluginInstance, PluginTestResult } from "@/hooks/usePlugins";
 
 const makeField = (
-  field: Omit<FieldSpec, 'validation_rules' | 'options' | 'required' | 'is_secret'> & {
+  field: Omit<FieldSpec, "validation_rules" | "options" | "required" | "is_secret"> & {
     required?: boolean;
     is_secret?: boolean;
-    validation_rules?: FieldSpec['validation_rules'];
-    options?: FieldSpec['options'];
-  }
+    validation_rules?: FieldSpec["validation_rules"];
+    options?: FieldSpec["options"];
+  },
 ): FieldSpec => ({
   required: false,
   is_secret: false,
@@ -71,7 +71,7 @@ const mockWhatsAppPlugin: PluginConfig = {
       options: [
         { value: "v18.0", label: "v18.0 (Latest)" },
         { value: "v17.0", label: "v17.0" },
-        { value: "v16.0", label: "v16.0" }
+        { value: "v16.0", label: "v16.0" },
       ],
       group: "Environment",
       order: 1,
@@ -156,8 +156,8 @@ const mockWhatsAppPlugin: PluginConfig = {
       description: "Last synchronization timestamp",
       group: "Advanced",
       order: 6,
-    })
-  ]
+    }),
+  ],
 };
 
 const mockInstance: PluginInstance = {
@@ -167,7 +167,7 @@ const mockInstance: PluginInstance = {
   config_schema: mockWhatsAppPlugin,
   status: "active" as const,
   has_configuration: true,
-  last_health_check: "2024-01-20T15:30:00Z"
+  last_health_check: "2024-01-20T15:30:00Z",
 };
 
 const mockAvailablePlugins: PluginConfig[] = [mockWhatsAppPlugin];
@@ -179,10 +179,10 @@ const defaultProps: Parameters<typeof PluginForm>[0] = {
   onTestConnection: jest.fn<Promise<PluginTestResult>, [string, Record<string, unknown>?]>(
     async () => ({
       success: true,
-      message: 'ok',
+      message: "ok",
       details: {},
       timestamp: new Date().toISOString(),
-    })
+    }),
   ),
 };
 
@@ -191,29 +191,29 @@ const renderPluginForm = (props = {}) => {
   return render(<PluginForm {...defaultProps} {...props} />);
 };
 
-describe('PluginForm', () => {
+describe("PluginForm", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe('Plugin Selection Mode', () => {
-    it('renders plugin selection form when no plugin is pre-selected', () => {
+  describe("Plugin Selection Mode", () => {
+    it("renders plugin selection form when no plugin is pre-selected", () => {
       renderPluginForm();
 
-      expect(screen.getByText('Add New Plugin Instance')).toBeInTheDocument();
+      expect(screen.getByText("Add New Plugin Instance")).toBeInTheDocument();
       expect(screen.getByLabelText(/Plugin/)).toBeInTheDocument();
       expect(screen.getByLabelText(/Instance Name/)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Create Plugin/ })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Create Plugin/ })).toBeInTheDocument();
     });
 
-    it('allows selecting a plugin from dropdown', async () => {
+    it("allows selecting a plugin from dropdown", async () => {
       const user = userEvent.setup();
       renderPluginForm();
 
       const pluginSelect = screen.getByLabelText(/Plugin/);
-      await user.selectOptions(pluginSelect, 'WhatsApp Business');
+      await user.selectOptions(pluginSelect, "WhatsApp Business");
 
-      expect(pluginSelect).toHaveValue('WhatsApp Business');
+      expect(pluginSelect).toHaveValue("WhatsApp Business");
 
       // Should show plugin fields after selection
       await waitFor(() => {
@@ -221,146 +221,150 @@ describe('PluginForm', () => {
       });
     });
 
-    it('shows validation error when no plugin is selected', async () => {
+    it("shows validation error when no plugin is selected", async () => {
       const user = userEvent.setup();
       renderPluginForm();
 
-      const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+      const submitButton = screen.getByRole("button", {
+        name: /Create Plugin/,
+      });
 
       await user.click(submitButton);
 
       // Use findByText which waits for the element to appear
-      const errorMessage = await screen.findByText('Please select a plugin');
+      const errorMessage = await screen.findByText("Please select a plugin");
       expect(errorMessage).toBeInTheDocument();
     });
   });
 
-  describe('Field Type Rendering', () => {
+  describe("Field Type Rendering", () => {
     beforeEach(() => {
       renderPluginForm({ plugin: mockWhatsAppPlugin });
     });
 
-    it('renders string fields correctly', () => {
+    it("renders string fields correctly", () => {
       const stringField = screen.getByLabelText(/Business Account ID/);
       expect(stringField).toBeInTheDocument();
-      expect(stringField).toHaveAttribute('type', 'text');
+      expect(stringField).toHaveAttribute("type", "text");
     });
 
-    it('renders secret fields with password input and visibility toggle', () => {
+    it("renders secret fields with password input and visibility toggle", () => {
       const secretField = screen.getByLabelText(/API Token/);
       expect(secretField).toBeInTheDocument();
-      expect(secretField).toHaveAttribute('type', 'password');
+      expect(secretField).toHaveAttribute("type", "password");
 
       // Should have visibility toggle button
-      const toggleButton = secretField.parentElement?.querySelector('button');
+      const toggleButton = secretField.parentElement?.querySelector("button");
       expect(toggleButton).toBeInTheDocument();
     });
 
-    it('renders phone fields with correct pattern', () => {
+    it("renders phone fields with correct pattern", () => {
       const phoneField = screen.getByLabelText(/Phone Number/);
       expect(phoneField).toBeInTheDocument();
-      expect(phoneField).toHaveAttribute('type', 'tel');
-      expect(phoneField).toHaveAttribute('pattern', '^\\+[1-9]\\d{1,14}$');
+      expect(phoneField).toHaveAttribute("type", "tel");
+      expect(phoneField).toHaveAttribute("pattern", "^\\+[1-9]\\d{1,14}$");
     });
 
-    it('renders select fields with options', () => {
+    it("renders select fields with options", () => {
       const selectField = screen.getByLabelText(/API Version/);
       expect(selectField).toBeInTheDocument();
-      expect(selectField.tagName).toBe('SELECT');
+      expect(selectField.tagName).toBe("SELECT");
 
       // Check that the select field has the correct options
       const selectElement = selectField as HTMLSelectElement;
       expect(selectElement.options.length).toBe(4); // 3 options + placeholder
-      expect(screen.getByRole('option', { name: /v18.0 \(Latest\)/ })).toBeInTheDocument();
+      expect(screen.getByRole("option", { name: /v18.0 \(Latest\)/ })).toBeInTheDocument();
     });
 
-    it('renders boolean fields as checkboxes', () => {
+    it("renders boolean fields as checkboxes", () => {
       const booleanField = screen.getByLabelText(/Enable sandbox mode for testing/);
       expect(booleanField).toBeInTheDocument();
-      expect(booleanField).toHaveAttribute('type', 'checkbox');
+      expect(booleanField).toHaveAttribute("type", "checkbox");
     });
 
-    it('renders integer fields with number input', () => {
+    it("renders integer fields with number input", () => {
       const integerField = screen.getByLabelText(/Message Retry Count/);
       expect(integerField).toBeInTheDocument();
-      expect(integerField).toHaveAttribute('type', 'number');
-      expect(integerField).toHaveAttribute('step', '1');
+      expect(integerField).toHaveAttribute("type", "number");
+      expect(integerField).toHaveAttribute("step", "1");
     });
 
-    it('renders float fields with decimal support', () => {
+    it("renders float fields with decimal support", () => {
       const floatField = screen.getByLabelText(/Request Timeout/);
       expect(floatField).toBeInTheDocument();
-      expect(floatField).toHaveAttribute('type', 'number');
-      expect(floatField).toHaveAttribute('step', 'any');
+      expect(floatField).toHaveAttribute("type", "number");
+      expect(floatField).toHaveAttribute("step", "any");
     });
 
-    it('renders URL fields with URL validation', () => {
+    it("renders URL fields with URL validation", () => {
       const urlField = screen.getByLabelText(/Webhook URL/);
       expect(urlField).toBeInTheDocument();
-      expect(urlField).toHaveAttribute('type', 'url');
+      expect(urlField).toHaveAttribute("type", "url");
     });
 
-    it('renders email fields with email validation', () => {
+    it("renders email fields with email validation", () => {
       const emailField = screen.getByLabelText(/Contact Email/);
       expect(emailField).toBeInTheDocument();
-      expect(emailField).toHaveAttribute('type', 'email');
+      expect(emailField).toHaveAttribute("type", "email");
     });
 
-    it('renders date fields with date picker', () => {
+    it("renders date fields with date picker", () => {
       const dateField = screen.getByLabelText(/Created Date/);
       expect(dateField).toBeInTheDocument();
-      expect(dateField).toHaveAttribute('type', 'date');
+      expect(dateField).toHaveAttribute("type", "date");
     });
 
-    it('renders datetime fields with datetime picker', () => {
+    it("renders datetime fields with datetime picker", () => {
       const datetimeField = screen.getByLabelText(/Last Sync Time/);
       expect(datetimeField).toBeInTheDocument();
-      expect(datetimeField).toHaveAttribute('type', 'datetime-local');
+      expect(datetimeField).toHaveAttribute("type", "datetime-local");
     });
 
-    it('renders JSON fields as textarea', () => {
+    it("renders JSON fields as textarea", () => {
       const jsonField = screen.getByLabelText(/Custom Headers/);
       expect(jsonField).toBeInTheDocument();
-      expect(jsonField.tagName).toBe('TEXTAREA');
+      expect(jsonField.tagName).toBe("TEXTAREA");
     });
   });
 
-  describe('Secret Field Visibility Toggle', () => {
-    it('toggles secret field visibility when eye button is clicked', async () => {
+  describe("Secret Field Visibility Toggle", () => {
+    it("toggles secret field visibility when eye button is clicked", async () => {
       const user = userEvent.setup();
       renderPluginForm({ plugin: mockWhatsAppPlugin });
 
       const secretField = screen.getByLabelText(/API Token/) as HTMLInputElement;
-      const toggleButton = secretField.parentElement?.querySelector('button');
+      const toggleButton = secretField.parentElement?.querySelector("button");
 
-      expect(secretField.type).toBe('password');
+      expect(secretField.type).toBe("password");
 
       if (toggleButton) {
         await act(async () => {
           await user.click(toggleButton);
         });
-        expect(secretField.type).toBe('text');
+        expect(secretField.type).toBe("text");
 
         await act(async () => {
           await user.click(toggleButton);
         });
-        expect(secretField.type).toBe('password');
+        expect(secretField.type).toBe("password");
       }
     });
   });
 
-  describe('Form Validation', () => {
+  describe("Form Validation", () => {
     beforeEach(() => {
       renderPluginForm({ plugin: mockWhatsAppPlugin });
     });
 
-    it('shows validation errors for required fields', async () => {
+    it("shows validation errors for required fields", async () => {
       const user = userEvent.setup();
 
       const instanceNameField = screen.getByLabelText(/Instance Name/);
-      await user.type(instanceNameField, 'Test Instance');
+      await user.type(instanceNameField, "Test Instance");
 
-      const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+      const submitButton = screen.getByRole("button", {
+        name: /Create Plugin/,
+      });
       await user.click(submitButton);
 
       // Use findByText which automatically waits for elements
@@ -369,82 +373,94 @@ describe('PluginForm', () => {
       expect(await screen.findByText(/Business Account ID is required/)).toBeInTheDocument();
     });
 
-    it('validates minimum length for secret fields', async () => {
+    it("validates minimum length for secret fields", async () => {
       const user = userEvent.setup();
 
       const apiTokenField = screen.getByLabelText(/API Token/);
-      await user.type(apiTokenField, 'short');
+      await user.type(apiTokenField, "short");
 
-      const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+      const submitButton = screen.getByRole("button", {
+        name: /Create Plugin/,
+      });
       await user.click(submitButton);
 
       expect(await screen.findByText(/Minimum length is 50 characters/)).toBeInTheDocument();
     });
 
-    it('validates email format', async () => {
+    it("validates email format", async () => {
       const user = userEvent.setup();
 
       const emailField = screen.getByLabelText(/Contact Email/);
-      await user.type(emailField, 'invalid-email');
+      await user.type(emailField, "invalid-email");
 
-      const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+      const submitButton = screen.getByRole("button", {
+        name: /Create Plugin/,
+      });
       await user.click(submitButton);
 
       expect(await screen.findByText(/Invalid email format/)).toBeInTheDocument();
     });
 
-    it('validates URL format', async () => {
+    it("validates URL format", async () => {
       const user = userEvent.setup();
 
       const urlField = screen.getByLabelText(/Webhook URL/);
-      await user.type(urlField, 'invalid-url');
+      await user.type(urlField, "invalid-url");
 
-      const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+      const submitButton = screen.getByRole("button", {
+        name: /Create Plugin/,
+      });
       await user.click(submitButton);
 
       expect(await screen.findByText(/Invalid URL format/)).toBeInTheDocument();
     });
 
-    it('validates phone number format', async () => {
+    it("validates phone number format", async () => {
       const user = userEvent.setup();
 
       const phoneField = screen.getByLabelText(/Phone Number/);
-      await user.type(phoneField, '123456');
+      await user.type(phoneField, "123456");
 
-      const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+      const submitButton = screen.getByRole("button", {
+        name: /Create Plugin/,
+      });
       await user.click(submitButton);
 
       expect(await screen.findByText(/Invalid phone number format/)).toBeInTheDocument();
     });
 
-    it('validates number field ranges', async () => {
+    it("validates number field ranges", async () => {
       const user = userEvent.setup();
 
       const retryCountField = screen.getByLabelText(/Message Retry Count/);
-      await user.type(retryCountField, '10');
+      await user.type(retryCountField, "10");
 
-      const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+      const submitButton = screen.getByRole("button", {
+        name: /Create Plugin/,
+      });
       await user.click(submitButton);
 
       expect(await screen.findByText(/Maximum value is 5/)).toBeInTheDocument();
     });
 
-    it('validates JSON format', async () => {
+    it("validates JSON format", async () => {
       const user = userEvent.setup();
 
       const jsonField = screen.getByLabelText(/Custom Headers/) as HTMLTextAreaElement;
       // Use direct value setting to avoid userEvent keyboard parsing issues with curly braces
-      fireEvent.change(jsonField, { target: { value: '{ invalid json' } });
+      fireEvent.change(jsonField, { target: { value: "{ invalid json" } });
 
-      const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+      const submitButton = screen.getByRole("button", {
+        name: /Create Plugin/,
+      });
       await user.click(submitButton);
 
       expect(await screen.findByText(/Invalid JSON format/)).toBeInTheDocument();
     });
   });
 
-  describe('Form Submission', () => {
-    it('submits form with valid data', async () => {
+  describe("Form Submission", () => {
+    it("submits form with valid data", async () => {
       const user = userEvent.setup();
       const onSubmit = jest.fn().mockResolvedValue(undefined);
 
@@ -452,13 +468,15 @@ describe('PluginForm', () => {
 
       // Fill required fields
       await act(async () => {
-        await user.type(screen.getByLabelText(/Instance Name/), 'Test Instance');
-        await user.type(screen.getByLabelText(/Phone Number/), '+1234567890');
-        await user.type(screen.getByLabelText(/API Token/), 'a'.repeat(50));
-        await user.type(screen.getByLabelText(/Business Account ID/), 'test-account-id');
+        await user.type(screen.getByLabelText(/Instance Name/), "Test Instance");
+        await user.type(screen.getByLabelText(/Phone Number/), "+1234567890");
+        await user.type(screen.getByLabelText(/API Token/), "a".repeat(50));
+        await user.type(screen.getByLabelText(/Business Account ID/), "test-account-id");
       });
 
-      const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+      const submitButton = screen.getByRole("button", {
+        name: /Create Plugin/,
+      });
 
       await act(async () => {
         await user.click(submitButton);
@@ -466,32 +484,34 @@ describe('PluginForm', () => {
 
       await waitFor(() => {
         expect(onSubmit).toHaveBeenCalledWith({
-          plugin_name: 'WhatsApp Business',
-          instance_name: 'Test Instance',
+          plugin_name: "WhatsApp Business",
+          instance_name: "Test Instance",
           configuration: expect.objectContaining({
-            phone_number: '+1234567890',
-            api_token: 'a'.repeat(50),
-            business_account_id: 'test-account-id'
-          })
+            phone_number: "+1234567890",
+            api_token: "a".repeat(50),
+            business_account_id: "test-account-id",
+          }),
         });
       });
     });
 
-    it('handles submission errors', async () => {
+    it("handles submission errors", async () => {
       const user = userEvent.setup();
-      const onSubmit = jest.fn().mockRejectedValue(new Error('Submission failed'));
+      const onSubmit = jest.fn().mockRejectedValue(new Error("Submission failed"));
 
       renderPluginForm({ plugin: mockWhatsAppPlugin, onSubmit });
 
       // Fill required fields
       await act(async () => {
-        await user.type(screen.getByLabelText(/Instance Name/), 'Test Instance');
-        await user.type(screen.getByLabelText(/Phone Number/), '+1234567890');
-        await user.type(screen.getByLabelText(/API Token/), 'a'.repeat(50));
-        await user.type(screen.getByLabelText(/Business Account ID/), 'test-account-id');
+        await user.type(screen.getByLabelText(/Instance Name/), "Test Instance");
+        await user.type(screen.getByLabelText(/Phone Number/), "+1234567890");
+        await user.type(screen.getByLabelText(/API Token/), "a".repeat(50));
+        await user.type(screen.getByLabelText(/Business Account ID/), "test-account-id");
       });
 
-      const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+      const submitButton = screen.getByRole("button", {
+        name: /Create Plugin/,
+      });
 
       await act(async () => {
         await user.click(submitButton);
@@ -503,27 +523,27 @@ describe('PluginForm', () => {
     });
   });
 
-  describe('Connection Testing', () => {
-    it('shows test connection button for plugins that support it', () => {
+  describe("Connection Testing", () => {
+    it("shows test connection button for plugins that support it", () => {
       renderPluginForm({ plugin: mockWhatsAppPlugin });
-      expect(screen.getByRole('button', { name: /Test Connection/ })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Test Connection/ })).toBeInTheDocument();
     });
 
-    it('does not show test connection button for plugins that do not support it', () => {
+    it("does not show test connection button for plugins that do not support it", () => {
       const pluginWithoutTestConnection = {
         ...mockWhatsAppPlugin,
-        supports_test_connection: false
+        supports_test_connection: false,
       };
 
       renderPluginForm({ plugin: pluginWithoutTestConnection });
-      expect(screen.queryByRole('button', { name: /Test Connection/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /Test Connection/ })).not.toBeInTheDocument();
     });
 
-    it('calls onTestConnection when test button is clicked', async () => {
+    it("calls onTestConnection when test button is clicked", async () => {
       const user = userEvent.setup();
       const onTestConnection = jest.fn().mockResolvedValue({
         success: true,
-        message: 'Connection successful'
+        message: "Connection successful",
       });
 
       renderPluginForm({ plugin: mockWhatsAppPlugin, onTestConnection });
@@ -534,17 +554,19 @@ describe('PluginForm', () => {
       const apiTokenField = screen.getByLabelText(/API Token/);
       const businessAccountIdField = screen.getByLabelText(/Business Account ID/);
 
-      await user.type(instanceNameField, 'Test Instance');
-      await user.type(phoneField, '+1234567890');
-      await user.type(apiTokenField, 'a'.repeat(50));
-      await user.type(businessAccountIdField, 'business-123');
+      await user.type(instanceNameField, "Test Instance");
+      await user.type(phoneField, "+1234567890");
+      await user.type(apiTokenField, "a".repeat(50));
+      await user.type(businessAccountIdField, "business-123");
 
-      const testButton = screen.getByRole('button', { name: /Test Connection/ });
+      const testButton = screen.getByRole("button", {
+        name: /Test Connection/,
+      });
 
       await user.click(testButton);
 
       await waitFor(() => {
-        expect(onTestConnection).toHaveBeenCalledWith('', expect.any(Object));
+        expect(onTestConnection).toHaveBeenCalledWith("", expect.any(Object));
       });
 
       // Wait for all state updates to complete
@@ -553,11 +575,11 @@ describe('PluginForm', () => {
       });
     });
 
-    it('displays test result message', async () => {
+    it("displays test result message", async () => {
       const user = userEvent.setup();
       const onTestConnection = jest.fn().mockResolvedValue({
         success: true,
-        message: 'Connection successful'
+        message: "Connection successful",
       });
 
       renderPluginForm({ plugin: mockWhatsAppPlugin, onTestConnection });
@@ -568,12 +590,14 @@ describe('PluginForm', () => {
       const apiTokenField = screen.getByLabelText(/API Token/);
       const businessAccountIdField = screen.getByLabelText(/Business Account ID/);
 
-      await user.type(instanceNameField, 'Test Instance');
-      await user.type(phoneField, '+1234567890');
-      await user.type(apiTokenField, 'a'.repeat(50));
-      await user.type(businessAccountIdField, 'business-123');
+      await user.type(instanceNameField, "Test Instance");
+      await user.type(phoneField, "+1234567890");
+      await user.type(apiTokenField, "a".repeat(50));
+      await user.type(businessAccountIdField, "business-123");
 
-      const testButton = screen.getByRole('button', { name: /Test Connection/ });
+      const testButton = screen.getByRole("button", {
+        name: /Test Connection/,
+      });
 
       await user.click(testButton);
 
@@ -585,11 +609,11 @@ describe('PluginForm', () => {
       });
     });
 
-    it('displays test failure message', async () => {
+    it("displays test failure message", async () => {
       const user = userEvent.setup();
       const onTestConnection = jest.fn().mockResolvedValue({
         success: false,
-        message: 'Connection failed'
+        message: "Connection failed",
       });
 
       renderPluginForm({ plugin: mockWhatsAppPlugin, onTestConnection });
@@ -600,12 +624,14 @@ describe('PluginForm', () => {
       const apiTokenField = screen.getByLabelText(/API Token/);
       const businessAccountIdField = screen.getByLabelText(/Business Account ID/);
 
-      await user.type(instanceNameField, 'Test Instance');
-      await user.type(phoneField, '+1234567890');
-      await user.type(apiTokenField, 'a'.repeat(50));
-      await user.type(businessAccountIdField, 'business-123');
+      await user.type(instanceNameField, "Test Instance");
+      await user.type(phoneField, "+1234567890");
+      await user.type(apiTokenField, "a".repeat(50));
+      await user.type(businessAccountIdField, "business-123");
 
-      const testButton = screen.getByRole('button', { name: /Test Connection/ });
+      const testButton = screen.getByRole("button", {
+        name: /Test Connection/,
+      });
 
       await user.click(testButton);
 
@@ -618,67 +644,69 @@ describe('PluginForm', () => {
     });
   });
 
-  describe('Edit Mode', () => {
-    it('renders in edit mode when instance is provided', () => {
+  describe("Edit Mode", () => {
+    it("renders in edit mode when instance is provided", () => {
       renderPluginForm({ instance: mockInstance });
 
-      expect(screen.getByText('Edit Plugin Configuration')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Update Plugin/ })).toBeInTheDocument();
+      expect(screen.getByText("Edit Plugin Configuration")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /Update Plugin/ })).toBeInTheDocument();
 
       // Instance name should be disabled in edit mode
       const instanceNameField = screen.getByLabelText(/Instance Name/) as HTMLInputElement;
       expect(instanceNameField).toBeDisabled();
-      expect(instanceNameField.value).toBe('Production WhatsApp');
+      expect(instanceNameField.value).toBe("Production WhatsApp");
     });
 
-    it('does not show plugin selection in edit mode', () => {
+    it("does not show plugin selection in edit mode", () => {
       renderPluginForm({ instance: mockInstance });
       expect(screen.queryByLabelText(/Plugin/)).not.toBeInTheDocument();
     });
   });
 
-  describe('Field Grouping', () => {
+  describe("Field Grouping", () => {
     beforeEach(() => {
       renderPluginForm({ plugin: mockWhatsAppPlugin });
     });
 
-    it('groups fields by group name', () => {
-      expect(screen.getByText('Basic Configuration')).toBeInTheDocument();
-      expect(screen.getByText('Environment')).toBeInTheDocument();
-      expect(screen.getByText('Webhooks')).toBeInTheDocument();
-      expect(screen.getByText('Advanced')).toBeInTheDocument();
+    it("groups fields by group name", () => {
+      expect(screen.getByText("Basic Configuration")).toBeInTheDocument();
+      expect(screen.getByText("Environment")).toBeInTheDocument();
+      expect(screen.getByText("Webhooks")).toBeInTheDocument();
+      expect(screen.getByText("Advanced")).toBeInTheDocument();
     });
 
-    it('shows fields under correct groups', () => {
+    it("shows fields under correct groups", () => {
       // Basic Configuration group should contain phone, token, and business ID
-      const basicSection = screen.getByText('Basic Configuration').closest('div');
+      const basicSection = screen.getByText("Basic Configuration").closest("div");
       expect(basicSection).toBeInTheDocument();
     });
   });
 
-  describe('Default Values', () => {
-    it('sets default values for fields that have them', () => {
+  describe("Default Values", () => {
+    it("sets default values for fields that have them", () => {
       renderPluginForm({ plugin: mockWhatsAppPlugin });
 
       const apiVersionField = screen.getByLabelText(/API Version/) as HTMLSelectElement;
-      expect(apiVersionField.value).toBe('v18.0');
+      expect(apiVersionField.value).toBe("v18.0");
 
-      const sandboxField = screen.getByLabelText(/Enable sandbox mode for testing/) as HTMLInputElement;
+      const sandboxField = screen.getByLabelText(
+        /Enable sandbox mode for testing/,
+      ) as HTMLInputElement;
       expect(sandboxField.checked).toBe(false);
 
       const retryCountField = screen.getByLabelText(/Message Retry Count/) as HTMLInputElement;
-      expect(retryCountField.value).toBe('3');
+      expect(retryCountField.value).toBe("3");
     });
   });
 
-  describe('Cancel Functionality', () => {
-    it('calls onCancel when cancel button is clicked', async () => {
+  describe("Cancel Functionality", () => {
+    it("calls onCancel when cancel button is clicked", async () => {
       const user = userEvent.setup();
       const onCancel = jest.fn();
 
       renderPluginForm({ plugin: mockWhatsAppPlugin, onCancel });
 
-      const cancelButton = screen.getByRole('button', { name: /Cancel/ });
+      const cancelButton = screen.getByRole("button", { name: /Cancel/ });
 
       await act(async () => {
         await user.click(cancelButton);
@@ -687,7 +715,7 @@ describe('PluginForm', () => {
       expect(onCancel).toHaveBeenCalled();
     });
 
-    it('calls onCancel when close button is clicked', async () => {
+    it("calls onCancel when close button is clicked", async () => {
       const user = userEvent.setup();
       const onCancel = jest.fn();
 

@@ -8,10 +8,10 @@ by managing configuration files and executing wg commands.
 import asyncio
 import ipaddress
 import logging
-import tempfile
+import re
+import secrets
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -67,6 +67,8 @@ class WireGuardClient:
     wg commands via Docker exec to interact with the running container.
     """
 
+    _PEER_NAME_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
+
     def __init__(
         self,
         container_name: str = "isp-wireguard",
@@ -85,12 +87,29 @@ class WireGuardClient:
         self.config_base_path = config_base_path
         self.server_interface = server_interface
 
-    async def _docker_exec(self, command: list[str]) -> tuple[str, str]:
+    def _sanitize_peer_name(self, peer_name: str) -> str:
+        """Validate peer name to prevent path traversal and command injection."""
+        if not self._PEER_NAME_PATTERN.match(peer_name):
+            raise WireGuardClientError(
+                "Invalid peer name. Only alphanumeric characters, dash, underscore, and dot are allowed."
+            )
+        return peer_name
+
+    @staticmethod
+    def _validate_preshared_key(preshared_key: str) -> None:
+        """Ensure preshared keys follow WireGuard base64 format (32 bytes -> 43 chars)."""
+        if not preshared_key or not re.fullmatch(r"[A-Za-z0-9+/=]{43,44}", preshared_key):
+            raise WireGuardClientError("Invalid preshared key format.")
+
+    async def _docker_exec(
+        self, command: list[str], *, input_data: bytes | None = None
+    ) -> tuple[str, str]:
         """
         Execute command inside WireGuard container.
 
         Args:
             command: Command to execute
+            input_data: Optional data to send to stdin
 
         Returns:
             Tuple of (stdout, stderr)
@@ -103,10 +122,11 @@ class WireGuardClient:
         try:
             process = await asyncio.create_subprocess_exec(
                 *full_command,
+                stdin=asyncio.subprocess.PIPE if input_data is not None else None,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            stdout, stderr = await process.communicate()
+            stdout, stderr = await process.communicate(input=input_data)
 
             if process.returncode != 0:
                 raise WireGuardClientError(
@@ -258,7 +278,8 @@ class WireGuardClient:
         Raises:
             WireGuardClientError: If config cannot be read
         """
-        config_path = f"{self.config_base_path}/{peer_name}/{peer_name}.conf"
+        safe_peer_name = self._sanitize_peer_name(peer_name)
+        config_path = f"{self.config_base_path}/{safe_peer_name}/{safe_peer_name}.conf"
 
         try:
             stdout, _ = await self._docker_exec(["cat", config_path])
@@ -281,17 +302,19 @@ class WireGuardClient:
         Raises:
             WireGuardClientError: If config cannot be written
         """
-        config_path = f"{self.config_base_path}/{peer_name}/{peer_name}.conf"
+        safe_peer_name = self._sanitize_peer_name(peer_name)
+        config_path = f"{self.config_base_path}/{safe_peer_name}/{safe_peer_name}.conf"
 
         try:
             # Create peer directory if it doesn't exist
-            await self._docker_exec(["mkdir", "-p", f"{self.config_base_path}/{peer_name}"])
+            await self._docker_exec(["mkdir", "-p", f"{self.config_base_path}/{safe_peer_name}"])
 
-            # Write config file
+            # Write config file via tee to avoid shell interpolation
             await self._docker_exec(
-                ["sh", "-c", f"cat > {config_path} << 'EOF'\n{config_content}\nEOF"]
+                ["tee", config_path],
+                input_data=config_content.encode("utf-8"),
             )
-
+            await self._docker_exec(["chmod", "600", config_path])
         except Exception as e:
             raise WireGuardClientError(f"Failed to write peer config for {peer_name}: {e}") from e
 
@@ -425,14 +448,18 @@ AllowedIPs = {', '.join(allowed_ips)}
 
         # Handle preshared key if provided
         if preshared_key:
+            self._validate_preshared_key(preshared_key)
             # wg requires preshared key to be in a file, so write to temp file
             # Create temp file in /tmp inside container (will be cleaned up by OS)
-            temp_filename = f"/tmp/psk_{public_key[:8]}.tmp"
+            temp_filename = f"/tmp/psk_{secrets.token_hex(8)}.tmp"
 
             try:
                 # Write preshared key to temp file in container
-                write_cmd = ["sh", "-c", f"echo '{preshared_key}' > {temp_filename}"]
-                await self._docker_exec(write_cmd)
+                await self._docker_exec(
+                    ["tee", temp_filename],
+                    input_data=f"{preshared_key}\n".encode("utf-8"),
+                )
+                await self._docker_exec(["chmod", "600", temp_filename])
 
                 # Add preshared-key argument to command
                 command.extend(["preshared-key", temp_filename])
@@ -513,7 +540,8 @@ AllowedIPs = {', '.join(allowed_ips)}
         Raises:
             WireGuardClientError: If QR code cannot be read
         """
-        qr_path = f"{self.config_base_path}/{peer_name}/{peer_name}.png"
+        safe_peer_name = self._sanitize_peer_name(peer_name)
+        qr_path = f"{self.config_base_path}/{safe_peer_name}/{safe_peer_name}.png"
 
         try:
             # Check if QR code exists

@@ -193,8 +193,8 @@ def create_platform_app() -> FastAPI:
         description="Platform-level operations for multi-tenant ISP management",
         version=settings.app_version,
         lifespan=lifespan,
-        docs_url="/docs" if settings.environment != "production" else None,
-        redoc_url="/redoc" if settings.environment != "production" else None,
+        docs_url="/docs" if not settings.is_production else None,
+        redoc_url="/redoc" if not settings.is_production else None,
     )
 
     # Register platform routers

@@ -1,10 +1,10 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Send,
@@ -17,19 +17,19 @@ import {
   CheckCircle2,
   Circle,
   XCircle,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   useTicket,
   useAddMessage,
@@ -37,7 +37,7 @@ import {
   type TicketStatus,
   type TicketPriority,
   type TicketMessage,
-} from '@/hooks/useTicketing';
+} from "@/hooks/useTicketing";
 
 export default function TicketDetailPage() {
   const params = useParams();
@@ -48,7 +48,7 @@ export default function TicketDetailPage() {
   const { addMessage, loading: sendingMessage } = useAddMessage();
   const { updateTicket, loading: updatingTicket } = useUpdateTicket();
 
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
   const handleSendMessage = async () => {
@@ -59,7 +59,7 @@ export default function TicketDetailPage() {
     });
 
     if (result) {
-      setNewMessage('');
+      setNewMessage("");
       refetch();
     }
   };
@@ -99,11 +99,7 @@ export default function TicketDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push('/dashboard/support')}
-          >
+          <Button variant="ghost" size="sm" onClick={() => router.push("/dashboard/support")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
@@ -116,11 +112,7 @@ export default function TicketDetailPage() {
             <p className="text-sm text-muted-foreground mt-1">{ticket.subject}</p>
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsEditing(!isEditing)}
-        >
+        <Button variant="outline" size="sm" onClick={() => setIsEditing(!isEditing)}>
           <Edit className="h-4 w-4 mr-2" />
           Edit
         </Button>
@@ -134,14 +126,13 @@ export default function TicketDetailPage() {
             <CardHeader>
               <CardTitle>Conversation</CardTitle>
               <CardDescription>
-                {ticket.messages.length} message{ticket.messages.length !== 1 ? 's' : ''}
+                {ticket.messages.length} message
+                {ticket.messages.length !== 1 ? "s" : ""}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {ticket.messages.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No messages yet
-                </div>
+                <div className="text-center py-8 text-muted-foreground">No messages yet</div>
               ) : (
                 <div className="space-y-4">
                   {ticket.messages.map((message, index) => (
@@ -153,7 +144,7 @@ export default function TicketDetailPage() {
               <Separator />
 
               {/* Reply Form */}
-              {ticket.status !== 'closed' && (
+              {ticket.status !== "closed" && (
                 <div className="space-y-3">
                   <label className="text-sm font-medium">Add Reply</label>
                   <Textarea
@@ -239,7 +230,7 @@ export default function TicketDetailPage() {
                   <div>
                     <div className="font-medium">Type</div>
                     <div className="text-muted-foreground capitalize">
-                      {ticket.ticket_type.replace(/_/g, ' ')}
+                      {ticket.ticket_type.replace(/_/g, " ")}
                     </div>
                   </div>
                 </div>
@@ -310,7 +301,7 @@ export default function TicketDetailPage() {
                   <div>
                     <div className="font-medium">Resolution Time</div>
                     <div className="text-muted-foreground">
-                      {Math.floor(ticket.resolution_time_minutes / 60)}h{' '}
+                      {Math.floor(ticket.resolution_time_minutes / 60)}h{" "}
                       {ticket.resolution_time_minutes % 60}m
                     </div>
                   </div>
@@ -334,11 +325,11 @@ interface MessageCardProps {
 }
 
 function MessageCard({ message, isFirst }: MessageCardProps) {
-  const isSystem = message.sender_type === 'platform';
-  const isCustomer = message.sender_type === 'customer';
+  const isSystem = message.sender_type === "platform";
+  const isCustomer = message.sender_type === "customer";
 
   return (
-    <div className={`${isFirst ? 'border-l-4 border-primary pl-4' : ''}`}>
+    <div className={`${isFirst ? "border-l-4 border-primary pl-4" : ""}`}>
       <div className="flex items-start gap-3">
         <div className="flex-shrink-0">
           <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center">
@@ -347,9 +338,7 @@ function MessageCard({ message, isFirst }: MessageCardProps) {
         </div>
         <div className="flex-1 space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium capitalize">
-              {message.sender_type}
-            </span>
+            <span className="text-sm font-medium capitalize">{message.sender_type}</span>
             <span className="text-xs text-muted-foreground">
               {new Date(message.created_at).toLocaleString()}
             </span>
@@ -359,12 +348,11 @@ function MessageCard({ message, isFirst }: MessageCardProps) {
               </Badge>
             )}
           </div>
-          <div className="text-sm text-foreground whitespace-pre-wrap">
-            {message.body}
-          </div>
+          <div className="text-sm text-foreground whitespace-pre-wrap">{message.body}</div>
           {message.attachments.length > 0 && (
             <div className="text-xs text-muted-foreground">
-              {message.attachments.length} attachment{message.attachments.length !== 1 ? 's' : ''}
+              {message.attachments.length} attachment
+              {message.attachments.length !== 1 ? "s" : ""}
             </div>
           )}
         </div>
@@ -375,11 +363,11 @@ function MessageCard({ message, isFirst }: MessageCardProps) {
 
 function StatusBadge({ status }: { status: TicketStatus }) {
   const variants: Record<TicketStatus, { variant: any; label: string; icon: any }> = {
-    open: { variant: 'default', label: 'Open', icon: Circle },
-    in_progress: { variant: 'secondary', label: 'In Progress', icon: Clock },
-    waiting: { variant: 'outline', label: 'Waiting', icon: Clock },
-    resolved: { variant: 'success', label: 'Resolved', icon: CheckCircle2 },
-    closed: { variant: 'secondary', label: 'Closed', icon: XCircle },
+    open: { variant: "default", label: "Open", icon: Circle },
+    in_progress: { variant: "secondary", label: "In Progress", icon: Clock },
+    waiting: { variant: "outline", label: "Waiting", icon: Clock },
+    resolved: { variant: "success", label: "Resolved", icon: CheckCircle2 },
+    closed: { variant: "secondary", label: "Closed", icon: XCircle },
   };
 
   const config = variants[status];
@@ -395,17 +383,13 @@ function StatusBadge({ status }: { status: TicketStatus }) {
 
 function PriorityBadge({ priority }: { priority: TicketPriority }) {
   const variants: Record<TicketPriority, { variant: any; label: string }> = {
-    low: { variant: 'outline', label: 'Low' },
-    normal: { variant: 'secondary', label: 'Normal' },
-    high: { variant: 'default', label: 'High' },
-    urgent: { variant: 'destructive', label: 'Urgent' },
+    low: { variant: "outline", label: "Low" },
+    normal: { variant: "secondary", label: "Normal" },
+    high: { variant: "default", label: "High" },
+    urgent: { variant: "destructive", label: "Urgent" },
   };
 
   const config = variants[priority];
 
-  return (
-    <Badge variant={config.variant as any}>
-      {config.label}
-    </Badge>
-  );
+  return <Badge variant={config.variant as any}>{config.label}</Badge>;
 }

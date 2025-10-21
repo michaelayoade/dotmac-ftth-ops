@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * IPAM (IP Address Management) Dashboard
@@ -6,20 +6,20 @@
  * Comprehensive IP management with prefixes, VLANs, VRFs, and allocation
  */
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   useIPAddresses,
   usePrefixes,
@@ -42,7 +42,7 @@ import {
   useCreateVRF,
   useAvailableIPs,
   useAllocateIP,
-} from '@/hooks/useNetBox';
+} from "@/hooks/useNetBox";
 import type {
   IPAddress,
   Prefix,
@@ -52,7 +52,7 @@ import type {
   CreatePrefixRequest,
   CreateVLANRequest,
   CreateVRFRequest,
-} from '@/types/netbox';
+} from "@/types/netbox";
 import {
   Network,
   Globe,
@@ -66,10 +66,10 @@ import {
   XCircle,
   AlertCircle,
   TrendingUp,
-} from 'lucide-react';
+} from "lucide-react";
 
 export default function IPAMDashboardPage() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedPrefix, setSelectedPrefix] = useState<number | undefined>(undefined);
   const [isCreateIPOpen, setIsCreateIPOpen] = useState(false);
   const [isCreatePrefixOpen, setIsCreatePrefixOpen] = useState(false);
@@ -95,31 +95,31 @@ export default function IPAMDashboardPage() {
 
   // Form states
   const [newIP, setNewIP] = useState<CreateIPAddressRequest>({
-    address: '',
-    status: 'active',
-    description: '',
-    dns_name: '',
+    address: "",
+    status: "active",
+    description: "",
+    dns_name: "",
   });
 
   const [newPrefix, setNewPrefix] = useState<CreatePrefixRequest>({
-    prefix: '',
-    status: 'active',
+    prefix: "",
+    status: "active",
     is_pool: false,
-    description: '',
+    description: "",
   });
 
   const [newVLAN, setNewVLAN] = useState<CreateVLANRequest>({
     vid: 1,
-    name: '',
-    status: 'active',
-    description: '',
+    name: "",
+    status: "active",
+    description: "",
   });
 
   const [newVRF, setNewVRF] = useState<CreateVRFRequest>({
-    name: '',
-    rd: '',
+    name: "",
+    rd: "",
     enforce_unique: true,
-    description: '',
+    description: "",
   });
 
   // Filter IPs by search
@@ -127,14 +127,14 @@ export default function IPAMDashboardPage() {
     (ip) =>
       ip.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ip.dns_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ip.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      ip.description?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Calculate statistics
   const stats = {
     totalIPs: ipAddresses.length,
-    activeIPs: ipAddresses.filter((ip) => ip.status.value === 'active').length,
-    reservedIPs: ipAddresses.filter((ip) => ip.status.value === 'reserved').length,
+    activeIPs: ipAddresses.filter((ip) => ip.status.value === "active").length,
+    reservedIPs: ipAddresses.filter((ip) => ip.status.value === "reserved").length,
     totalPrefixes: prefixes.length,
     totalVLANs: vlans.length,
     totalVRFs: vrfs.length,
@@ -143,15 +143,15 @@ export default function IPAMDashboardPage() {
   // Calculate prefix utilization
   const getPrefixUtilization = (prefix: Prefix) => {
     if (!prefix.prefix) return 0;
-    const [, maskBits] = prefix.prefix.split('/');
+    const [, maskBits] = prefix.prefix.split("/");
     if (!maskBits) return 0;
     const totalIPs = Math.pow(2, 32 - parseInt(maskBits)) - 2; // Exclude network and broadcast
     const usedIPs = ipAddresses.filter((ip) => {
       if (!ip.address || !prefix.prefix) return false;
-      const ipPrefix = ip.address.split('/')[0] ?? "";
-      const prefixNet = prefix.prefix.split('/')[0] ?? "";
+      const ipPrefix = ip.address.split("/")[0] ?? "";
+      const prefixNet = prefix.prefix.split("/")[0] ?? "";
       // Simple check - in production would use proper IP range checking
-      const networkFragment = prefixNet.split('.').slice(0, 3).join('.');
+      const networkFragment = prefixNet.split(".").slice(0, 3).join(".");
       return networkFragment.length > 0 && ipPrefix.startsWith(networkFragment);
     }).length;
     return totalIPs > 0 ? (usedIPs / totalIPs) * 100 : 0;
@@ -159,27 +159,23 @@ export default function IPAMDashboardPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'bg-green-500';
-      case 'reserved':
-        return 'bg-yellow-500';
-      case 'deprecated':
-        return 'bg-red-500';
-      case 'dhcp':
-        return 'bg-blue-500';
+      case "active":
+        return "bg-green-500";
+      case "reserved":
+        return "bg-yellow-500";
+      case "deprecated":
+        return "bg-red-500";
+      case "dhcp":
+        return "bg-blue-500";
       default:
-        return 'bg-gray-500';
+        return "bg-gray-500";
     }
   };
 
   const getStatusBadge = (status: { value: string; label: string }) => {
     const variant =
-      status.value === 'active' ? 'default' : status.value === 'reserved' ? 'secondary' : 'outline';
-    return (
-      <Badge variant={variant as any}>
-        {status.label}
-      </Badge>
-    );
+      status.value === "active" ? "default" : status.value === "reserved" ? "secondary" : "outline";
+    return <Badge variant={variant as any}>{status.label}</Badge>;
   };
 
   const handleCreateIP = async () => {
@@ -194,10 +190,10 @@ export default function IPAMDashboardPage() {
     await createIP.mutateAsync(newIP);
     setIsCreateIPOpen(false);
     setNewIP({
-      address: '',
-      status: 'active',
-      description: '',
-      dns_name: '',
+      address: "",
+      status: "active",
+      description: "",
+      dns_name: "",
     });
   };
 
@@ -213,10 +209,10 @@ export default function IPAMDashboardPage() {
     await createPrefix.mutateAsync(newPrefix);
     setIsCreatePrefixOpen(false);
     setNewPrefix({
-      prefix: '',
-      status: 'active',
+      prefix: "",
+      status: "active",
       is_pool: false,
-      description: '',
+      description: "",
     });
   };
 
@@ -227,9 +223,9 @@ export default function IPAMDashboardPage() {
     setIsCreateVLANOpen(false);
     setNewVLAN({
       vid: 1,
-      name: '',
-      status: 'active',
-      description: '',
+      name: "",
+      status: "active",
+      description: "",
     });
   };
 
@@ -239,10 +235,10 @@ export default function IPAMDashboardPage() {
     await createVRF.mutateAsync(newVRF);
     setIsCreateVRFOpen(false);
     setNewVRF({
-      name: '',
-      rd: '',
+      name: "",
+      rd: "",
       enforce_unique: true,
-      description: '',
+      description: "",
     });
   };
 
@@ -271,7 +267,7 @@ export default function IPAMDashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           {health && (
-            <Badge variant={health.healthy ? 'default' : 'destructive'}>
+            <Badge variant={health.healthy ? "default" : "destructive"}>
               {health.healthy ? (
                 <>
                   <CheckCircle className="h-3 w-3 mr-1" />
@@ -299,7 +295,7 @@ export default function IPAMDashboardPage() {
             <div className="text-2xl font-bold">{stats.totalIPs}</div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600">{stats.activeIPs} active</span>
-              {' • '}
+              {" • "}
               <span className="text-yellow-600">{stats.reservedIPs} reserved</span>
             </p>
           </CardContent>
@@ -367,9 +363,7 @@ export default function IPAMDashboardPage() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Create IP Address</DialogTitle>
-                      <DialogDescription>
-                        Add a new IP address to NetBox
-                      </DialogDescription>
+                      <DialogDescription>Add a new IP address to NetBox</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid gap-2">
@@ -378,18 +372,14 @@ export default function IPAMDashboardPage() {
                           id="ip-address"
                           placeholder="192.168.1.1/24"
                           value={newIP.address}
-                          onChange={(e) =>
-                            setNewIP({ ...newIP, address: e.target.value })
-                          }
+                          onChange={(e) => setNewIP({ ...newIP, address: e.target.value })}
                         />
                       </div>
                       <div className="grid gap-2">
                         <Label htmlFor="ip-status">Status</Label>
                         <Select
                           value={newIP.status}
-                          onValueChange={(value) =>
-                            setNewIP({ ...newIP, status: value })
-                          }
+                          onValueChange={(value) => setNewIP({ ...newIP, status: value })}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -408,9 +398,7 @@ export default function IPAMDashboardPage() {
                           id="ip-dns"
                           placeholder="server.example.com"
                           value={newIP.dns_name}
-                          onChange={(e) =>
-                            setNewIP({ ...newIP, dns_name: e.target.value })
-                          }
+                          onChange={(e) => setNewIP({ ...newIP, dns_name: e.target.value })}
                         />
                       </div>
                       <div className="grid gap-2">
@@ -419,23 +407,15 @@ export default function IPAMDashboardPage() {
                           id="ip-description"
                           placeholder="Web server primary IP"
                           value={newIP.description}
-                          onChange={(e) =>
-                            setNewIP({ ...newIP, description: e.target.value })
-                          }
+                          onChange={(e) => setNewIP({ ...newIP, description: e.target.value })}
                         />
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsCreateIPOpen(false)}
-                      >
+                      <Button variant="outline" onClick={() => setIsCreateIPOpen(false)}>
                         Cancel
                       </Button>
-                      <Button
-                        onClick={handleCreateIP}
-                        disabled={createIP.isPending}
-                      >
+                      <Button onClick={handleCreateIP} disabled={createIP.isPending}>
                         Create IP
                       </Button>
                     </DialogFooter>
@@ -460,27 +440,13 @@ export default function IPAMDashboardPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        IP Address
-                      </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        Status
-                      </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        DNS Name
-                      </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        VRF
-                      </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        Assigned To
-                      </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        Description
-                      </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        Actions
-                      </th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">IP Address</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Status</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">DNS Name</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">VRF</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Assigned To</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Description</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -499,32 +465,22 @@ export default function IPAMDashboardPage() {
                     ) : (
                       filteredIPs.map((ip) => (
                         <tr key={ip.id} className="border-b">
-                          <td className="p-4 font-mono text-xs font-medium">
-                            {ip.address}
-                          </td>
+                          <td className="p-4 font-mono text-xs font-medium">{ip.address}</td>
                           <td className="p-4">{getStatusBadge(ip.status)}</td>
-                          <td className="p-4">{ip.dns_name || '-'}</td>
+                          <td className="p-4">{ip.dns_name || "-"}</td>
                           <td className="p-4">
-                            {ip.vrf ? (
-                              <Badge variant="outline">
-                                {ip.vrf.name}
-                              </Badge>
-                            ) : (
-                              '-'
-                            )}
+                            {ip.vrf ? <Badge variant="outline">{ip.vrf.name}</Badge> : "-"}
                           </td>
                           <td className="p-4">
                             {ip.assigned_object ? (
                               <span className="text-xs">
-                                {ip.assigned_object_type?.split('.')[1]}
+                                {ip.assigned_object_type?.split(".")[1]}
                               </span>
                             ) : (
-                              '-'
+                              "-"
                             )}
                           </td>
-                          <td className="p-4 max-w-xs truncate">
-                            {ip.description || '-'}
-                          </td>
+                          <td className="p-4 max-w-xs truncate">{ip.description || "-"}</td>
                           <td className="p-4">
                             <Button
                               variant="ghost"
@@ -578,30 +534,25 @@ export default function IPAMDashboardPage() {
                         )}
                         <div className="grid gap-2">
                           <Label>Description</Label>
-                          <Input
-                            placeholder="Web server"
-                            id="alloc-description"
-                          />
+                          <Input placeholder="Web server" id="alloc-description" />
                         </div>
                         <div className="grid gap-2">
                           <Label>DNS Name</Label>
-                          <Input
-                            placeholder="web01.example.com"
-                            id="alloc-dns"
-                          />
+                          <Input placeholder="web01.example.com" id="alloc-dns" />
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsAllocateIPOpen(false)}
-                        >
+                        <Button variant="outline" onClick={() => setIsAllocateIPOpen(false)}>
                           Cancel
                         </Button>
                         <Button
                           onClick={() => {
-                            const desc = (document.getElementById('alloc-description') as HTMLInputElement)?.value || '';
-                            const dns = (document.getElementById('alloc-dns') as HTMLInputElement)?.value || '';
+                            const desc =
+                              (document.getElementById("alloc-description") as HTMLInputElement)
+                                ?.value || "";
+                            const dns =
+                              (document.getElementById("alloc-dns") as HTMLInputElement)?.value ||
+                              "";
                             handleAllocateIP(desc, dns);
                           }}
                           disabled={allocateIP.isPending || availableIPs.length === 0}
@@ -622,9 +573,7 @@ export default function IPAMDashboardPage() {
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Create Prefix</DialogTitle>
-                        <DialogDescription>
-                          Add a new IP prefix/subnet
-                        </DialogDescription>
+                        <DialogDescription>Add a new IP prefix/subnet</DialogDescription>
                       </DialogHeader>
                       <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
@@ -634,7 +583,10 @@ export default function IPAMDashboardPage() {
                             placeholder="10.0.0.0/24"
                             value={newPrefix.prefix}
                             onChange={(e) =>
-                              setNewPrefix({ ...newPrefix, prefix: e.target.value })
+                              setNewPrefix({
+                                ...newPrefix,
+                                prefix: e.target.value,
+                              })
                             }
                           />
                         </div>
@@ -642,9 +594,7 @@ export default function IPAMDashboardPage() {
                           <Label htmlFor="prefix-status">Status</Label>
                           <Select
                             value={newPrefix.status}
-                            onValueChange={(value) =>
-                              setNewPrefix({ ...newPrefix, status: value })
-                            }
+                            onValueChange={(value) => setNewPrefix({ ...newPrefix, status: value })}
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -662,13 +612,14 @@ export default function IPAMDashboardPage() {
                             id="is-pool"
                             checked={newPrefix.is_pool}
                             onChange={(e) =>
-                              setNewPrefix({ ...newPrefix, is_pool: e.target.checked })
+                              setNewPrefix({
+                                ...newPrefix,
+                                is_pool: e.target.checked,
+                              })
                             }
                             className="h-4 w-4"
                           />
-                          <Label htmlFor="is-pool">
-                            Mark as IP allocation pool
-                          </Label>
+                          <Label htmlFor="is-pool">Mark as IP allocation pool</Label>
                         </div>
                         <div className="grid gap-2">
                           <Label htmlFor="prefix-description">Description</Label>
@@ -686,16 +637,10 @@ export default function IPAMDashboardPage() {
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsCreatePrefixOpen(false)}
-                        >
+                        <Button variant="outline" onClick={() => setIsCreatePrefixOpen(false)}>
                           Cancel
                         </Button>
-                        <Button
-                          onClick={handleCreatePrefix}
-                          disabled={createPrefix.isPending}
-                        >
+                        <Button onClick={handleCreatePrefix} disabled={createPrefix.isPending}>
                           Create Prefix
                         </Button>
                       </DialogFooter>
@@ -720,8 +665,8 @@ export default function IPAMDashboardPage() {
                         key={prefix.id}
                         className={`rounded-lg border p-4 cursor-pointer transition-colors ${
                           selectedPrefix === prefix.id
-                            ? 'border-primary bg-primary/5'
-                            : 'hover:bg-muted/50'
+                            ? "border-primary bg-primary/5"
+                            : "hover:bg-muted/50"
                         }`}
                         onClick={() => setSelectedPrefix(prefix.id)}
                       >
@@ -762,10 +707,10 @@ export default function IPAMDashboardPage() {
                           <div
                             className={`h-2 rounded-full transition-all ${
                               utilization > 80
-                                ? 'bg-red-500'
+                                ? "bg-red-500"
                                 : utilization > 60
-                                  ? 'bg-yellow-500'
-                                  : 'bg-green-500'
+                                  ? "bg-yellow-500"
+                                  : "bg-green-500"
                             }`}
                             style={{ width: `${Math.min(utilization, 100)}%` }}
                           />
@@ -775,7 +720,7 @@ export default function IPAMDashboardPage() {
                         <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
                           {prefix.vlan && (
                             <div>
-                              <span className="text-muted-foreground">VLAN:</span>{' '}
+                              <span className="text-muted-foreground">VLAN:</span>{" "}
                               <Badge variant="outline">
                                 {prefix.vlan.vid} - {prefix.vlan.name}
                               </Badge>
@@ -783,7 +728,7 @@ export default function IPAMDashboardPage() {
                           )}
                           {prefix.role && (
                             <div>
-                              <span className="text-muted-foreground">Role:</span>{' '}
+                              <span className="text-muted-foreground">Role:</span>{" "}
                               {prefix.role.name}
                             </div>
                           )}
@@ -816,9 +761,7 @@ export default function IPAMDashboardPage() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Create VLAN</DialogTitle>
-                      <DialogDescription>
-                        Add a new VLAN configuration
-                      </DialogDescription>
+                      <DialogDescription>Add a new VLAN configuration</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid gap-2">
@@ -843,18 +786,14 @@ export default function IPAMDashboardPage() {
                           id="vlan-name"
                           placeholder="Production"
                           value={newVLAN.name}
-                          onChange={(e) =>
-                            setNewVLAN({ ...newVLAN, name: e.target.value })
-                          }
+                          onChange={(e) => setNewVLAN({ ...newVLAN, name: e.target.value })}
                         />
                       </div>
                       <div className="grid gap-2">
                         <Label htmlFor="vlan-status">Status</Label>
                         <Select
                           value={newVLAN.status}
-                          onValueChange={(value) =>
-                            setNewVLAN({ ...newVLAN, status: value })
-                          }
+                          onValueChange={(value) => setNewVLAN({ ...newVLAN, status: value })}
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -882,16 +821,10 @@ export default function IPAMDashboardPage() {
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsCreateVLANOpen(false)}
-                      >
+                      <Button variant="outline" onClick={() => setIsCreateVLANOpen(false)}>
                         Cancel
                       </Button>
-                      <Button
-                        onClick={handleCreateVLAN}
-                        disabled={createVLAN.isPending}
-                      >
+                      <Button onClick={handleCreateVLAN} disabled={createVLAN.isPending}>
                         Create VLAN
                       </Button>
                     </DialogFooter>
@@ -904,24 +837,12 @@ export default function IPAMDashboardPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        VLAN ID
-                      </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        Name
-                      </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        Status
-                      </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        Site
-                      </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        Role
-                      </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        Description
-                      </th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">VLAN ID</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Name</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Status</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Site</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Role</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Description</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -947,13 +868,9 @@ export default function IPAMDashboardPage() {
                           </td>
                           <td className="p-4 font-medium">{vlan.name}</td>
                           <td className="p-4">{getStatusBadge(vlan.status)}</td>
-                          <td className="p-4">
-                            {vlan.site ? vlan.site.name : '-'}
-                          </td>
-                          <td className="p-4">
-                            {vlan.role ? vlan.role.name : '-'}
-                          </td>
-                          <td className="p-4">{vlan.description || '-'}</td>
+                          <td className="p-4">{vlan.site ? vlan.site.name : "-"}</td>
+                          <td className="p-4">{vlan.role ? vlan.role.name : "-"}</td>
+                          <td className="p-4">{vlan.description || "-"}</td>
                         </tr>
                       ))
                     )}
@@ -971,9 +888,7 @@ export default function IPAMDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>VRFs (Virtual Routing and Forwarding)</CardTitle>
-                  <CardDescription>
-                    Virtual routing instances for multi-tenancy
-                  </CardDescription>
+                  <CardDescription>Virtual routing instances for multi-tenancy</CardDescription>
                 </div>
                 <Dialog open={isCreateVRFOpen} onOpenChange={setIsCreateVRFOpen}>
                   <DialogTrigger asChild>
@@ -985,9 +900,7 @@ export default function IPAMDashboardPage() {
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>Create VRF</DialogTitle>
-                      <DialogDescription>
-                        Add a new virtual routing instance
-                      </DialogDescription>
+                      <DialogDescription>Add a new virtual routing instance</DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid gap-2">
@@ -996,9 +909,7 @@ export default function IPAMDashboardPage() {
                           id="vrf-name"
                           placeholder="Customer-A"
                           value={newVRF.name}
-                          onChange={(e) =>
-                            setNewVRF({ ...newVRF, name: e.target.value })
-                          }
+                          onChange={(e) => setNewVRF({ ...newVRF, name: e.target.value })}
                         />
                       </div>
                       <div className="grid gap-2">
@@ -1007,9 +918,7 @@ export default function IPAMDashboardPage() {
                           id="vrf-rd"
                           placeholder="65000:100"
                           value={newVRF.rd}
-                          onChange={(e) =>
-                            setNewVRF({ ...newVRF, rd: e.target.value })
-                          }
+                          onChange={(e) => setNewVRF({ ...newVRF, rd: e.target.value })}
                         />
                       </div>
                       <div className="flex items-center space-x-2">
@@ -1025,9 +934,7 @@ export default function IPAMDashboardPage() {
                           }
                           className="h-4 w-4"
                         />
-                        <Label htmlFor="enforce-unique">
-                          Enforce unique IP addresses
-                        </Label>
+                        <Label htmlFor="enforce-unique">Enforce unique IP addresses</Label>
                       </div>
                       <div className="grid gap-2">
                         <Label htmlFor="vrf-description">Description</Label>
@@ -1045,16 +952,10 @@ export default function IPAMDashboardPage() {
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsCreateVRFOpen(false)}
-                      >
+                      <Button variant="outline" onClick={() => setIsCreateVRFOpen(false)}>
                         Cancel
                       </Button>
-                      <Button
-                        onClick={handleCreateVRF}
-                        disabled={createVRF.isPending}
-                      >
+                      <Button onClick={handleCreateVRF} disabled={createVRF.isPending}>
                         Create VRF
                       </Button>
                     </DialogFooter>
@@ -1067,21 +968,15 @@ export default function IPAMDashboardPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b bg-muted/50">
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        Name
-                      </th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Name</th>
                       <th className="h-12 px-4 text-left align-middle font-medium">
                         Route Distinguisher
                       </th>
                       <th className="h-12 px-4 text-left align-middle font-medium">
                         Enforce Unique
                       </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        Tenant
-                      </th>
-                      <th className="h-12 px-4 text-left align-middle font-medium">
-                        Description
-                      </th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Tenant</th>
+                      <th className="h-12 px-4 text-left align-middle font-medium">Description</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1101,9 +996,7 @@ export default function IPAMDashboardPage() {
                       vrfs.map((vrf) => (
                         <tr key={vrf.id} className="border-b">
                           <td className="p-4 font-medium">{vrf.name}</td>
-                          <td className="p-4 font-mono text-xs">
-                            {vrf.rd || '-'}
-                          </td>
+                          <td className="p-4 font-mono text-xs">{vrf.rd || "-"}</td>
                           <td className="p-4">
                             {vrf.enforce_unique ? (
                               <CheckCircle className="h-4 w-4 text-green-500" />
@@ -1111,10 +1004,8 @@ export default function IPAMDashboardPage() {
                               <XCircle className="h-4 w-4 text-gray-400" />
                             )}
                           </td>
-                          <td className="p-4">
-                            {vrf.tenant ? vrf.tenant.name : '-'}
-                          </td>
-                          <td className="p-4">{vrf.description || '-'}</td>
+                          <td className="p-4">{vrf.tenant ? vrf.tenant.name : "-"}</td>
+                          <td className="p-4">{vrf.description || "-"}</td>
                         </tr>
                       ))
                     )}

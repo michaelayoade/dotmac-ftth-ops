@@ -43,6 +43,11 @@ def setup_test_database():
     from sqlalchemy import create_engine
 
     from dotmac.platform.db import Base
+    # Import required models so metadata is populated
+    from dotmac.platform.tenant.models import Tenant, TenantUsage  # noqa: F401
+    from dotmac.platform.user_management.models import User  # noqa: F401
+    from dotmac.platform.billing.subscriptions.models import Subscription  # noqa: F401
+    from dotmac.platform.contacts.models import Contact  # noqa: F401
 
     # Create in-memory SQLite database
     engine = create_engine("sqlite:///:memory:", echo=False)
@@ -112,8 +117,15 @@ async def test_client_with_auth(
             user_id="test-user-123",
             username="testuser",
             email="test@example.com",
-            permissions=["tenants:read", "tenants:write", "tenants:admin"],
-            tenant_id="test-tenant",
+            permissions=[
+                "tenants:read",
+                "tenants:write",
+                "tenants:admin",
+                "platform:tenants:read",
+                "platform:tenants:write",
+            ],
+            tenant_id=None,
+            is_platform_admin=True,
         )
 
     async def override_get_async_db():

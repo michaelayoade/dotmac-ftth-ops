@@ -213,23 +213,27 @@ class EntityNotFoundError(RepositoryError):
 
     def __init__(
         self,
-        entity_type: str,
-        entity_id: str | int,
+        entity: str,
+        entity_id: str | int | None = None,
     ) -> None:
         """Initialize EntityNotFoundError.
 
         Args:
-            entity_type: Type of entity (e.g., "Invoice", "Customer")
-            entity_id: ID of the entity that was not found
+            entity: Entity type or error message if ``entity_id`` is omitted.
+            entity_id: ID of the entity that was not found.
         """
-        super().__init__(
-            message=f"{entity_type} not found: {entity_id}",
-            operation="find",
-        )
+        if entity_id is None:
+            message = entity
+            super().__init__(message=message, operation="find")
+            self.details.setdefault("entity_type", None)
+        else:
+            message = f"{entity} not found: {entity_id}"
+            super().__init__(message=message, operation="find")
+            self.details["entity_type"] = entity
+            self.details["entity_id"] = str(entity_id)
+
         self.error_code = "ENTITY_NOT_FOUND"
         self.status_code = 404
-        self.details["entity_type"] = entity_type
-        self.details["entity_id"] = str(entity_id)
 
 
 class DuplicateEntityError(RepositoryError):
@@ -241,23 +245,27 @@ class DuplicateEntityError(RepositoryError):
 
     def __init__(
         self,
-        entity_type: str,
-        entity_id: str | int,
+        entity: str,
+        entity_id: str | int | None = None,
     ) -> None:
         """Initialize DuplicateEntityError.
 
         Args:
-            entity_type: Type of entity (e.g., "Invoice", "Customer")
-            entity_id: ID of the duplicate entity
+            entity: Entity type or error message if ``entity_id`` is omitted.
+            entity_id: ID of the duplicate entity.
         """
-        super().__init__(
-            message=f"{entity_type} already exists: {entity_id}",
-            operation="create",
-        )
+        if entity_id is None:
+            message = entity
+            super().__init__(message=message, operation="create")
+            self.details.setdefault("entity_type", None)
+        else:
+            message = f"{entity} already exists: {entity_id}"
+            super().__init__(message=message, operation="create")
+            self.details["entity_type"] = entity
+            self.details["entity_id"] = str(entity_id)
+
         self.error_code = "DUPLICATE_ENTITY"
         self.status_code = 409
-        self.details["entity_type"] = entity_type
-        self.details["entity_id"] = str(entity_id)
 
 
 # Alias for backward compatibility

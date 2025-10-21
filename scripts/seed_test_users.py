@@ -67,6 +67,8 @@ async def create_test_tenant(db: AsyncSession) -> str:
         plan_type=TenantPlanType.ENTERPRISE,
         email="admin@test-org.example.com",
         phone="+1234567890",
+        billing_cycle="monthly",  # Default billing cycle
+        timezone="UTC",  # Default timezone
     )
 
     db.add(tenant)

@@ -1,11 +1,18 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { AvailablePlan } from '@/hooks/useTenantSubscription';
-import { Check } from 'lucide-react';
+import React from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { AvailablePlan } from "@/hooks/useTenantSubscription";
+import { Check } from "lucide-react";
 
 interface PlanComparisonProps {
   plans: AvailablePlan[];
@@ -19,18 +26,18 @@ export const PlanComparison: React.FC<PlanComparisonProps> = ({
   onSelectPlan,
 }) => {
   const formatPrice = (amount: number, currency: string, cycle: string) => {
-    const formatter = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency || 'USD',
+    const formatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency || "USD",
     });
     return `${formatter.format(amount)} / ${cycle}`;
   };
 
   const getBillingCycleLabel = (cycle: string) => {
     const labels: Record<string, string> = {
-      monthly: 'month',
-      quarterly: 'quarter',
-      annual: 'year',
+      monthly: "month",
+      quarterly: "quarter",
+      annual: "year",
     };
     return labels[cycle] || cycle;
   };
@@ -44,17 +51,15 @@ export const PlanComparison: React.FC<PlanComparisonProps> = ({
         return (
           <Card
             key={plan.plan_id}
-            variant={isFeatured ? 'elevated' : 'default'}
+            variant={isFeatured ? "elevated" : "default"}
             className={`relative ${
-              isFeatured ? 'border-primary shadow-lg scale-105' : ''
-            } ${isCurrentPlan ? 'ring-2 ring-primary' : ''}`}
+              isFeatured ? "border-primary shadow-lg scale-105" : ""
+            } ${isCurrentPlan ? "ring-2 ring-primary" : ""}`}
           >
             {/* Featured Badge */}
             {isFeatured && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-primary text-primary-foreground px-4 py-1">
-                  Most Popular
-                </Badge>
+                <Badge className="bg-primary text-primary-foreground px-4 py-1">Most Popular</Badge>
               </div>
             )}
 
@@ -79,7 +84,7 @@ export const PlanComparison: React.FC<PlanComparisonProps> = ({
                   {formatPrice(
                     plan.price_amount,
                     plan.currency,
-                    getBillingCycleLabel(plan.billing_cycle)
+                    getBillingCycleLabel(plan.billing_cycle),
                   )}
                 </div>
                 {plan.trial_days > 0 && (
@@ -96,12 +101,12 @@ export const PlanComparison: React.FC<PlanComparisonProps> = ({
                   <ul className="space-y-2">
                     {Object.entries(plan.features).map(([key, value]) => {
                       // Handle different feature value types
-                      let featureText = key.replace(/_/g, ' ');
-                      if (typeof value === 'boolean' && value) {
+                      let featureText = key.replace(/_/g, " ");
+                      if (typeof value === "boolean" && value) {
                         featureText = featureText;
-                      } else if (typeof value === 'number') {
+                      } else if (typeof value === "number") {
                         featureText = `${featureText}: ${value}`;
-                      } else if (typeof value === 'string') {
+                      } else if (typeof value === "string") {
                         featureText = `${featureText}: ${value}`;
                       }
 
@@ -124,11 +129,11 @@ export const PlanComparison: React.FC<PlanComparisonProps> = ({
                 </Button>
               ) : (
                 <Button
-                  variant={isFeatured ? 'default' : 'outline'}
+                  variant={isFeatured ? "default" : "outline"}
                   onClick={() => onSelectPlan(plan)}
                   className="w-full"
                 >
-                  {currentPlanId ? 'Switch to this Plan' : 'Select Plan'}
+                  {currentPlanId ? "Switch to this Plan" : "Select Plan"}
                 </Button>
               )}
             </CardFooter>

@@ -92,17 +92,13 @@ export function OSSStatusOverview({ configurations, statistics }: OSSStatusOverv
               <Settings className="h-4 w-4 text-purple-500" />
               <span className="text-2xl font-bold">{statistics.totalServices}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              OSS integrations available
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">OSS integrations available</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Configured
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Configured</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
@@ -111,9 +107,7 @@ export function OSSStatusOverview({ configurations, statistics }: OSSStatusOverv
                 {statistics.configuredCount}/{statistics.totalServices}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Services with valid configuration
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">Services with valid configuration</p>
           </CardContent>
         </Card>
 
@@ -128,9 +122,7 @@ export function OSSStatusOverview({ configurations, statistics }: OSSStatusOverv
               <Settings className="h-4 w-4 text-blue-500" />
               <span className="text-2xl font-bold">{statistics.overriddenCount}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Services with custom settings
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">Services with custom settings</p>
           </CardContent>
         </Card>
       </div>
@@ -139,9 +131,7 @@ export function OSSStatusOverview({ configurations, statistics }: OSSStatusOverv
       <Card>
         <CardHeader>
           <CardTitle className="text-base">OSS Services Status</CardTitle>
-          <CardDescription>
-            Configuration status for all OSS integrations
-          </CardDescription>
+          <CardDescription>Configuration status for all OSS integrations</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -183,13 +173,11 @@ export function OSSStatusOverview({ configurations, statistics }: OSSStatusOverv
                           <span className="text-sm text-muted-foreground">-</span>
                         )}
                       </TableCell>
-                      <TableCell>
-                        {getStatusBadge(serviceStat?.configured || false)}
-                      </TableCell>
+                      <TableCell>{getStatusBadge(serviceStat?.configured || false)}</TableCell>
                       <TableCell>
                         {getOverrideBadge(
                           serviceStat?.hasOverrides || false,
-                          serviceStat?.overrideCount || 0
+                          serviceStat?.overrideCount || 0,
                         )}
                       </TableCell>
                     </TableRow>

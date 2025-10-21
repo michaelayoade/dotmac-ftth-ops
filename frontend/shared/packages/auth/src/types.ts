@@ -1,7 +1,7 @@
 // Define PortalType locally since @dotmac/ui may not be available
-export type PortalType = 'admin' | 'customer' | 'reseller' | 'technician' | 'management';
+export type PortalType = "admin" | "customer" | "reseller" | "technician" | "management";
 
-export type AuthVariant = 'simple' | 'secure' | 'enterprise';
+export type AuthVariant = "simple" | "secure" | "enterprise";
 
 export interface User {
   id: string;
@@ -19,57 +19,57 @@ export interface User {
 }
 
 export enum UserRole {
-  SUPER_ADMIN = 'super_admin',
-  MASTER_ADMIN = 'master_admin',
-  TENANT_ADMIN = 'tenant_admin',
-  MANAGER = 'manager',
-  AGENT = 'agent',
-  CUSTOMER = 'customer',
-  RESELLER = 'reseller',
-  TECHNICIAN = 'technician',
-  READONLY = 'readonly',
+  SUPER_ADMIN = "super_admin",
+  MASTER_ADMIN = "master_admin",
+  TENANT_ADMIN = "tenant_admin",
+  MANAGER = "manager",
+  AGENT = "agent",
+  CUSTOMER = "customer",
+  RESELLER = "reseller",
+  TECHNICIAN = "technician",
+  READONLY = "readonly",
 }
 
 export enum Permission {
   // User Management
-  USERS_READ = 'users:read',
-  USERS_CREATE = 'users:create',
-  USERS_UPDATE = 'users:update',
-  USERS_DELETE = 'users:delete',
+  USERS_READ = "users:read",
+  USERS_CREATE = "users:create",
+  USERS_UPDATE = "users:update",
+  USERS_DELETE = "users:delete",
 
   // Customer Management
-  CUSTOMERS_READ = 'customers:read',
-  CUSTOMERS_CREATE = 'customers:create',
-  CUSTOMERS_UPDATE = 'customers:update',
-  CUSTOMERS_DELETE = 'customers:delete',
+  CUSTOMERS_READ = "customers:read",
+  CUSTOMERS_CREATE = "customers:create",
+  CUSTOMERS_UPDATE = "customers:update",
+  CUSTOMERS_DELETE = "customers:delete",
 
   // Billing Management
-  BILLING_READ = 'billing:read',
-  BILLING_CREATE = 'billing:create',
-  BILLING_UPDATE = 'billing:update',
-  BILLING_DELETE = 'billing:delete',
+  BILLING_READ = "billing:read",
+  BILLING_CREATE = "billing:create",
+  BILLING_UPDATE = "billing:update",
+  BILLING_DELETE = "billing:delete",
 
   // Network Management
-  NETWORK_READ = 'network:read',
-  NETWORK_CREATE = 'network:create',
-  NETWORK_UPDATE = 'network:update',
-  NETWORK_DELETE = 'network:delete',
+  NETWORK_READ = "network:read",
+  NETWORK_CREATE = "network:create",
+  NETWORK_UPDATE = "network:update",
+  NETWORK_DELETE = "network:delete",
 
   // System Administration
-  SYSTEM_ADMIN = 'system:admin',
-  SYSTEM_CONFIG = 'system:config',
-  SYSTEM_MONITOR = 'system:monitor',
+  SYSTEM_ADMIN = "system:admin",
+  SYSTEM_CONFIG = "system:config",
+  SYSTEM_MONITOR = "system:monitor",
 
   // Reports & Analytics
-  REPORTS_READ = 'reports:read',
-  REPORTS_CREATE = 'reports:create',
-  ANALYTICS_READ = 'analytics:read',
+  REPORTS_READ = "reports:read",
+  REPORTS_CREATE = "reports:create",
+  ANALYTICS_READ = "analytics:read",
 
   // Support & Tickets
-  TICKETS_READ = 'tickets:read',
-  TICKETS_CREATE = 'tickets:create',
-  TICKETS_UPDATE = 'tickets:update',
-  TICKETS_DELETE = 'tickets:delete',
+  TICKETS_READ = "tickets:read",
+  TICKETS_CREATE = "tickets:create",
+  TICKETS_UPDATE = "tickets:update",
+  TICKETS_DELETE = "tickets:delete",
 }
 
 export interface LoginCredentials {
@@ -223,41 +223,41 @@ export interface SecurityEvent {
 }
 
 export enum SecurityEventType {
-  LOGIN_SUCCESS = 'login_success',
-  LOGIN_FAILURE = 'login_failure',
-  LOGIN_ATTEMPT = 'login_attempt',
-  LOGOUT = 'logout',
-  TOKEN_REFRESH = 'token_refresh',
-  TOKEN_EXPIRED = 'token_expired',
-  SESSION_TIMEOUT = 'session_timeout',
-  ACCOUNT_LOCKED = 'account_locked',
-  PASSWORD_CHANGED = 'password_changed',
-  MFA_ENABLED = 'mfa_enabled',
-  MFA_DISABLED = 'mfa_disabled',
-  SUSPICIOUS_ACTIVITY = 'suspicious_activity',
-  PERMISSION_DENIED = 'permission_denied',
+  LOGIN_SUCCESS = "login_success",
+  LOGIN_FAILURE = "login_failure",
+  LOGIN_ATTEMPT = "login_attempt",
+  LOGOUT = "logout",
+  TOKEN_REFRESH = "token_refresh",
+  TOKEN_EXPIRED = "token_expired",
+  SESSION_TIMEOUT = "session_timeout",
+  ACCOUNT_LOCKED = "account_locked",
+  PASSWORD_CHANGED = "password_changed",
+  MFA_ENABLED = "mfa_enabled",
+  MFA_DISABLED = "mfa_disabled",
+  SUSPICIOUS_ACTIVITY = "suspicious_activity",
+  PERMISSION_DENIED = "permission_denied",
   // Additional enterprise events
-  USER_ACTIVITY = 'user_activity',
-  SSO_CALLBACK_FAILED = 'sso_callback_failed',
-  SSO_CALLBACK_ERROR = 'sso_callback_error',
-  INACTIVITY_WARNING = 'inactivity_warning',
-  SESSION_VALIDATION_FAILED = 'session_validation_failed',
-  SESSION_VALIDATION_ERROR = 'session_validation_error',
-  PROFILE_LOADED = 'profile_loaded',
-  PROFILE_FETCH_FAILED = 'profile_fetch_failed',
-  LOGIN_ATTEMPT_WHILE_LOCKED = 'login_attempt_while_locked',
-  TOKEN_REFRESH_ATTEMPT = 'token_refresh_attempt',
-  TOKEN_REFRESH_FAILED = 'token_refresh_failed',
-  TOKEN_REFRESH_SUCCESS = 'token_refresh_success',
-  TOKEN_REFRESH_ERROR = 'token_refresh_error',
-  SSO_INITIATED = 'sso_initiated',
-  SSO_INITIATION_FAILED = 'sso_initiation_failed',
-  PROFILE_UPDATE_ATTEMPT = 'profile_update_attempt',
-  PROFILE_UPDATED = 'profile_updated',
-  PROFILE_UPDATE_FAILED = 'profile_update_failed',
-  SESSION_EXTENDED = 'session_extended',
-  LOGOUT_INITIATED = 'logout_initiated',
-  LOGOUT_COMPLETE = 'logout_complete',
+  USER_ACTIVITY = "user_activity",
+  SSO_CALLBACK_FAILED = "sso_callback_failed",
+  SSO_CALLBACK_ERROR = "sso_callback_error",
+  INACTIVITY_WARNING = "inactivity_warning",
+  SESSION_VALIDATION_FAILED = "session_validation_failed",
+  SESSION_VALIDATION_ERROR = "session_validation_error",
+  PROFILE_LOADED = "profile_loaded",
+  PROFILE_FETCH_FAILED = "profile_fetch_failed",
+  LOGIN_ATTEMPT_WHILE_LOCKED = "login_attempt_while_locked",
+  TOKEN_REFRESH_ATTEMPT = "token_refresh_attempt",
+  TOKEN_REFRESH_FAILED = "token_refresh_failed",
+  TOKEN_REFRESH_SUCCESS = "token_refresh_success",
+  TOKEN_REFRESH_ERROR = "token_refresh_error",
+  SSO_INITIATED = "sso_initiated",
+  SSO_INITIATION_FAILED = "sso_initiation_failed",
+  PROFILE_UPDATE_ATTEMPT = "profile_update_attempt",
+  PROFILE_UPDATED = "profile_updated",
+  PROFILE_UPDATE_FAILED = "profile_update_failed",
+  SESSION_EXTENDED = "session_extended",
+  LOGOUT_INITIATED = "logout_initiated",
+  LOGOUT_COMPLETE = "logout_complete",
 }
 
 // Error types
@@ -265,42 +265,42 @@ export class AuthError extends Error {
   constructor(
     message: string,
     public code: string,
-    public statusCode?: number
+    public statusCode?: number,
   ) {
     super(message);
-    this.name = 'AuthError';
+    this.name = "AuthError";
   }
 }
 
 export class InvalidCredentialsError extends AuthError {
-  constructor(message = 'Invalid credentials') {
-    super(message, 'INVALID_CREDENTIALS', 401);
+  constructor(message = "Invalid credentials") {
+    super(message, "INVALID_CREDENTIALS", 401);
   }
 }
 
 export class AccountLockedError extends AuthError {
   constructor(
-    message = 'Account is locked',
-    public unlockTime?: number
+    message = "Account is locked",
+    public unlockTime?: number,
   ) {
-    super(message, 'ACCOUNT_LOCKED', 423);
+    super(message, "ACCOUNT_LOCKED", 423);
   }
 }
 
 export class SessionExpiredError extends AuthError {
-  constructor(message = 'Session has expired') {
-    super(message, 'SESSION_EXPIRED', 401);
+  constructor(message = "Session has expired") {
+    super(message, "SESSION_EXPIRED", 401);
   }
 }
 
 export class MFARequiredError extends AuthError {
-  constructor(message = 'MFA verification required') {
-    super(message, 'MFA_REQUIRED', 428);
+  constructor(message = "MFA verification required") {
+    super(message, "MFA_REQUIRED", 428);
   }
 }
 
 export class PermissionDeniedError extends AuthError {
-  constructor(message = 'Permission denied') {
-    super(message, 'PERMISSION_DENIED', 403);
+  constructor(message = "Permission denied") {
+    super(message, "PERMISSION_DENIED", 403);
   }
 }

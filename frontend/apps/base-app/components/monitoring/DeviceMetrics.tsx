@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Device Metrics Component with Dual-Stack Monitoring
@@ -6,12 +6,12 @@
  * Displays device performance metrics for both IPv4 and IPv6 connectivity
  */
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { IPAddressDisplay } from '@/components/forms/IPAddressDisplay';
-import { Activity, Wifi, WifiOff, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { IPAddressDisplay } from "@/components/forms/IPAddressDisplay";
+import { Activity, Wifi, WifiOff, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 export interface ConnectivityMetrics {
   ipv4?: {
@@ -33,7 +33,7 @@ export interface DeviceMetrics {
   device_name: string;
   ipv4_address?: string | null;
   ipv6_address?: string | null;
-  status: 'online' | 'offline' | 'degraded';
+  status: "online" | "offline" | "degraded";
   connectivity: ConnectivityMetrics;
   cpu_usage_percent?: number;
   memory_usage_percent?: number;
@@ -50,8 +50,8 @@ export interface DeviceMetricsProps {
 }
 
 export function DeviceMetricsPanel({ metrics }: DeviceMetricsProps) {
-  const hasIPv4 = metrics.ipv4_address && metrics.ipv4_address.trim() !== '';
-  const hasIPv6 = metrics.ipv6_address && metrics.ipv6_address.trim() !== '';
+  const hasIPv4 = metrics.ipv4_address && metrics.ipv4_address.trim() !== "";
+  const hasIPv6 = metrics.ipv6_address && metrics.ipv6_address.trim() !== "";
 
   return (
     <div className="space-y-6">
@@ -80,9 +80,7 @@ export function DeviceMetricsPanel({ metrics }: DeviceMetricsProps) {
             <div className="space-y-2">
               <Label>Uptime</Label>
               {metrics.uptime_seconds !== undefined ? (
-                <div className="text-2xl font-bold">
-                  {formatUptime(metrics.uptime_seconds)}
-                </div>
+                <div className="text-2xl font-bold">{formatUptime(metrics.uptime_seconds)}</div>
               ) : (
                 <div className="text-muted-foreground">N/A</div>
               )}
@@ -98,13 +96,19 @@ export function DeviceMetricsPanel({ metrics }: DeviceMetricsProps) {
           <CardDescription>IPv4 and IPv6 reachability</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue={hasIPv4 ? 'ipv4' : 'ipv6'}>
+          <Tabs defaultValue={hasIPv4 ? "ipv4" : "ipv6"}>
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="ipv4" disabled={!hasIPv4}>
-                IPv4 {hasIPv4 && <ConnectivityIndicator connected={metrics.connectivity.ipv4?.reachable} />}
+                IPv4{" "}
+                {hasIPv4 && (
+                  <ConnectivityIndicator connected={metrics.connectivity.ipv4?.reachable} />
+                )}
               </TabsTrigger>
               <TabsTrigger value="ipv6" disabled={!hasIPv6}>
-                IPv6 {hasIPv6 && <ConnectivityIndicator connected={metrics.connectivity.ipv6?.reachable} />}
+                IPv6{" "}
+                {hasIPv6 && (
+                  <ConnectivityIndicator connected={metrics.connectivity.ipv6?.reachable} />
+                )}
               </TabsTrigger>
             </TabsList>
 
@@ -145,16 +149,8 @@ export function DeviceMetricsPanel({ metrics }: DeviceMetricsProps) {
           unit="%"
           threshold={{ warning: 80, critical: 95 }}
         />
-        <MetricCard
-          title="Bandwidth In"
-          value={metrics.bandwidth_in_mbps}
-          unit="Mbps"
-        />
-        <MetricCard
-          title="Bandwidth Out"
-          value={metrics.bandwidth_out_mbps}
-          unit="Mbps"
-        />
+        <MetricCard title="Bandwidth In" value={metrics.bandwidth_in_mbps} unit="Mbps" />
+        <MetricCard title="Bandwidth Out" value={metrics.bandwidth_out_mbps} unit="Mbps" />
       </div>
 
       {/* Interface Status */}
@@ -186,11 +182,19 @@ function Label({ children }: { children: React.ReactNode }) {
   return <div className="text-sm font-medium text-muted-foreground">{children}</div>;
 }
 
-function StatusBadge({ status }: { status: DeviceMetrics['status'] }) {
+function StatusBadge({ status }: { status: DeviceMetrics["status"] }) {
   const variants = {
-    online: { variant: 'default' as const, icon: Wifi, label: 'Online' },
-    offline: { variant: 'destructive' as const, icon: WifiOff, label: 'Offline' },
-    degraded: { variant: 'secondary' as const, icon: Activity, label: 'Degraded' },
+    online: { variant: "default" as const, icon: Wifi, label: "Online" },
+    offline: {
+      variant: "destructive" as const,
+      icon: WifiOff,
+      label: "Offline",
+    },
+    degraded: {
+      variant: "secondary" as const,
+      icon: Activity,
+      label: "Degraded",
+    },
   };
 
   const { variant, icon: Icon, label } = variants[status];
@@ -207,22 +211,22 @@ function ConnectivityIndicator({ connected }: { connected?: boolean }) {
   if (connected === undefined) return null;
 
   return (
-    <span className={`ml-2 inline-block h-2 w-2 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
+    <span
+      className={`ml-2 inline-block h-2 w-2 rounded-full ${connected ? "bg-green-500" : "bg-red-500"}`}
+    />
   );
 }
 
 interface ConnectivityCardProps {
-  family: 'IPv4' | 'IPv6';
+  family: "IPv4" | "IPv6";
   address: string;
-  connectivity?: ConnectivityMetrics['ipv4'] | ConnectivityMetrics['ipv6'];
+  connectivity?: ConnectivityMetrics["ipv4"] | ConnectivityMetrics["ipv6"];
 }
 
 function ConnectivityCard({ family, address, connectivity }: ConnectivityCardProps) {
   if (!connectivity) {
     return (
-      <div className="text-center text-muted-foreground py-8">
-        No connectivity data available
-      </div>
+      <div className="text-center text-muted-foreground py-8">No connectivity data available</div>
     );
   }
 
@@ -268,7 +272,9 @@ function ConnectivityCard({ family, address, connectivity }: ConnectivityCardPro
         </CardHeader>
         <CardContent>
           {connectivity.packet_loss_percent !== undefined ? (
-            <div className={`text-2xl font-bold ${connectivity.packet_loss_percent > 0 ? 'text-red-500' : ''}`}>
+            <div
+              className={`text-2xl font-bold ${connectivity.packet_loss_percent > 0 ? "text-red-500" : ""}`}
+            >
               {connectivity.packet_loss_percent.toFixed(1)}%
             </div>
           ) : (
@@ -287,12 +293,12 @@ interface MetricCardProps {
   threshold?: { warning: number; critical: number };
 }
 
-function MetricCard({ title, value, unit = '', threshold }: MetricCardProps) {
+function MetricCard({ title, value, unit = "", threshold }: MetricCardProps) {
   const getColor = () => {
-    if (!threshold || value === undefined) return 'text-foreground';
-    if (value >= threshold.critical) return 'text-red-500';
-    if (value >= threshold.warning) return 'text-yellow-500';
-    return 'text-green-500';
+    if (!threshold || value === undefined) return "text-foreground";
+    if (value >= threshold.critical) return "text-red-500";
+    if (value >= threshold.warning) return "text-yellow-500";
+    return "text-green-500";
   };
 
   const getTrendIcon = () => {

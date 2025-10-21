@@ -30,7 +30,7 @@ import {
   useWirelessDashboardQuery,
   AccessPointStatus,
   FrequencyBand,
-} from '@/lib/graphql/generated';
+} from "@/lib/graphql/generated";
 
 // ============================================================================
 // Access Point List Hook
@@ -67,7 +67,7 @@ export function useAccessPointListGraphQL(options: UseAccessPointListOptions = {
     },
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const accessPoints = data?.accessPoints?.accessPoints ?? [];
@@ -107,7 +107,7 @@ export function useAccessPointDetailGraphQL(options: UseAccessPointDetailOptions
     variables: { id },
     skip: !enabled || !id,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const accessPoint = data?.accessPoint ?? null;
@@ -131,17 +131,13 @@ export interface UseAccessPointsBySiteOptions {
 }
 
 export function useAccessPointsBySiteGraphQL(options: UseAccessPointsBySiteOptions) {
-  const {
-    siteId,
-    enabled = true,
-    pollInterval = 30000,
-  } = options;
+  const { siteId, enabled = true, pollInterval = 30000 } = options;
 
   const { data, loading, error, refetch } = useAccessPointsBySiteQuery({
     variables: { siteId },
     skip: !enabled || !siteId,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const accessPoints = data?.accessPointsBySite ?? [];
@@ -192,7 +188,7 @@ export function useWirelessClientListGraphQL(options: UseWirelessClientListOptio
     },
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const clients = data?.wirelessClients?.clients ?? [];
@@ -222,17 +218,13 @@ export interface UseWirelessClientDetailOptions {
 }
 
 export function useWirelessClientDetailGraphQL(options: UseWirelessClientDetailOptions) {
-  const {
-    id,
-    enabled = true,
-    pollInterval = 10000,
-  } = options;
+  const { id, enabled = true, pollInterval = 10000 } = options;
 
   const { data, loading, error, refetch } = useWirelessClientDetailQuery({
     variables: { id },
     skip: !enabled || !id,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const client = data?.wirelessClient ?? null;
@@ -256,18 +248,16 @@ export interface UseWirelessClientsByAccessPointOptions {
   pollInterval?: number;
 }
 
-export function useWirelessClientsByAccessPointGraphQL(options: UseWirelessClientsByAccessPointOptions) {
-  const {
-    accessPointId,
-    enabled = true,
-    pollInterval = 15000,
-  } = options;
+export function useWirelessClientsByAccessPointGraphQL(
+  options: UseWirelessClientsByAccessPointOptions,
+) {
+  const { accessPointId, enabled = true, pollInterval = 15000 } = options;
 
   const { data, loading, error, refetch } = useWirelessClientsByAccessPointQuery({
     variables: { accessPointId },
     skip: !enabled || !accessPointId,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const clients = data?.wirelessClientsByAccessPoint ?? [];
@@ -291,17 +281,13 @@ export interface UseWirelessClientsByCustomerOptions {
 }
 
 export function useWirelessClientsByCustomerGraphQL(options: UseWirelessClientsByCustomerOptions) {
-  const {
-    customerId,
-    enabled = true,
-    pollInterval = 30000,
-  } = options;
+  const { customerId, enabled = true, pollInterval = 30000 } = options;
 
   const { data, loading, error, refetch } = useWirelessClientsByCustomerQuery({
     variables: { customerId },
     skip: !enabled || !customerId,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const clients = data?.wirelessClientsByCustomer ?? [];
@@ -345,7 +331,7 @@ export function useCoverageZoneListGraphQL(options: UseCoverageZoneListOptions =
     },
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const zones = data?.coverageZones?.zones ?? [];
@@ -375,17 +361,13 @@ export interface UseCoverageZoneDetailOptions {
 }
 
 export function useCoverageZoneDetailGraphQL(options: UseCoverageZoneDetailOptions) {
-  const {
-    id,
-    enabled = true,
-    pollInterval = 60000,
-  } = options;
+  const { id, enabled = true, pollInterval = 60000 } = options;
 
   const { data, loading, error, refetch } = useCoverageZoneDetailQuery({
     variables: { id },
     skip: !enabled || !id,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const zone = data?.coverageZone ?? null;
@@ -409,17 +391,13 @@ export interface UseCoverageZonesBySiteOptions {
 }
 
 export function useCoverageZonesBySiteGraphQL(options: UseCoverageZonesBySiteOptions) {
-  const {
-    siteId,
-    enabled = true,
-    pollInterval = 60000,
-  } = options;
+  const { siteId, enabled = true, pollInterval = 60000 } = options;
 
   const { data, loading, error, refetch } = useCoverageZonesBySiteQuery({
     variables: { siteId },
     skip: !enabled || !siteId,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const zones = data?.coverageZonesBySite ?? [];
@@ -453,7 +431,7 @@ export function useRfAnalyticsGraphQL(options: UseRfAnalyticsOptions) {
     variables: { siteId },
     skip: !enabled || !siteId,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const analytics = data?.rfAnalytics ?? null;
@@ -478,18 +456,13 @@ export interface UseChannelUtilizationOptions {
 }
 
 export function useChannelUtilizationGraphQL(options: UseChannelUtilizationOptions) {
-  const {
-    siteId,
-    band,
-    enabled = true,
-    pollInterval = 30000,
-  } = options;
+  const { siteId, band, enabled = true, pollInterval = 30000 } = options;
 
   const { data, loading, error, refetch } = useChannelUtilizationQuery({
     variables: { siteId, frequencyBand: band! },
     skip: !enabled || !siteId || !band,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const channelUtilization = data?.channelUtilization ?? [];
@@ -513,17 +486,13 @@ export interface UseWirelessSiteMetricsOptions {
 }
 
 export function useWirelessSiteMetricsGraphQL(options: UseWirelessSiteMetricsOptions) {
-  const {
-    siteId,
-    enabled = true,
-    pollInterval = 30000,
-  } = options;
+  const { siteId, enabled = true, pollInterval = 30000 } = options;
 
   const { data, loading, error, refetch } = useWirelessSiteMetricsQuery({
     variables: { siteId },
     skip: !enabled || !siteId,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const metrics = data?.wirelessSiteMetrics ?? null;
@@ -554,7 +523,7 @@ export function useWirelessDashboardGraphQL(options: UseWirelessDashboardOptions
   const { data, loading, error, refetch } = useWirelessDashboardQuery({
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const dashboard = data?.wirelessDashboard ?? null;
@@ -597,12 +566,12 @@ export function calculateSignalQuality(rssiDbm: number | null | undefined): numb
  * @returns Signal quality label
  */
 export function getSignalQualityLabel(rssiDbm: number | null | undefined): string {
-  if (!rssiDbm) return 'Unknown';
+  if (!rssiDbm) return "Unknown";
 
-  if (rssiDbm >= -50) return 'Excellent';
-  if (rssiDbm >= -60) return 'Good';
-  if (rssiDbm >= -70) return 'Fair';
-  return 'Poor';
+  if (rssiDbm >= -50) return "Excellent";
+  if (rssiDbm >= -60) return "Good";
+  if (rssiDbm >= -70) return "Fair";
+  return "Poor";
 }
 
 /**
@@ -611,16 +580,16 @@ export function getSignalQualityLabel(rssiDbm: number | null | undefined): strin
  * @returns Human-readable frequency band label
  */
 export function getFrequencyBandLabel(band: FrequencyBand | null | undefined): string {
-  if (!band) return 'Unknown';
+  if (!band) return "Unknown";
 
   switch (band) {
     case FrequencyBand.Band_2_4Ghz:
-      return '2.4 GHz';
+      return "2.4 GHz";
     case FrequencyBand.Band_5Ghz:
-      return '5 GHz';
+      return "5 GHz";
     case FrequencyBand.Band_6Ghz:
-      return '6 GHz';
+      return "6 GHz";
     default:
-      return 'Unknown';
+      return "Unknown";
   }
 }

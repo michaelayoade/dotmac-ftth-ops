@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * IP CIDR Input Component
@@ -6,18 +6,18 @@
  * Form input with validation for CIDR notation (e.g., 192.168.1.0/24)
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useCallback, useMemo } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   parseCIDR,
   IPFamily,
   getIPv4UsableHosts,
   getIPv4Network,
   getIPv4Broadcast,
-} from '@/lib/utils/ip-address';
-import { cn } from '@/lib/utils';
+} from "@/lib/utils/ip-address";
+import { cn } from "@/lib/utils";
 
 export interface IPCIDRInputProps {
   value: string;
@@ -40,7 +40,7 @@ export function IPCIDRInput({
   onChange,
   onBlur,
   label,
-  placeholder = 'Enter CIDR notation (e.g., 192.168.1.0/24)',
+  placeholder = "Enter CIDR notation (e.g., 192.168.1.0/24)",
   error,
   disabled = false,
   required = false,
@@ -66,20 +66,20 @@ export function IPCIDRInput({
     if (!value) return null;
 
     if (!allowIPv4 && parsed?.family === IPFamily.IPv4) {
-      return 'IPv4 CIDR is not allowed';
+      return "IPv4 CIDR is not allowed";
     }
 
     if (!allowIPv6 && parsed?.family === IPFamily.IPv6) {
-      return 'IPv6 CIDR is not allowed';
+      return "IPv6 CIDR is not allowed";
     }
 
     if (!isValid) {
       if (allowIPv4 && allowIPv6) {
-        return 'Invalid CIDR notation format';
+        return "Invalid CIDR notation format";
       } else if (allowIPv4) {
-        return 'Invalid IPv4 CIDR format (e.g., 192.168.1.0/24)';
+        return "Invalid IPv4 CIDR format (e.g., 192.168.1.0/24)";
       } else {
-        return 'Invalid IPv6 CIDR format (e.g., 2001:db8::/64)';
+        return "Invalid IPv6 CIDR format (e.g., 2001:db8::/64)";
       }
     }
 
@@ -100,7 +100,7 @@ export function IPCIDRInput({
   }, [value, parsed, showInfo]);
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       {label && (
         <div className="flex items-center justify-between">
           <Label htmlFor={label}>
@@ -108,10 +108,8 @@ export function IPCIDRInput({
             {required && <span className="text-red-500 ml-1">*</span>}
           </Label>
           {isValid && parsed && (
-            <Badge
-              variant={parsed.family === IPFamily.IPv4 ? 'default' : 'secondary'}
-            >
-              {parsed.family === IPFamily.IPv4 ? 'IPv4' : 'IPv6'} /{parsed.cidr}
+            <Badge variant={parsed.family === IPFamily.IPv4 ? "default" : "secondary"}>
+              {parsed.family === IPFamily.IPv4 ? "IPv4" : "IPv6"} /{parsed.cidr}
             </Badge>
           )}
         </div>
@@ -125,9 +123,7 @@ export function IPCIDRInput({
         onBlur={handleBlur}
         placeholder={placeholder}
         disabled={disabled}
-        className={cn(
-          displayError && 'border-red-500 focus-visible:ring-red-500'
-        )}
+        className={cn(displayError && "border-red-500 focus-visible:ring-red-500")}
         aria-invalid={!!displayError}
         aria-describedby={displayError ? `${label}-error` : undefined}
       />
@@ -148,19 +144,13 @@ export function IPCIDRInput({
           </div>
           <div className="flex justify-between">
             <span className="font-medium">Usable Hosts:</span>
-            <span className="font-mono">
-              {networkInfo.usableHosts.toLocaleString()}
-            </span>
+            <span className="font-mono">{networkInfo.usableHosts.toLocaleString()}</span>
           </div>
         </div>
       )}
 
       {displayError && (
-        <p
-          id={`${label}-error`}
-          className="text-sm text-red-500"
-          role="alert"
-        >
+        <p id={`${label}-error`} className="text-sm text-red-500" role="alert">
           {displayError}
         </p>
       )}

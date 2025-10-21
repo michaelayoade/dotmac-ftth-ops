@@ -7,6 +7,7 @@ with efficient DataLoader batching to prevent N+1 queries.
 
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 import strawberry
 
@@ -76,7 +77,7 @@ class InterfaceStats:
     utilization_percent: float | None
 
     @classmethod
-    def from_model(cls, interface: any) -> "InterfaceStats":
+    def from_model(cls, interface: Any) -> "InterfaceStats":
         """Convert interface model to GraphQL type."""
         return cls(
             interface_name=interface.interface_name,
@@ -134,7 +135,7 @@ class DeviceHealth:
     uptime_days: int | None
 
     @classmethod
-    def from_model(cls, device: any) -> "DeviceHealth":
+    def from_model(cls, device: Any) -> "DeviceHealth":
         """Convert device health model to GraphQL type."""
         # Compute properties
         is_healthy = device.status in ["online"] and (
@@ -205,7 +206,7 @@ class TrafficStats:
     total_bandwidth_gbps: float
 
     @classmethod
-    def from_model(cls, traffic: any, include_interfaces: bool = False) -> "TrafficStats":
+    def from_model(cls, traffic: Any, include_interfaces: bool = False) -> "TrafficStats":
         """Convert traffic stats model to GraphQL type."""
         # Compute properties
         current_rate_in_mbps = traffic.current_rate_in_bps / 1_000_000
@@ -253,7 +254,7 @@ class ONUMetrics:
     state: str | None
 
     @classmethod
-    def from_model(cls, onu: any) -> "ONUMetrics":
+    def from_model(cls, onu: Any) -> "ONUMetrics":
         """Convert ONU metrics model to GraphQL type."""
         return cls(
             serial_number=onu.serial_number,
@@ -278,7 +279,7 @@ class CPEMetrics:
     last_inform: datetime | None
 
     @classmethod
-    def from_model(cls, cpe: any) -> "CPEMetrics":
+    def from_model(cls, cpe: Any) -> "CPEMetrics":
         """Convert CPE metrics model to GraphQL type."""
         return cls(
             mac_address=cpe.mac_address,
@@ -314,7 +315,7 @@ class DeviceMetrics:
     cpe_metrics: CPEMetrics | None = None
 
     @classmethod
-    def from_model(cls, metrics: any) -> "DeviceMetrics":
+    def from_model(cls, metrics: Any) -> "DeviceMetrics":
         """Convert device metrics model to GraphQL type."""
         return cls(
             device_id=metrics.device_id,
@@ -364,7 +365,7 @@ class NetworkAlert:
     tenant_id: str
 
     @classmethod
-    def from_model(cls, alert: any) -> "NetworkAlert":
+    def from_model(cls, alert: Any) -> "NetworkAlert":
         """Convert alert model to GraphQL type."""
         device_type = None
         if alert.device_type:
@@ -458,7 +459,7 @@ class NetworkOverview:
     total_bandwidth_gbps: float
 
     @classmethod
-    def from_model(cls, overview: any) -> "NetworkOverview":
+    def from_model(cls, overview: Any) -> "NetworkOverview":
         """Convert network overview model to GraphQL type."""
         # Compute properties
         total_devices = overview.total_devices or 1  # Avoid division by zero

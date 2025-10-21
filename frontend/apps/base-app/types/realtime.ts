@@ -11,47 +11,47 @@
 
 export enum EventType {
   // ONU Events
-  ONU_ONLINE = 'onu.online',
-  ONU_OFFLINE = 'onu.offline',
-  ONU_SIGNAL_DEGRADED = 'onu.signal_degraded',
-  ONU_PROVISIONED = 'onu.provisioned',
-  ONU_DEPROVISIONED = 'onu.deprovisioned',
+  ONU_ONLINE = "onu.online",
+  ONU_OFFLINE = "onu.offline",
+  ONU_SIGNAL_DEGRADED = "onu.signal_degraded",
+  ONU_PROVISIONED = "onu.provisioned",
+  ONU_DEPROVISIONED = "onu.deprovisioned",
 
   // RADIUS Session Events
-  SESSION_STARTED = 'session.started',
-  SESSION_UPDATED = 'session.updated',
-  SESSION_STOPPED = 'session.stopped',
+  SESSION_STARTED = "session.started",
+  SESSION_UPDATED = "session.updated",
+  SESSION_STOPPED = "session.stopped",
 
   // Job Progress Events
-  JOB_CREATED = 'job.created',
-  JOB_PROGRESS = 'job.progress',
-  JOB_COMPLETED = 'job.completed',
-  JOB_FAILED = 'job.failed',
-  JOB_CANCELLED = 'job.cancelled',
+  JOB_CREATED = "job.created",
+  JOB_PROGRESS = "job.progress",
+  JOB_COMPLETED = "job.completed",
+  JOB_FAILED = "job.failed",
+  JOB_CANCELLED = "job.cancelled",
 
   // Ticket Events
-  TICKET_CREATED = 'ticket.created',
-  TICKET_UPDATED = 'ticket.updated',
-  TICKET_ASSIGNED = 'ticket.assigned',
-  TICKET_RESOLVED = 'ticket.resolved',
+  TICKET_CREATED = "ticket.created",
+  TICKET_UPDATED = "ticket.updated",
+  TICKET_ASSIGNED = "ticket.assigned",
+  TICKET_RESOLVED = "ticket.resolved",
 
   // Alert Events
-  ALERT_RAISED = 'alert.raised',
-  ALERT_CLEARED = 'alert.cleared',
+  ALERT_RAISED = "alert.raised",
+  ALERT_CLEARED = "alert.cleared",
 
   // Subscriber Events
-  SUBSCRIBER_CREATED = 'subscriber.created',
-  SUBSCRIBER_ACTIVATED = 'subscriber.activated',
-  SUBSCRIBER_SUSPENDED = 'subscriber.suspended',
-  SUBSCRIBER_TERMINATED = 'subscriber.terminated',
+  SUBSCRIBER_CREATED = "subscriber.created",
+  SUBSCRIBER_ACTIVATED = "subscriber.activated",
+  SUBSCRIBER_SUSPENDED = "subscriber.suspended",
+  SUBSCRIBER_TERMINATED = "subscriber.terminated",
 }
 
 export enum ConnectionStatus {
-  CONNECTING = 'connecting',
-  CONNECTED = 'connected',
-  DISCONNECTED = 'disconnected',
-  RECONNECTING = 'reconnecting',
-  ERROR = 'error',
+  CONNECTING = "connecting",
+  CONNECTED = "connected",
+  DISCONNECTED = "disconnected",
+  RECONNECTING = "reconnecting",
+  ERROR = "error",
 }
 
 // ============================================================================
@@ -78,7 +78,7 @@ export interface ONUStatusEvent extends BaseEvent {
     | EventType.ONU_DEPROVISIONED;
   onu_serial: string;
   subscriber_id?: string;
-  status: 'online' | 'offline' | 'degraded' | 'provisioned' | 'deprovisioned';
+  status: "online" | "offline" | "degraded" | "provisioned" | "deprovisioned";
   signal_dbm?: number;
   previous_status?: string;
   olt_id?: string;
@@ -90,10 +90,7 @@ export interface ONUStatusEvent extends BaseEvent {
 // ============================================================================
 
 export interface RADIUSSessionEvent extends BaseEvent {
-  event_type:
-    | EventType.SESSION_STARTED
-    | EventType.SESSION_UPDATED
-    | EventType.SESSION_STOPPED;
+  event_type: EventType.SESSION_STARTED | EventType.SESSION_UPDATED | EventType.SESSION_STOPPED;
   username: string;
   session_id: string;
   nas_ip_address: string;
@@ -117,7 +114,7 @@ export interface JobProgressEvent extends BaseEvent {
     | EventType.JOB_CANCELLED;
   job_id: string;
   job_type: string;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  status: "pending" | "running" | "completed" | "failed" | "cancelled";
   progress_percent: number;
   items_total?: number;
   items_processed?: number;
@@ -141,7 +138,7 @@ export interface TicketEvent extends BaseEvent {
   ticket_number: string;
   title: string;
   category: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: "low" | "medium" | "high" | "critical";
   status: string;
   assigned_to?: string;
   subscriber_id?: string;
@@ -156,7 +153,7 @@ export interface AlertEvent extends BaseEvent {
   event_type: EventType.ALERT_RAISED | EventType.ALERT_CLEARED;
   alert_id: string;
   alert_type: string;
-  severity: 'info' | 'warning' | 'error' | 'critical';
+  severity: "info" | "warning" | "error" | "critical";
   source: string;
   message: string;
   details?: Record<string, any>;
@@ -175,7 +172,7 @@ export interface SubscriberEvent extends BaseEvent {
   subscriber_id: string;
   account_number: string;
   full_name?: string;
-  status: 'active' | 'inactive' | 'suspended' | 'terminated';
+  status: "active" | "inactive" | "suspended" | "terminated";
   plan?: string;
   onu_serial?: string;
 }
@@ -185,16 +182,16 @@ export interface SubscriberEvent extends BaseEvent {
 // ============================================================================
 
 export enum WebSocketMessageType {
-  PING = 'ping',
-  PONG = 'pong',
-  SUBSCRIBED = 'subscribed',
-  ERROR = 'error',
-  CANCEL_JOB = 'cancel_job',
-  PAUSE_JOB = 'pause_job',
-  RESUME_JOB = 'resume_job',
-  CANCEL_CAMPAIGN = 'cancel_campaign',
-  PAUSE_CAMPAIGN = 'pause_campaign',
-  RESUME_CAMPAIGN = 'resume_campaign',
+  PING = "ping",
+  PONG = "pong",
+  SUBSCRIBED = "subscribed",
+  ERROR = "error",
+  CANCEL_JOB = "cancel_job",
+  PAUSE_JOB = "pause_job",
+  RESUME_JOB = "resume_job",
+  CANCEL_CAMPAIGN = "cancel_campaign",
+  PAUSE_CAMPAIGN = "pause_campaign",
+  RESUME_CAMPAIGN = "resume_campaign",
 }
 
 export interface WebSocketClientMessage {
@@ -253,7 +250,7 @@ export interface SSEConnection {
   error: string | null;
   subscribe: <T extends BaseEvent>(
     eventType: EventType | string,
-    handler: (event: T) => void
+    handler: (event: T) => void,
   ) => () => void;
   close: () => void;
   reconnect: () => void;
@@ -266,7 +263,7 @@ export interface WebSocketConnection {
   send: (message: WebSocketClientMessage) => void;
   subscribe: <T extends BaseEvent>(
     eventType: EventType | string,
-    handler: (event: T) => void
+    handler: (event: T) => void,
   ) => () => void;
   close: () => void;
   reconnect: () => void;
@@ -289,14 +286,14 @@ export interface EventSubscription {
 // ============================================================================
 
 export enum RealtimeChannel {
-  ONU_STATUS = '/api/v1/realtime/onu-status',
-  ALERTS = '/api/v1/realtime/alerts',
-  TICKETS = '/api/v1/realtime/tickets',
-  SUBSCRIBERS = '/api/v1/realtime/subscribers',
-  RADIUS_SESSIONS = '/api/v1/realtime/radius-sessions',
-  WS_SESSIONS = '/api/v1/realtime/ws/sessions',
-  WS_JOB = '/api/v1/realtime/ws/jobs',
-  WS_CAMPAIGN = '/api/v1/realtime/ws/campaigns',
+  ONU_STATUS = "/api/v1/realtime/onu-status",
+  ALERTS = "/api/v1/realtime/alerts",
+  TICKETS = "/api/v1/realtime/tickets",
+  SUBSCRIBERS = "/api/v1/realtime/subscribers",
+  RADIUS_SESSIONS = "/api/v1/realtime/radius-sessions",
+  WS_SESSIONS = "/api/v1/realtime/ws/sessions",
+  WS_JOB = "/api/v1/realtime/ws/jobs",
+  WS_CAMPAIGN = "/api/v1/realtime/ws/campaigns",
 }
 
 // ============================================================================
@@ -326,9 +323,7 @@ export interface RealtimeContextValue {
   subscribeToAlerts: (handler: EventHandler<AlertEvent>) => () => void;
   subscribeToTickets: (handler: EventHandler<TicketEvent>) => () => void;
   subscribeToSubscribers: (handler: EventHandler<SubscriberEvent>) => () => void;
-  subscribeToRadiusSessions: (
-    handler: EventHandler<RADIUSSessionEvent>
-  ) => () => void;
+  subscribeToRadiusSessions: (handler: EventHandler<RADIUSSessionEvent>) => () => void;
 
   // WebSocket Connections
   connectToSessionsWS: () => WebSocketConnection;
@@ -374,6 +369,4 @@ export type RealtimeEventMap = {
 };
 
 // Helper type for typed event handlers
-export type TypedEventHandler<T extends EventType> = EventHandler<
-  RealtimeEventMap[T]
->;
+export type TypedEventHandler<T extends EventType> = EventHandler<RealtimeEventMap[T]>;

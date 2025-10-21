@@ -86,7 +86,7 @@ export interface RADIUSUsageQuery {
   username?: string | null;
   start_date?: string | null;
   end_date?: string | null;
-  grouping?: 'day' | 'week' | 'month' | null;
+  grouping?: "day" | "week" | "month" | null;
 }
 
 export interface RADIUSUsageResponse {
@@ -217,7 +217,7 @@ export interface RADIUSAuthTestResponse {
 
 export interface RADIUSHealthResponse {
   timestamp: number;
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   checks: {
     radius_connectivity?: {
       status: string;

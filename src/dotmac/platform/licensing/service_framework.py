@@ -10,6 +10,7 @@ Provides business logic for:
 """
 
 from datetime import datetime, timedelta
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import and_, select
@@ -73,8 +74,8 @@ class LicensingFrameworkService:
         dependencies: list[str],
         pricing_model: PricingModel,
         base_price: float,
-        config_schema: dict,
-        default_config: dict,
+        config_schema: dict[str, Any],
+        default_config: dict[str, Any],
     ) -> FeatureModule:
         """Create a new reusable feature module."""
         # Validate dependencies exist
@@ -115,7 +116,7 @@ class LicensingFrameworkService:
         description: str,
         api_endpoints: list[str],
         ui_routes: list[str],
-        config: dict,
+        config: dict[str, Any],
     ) -> ModuleCapability:
         """Add a capability to a feature module."""
         capability = ModuleCapability(
@@ -153,7 +154,7 @@ class LicensingFrameworkService:
         return module, dependencies
 
     async def _resolve_dependencies(
-        self, module_codes: list[str], resolved: set[str] = None
+        self, module_codes: list[str], resolved: set[str] | None = None
     ) -> list[FeatureModule]:
         """Recursively resolve module dependencies."""
         if resolved is None:
@@ -232,9 +233,9 @@ class LicensingFrameworkService:
         is_custom: bool,
         trial_days: int,
         trial_modules: list[str],
-        module_configs: list[dict],  # [{"module_id": UUID, "included": bool, "addon": bool, "price": float}]
-        quota_configs: list[dict],  # [{"quota_id": UUID, "quantity": int, "allow_overage": bool, "rate": float}]
-        metadata: dict,
+        module_configs: list[dict[str, Any]],  # [{"module_id": UUID, "included": bool, "addon": bool, "price": float}]
+        quota_configs: list[dict[str, Any]],  # [{"quota_id": UUID, "quantity": int, "allow_overage": bool, "rate": float}]
+        metadata: dict[str, Any],
     ) -> ServicePlan:
         """
         Create a new service plan by composing modules and quotas.
@@ -384,8 +385,8 @@ class LicensingFrameworkService:
         return new_plan
 
     async def calculate_plan_price(
-        self, plan_id: UUID, billing_cycle: BillingCycle, addon_modules: list[UUID] = None
-    ) -> dict:
+        self, plan_id: UUID, billing_cycle: BillingCycle, addon_modules: list[UUID] | None = None
+    ) -> dict[str, Any]:
         """Calculate total price for a plan including add-ons."""
         # Load plan with modules
         result = await self.db.execute(
@@ -458,8 +459,8 @@ class LicensingFrameworkService:
         plan_id: UUID,
         billing_cycle: BillingCycle,
         start_trial: bool,
-        addon_module_ids: list[UUID] = None,
-        custom_config: dict = None,
+        addon_module_ids: list[UUID] | None = None,
+        custom_config: dict[str, Any] | None = None,
         stripe_customer_id: str | None = None,
         stripe_subscription_id: str | None = None,
     ) -> TenantSubscription:
@@ -869,7 +870,7 @@ class LicensingFrameworkService:
         tenant_id: UUID,
         quota_code: str,
         requested_quantity: int = 1,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """
         Check if tenant has quota available.
 
@@ -1007,8 +1008,8 @@ class LicensingFrameworkService:
         tenant_id: UUID,
         quota_code: str,
         quantity: int = 1,
-        metadata: dict = None,
-    ) -> dict:
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """
         Consume quota and track usage.
 
@@ -1043,11 +1044,15 @@ class LicensingFrameworkService:
             .order_by(TenantSubscription.created_at.desc())
         )
         subscription = result.scalar_one_or_none()
+        if not subscription:
+            raise ValueError(f"Subscription not found for tenant {tenant_id}")
 
         result = await self.db.execute(
             select(QuotaDefinition).where(QuotaDefinition.quota_code == quota_code)
         )
         quota = result.scalar_one_or_none()
+        if not quota:
+            raise ValueError(f"Quota definition for '{quota_code}' not found")
 
         result = await self.db.execute(
             select(SubscriptionQuotaUsage).where(
@@ -1058,6 +1063,8 @@ class LicensingFrameworkService:
             )
         )
         usage = result.scalar_one_or_none()
+        if not usage:
+            raise ValueError(f"Quota usage for '{quota_code}' not found")
 
         # Update usage
         usage.current_usage += quantity

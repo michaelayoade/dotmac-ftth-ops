@@ -494,6 +494,11 @@ class TestSearchRouter:
         """Test removing content from index."""
         content_id = "test-doc-123"
 
+        client.post(
+            "/search/index",
+            json={"id": content_id, "title": "Test", "content": "remove me", "type": "document"},
+        )
+
         response = client.delete(f"/search/index/{content_id}")
 
         assert response.status_code == 200

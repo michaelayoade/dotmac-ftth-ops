@@ -3,12 +3,12 @@
  * Consolidates data fetching, caching, and state management patterns
  */
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useApiClient } from '../api';
-import { useAppStore } from '../stores';
-import { useAuth } from '@dotmac/headless/auth';
-import type { ApiResponse, PaginatedResponse, PaginationParams } from '../api/types';
-import type { FilterState, PaginationState, SelectionState, LoadingState } from '../stores/types';
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useApiClient } from "../api";
+import { useAppStore } from "../stores";
+import { useAuth } from "@dotmac/headless/auth";
+import type { ApiResponse, PaginatedResponse, PaginationParams } from "../api/types";
+import type { FilterState, PaginationState, SelectionState, LoadingState } from "../stores/types";
 
 export interface DataManagerConfig<T = any> {
   contextId: string;
@@ -26,17 +26,17 @@ export interface DataManagerConfig<T = any> {
 
 export interface DataOperations<T = any> {
   // CRUD operations
-  create: (data: Omit<T, 'id'>) => Promise<ApiResponse<T>>;
+  create: (data: Omit<T, "id">) => Promise<ApiResponse<T>>;
   update: (id: string, data: Partial<T>) => Promise<ApiResponse<T>>;
   delete: (id: string) => Promise<ApiResponse<void>>;
 
   // Bulk operations
-  bulkCreate: (items: Omit<T, 'id'>[]) => Promise<ApiResponse<T[]>>;
+  bulkCreate: (items: Omit<T, "id">[]) => Promise<ApiResponse<T[]>>;
   bulkUpdate: (updates: Array<{ id: string; data: Partial<T> }>) => Promise<ApiResponse<T[]>>;
   bulkDelete: (ids: string[]) => Promise<ApiResponse<void>>;
 
   // Export operations
-  exportData: (format: 'csv' | 'xlsx' | 'json', filters?: any) => Promise<void>;
+  exportData: (format: "csv" | "xlsx" | "json", filters?: any) => Promise<void>;
 }
 
 export interface DataManagerReturn<T = any> {
@@ -58,12 +58,12 @@ export interface DataManagerReturn<T = any> {
   // Data operations
   load: (params?: PaginationParams) => Promise<void>;
   reload: () => Promise<void>;
-  create: (data: Omit<T, 'id'>) => Promise<T | null>;
+  create: (data: Omit<T, "id">) => Promise<T | null>;
   update: (id: string, data: Partial<T>) => Promise<T | null>;
   remove: (id: string) => Promise<boolean>;
 
   // Bulk operations
-  bulkCreate: (items: Omit<T, 'id'>[]) => Promise<T[]>;
+  bulkCreate: (items: Omit<T, "id">[]) => Promise<T[]>;
   bulkUpdate: (updates: Array<{ id: string; data: Partial<T> }>) => Promise<T[]>;
   bulkDelete: (ids: string[]) => Promise<boolean>;
 
@@ -78,7 +78,7 @@ export interface DataManagerReturn<T = any> {
   setFilters: (filters: Partial<FilterState>) => void;
   resetFilters: () => void;
   setSearch: (term: string) => void;
-  setSorting: (sortBy: string, order?: 'asc' | 'desc') => void;
+  setSorting: (sortBy: string, order?: "asc" | "desc") => void;
 
   // Pagination management
   setPage: (page: number) => void;
@@ -89,7 +89,7 @@ export interface DataManagerReturn<T = any> {
   // Utility functions
   getSelectedIds: () => string[];
   getFilteredData: (customFilter?: (item: T) => boolean) => T[];
-  exportData: (format: 'csv' | 'xlsx' | 'json') => Promise<void>;
+  exportData: (format: "csv" | "xlsx" | "json") => Promise<void>;
 
   // Real-time connection
   isConnected: boolean;
@@ -145,9 +145,9 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
         const requestParams = params || {
           page: currentPagination?.currentPage || 1,
           limit: currentPagination?.itemsPerPage || 20,
-          search: currentFilters?.searchTerm || '',
-          sort: currentFilters?.sortBy || '',
-          order: currentFilters?.sortOrder || 'asc',
+          search: currentFilters?.searchTerm || "",
+          sort: currentFilters?.sortBy || "",
+          order: currentFilters?.sortOrder || "asc",
           ...currentFilters?.customFilters,
         };
 
@@ -182,7 +182,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           onSuccess?.(processedData);
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
+        const errorMessage = err instanceof Error ? err.message : "Failed to load data";
         appStore.setError(contextId, errorMessage);
         onError?.(err instanceof Error ? err : new Error(errorMessage));
       } finally {
@@ -200,7 +200,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       onError,
       contextState?.filters,
       contextState?.pagination,
-    ]
+    ],
   );
 
   // Reload function
@@ -212,8 +212,8 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
 
   // CRUD operations
   const create = useCallback(
-    async (data: Omit<T, 'id'>): Promise<T | null> => {
-      appStore.setGlobalLoading(true, 'Creating...');
+    async (data: Omit<T, "id">): Promise<T | null> => {
+      appStore.setGlobalLoading(true, "Creating...");
 
       try {
         const response = await apiClient.post<T>(endpoint, data);
@@ -228,9 +228,9 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           await load();
 
           appStore.addNotification({
-            type: 'success',
-            title: 'Success',
-            message: 'Item created successfully',
+            type: "success",
+            title: "Success",
+            message: "Item created successfully",
           });
 
           return response.data;
@@ -238,10 +238,10 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
 
         return null;
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to create item';
+        const errorMessage = err instanceof Error ? err.message : "Failed to create item";
         appStore.addNotification({
-          type: 'error',
-          title: 'Error',
+          type: "error",
+          title: "Error",
           message: errorMessage,
         });
         throw err;
@@ -249,12 +249,12 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
         appStore.setGlobalLoading(false);
       }
     },
-    [apiClient, appStore, contextId, endpoint, contextState?.data, load]
+    [apiClient, appStore, contextId, endpoint, contextState?.data, load],
   );
 
   const update = useCallback(
     async (id: string, data: Partial<T>): Promise<T | null> => {
-      appStore.setGlobalLoading(true, 'Updating...');
+      appStore.setGlobalLoading(true, "Updating...");
 
       try {
         const response = await apiClient.put<T>(`${endpoint}/${id}`, data);
@@ -263,7 +263,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           // Update local state
           const currentData = contextState?.data || [];
           const updatedData = currentData.map((item) =>
-            (item as any).id === id ? response.data! : item
+            (item as any).id === id ? response.data! : item,
           );
           appStore.setContextData(contextId, updatedData);
 
@@ -272,9 +272,9 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           apiClient.cache?.invalidateEndpoint(endpoint);
 
           appStore.addNotification({
-            type: 'success',
-            title: 'Success',
-            message: 'Item updated successfully',
+            type: "success",
+            title: "Success",
+            message: "Item updated successfully",
           });
 
           return response.data;
@@ -282,10 +282,10 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
 
         return null;
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to update item';
+        const errorMessage = err instanceof Error ? err.message : "Failed to update item";
         appStore.addNotification({
-          type: 'error',
-          title: 'Error',
+          type: "error",
+          title: "Error",
           message: errorMessage,
         });
         throw err;
@@ -293,16 +293,16 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
         appStore.setGlobalLoading(false);
       }
     },
-    [apiClient, appStore, contextId, endpoint, contextState?.data]
+    [apiClient, appStore, contextId, endpoint, contextState?.data],
   );
 
   const remove = useCallback(
     async (id: string): Promise<boolean> => {
       const confirmed = await new Promise<boolean>((resolve) => {
         appStore.openConfirmDialog({
-          title: 'Confirm Delete',
-          message: 'Are you sure you want to delete this item? This action cannot be undone.',
-          variant: 'danger',
+          title: "Confirm Delete",
+          message: "Are you sure you want to delete this item? This action cannot be undone.",
+          variant: "danger",
           onConfirm: () => resolve(true),
           onCancel: () => resolve(false),
         });
@@ -310,7 +310,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
 
       if (!confirmed) return false;
 
-      appStore.setGlobalLoading(true, 'Deleting...');
+      appStore.setGlobalLoading(true, "Deleting...");
 
       try {
         const response = await apiClient.delete(`${endpoint}/${id}`);
@@ -326,9 +326,9 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           apiClient.cache?.invalidateEndpoint(endpoint);
 
           appStore.addNotification({
-            type: 'success',
-            title: 'Success',
-            message: 'Item deleted successfully',
+            type: "success",
+            title: "Success",
+            message: "Item deleted successfully",
           });
 
           return true;
@@ -336,10 +336,10 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
 
         return false;
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to delete item';
+        const errorMessage = err instanceof Error ? err.message : "Failed to delete item";
         appStore.addNotification({
-          type: 'error',
-          title: 'Error',
+          type: "error",
+          title: "Error",
           message: errorMessage,
         });
         throw err;
@@ -347,24 +347,26 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
         appStore.setGlobalLoading(false);
       }
     },
-    [apiClient, appStore, contextId, endpoint, contextState?.data]
+    [apiClient, appStore, contextId, endpoint, contextState?.data],
   );
 
   // Bulk operations
   const bulkCreate = useCallback(
-    async (items: Omit<T, 'id'>[]): Promise<T[]> => {
+    async (items: Omit<T, "id">[]): Promise<T[]> => {
       appStore.setGlobalLoading(true, `Creating ${items.length} items...`);
 
       try {
-        const response = await apiClient.post<T[]>(`${endpoint}/bulk`, { items });
+        const response = await apiClient.post<T[]>(`${endpoint}/bulk`, {
+          items,
+        });
 
         if (response.success && response.data) {
           // Reload data for consistency
           await load();
 
           appStore.addNotification({
-            type: 'success',
-            title: 'Success',
+            type: "success",
+            title: "Success",
             message: `${items.length} items created successfully`,
           });
 
@@ -373,10 +375,10 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
 
         return [];
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to create items';
+        const errorMessage = err instanceof Error ? err.message : "Failed to create items";
         appStore.addNotification({
-          type: 'error',
-          title: 'Error',
+          type: "error",
+          title: "Error",
           message: errorMessage,
         });
         throw err;
@@ -384,7 +386,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
         appStore.setGlobalLoading(false);
       }
     },
-    [apiClient, appStore, endpoint, load]
+    [apiClient, appStore, endpoint, load],
   );
 
   const bulkUpdate = useCallback(
@@ -392,15 +394,17 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       appStore.setGlobalLoading(true, `Updating ${updates.length} items...`);
 
       try {
-        const response = await apiClient.put<T[]>(`${endpoint}/bulk`, { updates });
+        const response = await apiClient.put<T[]>(`${endpoint}/bulk`, {
+          updates,
+        });
 
         if (response.success && response.data) {
           // Reload data for consistency
           await load();
 
           appStore.addNotification({
-            type: 'success',
-            title: 'Success',
+            type: "success",
+            title: "Success",
             message: `${updates.length} items updated successfully`,
           });
 
@@ -409,10 +413,10 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
 
         return [];
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to update items';
+        const errorMessage = err instanceof Error ? err.message : "Failed to update items";
         appStore.addNotification({
-          type: 'error',
-          title: 'Error',
+          type: "error",
+          title: "Error",
           message: errorMessage,
         });
         throw err;
@@ -420,16 +424,16 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
         appStore.setGlobalLoading(false);
       }
     },
-    [apiClient, appStore, endpoint, load]
+    [apiClient, appStore, endpoint, load],
   );
 
   const bulkDelete = useCallback(
     async (ids: string[]): Promise<boolean> => {
       const confirmed = await new Promise<boolean>((resolve) => {
         appStore.openConfirmDialog({
-          title: 'Confirm Bulk Delete',
+          title: "Confirm Bulk Delete",
           message: `Are you sure you want to delete ${ids.length} items? This action cannot be undone.`,
-          variant: 'danger',
+          variant: "danger",
           onConfirm: () => resolve(true),
           onCancel: () => resolve(false),
         });
@@ -440,15 +444,17 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       appStore.setGlobalLoading(true, `Deleting ${ids.length} items...`);
 
       try {
-        const response = await apiClient.delete(`${endpoint}/bulk`, { data: { ids } });
+        const response = await apiClient.delete(`${endpoint}/bulk`, {
+          data: { ids },
+        });
 
         if (response.success) {
           // Reload data for consistency
           await load();
 
           appStore.addNotification({
-            type: 'success',
-            title: 'Success',
+            type: "success",
+            title: "Success",
             message: `${ids.length} items deleted successfully`,
           });
 
@@ -457,10 +463,10 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
 
         return false;
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to delete items';
+        const errorMessage = err instanceof Error ? err.message : "Failed to delete items";
         appStore.addNotification({
-          type: 'error',
-          title: 'Error',
+          type: "error",
+          title: "Error",
           message: errorMessage,
         });
         throw err;
@@ -468,13 +474,13 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
         appStore.setGlobalLoading(false);
       }
     },
-    [apiClient, appStore, endpoint, load]
+    [apiClient, appStore, endpoint, load],
   );
 
   // Export function
   const exportData = useCallback(
-    async (format: 'csv' | 'xlsx' | 'json') => {
-      appStore.setGlobalLoading(true, 'Generating export...');
+    async (format: "csv" | "xlsx" | "json") => {
+      appStore.setGlobalLoading(true, "Generating export...");
 
       try {
         const currentFilters = contextState?.filters;
@@ -490,32 +496,32 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
         if (response.success && response.data) {
           const blob = response.data;
           const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
+          const link = document.createElement("a");
           link.href = url;
-          link.download = `${contextId}-export-${new Date().toISOString().split('T')[0]}.${format}`;
+          link.download = `${contextId}-export-${new Date().toISOString().split("T")[0]}.${format}`;
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
 
           appStore.addNotification({
-            type: 'success',
-            title: 'Success',
-            message: 'Data exported successfully',
+            type: "success",
+            title: "Success",
+            message: "Data exported successfully",
           });
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to export data';
+        const errorMessage = err instanceof Error ? err.message : "Failed to export data";
         appStore.addNotification({
-          type: 'error',
-          title: 'Error',
+          type: "error",
+          title: "Error",
           message: errorMessage,
         });
       } finally {
         appStore.setGlobalLoading(false);
       }
     },
-    [apiClient, appStore, contextId, endpoint, contextState?.filters]
+    [apiClient, appStore, contextId, endpoint, contextState?.filters],
   );
 
   // WebSocket connection for real-time updates
@@ -528,7 +534,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
 
       ws.onopen = () => {
         isConnectedRef.current = true;
-        ws.send(JSON.stringify({ type: 'subscribe', channel: contextId }));
+        ws.send(JSON.stringify({ type: "subscribe", channel: contextId }));
       };
 
       ws.onmessage = (event) => {
@@ -536,16 +542,16 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           const message = JSON.parse(event.data);
           if (message.channel === contextId) {
             switch (message.type) {
-              case 'created':
-              case 'updated':
-              case 'deleted':
+              case "created":
+              case "updated":
+              case "deleted":
                 // Reload data when changes occur
                 load();
                 break;
             }
           }
         } catch (error) {
-          console.error('WebSocket message parse error:', error);
+          console.error("WebSocket message parse error:", error);
         }
       };
 
@@ -554,11 +560,11 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error("WebSocket error:", error);
         isConnectedRef.current = false;
       };
     } catch (error) {
-      console.error('WebSocket connection error:', error);
+      console.error("WebSocket connection error:", error);
     }
   }, [websocketEndpoint, enableRealtime, contextId, load]);
 
@@ -626,10 +632,10 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       isMultiSelect: false,
     },
     filters: contextState?.filters || {
-      searchTerm: '',
-      statusFilter: '',
-      sortBy: '',
-      sortOrder: 'asc',
+      searchTerm: "",
+      statusFilter: "",
+      sortBy: "",
+      sortOrder: "asc",
       customFilters: {},
       showAdvanced: false,
     },
@@ -665,7 +671,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       appStore.setSearchTerm(contextId, term);
       load();
     },
-    setSorting: (sortBy: string, order: 'asc' | 'desc' = 'asc') => {
+    setSorting: (sortBy: string, order: "asc" | "desc" = "asc") => {
       appStore.setSorting(contextId, sortBy, order);
       load();
     },

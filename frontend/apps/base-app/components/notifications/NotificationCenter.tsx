@@ -5,25 +5,25 @@
  * Displays unread count badge and provides quick actions.
  */
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Bell, Check, CheckCheck, Archive, Trash2, ExternalLink, Loader2 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { useNotifications } from '@/hooks/useNotifications';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { Bell, Check, CheckCheck, Archive, Trash2, ExternalLink, Loader2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { useNotifications } from "@/hooks/useNotifications";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import type { Notification, NotificationPriority } from '@/hooks/useNotifications';
+} from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import type { Notification, NotificationPriority } from "@/hooks/useNotifications";
 
 interface NotificationCenterProps {
   /** Maximum notifications to show in dropdown */
@@ -40,7 +40,7 @@ export function NotificationCenter({
   maxNotifications = 5,
   refreshInterval = 30000,
   showViewAll = true,
-  viewAllUrl = '/dashboard/notifications',
+  viewAllUrl = "/dashboard/notifications",
 }: NotificationCenterProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -77,7 +77,7 @@ export function NotificationCenter({
 
   const handleDelete = async (notificationId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('Are you sure you want to delete this notification?')) {
+    if (confirm("Are you sure you want to delete this notification?")) {
       await deleteNotification(notificationId);
     }
   };
@@ -103,7 +103,7 @@ export function NotificationCenter({
           variant="ghost"
           size="icon"
           className="relative"
-          aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
+          aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
         >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
@@ -111,7 +111,7 @@ export function NotificationCenter({
               variant="destructive"
               className="absolute -right-1 -top-1 h-5 min-w-[20px] rounded-full px-1 py-0 text-xs"
             >
-              {unreadCount > 99 ? '99+' : unreadCount}
+              {unreadCount > 99 ? "99+" : unreadCount}
             </Badge>
           )}
         </Button>
@@ -225,31 +225,31 @@ function NotificationItem({
   onDelete,
 }: NotificationItemProps) {
   const priorityColors: Record<NotificationPriority, string> = {
-    low: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-    medium: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-    high: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-    urgent: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+    low: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+    medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+    high: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+    urgent: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
   };
 
   const notificationTypeLabels: Record<string, string> = {
-    subscriber_provisioned: 'Subscriber',
-    subscriber_suspended: 'Subscriber',
-    service_activated: 'Service',
-    service_outage: 'Network',
-    invoice_generated: 'Billing',
-    invoice_overdue: 'Billing',
-    payment_received: 'Payment',
-    payment_failed: 'Payment',
-    ticket_created: 'Ticket',
-    ticket_updated: 'Ticket',
-    system_announcement: 'Announcement',
+    subscriber_provisioned: "Subscriber",
+    subscriber_suspended: "Subscriber",
+    service_activated: "Service",
+    service_outage: "Network",
+    invoice_generated: "Billing",
+    invoice_overdue: "Billing",
+    payment_received: "Payment",
+    payment_failed: "Payment",
+    ticket_created: "Ticket",
+    ticket_updated: "Ticket",
+    system_announcement: "Announcement",
   };
 
   return (
     <div
       className={cn(
-        'group relative flex cursor-pointer items-start gap-3 p-4 transition-colors hover:bg-accent',
-        !notification.is_read && 'bg-blue-50/50 dark:bg-blue-950/20'
+        "group relative flex cursor-pointer items-start gap-3 p-4 transition-colors hover:bg-accent",
+        !notification.is_read && "bg-blue-50/50 dark:bg-blue-950/20",
       )}
       onClick={onClick}
     >
@@ -263,10 +263,10 @@ function NotificationItem({
         {/* Title with priority badge */}
         <div className="flex items-start justify-between gap-2">
           <p className="text-sm font-medium leading-tight">{notification.title}</p>
-          {notification.priority !== 'medium' && (
+          {notification.priority !== "medium" && (
             <Badge
               variant="outline"
-              className={cn('flex-shrink-0 text-xs', priorityColors[notification.priority])}
+              className={cn("flex-shrink-0 text-xs", priorityColors[notification.priority])}
             >
               {notification.priority}
             </Badge>
@@ -278,7 +278,11 @@ function NotificationItem({
 
         {/* Metadata */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>{formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}</span>
+          <span>
+            {formatDistanceToNow(new Date(notification.created_at), {
+              addSuffix: true,
+            })}
+          </span>
           {notificationTypeLabels[notification.type] && (
             <>
               <span>•</span>
@@ -309,13 +313,7 @@ function NotificationItem({
             <Check className="h-3 w-3" />
           </Button>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6"
-          onClick={onArchive}
-          title="Archive"
-        >
+        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onArchive} title="Archive">
           <Archive className="h-3 w-3" />
         </Button>
         <Button
@@ -348,7 +346,7 @@ export function NotificationBadge() {
 
   return (
     <Badge variant="destructive" className="h-5 min-w-[20px] rounded-full px-1 py-0 text-xs">
-      {unreadCount > 99 ? '99+' : unreadCount}
+      {unreadCount > 99 ? "99+" : unreadCount}
     </Badge>
   );
 }

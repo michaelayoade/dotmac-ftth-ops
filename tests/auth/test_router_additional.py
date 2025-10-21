@@ -85,7 +85,7 @@ async def mfa_user(async_db_session: AsyncSession):
 def router_app():
     """Create test app with auth router."""
     app = FastAPI()
-    app.include_router(auth_router, prefix="/auth")
+    app.include_router(auth_router)
     return app
 
 
@@ -418,7 +418,7 @@ async def test_update_profile_email_conflict(router_app: FastAPI, async_db_sessi
         yield async_db_session
 
     router_app = FastAPI()
-    router_app.include_router(auth_router, prefix="/auth")
+    router_app.include_router(auth_router)
     router_app.dependency_overrides[get_auth_session] = override_session
 
     token = create_access_token(
@@ -481,7 +481,7 @@ async def test_update_profile_username_conflict(router_app: FastAPI, async_db_se
         yield async_db_session
 
     router_app = FastAPI()
-    router_app.include_router(auth_router, prefix="/auth")
+    router_app.include_router(auth_router)
     router_app.dependency_overrides[get_auth_session] = override_session
 
     token = create_access_token(

@@ -64,12 +64,7 @@ interface LeadDetailModalProps {
   onUpdate?: () => void;
 }
 
-export function LeadDetailModal({
-  isOpen,
-  onClose,
-  lead,
-  onUpdate,
-}: LeadDetailModalProps) {
+export function LeadDetailModal({ isOpen, onClose, lead, onUpdate }: LeadDetailModalProps) {
   const { toast } = useToast();
   const { updateLead, qualifyLead, disqualifyLead, convertToCustomer } = useLeads();
   const { quotes, refetch: refetchQuotes } = useQuotes({ leadId: lead?.id });
@@ -171,7 +166,7 @@ export function LeadDetailModal({
 
   const handleConvert = async () => {
     const confirmed = confirm(
-      `Convert ${lead.first_name} ${lead.last_name} to a customer? This action cannot be undone.`
+      `Convert ${lead.first_name} ${lead.last_name} to a customer? This action cannot be undone.`,
     );
     if (!confirmed) return;
 
@@ -226,11 +221,7 @@ export function LeadDetailModal({
             <div className="flex gap-2">
               {isEditMode ? (
                 <>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setIsEditMode(false)}
-                  >
+                  <Button size="sm" variant="outline" onClick={() => setIsEditMode(false)}>
                     <X className="h-4 w-4 mr-1" />
                     Cancel
                   </Button>
@@ -240,11 +231,7 @@ export function LeadDetailModal({
                   </Button>
                 </>
               ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsEditMode(true)}
-                >
+                <Button size="sm" variant="outline" onClick={() => setIsEditMode(true)}>
                   <Edit2 className="h-4 w-4 mr-1" />
                   Edit
                 </Button>
@@ -316,9 +303,7 @@ export function LeadDetailModal({
                   {isEditMode ? (
                     <Input
                       value={editData.first_name || ""}
-                      onChange={(e) =>
-                        setEditData({ ...editData, first_name: e.target.value })
-                      }
+                      onChange={(e) => setEditData({ ...editData, first_name: e.target.value })}
                     />
                   ) : (
                     <p className="text-sm">{lead.first_name}</p>
@@ -329,9 +314,7 @@ export function LeadDetailModal({
                   {isEditMode ? (
                     <Input
                       value={editData.last_name || ""}
-                      onChange={(e) =>
-                        setEditData({ ...editData, last_name: e.target.value })
-                      }
+                      onChange={(e) => setEditData({ ...editData, last_name: e.target.value })}
                     />
                   ) : (
                     <p className="text-sm">{lead.last_name}</p>
@@ -343,9 +326,7 @@ export function LeadDetailModal({
                     <Input
                       type="email"
                       value={editData.email || ""}
-                      onChange={(e) =>
-                        setEditData({ ...editData, email: e.target.value })
-                      }
+                      onChange={(e) => setEditData({ ...editData, email: e.target.value })}
                     />
                   ) : (
                     <p className="text-sm">{lead.email}</p>
@@ -356,9 +337,7 @@ export function LeadDetailModal({
                   {isEditMode ? (
                     <Input
                       value={editData.phone || ""}
-                      onChange={(e) =>
-                        setEditData({ ...editData, phone: e.target.value })
-                      }
+                      onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
                     />
                   ) : (
                     <p className="text-sm">{lead.phone || "N/A"}</p>
@@ -554,17 +533,13 @@ export function LeadDetailModal({
                         </Badge>
                       ))
                     ) : (
-                      <p className="text-sm text-muted-foreground">
-                        Not specified
-                      </p>
+                      <p className="text-sm text-muted-foreground">Not specified</p>
                     )}
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label>Desired Bandwidth</Label>
-                  <p className="text-sm">
-                    {lead.desired_bandwidth || "Not specified"}
-                  </p>
+                  <p className="text-sm">{lead.desired_bandwidth || "Not specified"}</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Estimated Monthly Budget</Label>
@@ -578,9 +553,7 @@ export function LeadDetailModal({
                   <Label>Desired Installation Date</Label>
                   <p className="text-sm">
                     {lead.desired_installation_date
-                      ? new Date(
-                          lead.desired_installation_date
-                        ).toLocaleDateString()
+                      ? new Date(lead.desired_installation_date).toLocaleDateString()
                       : "Not specified"}
                   </p>
                 </div>
@@ -646,9 +619,7 @@ export function LeadDetailModal({
                 {isEditMode ? (
                   <Textarea
                     value={editData.notes || ""}
-                    onChange={(e) =>
-                      setEditData({ ...editData, notes: e.target.value })
-                    }
+                    onChange={(e) => setEditData({ ...editData, notes: e.target.value })}
                     rows={4}
                   />
                 ) : (
@@ -676,9 +647,7 @@ export function LeadDetailModal({
                       addSuffix: true,
                     })}
                   </p>
-                  <p className="text-sm mt-1">
-                    New lead from {lead.source.replace(/_/g, " ")}
-                  </p>
+                  <p className="text-sm mt-1">New lead from {lead.source.replace(/_/g, " ")}</p>
                 </div>
               </div>
 
@@ -697,9 +666,7 @@ export function LeadDetailModal({
                         addSuffix: true,
                       })}
                     </p>
-                    <p className="text-sm mt-1">
-                      Lead meets qualification criteria
-                    </p>
+                    <p className="text-sm mt-1">Lead meets qualification criteria</p>
                   </div>
                 </div>
               )}
@@ -719,9 +686,7 @@ export function LeadDetailModal({
                       })}
                     </p>
                     {lead.converted_to_customer_id && (
-                      <p className="text-sm mt-1">
-                        Customer ID: {lead.converted_to_customer_id}
-                      </p>
+                      <p className="text-sm mt-1">Customer ID: {lead.converted_to_customer_id}</p>
                     )}
                   </div>
                 </div>
@@ -741,17 +706,11 @@ export function LeadDetailModal({
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="font-mono text-sm">
-                            {quote.quote_number}
-                          </span>
+                          <span className="font-mono text-sm">{quote.quote_number}</span>
                           <QuoteStatusBadge status={quote.status} />
                         </div>
-                        <p className="text-sm font-medium">
-                          {quote.service_plan_name}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {quote.bandwidth}
-                        </p>
+                        <p className="text-sm font-medium">{quote.service_plan_name}</p>
+                        <p className="text-sm text-muted-foreground">{quote.bandwidth}</p>
                         <div className="flex items-center gap-4 mt-2">
                           <div className="flex items-center gap-1">
                             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -765,8 +724,7 @@ export function LeadDetailModal({
                         </div>
                         {quote.valid_until && (
                           <p className="text-xs text-muted-foreground mt-2">
-                            Valid until{" "}
-                            {new Date(quote.valid_until).toLocaleDateString()}
+                            Valid until {new Date(quote.valid_until).toLocaleDateString()}
                           </p>
                         )}
                       </div>
@@ -810,13 +768,9 @@ export function LeadDetailModal({
                           <Calendar className="h-4 w-4 text-muted-foreground" />
                           <span>
                             {survey.scheduled_date &&
-                              new Date(
-                                survey.scheduled_date
-                              ).toLocaleDateString()}
+                              new Date(survey.scheduled_date).toLocaleDateString()}
                           </span>
-                          {survey.scheduled_time && (
-                            <span>at {survey.scheduled_time}</span>
-                          )}
+                          {survey.scheduled_time && <span>at {survey.scheduled_time}</span>}
                         </div>
                         {survey.technician_id && (
                           <p className="text-sm text-muted-foreground">
@@ -827,8 +781,7 @@ export function LeadDetailModal({
                           <div className="mt-2">
                             <Badge
                               variant={
-                                survey.serviceability_assessment ===
-                                "serviceable"
+                                survey.serviceability_assessment === "serviceable"
                                   ? "default"
                                   : "secondary"
                               }
@@ -897,9 +850,7 @@ export function LeadDetailModal({
                           })}
                         </span>
                       </div>
-                      <p className="text-sm whitespace-pre-wrap">
-                        {lead.notes}
-                      </p>
+                      <p className="text-sm whitespace-pre-wrap">{lead.notes}</p>
                     </div>
                   )}
                   {!lead.notes && (

@@ -39,7 +39,7 @@ def app():
     )
     app.add_middleware(TenantMiddleware, config=tenant_config)
 
-    app.include_router(auth_router, prefix="/auth")
+    app.include_router(auth_router)
     return app
 
 

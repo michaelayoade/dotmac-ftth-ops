@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useCallback, useMemo, useState } from "react";
@@ -31,20 +31,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { EnhancedDataTable, type ColumnDef, type BulkAction, type Row } from "@/components/ui/EnhancedDataTable";
+import {
+  EnhancedDataTable,
+  type ColumnDef,
+  type BulkAction,
+  type Row,
+} from "@/components/ui/EnhancedDataTable";
 import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  useLeads,
-  type Lead,
-  type LeadStatus,
-  type LeadSource,
-} from "@/hooks/useCRM";
-import {
-  LeadStatusBadge,
-  LeadSourceBadge,
-  LeadPriorityBadge,
-} from "@/components/crm/Badges";
+import { useLeads, type Lead, type LeadStatus, type LeadSource } from "@/hooks/useCRM";
+import { LeadStatusBadge, LeadSourceBadge, LeadPriorityBadge } from "@/components/crm/Badges";
 import { CreateLeadModal } from "@/components/crm/CreateLeadModal";
 import { LeadDetailModal } from "@/components/crm/LeadDetailModal";
 import {
@@ -111,7 +107,7 @@ export default function LeadsManagementPage() {
           lead.last_name.toLowerCase().includes(query) ||
           lead.email.toLowerCase().includes(query) ||
           lead.phone?.toLowerCase().includes(query) ||
-          lead.lead_number.toLowerCase().includes(query)
+          lead.lead_number.toLowerCase().includes(query),
       );
     }
 
@@ -149,7 +145,7 @@ export default function LeadsManagementPage() {
       setSelectedLead(lead);
       setIsDetailModalOpen(true);
     },
-    [setSelectedLead, setIsDetailModalOpen]
+    [setSelectedLead, setIsDetailModalOpen],
   );
 
   const handleEditLead = useCallback(
@@ -157,7 +153,7 @@ export default function LeadsManagementPage() {
       setSelectedLead(lead);
       setIsCreateModalOpen(true);
     },
-    [setSelectedLead, setIsCreateModalOpen]
+    [setSelectedLead, setIsCreateModalOpen],
   );
 
   const handleQualify = useCallback(
@@ -171,7 +167,7 @@ export default function LeadsManagementPage() {
         refetch();
       }
     },
-    [qualifyLead, refetch, toast]
+    [qualifyLead, refetch, toast],
   );
 
   const handleDisqualify = useCallback(
@@ -188,7 +184,7 @@ export default function LeadsManagementPage() {
         }
       }
     },
-    [disqualifyLead, refetch, toast]
+    [disqualifyLead, refetch, toast],
   );
 
   const columns: ColumnDef<Lead>[] = useMemo(
@@ -229,7 +225,9 @@ export default function LeadsManagementPage() {
       {
         id: "priority",
         header: "Priority",
-        cell: ({ row }: { row: Row<Lead> }) => <LeadPriorityBadge priority={row.original.priority} />,
+        cell: ({ row }: { row: Row<Lead> }) => (
+          <LeadPriorityBadge priority={row.original.priority} />
+        ),
       },
       {
         id: "serviceability",
@@ -238,13 +236,28 @@ export default function LeadsManagementPage() {
           if (!row.original.is_serviceable) return <span className="text-muted-foreground">—</span>;
 
           const config: Record<string, { label: string; className: string }> = {
-            serviceable: { label: "✅ Serviceable", className: "text-green-500" },
-            not_serviceable: { label: "❌ Not Serviceable", className: "text-red-500" },
-            pending_expansion: { label: "⏳ Pending", className: "text-yellow-500" },
-            requires_construction: { label: "🔧 Construction", className: "text-orange-500" },
+            serviceable: {
+              label: "✅ Serviceable",
+              className: "text-green-500",
+            },
+            not_serviceable: {
+              label: "❌ Not Serviceable",
+              className: "text-red-500",
+            },
+            pending_expansion: {
+              label: "⏳ Pending",
+              className: "text-yellow-500",
+            },
+            requires_construction: {
+              label: "🔧 Construction",
+              className: "text-orange-500",
+            },
           };
 
-          const { label, className } = config[row.original.is_serviceable] || { label: "Unknown", className: "text-gray-500" };
+          const { label, className } = config[row.original.is_serviceable] || {
+            label: "Unknown",
+            className: "text-gray-500",
+          };
           return <span className={`text-xs ${className}`}>{label}</span>;
         },
       },
@@ -294,7 +307,7 @@ export default function LeadsManagementPage() {
         ),
       },
     ],
-    [handleDisqualify, handleEditLead, handleQualify, handleViewLead]
+    [handleDisqualify, handleEditLead, handleQualify, handleViewLead],
   );
 
   // Bulk actions
@@ -347,7 +360,7 @@ export default function LeadsManagementPage() {
         variant: "destructive",
       },
     ],
-    [updateLeadStatus, qualifyLead, refetch, toast]
+    [updateLeadStatus, qualifyLead, refetch, toast],
   );
 
   // Handlers
@@ -464,7 +477,10 @@ export default function LeadsManagementPage() {
               {/* Status Filter */}
               <div className="space-y-2">
                 <Label>Status</Label>
-                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as LeadStatus | "")}>
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value) => setStatusFilter(value as LeadStatus | "")}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
@@ -487,7 +503,10 @@ export default function LeadsManagementPage() {
               {/* Source Filter */}
               <div className="space-y-2">
                 <Label>Source</Label>
-                <Select value={sourceFilter} onValueChange={(value) => setSourceFilter(value as LeadSource | "")}>
+                <Select
+                  value={sourceFilter}
+                  onValueChange={(value) => setSourceFilter(value as LeadSource | "")}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="All Sources" />
                   </SelectTrigger>

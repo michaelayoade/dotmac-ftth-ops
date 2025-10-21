@@ -74,7 +74,7 @@ class RadCheck(Base):  # type: ignore[misc]
     )
 
     # Relationships
-    tenant = relationship("Tenant", back_populates="radius_checks")
+    tenant = relationship("Tenant")
     subscriber = relationship("Subscriber", back_populates="radius_checks")
 
     __table_args__ = (
@@ -271,7 +271,7 @@ class NAS(Base):  # type: ignore[misc]
     )
 
     # Relationships
-    tenant = relationship("Tenant", back_populates="nas_devices")
+    tenant = relationship("Tenant")
 
     __table_args__ = (
         Index("idx_nas_tenant", "tenant_id"),

@@ -7,16 +7,16 @@ export interface ISPTenant {
   id: string;
   name: string;
   slug: string;
-  status: 'ACTIVE' | 'SUSPENDED' | 'INACTIVE' | 'TRIAL' | 'EXPIRED';
+  status: "ACTIVE" | "SUSPENDED" | "INACTIVE" | "TRIAL" | "EXPIRED";
 
   // Subscription and billing
   subscription: {
-    plan: 'STARTER' | 'PROFESSIONAL' | 'ENTERPRISE' | 'CUSTOM';
-    status: 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'TRIAL';
+    plan: "STARTER" | "PROFESSIONAL" | "ENTERPRISE" | "CUSTOM";
+    status: "ACTIVE" | "PAST_DUE" | "CANCELLED" | "TRIAL";
     trial_ends_at?: string;
     current_period_start: string;
     current_period_end: string;
-    billing_cycle: 'MONTHLY' | 'YEARLY';
+    billing_cycle: "MONTHLY" | "YEARLY";
     max_customers: number;
     max_services: number;
     max_users: number;
@@ -25,7 +25,7 @@ export interface ISPTenant {
   // ISP-specific configuration
   isp_config: {
     company_name: string;
-    company_type: 'WISP' | 'FIBER' | 'CABLE' | 'CELLULAR' | 'SATELLITE' | 'HYBRID';
+    company_type: "WISP" | "FIBER" | "CABLE" | "CELLULAR" | "SATELLITE" | "HYBRID";
     license_number?: string;
     service_area: string;
     time_zone: string;
@@ -52,7 +52,7 @@ export interface ISPTenant {
       reseller_portal: {
         enabled: boolean;
         domain?: string;
-        commission_structure: 'FLAT' | 'PERCENTAGE' | 'TIERED';
+        commission_structure: "FLAT" | "PERCENTAGE" | "TIERED";
       };
       technician_portal: {
         enabled: boolean;
@@ -152,20 +152,20 @@ export interface ISPTenant {
   // Integration settings
   integrations: {
     payment_processor?: {
-      provider: 'STRIPE' | 'PAYPAL' | 'AUTHORIZE_NET' | 'SQUARE';
+      provider: "STRIPE" | "PAYPAL" | "AUTHORIZE_NET" | "SQUARE";
       live_mode: boolean;
       webhook_url: string;
     };
     email_service?: {
-      provider: 'SENDGRID' | 'MAILGUN' | 'SES' | 'SMTP';
+      provider: "SENDGRID" | "MAILGUN" | "SES" | "SMTP";
       from_address: string;
       from_name: string;
     };
     sms_service?: {
-      provider: 'TWILIO' | 'NEXMO' | 'AWS_SNS';
+      provider: "TWILIO" | "NEXMO" | "AWS_SNS";
     };
     backup_service?: {
-      provider: 'AWS_S3' | 'GOOGLE_CLOUD' | 'AZURE';
+      provider: "AWS_S3" | "GOOGLE_CLOUD" | "AZURE";
       bucket: string;
       retention_days: number;
     };
@@ -182,9 +182,9 @@ export interface TenantUser {
   id: string;
   email: string;
   name: string;
-  role: 'OWNER' | 'ADMIN' | 'MANAGER' | 'OPERATOR' | 'VIEWER';
+  role: "OWNER" | "ADMIN" | "MANAGER" | "OPERATOR" | "VIEWER";
   permissions: string[];
-  status: 'ACTIVE' | 'INACTIVE' | 'PENDING';
+  status: "ACTIVE" | "INACTIVE" | "PENDING";
   last_login_at?: string;
   created_at: string;
   updated_at: string;
@@ -193,7 +193,7 @@ export interface TenantUser {
 export interface TenantSession {
   tenant: ISPTenant;
   user: TenantUser;
-  portal_type: 'ADMIN' | 'CUSTOMER' | 'RESELLER' | 'TECHNICIAN';
+  portal_type: "ADMIN" | "CUSTOMER" | "RESELLER" | "TECHNICIAN";
   permissions: string[];
   features: string[];
   limits: Record<string, number>;
@@ -208,75 +208,75 @@ export interface TenantSession {
 
 export interface TenantPermissions {
   // Identity module permissions
-  'identity.users.read': boolean;
-  'identity.users.write': boolean;
-  'identity.users.delete': boolean;
-  'identity.customers.read': boolean;
-  'identity.customers.write': boolean;
-  'identity.customers.delete': boolean;
+  "identity.users.read": boolean;
+  "identity.users.write": boolean;
+  "identity.users.delete": boolean;
+  "identity.customers.read": boolean;
+  "identity.customers.write": boolean;
+  "identity.customers.delete": boolean;
 
   // Billing module permissions
-  'billing.invoices.read': boolean;
-  'billing.invoices.write': boolean;
-  'billing.payments.read': boolean;
-  'billing.payments.process': boolean;
+  "billing.invoices.read": boolean;
+  "billing.invoices.write": boolean;
+  "billing.payments.read": boolean;
+  "billing.payments.process": boolean;
 
   // Services module permissions
-  'services.catalog.read': boolean;
-  'services.catalog.write': boolean;
-  'services.provision': boolean;
-  'services.suspend': boolean;
-  'services.terminate': boolean;
+  "services.catalog.read": boolean;
+  "services.catalog.write": boolean;
+  "services.provision": boolean;
+  "services.suspend": boolean;
+  "services.terminate": boolean;
 
   // Networking module permissions
-  'networking.devices.read': boolean;
-  'networking.devices.write': boolean;
-  'networking.ipam.read': boolean;
-  'networking.ipam.allocate': boolean;
-  'networking.monitoring.read': boolean;
+  "networking.devices.read": boolean;
+  "networking.devices.write": boolean;
+  "networking.ipam.read": boolean;
+  "networking.ipam.allocate": boolean;
+  "networking.monitoring.read": boolean;
 
   // Support module permissions
-  'support.tickets.read': boolean;
-  'support.tickets.write': boolean;
-  'support.tickets.assign': boolean;
-  'support.kb.read': boolean;
-  'support.kb.write': boolean;
+  "support.tickets.read": boolean;
+  "support.tickets.write": boolean;
+  "support.tickets.assign": boolean;
+  "support.kb.read": boolean;
+  "support.kb.write": boolean;
 
   // Sales module permissions
-  'sales.leads.read': boolean;
-  'sales.leads.write': boolean;
-  'sales.campaigns.read': boolean;
-  'sales.campaigns.write': boolean;
+  "sales.leads.read": boolean;
+  "sales.leads.write": boolean;
+  "sales.campaigns.read": boolean;
+  "sales.campaigns.write": boolean;
 
   // Reseller module permissions
-  'resellers.read': boolean;
-  'resellers.write': boolean;
-  'resellers.commissions.read': boolean;
-  'resellers.commissions.process': boolean;
+  "resellers.read": boolean;
+  "resellers.write": boolean;
+  "resellers.commissions.read": boolean;
+  "resellers.commissions.process": boolean;
 
   // Analytics module permissions
-  'analytics.reports.read': boolean;
-  'analytics.reports.create': boolean;
-  'analytics.data.export': boolean;
+  "analytics.reports.read": boolean;
+  "analytics.reports.create": boolean;
+  "analytics.data.export": boolean;
 
   // Inventory module permissions
-  'inventory.items.read': boolean;
-  'inventory.items.write': boolean;
-  'inventory.procurement.read': boolean;
-  'inventory.procurement.write': boolean;
+  "inventory.items.read": boolean;
+  "inventory.items.write": boolean;
+  "inventory.procurement.read": boolean;
+  "inventory.procurement.write": boolean;
 
   // Field operations permissions
-  'field_ops.work_orders.read': boolean;
-  'field_ops.work_orders.write': boolean;
-  'field_ops.technicians.read': boolean;
-  'field_ops.technicians.assign': boolean;
+  "field_ops.work_orders.read": boolean;
+  "field_ops.work_orders.write": boolean;
+  "field_ops.technicians.read": boolean;
+  "field_ops.technicians.assign": boolean;
 
   // Administrative permissions
-  'admin.settings.read': boolean;
-  'admin.settings.write': boolean;
-  'admin.users.manage': boolean;
-  'admin.billing.manage': boolean;
-  'admin.integrations.manage': boolean;
+  "admin.settings.read": boolean;
+  "admin.settings.write": boolean;
+  "admin.users.manage": boolean;
+  "admin.billing.manage": boolean;
+  "admin.integrations.manage": boolean;
 }
 
 export interface TenantLimitsUsage {
@@ -302,10 +302,10 @@ export interface TenantBranding {
 
 export interface TenantNotification {
   id: string;
-  type: 'BILLING' | 'LIMIT_WARNING' | 'FEATURE_UPDATE' | 'MAINTENANCE' | 'SECURITY';
+  type: "BILLING" | "LIMIT_WARNING" | "FEATURE_UPDATE" | "MAINTENANCE" | "SECURITY";
   title: string;
   message: string;
-  severity: 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS';
+  severity: "INFO" | "WARNING" | "ERROR" | "SUCCESS";
   action_required: boolean;
   action_url?: string;
   expires_at?: string;
@@ -313,7 +313,7 @@ export interface TenantNotification {
   read: boolean;
 }
 
-export type TenantPlan = 'STARTER' | 'PROFESSIONAL' | 'ENTERPRISE' | 'CUSTOM';
-export type TenantStatus = 'ACTIVE' | 'SUSPENDED' | 'INACTIVE' | 'TRIAL' | 'EXPIRED';
-export type UserRole = 'OWNER' | 'ADMIN' | 'MANAGER' | 'OPERATOR' | 'VIEWER';
-export type PortalType = 'ADMIN' | 'CUSTOMER' | 'RESELLER' | 'TECHNICIAN';
+export type TenantPlan = "STARTER" | "PROFESSIONAL" | "ENTERPRISE" | "CUSTOM";
+export type TenantStatus = "ACTIVE" | "SUSPENDED" | "INACTIVE" | "TRIAL" | "EXPIRED";
+export type UserRole = "OWNER" | "ADMIN" | "MANAGER" | "OPERATOR" | "VIEWER";
+export type PortalType = "ADMIN" | "CUSTOMER" | "RESELLER" | "TECHNICIAN";

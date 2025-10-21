@@ -6,8 +6,8 @@
 export interface PaymentProcessor {
   id: string;
   name: string;
-  type: 'STRIPE' | 'SQUARE' | 'AUTHORIZE_NET' | 'PAYPAL' | 'BRAINTREE' | 'WORLDPAY';
-  status: 'ACTIVE' | 'INACTIVE' | 'TESTING' | 'ERROR';
+  type: "STRIPE" | "SQUARE" | "AUTHORIZE_NET" | "PAYPAL" | "BRAINTREE" | "WORLDPAY";
+  status: "ACTIVE" | "INACTIVE" | "TESTING" | "ERROR";
   capabilities: PaymentCapability[];
   configuration: ProcessorConfiguration;
   webhookUrl?: string;
@@ -17,15 +17,15 @@ export interface PaymentProcessor {
 
 export interface PaymentCapability {
   type:
-    | 'CREDIT_CARD'
-    | 'DEBIT_CARD'
-    | 'ACH'
-    | 'PAYPAL'
-    | 'APPLE_PAY'
-    | 'GOOGLE_PAY'
-    | 'RECURRING'
-    | 'REFUNDS'
-    | 'TOKENIZATION';
+    | "CREDIT_CARD"
+    | "DEBIT_CARD"
+    | "ACH"
+    | "PAYPAL"
+    | "APPLE_PAY"
+    | "GOOGLE_PAY"
+    | "RECURRING"
+    | "REFUNDS"
+    | "TOKENIZATION";
   enabled: boolean;
   supported_currencies: string[];
   transaction_limits: {
@@ -37,7 +37,7 @@ export interface PaymentCapability {
 }
 
 export interface ProcessorConfiguration {
-  processor_type: PaymentProcessor['type'];
+  processor_type: PaymentProcessor["type"];
   credentials: {
     // Stripe
     publishable_key?: string;
@@ -47,7 +47,7 @@ export interface ProcessorConfiguration {
     // Square
     application_id?: string;
     access_token?: string;
-    environment?: 'sandbox' | 'production';
+    environment?: "sandbox" | "production";
 
     // Authorize.Net
     api_login_id?: string;
@@ -64,7 +64,7 @@ export interface ProcessorConfiguration {
   };
   settings: {
     currency: string;
-    capture_method: 'automatic' | 'manual';
+    capture_method: "automatic" | "manual";
     statement_descriptor?: string;
     receipt_email: boolean;
     save_payment_methods: boolean;
@@ -78,8 +78,8 @@ export interface PaymentMethod {
   customer_id: string;
   processor_id: string;
   processor_payment_method_id: string;
-  type: 'CREDIT_CARD' | 'DEBIT_CARD' | 'ACH' | 'PAYPAL' | 'DIGITAL_WALLET';
-  status: 'ACTIVE' | 'EXPIRED' | 'DECLINED' | 'REQUIRES_ACTION';
+  type: "CREDIT_CARD" | "DEBIT_CARD" | "ACH" | "PAYPAL" | "DIGITAL_WALLET";
+  status: "ACTIVE" | "EXPIRED" | "DECLINED" | "REQUIRES_ACTION";
   is_default: boolean;
   metadata: {
     // Card details (last 4 digits, brand, etc.)
@@ -90,11 +90,11 @@ export interface PaymentMethod {
 
     // ACH details
     bank_name?: string;
-    account_type?: 'checking' | 'savings';
+    account_type?: "checking" | "savings";
     account_last4?: string;
 
     // Digital wallet
-    wallet_type?: 'apple_pay' | 'google_pay' | 'samsung_pay';
+    wallet_type?: "apple_pay" | "google_pay" | "samsung_pay";
   };
   billing_address?: BillingAddress;
   created_at: string;
@@ -124,13 +124,13 @@ export interface PaymentIntent {
   amount: number;
   currency: string;
   status:
-    | 'PENDING'
-    | 'REQUIRES_PAYMENT_METHOD'
-    | 'REQUIRES_CONFIRMATION'
-    | 'REQUIRES_ACTION'
-    | 'PROCESSING'
-    | 'SUCCEEDED'
-    | 'CANCELED';
+    | "PENDING"
+    | "REQUIRES_PAYMENT_METHOD"
+    | "REQUIRES_CONFIRMATION"
+    | "REQUIRES_ACTION"
+    | "PROCESSING"
+    | "SUCCEEDED"
+    | "CANCELED";
   payment_method_id?: string;
   description?: string;
   metadata?: Record<string, any>;
@@ -153,10 +153,10 @@ export interface Transaction {
   payment_intent_id?: string;
   processor_id: string;
   processor_transaction_id: string;
-  type: 'PAYMENT' | 'REFUND' | 'DISPUTE' | 'CHARGEBACK' | 'PARTIAL_REFUND';
+  type: "PAYMENT" | "REFUND" | "DISPUTE" | "CHARGEBACK" | "PARTIAL_REFUND";
   amount: number;
   currency: string;
-  status: 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'CANCELED' | 'DISPUTED';
+  status: "PENDING" | "SUCCEEDED" | "FAILED" | "CANCELED" | "DISPUTED";
   payment_method: {
     type: string;
     details: Record<string, any>;
@@ -173,7 +173,7 @@ export interface Transaction {
 }
 
 export interface TransactionFee {
-  type: 'PROCESSING' | 'APPLICATION' | 'GATEWAY' | 'INTERCHANGE';
+  type: "PROCESSING" | "APPLICATION" | "GATEWAY" | "INTERCHANGE";
   amount: number;
   currency: string;
   description: string;
@@ -182,7 +182,7 @@ export interface TransactionFee {
 export interface PaymentError {
   code: string;
   message: string;
-  type: 'card_error' | 'invalid_request_error' | 'api_error' | 'authentication_error';
+  type: "card_error" | "invalid_request_error" | "api_error" | "authentication_error";
   decline_code?: string;
   processor_code?: string;
   processor_message?: string;
@@ -193,20 +193,20 @@ export interface Subscription {
   customer_id: string;
   plan_id: string;
   status:
-    | 'ACTIVE'
-    | 'PAST_DUE'
-    | 'CANCELED'
-    | 'INCOMPLETE'
-    | 'INCOMPLETE_EXPIRED'
-    | 'TRIALING'
-    | 'UNPAID';
+    | "ACTIVE"
+    | "PAST_DUE"
+    | "CANCELED"
+    | "INCOMPLETE"
+    | "INCOMPLETE_EXPIRED"
+    | "TRIALING"
+    | "UNPAID";
   current_period_start: string;
   current_period_end: string;
   trial_start?: string;
   trial_end?: string;
   canceled_at?: string;
   billing_cycle_anchor?: string;
-  collection_method: 'charge_automatically' | 'send_invoice';
+  collection_method: "charge_automatically" | "send_invoice";
   default_payment_method_id?: string;
   items: SubscriptionItem[];
   discount?: SubscriptionDiscount;
@@ -243,10 +243,10 @@ export interface TaxRate {
 
 export interface SubscriptionDiscount {
   coupon_id: string;
-  discount_type: 'PERCENTAGE' | 'FIXED_AMOUNT';
+  discount_type: "PERCENTAGE" | "FIXED_AMOUNT";
   value: number;
   currency?: string;
-  duration: 'ONCE' | 'REPEATING' | 'FOREVER';
+  duration: "ONCE" | "REPEATING" | "FOREVER";
   duration_in_months?: number;
   start: string;
   end?: string;
@@ -256,7 +256,7 @@ export interface Invoice {
   id: string;
   customer_id: string;
   subscription_id?: string;
-  status: 'DRAFT' | 'OPEN' | 'PAID' | 'VOID' | 'UNCOLLECTIBLE';
+  status: "DRAFT" | "OPEN" | "PAID" | "VOID" | "UNCOLLECTIBLE";
   amount_due: number;
   amount_paid: number;
   amount_remaining: number;
@@ -303,7 +303,7 @@ export interface CreatePaymentIntentRequest {
   description?: string;
   metadata?: Record<string, any>;
   save_payment_method?: boolean;
-  setup_future_usage?: 'on_session' | 'off_session';
+  setup_future_usage?: "on_session" | "off_session";
 }
 
 export interface CreatePaymentIntentResponse {
@@ -320,7 +320,7 @@ export interface ConfirmPaymentRequest {
 export interface ProcessRefundRequest {
   transaction_id: string;
   amount?: number;
-  reason?: 'duplicate' | 'fraudulent' | 'requested_by_customer';
+  reason?: "duplicate" | "fraudulent" | "requested_by_customer";
   metadata?: Record<string, any>;
 }
 
@@ -400,9 +400,9 @@ export interface DunningAction {
   id: string;
   customer_id: string;
   invoice_id: string;
-  action_type: 'EMAIL_REMINDER' | 'SUSPEND_SERVICE' | 'CANCEL_SUBSCRIPTION' | 'COLLECTION_AGENCY';
+  action_type: "EMAIL_REMINDER" | "SUSPEND_SERVICE" | "CANCEL_SUBSCRIPTION" | "COLLECTION_AGENCY";
   days_overdue: number;
-  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'CANCELED';
+  status: "PENDING" | "COMPLETED" | "FAILED" | "CANCELED";
   scheduled_for: string;
   executed_at?: string;
   result?: string;

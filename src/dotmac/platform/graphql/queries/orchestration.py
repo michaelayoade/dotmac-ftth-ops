@@ -7,6 +7,7 @@ Provides queries for workflows, provisioning status, and statistics.
 
 import strawberry
 import structlog
+from typing import cast
 
 from dotmac.platform.graphql.context import Context
 from dotmac.platform.graphql.types.orchestration import (
@@ -202,13 +203,14 @@ class OrchestrationQueries:
         tenant_id = current_user.tenant_id
 
         try:
-            count = (
+            count = cast(
+                int,
                 db.query(WorkflowModel)
                 .filter(
                     WorkflowModel.tenant_id == tenant_id,
                     WorkflowModel.status == DBWorkflowStatus.RUNNING,
                 )
-                .count()
+                .count(),
             )
             return count
 
@@ -243,7 +245,8 @@ class OrchestrationQueries:
             from sqlalchemy import func
 
             # Check for running workflows where input_data contains customer_id
-            count = (
+            count_result = cast(
+                int | None,
                 db.query(func.count(WorkflowModel.id))
                 .filter(
                     WorkflowModel.tenant_id == tenant_id,
@@ -253,10 +256,10 @@ class OrchestrationQueries:
                     ]),
                     WorkflowModel.input_data["customer_id"].astext == customer_id,
                 )
-                .scalar()
+                .scalar(),
             )
 
-            return count > 0
+            return bool(count_result and count_result > 0)
 
         except Exception as e:
             logger.error("Error checking running workflows", customer_id=customer_id, error=str(e))

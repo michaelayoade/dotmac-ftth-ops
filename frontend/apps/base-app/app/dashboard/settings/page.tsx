@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   User,
   Users,
@@ -22,10 +22,10 @@ import {
   FileText,
   Zap,
   Cloud,
-  Smartphone
-} from 'lucide-react';
-import { apiClient } from '@/lib/api/client';
-import { RouteGuard } from '@/components/auth/PermissionGuard';
+  Smartphone,
+} from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { RouteGuard } from "@/components/auth/PermissionGuard";
 
 interface SettingCard {
   id: string;
@@ -33,84 +33,84 @@ interface SettingCard {
   description: string;
   icon: React.ElementType;
   href: string;
-  status?: 'active' | 'warning' | 'info';
+  status?: "active" | "warning" | "info";
   badge?: string;
 }
 
 const settingCards: SettingCard[] = [
   {
-    id: 'profile',
-    title: 'Profile',
-    description: 'Manage your personal information and account details',
+    id: "profile",
+    title: "Profile",
+    description: "Manage your personal information and account details",
     icon: User,
-    href: '/dashboard/settings/profile',
-    status: 'active'
+    href: "/dashboard/settings/profile",
+    status: "active",
   },
   {
-    id: 'organization',
-    title: 'Organization',
-    description: 'Company information, team management, and roles',
+    id: "organization",
+    title: "Organization",
+    description: "Company information, team management, and roles",
     icon: Building,
-    href: '/dashboard/settings/organization'
+    href: "/dashboard/settings/organization",
   },
   {
-    id: 'billing',
-    title: 'Billing Preferences',
-    description: 'Payment methods, billing address, and invoice settings',
+    id: "billing",
+    title: "Billing Preferences",
+    description: "Payment methods, billing address, and invoice settings",
     icon: CreditCard,
-    href: '/dashboard/settings/billing',
-    badge: 'Payment due'
+    href: "/dashboard/settings/billing",
+    badge: "Payment due",
   },
   {
-    id: 'notifications',
-    title: 'Notifications',
-    description: 'Email alerts, push notifications, and communication preferences',
+    id: "notifications",
+    title: "Notifications",
+    description: "Email alerts, push notifications, and communication preferences",
     icon: Bell,
-    href: '/dashboard/settings/notifications'
+    href: "/dashboard/settings/notifications",
   },
   {
-    id: 'security',
-    title: 'Security',
-    description: 'Password, two-factor authentication, and security settings',
+    id: "security",
+    title: "Security",
+    description: "Password, two-factor authentication, and security settings",
     icon: Shield,
-    href: '/dashboard/settings/security',
-    status: 'warning',
-    badge: 'MFA disabled'
+    href: "/dashboard/settings/security",
+    status: "warning",
+    badge: "MFA disabled",
   },
   {
-    id: 'integrations',
-    title: 'Integrations',
-    description: 'Connect with third-party services and APIs',
+    id: "integrations",
+    title: "Integrations",
+    description: "Connect with third-party services and APIs",
     icon: Package,
-    href: '/dashboard/settings/integrations'
+    href: "/dashboard/settings/integrations",
   },
   {
-    id: 'api-tokens',
-    title: 'API Tokens',
-    description: 'Manage personal API access tokens and OAuth apps',
+    id: "api-tokens",
+    title: "API Tokens",
+    description: "Manage personal API access tokens and OAuth apps",
     icon: Key,
-    href: '/dashboard/settings/tokens'
+    href: "/dashboard/settings/tokens",
   },
   {
-    id: 'appearance',
-    title: 'Appearance',
-    description: 'Theme preferences, display settings, and UI customization',
+    id: "appearance",
+    title: "Appearance",
+    description: "Theme preferences, display settings, and UI customization",
     icon: Palette,
-    href: '/dashboard/settings/appearance'
+    href: "/dashboard/settings/appearance",
   },
   {
-    id: 'data-privacy',
-    title: 'Data & Privacy',
-    description: 'Data export, deletion requests, and privacy controls',
+    id: "data-privacy",
+    title: "Data & Privacy",
+    description: "Data export, deletion requests, and privacy controls",
     icon: Database,
-    href: '/dashboard/settings/privacy'
+    href: "/dashboard/settings/privacy",
   },
   {
-    id: 'advanced',
-    title: 'Advanced',
-    description: 'Developer settings, experimental features, and system config',
+    id: "advanced",
+    title: "Advanced",
+    description: "Developer settings, experimental features, and system config",
     icon: Sliders,
-    href: '/dashboard/settings/advanced'
+    href: "/dashboard/settings/advanced",
   },
 ];
 
@@ -118,7 +118,7 @@ interface QuickStat {
   label: string;
   value: string | number;
   icon: React.ElementType;
-  trend?: 'up' | 'down' | 'stable';
+  trend?: "up" | "down" | "stable";
 }
 
 function QuickStats({ stats }: { stats: QuickStat[] }) {
@@ -143,22 +143,22 @@ function QuickStats({ stats }: { stats: QuickStat[] }) {
 
 function SettingCard({ card }: { card: SettingCard }) {
   const statusColors = {
-    active: 'border-green-900/20 bg-green-950/10',
-    warning: 'border-orange-900/20 bg-orange-950/10',
-    info: 'border-blue-900/20 bg-blue-950/10'
+    active: "border-green-900/20 bg-green-950/10",
+    warning: "border-orange-900/20 bg-orange-950/10",
+    info: "border-blue-900/20 bg-blue-950/10",
   };
 
   const badgeColors = {
-    active: 'bg-green-500/20 text-green-400',
-    warning: 'bg-orange-500/20 text-orange-400',
-    info: 'bg-blue-500/20 text-blue-400'
+    active: "bg-green-500/20 text-green-400",
+    warning: "bg-orange-500/20 text-orange-400",
+    info: "bg-blue-500/20 text-blue-400",
   };
 
   return (
     <Link
       href={card.href}
       className={`group relative rounded-lg border p-6 hover:border-border transition-all ${
-        card.status ? statusColors[card.status] : 'border-border bg-card hover:bg-accent/50'
+        card.status ? statusColors[card.status] : "border-border bg-card hover:bg-accent/50"
       }`}
     >
       <div className="flex items-start gap-4">
@@ -171,16 +171,16 @@ function SettingCard({ card }: { card: SettingCard }) {
               <h3 className="font-semibold text-foreground group-hover:text-sky-400 transition-colors">
                 {card.title}
               </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {card.description}
-              </p>
+              <p className="mt-1 text-sm text-muted-foreground">{card.description}</p>
             </div>
             <ArrowUpRight className="h-4 w-4 text-foreground0 opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
           {card.badge && (
-            <span className={`inline-block mt-3 px-2 py-1 text-xs font-medium rounded-full ${
-              card.status ? badgeColors[card.status] : 'bg-muted text-muted-foreground'
-            }`}>
+            <span
+              className={`inline-block mt-3 px-2 py-1 text-xs font-medium rounded-full ${
+                card.status ? badgeColors[card.status] : "bg-muted text-muted-foreground"
+              }`}
+            >
               {card.badge}
             </span>
           )}
@@ -203,7 +203,7 @@ function SettingsHubPageContent() {
     try {
       setLoading(true);
       // Fetch user data
-      const userResponse = await apiClient.get('/auth/me').catch(() => ({ data: null }));
+      const userResponse = await apiClient.get("/auth/me").catch(() => ({ data: null }));
 
       // Organization endpoint not yet implemented - will be added later
       const orgResponse = { data: null };
@@ -215,17 +215,21 @@ function SettingsHubPageContent() {
         setOrganization((orgResponse.data || {}) as Record<string, unknown>);
       }
     } catch (err) {
-      console.error('Failed to fetch settings data:', err);
+      console.error("Failed to fetch settings data:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const quickStats: QuickStat[] = [
-    { label: 'Active Sessions', value: 3, icon: Smartphone },
-    { label: 'API Calls Today', value: '1,234', icon: Zap },
-    { label: 'Storage Used', value: '2.3 GB', icon: Cloud },
-    { label: 'Team Members', value: (organization?.memberCount as number) || 5, icon: Users }
+    { label: "Active Sessions", value: 3, icon: Smartphone },
+    { label: "API Calls Today", value: "1,234", icon: Zap },
+    { label: "Storage Used", value: "2.3 GB", icon: Cloud },
+    {
+      label: "Team Members",
+      value: (organization?.memberCount as number) || 5,
+      icon: Users,
+    },
   ];
 
   return (
@@ -251,15 +255,17 @@ function SettingsHubPageContent() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="h-12 w-12 rounded-full bg-gradient-to-br from-sky-400 to-blue-500 flex items-center justify-center text-foreground font-semibold text-lg">
-                  {(user.username as string)?.charAt(0).toUpperCase() || 'U'}
+                  {(user.username as string)?.charAt(0).toUpperCase() || "U"}
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-foreground">{(user.full_name || user.username) as string}</h2>
+                  <h2 className="text-lg font-semibold text-foreground">
+                    {(user.full_name || user.username) as string}
+                  </h2>
                   <p className="text-sm text-muted-foreground">{user.email as string}</p>
                   <p className="text-xs text-foreground0 mt-1">
-                    Organization: {(organization?.name as string) || 'Personal'} •
-                    Plan: {(organization?.plan as string) || 'Free'} •
-                    Role: {(user.roles as string[])?.join(', ') || 'User'}
+                    Organization: {(organization?.name as string) || "Personal"} • Plan:{" "}
+                    {(organization?.plan as string) || "Free"} • Role:{" "}
+                    {(user.roles as string[])?.join(", ") || "User"}
                   </p>
                 </div>
               </div>

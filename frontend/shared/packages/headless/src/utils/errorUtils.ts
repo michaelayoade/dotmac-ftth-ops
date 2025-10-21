@@ -3,15 +3,15 @@
  * Provides consistent error handling patterns across the ISP Framework
  */
 
-export type ErrorSeverity = 'low' | 'medium' | 'high' | 'critical';
+export type ErrorSeverity = "low" | "medium" | "high" | "critical";
 export type ErrorCategory =
-  | 'network'
-  | 'validation'
-  | 'authentication'
-  | 'authorization'
-  | 'business'
-  | 'system'
-  | 'unknown';
+  | "network"
+  | "validation"
+  | "authentication"
+  | "authorization"
+  | "business"
+  | "system"
+  | "unknown";
 
 export interface StandardError {
   id: string;
@@ -52,10 +52,10 @@ export class ISPError extends Error {
 
   constructor(params: Partial<StandardError> & { message: string }) {
     super(params.message);
-    this.name = 'ISPError';
+    this.name = "ISPError";
     this.id = params.id || generateErrorId();
-    this.category = params.category || 'unknown';
-    this.severity = params.severity || 'medium';
+    this.category = params.category || "unknown";
+    this.severity = params.severity || "medium";
     this.context = params.context;
     this.timestamp = params.timestamp || new Date();
     this.retryable = params.retryable ?? false;
@@ -68,20 +68,20 @@ export class ISPError extends Error {
 
   private generateUserMessage(): string {
     switch (this.category) {
-      case 'network':
-        return 'Connection problem. Please check your internet and try again.';
-      case 'authentication':
-        return 'Please log in again to continue.';
-      case 'authorization':
+      case "network":
+        return "Connection problem. Please check your internet and try again.";
+      case "authentication":
+        return "Please log in again to continue.";
+      case "authorization":
         return "You don't have permission to perform this action.";
-      case 'validation':
-        return 'Please check your input and try again.';
-      case 'business':
-        return 'Unable to complete this action. Please try again later.';
-      case 'system':
-        return 'System temporarily unavailable. Please try again in a few minutes.';
+      case "validation":
+        return "Please check your input and try again.";
+      case "business":
+        return "Unable to complete this action. Please try again later.";
+      case "system":
+        return "System temporarily unavailable. Please try again in a few minutes.";
       default:
-        return 'Something went wrong. Please try again.';
+        return "Something went wrong. Please try again.";
     }
   }
 
@@ -113,39 +113,39 @@ export function classifyError(error: unknown, context?: string): ISPError {
   }
 
   // Handle fetch/network errors
-  if (error instanceof TypeError && error.message.includes('fetch')) {
+  if (error instanceof TypeError && error.message.includes("fetch")) {
     return new ISPError({
       message: error.message,
-      category: 'network',
-      severity: 'medium',
+      category: "network",
+      severity: "medium",
       context,
       retryable: true,
-      userMessage: 'Network connection failed. Please check your internet connection.',
+      userMessage: "Network connection failed. Please check your internet connection.",
     });
   }
 
   // Handle HTTP status errors
-  if (error && typeof error === 'object' && 'status' in error) {
+  if (error && typeof error === "object" && "status" in error) {
     const status = (error as any).status;
 
     if (status === 401) {
       return new ISPError({
-        message: 'Authentication failed',
+        message: "Authentication failed",
         status,
-        category: 'authentication',
-        severity: 'high',
+        category: "authentication",
+        severity: "high",
         context,
         retryable: false,
-        userMessage: 'Please log in again to continue.',
+        userMessage: "Please log in again to continue.",
       });
     }
 
     if (status === 403) {
       return new ISPError({
-        message: 'Access denied',
+        message: "Access denied",
         status,
-        category: 'authorization',
-        severity: 'high',
+        category: "authorization",
+        severity: "high",
         context,
         retryable: false,
         userMessage: "You don't have permission to perform this action.",
@@ -154,50 +154,50 @@ export function classifyError(error: unknown, context?: string): ISPError {
 
     if (status === 422) {
       return new ISPError({
-        message: 'Validation failed',
+        message: "Validation failed",
         status,
-        category: 'validation',
-        severity: 'low',
+        category: "validation",
+        severity: "low",
         context,
         retryable: false,
-        userMessage: 'Please check your input and try again.',
+        userMessage: "Please check your input and try again.",
       });
     }
 
     if (status >= 500) {
       return new ISPError({
-        message: 'Server error',
+        message: "Server error",
         status,
-        category: 'system',
-        severity: 'critical',
+        category: "system",
+        severity: "critical",
         context,
         retryable: true,
-        userMessage: 'System temporarily unavailable. Please try again in a few minutes.',
+        userMessage: "System temporarily unavailable. Please try again in a few minutes.",
       });
     }
 
     if (status === 429) {
       return new ISPError({
-        message: 'Rate limit exceeded',
+        message: "Rate limit exceeded",
         status,
-        category: 'system',
-        severity: 'medium',
+        category: "system",
+        severity: "medium",
         context,
         retryable: true,
-        userMessage: 'Too many requests. Please wait a moment before trying again.',
+        userMessage: "Too many requests. Please wait a moment before trying again.",
       });
     }
   }
 
   // Handle timeout errors
-  if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
+  if (error && typeof error === "object" && "name" in error && error.name === "AbortError") {
     return new ISPError({
-      message: 'Request timeout',
-      category: 'network',
-      severity: 'medium',
+      message: "Request timeout",
+      category: "network",
+      severity: "medium",
       context,
       retryable: true,
-      userMessage: 'Request timed out. Please try again.',
+      userMessage: "Request timed out. Please try again.",
     });
   }
 
@@ -205,8 +205,8 @@ export function classifyError(error: unknown, context?: string): ISPError {
   if (error instanceof Error) {
     return new ISPError({
       message: error.message,
-      category: 'unknown',
-      severity: 'medium',
+      category: "unknown",
+      severity: "medium",
       context,
       retryable: false,
       technicalDetails: { originalError: error.name, stack: error.stack },
@@ -215,9 +215,9 @@ export function classifyError(error: unknown, context?: string): ISPError {
 
   // Handle unknown error types
   return new ISPError({
-    message: 'An unknown error occurred',
-    category: 'unknown',
-    severity: 'medium',
+    message: "An unknown error occurred",
+    category: "unknown",
+    severity: "medium",
     context,
     retryable: false,
     technicalDetails: { originalError: String(error) },
@@ -265,8 +265,8 @@ export function logError(error: ISPError, additionalContext?: Partial<ErrorLogEn
 
   const logEntry: ErrorLogEntry = {
     error: error.toJSON(),
-    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',
-    url: typeof window !== 'undefined' ? window.location.href : 'Unknown',
+    userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "Unknown",
+    url: typeof window !== "undefined" ? window.location.href : "Unknown",
     ...additionalContext,
   };
 
@@ -314,7 +314,7 @@ export interface ErrorFallbackProps {
 }
 
 export function createErrorFallback(
-  fallbackComponent: React.ComponentType<ErrorFallbackProps>
+  fallbackComponent: React.ComponentType<ErrorFallbackProps>,
 ): React.ComponentType<ErrorFallbackProps> {
   return fallbackComponent;
 }
@@ -326,8 +326,8 @@ export const ErrorFactory = {
   network: (message: string, context?: string) =>
     new ISPError({
       message,
-      category: 'network',
-      severity: 'medium',
+      category: "network",
+      severity: "medium",
       context,
       retryable: true,
     }),
@@ -335,8 +335,8 @@ export const ErrorFactory = {
   validation: (message: string, context?: string, details?: Record<string, any>) =>
     new ISPError({
       message,
-      category: 'validation',
-      severity: 'low',
+      category: "validation",
+      severity: "low",
       context,
       retryable: false,
       technicalDetails: details,
@@ -344,9 +344,9 @@ export const ErrorFactory = {
 
   authentication: (context?: string) =>
     new ISPError({
-      message: 'Authentication required',
-      category: 'authentication',
-      severity: 'high',
+      message: "Authentication required",
+      category: "authentication",
+      severity: "high",
       context,
       retryable: false,
     }),
@@ -354,26 +354,26 @@ export const ErrorFactory = {
   authorization: (resource: string, context?: string) =>
     new ISPError({
       message: `Access denied to ${resource}`,
-      category: 'authorization',
-      severity: 'high',
+      category: "authorization",
+      severity: "high",
       context,
       retryable: false,
       userMessage: `You don't have permission to access ${resource}.`,
     }),
 
-  business: (message: string, context?: string, severity: ErrorSeverity = 'medium') =>
+  business: (message: string, context?: string, severity: ErrorSeverity = "medium") =>
     new ISPError({
       message,
-      category: 'business',
+      category: "business",
       severity,
       context,
       retryable: false,
     }),
 
-  system: (message: string, context?: string, severity: ErrorSeverity = 'critical') =>
+  system: (message: string, context?: string, severity: ErrorSeverity = "critical") =>
     new ISPError({
       message,
-      category: 'system',
+      category: "system",
       severity,
       context,
       retryable: true,
@@ -397,7 +397,7 @@ export const configureGlobalErrorHandling = (
   config: {
     logger?: (logData: any) => void;
     enableConsoleLogging?: boolean;
-  } = {}
+  } = {},
 ) => {
   if (config.logger) {
     setErrorLogger(config.logger);
@@ -405,8 +405,8 @@ export const configureGlobalErrorHandling = (
 
   if (config.enableConsoleLogging) {
     // Enable console logging for errors in development
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('Global error handling configured for development');
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Global error handling configured for development");
     }
   }
 };

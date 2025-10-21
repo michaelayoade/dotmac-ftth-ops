@@ -3,14 +3,14 @@
  * Handles network devices, topology, and monitoring
  */
 
-import { BaseApiClient } from './BaseApiClient';
-import type { PaginatedResponse, QueryParams } from '../types/api';
+import { BaseApiClient } from "./BaseApiClient";
+import type { PaginatedResponse, QueryParams } from "../types/api";
 
 export interface NetworkDevice {
   id: string;
   name: string;
-  type: 'router' | 'switch' | 'access_point' | 'modem' | 'ont';
-  status: 'online' | 'offline' | 'warning' | 'error';
+  type: "router" | "switch" | "access_point" | "modem" | "ont";
+  status: "online" | "offline" | "warning" | "error";
   ip_address: string;
   mac_address: string;
   location: string;
@@ -24,8 +24,8 @@ export interface NetworkTopology {
   connections: Array<{
     source: string;
     target: string;
-    type: 'physical' | 'logical';
-    status: 'active' | 'inactive';
+    type: "physical" | "logical";
+    status: "active" | "inactive";
   }>;
 }
 
@@ -36,7 +36,7 @@ export class NetworkingApiClient extends BaseApiClient {
 
   // Network device operations
   async getNetworkDevices(params?: QueryParams): Promise<PaginatedResponse<NetworkDevice>> {
-    return this.get('/api/networking/devices', { params });
+    return this.get("/api/networking/devices", { params });
   }
 
   async getNetworkDevice(deviceId: string): Promise<{ data: NetworkDevice }> {
@@ -45,7 +45,7 @@ export class NetworkingApiClient extends BaseApiClient {
 
   async updateNetworkDevice(
     deviceId: string,
-    data: Partial<NetworkDevice>
+    data: Partial<NetworkDevice>,
   ): Promise<{ data: NetworkDevice }> {
     return this.put(`/api/networking/devices/${deviceId}`, data);
   }
@@ -59,14 +59,14 @@ export class NetworkingApiClient extends BaseApiClient {
     depth?: number;
     filter?: string;
   }): Promise<{ data: NetworkTopology }> {
-    return this.get('/api/networking/topology', { params });
+    return this.get("/api/networking/topology", { params });
   }
 
   async discoverDevices(params?: {
     subnet?: string;
     timeout?: number;
   }): Promise<{ data: NetworkDevice[] }> {
-    return this.post('/api/networking/discover', params);
+    return this.post("/api/networking/discover", params);
   }
 
   // Monitoring operations
@@ -76,20 +76,20 @@ export class NetworkingApiClient extends BaseApiClient {
       start_time?: string;
       end_time?: string;
       metrics?: string[];
-    }
+    },
   ): Promise<{ data: any }> {
     return this.get(`/api/networking/devices/${deviceId}/metrics`, { params });
   }
 
   async getNetworkHealth(): Promise<{ data: any }> {
-    return this.get('/api/networking/health');
+    return this.get("/api/networking/health");
   }
 
   async getDeviceAlerts(params?: {
-    severity?: 'low' | 'medium' | 'high' | 'critical';
-    status?: 'active' | 'resolved';
+    severity?: "low" | "medium" | "high" | "critical";
+    status?: "active" | "resolved";
     limit?: number;
   }): Promise<PaginatedResponse<any>> {
-    return this.get('/api/networking/alerts', { params });
+    return this.get("/api/networking/alerts", { params });
   }
 }

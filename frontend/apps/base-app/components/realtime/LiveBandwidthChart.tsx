@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, Wifi, WifiOff } from "lucide-react";
@@ -70,9 +79,7 @@ export function LiveBandwidthChart() {
               <Activity className="h-5 w-5" />
               Live Bandwidth Monitoring
             </CardTitle>
-            <CardDescription>
-              Real-time network bandwidth and latency
-            </CardDescription>
+            <CardDescription>Real-time network bandwidth and latency</CardDescription>
           </div>
           <Badge
             variant={isConnected ? "default" : "secondary"}
@@ -110,9 +117,7 @@ export function LiveBandwidthChart() {
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Latency</p>
-              <p className="text-2xl font-bold">
-                {latestData.latency_ms.toFixed(0)} ms
-              </p>
+              <p className="text-2xl font-bold">{latestData.latency_ms.toFixed(0)} ms</p>
             </div>
           </div>
         )}
@@ -122,11 +127,7 @@ export function LiveBandwidthChart() {
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis
-                dataKey="time"
-                className="text-xs"
-                tick={{ fontSize: 10 }}
-              />
+              <XAxis dataKey="time" className="text-xs" tick={{ fontSize: 10 }} />
               <YAxis className="text-xs" tick={{ fontSize: 10 }} />
               <Tooltip
                 contentStyle={{

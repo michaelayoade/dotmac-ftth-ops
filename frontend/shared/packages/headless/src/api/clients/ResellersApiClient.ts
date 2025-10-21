@@ -3,17 +3,17 @@
  * Handles partner relationships, commission tracking, and channel sales
  */
 
-import { BaseApiClient } from './BaseApiClient';
-import type { PaginatedResponse, QueryParams, AddressData } from '../types/api';
+import { BaseApiClient } from "./BaseApiClient";
+import type { PaginatedResponse, QueryParams, AddressData } from "../types/api";
 
 export interface ResellerPartner {
   id: string;
   partner_code: string;
   company_name: string;
   legal_name: string;
-  partner_type: 'AGENT' | 'DEALER' | 'DISTRIBUTOR' | 'VAR' | 'REFERRAL' | 'FRANCHISE';
-  tier: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
-  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'PENDING_APPROVAL' | 'TERMINATED';
+  partner_type: "AGENT" | "DEALER" | "DISTRIBUTOR" | "VAR" | "REFERRAL" | "FRANCHISE";
+  tier: "BRONZE" | "SILVER" | "GOLD" | "PLATINUM" | "DIAMOND";
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING_APPROVAL" | "TERMINATED";
   contact_info: PartnerContact;
   business_info: BusinessInformation;
   territories: Territory[];
@@ -48,7 +48,7 @@ export interface ContactPerson {
 export interface BusinessInformation {
   tax_id: string;
   business_license: string;
-  business_type: 'CORPORATION' | 'LLC' | 'PARTNERSHIP' | 'SOLE_PROPRIETORSHIP';
+  business_type: "CORPORATION" | "LLC" | "PARTNERSHIP" | "SOLE_PROPRIETORSHIP";
   years_in_business: number;
   employee_count: number;
   annual_revenue?: number;
@@ -81,7 +81,7 @@ export interface InsurancePolicy {
 export interface Territory {
   id: string;
   name: string;
-  type: 'GEOGRAPHIC' | 'VERTICAL' | 'ACCOUNT_BASED';
+  type: "GEOGRAPHIC" | "VERTICAL" | "ACCOUNT_BASED";
   boundaries: TerritoryBoundary[];
   exclusive: boolean;
   population?: number;
@@ -89,27 +89,27 @@ export interface Territory {
 }
 
 export interface TerritoryBoundary {
-  type: 'POSTAL_CODE' | 'CITY' | 'COUNTY' | 'STATE' | 'COORDINATE';
+  type: "POSTAL_CODE" | "CITY" | "COUNTY" | "STATE" | "COORDINATE";
   values: string[];
   coordinates?: Array<{ latitude: number; longitude: number }>;
 }
 
 export interface ServiceAuthorization {
-  service_type: 'INTERNET' | 'VOICE' | 'TV' | 'BUNDLE' | 'ENTERPRISE';
+  service_type: "INTERNET" | "VOICE" | "TV" | "BUNDLE" | "ENTERPRISE";
   authorized: boolean;
   training_required: boolean;
   training_completed: boolean;
-  certification_level: 'BASIC' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
+  certification_level: "BASIC" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
   authorization_date?: string;
   expiry_date?: string;
 }
 
 export interface CommissionStructure {
-  commission_type: 'PERCENTAGE' | 'FLAT_RATE' | 'TIERED' | 'HYBRID';
+  commission_type: "PERCENTAGE" | "FLAT_RATE" | "TIERED" | "HYBRID";
   base_commission_rate: number;
   tiers?: CommissionTier[];
   bonus_structures?: BonusStructure[];
-  payment_terms: 'NET_30' | 'NET_45' | 'NET_60' | 'IMMEDIATE';
+  payment_terms: "NET_30" | "NET_45" | "NET_60" | "IMMEDIATE";
   minimum_payout: number;
   effective_date: string;
   expiry_date?: string;
@@ -123,11 +123,11 @@ export interface CommissionTier {
 }
 
 export interface BonusStructure {
-  bonus_type: 'VOLUME' | 'RETENTION' | 'NEW_CUSTOMER' | 'UPSELL' | 'REFERRAL';
+  bonus_type: "VOLUME" | "RETENTION" | "NEW_CUSTOMER" | "UPSELL" | "REFERRAL";
   threshold: number;
   bonus_amount: number;
   bonus_percentage?: number;
-  calculation_period: 'MONTHLY' | 'QUARTERLY' | 'ANNUALLY';
+  calculation_period: "MONTHLY" | "QUARTERLY" | "ANNUALLY";
 }
 
 export interface PartnerMetrics {
@@ -148,7 +148,7 @@ export interface PartnerMetrics {
 
 export interface ContractInformation {
   contract_number: string;
-  contract_type: 'STANDARD' | 'CUSTOM' | 'ENTERPRISE';
+  contract_type: "STANDARD" | "CUSTOM" | "ENTERPRISE";
   start_date: string;
   end_date?: string;
   auto_renewal: boolean;
@@ -160,7 +160,7 @@ export interface ContractInformation {
 }
 
 export interface ContractDocument {
-  document_type: 'AGREEMENT' | 'AMENDMENT' | 'ADDENDUM' | 'TERMINATION';
+  document_type: "AGREEMENT" | "AMENDMENT" | "ADDENDUM" | "TERMINATION";
   document_name: string;
   file_url: string;
   signed_date?: string;
@@ -169,7 +169,7 @@ export interface ContractDocument {
 }
 
 export interface OnboardingStatus {
-  stage: 'APPLICATION' | 'REVIEW' | 'BACKGROUND_CHECK' | 'TRAINING' | 'CERTIFICATION' | 'COMPLETED';
+  stage: "APPLICATION" | "REVIEW" | "BACKGROUND_CHECK" | "TRAINING" | "CERTIFICATION" | "COMPLETED";
   progress_percentage: number;
   completed_steps: string[];
   pending_steps: string[];
@@ -184,15 +184,15 @@ export interface Sale {
   partner_id: string;
   customer_id: string;
   customer_name: string;
-  sale_type: 'NEW_CUSTOMER' | 'UPGRADE' | 'DOWNGRADE' | 'ADD_ON' | 'RENEWAL';
+  sale_type: "NEW_CUSTOMER" | "UPGRADE" | "DOWNGRADE" | "ADD_ON" | "RENEWAL";
   products: SaleProduct[];
   total_value: number;
   commission_amount: number;
   commission_rate: number;
   sale_date: string;
   activation_date?: string;
-  status: 'PENDING' | 'APPROVED' | 'ACTIVATED' | 'CANCELLED' | 'REFUNDED';
-  payment_status: 'PENDING' | 'PAID' | 'PARTIALLY_PAID' | 'OVERDUE' | 'CANCELLED';
+  status: "PENDING" | "APPROVED" | "ACTIVATED" | "CANCELLED" | "REFUNDED";
+  payment_status: "PENDING" | "PAID" | "PARTIALLY_PAID" | "OVERDUE" | "CANCELLED";
   notes?: string;
   created_at: string;
 }
@@ -200,14 +200,14 @@ export interface Sale {
 export interface SaleProduct {
   product_id: string;
   product_name: string;
-  product_type: 'SERVICE' | 'EQUIPMENT' | 'INSTALLATION' | 'SUPPORT';
+  product_type: "SERVICE" | "EQUIPMENT" | "INSTALLATION" | "SUPPORT";
   quantity: number;
   unit_price: number;
   total_price: number;
   commission_rate: number;
   commission_amount: number;
   recurring: boolean;
-  billing_cycle?: 'MONTHLY' | 'QUARTERLY' | 'ANNUALLY';
+  billing_cycle?: "MONTHLY" | "QUARTERLY" | "ANNUALLY";
 }
 
 export interface CommissionPayment {
@@ -221,14 +221,14 @@ export interface CommissionPayment {
   deductions: PaymentDeduction[];
   net_commission: number;
   payment_date?: string;
-  payment_method: 'ACH' | 'WIRE' | 'CHECK' | 'CREDIT';
-  status: 'CALCULATED' | 'APPROVED' | 'PAID' | 'DISPUTED' | 'CANCELLED';
+  payment_method: "ACH" | "WIRE" | "CHECK" | "CREDIT";
+  status: "CALCULATED" | "APPROVED" | "PAID" | "DISPUTED" | "CANCELLED";
   payment_reference?: string;
   created_at: string;
 }
 
 export interface PaymentDeduction {
-  type: 'TAX' | 'CHARGEBACK' | 'ADJUSTMENT' | 'FEE' | 'PENALTY';
+  type: "TAX" | "CHARGEBACK" | "ADJUSTMENT" | "FEE" | "PENALTY";
   description: string;
   amount: number;
   reference?: string;
@@ -237,11 +237,11 @@ export interface PaymentDeduction {
 export interface PartnerTraining {
   id: string;
   training_name: string;
-  training_type: 'ONBOARDING' | 'PRODUCT' | 'SALES' | 'TECHNICAL' | 'COMPLIANCE';
+  training_type: "ONBOARDING" | "PRODUCT" | "SALES" | "TECHNICAL" | "COMPLIANCE";
   description: string;
   required: boolean;
   duration_hours: number;
-  delivery_method: 'ONLINE' | 'IN_PERSON' | 'WEBINAR' | 'SELF_PACED';
+  delivery_method: "ONLINE" | "IN_PERSON" | "WEBINAR" | "SELF_PACED";
   prerequisites?: string[];
   certification_provided: boolean;
   expiry_period?: number;
@@ -249,7 +249,7 @@ export interface PartnerTraining {
 }
 
 export interface TrainingMaterial {
-  type: 'VIDEO' | 'DOCUMENT' | 'QUIZ' | 'PRESENTATION' | 'INTERACTIVE';
+  type: "VIDEO" | "DOCUMENT" | "QUIZ" | "PRESENTATION" | "INTERACTIVE";
   title: string;
   description: string;
   url: string;
@@ -261,7 +261,7 @@ export interface PartnerTrainingRecord {
   id: string;
   partner_id: string;
   training_id: string;
-  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED' | 'FAILED';
+  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "EXPIRED" | "FAILED";
   start_date?: string;
   completion_date?: string;
   score?: number;
@@ -278,7 +278,7 @@ export class ResellersApiClient extends BaseApiClient {
 
   // Partner Management
   async getPartners(params?: QueryParams): Promise<PaginatedResponse<ResellerPartner>> {
-    return this.get('/api/resellers/partners', { params });
+    return this.get("/api/resellers/partners", { params });
   }
 
   async getPartner(partnerId: string): Promise<{ data: ResellerPartner }> {
@@ -288,15 +288,15 @@ export class ResellersApiClient extends BaseApiClient {
   async createPartner(
     data: Omit<
       ResellerPartner,
-      'id' | 'partner_code' | 'performance_metrics' | 'created_at' | 'updated_at'
-    >
+      "id" | "partner_code" | "performance_metrics" | "created_at" | "updated_at"
+    >,
   ): Promise<{ data: ResellerPartner }> {
-    return this.post('/api/resellers/partners', data);
+    return this.post("/api/resellers/partners", data);
   }
 
   async updatePartner(
     partnerId: string,
-    data: Partial<ResellerPartner>
+    data: Partial<ResellerPartner>,
   ): Promise<{ data: ResellerPartner }> {
     return this.put(`/api/resellers/partners/${partnerId}`, data);
   }
@@ -306,7 +306,9 @@ export class ResellersApiClient extends BaseApiClient {
   }
 
   async suspendPartner(partnerId: string, reason: string): Promise<{ data: ResellerPartner }> {
-    return this.post(`/api/resellers/partners/${partnerId}/suspend`, { reason });
+    return this.post(`/api/resellers/partners/${partnerId}/suspend`, {
+      reason,
+    });
   }
 
   async terminatePartner(
@@ -316,7 +318,7 @@ export class ResellersApiClient extends BaseApiClient {
       effective_date: string;
       final_commission_calculation: boolean;
       notice_provided: boolean;
-    }
+    },
   ): Promise<{ data: ResellerPartner }> {
     return this.post(`/api/resellers/partners/${partnerId}/terminate`, data);
   }
@@ -328,7 +330,7 @@ export class ResellersApiClient extends BaseApiClient {
 
   async assignTerritory(
     partnerId: string,
-    territoryData: Omit<Territory, 'id'>
+    territoryData: Omit<Territory, "id">,
   ): Promise<{ data: Territory }> {
     return this.post(`/api/resellers/partners/${partnerId}/territories`, territoryData);
   }
@@ -336,7 +338,7 @@ export class ResellersApiClient extends BaseApiClient {
   async updateTerritory(
     partnerId: string,
     territoryId: string,
-    data: Partial<Territory>
+    data: Partial<Territory>,
   ): Promise<{ data: Territory }> {
     return this.put(`/api/resellers/partners/${partnerId}/territories/${territoryId}`, data);
   }
@@ -347,10 +349,14 @@ export class ResellersApiClient extends BaseApiClient {
 
   async checkTerritoryConflicts(territoryData: Territory): Promise<{
     data: {
-      conflicts: Array<{ partner_id: string; territory_id: string; overlap_percentage: number }>;
+      conflicts: Array<{
+        partner_id: string;
+        territory_id: string;
+        overlap_percentage: number;
+      }>;
     };
   }> {
-    return this.post('/api/resellers/territories/check-conflicts', territoryData);
+    return this.post("/api/resellers/territories/check-conflicts", territoryData);
   }
 
   // Sales Management
@@ -360,9 +366,9 @@ export class ResellersApiClient extends BaseApiClient {
       start_date?: string;
       end_date?: string;
       status?: string;
-    }
+    },
   ): Promise<PaginatedResponse<Sale>> {
-    return this.get('/api/resellers/sales', { params });
+    return this.get("/api/resellers/sales", { params });
   }
 
   async getSale(saleId: string): Promise<{ data: Sale }> {
@@ -370,9 +376,9 @@ export class ResellersApiClient extends BaseApiClient {
   }
 
   async createSale(
-    data: Omit<Sale, 'id' | 'sale_number' | 'commission_amount' | 'commission_rate' | 'created_at'>
+    data: Omit<Sale, "id" | "sale_number" | "commission_amount" | "commission_rate" | "created_at">,
   ): Promise<{ data: Sale }> {
-    return this.post('/api/resellers/sales', data);
+    return this.post("/api/resellers/sales", data);
   }
 
   async updateSale(saleId: string, data: Partial<Sale>): Promise<{ data: Sale }> {
@@ -380,7 +386,9 @@ export class ResellersApiClient extends BaseApiClient {
   }
 
   async approveSale(saleId: string, approvalNotes?: string): Promise<{ data: Sale }> {
-    return this.post(`/api/resellers/sales/${saleId}/approve`, { approval_notes: approvalNotes });
+    return this.post(`/api/resellers/sales/${saleId}/approve`, {
+      approval_notes: approvalNotes,
+    });
   }
 
   async cancelSale(saleId: string, cancellationReason: string): Promise<{ data: Sale }> {
@@ -396,7 +404,7 @@ export class ResellersApiClient extends BaseApiClient {
   // Commission Management
   async calculateCommissions(
     partnerId: string,
-    period: { start_date: string; end_date: string }
+    period: { start_date: string; end_date: string },
   ): Promise<{ data: CommissionPayment }> {
     return this.post(`/api/resellers/partners/${partnerId}/calculate-commissions`, period);
   }
@@ -407,9 +415,9 @@ export class ResellersApiClient extends BaseApiClient {
       status?: string;
       start_date?: string;
       end_date?: string;
-    }
+    },
   ): Promise<PaginatedResponse<CommissionPayment>> {
-    return this.get('/api/resellers/commissions', { params });
+    return this.get("/api/resellers/commissions", { params });
   }
 
   async getCommissionPayment(paymentId: string): Promise<{ data: CommissionPayment }> {
@@ -418,7 +426,7 @@ export class ResellersApiClient extends BaseApiClient {
 
   async approveCommissionPayment(
     paymentId: string,
-    approvalNotes?: string
+    approvalNotes?: string,
   ): Promise<{ data: CommissionPayment }> {
     return this.post(`/api/resellers/commissions/${paymentId}/approve`, {
       approval_notes: approvalNotes,
@@ -428,17 +436,17 @@ export class ResellersApiClient extends BaseApiClient {
   async processCommissionPayment(
     paymentId: string,
     paymentDetails: {
-      payment_method: CommissionPayment['payment_method'];
+      payment_method: CommissionPayment["payment_method"];
       payment_reference: string;
       payment_date: string;
-    }
+    },
   ): Promise<{ data: CommissionPayment }> {
     return this.post(`/api/resellers/commissions/${paymentId}/process`, paymentDetails);
   }
 
   async disputeCommissionPayment(
     paymentId: string,
-    disputeReason: string
+    disputeReason: string,
   ): Promise<{ data: CommissionPayment }> {
     return this.post(`/api/resellers/commissions/${paymentId}/dispute`, {
       dispute_reason: disputeReason,
@@ -450,15 +458,15 @@ export class ResellersApiClient extends BaseApiClient {
     params: {
       start_date: string;
       end_date: string;
-      format?: 'PDF' | 'CSV' | 'JSON';
-    }
+      format?: "PDF" | "CSV" | "JSON";
+    },
   ): Promise<{ data: { statement_url: string } }> {
     return this.get(`/api/resellers/partners/${partnerId}/commission-statement`, { params });
   }
 
   // Training & Certification
   async getTrainingPrograms(params?: QueryParams): Promise<PaginatedResponse<PartnerTraining>> {
-    return this.get('/api/resellers/training/programs', { params });
+    return this.get("/api/resellers/training/programs", { params });
   }
 
   async getTrainingProgram(trainingId: string): Promise<{ data: PartnerTraining }> {
@@ -467,14 +475,16 @@ export class ResellersApiClient extends BaseApiClient {
 
   async getPartnerTrainingRecords(
     partnerId: string,
-    params?: QueryParams
+    params?: QueryParams,
   ): Promise<PaginatedResponse<PartnerTrainingRecord>> {
-    return this.get(`/api/resellers/partners/${partnerId}/training`, { params });
+    return this.get(`/api/resellers/partners/${partnerId}/training`, {
+      params,
+    });
   }
 
   async enrollPartnerInTraining(
     partnerId: string,
-    trainingId: string
+    trainingId: string,
   ): Promise<{ data: PartnerTrainingRecord }> {
     return this.post(`/api/resellers/partners/${partnerId}/training/${trainingId}/enroll`, {});
   }
@@ -486,7 +496,7 @@ export class ResellersApiClient extends BaseApiClient {
       progress_percentage?: number;
       completed_materials?: string[];
       quiz_scores?: Record<string, number>;
-    }
+    },
   ): Promise<{ data: PartnerTrainingRecord }> {
     return this.put(`/api/resellers/training-records/${trainingRecordId}/progress`, data);
   }
@@ -494,7 +504,7 @@ export class ResellersApiClient extends BaseApiClient {
   async completeTraining(
     partnerId: string,
     trainingRecordId: string,
-    finalScore: number
+    finalScore: number,
   ): Promise<{ data: PartnerTrainingRecord }> {
     return this.post(`/api/resellers/training-records/${trainingRecordId}/complete`, {
       final_score: finalScore,
@@ -508,7 +518,7 @@ export class ResellersApiClient extends BaseApiClient {
       start_date?: string;
       end_date?: string;
       metrics?: string[];
-    }
+    },
   ): Promise<{
     data: PartnerMetrics & {
       sales_trend: any[];
@@ -516,7 +526,9 @@ export class ResellersApiClient extends BaseApiClient {
       customer_acquisition_trend: any[];
     };
   }> {
-    return this.get(`/api/resellers/partners/${partnerId}/performance`, { params });
+    return this.get(`/api/resellers/partners/${partnerId}/performance`, {
+      params,
+    });
   }
 
   async getChannelPerformance(params?: {
@@ -540,12 +552,12 @@ export class ResellersApiClient extends BaseApiClient {
       sales_by_region: any[];
     };
   }> {
-    return this.get('/api/resellers/analytics/channel-performance', { params });
+    return this.get("/api/resellers/analytics/channel-performance", { params });
   }
 
   async getPartnerLeaderboard(params?: {
-    metric?: 'SALES' | 'CUSTOMERS' | 'COMMISSION' | 'SATISFACTION';
-    period?: 'MONTH' | 'QUARTER' | 'YEAR';
+    metric?: "SALES" | "CUSTOMERS" | "COMMISSION" | "SATISFACTION";
+    period?: "MONTH" | "QUARTER" | "YEAR";
     territory?: string;
     tier?: string;
     limit?: number;
@@ -558,24 +570,24 @@ export class ResellersApiClient extends BaseApiClient {
       change_from_previous: number;
     }>;
   }> {
-    return this.get('/api/resellers/analytics/leaderboard', { params });
+    return this.get("/api/resellers/analytics/leaderboard", { params });
   }
 
   // Onboarding Management
   async updateOnboardingStatus(
     partnerId: string,
     data: {
-      stage: OnboardingStatus['stage'];
+      stage: OnboardingStatus["stage"];
       completed_steps?: string[];
       notes?: string;
-    }
+    },
   ): Promise<{ data: ResellerPartner }> {
     return this.put(`/api/resellers/partners/${partnerId}/onboarding`, data);
   }
 
   async assignOnboardingManager(
     partnerId: string,
-    managerId: string
+    managerId: string,
   ): Promise<{ data: ResellerPartner }> {
     return this.post(`/api/resellers/partners/${partnerId}/assign-onboarding-manager`, {
       manager_id: managerId,
@@ -599,14 +611,14 @@ export class ResellersApiClient extends BaseApiClient {
   async uploadPartnerDocument(
     partnerId: string,
     file: File,
-    documentType: string
+    documentType: string,
   ): Promise<{ data: ContractDocument }> {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('document_type', documentType);
+    formData.append("file", file);
+    formData.append("document_type", documentType);
 
     const response = await fetch(`${this.baseURL}/api/resellers/partners/${partnerId}/documents`, {
-      method: 'POST',
+      method: "POST",
       headers: this.defaultHeaders,
       body: formData,
     });
@@ -626,15 +638,15 @@ export class ResellersApiClient extends BaseApiClient {
     partnerId: string,
     documentId: string,
     signatureData: {
-      signature_method: 'ELECTRONIC' | 'WET_SIGNATURE' | 'DOCUSIGN';
+      signature_method: "ELECTRONIC" | "WET_SIGNATURE" | "DOCUSIGN";
       signer_name: string;
       signature_date: string;
       ip_address?: string;
-    }
+    },
   ): Promise<{ data: ContractDocument }> {
     return this.post(
       `/api/resellers/partners/${partnerId}/documents/${documentId}/sign`,
-      signatureData
+      signatureData,
     );
   }
 }

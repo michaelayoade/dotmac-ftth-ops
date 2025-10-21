@@ -50,11 +50,31 @@ export default function PartnerOnboardingWorkflow() {
   const completeOnboarding = useCompletePartnerOnboarding();
 
   const steps: { id: OnboardingStep; label: string; description: string }[] = [
-    { id: "partner", label: "Partner Information", description: "Basic partner details" },
-    { id: "customer", label: "First Customer", description: "Initial customer setup" },
-    { id: "license", label: "License Configuration", description: "Select license template" },
-    { id: "deployment", label: "Deployment Settings", description: "Configure deployment" },
-    { id: "review", label: "Review & Submit", description: "Review and submit" },
+    {
+      id: "partner",
+      label: "Partner Information",
+      description: "Basic partner details",
+    },
+    {
+      id: "customer",
+      label: "First Customer",
+      description: "Initial customer setup",
+    },
+    {
+      id: "license",
+      label: "License Configuration",
+      description: "Select license template",
+    },
+    {
+      id: "deployment",
+      label: "Deployment Settings",
+      description: "Configure deployment",
+    },
+    {
+      id: "review",
+      label: "Review & Submit",
+      description: "Review and submit",
+    },
   ];
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
@@ -93,7 +113,7 @@ export default function PartnerOnboardingWorkflow() {
           `Customer: ${result.customer.name}\n` +
           `Licenses: ${result.licenses.licenses_allocated}\n` +
           `Tenant URL: ${result.tenant.tenant_url}\n\n` +
-          `Workflow ID: ${result.workflow_id}`
+          `Workflow ID: ${result.workflow_id}`,
       );
     } catch (error: any) {
       alert(`Failed to complete onboarding: ${error.message}`);
@@ -113,8 +133,8 @@ export default function PartnerOnboardingWorkflow() {
                     index < currentStepIndex
                       ? "bg-primary border-primary text-primary-foreground"
                       : index === currentStepIndex
-                      ? "border-primary text-primary"
-                      : "border-border text-muted-foreground"
+                        ? "border-primary text-primary"
+                        : "border-border text-muted-foreground"
                   }`}
                 >
                   {index < currentStepIndex ? (
@@ -155,7 +175,10 @@ export default function PartnerOnboardingWorkflow() {
                   type="text"
                   value={partnerData.company_name}
                   onChange={(e) =>
-                    setPartnerData({ ...partnerData, company_name: e.target.value })
+                    setPartnerData({
+                      ...partnerData,
+                      company_name: e.target.value,
+                    })
                   }
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   required
@@ -163,13 +186,16 @@ export default function PartnerOnboardingWorkflow() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1">
-                  Legal Name
-                </label>
+                <label className="block text-sm font-medium text-foreground mb-1">Legal Name</label>
                 <input
                   type="text"
                   value={partnerData.legal_name}
-                  onChange={(e) => setPartnerData({ ...partnerData, legal_name: e.target.value })}
+                  onChange={(e) =>
+                    setPartnerData({
+                      ...partnerData,
+                      legal_name: e.target.value,
+                    })
+                  }
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
@@ -184,7 +210,10 @@ export default function PartnerOnboardingWorkflow() {
                   type="email"
                   value={partnerData.primary_email}
                   onChange={(e) =>
-                    setPartnerData({ ...partnerData, primary_email: e.target.value })
+                    setPartnerData({
+                      ...partnerData,
+                      primary_email: e.target.value,
+                    })
                   }
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   required
@@ -261,7 +290,10 @@ export default function PartnerOnboardingWorkflow() {
                   type="text"
                   value={customerData.first_name}
                   onChange={(e) =>
-                    setCustomerData({ ...customerData, first_name: e.target.value })
+                    setCustomerData({
+                      ...customerData,
+                      first_name: e.target.value,
+                    })
                   }
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   required
@@ -276,7 +308,10 @@ export default function PartnerOnboardingWorkflow() {
                   type="text"
                   value={customerData.last_name}
                   onChange={(e) =>
-                    setCustomerData({ ...customerData, last_name: e.target.value })
+                    setCustomerData({
+                      ...customerData,
+                      last_name: e.target.value,
+                    })
                   }
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   required
@@ -310,14 +345,15 @@ export default function PartnerOnboardingWorkflow() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1">
-                Company Name
-              </label>
+              <label className="block text-sm font-medium text-foreground mb-1">Company Name</label>
               <input
                 type="text"
                 value={customerData.company_name}
                 onChange={(e) =>
-                  setCustomerData({ ...customerData, company_name: e.target.value })
+                  setCustomerData({
+                    ...customerData,
+                    company_name: e.target.value,
+                  })
                 }
                 className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
@@ -393,7 +429,10 @@ export default function PartnerOnboardingWorkflow() {
                 type="text"
                 value={whiteLabelConfig.company_name}
                 onChange={(e) =>
-                  setWhiteLabelConfig({ ...whiteLabelConfig, company_name: e.target.value })
+                  setWhiteLabelConfig({
+                    ...whiteLabelConfig,
+                    company_name: e.target.value,
+                  })
                 }
                 placeholder="Leave empty to use partner's company name"
                 className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -408,7 +447,10 @@ export default function PartnerOnboardingWorkflow() {
                 type="text"
                 value={whiteLabelConfig.custom_domain}
                 onChange={(e) =>
-                  setWhiteLabelConfig({ ...whiteLabelConfig, custom_domain: e.target.value })
+                  setWhiteLabelConfig({
+                    ...whiteLabelConfig,
+                    custom_domain: e.target.value,
+                  })
                 }
                 placeholder="e.g., partner.example.com"
                 className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -477,11 +519,7 @@ export default function PartnerOnboardingWorkflow() {
               Next
             </Button>
           ) : (
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={completeOnboarding.isPending}
-            >
+            <Button type="button" onClick={handleSubmit} disabled={completeOnboarding.isPending}>
               {completeOnboarding.isPending ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

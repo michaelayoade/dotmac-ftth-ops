@@ -72,8 +72,8 @@ class Order(Base, TimestampMixin):
     order_number = Column(String(50), unique=True, nullable=False, index=True)
 
     # Order details
-    order_type = Column(Enum(OrderType), nullable=False)
-    status = Column(Enum(OrderStatus), default=OrderStatus.DRAFT, nullable=False, index=True)
+    order_type: OrderType = Column(Enum(OrderType), nullable=False)  # type: ignore[assignment]
+    status: OrderStatus = Column(Enum(OrderStatus), default=OrderStatus.DRAFT, nullable=False, index=True)  # type: ignore[assignment]
     status_message = Column(Text)
 
     # Customer information
@@ -203,7 +203,7 @@ class ServiceActivation(Base, TimestampMixin):
     # Service details
     service_code = Column(String(100), nullable=False, index=True)
     service_name = Column(String(255), nullable=False)
-    activation_status = Column(Enum(ActivationStatus), default=ActivationStatus.PENDING, nullable=False, index=True)
+    activation_status: ActivationStatus = Column(Enum(ActivationStatus), default=ActivationStatus.PENDING, nullable=False, index=True)  # type: ignore[assignment]
 
     # Activation tracking
     started_at = Column(DateTime)

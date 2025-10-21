@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { X, Save, User, Building } from 'lucide-react';
-import { Customer } from '@/types';
-import { logger } from '@/lib/logger';
+import { useState } from "react";
+import { X, Save, User, Building } from "lucide-react";
+import { Customer } from "@/types";
+import { logger } from "@/lib/logger";
 
 interface CustomerEditModalProps {
   customer?: Customer | null;
@@ -18,31 +18,31 @@ export function CustomerEditModal({
   onClose,
   onCustomerUpdated,
   updateCustomer,
-  loading = false
+  loading = false,
 }: CustomerEditModalProps) {
   const [formData, setFormData] = useState({
-    customer_type: customer?.customer_type || 'individual',
-    first_name: customer?.first_name || '',
-    middle_name: customer?.middle_name || '',
-    last_name: customer?.last_name || '',
-    display_name: customer?.display_name || '',
-    company_name: customer?.company_name || '',
-    email: customer?.email || '',
-    phone: customer?.phone || '',
-    website: customer?.website || '',
-    status: customer?.status || 'active',
-    tier: customer?.tier || 'basic',
-    tax_id: customer?.tax_id || '',
-    vat_number: customer?.vat_number || '',
-    address_line_1: customer?.address_line_1 || '',
-    address_line_2: customer?.address_line_2 || '',
-    city: customer?.city || '',
-    state_province: customer?.state_province || '',
-    postal_code: customer?.postal_code || '',
-    country: customer?.country || '',
+    customer_type: customer?.customer_type || "individual",
+    first_name: customer?.first_name || "",
+    middle_name: customer?.middle_name || "",
+    last_name: customer?.last_name || "",
+    display_name: customer?.display_name || "",
+    company_name: customer?.company_name || "",
+    email: customer?.email || "",
+    phone: customer?.phone || "",
+    website: customer?.website || "",
+    status: customer?.status || "active",
+    tier: customer?.tier || "basic",
+    tax_id: customer?.tax_id || "",
+    vat_number: customer?.vat_number || "",
+    address_line_1: customer?.address_line_1 || "",
+    address_line_2: customer?.address_line_2 || "",
+    city: customer?.city || "",
+    state_province: customer?.state_province || "",
+    postal_code: customer?.postal_code || "",
+    country: customer?.country || "",
     credit_limit: customer?.credit_limit || 0,
     payment_terms: customer?.payment_terms || 30,
-    notes: customer?.notes || '',
+    notes: customer?.notes || "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -54,18 +54,18 @@ export function CustomerEditModal({
     // Validate required fields
     const newErrors: Record<string, string> = {};
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     }
-    if (formData.customer_type === 'individual') {
+    if (formData.customer_type === "individual") {
       if (!formData.first_name) {
-        newErrors.first_name = 'First name is required';
+        newErrors.first_name = "First name is required";
       }
       if (!formData.last_name) {
-        newErrors.last_name = 'Last name is required';
+        newErrors.last_name = "Last name is required";
       }
     } else {
       if (!formData.company_name) {
-        newErrors.company_name = 'Company name is required';
+        newErrors.company_name = "Company name is required";
       }
     }
 
@@ -81,23 +81,28 @@ export function CustomerEditModal({
         onCustomerUpdated(updatedCustomer);
       }
     } catch (error) {
-      logger.error('Failed to update customer', error instanceof Error ? error : new Error(String(error)));
-      setErrors({ submit: 'Failed to update customer. Please try again.' });
+      logger.error(
+        "Failed to update customer",
+        error instanceof Error ? error : new Error(String(error)),
+      );
+      setErrors({ submit: "Failed to update customer. Please try again." });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     // Clear error for this field when user starts typing
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  const isIndividual = formData.customer_type === 'individual';
+  const isIndividual = formData.customer_type === "individual";
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -107,7 +112,7 @@ export function CustomerEditModal({
           <div className="sticky top-0 bg-slate-900 border-b border-slate-700 p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">
-                {customer ? 'Edit Customer' : 'Create Customer'}
+                {customer ? "Edit Customer" : "Create Customer"}
               </h2>
               <button
                 type="button"
@@ -136,7 +141,7 @@ export function CustomerEditModal({
                     type="radio"
                     name="customer_type"
                     value="individual"
-                    checked={formData.customer_type === 'individual'}
+                    checked={formData.customer_type === "individual"}
                     onChange={handleChange}
                     className="mr-2"
                   />
@@ -148,7 +153,7 @@ export function CustomerEditModal({
                     type="radio"
                     name="customer_type"
                     value="business"
-                    checked={formData.customer_type === 'business'}
+                    checked={formData.customer_type === "business"}
                     onChange={handleChange}
                     className="mr-2"
                   />
@@ -172,7 +177,7 @@ export function CustomerEditModal({
                       value={formData.first_name}
                       onChange={handleChange}
                       className={`w-full px-3 py-2 bg-slate-800 border ${
-                        errors.first_name ? 'border-red-500' : 'border-slate-700'
+                        errors.first_name ? "border-red-500" : "border-slate-700"
                       } rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500`}
                     />
                     {errors.first_name && (
@@ -201,7 +206,7 @@ export function CustomerEditModal({
                       value={formData.last_name}
                       onChange={handleChange}
                       className={`w-full px-3 py-2 bg-slate-800 border ${
-                        errors.last_name ? 'border-red-500' : 'border-slate-700'
+                        errors.last_name ? "border-red-500" : "border-slate-700"
                       } rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500`}
                     />
                     {errors.last_name && (
@@ -220,7 +225,7 @@ export function CustomerEditModal({
                     value={formData.company_name}
                     onChange={handleChange}
                     className={`w-full px-3 py-2 bg-slate-800 border ${
-                      errors.company_name ? 'border-red-500' : 'border-slate-700'
+                      errors.company_name ? "border-red-500" : "border-slate-700"
                     } rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500`}
                   />
                   {errors.company_name && (
@@ -232,15 +237,15 @@ export function CustomerEditModal({
 
             {/* Display Name */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Display Name
-              </label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Display Name</label>
               <input
                 type="text"
                 name="display_name"
                 value={formData.display_name}
                 onChange={handleChange}
-                placeholder={isIndividual ? 'Leave empty to use full name' : 'Leave empty to use company name'}
+                placeholder={
+                  isIndividual ? "Leave empty to use full name" : "Leave empty to use company name"
+                }
                 className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
               />
             </div>
@@ -248,26 +253,20 @@ export function CustomerEditModal({
             {/* Contact Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Email *
-                </label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Email *</label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
                   className={`w-full px-3 py-2 bg-slate-800 border ${
-                    errors.email ? 'border-red-500' : 'border-slate-700'
+                    errors.email ? "border-red-500" : "border-slate-700"
                   } rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500`}
                 />
-                {errors.email && (
-                  <p className="mt-1 text-xs text-red-400">{errors.email}</p>
-                )}
+                {errors.email && <p className="mt-1 text-xs text-red-400">{errors.email}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Phone
-                </label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Phone</label>
                 <input
                   type="tel"
                   name="phone"
@@ -280,9 +279,7 @@ export function CustomerEditModal({
 
             {/* Website */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Website
-              </label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Website</label>
               <input
                 type="url"
                 name="website"
@@ -296,9 +293,7 @@ export function CustomerEditModal({
             {/* Status and Tier */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Status
-                </label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Status</label>
                 <select
                   name="status"
                   value={formData.status}
@@ -314,9 +309,7 @@ export function CustomerEditModal({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Tier
-                </label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Tier</label>
                 <select
                   name="tier"
                   value={formData.tier}
@@ -335,9 +328,7 @@ export function CustomerEditModal({
             {/* Tax Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Tax ID
-                </label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Tax ID</label>
                 <input
                   type="text"
                   name="tax_id"
@@ -347,9 +338,7 @@ export function CustomerEditModal({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  VAT Number
-                </label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">VAT Number</label>
                 <input
                   type="text"
                   name="vat_number"
@@ -452,9 +441,7 @@ export function CustomerEditModal({
 
             {/* Notes */}
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Notes
-              </label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Notes</label>
               <textarea
                 name="notes"
                 value={formData.notes}
@@ -483,7 +470,7 @@ export function CustomerEditModal({
                 className="flex items-center gap-2 px-4 py-2 bg-sky-500 hover:bg-sky-600 disabled:bg-slate-700 text-white rounded-lg transition-colors"
               >
                 <Save className="h-4 w-4" />
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </button>
             </div>
           </div>

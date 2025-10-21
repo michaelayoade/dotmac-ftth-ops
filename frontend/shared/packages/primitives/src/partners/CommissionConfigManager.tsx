@@ -3,7 +3,7 @@
  * Allows admins to create and manage flexible commission structures
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   Edit,
@@ -15,14 +15,14 @@ import {
   Percent,
   TrendingUp,
   Settings,
-} from 'lucide-react';
+} from "lucide-react";
 
-import { Card } from '../layout/Card';
-import { Button } from '../forms/Button';
-import { Input } from '../forms/Input';
-import { Modal } from '../layout/Modal';
-import { UniversalTable } from '../data-display/Table';
-import { StatusIndicators } from '../indicators/StatusIndicators';
+import { Card } from "../layout/Card";
+import { Button } from "../forms/Button";
+import { Input } from "../forms/Input";
+import { Modal } from "../layout/Modal";
+import { UniversalTable } from "../data-display/Table";
+import { StatusIndicators } from "../indicators/StatusIndicators";
 
 interface CommissionConfig {
   id: string;
@@ -33,12 +33,12 @@ interface CommissionConfig {
   reseller_type?: string;
   reseller_tier?: string;
   territory?: string;
-  commission_structure: 'flat_rate' | 'percentage' | 'tiered' | 'performance_based' | 'hybrid';
+  commission_structure: "flat_rate" | "percentage" | "tiered" | "performance_based" | "hybrid";
   rate_config: any;
   effective_from: string;
   effective_until?: string;
-  calculate_on: 'revenue' | 'signup' | 'both';
-  payment_frequency: 'monthly' | 'quarterly' | 'annual';
+  calculate_on: "revenue" | "signup" | "both";
+  payment_frequency: "monthly" | "quarterly" | "annual";
   minimum_payout: number;
   settings: any;
   created_at: string;
@@ -51,7 +51,7 @@ interface CommissionConfigManagerProps {
 }
 
 export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = ({
-  apiEndpoint = '/api/v1/commission-config',
+  apiEndpoint = "/api/v1/commission-config",
   onConfigChange,
 }) => {
   const [configs, setConfigs] = useState<CommissionConfig[]>([]);
@@ -71,7 +71,7 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
       const data = await response.json();
       setConfigs(data);
     } catch (error) {
-      console.error('Failed to load commission configs:', error);
+      console.error("Failed to load commission configs:", error);
     } finally {
       setLoading(false);
     }
@@ -80,15 +80,15 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
   const handleCreate = () => {
     setEditingConfig(null);
     setFormData({
-      name: '',
-      description: '',
+      name: "",
+      description: "",
       is_active: true,
       is_default: false,
-      commission_structure: 'percentage',
-      rate_config: { percentage: '10.0' },
-      effective_from: new Date().toISOString().split('T')[0],
-      calculate_on: 'revenue',
-      payment_frequency: 'monthly',
+      commission_structure: "percentage",
+      rate_config: { percentage: "10.0" },
+      effective_from: new Date().toISOString().split("T")[0],
+      calculate_on: "revenue",
+      payment_frequency: "monthly",
       minimum_payout: 50.0,
       settings: {},
     });
@@ -99,20 +99,20 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
     setEditingConfig(config);
     setFormData({
       ...config,
-      effective_from: config.effective_from.split('T')[0],
-      effective_until: config.effective_until?.split('T')[0] || '',
+      effective_from: config.effective_from.split("T")[0],
+      effective_until: config.effective_until?.split("T")[0] || "",
     });
     setShowModal(true);
   };
 
   const handleSave = async () => {
     try {
-      const method = editingConfig ? 'PUT' : 'POST';
+      const method = editingConfig ? "PUT" : "POST";
       const url = editingConfig ? `${apiEndpoint}/${editingConfig.id}` : apiEndpoint;
 
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
@@ -123,28 +123,30 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
         loadConfigs();
       }
     } catch (error) {
-      console.error('Failed to save commission config:', error);
+      console.error("Failed to save commission config:", error);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this commission configuration?')) return;
+    if (!confirm("Are you sure you want to delete this commission configuration?")) return;
 
     try {
-      const response = await fetch(`${apiEndpoint}/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${apiEndpoint}/${id}`, {
+        method: "DELETE",
+      });
       if (response.ok) {
         loadConfigs();
       }
     } catch (error) {
-      console.error('Failed to delete commission config:', error);
+      console.error("Failed to delete commission config:", error);
     }
   };
 
   const handleSetDefault = async (id: string) => {
     try {
       const response = await fetch(`${apiEndpoint}/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ is_default: true }),
       });
 
@@ -152,125 +154,125 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
         loadConfigs();
       }
     } catch (error) {
-      console.error('Failed to set default config:', error);
+      console.error("Failed to set default config:", error);
     }
   };
 
   const renderRateConfig = (structure: string, rateConfig: any) => {
     switch (structure) {
-      case 'flat_rate':
+      case "flat_rate":
         return `$${rateConfig.amount || 0}`;
-      case 'percentage':
+      case "percentage":
         return `${rateConfig.percentage || 0}%`;
-      case 'tiered':
+      case "tiered":
         return `${rateConfig.tiers?.length || 0} tiers`;
-      case 'performance_based':
+      case "performance_based":
         return `Base: ${rateConfig.base_rate || 0}%`;
-      case 'hybrid':
-        return 'Custom structure';
+      case "hybrid":
+        return "Custom structure";
       default:
-        return 'Not configured';
+        return "Not configured";
     }
   };
 
   const renderStructureIcon = (structure: string) => {
     const icons = {
-      flat_rate: <DollarSign className='h-4 w-4' />,
-      percentage: <Percent className='h-4 w-4' />,
-      tiered: <TrendingUp className='h-4 w-4' />,
-      performance_based: <TrendingUp className='h-4 w-4' />,
-      hybrid: <Settings className='h-4 w-4' />,
+      flat_rate: <DollarSign className="h-4 w-4" />,
+      percentage: <Percent className="h-4 w-4" />,
+      tiered: <TrendingUp className="h-4 w-4" />,
+      performance_based: <TrendingUp className="h-4 w-4" />,
+      hybrid: <Settings className="h-4 w-4" />,
     };
-    return icons[structure as keyof typeof icons] || <DollarSign className='h-4 w-4' />;
+    return icons[structure as keyof typeof icons] || <DollarSign className="h-4 w-4" />;
   };
 
   const tableColumns = [
     {
-      key: 'name',
-      title: 'Configuration',
+      key: "name",
+      title: "Configuration",
       render: (config: CommissionConfig) => (
-        <div className='flex items-center space-x-2'>
-          {config.is_default && <Star className='h-4 w-4 text-yellow-500 fill-current' />}
+        <div className="flex items-center space-x-2">
+          {config.is_default && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
           <div>
-            <div className='font-medium'>{config.name}</div>
+            <div className="font-medium">{config.name}</div>
             {config.description && (
-              <div className='text-sm text-gray-500'>{config.description}</div>
+              <div className="text-sm text-gray-500">{config.description}</div>
             )}
           </div>
         </div>
       ),
     },
     {
-      key: 'commission_structure',
-      title: 'Structure',
+      key: "commission_structure",
+      title: "Structure",
       render: (config: CommissionConfig) => (
-        <div className='flex items-center space-x-2'>
+        <div className="flex items-center space-x-2">
           {renderStructureIcon(config.commission_structure)}
-          <span className='capitalize'>{config.commission_structure.replace('_', ' ')}</span>
+          <span className="capitalize">{config.commission_structure.replace("_", " ")}</span>
         </div>
       ),
     },
     {
-      key: 'rate_config',
-      title: 'Rate',
+      key: "rate_config",
+      title: "Rate",
       render: (config: CommissionConfig) =>
         renderRateConfig(config.commission_structure, config.rate_config),
     },
     {
-      key: 'filters',
-      title: 'Applies To',
+      key: "filters",
+      title: "Applies To",
       render: (config: CommissionConfig) => (
-        <div className='text-sm'>
-          {config.reseller_type && <div>Type: {config.reseller_type.replace('_', ' ')}</div>}
+        <div className="text-sm">
+          {config.reseller_type && <div>Type: {config.reseller_type.replace("_", " ")}</div>}
           {config.reseller_tier && <div>Tier: {config.reseller_tier}</div>}
           {config.territory && <div>Territory: {config.territory}</div>}
           {!config.reseller_type && !config.reseller_tier && !config.territory && (
-            <span className='text-gray-500'>All partners</span>
+            <span className="text-gray-500">All partners</span>
           )}
         </div>
       ),
     },
     {
-      key: 'payment_frequency',
-      title: 'Frequency',
+      key: "payment_frequency",
+      title: "Frequency",
       render: (config: CommissionConfig) => (
-        <span className='capitalize'>{config.payment_frequency}</span>
+        <span className="capitalize">{config.payment_frequency}</span>
       ),
     },
     {
-      key: 'is_active',
-      title: 'Status',
+      key: "is_active",
+      title: "Status",
       render: (config: CommissionConfig) => (
         <StatusIndicators
-          status={config.is_active ? 'active' : 'inactive'}
-          size='sm'
+          status={config.is_active ? "active" : "inactive"}
+          size="sm"
           showLabel={true}
         />
       ),
     },
     {
-      key: 'actions',
-      title: 'Actions',
+      key: "actions",
+      title: "Actions",
       render: (config: CommissionConfig) => (
-        <div className='flex items-center space-x-1'>
-          <Button variant='ghost' size='sm' onClick={() => handleEdit(config)}>
-            <Edit className='h-4 w-4' />
+        <div className="flex items-center space-x-1">
+          <Button variant="ghost" size="sm" onClick={() => handleEdit(config)}>
+            <Edit className="h-4 w-4" />
           </Button>
           <Button
-            variant='ghost'
-            size='sm'
+            variant="ghost"
+            size="sm"
             onClick={() => handleSetDefault(config.id)}
             disabled={config.is_default}
           >
-            <Star className='h-4 w-4' />
+            <Star className="h-4 w-4" />
           </Button>
           <Button
-            variant='ghost'
-            size='sm'
+            variant="ghost"
+            size="sm"
             onClick={() => handleDelete(config.id)}
             disabled={config.is_default}
           >
-            <Trash2 className='h-4 w-4' />
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       ),
@@ -279,16 +281,16 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
 
   return (
     <>
-      <Card className='p-6'>
-        <div className='flex justify-between items-center mb-6'>
+      <Card className="p-6">
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className='text-lg font-semibold'>Commission Configuration</h2>
-            <p className='text-sm text-gray-500'>
+            <h2 className="text-lg font-semibold">Commission Configuration</h2>
+            <p className="text-sm text-gray-500">
               Manage flexible commission structures for different partner types
             </p>
           </div>
           <Button onClick={handleCreate}>
-            <Plus className='h-4 w-4 mr-2' />
+            <Plus className="h-4 w-4 mr-2" />
             New Configuration
           </Button>
         </div>
@@ -297,7 +299,7 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
           columns={tableColumns}
           data={configs}
           loading={loading}
-          emptyMessage='No commission configurations found'
+          emptyMessage="No commission configurations found"
         />
       </Card>
 
@@ -305,119 +307,119 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title={editingConfig ? 'Edit Commission Configuration' : 'New Commission Configuration'}
-        size='lg'
+        title={editingConfig ? "Edit Commission Configuration" : "New Commission Configuration"}
+        size="lg"
       >
-        <div className='space-y-6'>
+        <div className="space-y-6">
           {/* Basic Info */}
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-1'>Name *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
               <Input
-                value={formData.name || ''}
+                value={formData.name || ""}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder='e.g., Standard Partner Commission'
+                placeholder="e.g., Standard Partner Commission"
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-1'>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Commission Structure *
               </label>
               <select
-                value={formData.commission_structure || 'percentage'}
+                value={formData.commission_structure || "percentage"}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
                     commission_structure: e.target.value as any,
-                    rate_config: e.target.value === 'percentage' ? { percentage: '10.0' } : {},
+                    rate_config: e.target.value === "percentage" ? { percentage: "10.0" } : {},
                   })
                 }
-                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value='flat_rate'>Flat Rate</option>
-                <option value='percentage'>Percentage</option>
-                <option value='tiered'>Tiered</option>
-                <option value='performance_based'>Performance Based</option>
-                <option value='hybrid'>Hybrid</option>
+                <option value="flat_rate">Flat Rate</option>
+                <option value="percentage">Percentage</option>
+                <option value="tiered">Tiered</option>
+                <option value="performance_based">Performance Based</option>
+                <option value="hybrid">Hybrid</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
             <textarea
-              value={formData.description || ''}
+              value={formData.description || ""}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               rows={3}
-              placeholder='Description of this commission structure...'
+              placeholder="Description of this commission structure..."
             />
           </div>
 
           {/* Rate Configuration */}
-          <div className='border rounded-lg p-4'>
-            <h3 className='font-medium mb-3'>Rate Configuration</h3>
+          <div className="border rounded-lg p-4">
+            <h3 className="font-medium mb-3">Rate Configuration</h3>
 
-            {formData.commission_structure === 'percentage' && (
+            {formData.commission_structure === "percentage" && (
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Commission Percentage *
                 </label>
-                <div className='relative'>
+                <div className="relative">
                   <Input
-                    type='number'
-                    step='0.1'
-                    min='0'
-                    max='100'
-                    value={formData.rate_config?.percentage || ''}
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    value={formData.rate_config?.percentage || ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
                         rate_config: { percentage: e.target.value },
                       })
                     }
-                    placeholder='10.5'
+                    placeholder="10.5"
                   />
-                  <div className='absolute inset-y-0 right-0 pr-3 flex items-center'>
-                    <span className='text-gray-500'>%</span>
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <span className="text-gray-500">%</span>
                   </div>
                 </div>
               </div>
             )}
 
-            {formData.commission_structure === 'flat_rate' && (
+            {formData.commission_structure === "flat_rate" && (
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-1'>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Fixed Amount *
                 </label>
-                <div className='relative'>
-                  <div className='absolute inset-y-0 left-0 pl-3 flex items-center'>
-                    <span className='text-gray-500'>$</span>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                    <span className="text-gray-500">$</span>
                   </div>
                   <Input
-                    type='number'
-                    step='0.01'
-                    min='0'
-                    value={formData.rate_config?.amount || ''}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.rate_config?.amount || ""}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
                         rate_config: { amount: e.target.value },
                       })
                     }
-                    className='pl-8'
-                    placeholder='100.00'
+                    className="pl-8"
+                    placeholder="100.00"
                   />
                 </div>
               </div>
             )}
 
-            {formData.commission_structure === 'tiered' && (
+            {formData.commission_structure === "tiered" && (
               <div>
-                <p className='text-sm text-gray-600 mb-2'>
+                <p className="text-sm text-gray-600 mb-2">
                   Tiered structure will be configured through advanced settings
                 </p>
-                <Button variant='outline' size='sm'>
+                <Button variant="outline" size="sm">
                   Configure Tiers
                 </Button>
               </div>
@@ -425,156 +427,179 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
           </div>
 
           {/* Filters */}
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-1'>Reseller Type</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Reseller Type</label>
               <select
-                value={formData.reseller_type || ''}
+                value={formData.reseller_type || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, reseller_type: e.target.value || undefined })
+                  setFormData({
+                    ...formData,
+                    reseller_type: e.target.value || undefined,
+                  })
                 }
-                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value=''>All Types</option>
-                <option value='authorized_dealer'>Authorized Dealer</option>
-                <option value='value_added_reseller'>Value Added Reseller</option>
-                <option value='system_integrator'>System Integrator</option>
-                <option value='distributor'>Distributor</option>
-                <option value='referral_partner'>Referral Partner</option>
+                <option value="">All Types</option>
+                <option value="authorized_dealer">Authorized Dealer</option>
+                <option value="value_added_reseller">Value Added Reseller</option>
+                <option value="system_integrator">System Integrator</option>
+                <option value="distributor">Distributor</option>
+                <option value="referral_partner">Referral Partner</option>
               </select>
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-1'>Reseller Tier</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Reseller Tier</label>
               <select
-                value={formData.reseller_tier || ''}
+                value={formData.reseller_tier || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, reseller_tier: e.target.value || undefined })
+                  setFormData({
+                    ...formData,
+                    reseller_tier: e.target.value || undefined,
+                  })
                 }
-                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value=''>All Tiers</option>
-                <option value='bronze'>Bronze</option>
-                <option value='silver'>Silver</option>
-                <option value='gold'>Gold</option>
-                <option value='platinum'>Platinum</option>
+                <option value="">All Tiers</option>
+                <option value="bronze">Bronze</option>
+                <option value="silver">Silver</option>
+                <option value="gold">Gold</option>
+                <option value="platinum">Platinum</option>
               </select>
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-1'>Territory</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Territory</label>
               <Input
-                value={formData.territory || ''}
+                value={formData.territory || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, territory: e.target.value || undefined })
+                  setFormData({
+                    ...formData,
+                    territory: e.target.value || undefined,
+                  })
                 }
-                placeholder='e.g., North America'
+                placeholder="e.g., North America"
               />
             </div>
           </div>
 
           {/* Settings */}
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-1'>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Payment Frequency
               </label>
               <select
-                value={formData.payment_frequency || 'monthly'}
+                value={formData.payment_frequency || "monthly"}
                 onChange={(e) =>
-                  setFormData({ ...formData, payment_frequency: e.target.value as any })
+                  setFormData({
+                    ...formData,
+                    payment_frequency: e.target.value as any,
+                  })
                 }
-                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value='monthly'>Monthly</option>
-                <option value='quarterly'>Quarterly</option>
-                <option value='annual'>Annual</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="annual">Annual</option>
               </select>
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-1'>Minimum Payout</label>
-              <div className='relative'>
-                <div className='absolute inset-y-0 left-0 pl-3 flex items-center'>
-                  <span className='text-gray-500'>$</span>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Payout</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                  <span className="text-gray-500">$</span>
                 </div>
                 <Input
-                  type='number'
-                  step='0.01'
-                  min='0'
+                  type="number"
+                  step="0.01"
+                  min="0"
                   value={formData.minimum_payout || 50}
                   onChange={(e) =>
-                    setFormData({ ...formData, minimum_payout: parseFloat(e.target.value) })
+                    setFormData({
+                      ...formData,
+                      minimum_payout: parseFloat(e.target.value),
+                    })
                   }
-                  className='pl-8'
+                  className="pl-8"
                 />
               </div>
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-1'>Calculate On</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Calculate On</label>
               <select
-                value={formData.calculate_on || 'revenue'}
-                onChange={(e) => setFormData({ ...formData, calculate_on: e.target.value as any })}
-                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'
+                value={formData.calculate_on || "revenue"}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    calculate_on: e.target.value as any,
+                  })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value='revenue'>Revenue</option>
-                <option value='signup'>Signup</option>
-                <option value='both'>Both</option>
+                <option value="revenue">Revenue</option>
+                <option value="signup">Signup</option>
+                <option value="both">Both</option>
               </select>
             </div>
           </div>
 
           {/* Effective Period */}
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-1'>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Effective From *
               </label>
               <Input
-                type='date'
-                value={formData.effective_from || ''}
+                type="date"
+                value={formData.effective_from || ""}
                 onChange={(e) => setFormData({ ...formData, effective_from: e.target.value })}
               />
             </div>
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-1'>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Effective Until
               </label>
               <Input
-                type='date'
-                value={formData.effective_until || ''}
+                type="date"
+                value={formData.effective_until || ""}
                 onChange={(e) =>
-                  setFormData({ ...formData, effective_until: e.target.value || undefined })
+                  setFormData({
+                    ...formData,
+                    effective_until: e.target.value || undefined,
+                  })
                 }
               />
             </div>
           </div>
 
           {/* Status */}
-          <div className='flex items-center space-x-6'>
-            <label className='flex items-center'>
+          <div className="flex items-center space-x-6">
+            <label className="flex items-center">
               <input
-                type='checkbox'
+                type="checkbox"
                 checked={formData.is_active || false}
                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                className='rounded border-gray-300 text-blue-600 focus:ring-blue-500'
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
-              <span className='ml-2 text-sm'>Active</span>
+              <span className="ml-2 text-sm">Active</span>
             </label>
-            <label className='flex items-center'>
+            <label className="flex items-center">
               <input
-                type='checkbox'
+                type="checkbox"
                 checked={formData.is_default || false}
                 onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-                className='rounded border-gray-300 text-blue-600 focus:ring-blue-500'
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
-              <span className='ml-2 text-sm'>Set as Default</span>
+              <span className="ml-2 text-sm">Set as Default</span>
             </label>
           </div>
         </div>
 
-        <div className='flex justify-end space-x-2 pt-6'>
-          <Button variant='outline' onClick={() => setShowModal(false)}>
+        <div className="flex justify-end space-x-2 pt-6">
+          <Button variant="outline" onClick={() => setShowModal(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>{editingConfig ? 'Update' : 'Create'} Configuration</Button>
+          <Button onClick={handleSave}>{editingConfig ? "Update" : "Create"} Configuration</Button>
         </div>
       </Modal>
     </>

@@ -21,14 +21,14 @@ Production-ready table component with advanced features for enterprise applicati
 The component is already available in your UI components:
 
 ```tsx
-import { EnhancedDataTable } from '@/components/ui/EnhancedDataTable';
+import { EnhancedDataTable } from "@/components/ui/EnhancedDataTable";
 ```
 
 ## Basic Usage
 
 ```tsx
-import { EnhancedDataTable } from '@/components/ui/EnhancedDataTable';
-import { ColumnDef } from '@tanstack/react-table';
+import { EnhancedDataTable } from "@/components/ui/EnhancedDataTable";
+import { ColumnDef } from "@tanstack/react-table";
 
 interface Invoice {
   id: string;
@@ -40,21 +40,21 @@ interface Invoice {
 
 const columns: ColumnDef<Invoice>[] = [
   {
-    accessorKey: 'invoice_number',
-    header: 'Invoice #',
+    accessorKey: "invoice_number",
+    header: "Invoice #",
   },
   {
-    accessorKey: 'customer',
-    header: 'Customer',
+    accessorKey: "customer",
+    header: "Customer",
   },
   {
-    accessorKey: 'amount',
-    header: 'Amount',
-    cell: ({ row }) => `$${row.getValue('amount')}`,
+    accessorKey: "amount",
+    header: "Amount",
+    cell: ({ row }) => `$${row.getValue("amount")}`,
   },
   {
-    accessorKey: 'status',
-    header: 'Status',
+    accessorKey: "status",
+    header: "Status",
   },
 ];
 
@@ -77,41 +77,36 @@ export function InvoiceList({ invoices }: { invoices: Invoice[] }) {
 Add bulk operations for selected rows:
 
 ```tsx
-import { Send, X, Download } from 'lucide-react';
+import { Send, X, Download } from "lucide-react";
 
 const bulkActions = [
   {
-    label: 'Send Invoices',
+    label: "Send Invoices",
     icon: Send,
     action: async (invoices) => {
-      await api.sendInvoices(invoices.map(i => i.id));
+      await api.sendInvoices(invoices.map((i) => i.id));
     },
-    disabled: (invoices) => invoices.some(i => i.status === 'void'),
+    disabled: (invoices) => invoices.some((i) => i.status === "void"),
   },
   {
-    label: 'Void Invoices',
+    label: "Void Invoices",
     icon: X,
-    variant: 'destructive' as const,
+    variant: "destructive" as const,
     action: async (invoices) => {
-      await api.voidInvoices(invoices.map(i => i.id));
+      await api.voidInvoices(invoices.map((i) => i.id));
     },
-    confirmMessage: 'Are you sure you want to void these invoices?',
+    confirmMessage: "Are you sure you want to void these invoices?",
   },
   {
-    label: 'Download PDFs',
+    label: "Download PDFs",
     icon: Download,
     action: async (invoices) => {
-      await api.downloadInvoicePDFs(invoices.map(i => i.id));
+      await api.downloadInvoicePDFs(invoices.map((i) => i.id));
     },
   },
 ];
 
-<EnhancedDataTable
-  data={invoices}
-  columns={columns}
-  selectable
-  bulkActions={bulkActions}
-/>
+<EnhancedDataTable data={invoices} columns={columns} selectable bulkActions={bulkActions} />;
 ```
 
 ### 2. Advanced Filtering
@@ -121,33 +116,28 @@ Add filter bar with different field types:
 ```tsx
 const filters = [
   {
-    column: 'status',
-    label: 'Status',
-    type: 'select' as const,
+    column: "status",
+    label: "Status",
+    type: "select" as const,
     options: [
-      { label: 'Draft', value: 'draft' },
-      { label: 'Open', value: 'open' },
-      { label: 'Paid', value: 'paid' },
+      { label: "Draft", value: "draft" },
+      { label: "Open", value: "open" },
+      { label: "Paid", value: "paid" },
     ],
   },
   {
-    column: 'amount',
-    label: 'Amount',
-    type: 'number' as const,
+    column: "amount",
+    label: "Amount",
+    type: "number" as const,
   },
   {
-    column: 'created_at',
-    label: 'Created Date',
-    type: 'date' as const,
+    column: "created_at",
+    label: "Created Date",
+    type: "date" as const,
   },
 ];
 
-<EnhancedDataTable
-  data={invoices}
-  columns={columns}
-  filterable
-  filters={filters}
-/>
+<EnhancedDataTable data={invoices} columns={columns} filterable filters={filters} />;
 ```
 
 ### 3. Export Functionality
@@ -160,7 +150,7 @@ Enable CSV export with custom columns:
   columns={columns}
   exportable
   exportFilename="invoices"
-  exportColumns={['invoice_number', 'customer', 'amount', 'status']}
+  exportColumns={["invoice_number", "customer", "amount", "status"]}
 />
 ```
 
@@ -175,7 +165,9 @@ Add custom buttons to the toolbar:
   toolbarActions={
     <>
       <Button onClick={handleAddCustomer}>Add Customer</Button>
-      <Button variant="outline" onClick={handleImport}>Import</Button>
+      <Button variant="outline" onClick={handleImport}>
+        Import
+      </Button>
     </>
   }
 />
@@ -200,64 +192,62 @@ Handle row clicks for navigation:
 Here's a full-featured invoice list:
 
 ```tsx
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { EnhancedDataTable, BulkAction } from '@/components/ui/EnhancedDataTable';
-import { createSortableHeader } from '@/components/ui/data-table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Send, X, Download } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { EnhancedDataTable, BulkAction } from "@/components/ui/EnhancedDataTable";
+import { createSortableHeader } from "@/components/ui/data-table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Send, X, Download } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Invoice {
   id: string;
   invoice_number: string;
   customer_name: string;
   amount: number;
-  status: 'draft' | 'open' | 'paid' | 'void' | 'overdue';
+  status: "draft" | "open" | "paid" | "void" | "overdue";
   due_date: string;
 }
 
 const columns: ColumnDef<Invoice>[] = [
   {
-    accessorKey: 'invoice_number',
-    header: createSortableHeader('Invoice #'),
-    cell: ({ row }) => (
-      <div className="font-medium">{row.getValue('invoice_number')}</div>
-    ),
+    accessorKey: "invoice_number",
+    header: createSortableHeader("Invoice #"),
+    cell: ({ row }) => <div className="font-medium">{row.getValue("invoice_number")}</div>,
   },
   {
-    accessorKey: 'customer_name',
-    header: createSortableHeader('Customer'),
+    accessorKey: "customer_name",
+    header: createSortableHeader("Customer"),
   },
   {
-    accessorKey: 'amount',
-    header: createSortableHeader('Amount'),
+    accessorKey: "amount",
+    header: createSortableHeader("Amount"),
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('amount'));
+      const amount = parseFloat(row.getValue("amount"));
       return <div className="font-medium">${amount.toFixed(2)}</div>;
     },
   },
   {
-    accessorKey: 'status',
-    header: 'Status',
+    accessorKey: "status",
+    header: "Status",
     cell: ({ row }) => {
-      const status = row.getValue('status') as string;
+      const status = row.getValue("status") as string;
       const colors = {
-        draft: 'bg-gray-500',
-        open: 'bg-blue-500',
-        paid: 'bg-green-500',
-        void: 'bg-red-500',
-        overdue: 'bg-orange-500',
+        draft: "bg-gray-500",
+        open: "bg-blue-500",
+        paid: "bg-green-500",
+        void: "bg-red-500",
+        overdue: "bg-orange-500",
       };
       return <Badge className={colors[status]}>{status}</Badge>;
     },
   },
   {
-    accessorKey: 'due_date',
-    header: createSortableHeader('Due Date'),
-    cell: ({ row }) => new Date(row.getValue('due_date')).toLocaleDateString(),
+    accessorKey: "due_date",
+    header: createSortableHeader("Due Date"),
+    cell: ({ row }) => new Date(row.getValue("due_date")).toLocaleDateString(),
   },
 ];
 
@@ -268,28 +258,28 @@ export function InvoiceListPage() {
 
   const bulkActions: BulkAction<Invoice>[] = [
     {
-      label: 'Send Invoices',
+      label: "Send Invoices",
       icon: Send,
       action: async (selected) => {
-        await sendInvoices(selected.map(i => i.id));
+        await sendInvoices(selected.map((i) => i.id));
         // Refresh data
       },
-      disabled: (selected) => selected.some(i => i.status === 'void'),
+      disabled: (selected) => selected.some((i) => i.status === "void"),
     },
     {
-      label: 'Void Invoices',
+      label: "Void Invoices",
       icon: X,
-      variant: 'destructive',
+      variant: "destructive",
       action: async (selected) => {
-        await voidInvoices(selected.map(i => i.id));
+        await voidInvoices(selected.map((i) => i.id));
       },
-      confirmMessage: 'Are you sure you want to void these invoices?',
+      confirmMessage: "Are you sure you want to void these invoices?",
     },
     {
-      label: 'Download PDFs',
+      label: "Download PDFs",
       icon: Download,
       action: async (selected) => {
-        await downloadPDFs(selected.map(i => i.id));
+        await downloadPDFs(selected.map((i) => i.id));
       },
     },
   ];
@@ -298,9 +288,7 @@ export function InvoiceListPage() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Invoices</h1>
-        <Button onClick={() => router.push('/invoices/new')}>
-          Create Invoice
-        </Button>
+        <Button onClick={() => router.push("/invoices/new")}>Create Invoice</Button>
       </div>
 
       <EnhancedDataTable
@@ -313,18 +301,18 @@ export function InvoiceListPage() {
         bulkActions={bulkActions}
         exportable
         exportFilename="invoices"
-        exportColumns={['invoice_number', 'customer_name', 'amount', 'status', 'due_date']}
+        exportColumns={["invoice_number", "customer_name", "amount", "status", "due_date"]}
         filterable
         filters={[
           {
-            column: 'status',
-            label: 'Status',
-            type: 'select',
+            column: "status",
+            label: "Status",
+            type: "select",
             options: [
-              { label: 'Draft', value: 'draft' },
-              { label: 'Open', value: 'open' },
-              { label: 'Paid', value: 'paid' },
-              { label: 'Overdue', value: 'overdue' },
+              { label: "Draft", value: "draft" },
+              { label: "Open", value: "open" },
+              { label: "Paid", value: "paid" },
+              { label: "Overdue", value: "overdue" },
             ],
           },
         ]}
@@ -339,29 +327,29 @@ export function InvoiceListPage() {
 
 ## Props Reference
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `data` | `TData[]` | Required | Table data |
-| `columns` | `ColumnDef<TData, TValue>[]` | Required | Column definitions |
-| `searchable` | `boolean` | `true` | Enable search |
-| `searchPlaceholder` | `string` | `"Search..."` | Search input placeholder |
-| `searchColumn` | `string` | `undefined` | Column to search on |
-| `paginated` | `boolean` | `true` | Enable pagination |
-| `pageSizeOptions` | `number[]` | `[10, 20, 30, 50, 100]` | Page size options |
-| `defaultPageSize` | `number` | `10` | Default page size |
-| `selectable` | `boolean` | `false` | Enable row selection |
-| `bulkActions` | `BulkAction<TData>[]` | `[]` | Bulk action definitions |
-| `filterable` | `boolean` | `false` | Enable filter bar |
-| `filters` | `FilterConfig[]` | `[]` | Filter definitions |
-| `exportable` | `boolean` | `false` | Enable CSV export |
-| `exportFilename` | `string` | `"data"` | Export filename |
-| `exportColumns` | `(keyof TData)[]` | All columns | Columns to export |
-| `columnVisibility` | `boolean` | `true` | Enable column toggle |
-| `emptyMessage` | `string` | `"No results."` | Empty state message |
-| `className` | `string` | `undefined` | Additional CSS classes |
-| `isLoading` | `boolean` | `false` | Loading state |
-| `onRowClick` | `(row: TData) => void` | `undefined` | Row click handler |
-| `toolbarActions` | `React.ReactNode` | `undefined` | Custom toolbar buttons |
+| Prop                | Type                         | Default                 | Description              |
+| ------------------- | ---------------------------- | ----------------------- | ------------------------ |
+| `data`              | `TData[]`                    | Required                | Table data               |
+| `columns`           | `ColumnDef<TData, TValue>[]` | Required                | Column definitions       |
+| `searchable`        | `boolean`                    | `true`                  | Enable search            |
+| `searchPlaceholder` | `string`                     | `"Search..."`           | Search input placeholder |
+| `searchColumn`      | `string`                     | `undefined`             | Column to search on      |
+| `paginated`         | `boolean`                    | `true`                  | Enable pagination        |
+| `pageSizeOptions`   | `number[]`                   | `[10, 20, 30, 50, 100]` | Page size options        |
+| `defaultPageSize`   | `number`                     | `10`                    | Default page size        |
+| `selectable`        | `boolean`                    | `false`                 | Enable row selection     |
+| `bulkActions`       | `BulkAction<TData>[]`        | `[]`                    | Bulk action definitions  |
+| `filterable`        | `boolean`                    | `false`                 | Enable filter bar        |
+| `filters`           | `FilterConfig[]`             | `[]`                    | Filter definitions       |
+| `exportable`        | `boolean`                    | `false`                 | Enable CSV export        |
+| `exportFilename`    | `string`                     | `"data"`                | Export filename          |
+| `exportColumns`     | `(keyof TData)[]`            | All columns             | Columns to export        |
+| `columnVisibility`  | `boolean`                    | `true`                  | Enable column toggle     |
+| `emptyMessage`      | `string`                     | `"No results."`         | Empty state message      |
+| `className`         | `string`                     | `undefined`             | Additional CSS classes   |
+| `isLoading`         | `boolean`                    | `false`                 | Loading state            |
+| `onRowClick`        | `(row: TData) => void`       | `undefined`             | Row click handler        |
+| `toolbarActions`    | `React.ReactNode`            | `undefined`             | Custom toolbar buttons   |
 
 ## BulkAction Type
 
@@ -370,7 +358,7 @@ interface BulkAction<TData> {
   label: string;
   icon?: React.ComponentType<{ className?: string }>;
   action: (selectedRows: TData[]) => void | Promise<void>;
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   disabled?: (selectedRows: TData[]) => boolean;
   confirmMessage?: string;
 }
@@ -382,7 +370,7 @@ interface BulkAction<TData> {
 interface FilterConfig {
   column: string;
   label: string;
-  type: 'text' | 'select' | 'date' | 'number';
+  type: "text" | "select" | "date" | "number";
   options?: { label: string; value: string }[];
 }
 ```
@@ -392,17 +380,13 @@ interface FilterConfig {
 If you're using the basic `DataTable`, migration is simple:
 
 **Before:**
+
 ```tsx
-<DataTable
-  data={invoices}
-  columns={columns}
-  searchable
-  searchColumn="invoice_number"
-  paginated
-/>
+<DataTable data={invoices} columns={columns} searchable searchColumn="invoice_number" paginated />
 ```
 
 **After:**
+
 ```tsx
 <EnhancedDataTable
   data={invoices}
@@ -443,5 +427,6 @@ All existing props are compatible! Just add new features as needed.
 ## Support
 
 For issues or questions, see:
+
 - Example implementations in `EnhancedDataTable.examples.tsx`
 - Component Consolidation Guide in `/docs/COMPONENT_CONSOLIDATION_GUIDE.md`

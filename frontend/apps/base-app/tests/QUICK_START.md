@@ -77,6 +77,7 @@ pnpm exec playwright show-report
 **Problem**: Backend or frontend not running
 
 **Solution**:
+
 ```bash
 # Check if services are running
 curl http://localhost:8000/health  # Backend
@@ -88,6 +89,7 @@ curl http://localhost:3000         # Frontend
 **Problem**: PostgreSQL not running or migrations not applied
 
 **Solution**:
+
 ```bash
 # Start PostgreSQL
 docker compose up -d postgres
@@ -104,6 +106,7 @@ psql postgresql://dotmac_user:change-me-in-production@localhost:5432/dotmac
 **Problem**: Network issues or slow services
 
 **Solution**:
+
 ```bash
 # Increase timeout in playwright.config.ts
 timeout: 60000  // 60 seconds
@@ -117,6 +120,7 @@ pnpm exec playwright test --timeout=60000
 **Problem**: Playwright browsers not installed
 
 **Solution**:
+
 ```bash
 pnpm exec playwright install chromium
 ```

@@ -1,19 +1,26 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { useRBAC } from '@/contexts/RBACContext';
-import { useSystemHealth } from '@/hooks/useOperations';
-import { useServiceInstances, useServiceStatistics } from '@/hooks/useServiceLifecycle';
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { useRBAC } from "@/contexts/RBACContext";
+import { useSystemHealth } from "@/hooks/useOperations";
+import { useServiceInstances, useServiceStatistics } from "@/hooks/useServiceLifecycle";
 // TEMPORARILY DISABLED: import { useRADIUSSessions, useRADIUSSubscribers } from '@/hooks/useRADIUS';
-import { useNetboxHealth, useNetboxSites } from '@/hooks/useNetworkInventory';
-import { getCurrentUser, logout as logoutUser } from '@/lib/auth';
-import { platformConfig } from '@/lib/config';
-import { logger } from '@/lib/logger';
+import { useNetboxHealth, useNetboxSites } from "@/hooks/useNetworkInventory";
+import { getCurrentUser, logout as logoutUser } from "@/lib/auth";
+import { platformConfig } from "@/lib/config";
+import { logger } from "@/lib/logger";
 
 interface User {
   id: string;
@@ -24,7 +31,7 @@ interface User {
 
 function formatDate(value?: string | null): string {
   if (!value) {
-    return '—';
+    return "—";
   }
   try {
     return new Date(value).toLocaleString();
@@ -39,15 +46,16 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [initializing, setInitializing] = useState(true);
 
-  const hasRadiusAccess = platformConfig.features.enableRadius && hasPermission('isp.radius.read');
-  const hasNetworkAccess = platformConfig.features.enableNetwork && hasPermission('isp.ipam.read');
-  const hasLifecycleAccess = platformConfig.features.enableAutomation || true; // lifecycle endpoints currently open to authenticated tenants
+  const hasRadiusAccess = platformConfig.features.enableRadius && hasPermission("isp.radius.read");
+  const hasNetworkAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
+  const hasLifecycleAccess =
+    platformConfig.features.enableAutomation && hasPermission("isp.automation.read");
 
   const { data: serviceStats, isLoading: serviceStatsLoading } = useServiceStatistics({
     enabled: hasLifecycleAccess,
   });
   const { data: provisioningServices, isLoading: provisioningLoading } = useServiceInstances({
-    status: 'provisioning',
+    status: "provisioning",
     limit: 5,
     enabled: hasLifecycleAccess,
   });
@@ -80,11 +88,11 @@ export default function DashboardPage() {
         }
         setUser(currentUser);
       } catch (err) {
-        logger.error('Failed to fetch user', err instanceof Error ? err : new Error(String(err)));
+        logger.error("Failed to fetch user", err instanceof Error ? err : new Error(String(err)));
         if (!isMounted) {
           return;
         }
-        router.replace('/login');
+        router.replace("/login");
       } finally {
         if (isMounted) {
           setInitializing(false);
@@ -99,34 +107,37 @@ export default function DashboardPage() {
     };
   }, [router]);
 
-  const numberFormatter = useMemo(() => new Intl.NumberFormat('en-US'), []);
+  const numberFormatter = useMemo(() => new Intl.NumberFormat("en-US"), []);
 
   const totalSubscribers = radiusSubscribers?.length ?? 0;
-  const activeSubscribers = radiusSubscribers?.filter(subscriber => subscriber.enabled).length ?? 0;
+  const activeSubscribers =
+    radiusSubscribers?.filter((subscriber) => subscriber.enabled).length ?? 0;
   const activeSessionsCount = activeSessions?.length ?? 0;
 
   const summaryCards = [
     {
-      title: 'Active Subscribers',
-      value: hasRadiusAccess ? numberFormatter.format(activeSubscribers) : '—',
+      title: "Active Subscribers",
+      value: hasRadiusAccess ? numberFormatter.format(activeSubscribers) : "—",
       subtitle: hasRadiusAccess
         ? `of ${numberFormatter.format(totalSubscribers)} subscribers tracked`
-        : 'Access requires isp.radius.read',
+        : "Access requires isp.radius.read",
     },
     {
-      title: 'Active Services',
-      value: serviceStats ? numberFormatter.format(serviceStats.active_count) : '—',
-      subtitle: serviceStats ? `${numberFormatter.format(serviceStats.provisioning_count)} provisioning` : 'Lifecycle stats unavailable',
+      title: "Active Services",
+      value: serviceStats ? numberFormatter.format(serviceStats.active_count) : "—",
+      subtitle: serviceStats
+        ? `${numberFormatter.format(serviceStats.provisioning_count)} provisioning`
+        : "Lifecycle stats unavailable",
     },
     {
-      title: 'Active Sessions',
-      value: hasRadiusAccess ? numberFormatter.format(activeSessionsCount) : '—',
-      subtitle: hasRadiusAccess ? 'Live PPPoE / RADIUS sessions' : 'RADIUS feature disabled',
+      title: "Active Sessions",
+      value: hasRadiusAccess ? numberFormatter.format(activeSessionsCount) : "—",
+      subtitle: hasRadiusAccess ? "Live PPPoE / RADIUS sessions" : "RADIUS feature disabled",
     },
     {
-      title: 'Network Health',
-      value: netboxHealth ? (netboxHealth.healthy ? 'Healthy' : 'Degraded') : '—',
-      subtitle: netboxHealth?.message ?? 'NetBox connectivity',
+      title: "Network Health",
+      value: netboxHealth ? (netboxHealth.healthy ? "Healthy" : "Degraded") : "—",
+      subtitle: netboxHealth?.message ?? "NetBox connectivity",
     },
   ];
 
@@ -134,7 +145,7 @@ export default function DashboardPage() {
     try {
       await logoutUser();
     } finally {
-      router.push('/login');
+      router.push("/login");
     }
   };
 
@@ -160,7 +171,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3">
               <div className="text-sm text-muted-foreground hidden sm:block">
                 <div className="font-medium text-foreground">{user?.email}</div>
-                <div>{user?.roles?.join(', ') || 'Operator'}</div>
+                <div>{user?.roles?.join(", ") || "Operator"}</div>
               </div>
               <button
                 onClick={handleLogout}
@@ -172,16 +183,28 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Link href="/dashboard/subscribers" className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
+            <Link
+              href="/dashboard/subscribers"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+            >
               Subscribers
             </Link>
-            <Link href="/dashboard/network" className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
+            <Link
+              href="/dashboard/network"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+            >
               Network
             </Link>
-            <Link href="/dashboard/automation" className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
+            <Link
+              href="/dashboard/automation"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+            >
               Automation
             </Link>
-            <Link href="/dashboard/billing-revenue" className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent">
+            <Link
+              href="/dashboard/billing-revenue"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+            >
               Business Ops
             </Link>
           </div>
@@ -190,10 +213,12 @@ export default function DashboardPage() {
 
       <div className="max-w-7xl mx-auto px-6 py-12 space-y-10">
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {summaryCards.map(card => (
+          {summaryCards.map((card) => (
             <Card key={card.title} className="border-border/60 bg-card/60 backdrop-blur">
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{card.title}</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {card.title}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-semibold text-foreground">{card.value}</div>
@@ -235,23 +260,26 @@ export default function DashboardPage() {
                         </TableCell>
                       </TableRow>
                     )}
-                    {radiusSubscribers?.map(subscriber => (
+                    {radiusSubscribers?.map((subscriber) => (
                       <TableRow key={subscriber.id}>
                         <TableCell className="font-medium">{subscriber.username}</TableCell>
                         <TableCell>
-                          <Badge variant={subscriber.enabled ? 'outline' : 'secondary'}>
-                            {subscriber.enabled ? 'Enabled' : 'Disabled'}
+                          <Badge variant={subscriber.enabled ? "outline" : "secondary"}>
+                            {subscriber.enabled ? "Enabled" : "Disabled"}
                           </Badge>
                         </TableCell>
-                        <TableCell>{subscriber.bandwidth_profile_id ?? '—'}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{formatDate(subscriber.created_at)}</TableCell>
+                        <TableCell>{subscriber.bandwidth_profile_id ?? "—"}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatDate(subscriber.created_at)}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Radius access is disabled for your role. Contact an administrator to request <code>isp.radius.read</code>.
+                  Radius access is disabled for your role. Contact an administrator to request{" "}
+                  <code>isp.radius.read</code>.
                 </p>
               )}
             </CardContent>
@@ -260,7 +288,9 @@ export default function DashboardPage() {
           <Card className="border-border/60 bg-card/60 backdrop-blur">
             <CardHeader>
               <CardTitle>Provisioning pipeline</CardTitle>
-              <CardDescription>Live service activation jobs by lifecycle orchestration.</CardDescription>
+              <CardDescription>
+                Live service activation jobs by lifecycle orchestration.
+              </CardDescription>
             </CardHeader>
             <CardContent className="overflow-x-auto">
               {hasLifecycleAccess ? (
@@ -288,16 +318,20 @@ export default function DashboardPage() {
                         </TableCell>
                       </TableRow>
                     )}
-                    {provisioningServices?.map(service => (
+                    {provisioningServices?.map((service) => (
                       <TableRow key={service.id}>
                         <TableCell className="font-medium">{service.service_name}</TableCell>
                         <TableCell className="uppercase text-xs tracking-wide text-muted-foreground">
-                          {service.service_type.replace(/_/g, ' ')}
+                          {service.service_type.replace(/_/g, " ")}
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline">{service.provisioning_status ?? service.status}</Badge>
+                          <Badge variant="outline">
+                            {service.provisioning_status ?? service.status}
+                          </Badge>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{formatDate(service.created_at)}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatDate(service.created_at)}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -315,35 +349,37 @@ export default function DashboardPage() {
           <Card className="border-border/60 bg-card/60 backdrop-blur">
             <CardHeader>
               <CardTitle>Network inventory</CardTitle>
-              <CardDescription>Snapshot of NetBox sites and health for the active tenant.</CardDescription>
+              <CardDescription>
+                Snapshot of NetBox sites and health for the active tenant.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {hasNetworkAccess ? (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <Badge
-                      variant={netboxHealth?.healthy ? 'outline' : 'destructive'}
+                      variant={netboxHealth?.healthy ? "outline" : "destructive"}
                       className="uppercase tracking-wide"
                     >
-                      {netboxHealth?.healthy ? 'Healthy' : 'Degraded'}
+                      {netboxHealth?.healthy ? "Healthy" : "Degraded"}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
-                      {netboxHealth?.message ?? 'Awaiting health signal'}
+                      {netboxHealth?.message ?? "Awaiting health signal"}
                     </span>
                   </div>
 
                   <div className="space-y-2">
                     <p className="text-sm font-medium text-foreground">Sites</p>
                     <ul className="space-y-1 text-sm text-muted-foreground">
-                      {netboxSites?.slice(0, 5).map(site => (
+                      {netboxSites?.slice(0, 5).map((site) => (
                         <li key={site.id} className="flex items-center justify-between">
                           <span className="font-medium text-foreground">{site.name}</span>
-                          <span>{site.physical_address || site.facility || 'No address on file'}</span>
+                          <span>
+                            {site.physical_address || site.facility || "No address on file"}
+                          </span>
                         </li>
                       ))}
-                      {!netboxSites?.length && (
-                        <li>No sites returned from NetBox.</li>
-                      )}
+                      {!netboxSites?.length && <li>No sites returned from NetBox.</li>}
                     </ul>
                     <Link
                       className="text-sm text-primary hover:underline"
@@ -355,7 +391,8 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Network inventory requires <code>isp.ipam.read</code>. Contact your administrator to enable NetBox access.
+                  Network inventory requires <code>isp.ipam.read</code>. Contact your administrator
+                  to enable NetBox access.
                 </p>
               )}
             </CardContent>
@@ -370,22 +407,27 @@ export default function DashboardPage() {
               <div>
                 <p className="text-sm text-muted-foreground">Overall status</p>
                 <div className="mt-2 flex items-center gap-2">
-                  <Badge variant="outline">{systemHealth?.status ?? 'unknown'}</Badge>
+                  <Badge variant="outline">{systemHealth?.status ?? "unknown"}</Badge>
                   <span className="text-sm text-muted-foreground">
                     {systemHealth?.status
-                      ? systemHealth.status === 'healthy'
-                        ? 'All core services responding'
-                        : 'Investigate degraded checks'
-                      : 'No health data available'}
+                      ? systemHealth.status === "healthy"
+                        ? "All core services responding"
+                        : "Investigate degraded checks"
+                      : "No health data available"}
                   </span>
                 </div>
               </div>
               {systemHealth?.checks && (
                 <div className="space-y-2">
-                  {Object.values(systemHealth.checks).map(check => (
-                    <div key={check.name} className="flex items-center justify-between rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm">
+                  {Object.values(systemHealth.checks).map((check) => (
+                    <div
+                      key={check.name}
+                      className="flex items-center justify-between rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm"
+                    >
                       <span className="font-medium text-foreground">{check.name}</span>
-                      <Badge variant={check.status === 'healthy' ? 'outline' : 'destructive'}>{check.status}</Badge>
+                      <Badge variant={check.status === "healthy" ? "outline" : "destructive"}>
+                        {check.status}
+                      </Badge>
                     </div>
                   ))}
                 </div>

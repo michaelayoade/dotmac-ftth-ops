@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { BillingMetricsCard } from './components/BillingMetricsCard';
-import { CustomerMetricsCard } from './components/CustomerMetricsCard';
-import { MonitoringMetricsCard } from './components/MonitoringMetricsCard';
-import { useDashboardOverview } from '@/lib/graphql/hooks';
-import { BarChart3, DollarSign, Users, Activity, RefreshCw } from 'lucide-react';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { BillingMetricsCard } from "./components/BillingMetricsCard";
+import { CustomerMetricsCard } from "./components/CustomerMetricsCard";
+import { MonitoringMetricsCard } from "./components/MonitoringMetricsCard";
+import { useDashboardOverview } from "@/lib/graphql/hooks";
+import { BarChart3, DollarSign, Users, Activity, RefreshCw } from "lucide-react";
 
 export default function AnalyticsPage() {
-  const [period, setPeriod] = useState('30d');
+  const [period, setPeriod] = useState("30d");
   const { data, isLoading, refetch } = useDashboardOverview(period);
 
   return (
@@ -20,42 +20,35 @@ export default function AnalyticsPage() {
       <div className="flex items-center justify-between space-y-2">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Analytics Dashboard</h2>
-          <p className="text-muted-foreground">
-            Real-time metrics powered by GraphQL
-          </p>
+          <p className="text-muted-foreground">Real-time metrics powered by GraphQL</p>
         </div>
         <div className="flex items-center space-x-2">
           {/* Period Selector */}
           <div className="flex items-center space-x-2">
             <Button
-              variant={period === '7d' ? 'default' : 'outline'}
+              variant={period === "7d" ? "default" : "outline"}
               size="sm"
-              onClick={() => setPeriod('7d')}
+              onClick={() => setPeriod("7d")}
             >
               7 Days
             </Button>
             <Button
-              variant={period === '30d' ? 'default' : 'outline'}
+              variant={period === "30d" ? "default" : "outline"}
               size="sm"
-              onClick={() => setPeriod('30d')}
+              onClick={() => setPeriod("30d")}
             >
               30 Days
             </Button>
             <Button
-              variant={period === '90d' ? 'default' : 'outline'}
+              variant={period === "90d" ? "default" : "outline"}
               size="sm"
-              onClick={() => setPeriod('90d')}
+              onClick={() => setPeriod("90d")}
             >
               90 Days
             </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
         </div>
@@ -71,7 +64,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${data.billing?.mrr?.toLocaleString() || '0'}
+                ${data.billing?.mrr?.toLocaleString() || "0"}
               </div>
               <p className="text-xs text-muted-foreground">
                 {data.billing?.activeSubscriptions || 0} subscriptions
@@ -86,7 +79,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {data.customer?.totalCustomers?.toLocaleString() || '0'}
+                {data.customer?.totalCustomers?.toLocaleString() || "0"}
               </div>
               <p className="text-xs text-muted-foreground">
                 {data.customer?.newCustomers || 0} new this period
@@ -101,7 +94,7 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {data.monitoring?.totalRequests?.toLocaleString() || '0'}
+                {data.monitoring?.totalRequests?.toLocaleString() || "0"}
               </div>
               <p className="text-xs text-muted-foreground">
                 {((data.monitoring?.errorRate || 0) * 100).toFixed(2)}% error rate
@@ -116,10 +109,10 @@ export default function AnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {data.monitoring?.avgResponseTimeMs?.toFixed(0) || '0'}ms
+                {data.monitoring?.avgResponseTimeMs?.toFixed(0) || "0"}ms
               </div>
               <p className="text-xs text-muted-foreground">
-                P95: {data.monitoring?.p95ResponseTimeMs?.toFixed(0) || '0'}ms
+                P95: {data.monitoring?.p95ResponseTimeMs?.toFixed(0) || "0"}ms
               </p>
             </CardContent>
           </Card>
@@ -143,7 +136,7 @@ export default function AnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="monitoring" className="space-y-4">
-          <MonitoringMetricsCard period={period === '30d' ? '24h' : '7d'} />
+          <MonitoringMetricsCard period={period === "30d" ? "24h" : "7d"} />
         </TabsContent>
       </Tabs>
     </div>

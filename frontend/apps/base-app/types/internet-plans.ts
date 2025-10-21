@@ -9,57 +9,57 @@
 // ============================================================================
 
 export enum SpeedUnit {
-  KBPS = 'kbps',
-  MBPS = 'mbps',
-  GBPS = 'gbps',
+  KBPS = "kbps",
+  MBPS = "mbps",
+  GBPS = "gbps",
 }
 
 export enum DataUnit {
-  MB = 'MB',
-  GB = 'GB',
-  TB = 'TB',
-  UNLIMITED = 'unlimited',
+  MB = "MB",
+  GB = "GB",
+  TB = "TB",
+  UNLIMITED = "unlimited",
 }
 
 export enum PlanType {
-  RESIDENTIAL = 'residential',
-  BUSINESS = 'business',
-  ENTERPRISE = 'enterprise',
-  PROMOTIONAL = 'promotional',
+  RESIDENTIAL = "residential",
+  BUSINESS = "business",
+  ENTERPRISE = "enterprise",
+  PROMOTIONAL = "promotional",
 }
 
 export enum PlanStatus {
-  DRAFT = 'draft',
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  ARCHIVED = 'archived',
+  DRAFT = "draft",
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  ARCHIVED = "archived",
 }
 
 export enum BillingCycle {
-  DAILY = 'daily',
-  WEEKLY = 'weekly',
-  MONTHLY = 'monthly',
-  QUARTERLY = 'quarterly',
-  ANNUAL = 'annual',
+  DAILY = "daily",
+  WEEKLY = "weekly",
+  MONTHLY = "monthly",
+  QUARTERLY = "quarterly",
+  ANNUAL = "annual",
 }
 
 export enum ThrottlePolicy {
-  NO_THROTTLE = 'no_throttle',
-  THROTTLE = 'throttle',
-  BLOCK = 'block',
-  OVERAGE_CHARGE = 'overage_charge',
+  NO_THROTTLE = "no_throttle",
+  THROTTLE = "throttle",
+  BLOCK = "block",
+  OVERAGE_CHARGE = "overage_charge",
 }
 
 export enum ValidationSeverity {
-  INFO = 'info',
-  WARNING = 'warning',
-  ERROR = 'error',
+  INFO = "info",
+  WARNING = "warning",
+  ERROR = "error",
 }
 
 export enum ValidationStatus {
-  PASSED = 'passed',
-  FAILED = 'failed',
-  WARNING = 'warning',
+  PASSED = "passed",
+  FAILED = "failed",
+  WARNING = "warning",
 }
 
 // ============================================================================
@@ -401,7 +401,7 @@ export interface PlanFormData extends InternetServicePlanCreate {
 }
 
 export interface ValidationSimulationConfig {
-  usageScenario: 'light' | 'moderate' | 'heavy' | 'custom';
+  usageScenario: "light" | "moderate" | "heavy" | "custom";
   downloadGB: number;
   uploadGB: number;
   durationHours: number;

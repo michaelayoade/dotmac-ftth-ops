@@ -1,11 +1,11 @@
-import { Page, APIResponse } from '@playwright/test';
+import { Page, APIResponse } from "@playwright/test";
 
 export class GraphQLTestHelper {
   private page: Page;
   private baseURL: string;
   private authToken?: string;
 
-  constructor(page: Page, baseURL: string = 'http://localhost:8000') {
+  constructor(page: Page, baseURL: string = "http://localhost:8000") {
     this.page = page;
     this.baseURL = baseURL;
   }
@@ -17,8 +17,8 @@ export class GraphQLTestHelper {
     const response = await this.page.request.post(`${this.baseURL}/auth/login`, {
       data: {
         email,
-        password
-      }
+        password,
+      },
     });
 
     if (response.ok()) {
@@ -34,12 +34,12 @@ export class GraphQLTestHelper {
    */
   private getAuthHeaders(): Record<string, string> {
     if (!this.authToken) {
-      throw new Error('Not authenticated. Call authenticate() first.');
+      throw new Error("Not authenticated. Call authenticate() first.");
     }
 
     return {
-      'Authorization': `Bearer ${this.authToken}`,
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${this.authToken}`,
+      "Content-Type": "application/json",
     };
   }
 
@@ -49,15 +49,15 @@ export class GraphQLTestHelper {
   async executeQuery(
     query: string,
     variables?: Record<string, any>,
-    operationName?: string
+    operationName?: string,
   ): Promise<APIResponse> {
     return this.page.request.post(`${this.baseURL}/graphql`, {
       headers: this.getAuthHeaders(),
       data: {
         query,
         variables: variables || {},
-        operationName
-      }
+        operationName,
+      },
     });
   }
 
@@ -67,7 +67,7 @@ export class GraphQLTestHelper {
   async executeMutation(
     mutation: string,
     variables?: Record<string, any>,
-    operationName?: string
+    operationName?: string,
   ): Promise<APIResponse> {
     return this.executeQuery(mutation, variables, operationName);
   }
@@ -75,14 +75,16 @@ export class GraphQLTestHelper {
   /**
    * Execute multiple GraphQL operations in batch
    */
-  async executeBatch(operations: Array<{
-    query: string;
-    variables?: Record<string, any>;
-    operationName?: string;
-  }>): Promise<APIResponse> {
+  async executeBatch(
+    operations: Array<{
+      query: string;
+      variables?: Record<string, any>;
+      operationName?: string;
+    }>,
+  ): Promise<APIResponse> {
     return this.page.request.post(`${this.baseURL}/graphql`, {
       headers: this.getAuthHeaders(),
-      data: operations
+      data: operations,
     });
   }
 
@@ -225,12 +227,15 @@ export class GraphQLTestHelper {
     return this.executeMutation(mutation, { input });
   }
 
-  async updateUserMutation(id: string, input: {
-    fullName?: string;
-    email?: string;
-    roles?: string[];
-    isActive?: boolean;
-  }): Promise<APIResponse> {
+  async updateUserMutation(
+    id: string,
+    input: {
+      fullName?: string;
+      email?: string;
+      roles?: string[];
+      isActive?: boolean;
+    },
+  ): Promise<APIResponse> {
     const mutation = `
       mutation UpdateUser($id: ID!, $input: UpdateUserInput!) {
         updateUser(id: $id, input: $input) {
@@ -452,10 +457,10 @@ export class GraphQLTestHelper {
   async createTestUser(): Promise<any> {
     const input = {
       email: `graphql-test-${Date.now()}@example.com`,
-      fullName: 'GraphQL Test User',
+      fullName: "GraphQL Test User",
       username: `gqluser${Date.now()}`,
-      password: 'Test123!@#',
-      roles: ['user']
+      password: "Test123!@#",
+      roles: ["user"],
     };
 
     const response = await this.createUserMutation(input);
@@ -471,7 +476,10 @@ export class GraphQLTestHelper {
     return data.data.createUser;
   }
 
-  async validateQueryComplexity(query: string, variables?: Record<string, any>): Promise<{
+  async validateQueryComplexity(
+    query: string,
+    variables?: Record<string, any>,
+  ): Promise<{
     valid: boolean;
     complexity?: number;
     errors?: string[];
@@ -480,22 +488,22 @@ export class GraphQLTestHelper {
     const data = await response.json();
 
     if (data.errors) {
-      const complexityError = data.errors.find((error: any) =>
-        error.message.includes('Query depth limit') ||
-        error.message.includes('Query complexity')
+      const complexityError = data.errors.find(
+        (error: any) =>
+          error.message.includes("Query depth limit") || error.message.includes("Query complexity"),
       );
 
       if (complexityError) {
         return {
           valid: false,
-          errors: [complexityError.message]
+          errors: [complexityError.message],
         };
       }
     }
 
     return {
       valid: !data.errors,
-      errors: data.errors?.map((e: any) => e.message)
+      errors: data.errors?.map((e: any) => e.message),
     };
   }
 
@@ -505,7 +513,7 @@ export class GraphQLTestHelper {
   async measureQueryPerformance(
     query: string,
     variables?: Record<string, any>,
-    iterations: number = 10
+    iterations: number = 10,
   ): Promise<{
     averageTime: number;
     minTime: number;
@@ -525,7 +533,7 @@ export class GraphQLTestHelper {
       averageTime: times.reduce((a, b) => a + b, 0) / times.length,
       minTime: Math.min(...times),
       maxTime: Math.max(...times),
-      times
+      times,
     };
   }
 

@@ -3,122 +3,122 @@
  * Testing all functionality, accessibility, security, and performance aspects
  */
 
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { axe, toHaveNoViolations } from 'jest-axe';
-import { Button, type ButtonProps } from '../Button';
-import * as React from 'react';
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { axe, toHaveNoViolations } from "jest-axe";
+import { Button, type ButtonProps } from "../Button";
+import * as React from "react";
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations);
 
 // Mock Lucide React icons
-jest.mock('lucide-react', () => ({
+jest.mock("lucide-react", () => ({
   Loader2: ({ className }: { className?: string }) => (
-    <div data-testid='loader' className={className} />
+    <div data-testid="loader" className={className} />
   ),
   ChevronRight: ({ className }: { className?: string }) => (
-    <div data-testid='chevron-right' className={className} />
+    <div data-testid="chevron-right" className={className} />
   ),
 }));
 
 // Test utilities
 const renderButton = (props: Partial<ButtonProps> = {}) => {
-  return render(<Button data-testid='test-button' {...props} />);
+  return render(<Button data-testid="test-button" {...props} />);
 };
 
-describe('Button Component - Comprehensive Tests', () => {
+describe("Button Component - Comprehensive Tests", () => {
   // BASIC FUNCTIONALITY TESTS
-  describe('Basic Functionality', () => {
-    test('renders with default props', () => {
-      renderButton({ children: 'Test Button' });
-      const button = screen.getByRole('button', { name: /test button/i });
+  describe("Basic Functionality", () => {
+    test("renders with default props", () => {
+      renderButton({ children: "Test Button" });
+      const button = screen.getByRole("button", { name: /test button/i });
       expect(button).toBeInTheDocument();
-      expect(button).toHaveClass('inline-flex', 'items-center', 'justify-center');
+      expect(button).toHaveClass("inline-flex", "items-center", "justify-center");
     });
 
-    test('renders with custom text content', () => {
-      renderButton({ children: 'Custom Button Text' });
-      expect(screen.getByText('Custom Button Text')).toBeInTheDocument();
+    test("renders with custom text content", () => {
+      renderButton({ children: "Custom Button Text" });
+      expect(screen.getByText("Custom Button Text")).toBeInTheDocument();
     });
 
-    test('applies variant classes correctly', () => {
+    test("applies variant classes correctly", () => {
       const { rerender } = renderButton({
-        variant: 'destructive',
-        children: 'Delete',
+        variant: "destructive",
+        children: "Delete",
       });
 
-      let button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-destructive', 'text-destructive-foreground');
+      let button = screen.getByRole("button");
+      expect(button).toHaveClass("bg-destructive", "text-destructive-foreground");
 
       rerender(
-        <Button variant='outline' data-testid='test-button'>
+        <Button variant="outline" data-testid="test-button">
           Cancel
-        </Button>
+        </Button>,
       );
-      button = screen.getByRole('button');
-      expect(button).toHaveClass('border', 'border-input', 'bg-background');
+      button = screen.getByRole("button");
+      expect(button).toHaveClass("border", "border-input", "bg-background");
     });
 
-    test('applies size variants correctly', () => {
+    test("applies size variants correctly", () => {
       const { rerender } = renderButton({
-        size: 'sm',
-        children: 'Small',
+        size: "sm",
+        children: "Small",
       });
 
-      let button = screen.getByRole('button');
-      expect(button).toHaveClass('h-8', 'px-3', 'text-xs');
+      let button = screen.getByRole("button");
+      expect(button).toHaveClass("h-8", "px-3", "text-xs");
 
       rerender(
-        <Button size='lg' data-testid='test-button'>
+        <Button size="lg" data-testid="test-button">
           Large
-        </Button>
+        </Button>,
       );
-      button = screen.getByRole('button');
-      expect(button).toHaveClass('h-10', 'px-8');
+      button = screen.getByRole("button");
+      expect(button).toHaveClass("h-10", "px-8");
     });
   });
 
   // CLICK HANDLING TESTS
-  describe('Click Handling', () => {
-    test('handles click events correctly', async () => {
+  describe("Click Handling", () => {
+    test("handles click events correctly", async () => {
       const handleClick = jest.fn();
       renderButton({
         onClick: handleClick,
-        children: 'Clickable',
+        children: "Clickable",
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       await userEvent.click(button);
 
       expect(handleClick).toHaveBeenCalledTimes(1);
       expect(handleClick).toHaveBeenCalledWith(expect.any(Object));
     });
 
-    test('handles secure click functionality', async () => {
+    test("handles secure click functionality", async () => {
       const handleSecureClick = jest.fn().mockResolvedValue(undefined);
       renderButton({
         onSecureClick: handleSecureClick,
         showAsyncLoading: true,
-        children: 'Secure Action',
+        children: "Secure Action",
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       await userEvent.click(button);
 
       expect(handleSecureClick).toHaveBeenCalledTimes(1);
       expect(handleSecureClick).toHaveBeenCalledWith(expect.any(Object));
     });
 
-    test('prevents multiple clicks during async operation', async () => {
+    test("prevents multiple clicks during async operation", async () => {
       const handleSecureClick = jest.fn(() => new Promise((resolve) => setTimeout(resolve, 100)));
       renderButton({
         onSecureClick: handleSecureClick,
         showAsyncLoading: true,
-        children: 'Async Action',
+        children: "Async Action",
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
 
       // Click rapidly
       await userEvent.click(button);
@@ -131,38 +131,38 @@ describe('Button Component - Comprehensive Tests', () => {
   });
 
   // LOADING STATES TESTS
-  describe('Loading States', () => {
-    test('shows loading spinner when isLoading is true', () => {
+  describe("Loading States", () => {
+    test("shows loading spinner when isLoading is true", () => {
       renderButton({
         isLoading: true,
-        children: 'Loading Button',
+        children: "Loading Button",
       });
 
-      expect(screen.getByTestId('loader')).toBeInTheDocument();
-      expect(screen.getByRole('button')).toBeDisabled();
+      expect(screen.getByTestId("loader")).toBeInTheDocument();
+      expect(screen.getByRole("button")).toBeDisabled();
     });
 
-    test('shows custom loading component when provided', () => {
-      const customLoader = <div data-testid='custom-loader'>Custom Loading...</div>;
+    test("shows custom loading component when provided", () => {
+      const customLoader = <div data-testid="custom-loader">Custom Loading...</div>;
       renderButton({
         isLoading: true,
         loadingComponent: customLoader,
-        children: 'Custom Loading',
+        children: "Custom Loading",
       });
 
-      expect(screen.getByTestId('custom-loader')).toBeInTheDocument();
-      expect(screen.queryByTestId('loader')).not.toBeInTheDocument();
+      expect(screen.getByTestId("custom-loader")).toBeInTheDocument();
+      expect(screen.queryByTestId("loader")).not.toBeInTheDocument();
     });
 
-    test('handles async loading state correctly', async () => {
+    test("handles async loading state correctly", async () => {
       const handleAsyncClick = jest.fn(() => new Promise((resolve) => setTimeout(resolve, 50)));
       renderButton({
         onSecureClick: handleAsyncClick,
         showAsyncLoading: true,
-        children: 'Async Button',
+        children: "Async Button",
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
 
       // Click and immediately check loading state
       fireEvent.click(button);
@@ -180,118 +180,118 @@ describe('Button Component - Comprehensive Tests', () => {
   });
 
   // ACCESSIBILITY TESTS
-  describe('Accessibility', () => {
-    test('has no accessibility violations', async () => {
-      const { container } = renderButton({ children: 'Accessible Button' });
+  describe("Accessibility", () => {
+    test("has no accessibility violations", async () => {
+      const { container } = renderButton({ children: "Accessible Button" });
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
-    test('supports keyboard navigation', async () => {
+    test("supports keyboard navigation", async () => {
       const handleClick = jest.fn();
       renderButton({
         onClick: handleClick,
-        children: 'Keyboard Accessible',
+        children: "Keyboard Accessible",
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       button.focus();
 
       // Test Enter key
-      await userEvent.keyboard('{Enter}');
+      await userEvent.keyboard("{Enter}");
       expect(handleClick).toHaveBeenCalledTimes(1);
 
       // Test Space key
-      await userEvent.keyboard('{Space}');
+      await userEvent.keyboard("{Space}");
       expect(handleClick).toHaveBeenCalledTimes(2);
     });
 
-    test('has proper ARIA attributes when disabled', () => {
+    test("has proper ARIA attributes when disabled", () => {
       renderButton({
         disabled: true,
-        children: 'Disabled Button',
+        children: "Disabled Button",
       });
 
-      const button = screen.getByRole('button');
-      expect(button).toHaveAttribute('disabled');
-      expect(button).toHaveAttribute('aria-disabled', 'true');
+      const button = screen.getByRole("button");
+      expect(button).toHaveAttribute("disabled");
+      expect(button).toHaveAttribute("aria-disabled", "true");
     });
 
-    test('has proper ARIA attributes when loading', () => {
+    test("has proper ARIA attributes when loading", () => {
       renderButton({
         isLoading: true,
-        children: 'Loading Button',
+        children: "Loading Button",
       });
 
-      const button = screen.getByRole('button');
-      expect(button).toHaveAttribute('disabled');
-      expect(button).toHaveAttribute('aria-disabled', 'true');
+      const button = screen.getByRole("button");
+      expect(button).toHaveAttribute("disabled");
+      expect(button).toHaveAttribute("aria-disabled", "true");
     });
   });
 
   // ICON HANDLING TESTS
-  describe('Icon Handling', () => {
-    test('renders left icon correctly', () => {
-      const leftIcon = <div data-testid='left-icon' />;
+  describe("Icon Handling", () => {
+    test("renders left icon correctly", () => {
+      const leftIcon = <div data-testid="left-icon" />;
       renderButton({
         leftIcon,
-        children: 'With Left Icon',
+        children: "With Left Icon",
       });
 
-      expect(screen.getByTestId('left-icon')).toBeInTheDocument();
+      expect(screen.getByTestId("left-icon")).toBeInTheDocument();
     });
 
-    test('renders right icon correctly', () => {
-      const rightIcon = <div data-testid='right-icon' />;
+    test("renders right icon correctly", () => {
+      const rightIcon = <div data-testid="right-icon" />;
       renderButton({
         rightIcon,
-        children: 'With Right Icon',
+        children: "With Right Icon",
       });
 
-      expect(screen.getByTestId('right-icon')).toBeInTheDocument();
+      expect(screen.getByTestId("right-icon")).toBeInTheDocument();
     });
 
-    test('hides icons during loading state', () => {
-      const leftIcon = <div data-testid='left-icon' />;
-      const rightIcon = <div data-testid='right-icon' />;
+    test("hides icons during loading state", () => {
+      const leftIcon = <div data-testid="left-icon" />;
+      const rightIcon = <div data-testid="right-icon" />;
 
       renderButton({
         leftIcon,
         rightIcon,
         isLoading: true,
-        children: 'Loading with Icons',
+        children: "Loading with Icons",
       });
 
-      expect(screen.queryByTestId('left-icon')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('right-icon')).not.toBeInTheDocument();
-      expect(screen.getByTestId('loader')).toBeInTheDocument();
+      expect(screen.queryByTestId("left-icon")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("right-icon")).not.toBeInTheDocument();
+      expect(screen.getByTestId("loader")).toBeInTheDocument();
     });
   });
 
   // SECURITY TESTS
-  describe('Security', () => {
-    test('prevents XSS in children content', () => {
+  describe("Security", () => {
+    test("prevents XSS in children content", () => {
       const maliciousContent = '<script>alert("xss")</script>';
       renderButton({ children: maliciousContent });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       expect(button).toHaveTextContent('<script>alert("xss")</script>');
-      expect(document.querySelector('script')).not.toBeInTheDocument();
+      expect(document.querySelector("script")).not.toBeInTheDocument();
     });
 
-    test('sanitizes className prop', () => {
-      const maliciousClass = 'btn onclick="alert(\'xss\')"';
+    test("sanitizes className prop", () => {
+      const maliciousClass = "btn onclick=\"alert('xss')\"";
       renderButton({
         className: maliciousClass,
-        children: 'Test',
+        children: "Test",
       });
 
-      const button = screen.getByRole('button');
-      expect(button.getAttribute('onclick')).toBeNull();
-      expect(button).toHaveClass('btn');
+      const button = screen.getByRole("button");
+      expect(button.getAttribute("onclick")).toBeNull();
+      expect(button).toHaveClass("btn");
     });
 
-    test('handles form submission prevention', async () => {
+    test("handles form submission prevention", async () => {
       const mockPreventDefault = jest.fn();
       const mockEvent = {
         preventDefault: mockPreventDefault,
@@ -302,17 +302,17 @@ describe('Button Component - Comprehensive Tests', () => {
       renderButton({
         preventFormSubmission: true,
         onClick: (e) => e.preventDefault(),
-        children: 'Form Button',
+        children: "Form Button",
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       fireEvent.click(button);
     });
   });
 
   // PERFORMANCE TESTS
-  describe('Performance', () => {
-    test('renders efficiently with large numbers', () => {
+  describe("Performance", () => {
+    test("renders efficiently with large numbers", () => {
       const startTime = performance.now();
 
       const buttons = Array.from({ length: 100 }, (_, i) => (
@@ -329,10 +329,10 @@ describe('Button Component - Comprehensive Tests', () => {
       expect(endTime - startTime).toBeLessThan(100);
 
       // Verify all buttons are rendered
-      expect(screen.getAllByRole('button')).toHaveLength(100);
+      expect(screen.getAllByRole("button")).toHaveLength(100);
     });
 
-    test('handles rapid state changes without memory leaks', async () => {
+    test("handles rapid state changes without memory leaks", async () => {
       const TestComponent = () => {
         const [loading, setLoading] = React.useState(false);
 
@@ -340,7 +340,7 @@ describe('Button Component - Comprehensive Tests', () => {
           <Button
             isLoading={loading}
             onClick={() => setLoading((prev) => !prev)}
-            data-testid='toggle-button'
+            data-testid="toggle-button"
           >
             Toggle Loading
           </Button>
@@ -348,7 +348,7 @@ describe('Button Component - Comprehensive Tests', () => {
       };
 
       render(<TestComponent />);
-      const button = screen.getByTestId('toggle-button');
+      const button = screen.getByTestId("toggle-button");
 
       // Rapidly toggle loading state
       for (let i = 0; i < 50; i++) {
@@ -361,65 +361,65 @@ describe('Button Component - Comprehensive Tests', () => {
   });
 
   // AS CHILD FUNCTIONALITY TESTS
-  describe('AsChild Functionality', () => {
-    test('renders as Slot when asChild is true', () => {
+  describe("AsChild Functionality", () => {
+    test("renders as Slot when asChild is true", () => {
       renderButton({
         asChild: true,
-        children: <a href='#test'>Link Button</a>,
+        children: <a href="#test">Link Button</a>,
       });
 
-      const link = screen.getByRole('link');
+      const link = screen.getByRole("link");
       expect(link).toBeInTheDocument();
-      expect(link).toHaveAttribute('href', '#test');
+      expect(link).toHaveAttribute("href", "#test");
     });
 
-    test('maintains button styling when asChild is true', () => {
+    test("maintains button styling when asChild is true", () => {
       renderButton({
         asChild: true,
-        variant: 'destructive',
-        size: 'lg',
-        children: <div data-testid='custom-element'>Custom Element</div>,
+        variant: "destructive",
+        size: "lg",
+        children: <div data-testid="custom-element">Custom Element</div>,
       });
 
-      const element = screen.getByTestId('custom-element');
-      expect(element).toHaveClass('bg-destructive', 'h-10', 'px-8');
+      const element = screen.getByTestId("custom-element");
+      expect(element).toHaveClass("bg-destructive", "h-10", "px-8");
     });
   });
 
   // EDGE CASES
-  describe('Edge Cases', () => {
-    test('handles undefined children gracefully', () => {
+  describe("Edge Cases", () => {
+    test("handles undefined children gracefully", () => {
       renderButton({ children: undefined });
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       expect(button).toBeInTheDocument();
       expect(button).toBeEmptyDOMElement();
     });
 
-    test('handles null onClick gracefully', () => {
+    test("handles null onClick gracefully", () => {
       renderButton({
         onClick: undefined,
-        children: 'No Handler',
+        children: "No Handler",
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       expect(() => fireEvent.click(button)).not.toThrow();
     });
 
-    test('handles async click errors gracefully', async () => {
-      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-      const failingHandler = jest.fn().mockRejectedValue(new Error('Async error'));
+    test("handles async click errors gracefully", async () => {
+      const consoleError = jest.spyOn(console, "error").mockImplementation(() => {});
+      const failingHandler = jest.fn().mockRejectedValue(new Error("Async error"));
 
       renderButton({
         onSecureClick: failingHandler,
         showAsyncLoading: true,
-        children: 'Failing Button',
+        children: "Failing Button",
       });
 
-      const button = screen.getByRole('button');
+      const button = screen.getByRole("button");
       await userEvent.click(button);
 
       await waitFor(() => {
-        expect(consoleError).toHaveBeenCalledWith('Secure click handler error:', expect.any(Error));
+        expect(consoleError).toHaveBeenCalledWith("Secure click handler error:", expect.any(Error));
       });
 
       // Button should not remain in loading state after error

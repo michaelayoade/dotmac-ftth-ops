@@ -1,11 +1,11 @@
 export type PortalType =
-  | 'customer'
-  | 'admin'
-  | 'reseller'
-  | 'technician'
-  | 'management-admin'
-  | 'management-reseller'
-  | 'tenant-portal';
+  | "customer"
+  | "admin"
+  | "reseller"
+  | "technician"
+  | "management-admin"
+  | "management-reseller"
+  | "tenant-portal";
 
 export interface FeatureFlags {
   notifications?: boolean;
@@ -29,21 +29,21 @@ export interface NotificationConfig {
   maxNotifications?: number;
   defaultDuration?: number;
   position?:
-    | 'top-right'
-    | 'top-left'
-    | 'bottom-right'
-    | 'bottom-left'
-    | 'top-center'
-    | 'bottom-center';
+    | "top-right"
+    | "top-left"
+    | "bottom-right"
+    | "bottom-left"
+    | "top-center"
+    | "bottom-center";
   enableSound?: boolean;
 }
 
 export interface ThemeConfig {
-  mode?: 'light' | 'dark' | 'auto';
+  mode?: "light" | "dark" | "auto";
   primaryColor?: string;
   accentColor?: string;
   borderRadius?: string;
-  fontSize?: 'small' | 'medium' | 'large';
+  fontSize?: "small" | "medium" | "large";
 }
 
 export interface ProviderConfig {

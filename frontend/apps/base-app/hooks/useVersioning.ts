@@ -9,8 +9,8 @@
  * - Configuration management
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/components/ui/use-toast';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
 import {
   versioningService,
   type APIVersionInfo,
@@ -26,7 +26,7 @@ import {
   type VersionListFilters,
   type VersionUpdate,
   type VersionUsageStats,
-} from '@/lib/services/versioning-service';
+} from "@/lib/services/versioning-service";
 
 // Re-export types for convenience
 export type {
@@ -42,29 +42,26 @@ export type {
   VersionStatus,
   VersionUpdate,
   VersionUsageStats,
-} from '@/lib/services/versioning-service';
+} from "@/lib/services/versioning-service";
 
 // ============================================
 // Query Keys
 // ============================================
 
 export const versioningKeys = {
-  all: ['versioning'] as const,
-  versions: () => [...versioningKeys.all, 'versions'] as const,
-  version: (filters: VersionListFilters) =>
-    [...versioningKeys.versions(), filters] as const,
+  all: ["versioning"] as const,
+  versions: () => [...versioningKeys.all, "versions"] as const,
+  version: (filters: VersionListFilters) => [...versioningKeys.versions(), filters] as const,
   versionDetail: (version: string) => [...versioningKeys.versions(), version] as const,
   versionUsage: (version: string, days: number) =>
-    [...versioningKeys.versionDetail(version), 'usage', days] as const,
-  versionHealth: (version: string) =>
-    [...versioningKeys.versionDetail(version), 'health'] as const,
-  breakingChanges: () => [...versioningKeys.all, 'breaking-changes'] as const,
+    [...versioningKeys.versionDetail(version), "usage", days] as const,
+  versionHealth: (version: string) => [...versioningKeys.versionDetail(version), "health"] as const,
+  breakingChanges: () => [...versioningKeys.all, "breaking-changes"] as const,
   breakingChange: (filters: BreakingChangeFilters) =>
     [...versioningKeys.breakingChanges(), filters] as const,
-  breakingChangeDetail: (id: string) =>
-    [...versioningKeys.breakingChanges(), id] as const,
-  adoption: (days: number) => [...versioningKeys.all, 'adoption', days] as const,
-  config: () => [...versioningKeys.all, 'config'] as const,
+  breakingChangeDetail: (id: string) => [...versioningKeys.breakingChanges(), id] as const,
+  adoption: (days: number) => [...versioningKeys.all, "adoption", days] as const,
+  config: () => [...versioningKeys.all, "config"] as const,
 };
 
 // ============================================
@@ -187,7 +184,9 @@ export function useUpdateVersion(options?: {
     mutationFn: ({ version, data }) => versioningService.updateVersion(version, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: versioningKeys.versions() });
-      queryClient.invalidateQueries({ queryKey: versioningKeys.versionDetail(data.version) });
+      queryClient.invalidateQueries({
+        queryKey: versioningKeys.versionDetail(data.version),
+      });
 
       // toast.success('Version updated successfully');
 
@@ -215,15 +214,13 @@ export function useDeprecateVersion(options?: {
 }) {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    APIVersionInfo,
-    Error,
-    { version: string; data: VersionDeprecation }
-  >({
+  return useMutation<APIVersionInfo, Error, { version: string; data: VersionDeprecation }>({
     mutationFn: ({ version, data }) => versioningService.deprecateVersion(version, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: versioningKeys.versions() });
-      queryClient.invalidateQueries({ queryKey: versioningKeys.versionDetail(data.version) });
+      queryClient.invalidateQueries({
+        queryKey: versioningKeys.versionDetail(data.version),
+      });
       queryClient.invalidateQueries({ queryKey: versioningKeys.config() });
 
       // toast.success('Version deprecated successfully');
@@ -256,7 +253,9 @@ export function useUndeprecateVersion(options?: {
     mutationFn: (version) => versioningService.undeprecateVersion(version),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: versioningKeys.versions() });
-      queryClient.invalidateQueries({ queryKey: versioningKeys.versionDetail(data.version) });
+      queryClient.invalidateQueries({
+        queryKey: versioningKeys.versionDetail(data.version),
+      });
       queryClient.invalidateQueries({ queryKey: versioningKeys.config() });
 
       // toast.success('Version un-deprecated successfully');
@@ -391,7 +390,9 @@ export function useCreateBreakingChange(options?: {
   return useMutation<BreakingChange, Error, BreakingChangeCreate>({
     mutationFn: (data) => versioningService.createBreakingChange(data),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: versioningKeys.breakingChanges() });
+      queryClient.invalidateQueries({
+        queryKey: versioningKeys.breakingChanges(),
+      });
 
       // toast.success('Breaking change created successfully');
 
@@ -419,15 +420,12 @@ export function useUpdateBreakingChange(options?: {
 }) {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    BreakingChange,
-    Error,
-    { changeId: string; data: BreakingChangeUpdate }
-  >({
-    mutationFn: ({ changeId, data }) =>
-      versioningService.updateBreakingChange(changeId, data),
+  return useMutation<BreakingChange, Error, { changeId: string; data: BreakingChangeUpdate }>({
+    mutationFn: ({ changeId, data }) => versioningService.updateBreakingChange(changeId, data),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: versioningKeys.breakingChanges() });
+      queryClient.invalidateQueries({
+        queryKey: versioningKeys.breakingChanges(),
+      });
       queryClient.invalidateQueries({
         queryKey: versioningKeys.breakingChangeDetail(data.id),
       });
@@ -461,7 +459,9 @@ export function useDeleteBreakingChange(options?: {
   return useMutation<void, Error, string>({
     mutationFn: (changeId) => versioningService.deleteBreakingChange(changeId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: versioningKeys.breakingChanges() });
+      queryClient.invalidateQueries({
+        queryKey: versioningKeys.breakingChanges(),
+      });
 
       // toast.success('Breaking change deleted successfully');
 
@@ -562,7 +562,7 @@ export function useVersioningOperations() {
         await deprecate.mutateAsync({ version, data });
         return true;
       } catch (error) {
-        console.error('Failed to deprecate version:', error);
+        console.error("Failed to deprecate version:", error);
         return false;
       }
     },
@@ -571,7 +571,7 @@ export function useVersioningOperations() {
         await undeprecate.mutateAsync(version);
         return true;
       } catch (error) {
-        console.error('Failed to un-deprecate version:', error);
+        console.error("Failed to un-deprecate version:", error);
         return false;
       }
     },
@@ -580,7 +580,7 @@ export function useVersioningOperations() {
         await setDefault.mutateAsync(version);
         return true;
       } catch (error) {
-        console.error('Failed to set default version:', error);
+        console.error("Failed to set default version:", error);
         return false;
       }
     },
@@ -589,14 +589,11 @@ export function useVersioningOperations() {
         await remove.mutateAsync(version);
         return true;
       } catch (error) {
-        console.error('Failed to remove version:', error);
+        console.error("Failed to remove version:", error);
         return false;
       }
     },
     isLoading:
-      deprecate.isPending ||
-      undeprecate.isPending ||
-      setDefault.isPending ||
-      remove.isPending,
+      deprecate.isPending || undeprecate.isPending || setDefault.isPending || remove.isPending,
   };
 }

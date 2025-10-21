@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 
 interface MetricCard {
   id: string;
@@ -8,18 +8,18 @@ interface MetricCard {
   value: string | number;
   change?: {
     value: number;
-    type: 'increase' | 'decrease' | 'neutral';
+    type: "increase" | "decrease" | "neutral";
     period: string;
   };
   icon?: React.ComponentType<any>;
-  color?: 'blue' | 'green' | 'yellow' | 'red' | 'gray';
+  color?: "blue" | "green" | "yellow" | "red" | "gray";
 }
 
 interface ChartWidget {
   id: string;
   title: string;
   component: React.ComponentType<any>;
-  size: 'small' | 'medium' | 'large' | 'full';
+  size: "small" | "medium" | "large" | "full";
   data?: any;
 }
 
@@ -43,33 +43,33 @@ interface DashboardTemplateProps {
   className?: string;
 }
 
-const getSizeClasses = (size: ChartWidget['size']) => {
+const getSizeClasses = (size: ChartWidget["size"]) => {
   switch (size) {
-    case 'small':
-      return 'col-span-1 row-span-1';
-    case 'medium':
-      return 'col-span-2 row-span-1';
-    case 'large':
-      return 'col-span-2 row-span-2';
-    case 'full':
-      return 'col-span-full row-span-2';
+    case "small":
+      return "col-span-1 row-span-1";
+    case "medium":
+      return "col-span-2 row-span-1";
+    case "large":
+      return "col-span-2 row-span-2";
+    case "full":
+      return "col-span-full row-span-2";
     default:
-      return 'col-span-1 row-span-1';
+      return "col-span-1 row-span-1";
   }
 };
 
-const getColorClasses = (color: MetricCard['color'] = 'blue') => {
+const getColorClasses = (color: MetricCard["color"] = "blue") => {
   switch (color) {
-    case 'green':
-      return 'bg-green-50 text-green-800 border-green-200';
-    case 'yellow':
-      return 'bg-yellow-50 text-yellow-800 border-yellow-200';
-    case 'red':
-      return 'bg-red-50 text-red-800 border-red-200';
-    case 'gray':
-      return 'bg-gray-50 text-gray-800 border-gray-200';
+    case "green":
+      return "bg-green-50 text-green-800 border-green-200";
+    case "yellow":
+      return "bg-yellow-50 text-yellow-800 border-yellow-200";
+    case "red":
+      return "bg-red-50 text-red-800 border-red-200";
+    case "gray":
+      return "bg-gray-50 text-gray-800 border-gray-200";
     default:
-      return 'bg-blue-50 text-blue-800 border-blue-200';
+      return "bg-blue-50 text-blue-800 border-blue-200";
   }
 };
 
@@ -82,29 +82,29 @@ export const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
   customContent,
   refreshData,
   loading = false,
-  className = '',
+  className = "",
 }) => {
   return (
     <div className={`dashboard-template ${className}`}>
-      <div className='dashboard-header bg-white border-b border-gray-200 px-6 py-4'>
-        <div className='flex items-center justify-between'>
+      <div className="dashboard-header bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className='text-2xl font-bold text-gray-900'>{title}</h1>
-            {subtitle && <p className='text-gray-600 mt-1'>{subtitle}</p>}
+            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+            {subtitle && <p className="text-gray-600 mt-1">{subtitle}</p>}
           </div>
 
-          <div className='flex items-center space-x-3'>
+          <div className="flex items-center space-x-3">
             {refreshData && (
               <button
                 onClick={refreshData}
                 disabled={loading}
-                className='
+                className="
                   px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300
                   rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500
                   disabled:opacity-50 disabled:cursor-not-allowed
-                '
+                "
               >
-                {loading ? 'Refreshing...' : 'Refresh'}
+                {loading ? "Refreshing..." : "Refresh"}
               </button>
             )}
 
@@ -113,14 +113,14 @@ export const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
                 key={action.id}
                 onClick={action.onClick}
                 disabled={action.disabled}
-                className='
+                className="
                   flex items-center px-4 py-2 text-sm font-medium text-white
                   bg-blue-600 border border-transparent rounded-md shadow-sm
                   hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500
                   disabled:opacity-50 disabled:cursor-not-allowed
-                '
+                "
               >
-                {action.icon && <action.icon className='w-4 h-4 mr-2' />}
+                {action.icon && <action.icon className="w-4 h-4 mr-2" />}
                 {action.label}
               </button>
             ))}
@@ -128,45 +128,45 @@ export const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
         </div>
       </div>
 
-      <div className='dashboard-content flex-1 overflow-auto bg-gray-50 p-6'>
+      <div className="dashboard-content flex-1 overflow-auto bg-gray-50 p-6">
         {loading ? (
-          <div className='flex items-center justify-center h-64'>
-            <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600'></div>
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
         ) : (
-          <div className='space-y-6'>
+          <div className="space-y-6">
             {/* Metrics Grid */}
             {metrics.length > 0 && (
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {metrics.map((metric) => (
                   <div
                     key={metric.id}
-                    className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'
+                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
                   >
-                    <div className='flex items-center justify-between'>
+                    <div className="flex items-center justify-between">
                       <div>
-                        <p className='text-sm font-medium text-gray-600'>{metric.title}</p>
-                        <p className='text-3xl font-bold text-gray-900 mt-2'>{metric.value}</p>
+                        <p className="text-sm font-medium text-gray-600">{metric.title}</p>
+                        <p className="text-3xl font-bold text-gray-900 mt-2">{metric.value}</p>
 
                         {metric.change && (
-                          <div className='mt-2 flex items-center'>
+                          <div className="mt-2 flex items-center">
                             <span
                               className={`
                                 inline-flex items-center px-2 py-1 text-xs font-medium rounded-full
                                 ${
-                                  metric.change.type === 'increase'
-                                    ? 'bg-green-100 text-green-800'
-                                    : metric.change.type === 'decrease'
-                                      ? 'bg-red-100 text-red-800'
-                                      : 'bg-gray-100 text-gray-800'
+                                  metric.change.type === "increase"
+                                    ? "bg-green-100 text-green-800"
+                                    : metric.change.type === "decrease"
+                                      ? "bg-red-100 text-red-800"
+                                      : "bg-gray-100 text-gray-800"
                                 }
                               `}
                             >
-                              {metric.change.type === 'increase' && '↑'}
-                              {metric.change.type === 'decrease' && '↓'}
+                              {metric.change.type === "increase" && "↑"}
+                              {metric.change.type === "decrease" && "↓"}
                               {metric.change.value}%
                             </span>
-                            <span className='text-sm text-gray-500 ml-2'>
+                            <span className="text-sm text-gray-500 ml-2">
                               vs {metric.change.period}
                             </span>
                           </div>
@@ -175,7 +175,7 @@ export const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
 
                       {metric.icon && (
                         <div className={`p-3 rounded-lg ${getColorClasses(metric.color)}`}>
-                          <metric.icon className='w-6 h-6' />
+                          <metric.icon className="w-6 h-6" />
                         </div>
                       )}
                     </div>
@@ -186,7 +186,7 @@ export const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
 
             {/* Charts Grid */}
             {charts.length > 0 && (
-              <div className='grid grid-cols-1 lg:grid-cols-4 gap-6 auto-rows-fr'>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 auto-rows-fr">
                 {charts.map((chart) => (
                   <div
                     key={chart.id}
@@ -195,8 +195,8 @@ export const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
                       ${getSizeClasses(chart.size)}
                     `}
                   >
-                    <h3 className='text-lg font-semibold text-gray-900 mb-4'>{chart.title}</h3>
-                    <div className='chart-container h-full'>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">{chart.title}</h3>
+                    <div className="chart-container h-full">
                       <chart.component data={chart.data} />
                     </div>
                   </div>
@@ -206,7 +206,7 @@ export const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
 
             {/* Custom Content */}
             {customContent && (
-              <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 {customContent}
               </div>
             )}

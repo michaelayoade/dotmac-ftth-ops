@@ -1,16 +1,117 @@
 """Search API router."""
 
-from typing import Any
+from __future__ import annotations
+
+import asyncio
+from typing import Any, Iterable
+from uuid import uuid4
 
 import structlog
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.search.interfaces import SearchQuery as InternalSearchQuery
+from dotmac.platform.search.interfaces import SearchType
+from dotmac.platform.search.service import InMemorySearchBackend, SearchBackend
+
+from .factory import get_default_search_backend
+try:  # pragma: no cover - optional dependency
+    from meilisearch.errors import MeilisearchCommunicationError
+
+    _COMMUNICATION_ERRORS: tuple[type[Exception], ...] = (MeilisearchCommunicationError,)
+except ImportError:  # pragma: no cover
+    _COMMUNICATION_ERRORS = ()
 
 logger = structlog.get_logger(__name__)
-search_router = APIRouter(prefix="/search", )
+search_router = APIRouter()
+
+# Default entity types searched when no type filter provided
+_DEFAULT_ENTITY_TYPES = {"customer", "subscriber", "invoice", "ticket", "user"}
+
+
+class _SearchBackendState:
+    """Singleton wrapper that lazily initialises and caches the search backend."""
+
+    def __init__(self) -> None:
+        self._backend: SearchBackend | None = None
+        self._lock = asyncio.Lock()
+        self.known_types: set[str] = set(_DEFAULT_ENTITY_TYPES)
+
+    async def get_backend(self) -> SearchBackend:
+        if self._backend is not None:
+            return self._backend
+        async with self._lock:
+            if self._backend is None:
+                try:
+                    backend = get_default_search_backend()
+                except Exception as exc:  # pragma: no cover - defensive
+                    logger.warning(
+                        "search.backend.init_failed",
+                        error=str(exc),
+                        message="Falling back to in-memory search backend",
+                    )
+                    backend = InMemorySearchBackend()
+                self._backend = backend
+        return self._backend
+
+    def register_type(self, entity_type: str) -> None:
+        if entity_type:
+            self.known_types.add(entity_type.strip().lower())
+
+    def iter_indices(self, tenant_id: str, type_filter: str | None) -> Iterable[str]:
+        if type_filter:
+            yield _build_index_name(type_filter, tenant_id)
+            return
+        for entity_type in sorted(self.known_types):
+            yield _build_index_name(entity_type, tenant_id)
+
+    async def fallback_to_memory(self, reason: str | None = None) -> SearchBackend:
+        async with self._lock:
+            backend = InMemorySearchBackend()
+            self._backend = backend
+        logger.warning(
+            "search.backend.fallback_to_memory",
+            reason=reason,
+            backend="memory",
+        )
+        return backend
+
+
+_backend_state = _SearchBackendState()
+
+
+def _build_index_name(entity_type: str, tenant_id: str) -> str:
+    sanitized_type = entity_type.strip().lower() or "document"
+    return f"dotmac_{sanitized_type}_{tenant_id}"
+
+
+def _extract_entity_type(index_name: str, tenant_id: str) -> str:
+    prefix = "dotmac_"
+    suffix = f"_{tenant_id}"
+    if index_name.startswith(prefix):
+        candidate = index_name[len(prefix) :]
+        if candidate.endswith(suffix):
+            candidate = candidate[: -len(suffix)]
+        return (candidate or "document").strip().lower()
+    return index_name.strip().lower()
+
+
+async def _handle_backend_failure(exc: Exception, operation: str) -> bool:
+    """Determine whether to fall back to in-memory backend and perform the switch."""
+    if not _COMMUNICATION_ERRORS:
+        return False
+    if isinstance(exc, _COMMUNICATION_ERRORS):
+        await _backend_state.fallback_to_memory(str(exc))
+        logger.warning(
+            "search.backend.communication_error",
+            operation=operation,
+            error=str(exc),
+            fallback="memory",
+        )
+        return True
+    return False
 
 
 # Response Models
@@ -46,12 +147,8 @@ async def search(
     Searches within the current tenant's data using the configured search backend.
     Uses in-memory search for development; configure Elasticsearch/MeiliSearch for production.
     """
-    from .factory import get_default_search_backend
-    from .interfaces import SearchQuery as InternalSearchQuery
-    from .interfaces import SearchType
-
     logger.info(
-        "search.request",
+        f"search.request user={current_user.user_id} query={q}",
         user_id=current_user.user_id,
         tenant_id=current_user.tenant_id,
         query=q,
@@ -60,7 +157,7 @@ async def search(
 
     try:
         # Get search backend
-        search_backend = get_default_search_backend()
+        search_backend = await _backend_state.get_backend()
 
         # Calculate offset from page number
         offset = (page - 1) * limit
@@ -69,61 +166,69 @@ async def search(
         internal_query = InternalSearchQuery(
             query=q,
             search_type=SearchType.FULL_TEXT,
-            limit=limit,
-            offset=offset,
+            limit=limit + offset,
+            offset=0,  # Apply offset after aggregating all results
             include_score=True,
             highlight=True,
         )
 
         # Determine which indices to search
-        indices_to_search = []
         if type:
-            # Search specific type within tenant
-            index_name = f"dotmac_{type}_{current_user.tenant_id}"
-            indices_to_search.append(index_name)
-        else:
-            # Search common entity types within tenant
-            common_types = ["customer", "subscriber", "invoice", "ticket", "user"]
-            for entity_type in common_types:
-                indices_to_search.append(f"dotmac_{entity_type}_{current_user.tenant_id}")
+            _backend_state.register_type(type)
+        indices_to_search = list(_backend_state.iter_indices(current_user.tenant_id, type))
 
         # Aggregate results from all indices
-        all_results = []
+        all_results: list[SearchResult] = []
         type_counts: dict[str, int] = {}
 
         for index_name in indices_to_search:
             try:
                 response = await search_backend.search(index_name, internal_query)
-                for result in response.results:
-                    # Convert internal result to API result format
-                    result_type = result.type or "unknown"
-                    all_results.append(
-                        SearchResult(
-                            id=result.id,
-                            type=result_type,
-                            title=result.data.get("name") or result.data.get("title") or result.id,
-                            content=str(result.data)[:200],  # Truncate for preview
-                            score=result.score or 0.0,
-                            metadata=result.data,
+            except Exception as exc:
+                if await _handle_backend_failure(exc, "search"):
+                    search_backend = await _backend_state.get_backend()
+                    try:
+                        response = await search_backend.search(index_name, internal_query)
+                    except Exception as retry_exc:
+                        logger.warning(
+                            "search.index_error",
+                            index=index_name,
+                            error=str(retry_exc),
                         )
+                        continue
+                else:
+                    logger.warning(
+                        "search.index_error",
+                        index=index_name,
+                        error=str(exc),
                     )
-                    type_counts[result_type] = type_counts.get(result_type, 0) + 1
-            except Exception as e:
-                logger.warning(
-                    "search.index_error",
-                    index=index_name,
-                    error=str(e),
+                    continue
+
+            for result in response.results:
+                # Convert internal result to API result format
+                entity_type = _extract_entity_type(index_name, current_user.tenant_id)
+                _backend_state.register_type(entity_type)
+                all_results.append(
+                    SearchResult(
+                        id=result.id,
+                        type=entity_type,
+                        title=result.data.get("name") or result.data.get("title") or result.id,
+                        content=str(result.data)[:200],  # Truncate for preview
+                        score=result.score or 0.0,
+                        metadata=result.data,
+                    )
                 )
-                continue
+                type_counts[entity_type] = type_counts.get(entity_type, 0) + 1
 
         # Sort by score descending
         all_results.sort(key=lambda x: x.score, reverse=True)
 
-        # Apply limit for this page
-        paginated_results = all_results[:limit]
+        # Apply pagination across all indices
+        paginated_results = all_results[offset : offset + limit]
 
-        logger.info(
-            "search.completed",
+        logger.debug(
+            f"search.completed user={current_user.user_id} query={q} "
+            f"page={page} total={len(all_results)}",
             user_id=current_user.user_id,
             query=q,
             total_results=len(all_results),
@@ -140,7 +245,7 @@ async def search(
 
     except Exception as e:
         logger.error(
-            "search.error",
+            f"search.error user={current_user.user_id} query={q} error={e}",
             user_id=current_user.user_id,
             query=q,
             error=str(e),
@@ -160,23 +265,112 @@ async def index_content(
     content: dict[str, Any], current_user: UserInfo = Depends(get_current_user)
 ) -> dict[str, Any]:
     """Index new content for search."""
-    if current_user:
-        logger.info(f"User {current_user.user_id} indexing content")
-    else:
-        logger.info("Anonymous user indexing content")
-    return {"message": "Content indexed", "id": "new-id"}
+    if not isinstance(content, dict):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Content payload must be a JSON object.",
+        )
+
+    search_backend = await _backend_state.get_backend()
+
+    doc_type = str(content.get("type", "document")).strip().lower() or "document"
+    doc_id = str(content.get("id") or uuid4())
+    index_name = _build_index_name(doc_type, current_user.tenant_id)
+
+    _backend_state.register_type(doc_type)
+
+    try:
+        await search_backend.create_index(index_name)
+    except NotImplementedError:
+        pass
+    except Exception as exc:  # pragma: no cover - defensive
+        if await _handle_backend_failure(exc, "create_index"):
+            search_backend = await _backend_state.get_backend()
+            try:
+                await search_backend.create_index(index_name)
+            except Exception as retry_exc:  # pragma: no cover - defensive
+                logger.warning(
+                    "search.index.create_failed",
+                    index=index_name,
+                    error=str(retry_exc),
+                )
+        else:
+            logger.warning(
+                "search.index.create_failed",
+                index=index_name,
+                error=str(exc),
+            )
+
+    document = dict(content)
+    document["tenant_id"] = current_user.tenant_id
+    document.setdefault("type", doc_type)
+
+    logger.info(
+        "search.index.request",
+        user_id=current_user.user_id,
+        tenant_id=current_user.tenant_id,
+        index=index_name,
+        doc_id=doc_id,
+    )
+
+    try:
+        await search_backend.index(index_name, doc_id, document)
+    except Exception as exc:
+        if await _handle_backend_failure(exc, "index"):
+            search_backend = await _backend_state.get_backend()
+            await search_backend.create_index(index_name)
+            await search_backend.index(index_name, doc_id, document)
+        else:
+            raise
+    return {"message": "Content indexed", "id": doc_id, "type": doc_type}
 
 
 @search_router.delete("/index/{content_id}")
 async def remove_from_index(
-    content_id: str, current_user: UserInfo = Depends(get_current_user)
+    content_id: str,
+    current_user: UserInfo = Depends(get_current_user),
+    type: str | None = Query(None, description="Optional type hint to speed up deletion"),
 ) -> dict[str, Any]:
     """Remove content from search index."""
-    if current_user:
-        logger.info(f"User {current_user.user_id} removing {content_id} from index")
-    else:
-        logger.info(f"Anonymous user removing {content_id} from index")
-    return {"message": f"Content {content_id} removed from index"}
+    search_backend = await _backend_state.get_backend()
+
+    indices_to_check = list(_backend_state.iter_indices(current_user.tenant_id, type))
+    removed_from: list[str] = []
+
+    for index_name in indices_to_check:
+        try:
+            deleted = await search_backend.delete(index_name, content_id)
+        except NotImplementedError:
+            deleted = False
+        except Exception as exc:
+            if await _handle_backend_failure(exc, "delete"):
+                search_backend = await _backend_state.get_backend()
+                try:
+                    deleted = await search_backend.delete(index_name, content_id)
+                except Exception:
+                    deleted = False
+            else:
+                raise
+        if deleted:
+            removed_from.append(index_name)
+            logger.info(
+                "search.index.remove",
+                user_id=current_user.user_id,
+                tenant_id=current_user.tenant_id,
+                doc_id=content_id,
+                index=index_name,
+            )
+
+    if not removed_from:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Content {content_id} not found in search indices.",
+        )
+
+    return {
+        "message": f"Content {content_id} removed from index",
+        "removed_from": removed_from,
+    }
 
 
 __all__ = ["search_router"]

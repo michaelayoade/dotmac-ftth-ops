@@ -6,57 +6,57 @@
 
 export enum ActivityType {
   // Auth activities
-  USER_LOGIN = 'user.login',
-  USER_LOGOUT = 'user.logout',
-  USER_CREATED = 'user.created',
-  USER_UPDATED = 'user.updated',
-  USER_DELETED = 'user.deleted',
-  USER_IMPERSONATION = 'user.impersonation',
-  PASSWORD_RESET_ADMIN = 'user.password_reset_admin',
+  USER_LOGIN = "user.login",
+  USER_LOGOUT = "user.logout",
+  USER_CREATED = "user.created",
+  USER_UPDATED = "user.updated",
+  USER_DELETED = "user.deleted",
+  USER_IMPERSONATION = "user.impersonation",
+  PASSWORD_RESET_ADMIN = "user.password_reset_admin",
 
   // RBAC activities
-  ROLE_CREATED = 'rbac.role.created',
-  ROLE_UPDATED = 'rbac.role.updated',
-  ROLE_DELETED = 'rbac.role.deleted',
-  ROLE_ASSIGNED = 'rbac.role.assigned',
-  ROLE_REVOKED = 'rbac.role.revoked',
-  PERMISSION_GRANTED = 'rbac.permission.granted',
-  PERMISSION_REVOKED = 'rbac.permission.revoked',
-  PERMISSION_CREATED = 'rbac.permission.created',
-  PERMISSION_UPDATED = 'rbac.permission.updated',
-  PERMISSION_DELETED = 'rbac.permission.deleted',
+  ROLE_CREATED = "rbac.role.created",
+  ROLE_UPDATED = "rbac.role.updated",
+  ROLE_DELETED = "rbac.role.deleted",
+  ROLE_ASSIGNED = "rbac.role.assigned",
+  ROLE_REVOKED = "rbac.role.revoked",
+  PERMISSION_GRANTED = "rbac.permission.granted",
+  PERMISSION_REVOKED = "rbac.permission.revoked",
+  PERMISSION_CREATED = "rbac.permission.created",
+  PERMISSION_UPDATED = "rbac.permission.updated",
+  PERMISSION_DELETED = "rbac.permission.deleted",
 
   // Secret activities
-  SECRET_CREATED = 'secret.created',
-  SECRET_ACCESSED = 'secret.accessed',
-  SECRET_UPDATED = 'secret.updated',
-  SECRET_DELETED = 'secret.deleted',
+  SECRET_CREATED = "secret.created",
+  SECRET_ACCESSED = "secret.accessed",
+  SECRET_UPDATED = "secret.updated",
+  SECRET_DELETED = "secret.deleted",
 
   // File activities
-  FILE_UPLOADED = 'file.uploaded',
-  FILE_DOWNLOADED = 'file.downloaded',
-  FILE_DELETED = 'file.deleted',
+  FILE_UPLOADED = "file.uploaded",
+  FILE_DOWNLOADED = "file.downloaded",
+  FILE_DELETED = "file.deleted",
 
   // Customer activities
-  CUSTOMER_STATUS_CHANGE = 'customer.status_change',
+  CUSTOMER_STATUS_CHANGE = "customer.status_change",
 
   // API activities
-  API_REQUEST = 'api.request',
-  API_ERROR = 'api.error',
+  API_REQUEST = "api.request",
+  API_ERROR = "api.error",
 
   // System activities
-  SYSTEM_STARTUP = 'system.startup',
-  SYSTEM_SHUTDOWN = 'system.shutdown',
+  SYSTEM_STARTUP = "system.startup",
+  SYSTEM_SHUTDOWN = "system.shutdown",
 
   // Frontend activities
-  FRONTEND_LOG = 'frontend.log',
+  FRONTEND_LOG = "frontend.log",
 }
 
 export enum ActivitySeverity {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  CRITICAL = 'critical',
+  LOW = "low",
+  MEDIUM = "medium",
+  HIGH = "high",
+  CRITICAL = "critical",
 }
 
 export interface AuditActivity {
@@ -106,10 +106,10 @@ export interface ActivitySummary {
 
 // Severity colors for UI
 export const SEVERITY_COLORS: Record<ActivitySeverity, string> = {
-  [ActivitySeverity.LOW]: 'bg-green-100 text-green-800 border-green-200',
-  [ActivitySeverity.MEDIUM]: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  [ActivitySeverity.HIGH]: 'bg-orange-100 text-orange-800 border-orange-200',
-  [ActivitySeverity.CRITICAL]: 'bg-red-100 text-red-800 border-red-200',
+  [ActivitySeverity.LOW]: "bg-green-100 text-green-800 border-green-200",
+  [ActivitySeverity.MEDIUM]: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  [ActivitySeverity.HIGH]: "bg-orange-100 text-orange-800 border-orange-200",
+  [ActivitySeverity.CRITICAL]: "bg-red-100 text-red-800 border-red-200",
 };
 
 // Activity type categories for grouping
@@ -119,13 +119,13 @@ export const ACTIVITY_CATEGORIES: Record<string, ActivityType[]> = {
     ActivityType.USER_LOGOUT,
     ActivityType.USER_IMPERSONATION,
   ],
-  'User Management': [
+  "User Management": [
     ActivityType.USER_CREATED,
     ActivityType.USER_UPDATED,
     ActivityType.USER_DELETED,
     ActivityType.PASSWORD_RESET_ADMIN,
   ],
-  'Access Control': [
+  "Access Control": [
     ActivityType.ROLE_CREATED,
     ActivityType.ROLE_UPDATED,
     ActivityType.ROLE_DELETED,
@@ -143,11 +143,7 @@ export const ACTIVITY_CATEGORIES: Record<string, ActivityType[]> = {
     ActivityType.SECRET_UPDATED,
     ActivityType.SECRET_DELETED,
   ],
-  Files: [
-    ActivityType.FILE_UPLOADED,
-    ActivityType.FILE_DOWNLOADED,
-    ActivityType.FILE_DELETED,
-  ],
+  Files: [ActivityType.FILE_UPLOADED, ActivityType.FILE_DOWNLOADED, ActivityType.FILE_DELETED],
   System: [
     ActivityType.SYSTEM_STARTUP,
     ActivityType.SYSTEM_SHUTDOWN,
@@ -159,9 +155,9 @@ export const ACTIVITY_CATEGORIES: Record<string, ActivityType[]> = {
 // Format activity type for display
 export function formatActivityType(type: string): string {
   return type
-    .split('.')
+    .split(".")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' > ');
+    .join(" > ");
 }
 
 // Format severity for display
@@ -171,13 +167,13 @@ export function formatSeverity(severity: ActivitySeverity): string {
 
 // Get icon for activity type
 export function getActivityIcon(type: string): string {
-  if (type.startsWith('user.')) return '👤';
-  if (type.startsWith('rbac.')) return '🔐';
-  if (type.startsWith('secret.')) return '🔑';
-  if (type.startsWith('file.')) return '📁';
-  if (type.startsWith('customer.')) return '🏢';
-  if (type.startsWith('api.')) return '🔌';
-  if (type.startsWith('system.')) return '⚙️';
-  if (type.startsWith('frontend.')) return '💻';
-  return '📝';
+  if (type.startsWith("user.")) return "👤";
+  if (type.startsWith("rbac.")) return "🔐";
+  if (type.startsWith("secret.")) return "🔑";
+  if (type.startsWith("file.")) return "📁";
+  if (type.startsWith("customer.")) return "🏢";
+  if (type.startsWith("api.")) return "🔌";
+  if (type.startsWith("system.")) return "⚙️";
+  if (type.startsWith("frontend.")) return "💻";
+  return "📝";
 }

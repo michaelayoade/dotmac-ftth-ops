@@ -128,8 +128,7 @@ export function CreateQuoteModal({
     const firstYearCost =
       totalUpfront +
       (promoMonths > 0
-        ? monthlyWithDiscount * promoMonths +
-          formData.monthly_recurring_charge * (12 - promoMonths)
+        ? monthlyWithDiscount * promoMonths + formData.monthly_recurring_charge * (12 - promoMonths)
         : formData.monthly_recurring_charge * 12);
 
     const contractTermMonths = formData.contract_term_months ?? 12;
@@ -259,9 +258,7 @@ export function CreateQuoteModal({
                   </Label>
                   <Select
                     value={formData.lead_id}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, lead_id: value })
-                    }
+                    onValueChange={(value) => setFormData({ ...formData, lead_id: value })}
                     disabled={!!quote}
                   >
                     <SelectTrigger id="lead_id">
@@ -273,7 +270,7 @@ export function CreateQuoteModal({
                           (lead) =>
                             lead.status === "qualified" ||
                             lead.status === "quote_sent" ||
-                            lead.status === "negotiating"
+                            lead.status === "negotiating",
                         )
                         .map((lead) => (
                           <SelectItem key={lead.id} value={lead.id}>
@@ -293,7 +290,10 @@ export function CreateQuoteModal({
                   id="service_plan_name"
                   value={formData.service_plan_name}
                   onChange={(e) =>
-                    setFormData({ ...formData, service_plan_name: e.target.value })
+                    setFormData({
+                      ...formData,
+                      service_plan_name: e.target.value,
+                    })
                   }
                   placeholder="e.g., Fiber 500 Business"
                   required
@@ -307,9 +307,7 @@ export function CreateQuoteModal({
                 <Input
                   id="bandwidth"
                   value={formData.bandwidth}
-                  onChange={(e) =>
-                    setFormData({ ...formData, bandwidth: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, bandwidth: e.target.value })}
                   placeholder="e.g., 500 Mbps / 500 Mbps"
                   required
                 />
@@ -353,7 +351,7 @@ export function CreateQuoteModal({
                       type="number"
                       step="0.01"
                       min="0"
-                      value={(formData.installation_fee ?? 0)}
+                      value={formData.installation_fee ?? 0}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -375,7 +373,7 @@ export function CreateQuoteModal({
                       type="number"
                       step="0.01"
                       min="0"
-                      value={(formData.equipment_fee ?? 0)}
+                      value={formData.equipment_fee ?? 0}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -397,7 +395,7 @@ export function CreateQuoteModal({
                       type="number"
                       step="0.01"
                       min="0"
-                      value={(formData.activation_fee ?? 0)}
+                      value={formData.activation_fee ?? 0}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -418,10 +416,7 @@ export function CreateQuoteModal({
                 {lineItems.length > 0 && (
                   <div className="border rounded-lg p-3 space-y-2">
                     {lineItems.map((item, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between gap-2 text-sm"
-                      >
+                      <div key={index} className="flex items-center justify-between gap-2 text-sm">
                         <div className="flex-1">
                           <p className="font-medium">{item.description}</p>
                           <p className="text-xs text-muted-foreground">
@@ -429,9 +424,7 @@ export function CreateQuoteModal({
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">
-                            ${item.total.toFixed(2)}
-                          </span>
+                          <span className="font-medium">${item.total.toFixed(2)}</span>
                           <Button
                             type="button"
                             variant="ghost"
@@ -508,9 +501,7 @@ export function CreateQuoteModal({
               <div className="border rounded-lg p-4 bg-muted/50">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Total Upfront Cost:</span>
-                  <span className="text-lg font-bold">
-                    ${calculations.totalUpfront.toFixed(2)}
-                  </span>
+                  <span className="text-lg font-bold">${calculations.totalUpfront.toFixed(2)}</span>
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1">
                   <div className="flex justify-between">
@@ -521,9 +512,7 @@ export function CreateQuoteModal({
                     <div className="flex justify-between">
                       <span>Line Items:</span>
                       <span>
-                        ${lineItems
-                          .reduce((sum, item) => sum + item.total, 0)
-                          .toFixed(2)}
+                        ${lineItems.reduce((sum, item) => sum + item.total, 0).toFixed(2)}
                       </span>
                     </div>
                   )}
@@ -561,9 +550,7 @@ export function CreateQuoteModal({
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="early_termination_fee">
-                    Early Termination Fee
-                  </Label>
+                  <Label htmlFor="early_termination_fee">Early Termination Fee</Label>
                   <div className="relative">
                     <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -571,7 +558,7 @@ export function CreateQuoteModal({
                       type="number"
                       step="0.01"
                       min="0"
-                      value={(formData.early_termination_fee ?? 0)}
+                      value={formData.early_termination_fee ?? 0}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -590,9 +577,7 @@ export function CreateQuoteModal({
                 <Label>Promotional Discount (Optional)</Label>
 
                 <div className="space-y-2">
-                  <Label htmlFor="notes">
-                    Discount Description
-                  </Label>
+                  <Label htmlFor="notes">Discount Description</Label>
                   <Input
                     id="notes"
                     value={formData.notes}
@@ -608,9 +593,7 @@ export function CreateQuoteModal({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="promo_monthly_discount">
-                      Discount Amount
-                    </Label>
+                    <Label htmlFor="promo_monthly_discount">Discount Amount</Label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -622,8 +605,7 @@ export function CreateQuoteModal({
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            promo_monthly_discount:
-                              parseFloat(e.target.value) || 0,
+                            promo_monthly_discount: parseFloat(e.target.value) || 0,
                           })
                         }
                         className="pl-9"
@@ -633,9 +615,7 @@ export function CreateQuoteModal({
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="promo_discount_months">
-                      Discount Duration (Months)
-                    </Label>
+                    <Label htmlFor="promo_discount_months">Discount Duration (Months)</Label>
                     <Input
                       id="promo_discount_months"
                       type="number"
@@ -644,8 +624,7 @@ export function CreateQuoteModal({
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          promo_discount_months:
-                            parseInt(e.target.value) || 0,
+                          promo_discount_months: parseInt(e.target.value) || 0,
                         })
                       }
                       placeholder="0"
@@ -676,9 +655,7 @@ export function CreateQuoteModal({
                 <Label htmlFor="validUntilDays">Quote Valid For (Days)</Label>
                 <Select
                   value={validUntilDays?.toString() || "30"}
-                  onValueChange={(value) =>
-                    setValidUntilDays(parseInt(value))
-                  }
+                  onValueChange={(value) => setValidUntilDays(parseInt(value))}
                 >
                   <SelectTrigger id="validUntilDays">
                     <SelectValue />
@@ -698,9 +675,7 @@ export function CreateQuoteModal({
                 <Textarea
                   id="notes"
                   value={formData.notes}
-                  onChange={(e) =>
-                    setFormData({ ...formData, notes: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Any special terms, conditions, or notes for this quote..."
                   rows={4}
                 />
@@ -719,13 +694,9 @@ export function CreateQuoteModal({
                   <div className="space-y-4">
                     {/* Service Details */}
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-2">
-                        Service
-                      </p>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">Service</p>
                       <p className="font-medium">{formData.service_plan_name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formData.bandwidth}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{formData.bandwidth}</p>
                     </div>
 
                     {/* Monthly Pricing */}
@@ -735,15 +706,13 @@ export function CreateQuoteModal({
                       </p>
                       <p className="text-2xl font-bold">
                         ${formData.monthly_recurring_charge.toFixed(2)}
-                        <span className="text-sm font-normal text-muted-foreground">
-                          /month
-                        </span>
+                        <span className="text-sm font-normal text-muted-foreground">/month</span>
                       </p>
                       {(formData.promo_monthly_discount ?? 0) > 0 &&
                         (formData.promo_discount_months ?? 0) > 0 && (
                           <p className="text-sm text-emerald-400 mt-1">
-                            ${calculations.monthlyWithDiscount.toFixed(2)}/month for
-                            first {formData.promo_discount_months ?? 0} months
+                            ${calculations.monthlyWithDiscount.toFixed(2)}/month for first{" "}
+                            {formData.promo_discount_months ?? 0} months
                           </p>
                         )}
                     </div>
@@ -753,9 +722,7 @@ export function CreateQuoteModal({
                       <p className="text-sm font-medium text-muted-foreground mb-2">
                         Total Upfront Cost
                       </p>
-                      <p className="text-2xl font-bold">
-                        ${calculations.totalUpfront.toFixed(2)}
-                      </p>
+                      <p className="text-2xl font-bold">${calculations.totalUpfront.toFixed(2)}</p>
                       <div className="mt-2 space-y-1 text-sm text-muted-foreground">
                         {(formData.installation_fee ?? 0) > 0 && (
                           <div className="flex justify-between">
@@ -793,7 +760,7 @@ export function CreateQuoteModal({
                         <div className="flex justify-between">
                           <span>Contract Length:</span>
                           <span className="font-medium">
-                            {(formData.contract_term_months ?? 12)} months
+                            {formData.contract_term_months ?? 12} months
                           </span>
                         </div>
                         {(formData.early_termination_fee ?? 0) > 0 && (
@@ -866,11 +833,7 @@ export function CreateQuoteModal({
                 </Button>
               ) : (
                 <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting
-                    ? "Creating..."
-                    : quote
-                    ? "Update Quote"
-                    : "Create Quote"}
+                  {isSubmitting ? "Creating..." : quote ? "Update Quote" : "Create Quote"}
                 </Button>
               )}
             </div>

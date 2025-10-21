@@ -3,11 +3,11 @@
  * Subtle animations that enhance user experience
  */
 
-'use client';
+"use client";
 
-import { motion, AnimatePresence, useInView, useAnimation } from 'framer-motion';
-import { useEffect, useRef } from 'react';
-import { cn } from '../utils/cn';
+import { motion, AnimatePresence, useInView, useAnimation } from "framer-motion";
+import { useEffect, useRef } from "react";
+import { cn } from "../utils/cn";
 
 // Fade in animation variants
 const fadeInVariants = {
@@ -58,14 +58,14 @@ const scaleOnHover = {
     scale: 1.02,
     transition: {
       duration: 0.2,
-      ease: 'easeOut',
+      ease: "easeOut",
     },
   },
   tap: {
     scale: 0.98,
     transition: {
       duration: 0.1,
-      ease: 'easeIn',
+      ease: "easeIn",
     },
   },
 };
@@ -114,8 +114,8 @@ interface AnimatedCounterProps {
 export const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
   value,
   duration = 2,
-  prefix = '',
-  suffix = '',
+  prefix = "",
+  suffix = "",
   className,
 }) => {
   return (
@@ -130,7 +130,7 @@ export const AnimatedCounter: React.FC<AnimatedCounterProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{
           duration,
-          ease: 'easeOut',
+          ease: "easeOut",
         }}
       >
         {prefix}
@@ -160,13 +160,13 @@ export const FadeInWhenVisible: React.FC<FadeInWhenVisibleProps> = ({
   className,
 }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
     <motion.div
       ref={ref}
-      initial='hidden'
-      animate={isInView ? 'visible' : 'hidden'}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
       variants={fadeInVariants}
       transition={{ delay }}
       className={className}
@@ -184,13 +184,13 @@ interface StaggeredFadeInProps {
 
 export const StaggeredFadeIn: React.FC<StaggeredFadeInProps> = ({ children, className }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-50px' });
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
     <motion.div
       ref={ref}
-      initial='hidden'
-      animate={isInView ? 'visible' : 'hidden'}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
       variants={staggerContainer}
       className={className}
     >
@@ -230,13 +230,13 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
   return (
     <motion.div
       className={cn(
-        'cursor-pointer transition-shadow duration-200',
-        disabled && 'cursor-not-allowed opacity-50',
-        className
+        "cursor-pointer transition-shadow duration-200",
+        disabled && "cursor-not-allowed opacity-50",
+        className,
       )}
       variants={scaleOnHover}
-      whileHover={!disabled ? 'hover' : undefined}
-      whileTap={!disabled ? 'tap' : undefined}
+      whileHover={!disabled ? "hover" : undefined}
+      whileTap={!disabled ? "tap" : undefined}
       onClick={!disabled ? onClick : undefined}
       layout
     >
@@ -248,14 +248,14 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
 // Slide in from directions
 interface SlideInProps {
   children: React.ReactNode;
-  direction: 'left' | 'right' | 'up' | 'down';
+  direction: "left" | "right" | "up" | "down";
   delay?: number;
   className?: string;
 }
 
 export const SlideIn: React.FC<SlideInProps> = ({ children, direction, delay = 0, className }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   const variants = {
     left: slideInLeft,
@@ -281,8 +281,8 @@ export const SlideIn: React.FC<SlideInProps> = ({ children, direction, delay = 0
   return (
     <motion.div
       ref={ref}
-      initial='hidden'
-      animate={isInView ? 'visible' : 'hidden'}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
       variants={variants[direction]}
       transition={{ delay }}
       className={className}
@@ -305,24 +305,24 @@ interface AnimatedProgressBarProps {
 
 export const AnimatedProgressBar: React.FC<AnimatedProgressBarProps> = ({
   progress,
-  height = 'h-2',
-  color = 'bg-blue-500',
-  backgroundColor = 'bg-gray-200',
+  height = "h-2",
+  color = "bg-blue-500",
+  backgroundColor = "bg-gray-200",
   className,
   showLabel = false,
   label,
 }) => {
   return (
-    <div className={cn('w-full', className)}>
+    <div className={cn("w-full", className)}>
       {showLabel && (
-        <div className='flex justify-between text-sm text-gray-600 mb-2'>
+        <div className="flex justify-between text-sm text-gray-600 mb-2">
           <span>{label}</span>
           <span>{Math.round(progress)}%</span>
         </div>
       )}
-      <div className={cn('w-full rounded-full overflow-hidden', height, backgroundColor)}>
+      <div className={cn("w-full rounded-full overflow-hidden", height, backgroundColor)}>
         <motion.div
-          className={cn('h-full rounded-full', color)}
+          className={cn("h-full rounded-full", color)}
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{
@@ -342,19 +342,19 @@ interface LoadingDotsProps {
   color?: string;
 }
 
-export const LoadingDots: React.FC<LoadingDotsProps> = ({ className, color = 'bg-blue-500' }) => {
+export const LoadingDots: React.FC<LoadingDotsProps> = ({ className, color = "bg-blue-500" }) => {
   return (
-    <div className={cn('flex space-x-1', className)}>
+    <div className={cn("flex space-x-1", className)}>
       {[0, 1, 2].map((index) => (
         <motion.div
           key={index}
-          className={cn('w-2 h-2 rounded-full', color)}
+          className={cn("w-2 h-2 rounded-full", color)}
           initial={{ opacity: 0.3 }}
           animate={{ opacity: 1 }}
           transition={{
             duration: 0.8,
             repeat: Infinity,
-            repeatType: 'reverse',
+            repeatType: "reverse",
             delay: index * 0.2,
           }}
         />
@@ -382,7 +382,7 @@ export const PulseIndicator: React.FC<PulseIndicatorProps> = ({
       transition={{
         duration: 2,
         repeat: Infinity,
-        ease: 'easeInOut',
+        ease: "easeInOut",
       }}
     >
       {children}
@@ -402,7 +402,7 @@ export const BounceIn: React.FC<BounceInProps> = ({ children, className }) => {
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{
-        type: 'spring',
+        type: "spring",
         stiffness: 300,
         damping: 20,
         duration: 0.6,
@@ -452,7 +452,7 @@ export const TypingAnimation: React.FC<TypingAnimationProps> = ({ text, delay = 
       animate={{ opacity: 1 }}
       transition={{ delay }}
     >
-      {text.split('').map((char, index) => (
+      {text.split("").map((char, index) => (
         <motion.span
           key={index}
           initial={{ opacity: 0 }}

@@ -93,7 +93,9 @@ export function useAddReconciledPayment() {
       paymentData: ReconcilePaymentRequest;
     }) => reconciliationService.addReconciledPayment(reconciliationId, paymentData),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["reconciliation", variables.reconciliationId] });
+      queryClient.invalidateQueries({
+        queryKey: ["reconciliation", variables.reconciliationId],
+      });
       queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
       queryClient.invalidateQueries({ queryKey: ["manual-payments"] });
       toast({
@@ -124,7 +126,9 @@ export function useCompleteReconciliation() {
       data: ReconciliationComplete;
     }) => reconciliationService.completeReconciliation(reconciliationId, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["reconciliation", variables.reconciliationId] });
+      queryClient.invalidateQueries({
+        queryKey: ["reconciliation", variables.reconciliationId],
+      });
       queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
       queryClient.invalidateQueries({ queryKey: ["reconciliation-summary"] });
       toast({
@@ -155,7 +159,9 @@ export function useApproveReconciliation() {
       data: ReconciliationApprove;
     }) => reconciliationService.approveReconciliation(reconciliationId, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["reconciliation", variables.reconciliationId] });
+      queryClient.invalidateQueries({
+        queryKey: ["reconciliation", variables.reconciliationId],
+      });
       queryClient.invalidateQueries({ queryKey: ["reconciliations"] });
       queryClient.invalidateQueries({ queryKey: ["reconciliation-summary"] });
       toast({

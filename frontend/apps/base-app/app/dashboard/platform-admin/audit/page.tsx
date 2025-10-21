@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, BarChart3 } from 'lucide-react';
-import { AuditLogViewer } from '../components/AuditLogViewer';
-import { AuditSummaryDashboard } from '../components/AuditSummaryDashboard';
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Shield, BarChart3 } from "lucide-react";
+import { AuditLogViewer } from "../components/AuditLogViewer";
+import { AuditSummaryDashboard } from "../components/AuditSummaryDashboard";
 
 export default function PlatformAdminAuditPage() {
-  const [activeTab, setActiveTab] = useState('summary');
+  const [activeTab, setActiveTab] = useState("summary");
 
   return (
     <div className="space-y-6 p-6">

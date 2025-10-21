@@ -38,7 +38,15 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
                 jwt_token = auth_header.split(" ")[1]
             else:
                 # Fall back to cookie (for GraphQL, real-time, and browser requests)
-                jwt_token = request.cookies.get("access_token")
+                cookie_token = None
+                cookies = getattr(request, "cookies", None)
+                if cookies:
+                    try:
+                        cookie_token = cookies.get("access_token")
+                    except Exception:
+                        cookie_token = None
+                if isinstance(cookie_token, str) and cookie_token:
+                    jwt_token = cookie_token
 
             if jwt_token or api_key:
                 # Import here to avoid circular dependency

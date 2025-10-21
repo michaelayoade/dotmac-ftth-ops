@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   File,
   Upload,
@@ -16,13 +16,13 @@ import {
   Image as ImageIcon,
   Video,
   Archive,
-  FolderOpen
-} from 'lucide-react';
-import { PageHeader } from '@/components/ui/page-header';
-import { EmptyState } from '@/components/ui/empty-state';
-import { StatusBadge } from '@/components/ui/status-badge';
-import { Button } from '@/components/ui/button';
-import { logger } from '@/lib/logger';
+  FolderOpen,
+} from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { Button } from "@/components/ui/button";
+import { logger } from "@/lib/logger";
 
 interface FileMetadata {
   file_id: string;
@@ -42,23 +42,23 @@ interface FilesResponse {
   per_page: number;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 
 export default function FilesPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch files
   const { data, isLoading, error } = useQuery<FilesResponse>({
-    queryKey: ['files'],
+    queryKey: ["files"],
     queryFn: async () => {
       const response = await fetch(`${API_BASE_URL}/api/v1/files/storage`, {
-        credentials: 'include',
+        credentials: "include",
       });
       if (!response.ok) {
-        throw new Error('Failed to fetch files');
+        throw new Error("Failed to fetch files");
       }
       return response.json();
     },
@@ -68,26 +68,26 @@ export default function FilesPage() {
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
       const response = await fetch(`${API_BASE_URL}/api/v1/files/storage/upload`, {
-        method: 'POST',
-        credentials: 'include',
+        method: "POST",
+        credentials: "include",
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        throw new Error("Upload failed");
       }
 
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['files'] });
-      logger.info('File uploaded successfully');
+      queryClient.invalidateQueries({ queryKey: ["files"] });
+      logger.info("File uploaded successfully");
     },
     onError: (error) => {
-      logger.error('File upload failed', { error });
+      logger.error("File upload failed", { error });
     },
   });
 
@@ -95,23 +95,23 @@ export default function FilesPage() {
   const deleteMutation = useMutation({
     mutationFn: async (fileId: string) => {
       const response = await fetch(`${API_BASE_URL}/api/v1/files/storage/${fileId}`, {
-        method: 'DELETE',
-        credentials: 'include',
+        method: "DELETE",
+        credentials: "include",
       });
 
       if (!response.ok) {
-        throw new Error('Delete failed');
+        throw new Error("Delete failed");
       }
 
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['files'] });
+      queryClient.invalidateQueries({ queryKey: ["files"] });
       setSelectedFiles([]);
-      logger.info('File deleted successfully');
+      logger.info("File deleted successfully");
     },
     onError: (error) => {
-      logger.error('File deletion failed', { error });
+      logger.error("File deletion failed", { error });
     },
   });
 
@@ -126,26 +126,26 @@ export default function FilesPage() {
       }
     } finally {
       setIsUploading(false);
-      event.target.value = ''; // Reset input
+      event.target.value = ""; // Reset input
     }
   };
 
   const handleDelete = async (fileId: string) => {
-    if (confirm('Are you sure you want to delete this file?')) {
+    if (confirm("Are you sure you want to delete this file?")) {
       await deleteMutation.mutateAsync(fileId);
     }
   };
 
   const handleDownload = (fileId: string, fileName: string) => {
-    window.open(`${API_BASE_URL}/api/v1/files/storage/${fileId}/download`, '_blank');
-    logger.info('File downloaded', { fileId, fileName });
+    window.open(`${API_BASE_URL}/api/v1/files/storage/${fileId}/download`, "_blank");
+    logger.info("File downloaded", { fileId, fileName });
   };
 
   const getFileIcon = (contentType: string) => {
-    if (contentType.startsWith('image/')) return ImageIcon;
-    if (contentType.startsWith('video/')) return Video;
-    if (contentType.includes('zip') || contentType.includes('archive')) return Archive;
-    if (contentType.includes('pdf') || contentType.includes('document')) return FileText;
+    if (contentType.startsWith("image/")) return ImageIcon;
+    if (contentType.startsWith("video/")) return Video;
+    if (contentType.includes("zip") || contentType.includes("archive")) return Archive;
+    if (contentType.includes("pdf") || contentType.includes("document")) return FileText;
     return File;
   };
 
@@ -159,31 +159,32 @@ export default function FilesPage() {
   const formatDate = (timestamp: string): string => {
     try {
       // Handle various timestamp formats
-      if (!timestamp) return 'Unknown';
+      if (!timestamp) return "Unknown";
 
       // Try parsing as ISO string or Unix timestamp
       const date = new Date(timestamp);
 
       if (isNaN(date.getTime())) {
         // Log for debugging in development
-        logger.debug('Invalid timestamp format', { timestamp });
-        return 'Unknown';
+        logger.debug("Invalid timestamp format", { timestamp });
+        return "Unknown";
       }
 
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       });
     } catch (error) {
-      logger.error('Date formatting error', { timestamp, error });
-      return 'Unknown';
+      logger.error("Date formatting error", { timestamp, error });
+      return "Unknown";
     }
   };
 
-  const filteredFiles = data?.files.filter(file =>
-    file.file_name.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const filteredFiles =
+    data?.files.filter((file) =>
+      file.file_name.toLowerCase().includes(searchQuery.toLowerCase()),
+    ) || [];
 
   if (isLoading) {
     return (
@@ -201,7 +202,7 @@ export default function FilesPage() {
         <EmptyState.Error
           title="Failed to load files"
           description="Unable to fetch file list. Please try again."
-          onRetry={() => queryClient.invalidateQueries({ queryKey: ['files'] })}
+          onRetry={() => queryClient.invalidateQueries({ queryKey: ["files"] })}
         />
       </div>
     );
@@ -224,27 +225,21 @@ export default function FilesPage() {
               aria-label="Upload files"
             />
             <Button
-              onClick={() => document.getElementById('file-upload')?.click()}
+              onClick={() => document.getElementById("file-upload")?.click()}
               disabled={isUploading}
               aria-label="Upload new files"
             >
               <Upload className="h-4 w-4 mr-2" />
-              {isUploading ? 'Uploading...' : 'Upload Files'}
+              {isUploading ? "Uploading..." : "Upload Files"}
             </Button>
           </PageHeader.Actions>
         }
       >
         <div className="flex gap-4 mt-4">
-          <PageHeader.Stat
-            label="Total Files"
-            value={data?.total || 0}
-            icon={File}
-          />
+          <PageHeader.Stat label="Total Files" value={data?.total || 0} icon={File} />
           <PageHeader.Stat
             label="Total Size"
-            value={formatFileSize(
-              filteredFiles.reduce((sum, file) => sum + file.file_size, 0)
-            )}
+            value={formatFileSize(filteredFiles.reduce((sum, file) => sum + file.file_size, 0))}
           />
         </div>
       </PageHeader>
@@ -268,7 +263,7 @@ export default function FilesPage() {
       {filteredFiles.length === 0 ? (
         <EmptyState.List
           entityName="files"
-          onCreateClick={() => document.getElementById('file-upload')?.click()}
+          onCreateClick={() => document.getElementById("file-upload")?.click()}
           icon={File}
         />
       ) : (
@@ -300,7 +295,10 @@ export default function FilesPage() {
                   <tr key={file.file_id} className="hover:bg-muted/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <FileIconComponent className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                        <FileIconComponent
+                          className="h-5 w-5 text-muted-foreground"
+                          aria-hidden="true"
+                        />
                         <div>
                           <div className="font-medium text-foreground">{file.file_name}</div>
                           {file.description && (
@@ -311,7 +309,7 @@ export default function FilesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <StatusBadge variant="info" size="sm">
-                        {file.content_type.split('/')[1]?.toUpperCase() || 'FILE'}
+                        {file.content_type.split("/")[1]?.toUpperCase() || "FILE"}
                       </StatusBadge>
                     </td>
                     <td className="px-6 py-4 text-sm text-muted-foreground">

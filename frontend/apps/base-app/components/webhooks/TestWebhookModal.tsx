@@ -1,4 +1,4 @@
-import { WebhookSubscription } from '@/hooks/useWebhooks';
+import { WebhookSubscription } from "@/hooks/useWebhooks";
 
 interface TestWebhookModalProps {
   webhook: WebhookSubscription;

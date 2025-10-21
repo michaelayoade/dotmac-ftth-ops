@@ -4,18 +4,18 @@
  */
 
 // Core auth components
-export { useAuth } from './useAuth';
-export { createAuthStore } from './store';
+export { useAuth } from "./useAuth";
+export { createAuthStore } from "./store";
 export {
   SecureStorage,
   secureStorage,
   sessionStorage,
   cookieStorage,
   memoryStorage,
-} from './storage';
-export { TokenManager } from './tokenManager';
-export { CSRFProtection } from './csrfProtection';
-export { RateLimiter } from './rateLimiter';
+} from "./storage";
+export { TokenManager } from "./tokenManager";
+export { CSRFProtection } from "./csrfProtection";
+export { RateLimiter } from "./rateLimiter";
 
 // Types
 export type {
@@ -30,15 +30,15 @@ export type {
   AuthActions,
   AuthProviderConfig,
   AuthStore,
-} from './types';
+} from "./types";
 
-export type { StorageBackend, SecureStorageOptions } from './storage';
+export type { StorageBackend, SecureStorageOptions } from "./storage";
 
 // Portal configurations for common use cases
 export const PORTAL_CONFIGS = {
   admin: {
-    type: 'admin' as const,
-    loginMethods: ['email'],
+    type: "admin" as const,
+    loginMethods: ["email"],
     features: {
       mfaRequired: true,
       allowPortalIdLogin: false,
@@ -56,8 +56,8 @@ export const PORTAL_CONFIGS = {
   },
 
   customer: {
-    type: 'customer' as const,
-    loginMethods: ['email', 'portalId', 'accountNumber'],
+    type: "customer" as const,
+    loginMethods: ["email", "portalId", "accountNumber"],
     features: {
       mfaRequired: false,
       allowPortalIdLogin: true,
@@ -75,8 +75,8 @@ export const PORTAL_CONFIGS = {
   },
 
   reseller: {
-    type: 'reseller' as const,
-    loginMethods: ['email', 'partnerCode'],
+    type: "reseller" as const,
+    loginMethods: ["email", "partnerCode"],
     features: {
       mfaRequired: true,
       allowPortalIdLogin: false,
@@ -94,8 +94,8 @@ export const PORTAL_CONFIGS = {
   },
 
   technician: {
-    type: 'technician' as const,
-    loginMethods: ['email'],
+    type: "technician" as const,
+    loginMethods: ["email"],
     features: {
       mfaRequired: false,
       allowPortalIdLogin: false,
@@ -113,8 +113,8 @@ export const PORTAL_CONFIGS = {
   },
 
   management: {
-    type: 'management' as const,
-    loginMethods: ['email'],
+    type: "management" as const,
+    loginMethods: ["email"],
     features: {
       mfaRequired: true,
       allowPortalIdLogin: false,
@@ -135,19 +135,19 @@ export const PORTAL_CONFIGS = {
 // Utility functions
 export function createPortalConfig(
   type: keyof typeof PORTAL_CONFIGS,
-  overrides: Partial<PortalConfig>
+  overrides: Partial<PortalConfig>,
 ): PortalConfig {
   const baseConfig = PORTAL_CONFIGS[type];
 
   return {
     id: `${type}-portal`,
     name: `${type.charAt(0).toUpperCase() + type.slice(1)} Portal`,
-    tenantId: 'default',
+    tenantId: "default",
     branding: {
-      logo: '',
-      companyName: 'DotMac Framework',
-      primaryColor: '#3B82F6',
-      secondaryColor: '#1E40AF',
+      logo: "",
+      companyName: "DotMac Framework",
+      primaryColor: "#3B82F6",
+      secondaryColor: "#1E40AF",
     },
     ...baseConfig,
     ...overrides,
@@ -156,17 +156,17 @@ export function createPortalConfig(
 
 // Portal detection utilities
 export function detectPortalFromURL(): keyof typeof PORTAL_CONFIGS {
-  if (typeof window === 'undefined') return 'customer';
+  if (typeof window === "undefined") return "customer";
 
   const { hostname, port } = window.location;
 
   // Development port detection
   const devPortMap: Record<string, keyof typeof PORTAL_CONFIGS> = {
-    '3000': 'admin',
-    '3001': 'management',
-    '3002': 'customer',
-    '3003': 'reseller',
-    '3004': 'technician',
+    "3000": "admin",
+    "3001": "management",
+    "3002": "customer",
+    "3003": "reseller",
+    "3004": "technician",
   };
 
   if (devPortMap[port]) {
@@ -174,20 +174,20 @@ export function detectPortalFromURL(): keyof typeof PORTAL_CONFIGS {
   }
 
   // Production subdomain detection
-  const subdomain = hostname.split('.')[0];
+  const subdomain = hostname.split(".")[0];
   const subdomainMap: Record<string, keyof typeof PORTAL_CONFIGS> = {
-    admin: 'admin',
-    manage: 'management',
-    management: 'management',
-    my: 'customer',
-    customer: 'customer',
-    partner: 'reseller',
-    reseller: 'reseller',
-    tech: 'technician',
-    technician: 'technician',
+    admin: "admin",
+    manage: "management",
+    management: "management",
+    my: "customer",
+    customer: "customer",
+    partner: "reseller",
+    reseller: "reseller",
+    tech: "technician",
+    technician: "technician",
   };
 
-  return subdomainMap[subdomain] || 'customer';
+  return subdomainMap[subdomain] || "customer";
 }
 
 // Create auth hook with portal auto-detection

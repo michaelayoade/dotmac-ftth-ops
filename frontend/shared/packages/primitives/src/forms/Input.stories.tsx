@@ -4,16 +4,16 @@
  * Comprehensive documentation and examples for the Input component
  */
 
-import type { Meta, StoryObj } from '@storybook/react';
-import { fn } from '@storybook/test';
-import { Input } from './Input';
-import { Mail, Search, Lock, User, Eye, EyeOff } from 'lucide-react';
+import type { Meta, StoryObj } from "@storybook/react";
+import { fn } from "@storybook/test";
+import { Input } from "./Input";
+import { Mail, Search, Lock, User, Eye, EyeOff } from "lucide-react";
 
 const meta = {
-  title: 'Primitives/Forms/Input',
+  title: "Primitives/Forms/Input",
   component: Input,
   parameters: {
-    layout: 'centered',
+    layout: "centered",
     docs: {
       description: {
         component: `
@@ -51,160 +51,160 @@ import { Input } from '@dotmac/primitives';
     a11y: {
       config: {
         rules: [
-          { id: 'label', enabled: true },
-          { id: 'color-contrast', enabled: true },
-          { id: 'aria-valid-attr-value', enabled: true },
+          { id: "label", enabled: true },
+          { id: "color-contrast", enabled: true },
+          { id: "aria-valid-attr-value", enabled: true },
         ],
       },
     },
   },
-  tags: ['autodocs', 'secure', 'accessible'],
+  tags: ["autodocs", "secure", "accessible"],
   argTypes: {
     variant: {
-      control: { type: 'select' },
-      options: ['default', 'error', 'success', 'warning'],
-      description: 'Visual style variant of the input',
+      control: { type: "select" },
+      options: ["default", "error", "success", "warning"],
+      description: "Visual style variant of the input",
       table: {
-        type: { summary: 'string' },
-        defaultValue: { summary: 'default' },
+        type: { summary: "string" },
+        defaultValue: { summary: "default" },
       },
     },
     size: {
-      control: { type: 'select' },
-      options: ['sm', 'default', 'lg'],
-      description: 'Size of the input',
+      control: { type: "select" },
+      options: ["sm", "default", "lg"],
+      description: "Size of the input",
       table: {
-        type: { summary: 'string' },
-        defaultValue: { summary: 'default' },
+        type: { summary: "string" },
+        defaultValue: { summary: "default" },
       },
     },
     type: {
-      control: { type: 'select' },
-      options: ['text', 'email', 'password', 'tel', 'url', 'search', 'number'],
-      description: 'Input type',
+      control: { type: "select" },
+      options: ["text", "email", "password", "tel", "url", "search", "number"],
+      description: "Input type",
       table: {
-        type: { summary: 'string' },
-        defaultValue: { summary: 'text' },
+        type: { summary: "string" },
+        defaultValue: { summary: "text" },
       },
     },
     label: {
-      control: 'text',
-      description: 'Label text for the input',
+      control: "text",
+      description: "Label text for the input",
       table: {
-        type: { summary: 'string' },
+        type: { summary: "string" },
       },
     },
     placeholder: {
-      control: 'text',
-      description: 'Placeholder text',
+      control: "text",
+      description: "Placeholder text",
       table: {
-        type: { summary: 'string' },
+        type: { summary: "string" },
       },
     },
     helperText: {
-      control: 'text',
-      description: 'Helper text displayed below the input',
+      control: "text",
+      description: "Helper text displayed below the input",
       table: {
-        type: { summary: 'string' },
+        type: { summary: "string" },
       },
     },
     error: {
-      control: 'text',
-      description: 'Error message to display',
+      control: "text",
+      description: "Error message to display",
       table: {
-        type: { summary: 'string' },
+        type: { summary: "string" },
       },
     },
     success: {
-      control: 'text',
-      description: 'Success message to display',
+      control: "text",
+      description: "Success message to display",
       table: {
-        type: { summary: 'string' },
+        type: { summary: "string" },
       },
     },
     warning: {
-      control: 'text',
-      description: 'Warning message to display',
+      control: "text",
+      description: "Warning message to display",
       table: {
-        type: { summary: 'string' },
+        type: { summary: "string" },
       },
     },
     isLoading: {
-      control: 'boolean',
-      description: 'Whether the input is in a loading state',
+      control: "boolean",
+      description: "Whether the input is in a loading state",
       table: {
-        type: { summary: 'boolean' },
-        defaultValue: { summary: 'false' },
+        type: { summary: "boolean" },
+        defaultValue: { summary: "false" },
       },
     },
     disabled: {
-      control: 'boolean',
-      description: 'Whether the input is disabled',
+      control: "boolean",
+      description: "Whether the input is disabled",
       table: {
-        type: { summary: 'boolean' },
-        defaultValue: { summary: 'false' },
+        type: { summary: "boolean" },
+        defaultValue: { summary: "false" },
       },
     },
     required: {
-      control: 'boolean',
-      description: 'Whether the input is required',
+      control: "boolean",
+      description: "Whether the input is required",
       table: {
-        type: { summary: 'boolean' },
-        defaultValue: { summary: 'false' },
+        type: { summary: "boolean" },
+        defaultValue: { summary: "false" },
       },
     },
     showPasswordToggle: {
-      control: 'boolean',
-      description: 'Whether to show password visibility toggle',
+      control: "boolean",
+      description: "Whether to show password visibility toggle",
       table: {
-        type: { summary: 'boolean' },
-        defaultValue: { summary: 'false' },
+        type: { summary: "boolean" },
+        defaultValue: { summary: "false" },
       },
     },
     sanitize: {
-      control: 'boolean',
-      description: 'Whether to sanitize input',
+      control: "boolean",
+      description: "Whether to sanitize input",
       table: {
-        type: { summary: 'boolean' },
-        defaultValue: { summary: 'true' },
+        type: { summary: "boolean" },
+        defaultValue: { summary: "true" },
       },
     },
     validateOnBlur: {
-      control: 'boolean',
-      description: 'Whether to validate on blur',
+      control: "boolean",
+      description: "Whether to validate on blur",
       table: {
-        type: { summary: 'boolean' },
-        defaultValue: { summary: 'false' },
+        type: { summary: "boolean" },
+        defaultValue: { summary: "false" },
       },
     },
     validateOnChange: {
-      control: 'boolean',
-      description: 'Whether to validate on change',
+      control: "boolean",
+      description: "Whether to validate on change",
       table: {
-        type: { summary: 'boolean' },
-        defaultValue: { summary: 'false' },
+        type: { summary: "boolean" },
+        defaultValue: { summary: "false" },
       },
     },
     maxLength: {
-      control: 'number',
-      description: 'Maximum character count',
+      control: "number",
+      description: "Maximum character count",
       table: {
-        type: { summary: 'number' },
+        type: { summary: "number" },
       },
     },
     showCharCount: {
-      control: 'boolean',
-      description: 'Whether to show character count',
+      control: "boolean",
+      description: "Whether to show character count",
       table: {
-        type: { summary: 'boolean' },
-        defaultValue: { summary: 'false' },
+        type: { summary: "boolean" },
+        defaultValue: { summary: "false" },
       },
     },
     onChange: {
-      action: 'changed',
-      description: 'Change event handler',
+      action: "changed",
+      description: "Change event handler",
       table: {
-        type: { summary: '(event: ChangeEvent) => void' },
+        type: { summary: "(event: ChangeEvent) => void" },
       },
     },
   },
@@ -219,31 +219,31 @@ type Story = StoryObj<typeof meta>;
 // Default story
 export const Default: Story = {
   args: {
-    placeholder: 'Enter text...',
+    placeholder: "Enter text...",
   },
 };
 
 // With Label
 export const WithLabel: Story = {
   args: {
-    label: 'Username',
-    placeholder: 'Enter your username',
+    label: "Username",
+    placeholder: "Enter your username",
   },
 };
 
 // Required field
 export const Required: Story = {
   args: {
-    label: 'Email Address',
-    type: 'email',
-    placeholder: 'user@example.com',
+    label: "Email Address",
+    type: "email",
+    placeholder: "user@example.com",
     required: true,
     helperText: "We'll never share your email with anyone else.",
   },
   parameters: {
     docs: {
       description: {
-        story: 'Required fields show an asterisk (*) indicator and proper aria attributes.',
+        story: "Required fields show an asterisk (*) indicator and proper aria attributes.",
       },
     },
   },
@@ -252,16 +252,16 @@ export const Required: Story = {
 // Password input
 export const Password: Story = {
   args: {
-    label: 'Password',
-    type: 'password',
-    placeholder: 'Enter your password',
+    label: "Password",
+    type: "password",
+    placeholder: "Enter your password",
     showPasswordToggle: true,
-    helperText: 'Must be at least 8 characters long',
+    helperText: "Must be at least 8 characters long",
   },
   parameters: {
     docs: {
       description: {
-        story: 'Password inputs can include a visibility toggle for better UX.',
+        story: "Password inputs can include a visibility toggle for better UX.",
       },
     },
   },
@@ -270,15 +270,15 @@ export const Password: Story = {
 // Variant stories
 export const ErrorState: Story = {
   args: {
-    label: 'Username',
-    placeholder: 'Enter username',
-    error: 'Username is already taken',
-    value: 'invalid_user',
+    label: "Username",
+    placeholder: "Enter username",
+    error: "Username is already taken",
+    value: "invalid_user",
   },
   parameters: {
     docs: {
       description: {
-        story: 'Error state with validation message and visual indicators.',
+        story: "Error state with validation message and visual indicators.",
       },
     },
   },
@@ -286,102 +286,102 @@ export const ErrorState: Story = {
 
 export const SuccessState: Story = {
   args: {
-    label: 'Username',
-    placeholder: 'Enter username',
-    success: 'Username is available!',
-    value: 'valid_user',
+    label: "Username",
+    placeholder: "Enter username",
+    success: "Username is available!",
+    value: "valid_user",
   },
 };
 
 export const WarningState: Story = {
   args: {
-    label: 'Password',
-    type: 'password',
-    warning: 'Password strength: Medium',
-    value: 'mypassword',
+    label: "Password",
+    type: "password",
+    warning: "Password strength: Medium",
+    value: "mypassword",
   },
 };
 
 // Size variants
 export const Small: Story = {
   args: {
-    size: 'sm',
-    label: 'Small Input',
-    placeholder: 'Small size',
+    size: "sm",
+    label: "Small Input",
+    placeholder: "Small size",
   },
 };
 
 export const Large: Story = {
   args: {
-    size: 'lg',
-    label: 'Large Input',
-    placeholder: 'Large size',
+    size: "lg",
+    label: "Large Input",
+    placeholder: "Large size",
   },
 };
 
 // Input types
 export const EmailInput: Story = {
   args: {
-    type: 'email',
-    label: 'Email Address',
-    placeholder: 'user@example.com',
-    leftIcon: <Mail className='h-4 w-4' />,
+    type: "email",
+    label: "Email Address",
+    placeholder: "user@example.com",
+    leftIcon: <Mail className="h-4 w-4" />,
   },
 };
 
 export const SearchInput: Story = {
   args: {
-    type: 'search',
-    placeholder: 'Search...',
-    leftIcon: <Search className='h-4 w-4' />,
+    type: "search",
+    placeholder: "Search...",
+    leftIcon: <Search className="h-4 w-4" />,
   },
 };
 
 export const PhoneInput: Story = {
   args: {
-    type: 'tel',
-    label: 'Phone Number',
-    placeholder: '+1 (555) 123-4567',
+    type: "tel",
+    label: "Phone Number",
+    placeholder: "+1 (555) 123-4567",
   },
 };
 
 // With icons
 export const WithLeftIcon: Story = {
   args: {
-    label: 'Username',
-    placeholder: 'Enter username',
-    leftIcon: <User className='h-4 w-4' />,
+    label: "Username",
+    placeholder: "Enter username",
+    leftIcon: <User className="h-4 w-4" />,
   },
 };
 
 export const WithRightIcon: Story = {
   args: {
-    label: 'Search',
-    placeholder: 'Type to search...',
-    rightIcon: <Search className='h-4 w-4' />,
+    label: "Search",
+    placeholder: "Type to search...",
+    rightIcon: <Search className="h-4 w-4" />,
   },
 };
 
 export const WithBothIcons: Story = {
   args: {
-    label: 'Secure Search',
-    placeholder: 'Search securely...',
-    leftIcon: <Lock className='h-4 w-4' />,
-    rightIcon: <Search className='h-4 w-4' />,
+    label: "Secure Search",
+    placeholder: "Search securely...",
+    leftIcon: <Lock className="h-4 w-4" />,
+    rightIcon: <Search className="h-4 w-4" />,
   },
 };
 
 // Loading state
 export const Loading: Story = {
   args: {
-    label: 'Processing',
-    placeholder: 'Please wait...',
+    label: "Processing",
+    placeholder: "Please wait...",
     isLoading: true,
   },
   parameters: {
     docs: {
       description: {
-        story: 'Loading state disables the input and shows a loading overlay.',
+        story: "Loading state disables the input and shows a loading overlay.",
       },
     },
   },
@@ -390,9 +390,9 @@ export const Loading: Story = {
 // Disabled state
 export const Disabled: Story = {
   args: {
-    label: 'Disabled Input',
-    placeholder: 'This is disabled',
-    value: 'Cannot edit this',
+    label: "Disabled Input",
+    placeholder: "This is disabled",
+    value: "Cannot edit this",
     disabled: true,
   },
 };
@@ -400,25 +400,25 @@ export const Disabled: Story = {
 // Character counting
 export const WithCharacterCount: Story = {
   args: {
-    label: 'Bio',
-    placeholder: 'Tell us about yourself...',
+    label: "Bio",
+    placeholder: "Tell us about yourself...",
     maxLength: 100,
     showCharCount: true,
-    helperText: 'Describe yourself in 100 characters or less',
+    helperText: "Describe yourself in 100 characters or less",
   },
 };
 
 export const CharacterLimitExceeded: Story = {
   args: {
-    label: 'Short Description',
+    label: "Short Description",
     maxLength: 10,
     showCharCount: true,
-    value: 'This text is way too long for the limit',
+    value: "This text is way too long for the limit",
   },
   parameters: {
     docs: {
       description: {
-        story: 'When character limit is exceeded, the counter turns red.',
+        story: "When character limit is exceeded, the counter turns red.",
       },
     },
   },
@@ -427,50 +427,50 @@ export const CharacterLimitExceeded: Story = {
 // Validation examples
 export const ValidationOnBlur: Story = {
   args: {
-    label: 'Email',
-    type: 'email',
-    placeholder: 'Enter email',
+    label: "Email",
+    type: "email",
+    placeholder: "Enter email",
     validateOnBlur: true,
     validate: (value: string) => {
-      if (!value) return 'Email is required';
+      if (!value) return "Email is required";
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        return 'Please enter a valid email address';
+        return "Please enter a valid email address";
       }
       return null;
     },
-    helperText: 'Email will be validated when you click away',
+    helperText: "Email will be validated when you click away",
   },
 };
 
 export const ValidationOnChange: Story = {
   args: {
-    label: 'Username',
-    placeholder: 'Enter username',
+    label: "Username",
+    placeholder: "Enter username",
     validateOnChange: true,
     validate: (value: string) => {
-      if (!value) return 'Username is required';
-      if (value.length < 3) return 'Username must be at least 3 characters';
+      if (!value) return "Username is required";
+      if (value.length < 3) return "Username must be at least 3 characters";
       if (!/^[a-zA-Z0-9_]+$/.test(value)) {
-        return 'Username can only contain letters, numbers, and underscores';
+        return "Username can only contain letters, numbers, and underscores";
       }
       return null;
     },
-    helperText: 'Username is validated as you type',
+    helperText: "Username is validated as you type",
   },
 };
 
 // Security demonstration
 export const SecurityDemo: Story = {
   args: {
-    label: 'Secure Input',
+    label: "Secure Input",
     placeholder: 'Try entering <script>alert("xss")</script>',
     sanitize: true,
-    helperText: 'This input sanitizes dangerous content automatically',
+    helperText: "This input sanitizes dangerous content automatically",
   },
   parameters: {
     docs: {
       description: {
-        story: 'Demonstrates automatic input sanitization to prevent XSS attacks.',
+        story: "Demonstrates automatic input sanitization to prevent XSS attacks.",
       },
     },
   },
@@ -479,53 +479,53 @@ export const SecurityDemo: Story = {
 // Form example
 export const CompleteForm: Story = {
   render: () => (
-    <form className='space-y-6 w-96'>
+    <form className="space-y-6 w-96">
       <Input
-        label='Full Name'
-        placeholder='Enter your full name'
+        label="Full Name"
+        placeholder="Enter your full name"
         required
-        leftIcon={<User className='h-4 w-4' />}
+        leftIcon={<User className="h-4 w-4" />}
       />
 
       <Input
-        label='Email Address'
-        type='email'
-        placeholder='user@example.com'
+        label="Email Address"
+        type="email"
+        placeholder="user@example.com"
         required
-        leftIcon={<Mail className='h-4 w-4' />}
+        leftIcon={<Mail className="h-4 w-4" />}
       />
 
       <Input
-        label='Password'
-        type='password'
-        placeholder='Enter secure password'
+        label="Password"
+        type="password"
+        placeholder="Enter secure password"
         required
         showPasswordToggle
-        leftIcon={<Lock className='h-4 w-4' />}
-        helperText='Must be at least 8 characters with uppercase, lowercase, number, and symbol'
+        leftIcon={<Lock className="h-4 w-4" />}
+        helperText="Must be at least 8 characters with uppercase, lowercase, number, and symbol"
       />
 
       <Input
-        label='Bio'
-        placeholder='Tell us about yourself...'
+        label="Bio"
+        placeholder="Tell us about yourself..."
         maxLength={200}
         showCharCount
-        helperText='Optional: Share a brief bio'
+        helperText="Optional: Share a brief bio"
       />
 
       <button
-        type='submit'
-        className='w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors'
+        type="submit"
+        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
       >
         Create Account
       </button>
     </form>
   ),
   parameters: {
-    layout: 'centered',
+    layout: "centered",
     docs: {
       description: {
-        story: 'Complete form example showing various input configurations.',
+        story: "Complete form example showing various input configurations.",
       },
     },
   },
@@ -534,25 +534,25 @@ export const CompleteForm: Story = {
 // All variants showcase
 export const AllVariants: Story = {
   render: () => (
-    <div className='space-y-4 w-96'>
-      <Input label='Default' placeholder='Default variant' />
+    <div className="space-y-4 w-96">
+      <Input label="Default" placeholder="Default variant" />
 
-      <Input label='Error' variant='error' error='This field has an error' value='Invalid input' />
+      <Input label="Error" variant="error" error="This field has an error" value="Invalid input" />
 
-      <Input label='Success' variant='success' success='This looks good!' value='Valid input' />
+      <Input label="Success" variant="success" success="This looks good!" value="Valid input" />
 
       <Input
-        label='Warning'
-        variant='warning'
-        warning='Please double-check this'
-        value='Questionable input'
+        label="Warning"
+        variant="warning"
+        warning="Please double-check this"
+        value="Questionable input"
       />
     </div>
   ),
   parameters: {
     docs: {
       description: {
-        story: 'All input variants displayed together for comparison.',
+        story: "All input variants displayed together for comparison.",
       },
     },
   },
@@ -561,43 +561,43 @@ export const AllVariants: Story = {
 // Accessibility showcase
 export const AccessibilityShowcase: Story = {
   render: () => (
-    <div className='space-y-6 w-96'>
+    <div className="space-y-6 w-96">
       <div>
-        <h3 className='text-lg font-semibold mb-4'>Proper Labeling</h3>
-        <div className='space-y-4'>
+        <h3 className="text-lg font-semibold mb-4">Proper Labeling</h3>
+        <div className="space-y-4">
           <Input
-            label='Accessible Label'
-            placeholder='Input with proper label'
-            helperText='This input has proper labeling'
+            label="Accessible Label"
+            placeholder="Input with proper label"
+            helperText="This input has proper labeling"
           />
 
           <Input
-            placeholder='Input with aria-label'
-            aria-label='Search products'
-            leftIcon={<Search className='h-4 w-4' />}
+            placeholder="Input with aria-label"
+            aria-label="Search products"
+            leftIcon={<Search className="h-4 w-4" />}
           />
         </div>
       </div>
 
       <div>
-        <h3 className='text-lg font-semibold mb-4'>Error Handling</h3>
+        <h3 className="text-lg font-semibold mb-4">Error Handling</h3>
         <Input
-          label='Required Field'
+          label="Required Field"
           required
-          error='This field is required'
-          helperText='Error messages are announced to screen readers'
+          error="This field is required"
+          helperText="Error messages are announced to screen readers"
         />
       </div>
 
       <div>
-        <h3 className='text-lg font-semibold mb-4'>Complex Input</h3>
+        <h3 className="text-lg font-semibold mb-4">Complex Input</h3>
         <Input
-          label='Password'
-          type='password'
+          label="Password"
+          type="password"
           required
           showPasswordToggle
-          helperText='Password visibility can be toggled'
-          aria-describedby='password-help'
+          helperText="Password visibility can be toggled"
+          aria-describedby="password-help"
         />
       </div>
     </div>
@@ -605,16 +605,16 @@ export const AccessibilityShowcase: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Demonstrates proper accessibility patterns for input fields.',
+        story: "Demonstrates proper accessibility patterns for input fields.",
       },
     },
     a11y: {
       config: {
         rules: [
-          { id: 'label', enabled: true },
-          { id: 'color-contrast', enabled: true },
-          { id: 'aria-valid-attr-value', enabled: true },
-          { id: 'form-field-multiple-labels', enabled: true },
+          { id: "label", enabled: true },
+          { id: "color-contrast", enabled: true },
+          { id: "aria-valid-attr-value", enabled: true },
+          { id: "form-field-multiple-labels", enabled: true },
         ],
       },
     },

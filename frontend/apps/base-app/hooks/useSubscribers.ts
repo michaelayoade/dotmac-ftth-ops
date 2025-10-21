@@ -4,16 +4,16 @@
  * Custom hooks for managing subscribers, their services, and related operations
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '@/lib/api/client';
+import { useState, useEffect, useCallback } from "react";
+import { apiClient } from "@/lib/api/client";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type SubscriberStatus = 'active' | 'suspended' | 'pending' | 'inactive' | 'terminated';
-export type ServiceStatus = 'active' | 'suspended' | 'pending_activation' | 'terminated';
-export type ConnectionType = 'ftth' | 'fttb' | 'wireless' | 'hybrid';
+export type SubscriberStatus = "active" | "suspended" | "pending" | "inactive" | "terminated";
+export type ServiceStatus = "active" | "suspended" | "pending_activation" | "terminated";
+export type ConnectionType = "ftth" | "fttb" | "wireless" | "hybrid";
 
 export interface Subscriber {
   id: string;
@@ -130,7 +130,7 @@ export interface SubscriberQueryParams {
   limit?: number;
   offset?: number;
   sort_by?: string;
-  sort_order?: 'asc' | 'desc';
+  sort_order?: "asc" | "desc";
 }
 
 export interface CreateSubscriberRequest {
@@ -210,19 +210,20 @@ export function useSubscribers(params?: SubscriberQueryParams) {
 
       // Build query string
       const queryParams = new URLSearchParams();
-      if (params?.status) params.status.forEach(s => queryParams.append('status', s));
-      if (params?.connection_type) params.connection_type.forEach(t => queryParams.append('connection_type', t));
-      if (params?.service_plan) queryParams.set('service_plan', params.service_plan);
-      if (params?.city) queryParams.set('city', params.city);
-      if (params?.search) queryParams.set('search', params.search);
-      if (params?.from_date) queryParams.set('from_date', params.from_date);
-      if (params?.to_date) queryParams.set('to_date', params.to_date);
-      if (params?.limit) queryParams.set('limit', String(params.limit));
-      if (params?.offset) queryParams.set('offset', String(params.offset));
-      if (params?.sort_by) queryParams.set('sort_by', params.sort_by);
-      if (params?.sort_order) queryParams.set('sort_order', params.sort_order);
+      if (params?.status) params.status.forEach((s) => queryParams.append("status", s));
+      if (params?.connection_type)
+        params.connection_type.forEach((t) => queryParams.append("connection_type", t));
+      if (params?.service_plan) queryParams.set("service_plan", params.service_plan);
+      if (params?.city) queryParams.set("city", params.city);
+      if (params?.search) queryParams.set("search", params.search);
+      if (params?.from_date) queryParams.set("from_date", params.from_date);
+      if (params?.to_date) queryParams.set("to_date", params.to_date);
+      if (params?.limit) queryParams.set("limit", String(params.limit));
+      if (params?.offset) queryParams.set("offset", String(params.offset));
+      if (params?.sort_by) queryParams.set("sort_by", params.sort_by);
+      if (params?.sort_order) queryParams.set("sort_order", params.sort_order);
 
-      const endpoint = `/subscribers${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const endpoint = `/subscribers${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
       const response = await apiClient.get(endpoint);
 
       if (response.data) {
@@ -231,7 +232,7 @@ export function useSubscribers(params?: SubscriberQueryParams) {
       }
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to fetch subscribers:', err);
+      console.error("Failed to fetch subscribers:", err);
     } finally {
       setIsLoading(false);
     }
@@ -269,7 +270,7 @@ export function useSubscriber(subscriberId: string | null) {
       setSubscriber(response.data);
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to fetch subscriber:', err);
+      console.error("Failed to fetch subscriber:", err);
     } finally {
       setIsLoading(false);
     }
@@ -300,11 +301,11 @@ export function useSubscriberStatistics() {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.get('/subscribers/statistics');
+      const response = await apiClient.get("/subscribers/statistics");
       setStatistics(response.data);
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to fetch subscriber statistics:', err);
+      console.error("Failed to fetch subscriber statistics:", err);
     } finally {
       setIsLoading(false);
     }
@@ -334,32 +335,35 @@ export function useSubscriberOperations() {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.post('/subscribers', data);
+      const response = await apiClient.post("/subscribers", data);
       return response.data as Subscriber;
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to create subscriber:', err);
+      console.error("Failed to create subscriber:", err);
       throw err;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const updateSubscriber = useCallback(async (subscriberId: string, data: UpdateSubscriberRequest) => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  const updateSubscriber = useCallback(
+    async (subscriberId: string, data: UpdateSubscriberRequest) => {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-      const response = await apiClient.patch(`/subscribers/${subscriberId}`, data);
-      return response.data as Subscriber;
-    } catch (err) {
-      setError(err as Error);
-      console.error('Failed to update subscriber:', err);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+        const response = await apiClient.patch(`/subscribers/${subscriberId}`, data);
+        return response.data as Subscriber;
+      } catch (err) {
+        setError(err as Error);
+        console.error("Failed to update subscriber:", err);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [],
+  );
 
   const deleteSubscriber = useCallback(async (subscriberId: string) => {
     try {
@@ -370,7 +374,7 @@ export function useSubscriberOperations() {
       return true;
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to delete subscriber:', err);
+      console.error("Failed to delete subscriber:", err);
       return false;
     } finally {
       setIsLoading(false);
@@ -382,11 +386,13 @@ export function useSubscriberOperations() {
       setIsLoading(true);
       setError(null);
 
-      await apiClient.post(`/subscribers/${subscriberId}/suspend`, { reason });
+      await apiClient.post(`/subscribers/${subscriberId}/suspend`, {
+        reason,
+      });
       return true;
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to suspend subscriber:', err);
+      console.error("Failed to suspend subscriber:", err);
       return false;
     } finally {
       setIsLoading(false);
@@ -402,7 +408,7 @@ export function useSubscriberOperations() {
       return true;
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to activate subscriber:', err);
+      console.error("Failed to activate subscriber:", err);
       return false;
     } finally {
       setIsLoading(false);
@@ -414,11 +420,13 @@ export function useSubscriberOperations() {
       setIsLoading(true);
       setError(null);
 
-      await apiClient.post(`/subscribers/${subscriberId}/terminate`, { reason });
+      await apiClient.post(`/subscribers/${subscriberId}/terminate`, {
+        reason,
+      });
       return true;
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to terminate subscriber:', err);
+      console.error("Failed to terminate subscriber:", err);
       return false;
     } finally {
       setIsLoading(false);
@@ -456,7 +464,7 @@ export function useSubscriberServices(subscriberId: string | null) {
       setServices(response.data || []);
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to fetch subscriber services:', err);
+      console.error("Failed to fetch subscriber services:", err);
     } finally {
       setIsLoading(false);
     }

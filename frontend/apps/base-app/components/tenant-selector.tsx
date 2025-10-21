@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { ChevronDown, Building2, Check, Loader2 } from 'lucide-react';
+import React, { useState } from "react";
+import { ChevronDown, Building2, Check, Loader2 } from "lucide-react";
 
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { useTenant, Tenant } from '@/lib/contexts/tenant-context';
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { useTenant, Tenant } from "@/lib/contexts/tenant-context";
 
 export function TenantSelector() {
   const { currentTenant, availableTenants, setTenant, isLoading } = useTenant();
@@ -18,17 +18,17 @@ export function TenantSelector() {
 
   const getStatusColor = (status: string | undefined) => {
     switch (status) {
-      case 'active':
-        return 'bg-green-500/10 text-green-500 dark:bg-green-500/20';
-      case 'trial':
-        return 'bg-blue-500/10 text-blue-500 dark:bg-blue-500/20';
-      case 'suspended':
-        return 'bg-orange-500/10 text-orange-500 dark:bg-orange-500/20';
-      case 'cancelled':
-      case 'expired':
-        return 'bg-red-500/10 text-red-500 dark:bg-red-500/20';
+      case "active":
+        return "bg-green-500/10 text-green-500 dark:bg-green-500/20";
+      case "trial":
+        return "bg-blue-500/10 text-blue-500 dark:bg-blue-500/20";
+      case "suspended":
+        return "bg-orange-500/10 text-orange-500 dark:bg-orange-500/20";
+      case "cancelled":
+      case "expired":
+        return "bg-red-500/10 text-red-500 dark:bg-red-500/20";
       default:
-        return 'bg-slate-500/10 text-slate-500 dark:bg-slate-500/20';
+        return "bg-slate-500/10 text-slate-500 dark:bg-slate-500/20";
     }
   };
 
@@ -43,7 +43,7 @@ export function TenantSelector() {
         className={cn(
           "flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
           "bg-card text-foreground border-border hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          "disabled:cursor-not-allowed disabled:opacity-50"
+          "disabled:cursor-not-allowed disabled:opacity-50",
         )}
       >
         {isLoading ? (
@@ -51,25 +51,20 @@ export function TenantSelector() {
         ) : (
           <Building2 className="h-4 w-4" />
         )}
-        <span className="max-w-[150px] truncate">
-          {currentTenant?.name || 'All tenants'}
-        </span>
+        <span className="max-w-[150px] truncate">{currentTenant?.name || "All tenants"}</span>
         <ChevronDown className="h-4 w-4" />
       </button>
 
       {isOpen && (
         <>
           {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
 
           {/* Dropdown */}
           <div
             className="absolute z-20 mt-2 w-72 rounded-md border border-border bg-card shadow-lg shadow-primary/10"
             onKeyDown={(event) => {
-              if (event.key === 'Escape') {
+              if (event.key === "Escape") {
                 setIsOpen(false);
               }
             }}
@@ -97,14 +92,10 @@ export function TenantSelector() {
                         )}
                       </div>
                       {tenant.slug && (
-                        <div className="mt-0.5 text-xs text-muted-foreground">
-                          @{tenant.slug}
-                        </div>
+                        <div className="mt-0.5 text-xs text-muted-foreground">@{tenant.slug}</div>
                       )}
                       <div className="flex items-center gap-2 mt-1">
-                        <Badge
-                          className={`text-xs px-1.5 py-0.5 ${getStatusColor(tenant.status)}`}
-                        >
+                        <Badge className={`text-xs px-1.5 py-0.5 ${getStatusColor(tenant.status)}`}>
                           {tenant.status}
                         </Badge>
                         <Badge variant="outline" className="text-xs px-1.5 py-0.5">
@@ -129,7 +120,7 @@ export function TenantBadge() {
   return (
     <div className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
       <Building2 className="h-3 w-3" />
-      <span>{currentTenant?.name ?? 'All tenants'}</span>
+      <span>{currentTenant?.name ?? "All tenants"}</span>
     </div>
   );
 }

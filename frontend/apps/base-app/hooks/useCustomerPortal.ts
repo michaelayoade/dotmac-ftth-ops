@@ -365,7 +365,7 @@ export function useCustomerPayments() {
         setLoading(false);
       }
     },
-    [fetchPayments]
+    [fetchPayments],
   );
 
   useEffect(() => {
@@ -501,7 +501,7 @@ export function useCustomerTickets() {
         setLoading(false);
       }
     },
-    [fetchTickets]
+    [fetchTickets],
   );
 
   useEffect(() => {
@@ -584,40 +584,37 @@ export function useCustomerSettings() {
     }
   }, []);
 
-  const changePassword = useCallback(
-    async (currentPassword: string, newPassword: string) => {
-      try {
-        setLoading(true);
-        setError(null);
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        const token = localStorage.getItem("customer_access_token");
-        const response = await fetch(`${API_BASE}/api/v1/customer/change-password`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            current_password: currentPassword,
-            new_password: newPassword,
-          }),
-        });
+      const token = localStorage.getItem("customer_access_token");
+      const response = await fetch(`${API_BASE}/api/v1/customer/change-password`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          current_password: currentPassword,
+          new_password: newPassword,
+        }),
+      });
 
-        if (!response.ok) {
-          throw new Error("Failed to change password");
-        }
-
-        return await response.json();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-        console.error("Error changing password:", err);
-        throw err;
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error("Failed to change password");
       }
-    },
-    []
-  );
+
+      return await response.json();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error("Error changing password:", err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchSettings();

@@ -8,8 +8,16 @@ via DataLoaders to prevent N+1 queries.
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+from typing import TYPE_CHECKING, Any
 
 import strawberry
+
+if TYPE_CHECKING:
+    from typing import TypeAlias
+
+    JSONScalar: TypeAlias = Any
+else:
+    from strawberry.scalars import JSON as JSONScalar
 
 from dotmac.platform.graphql.types.common import BillingCycleEnum
 
@@ -60,11 +68,11 @@ class SubscriptionPlan:
     has_setup_fee: bool
 
     # Usage allowances (for hybrid plans)
-    included_usage: strawberry.scalars.JSON
-    overage_rates: strawberry.scalars.JSON
+    included_usage: JSONScalar
+    overage_rates: JSONScalar
 
     @classmethod
-    def from_model(cls, plan: any) -> "SubscriptionPlan":
+    def from_model(cls, plan: Any) -> "SubscriptionPlan":
         """Convert SQLAlchemy/Pydantic model to GraphQL type."""
         has_trial = plan.trial_days is not None and plan.trial_days > 0
         has_setup_fee = plan.setup_fee is not None and plan.setup_fee > 0
@@ -102,7 +110,7 @@ class SubscriptionCustomer:
     created_at: datetime
 
     @classmethod
-    def from_model(cls, customer: any) -> "SubscriptionCustomer":
+    def from_model(cls, customer: Any) -> "SubscriptionCustomer":
         """Convert Customer model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(customer.id)),
@@ -129,7 +137,7 @@ class SubscriptionInvoice:
     created_at: datetime
 
     @classmethod
-    def from_model(cls, invoice: any) -> "SubscriptionInvoice":
+    def from_model(cls, invoice: Any) -> "SubscriptionInvoice":
         """Convert Invoice model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(invoice.invoice_id)),
@@ -180,7 +188,7 @@ class Subscription:
     custom_price: Decimal | None
 
     # Usage tracking (for hybrid plans)
-    usage_records: strawberry.scalars.JSON
+    usage_records: JSONScalar
 
     # Timestamps
     created_at: datetime
@@ -197,7 +205,7 @@ class Subscription:
     recent_invoices: list[SubscriptionInvoice] = strawberry.field(default_factory=list)
 
     @classmethod
-    def from_model(cls, subscription: any) -> "Subscription":
+    def from_model(cls, subscription: Any) -> "Subscription":
         """Convert Subscription model to GraphQL type."""
         # Compute properties
         is_active_status = subscription.status in ['active', 'trialing']
@@ -317,7 +325,7 @@ class Product:
     updated_at: datetime
 
     @classmethod
-    def from_model(cls, product: any) -> "Product":
+    def from_model(cls, product: Any) -> "Product":
         """Convert Product model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(getattr(product, 'id', product.product_id))),

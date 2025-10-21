@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState } from "react";
+import Link from "next/link";
 import {
   Users,
   Mail,
@@ -15,12 +15,12 @@ import {
   AlertCircle,
   Clock,
   Package,
-  RefreshCw
-} from 'lucide-react';
-import { useCustomerListGraphQL, useCustomerMetricsGraphQL } from '@/hooks/useCustomersGraphQL';
-import { AlertBanner } from '@/components/alerts/AlertBanner';
-import { MetricCardEnhanced } from '@/components/ui/metric-card-enhanced';
-import { Button } from '@/components/ui/button';
+  RefreshCw,
+} from "lucide-react";
+import { useCustomerListGraphQL, useCustomerMetricsGraphQL } from "@/hooks/useCustomersGraphQL";
+import { AlertBanner } from "@/components/alerts/AlertBanner";
+import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
+import { Button } from "@/components/ui/button";
 
 interface MetricCardProps {
   title: string;
@@ -41,12 +41,12 @@ function MetricCard({ title, value, subtitle, icon: Icon, trend, href }: MetricC
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
-          {subtitle && (
-            <p className="mt-1 text-sm text-foreground0">{subtitle}</p>
-          )}
+          {subtitle && <p className="mt-1 text-sm text-foreground0">{subtitle}</p>}
           {trend && (
-            <div className={`mt-2 flex items-center text-sm ${trend.isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-              <TrendingUp className={`h-4 w-4 mr-1 ${!trend.isPositive ? 'rotate-180' : ''}`} />
+            <div
+              className={`mt-2 flex items-center text-sm ${trend.isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+            >
+              <TrendingUp className={`h-4 w-4 mr-1 ${!trend.isPositive ? "rotate-180" : ""}`} />
               {Math.abs(trend.value)}% from last month
             </div>
           )}
@@ -97,7 +97,7 @@ function QuickAction({ title, description, href, icon: Icon }: QuickActionProps)
 
 interface RecentActivityItem {
   id: string;
-  type: 'customer' | 'communication' | 'file';
+  type: "customer" | "communication" | "file";
   title: string;
   description: string;
   timestamp: string;
@@ -112,9 +112,7 @@ function RecentActivity({ items }: { items: RecentActivityItem[] }) {
       </div>
       <div className="divide-y divide-border">
         {items.length === 0 ? (
-          <div className="p-6 text-center text-foreground0">
-            No recent activity
-          </div>
+          <div className="p-6 text-center text-foreground0">No recent activity</div>
         ) : (
           items.map((item) => (
             <div key={item.id} className="p-4 hover:bg-muted transition-colors">
@@ -126,9 +124,7 @@ function RecentActivity({ items }: { items: RecentActivityItem[] }) {
                   <p className="font-medium text-foreground truncate">{item.title}</p>
                   <p className="mt-1 text-sm text-muted-foreground truncate">{item.description}</p>
                 </div>
-                <span className="text-xs text-foreground0 whitespace-nowrap">
-                  {item.timestamp}
-                </span>
+                <span className="text-xs text-foreground0 whitespace-nowrap">{item.timestamp}</span>
               </div>
             </div>
           ))
@@ -165,12 +161,12 @@ export default function OperationsPage() {
   // Add customer activity from metrics
   if (customerMetrics?.newCustomers) {
     recentActivity.push({
-      id: 'cust-new',
-      type: 'customer',
+      id: "cust-new",
+      type: "customer",
       title: `${customerMetrics.newCustomers} new customers`,
-      description: 'Registered this month',
-      timestamp: 'This month',
-      icon: Users
+      description: "Registered this month",
+      timestamp: "This month",
+      icon: Users,
     });
   }
 
@@ -179,11 +175,11 @@ export default function OperationsPage() {
     if (idx < 3) {
       recentActivity.push({
         id: `cust-${customer.id}`,
-        type: 'customer',
-        title: customer.displayName || 'Unknown Customer',
-        description: customer.email || '',
-        timestamp: 'Recent',
-        icon: Users
+        type: "customer",
+        title: customer.displayName || "Unknown Customer",
+        description: customer.email || "",
+        timestamp: "Recent",
+        icon: Users,
       });
     }
   });
@@ -206,7 +202,7 @@ export default function OperationsPage() {
           </p>
         </div>
         <Button variant="outline" onClick={handleRefresh} disabled={loading}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           Refresh
         </Button>
       </div>
@@ -232,7 +228,7 @@ export default function OperationsPage() {
           icon={Users}
           trend={{
             value: 5.2,
-            isPositive: true
+            isPositive: true,
           }}
           href="/dashboard/operations/customers"
           emptyStateMessage="No customers registered yet"
@@ -244,7 +240,7 @@ export default function OperationsPage() {
           icon={Activity}
           trend={{
             value: 92.5,
-            isPositive: true
+            isPositive: true,
           }}
           href="/dashboard/operations/communications"
           emptyStateMessage="No communications sent"
@@ -256,7 +252,7 @@ export default function OperationsPage() {
           icon={TrendingUp}
           trend={{
             value: 7.5,
-            isPositive: false
+            isPositive: false,
           }}
           emptyStateMessage="No churn data"
         />
@@ -267,7 +263,7 @@ export default function OperationsPage() {
           icon={Users}
           trend={{
             value: 92.5,
-            isPositive: true
+            isPositive: true,
           }}
           emptyStateMessage="No retention data"
         />
@@ -282,7 +278,10 @@ export default function OperationsPage() {
               <p className="font-medium text-orange-400">Attention Required</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {customerMetrics.churnedCustomers} customers churned recently.
-                <Link href="/dashboard/operations/customers" className="ml-2 text-orange-400 hover:text-orange-300">
+                <Link
+                  href="/dashboard/operations/customers"
+                  className="ml-2 text-orange-400 hover:text-orange-300"
+                >
                   View customers →
                 </Link>
               </p>
@@ -340,7 +339,8 @@ export default function OperationsPage() {
                     <div>
                       <h3 className="font-semibold text-foreground">Customer Management</h3>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {customerMetrics?.totalCustomers || 0} total customers • {customerMetrics?.newCustomers || 0} new this month
+                        {customerMetrics?.totalCustomers || 0} total customers •{" "}
+                        {customerMetrics?.newCustomers || 0} new this month
                       </p>
                     </div>
                   </div>

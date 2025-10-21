@@ -33,7 +33,7 @@ import structlog
 from celery import Celery
 from celery import shared_task as celery_shared_task
 
-from dotmac.platform.core.caching import redis_client
+from dotmac.platform.core.caching import get_redis, redis_client
 from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
@@ -119,13 +119,15 @@ def idempotent_task(ttl: int = 3600) -> Callable[[Callable[P, R]], Callable[P, R
             task_key = f"task:idempotent:{hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()}"  # nosec B324 - MD5 for task deduplication key
             result_key = f"{task_key}:result"
 
-            if not redis_client:
+            client = redis_client or get_redis()
+
+            if not client:
                 logger.warning("Redis not available, executing task without idempotency")
                 return cast(R | None, func(*args, **kwargs))
 
             try:
                 # Try to acquire lock with TTL (atomic operation)
-                if redis_client.set(task_key, "processing", nx=True, ex=ttl):
+                if client.set(task_key, "processing", nx=True, ex=ttl):
                     logger.debug(f"Acquired idempotency lock for {func.__name__}")
                     try:
                         # Execute the task
@@ -133,12 +135,12 @@ def idempotent_task(ttl: int = 3600) -> Callable[[Callable[P, R]], Callable[P, R
 
                         # Cache the result
                         if result is not None:
-                            redis_client.setex(result_key, ttl, json.dumps(result, default=str))
+                            client.setex(result_key, ttl, json.dumps(result, default=str))
 
                         return result
                     except Exception as e:
                         # Release lock on failure to allow retry
-                        redis_client.delete(task_key)
+                        client.delete(task_key)
                         logger.error(f"Task {func.__name__} failed, releasing lock: {e}")
                         raise
                 else:
@@ -148,7 +150,7 @@ def idempotent_task(ttl: int = 3600) -> Callable[[Callable[P, R]], Callable[P, R
                     )
 
                     # Try to get cached result
-                    cached_bytes = redis_client.get(result_key)
+                    cached_bytes = client.get(result_key)
                     if cached_bytes is not None:
                         # Redis returns bytes, decode to string for JSON
                         if isinstance(cached_bytes, bytes):

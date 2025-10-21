@@ -39,7 +39,7 @@ import {
   type DistributionPointType,
   type ServiceAreaType,
   type FiberHealthStatus,
-} from '@/lib/graphql/generated';
+} from "@/lib/graphql/generated";
 
 // ============================================================================
 // TYPE EXPORTS
@@ -93,14 +93,16 @@ export type {
  * }
  * ```
  */
-export function useFiberDashboardGraphQL(options: {
-  pollInterval?: number;
-} = {}) {
+export function useFiberDashboardGraphQL(
+  options: {
+    pollInterval?: number;
+  } = {},
+) {
   const { pollInterval = 30000 } = options;
 
   const { data, loading, error, refetch } = useFiberDashboardQuery({
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -137,16 +139,18 @@ export function useFiberDashboardGraphQL(options: {
  * });
  * ```
  */
-export function useFiberCableListGraphQL(options: {
-  limit?: number;
-  offset?: number;
-  status?: FiberCableStatus;
-  fiberType?: FiberType;
-  installationType?: CableInstallationType;
-  siteId?: string;
-  search?: string;
-  pollInterval?: number;
-} = {}) {
+export function useFiberCableListGraphQL(
+  options: {
+    limit?: number;
+    offset?: number;
+    status?: FiberCableStatus;
+    fiberType?: FiberType;
+    installationType?: CableInstallationType;
+    siteId?: string;
+    search?: string;
+    pollInterval?: number;
+  } = {},
+) {
   const {
     limit = 50,
     offset = 0,
@@ -169,7 +173,7 @@ export function useFiberCableListGraphQL(options: {
       search,
     },
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -207,7 +211,7 @@ export function useFiberCableDetailGraphQL(
   cableId: string | undefined,
   options: {
     pollInterval?: number;
-  } = {}
+  } = {},
 ) {
   const { pollInterval = 15000 } = options;
 
@@ -215,7 +219,7 @@ export function useFiberCableDetailGraphQL(
     variables: { id: cableId! },
     skip: !cableId,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -243,7 +247,7 @@ export function useFiberCableDetailGraphQL(
  */
 export function useFiberCablesByRouteGraphQL(
   startPointId: string | undefined,
-  endPointId: string | undefined
+  endPointId: string | undefined,
 ) {
   const { data, loading, error, refetch } = useFiberCablesByRouteQuery({
     variables: {
@@ -251,7 +255,7 @@ export function useFiberCablesByRouteGraphQL(
       endPointId: endPointId!,
     },
     skip: !startPointId || !endPointId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -273,15 +277,13 @@ export function useFiberCablesByRouteGraphQL(
  * const { cables, loading } = useFiberCablesByDistributionPointGraphQL('dp-123');
  * ```
  */
-export function useFiberCablesByDistributionPointGraphQL(
-  distributionPointId: string | undefined
-) {
+export function useFiberCablesByDistributionPointGraphQL(distributionPointId: string | undefined) {
   const { data, loading, error, refetch } = useFiberCablesByDistributionPointQuery({
     variables: {
       distributionPointId: distributionPointId!,
     },
     skip: !distributionPointId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -312,11 +314,13 @@ export function useFiberCablesByDistributionPointGraphQL(
  * });
  * ```
  */
-export function useFiberHealthMetricsGraphQL(options: {
-  cableId?: string;
-  healthStatus?: FiberHealthStatus;
-  pollInterval?: number;
-} = {}) {
+export function useFiberHealthMetricsGraphQL(
+  options: {
+    cableId?: string;
+    healthStatus?: FiberHealthStatus;
+    pollInterval?: number;
+  } = {},
+) {
   const { cableId, healthStatus, pollInterval = 60000 } = options;
 
   const { data, loading, error, refetch } = useFiberHealthMetricsQuery({
@@ -325,7 +329,7 @@ export function useFiberHealthMetricsGraphQL(options: {
       healthStatus,
     },
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -356,14 +360,16 @@ export function useFiberHealthMetricsGraphQL(options: {
  * });
  * ```
  */
-export function useFiberNetworkAnalyticsGraphQL(options: {
-  pollInterval?: number;
-} = {}) {
+export function useFiberNetworkAnalyticsGraphQL(
+  options: {
+    pollInterval?: number;
+  } = {},
+) {
   const { pollInterval = 60000 } = options;
 
   const { data, loading, error, refetch } = useFiberNetworkAnalyticsQuery({
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -392,14 +398,16 @@ export function useFiberNetworkAnalyticsGraphQL(options: {
  * });
  * ```
  */
-export function useSplicePointListGraphQL(options: {
-  limit?: number;
-  offset?: number;
-  status?: SpliceStatus;
-  cableId?: string;
-  distributionPointId?: string;
-  pollInterval?: number;
-} = {}) {
+export function useSplicePointListGraphQL(
+  options: {
+    limit?: number;
+    offset?: number;
+    status?: SpliceStatus;
+    cableId?: string;
+    distributionPointId?: string;
+    pollInterval?: number;
+  } = {},
+) {
   const {
     limit = 50,
     offset = 0,
@@ -418,7 +426,7 @@ export function useSplicePointListGraphQL(options: {
       distributionPointId,
     },
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -441,7 +449,7 @@ export function useSplicePointDetailGraphQL(splicePointId: string | undefined) {
   const { data, loading, error, refetch } = useSplicePointDetailQuery({
     variables: { id: splicePointId! },
     skip: !splicePointId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -462,7 +470,7 @@ export function useSplicePointsByCableGraphQL(cableId: string | undefined) {
   const { data, loading, error, refetch } = useSplicePointsByCableQuery({
     variables: { cableId: cableId! },
     skip: !cableId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -491,16 +499,18 @@ export function useSplicePointsByCableGraphQL(cableId: string | undefined) {
  * });
  * ```
  */
-export function useDistributionPointListGraphQL(options: {
-  limit?: number;
-  offset?: number;
-  pointType?: DistributionPointType;
-  status?: FiberCableStatus;
-  siteId?: string;
-  nearCapacity?: boolean;
-  search?: string;
-  pollInterval?: number;
-} = {}) {
+export function useDistributionPointListGraphQL(
+  options: {
+    limit?: number;
+    offset?: number;
+    pointType?: DistributionPointType;
+    status?: FiberCableStatus;
+    siteId?: string;
+    nearCapacity?: boolean;
+    search?: string;
+    pollInterval?: number;
+  } = {},
+) {
   const {
     limit = 50,
     offset = 0,
@@ -521,7 +531,7 @@ export function useDistributionPointListGraphQL(options: {
       nearCapacity,
     },
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -540,13 +550,11 @@ export function useDistributionPointListGraphQL(options: {
  * @param distributionPointId - Distribution point ID
  * @returns Distribution point details
  */
-export function useDistributionPointDetailGraphQL(
-  distributionPointId: string | undefined
-) {
+export function useDistributionPointDetailGraphQL(distributionPointId: string | undefined) {
   const { data, loading, error, refetch } = useDistributionPointDetailQuery({
     variables: { id: distributionPointId! },
     skip: !distributionPointId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -567,7 +575,7 @@ export function useDistributionPointsBySiteGraphQL(siteId: string | undefined) {
   const { data, loading, error, refetch } = useDistributionPointsBySiteQuery({
     variables: { siteId: siteId! },
     skip: !siteId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -596,15 +604,17 @@ export function useDistributionPointsBySiteGraphQL(siteId: string | undefined) {
  * });
  * ```
  */
-export function useServiceAreaListGraphQL(options: {
-  limit?: number;
-  offset?: number;
-  areaType?: ServiceAreaType;
-  isServiceable?: boolean;
-  constructionStatus?: string;
-  search?: string;
-  pollInterval?: number;
-} = {}) {
+export function useServiceAreaListGraphQL(
+  options: {
+    limit?: number;
+    offset?: number;
+    areaType?: ServiceAreaType;
+    isServiceable?: boolean;
+    constructionStatus?: string;
+    search?: string;
+    pollInterval?: number;
+  } = {},
+) {
   const {
     limit = 50,
     offset = 0,
@@ -623,7 +633,7 @@ export function useServiceAreaListGraphQL(options: {
       constructionStatus,
     },
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -646,7 +656,7 @@ export function useServiceAreaDetailGraphQL(serviceAreaId: string | undefined) {
   const { data, loading, error, refetch } = useServiceAreaDetailQuery({
     variables: { id: serviceAreaId! },
     skip: !serviceAreaId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -667,7 +677,7 @@ export function useServiceAreasByPostalCodeGraphQL(postalCode: string | undefine
   const { data, loading, error, refetch } = useServiceAreasByPostalCodeQuery({
     variables: { postalCode: postalCode! },
     skip: !postalCode,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   return {
@@ -742,9 +752,7 @@ export function useFiberCableDetailsAggregated(cableId: string | undefined) {
  * @param distributionPointId - Distribution point ID
  * @returns All data needed for distribution point details page
  */
-export function useDistributionPointDetailsAggregated(
-  distributionPointId: string | undefined
-) {
+export function useDistributionPointDetailsAggregated(distributionPointId: string | undefined) {
   const pointQuery = useDistributionPointDetailGraphQL(distributionPointId);
   const cablesQuery = useFiberCablesByDistributionPointGraphQL(distributionPointId);
 

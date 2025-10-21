@@ -182,7 +182,12 @@ export function BankAccountDialog({
               <Input
                 id="bank_country"
                 value={formData.bank_country}
-                onChange={(e) => setFormData({ ...formData, bank_country: e.target.value.toUpperCase() })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    bank_country: e.target.value.toUpperCase(),
+                  })
+                }
                 required
                 disabled={isEdit}
                 maxLength={2}
@@ -223,7 +228,12 @@ export function BankAccountDialog({
               <Label htmlFor="account_type">Account Type *</Label>
               <Select
                 value={formData.account_type}
-                onValueChange={(value) => setFormData({ ...formData, account_type: value as AccountType })}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    account_type: value as AccountType,
+                  })
+                }
                 disabled={isEdit}
               >
                 <SelectTrigger id="account_type">
@@ -243,7 +253,12 @@ export function BankAccountDialog({
               <Input
                 id="currency"
                 value={formData.currency}
-                onChange={(e) => setFormData({ ...formData, currency: e.target.value.toUpperCase() })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    currency: e.target.value.toUpperCase(),
+                  })
+                }
                 required
                 disabled={isEdit}
                 maxLength={3}
@@ -269,7 +284,12 @@ export function BankAccountDialog({
               <Input
                 id="swift_code"
                 value={formData.swift_code ?? ""}
-                onChange={(e) => setFormData({ ...formData, swift_code: e.target.value.toUpperCase() })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    swift_code: e.target.value.toUpperCase(),
+                  })
+                }
                 disabled={isEdit}
                 maxLength={11}
                 placeholder="ABCDUS33XXX"
@@ -281,7 +301,12 @@ export function BankAccountDialog({
               <Input
                 id="iban"
                 value={formData.iban ?? ""}
-                onChange={(e) => setFormData({ ...formData, iban: e.target.value.toUpperCase() })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    iban: e.target.value.toUpperCase(),
+                  })
+                }
                 disabled={isEdit}
                 maxLength={34}
                 placeholder="GB82WEST..."
@@ -314,7 +339,9 @@ export function BankAccountDialog({
               <Switch
                 id="accepts_deposits"
                 checked={formData.accepts_deposits}
-                onCheckedChange={(checked) => setFormData({ ...formData, accepts_deposits: checked })}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, accepts_deposits: checked })
+                }
               />
             </div>
           </div>

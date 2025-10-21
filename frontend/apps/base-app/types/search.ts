@@ -45,29 +45,29 @@ export interface RemoveFromIndexResponse {
 
 // Entity type constants for filtering
 export const SEARCH_ENTITY_TYPES = {
-  CUSTOMER: 'customer',
-  SUBSCRIBER: 'subscriber',
-  INVOICE: 'invoice',
-  TICKET: 'ticket',
-  USER: 'user',
-  DEVICE: 'device',
-  SERVICE: 'service',
-  ORDER: 'order',
+  CUSTOMER: "customer",
+  SUBSCRIBER: "subscriber",
+  INVOICE: "invoice",
+  TICKET: "ticket",
+  USER: "user",
+  DEVICE: "device",
+  SERVICE: "service",
+  ORDER: "order",
 } as const;
 
-export type SearchEntityType = typeof SEARCH_ENTITY_TYPES[keyof typeof SEARCH_ENTITY_TYPES];
+export type SearchEntityType = (typeof SEARCH_ENTITY_TYPES)[keyof typeof SEARCH_ENTITY_TYPES];
 
 // Type badge colors
 export const TYPE_COLORS: Record<string, string> = {
-  customer: 'bg-blue-100 text-blue-800',
-  subscriber: 'bg-green-100 text-green-800',
-  invoice: 'bg-yellow-100 text-yellow-800',
-  ticket: 'bg-red-100 text-red-800',
-  user: 'bg-purple-100 text-purple-800',
-  device: 'bg-indigo-100 text-indigo-800',
-  service: 'bg-pink-100 text-pink-800',
-  order: 'bg-orange-100 text-orange-800',
-  unknown: 'bg-gray-100 text-gray-800',
+  customer: "bg-blue-100 text-blue-800",
+  subscriber: "bg-green-100 text-green-800",
+  invoice: "bg-yellow-100 text-yellow-800",
+  ticket: "bg-red-100 text-red-800",
+  user: "bg-purple-100 text-purple-800",
+  device: "bg-indigo-100 text-indigo-800",
+  service: "bg-pink-100 text-pink-800",
+  order: "bg-orange-100 text-orange-800",
+  unknown: "bg-gray-100 text-gray-800",
 };
 
 // Helper to get route for entity detail page
@@ -83,7 +83,7 @@ export function getEntityRoute(type: string, id: string): string {
     order: `/dashboard/orders/${id}`,
   };
 
-  return routes[type] || '#';
+  return routes[type] || "#";
 }
 
 // Format entity type for display

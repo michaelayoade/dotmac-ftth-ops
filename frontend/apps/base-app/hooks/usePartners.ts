@@ -229,7 +229,7 @@ export interface PartnerOnboardingResult {
 async function fetchPartners(
   status?: string,
   page: number = 1,
-  pageSize: number = 50
+  pageSize: number = 50,
 ): Promise<PartnerListResponse> {
   const params = new URLSearchParams({
     page: page.toString(),
@@ -240,15 +240,12 @@ async function fetchPartners(
     params.append("status", status);
   }
 
-  const response = await fetch(
-    `${API_BASE}/api/v1/partners?${params.toString()}`,
-    {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const response = await fetch(`${API_BASE}/api/v1/partners?${params.toString()}`, {
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
   if (!response.ok) {
     throw new Error("Failed to fetch partners");
@@ -290,10 +287,7 @@ async function createPartner(data: CreatePartnerInput): Promise<Partner> {
   return response.json();
 }
 
-async function updatePartner(
-  partnerId: string,
-  data: UpdatePartnerInput
-): Promise<Partner> {
+async function updatePartner(partnerId: string, data: UpdatePartnerInput): Promise<Partner> {
   const response = await fetch(`${API_BASE}/api/v1/partners/${partnerId}`, {
     method: "PATCH",
     credentials: "include",
@@ -329,7 +323,7 @@ async function deletePartner(partnerId: string): Promise<void> {
 async function checkLicenseQuota(
   partnerId: string,
   requestedLicenses: number,
-  tenantId?: string
+  tenantId?: string,
 ): Promise<QuotaCheckResult> {
   const params = new URLSearchParams({
     requested_licenses: requestedLicenses.toString(),
@@ -346,7 +340,7 @@ async function checkLicenseQuota(
       headers: {
         "Content-Type": "application/json",
       },
-    }
+    },
   );
 
   if (!response.ok) {
@@ -362,24 +356,21 @@ async function createPartnerCustomer(
   customerData: PartnerCustomerInput,
   engagementType: string = "managed",
   customCommissionRate?: number,
-  tenantId?: string
+  tenantId?: string,
 ): Promise<PartnerCustomerResult> {
-  const response = await fetch(
-    `${API_BASE}/api/v1/partners/${partnerId}/customers`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        customer_data: customerData,
-        engagement_type: engagementType,
-        custom_commission_rate: customCommissionRate,
-        tenant_id: tenantId,
-      }),
-    }
-  );
+  const response = await fetch(`${API_BASE}/api/v1/partners/${partnerId}/customers`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      customer_data: customerData,
+      engagement_type: engagementType,
+      custom_commission_rate: customCommissionRate,
+      tenant_id: tenantId,
+    }),
+  });
 
   if (!response.ok) {
     const error = await response.json();
@@ -390,25 +381,22 @@ async function createPartnerCustomer(
 }
 
 async function allocateLicensesFromPartner(
-  data: LicenseAllocationInput
+  data: LicenseAllocationInput,
 ): Promise<LicenseAllocationResult> {
-  const response = await fetch(
-    `${API_BASE}/api/v1/partners/${data.partner_id}/licenses/allocate`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        customer_id: data.customer_id,
-        license_template_id: data.license_template_id,
-        license_count: data.license_count || 1,
-        tenant_id: data.tenant_id,
-        metadata: data.metadata,
-      }),
-    }
-  );
+  const response = await fetch(`${API_BASE}/api/v1/partners/${data.partner_id}/licenses/allocate`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      customer_id: data.customer_id,
+      license_template_id: data.license_template_id,
+      license_count: data.license_count || 1,
+      tenant_id: data.tenant_id,
+      metadata: data.metadata,
+    }),
+  });
 
   if (!response.ok) {
     const error = await response.json();
@@ -419,27 +407,24 @@ async function allocateLicensesFromPartner(
 }
 
 async function provisionPartnerTenant(
-  data: TenantProvisioningInput
+  data: TenantProvisioningInput,
 ): Promise<TenantProvisioningResult> {
-  const response = await fetch(
-    `${API_BASE}/api/v1/partners/${data.partner_id}/tenants/provision`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        customer_id: data.customer_id,
-        license_key: data.license_key,
-        deployment_type: data.deployment_type,
-        white_label_config: data.white_label_config,
-        tenant_id: data.tenant_id,
-        environment: data.environment || "production",
-        region: data.region,
-      }),
-    }
-  );
+  const response = await fetch(`${API_BASE}/api/v1/partners/${data.partner_id}/tenants/provision`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      customer_id: data.customer_id,
+      license_key: data.license_key,
+      deployment_type: data.deployment_type,
+      white_label_config: data.white_label_config,
+      tenant_id: data.tenant_id,
+      environment: data.environment || "production",
+      region: data.region,
+    }),
+  });
 
   if (!response.ok) {
     const error = await response.json();
@@ -450,27 +435,24 @@ async function provisionPartnerTenant(
 }
 
 async function recordPartnerCommission(
-  data: CommissionRecordInput
+  data: CommissionRecordInput,
 ): Promise<CommissionRecordResult> {
-  const response = await fetch(
-    `${API_BASE}/api/v1/partners/${data.partner_id}/commissions`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        customer_id: data.customer_id,
-        commission_type: data.commission_type,
-        amount: data.amount,
-        invoice_id: data.invoice_id,
-        tenant_id: data.tenant_id,
-        currency: data.currency || "USD",
-        metadata: data.metadata,
-      }),
-    }
-  );
+  const response = await fetch(`${API_BASE}/api/v1/partners/${data.partner_id}/commissions`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      customer_id: data.customer_id,
+      commission_type: data.commission_type,
+      amount: data.amount,
+      invoice_id: data.invoice_id,
+      tenant_id: data.tenant_id,
+      currency: data.currency || "USD",
+      metadata: data.metadata,
+    }),
+  });
 
   if (!response.ok) {
     const error = await response.json();
@@ -481,19 +463,16 @@ async function recordPartnerCommission(
 }
 
 async function completePartnerOnboarding(
-  data: PartnerOnboardingInput
+  data: PartnerOnboardingInput,
 ): Promise<PartnerOnboardingResult> {
-  const response = await fetch(
-    `${API_BASE}/api/v1/partners/onboarding/complete`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }
-  );
+  const response = await fetch(`${API_BASE}/api/v1/partners/onboarding/complete`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
 
   if (!response.ok) {
     const error = await response.json();
@@ -504,11 +483,7 @@ async function completePartnerOnboarding(
 }
 
 // Hooks
-export function usePartners(
-  status?: string,
-  page: number = 1,
-  pageSize: number = 50
-) {
+export function usePartners(status?: string, page: number = 1, pageSize: number = 50) {
   return useQuery({
     queryKey: ["partners", status, page, pageSize],
     queryFn: () => fetchPartners(status, page, pageSize),
@@ -542,7 +517,9 @@ export function useUpdatePartner() {
       updatePartner(partnerId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
-      queryClient.invalidateQueries({ queryKey: ["partner", variables.partnerId] });
+      queryClient.invalidateQueries({
+        queryKey: ["partner", variables.partnerId],
+      });
     },
   });
 }
@@ -595,11 +572,13 @@ export function useCreatePartnerCustomer() {
         customerData,
         engagementType,
         customCommissionRate,
-        tenantId
+        tenantId,
       ),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
-      queryClient.invalidateQueries({ queryKey: ["partner", variables.partnerId] });
+      queryClient.invalidateQueries({
+        queryKey: ["partner", variables.partnerId],
+      });
       queryClient.invalidateQueries({ queryKey: ["customers"] });
     },
   });
@@ -614,7 +593,9 @@ export function useAllocateLicenses() {
       queryClient.invalidateQueries({ queryKey: ["partners"] });
       queryClient.invalidateQueries({ queryKey: ["partner", data.partner_id] });
       queryClient.invalidateQueries({ queryKey: ["licenses"] });
-      queryClient.invalidateQueries({ queryKey: ["customer", data.customer_id] });
+      queryClient.invalidateQueries({
+        queryKey: ["customer", data.customer_id],
+      });
     },
   });
 }

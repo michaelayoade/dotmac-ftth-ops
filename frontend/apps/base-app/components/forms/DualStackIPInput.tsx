@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Dual-Stack IP Input Component
@@ -6,11 +6,11 @@
  * Form input for configuring both IPv4 and IPv6 addresses
  */
 
-import React from 'react';
-import { Label } from '@/components/ui/label';
-import { IPAddressInput } from './IPAddressInput';
-import { IPCIDRInput } from './IPCIDRInput';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { Label } from "@/components/ui/label";
+import { IPAddressInput } from "./IPAddressInput";
+import { IPCIDRInput } from "./IPCIDRInput";
+import { cn } from "@/lib/utils";
 
 export interface DualStackIPInputProps {
   ipv4Value: string;
@@ -40,15 +40,15 @@ export function DualStackIPInput({
   onIPv6Change,
   onIPv4Blur,
   onIPv6Blur,
-  label = 'IP Addresses',
+  label = "IP Addresses",
   ipv4Error,
   ipv6Error,
   disabled = false,
   requireAtLeastOne = true,
   useCIDR = false,
   className,
-  ipv4Label = 'IPv4 Address',
-  ipv6Label = 'IPv6 Address',
+  ipv4Label = "IPv4 Address",
+  ipv6Label = "IPv6 Address",
   ipv4Placeholder,
   ipv6Placeholder,
   showInfo = true,
@@ -58,15 +58,11 @@ export function DualStackIPInput({
 
   const InputComponent = useCIDR ? IPCIDRInput : IPAddressInput;
 
-  const defaultIPv4Placeholder = useCIDR
-    ? '192.168.1.0/24'
-    : '192.168.1.1';
-  const defaultIPv6Placeholder = useCIDR
-    ? '2001:db8::/64'
-    : '2001:db8::1';
+  const defaultIPv4Placeholder = useCIDR ? "192.168.1.0/24" : "192.168.1.1";
+  const defaultIPv6Placeholder = useCIDR ? "2001:db8::/64" : "2001:db8::1";
 
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn("space-y-4", className)}>
       {label && (
         <div>
           <Label>

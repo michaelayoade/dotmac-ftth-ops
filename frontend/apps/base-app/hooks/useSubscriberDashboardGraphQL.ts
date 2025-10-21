@@ -13,8 +13,8 @@
  * - Type-safe from backend to frontend
  */
 
-import { useSubscriberDashboardQuery } from '@/lib/graphql/generated';
-import { logger } from '@/lib/logger';
+import { useSubscriberDashboardQuery } from "@/lib/graphql/generated";
+import { logger } from "@/lib/logger";
 
 interface UseSubscriberDashboardOptions {
   limit?: number;
@@ -33,7 +33,7 @@ export function useSubscriberDashboardGraphQL(options: UseSubscriberDashboardOpt
     skip: !enabled,
     pollInterval: 30000, // Refresh every 30 seconds
     onError: (err) => {
-      logger.error('GraphQL subscriber dashboard query failed', err);
+      logger.error("GraphQL subscriber dashboard query failed", err);
     },
   });
 
@@ -80,7 +80,7 @@ export function useSubscriberDashboardGraphQL(options: UseSubscriberDashboardOpt
  */
 export function getSubscriberSessions(
   subscribers: Array<{ username: string; sessions: any[] }>,
-  username: string
+  username: string,
 ) {
   const subscriber = subscribers.find((s) => s.username === username);
   return subscriber?.sessions ?? [];

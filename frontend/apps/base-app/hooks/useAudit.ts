@@ -11,30 +11,37 @@
  * - Automatic refetching and background updates
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/components/ui/use-toast';
-import { auditService } from '@/lib/services/audit-service';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
+import { auditService } from "@/lib/services/audit-service";
 import type {
   AuditActivity,
   AuditActivityList,
   AuditFilterParams,
   ActivitySummary,
-} from '@/types/audit';
-import type { AuditExportRequest, AuditExportResponse, ComplianceReport } from '@/lib/services/audit-service';
+} from "@/types/audit";
+import type {
+  AuditExportRequest,
+  AuditExportResponse,
+  ComplianceReport,
+} from "@/lib/services/audit-service";
 
 // ==================== Query Keys ====================
 
 export const auditKeys = {
-  all: ['audit'] as const,
+  all: ["audit"] as const,
   activities: {
-    all: ['audit', 'activities'] as const,
-    list: (filters: AuditFilterParams) => ['audit', 'activities', 'list', filters] as const,
-    recent: (limit: number, days: number) => ['audit', 'activities', 'recent', limit, days] as const,
-    user: (userId: string, limit: number, days: number) => ['audit', 'activities', 'user', userId, limit, days] as const,
-    detail: (id: string) => ['audit', 'activity', id] as const,
+    all: ["audit", "activities"] as const,
+    list: (filters: AuditFilterParams) => ["audit", "activities", "list", filters] as const,
+    recent: (limit: number, days: number) =>
+      ["audit", "activities", "recent", limit, days] as const,
+    user: (userId: string, limit: number, days: number) =>
+      ["audit", "activities", "user", userId, limit, days] as const,
+    detail: (id: string) => ["audit", "activity", id] as const,
   },
-  summary: (days: number) => ['audit', 'summary', days] as const,
-  compliance: (fromDate: string, toDate: string) => ['audit', 'compliance', fromDate, toDate] as const,
+  summary: (days: number) => ["audit", "summary", days] as const,
+  compliance: (fromDate: string, toDate: string) =>
+    ["audit", "compliance", fromDate, toDate] as const,
 };
 
 // ==================== Activity Operations ====================
@@ -116,13 +123,9 @@ export function useActivitySummary(days = 7, enabled = true) {
  * Get resource history
  * Convenience hook for getting audit logs for a specific resource
  */
-export function useResourceHistory(
-  resourceType: string,
-  resourceId: string,
-  enabled = true
-) {
+export function useResourceHistory(resourceType: string, resourceId: string, enabled = true) {
   return useQuery<AuditActivity[], Error>({
-    queryKey: ['audit', 'resource', resourceType, resourceId],
+    queryKey: ["audit", "resource", resourceType, resourceId],
     queryFn: () => auditService.getResourceHistory(resourceType, resourceId),
     enabled: enabled && !!resourceType && !!resourceId,
     staleTime: 60000, // 1 minute
@@ -161,11 +164,7 @@ export function useExportAuditLogs(options?: {
  * Get compliance report
  * GET /api/v1/audit/compliance
  */
-export function useComplianceReport(
-  fromDate: string,
-  toDate: string,
-  enabled = true
-) {
+export function useComplianceReport(fromDate: string, toDate: string, enabled = true) {
   return useQuery<ComplianceReport, Error>({
     queryKey: auditKeys.compliance(fromDate, toDate),
     queryFn: () => auditService.getComplianceReport(fromDate, toDate),

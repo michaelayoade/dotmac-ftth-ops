@@ -8,8 +8,8 @@
  * - Billing operations (mark billed, exclude)
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/components/ui/use-toast';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
 import {
   usageBillingService,
   type UsageAggregate,
@@ -21,7 +21,7 @@ import {
   type UsageRecordFilters,
   type UsageRecordUpdate,
   type UsageStatistics,
-} from '@/lib/services/usage-billing-service';
+} from "@/lib/services/usage-billing-service";
 
 // Re-export types for convenience
 export type {
@@ -33,22 +33,22 @@ export type {
   UsageRecordUpdate,
   UsageStatistics,
   UsageType,
-} from '@/lib/services/usage-billing-service';
+} from "@/lib/services/usage-billing-service";
 
 // ============================================
 // Query Keys
 // ============================================
 
 export const usageKeys = {
-  all: ['usage'] as const,
-  records: () => [...usageKeys.all, 'records'] as const,
+  all: ["usage"] as const,
+  records: () => [...usageKeys.all, "records"] as const,
   record: (filters: UsageRecordFilters) => [...usageKeys.records(), filters] as const,
   recordDetail: (id: string) => [...usageKeys.records(), id] as const,
-  aggregates: () => [...usageKeys.all, 'aggregates'] as const,
+  aggregates: () => [...usageKeys.all, "aggregates"] as const,
   aggregate: (filters: UsageAggregateFilters) => [...usageKeys.aggregates(), filters] as const,
   statistics: (periodStart?: string, periodEnd?: string) =>
-    [...usageKeys.all, 'statistics', periodStart, periodEnd] as const,
-  chartData: (filters: UsageChartFilters) => [...usageKeys.all, 'chart', filters] as const,
+    [...usageKeys.all, "statistics", periodStart, periodEnd] as const,
+  chartData: (filters: UsageChartFilters) => [...usageKeys.all, "chart", filters] as const,
 };
 
 // ============================================
@@ -169,11 +169,12 @@ export function useUpdateUsageRecord(options?: {
   const queryClient = useQueryClient();
 
   return useMutation<UsageRecord, Error, { recordId: string; data: UsageRecordUpdate }>({
-    mutationFn: ({ recordId, data }) =>
-      usageBillingService.updateUsageRecord(recordId, data),
+    mutationFn: ({ recordId, data }) => usageBillingService.updateUsageRecord(recordId, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: usageKeys.records() });
-      queryClient.invalidateQueries({ queryKey: usageKeys.recordDetail(data.id) });
+      queryClient.invalidateQueries({
+        queryKey: usageKeys.recordDetail(data.id),
+      });
       queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
 
       // toast.success('Usage record updated successfully');
@@ -269,8 +270,7 @@ export function useExcludeUsageRecordsFromBilling(options?: {
   const queryClient = useQueryClient();
 
   return useMutation<void, Error, string[]>({
-    mutationFn: (recordIds) =>
-      usageBillingService.excludeUsageRecordsFromBilling(recordIds),
+    mutationFn: (recordIds) => usageBillingService.excludeUsageRecordsFromBilling(recordIds),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: usageKeys.records() });
       queryClient.invalidateQueries({ queryKey: usageKeys.statistics() });
@@ -362,7 +362,7 @@ export function useUsageOperations() {
         await markAsBilled.mutateAsync({ recordIds, invoiceId });
         return true;
       } catch (error) {
-        console.error('Failed to mark usage records as billed:', error);
+        console.error("Failed to mark usage records as billed:", error);
         return false;
       }
     },
@@ -371,7 +371,7 @@ export function useUsageOperations() {
         await excludeFromBilling.mutateAsync(recordIds);
         return true;
       } catch (error) {
-        console.error('Failed to exclude usage records from billing:', error);
+        console.error("Failed to exclude usage records from billing:", error);
         return false;
       }
     },

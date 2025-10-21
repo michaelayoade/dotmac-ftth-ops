@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { AlertCircle, RefreshCw, LucideIcon } from 'lucide-react';
-import { Button } from './button';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { AlertCircle, RefreshCw, LucideIcon } from "lucide-react";
+import { Button } from "./button";
+import { cn } from "@/lib/utils";
 
 interface ErrorStateProps {
   title?: string;
@@ -12,22 +12,22 @@ interface ErrorStateProps {
   onRetry?: () => void;
   retryLabel?: string;
   className?: string;
-  variant?: 'inline' | 'card' | 'full';
+  variant?: "inline" | "card" | "full";
 }
 
 export function ErrorState({
-  title = 'Something went wrong',
+  title = "Something went wrong",
   message,
   icon: Icon = AlertCircle,
   onRetry,
-  retryLabel = 'Try again',
-  className = '',
-  variant = 'card',
+  retryLabel = "Try again",
+  className = "",
+  variant = "card",
 }: ErrorStateProps) {
   const variantStyles = {
-    inline: 'py-4',
-    card: 'rounded-lg border border-red-900/30 bg-red-950/20 p-6',
-    full: 'min-h-[400px] flex items-center justify-center py-12',
+    inline: "py-4",
+    card: "rounded-lg border border-red-900/30 bg-red-950/20 p-6",
+    full: "min-h-[400px] flex items-center justify-center py-12",
   };
 
   return (
@@ -65,7 +65,7 @@ export function ErrorBoundaryFallback({ error, resetErrorBoundary }: ErrorBounda
   return (
     <ErrorState
       title="Unexpected Error"
-      message={error.message || 'An unexpected error occurred while loading this component.'}
+      message={error.message || "An unexpected error occurred while loading this component."}
       onRetry={resetErrorBoundary}
       variant="full"
     />

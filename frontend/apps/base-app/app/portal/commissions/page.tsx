@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { usePartnerCommissions } from "@/hooks/usePartnerPortal";
@@ -47,10 +47,7 @@ export default function PartnerCommissionsPage() {
   }
 
   const commissionList = commissions || [];
-  const totalEarned = commissionList.reduce(
-    (sum, c) => sum + c.commission_amount,
-    0
-  );
+  const totalEarned = commissionList.reduce((sum, c) => sum + c.commission_amount, 0);
   const totalPaid = commissionList
     .filter((c) => c.status === "paid")
     .reduce((sum, c) => sum + c.commission_amount, 0);
@@ -63,9 +60,7 @@ export default function PartnerCommissionsPage() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-foreground">Commissions</h1>
-        <p className="text-muted-foreground mt-1">
-          Track your commission earnings and payments
-        </p>
+        <p className="text-muted-foreground mt-1">Track your commission earnings and payments</p>
       </div>
 
       {/* Summary Cards */}
@@ -161,10 +156,7 @@ export default function PartnerCommissionsPage() {
                   const StatusIcon = STATUS_ICONS[commission.status];
 
                   return (
-                    <tr
-                      key={commission.id}
-                      className="hover:bg-accent/50 transition-colors"
-                    >
+                    <tr key={commission.id} className="hover:bg-accent/50 transition-colors">
                       <td className="px-4 py-3 text-sm text-foreground">
                         {new Date(commission.event_date).toLocaleDateString()}
                       </td>
@@ -206,18 +198,19 @@ export default function PartnerCommissionsPage() {
 
       {/* Payment Information */}
       <div className="mt-6 bg-card p-6 rounded-lg border border-border">
-        <h2 className="text-lg font-semibold text-foreground mb-3">
-          Payment Information
-        </h2>
+        <h2 className="text-lg font-semibold text-foreground mb-3">Payment Information</h2>
         <div className="space-y-2 text-sm text-muted-foreground">
           <p>• Commissions are typically paid monthly on the 15th</p>
           <p>
-            • Minimum payout threshold: $100 (pending commissions below this
-            amount will roll over to the next month)
+            • Minimum payout threshold: $100 (pending commissions below this amount will roll over
+            to the next month)
           </p>
           <p>
             • Payment method can be configured in{" "}
-            <a href="/portal/settings" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">
+            <a
+              href="/portal/settings"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300"
+            >
               Settings
             </a>
           </p>

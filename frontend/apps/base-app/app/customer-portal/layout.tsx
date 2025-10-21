@@ -26,7 +26,12 @@ import {
   Wifi,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { CustomerAuthProvider, useCustomerAuth, CustomerProtectedRoute } from "@/lib/auth/CustomerAuthContext";
+import {
+  CustomerAuthProvider,
+  useCustomerAuth,
+  CustomerProtectedRoute,
+} from "@/lib/auth/CustomerAuthContext";
+import { PortalBadge } from "@/components/ui/portal-badge";
 
 const navigation = [
   { name: "Dashboard", href: "/customer-portal", icon: Home },
@@ -68,19 +73,13 @@ function CustomerPortalContent({ children }: { children: React.ReactNode }) {
               className="md:hidden"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              {isMobileMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
             <Link href="/customer-portal" className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
                 <Wifi className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="font-bold text-lg hidden sm:inline-block">
-                My Account
-              </span>
+              <span className="font-bold text-lg hidden sm:inline-block">My Account</span>
             </Link>
           </div>
 
@@ -88,7 +87,8 @@ function CustomerPortalContent({ children }: { children: React.ReactNode }) {
           <nav className="hidden md:flex items-center gap-6">
             {navigation.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href ||
+              const isActive =
+                pathname === item.href ||
                 (item.href !== "/customer-portal" && pathname.startsWith(item.href));
 
               return (
@@ -97,9 +97,7 @@ function CustomerPortalContent({ children }: { children: React.ReactNode }) {
                   href={item.href}
                   className={cn(
                     "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
-                    isActive
-                      ? "text-primary"
-                      : "text-muted-foreground"
+                    isActive ? "text-primary" : "text-muted-foreground",
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -116,7 +114,8 @@ function CustomerPortalContent({ children }: { children: React.ReactNode }) {
                 <Avatar>
                   <AvatarImage src="" alt={`${user.first_name} ${user.last_name}`} />
                   <AvatarFallback>
-                    {user.first_name[0]}{user.last_name[0]}
+                    {(user.first_name?.[0] || user.email?.[0] || "U").toUpperCase()}
+                    {(user.last_name?.[0] || user.email?.[1] || "").toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -127,9 +126,7 @@ function CustomerPortalContent({ children }: { children: React.ReactNode }) {
                   <p className="text-sm font-medium leading-none">
                     {user.first_name} {user.last_name}
                   </p>
-                  <p className="text-xs leading-none text-muted-foreground">
-                    {user.email}
-                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                   <p className="text-xs leading-none text-muted-foreground mt-1">
                     Account: {user.account_number}
                   </p>
@@ -158,7 +155,8 @@ function CustomerPortalContent({ children }: { children: React.ReactNode }) {
           <nav className="container px-4 py-4 space-y-1">
             {navigation.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href ||
+              const isActive =
+                pathname === item.href ||
                 (item.href !== "/customer-portal" && pathname.startsWith(item.href));
 
               return (
@@ -170,7 +168,7 @@ function CustomerPortalContent({ children }: { children: React.ReactNode }) {
                     "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                     isActive
                       ? "bg-primary text-primary-foreground"
-                      : "hover:bg-accent hover:text-accent-foreground"
+                      : "hover:bg-accent hover:text-accent-foreground",
                   )}
                 >
                   <Icon className="h-4 w-4" />
@@ -184,6 +182,10 @@ function CustomerPortalContent({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <main className="flex-1 container px-4 py-6">
+        {/* Portal Badge - Shows which portal user is in */}
+        <div className="mb-4 flex items-center justify-between">
+          <PortalBadge showIcon shortName size="sm" />
+        </div>
         <CustomerProtectedRoute>{children}</CustomerProtectedRoute>
       </main>
 
@@ -191,9 +193,7 @@ function CustomerPortalContent({ children }: { children: React.ReactNode }) {
       <footer className="border-t mt-auto">
         <div className="container px-4 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-            <div>
-              © 2025 Your ISP Company. All rights reserved.
-            </div>
+            <div>© 2025 Your ISP Company. All rights reserved.</div>
             <div className="flex gap-6">
               <Link href="/customer-portal/help" className="hover:text-primary">
                 Help Center

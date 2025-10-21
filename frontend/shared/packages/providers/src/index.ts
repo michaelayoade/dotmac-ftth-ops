@@ -4,10 +4,10 @@
  */
 
 // Core provider aggregator
-export { UniversalProviders } from './UniversalProviders';
+export { UniversalProviders } from "./UniversalProviders";
 
 // Local components only - avoiding problematic external re-exports for now
-export { ErrorBoundary } from './components/ErrorBoundary';
+export { ErrorBoundary } from "./components/ErrorBoundary";
 
 // Re-export RBAC components for convenience
 export {
@@ -19,7 +19,7 @@ export {
   ShowIfAny,
   ShowIfAll,
   HideIf,
-} from '@dotmac/rbac';
+} from "@dotmac/rbac";
 
 // Re-export permission-aware UI components
 export {
@@ -28,19 +28,19 @@ export {
   EditButton,
   DeleteButton,
   AdminButton,
-} from '@dotmac/rbac';
+} from "@dotmac/rbac";
 
 // Re-export routing components
-export { ProtectedRoute, AdminRoute, ManagerRoute, AuthenticatedRoute } from '@dotmac/rbac';
+export { ProtectedRoute, AdminRoute, ManagerRoute, AuthenticatedRoute } from "@dotmac/rbac";
 
 // Re-export hooks
-export { usePermissions, useAccessControl } from '@dotmac/rbac';
+export { usePermissions, useAccessControl } from "@dotmac/rbac";
 
 // Re-export decorators
-export { withAccessControl, accessControlDecorators, createProtected } from '@dotmac/rbac';
+export { withAccessControl, accessControlDecorators, createProtected } from "@dotmac/rbac";
 
 // Re-export auth-related types
-export type { FeatureFlags, AuthVariant, TenantVariant } from './UniversalProviders';
+export type { FeatureFlags, AuthVariant, TenantVariant } from "./UniversalProviders";
 
 // Default configurations for each portal
 export const PORTAL_DEFAULTS = {
@@ -53,8 +53,8 @@ export const PORTAL_DEFAULTS = {
       errorHandling: true,
       performanceMonitoring: true,
     },
-    theme: 'customer',
-    cacheStrategy: 'aggressive',
+    theme: "customer",
+    cacheStrategy: "aggressive",
   },
   admin: {
     features: {
@@ -65,8 +65,8 @@ export const PORTAL_DEFAULTS = {
       errorHandling: true,
       performanceMonitoring: true,
     },
-    theme: 'admin',
-    cacheStrategy: 'balanced',
+    theme: "admin",
+    cacheStrategy: "balanced",
   },
   reseller: {
     features: {
@@ -77,8 +77,8 @@ export const PORTAL_DEFAULTS = {
       errorHandling: true,
       performanceMonitoring: false,
     },
-    theme: 'reseller',
-    cacheStrategy: 'conservative',
+    theme: "reseller",
+    cacheStrategy: "conservative",
   },
   technician: {
     features: {
@@ -89,10 +89,10 @@ export const PORTAL_DEFAULTS = {
       errorHandling: true,
       performanceMonitoring: false,
     },
-    theme: 'technician',
-    cacheStrategy: 'minimal',
+    theme: "technician",
+    cacheStrategy: "minimal",
   },
-  'management-admin': {
+  "management-admin": {
     features: {
       notifications: true,
       realtime: true,
@@ -101,10 +101,10 @@ export const PORTAL_DEFAULTS = {
       errorHandling: true,
       performanceMonitoring: true,
     },
-    theme: 'management',
-    cacheStrategy: 'aggressive',
+    theme: "management",
+    cacheStrategy: "aggressive",
   },
-  'management-reseller': {
+  "management-reseller": {
     features: {
       notifications: true,
       realtime: false,
@@ -113,10 +113,10 @@ export const PORTAL_DEFAULTS = {
       errorHandling: true,
       performanceMonitoring: false,
     },
-    theme: 'management-reseller',
-    cacheStrategy: 'balanced',
+    theme: "management-reseller",
+    cacheStrategy: "balanced",
   },
-  'tenant-portal': {
+  "tenant-portal": {
     features: {
       notifications: true,
       realtime: false,
@@ -125,7 +125,7 @@ export const PORTAL_DEFAULTS = {
       errorHandling: true,
       performanceMonitoring: false,
     },
-    theme: 'tenant',
-    cacheStrategy: 'conservative',
+    theme: "tenant",
+    cacheStrategy: "conservative",
   },
 } as const;

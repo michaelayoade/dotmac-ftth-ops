@@ -3,7 +3,7 @@
  * Provides both client and server-side validation
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // Base Partner Schema
 export const PartnerSchema = z.object({
@@ -16,8 +16,8 @@ export const PartnerSchema = z.object({
     .regex(/^[A-Z0-9]+$/),
   territory: z.string().min(2).max(50),
   joinDate: z.string().datetime(),
-  status: z.enum(['active', 'inactive', 'suspended', 'pending']),
-  tier: z.enum(['Bronze', 'Silver', 'Gold', 'Platinum']),
+  status: z.enum(["active", "inactive", "suspended", "pending"]),
+  tier: z.enum(["Bronze", "Silver", "Gold", "Platinum"]),
   contact: z.object({
     name: z.string().min(2).max(50),
     email: z.string().email(),
@@ -32,12 +32,12 @@ export const CustomerSchema = z.object({
   email: z.string().email(),
   phone: z.string().regex(/^\+?[1-9]\d{1,14}$/),
   address: z.string().min(10).max(200),
-  plan: z.enum(['residential_basic', 'residential_premium', 'business_pro', 'enterprise']),
+  plan: z.enum(["residential_basic", "residential_premium", "business_pro", "enterprise"]),
   mrr: z.number().min(0).max(10000),
-  status: z.enum(['active', 'pending', 'suspended', 'cancelled']),
+  status: z.enum(["active", "pending", "suspended", "cancelled"]),
   joinDate: z.string().datetime(),
   lastPayment: z.string().datetime().nullable(),
-  connectionStatus: z.enum(['online', 'offline']),
+  connectionStatus: z.enum(["online", "offline"]),
   usage: z.number().min(0).max(100),
 });
 
@@ -87,7 +87,7 @@ export const CommissionRecordSchema = z.object({
   revenue: z.number().min(0),
   commissionRate: z.number().min(0).max(1), // 0-100% as decimal
   commissionAmount: z.number().min(0),
-  status: z.enum(['pending', 'paid', 'disputed']),
+  status: z.enum(["pending", "paid", "disputed"]),
   payoutDate: z.string().datetime().optional(),
 });
 
@@ -96,7 +96,7 @@ export const CustomerQueryParamsSchema = z.object({
   page: z.number().min(1).default(1),
   limit: z.number().min(1).max(100).default(10),
   search: z.string().max(100).optional(),
-  status: z.enum(['active', 'pending', 'suspended', 'cancelled']).optional(),
+  status: z.enum(["active", "pending", "suspended", "cancelled"]).optional(),
 });
 
 export const CommissionQueryParamsSchema = z.object({
@@ -106,7 +106,7 @@ export const CommissionQueryParamsSchema = z.object({
     .string()
     .regex(/^\d{4}(-\d{2})?$/)
     .optional(), // YYYY or YYYY-MM
-  status: z.enum(['pending', 'paid', 'disputed']).optional(),
+  status: z.enum(["pending", "paid", "disputed"]).optional(),
 });
 
 // Dashboard Data Schema
@@ -133,17 +133,17 @@ export const DashboardDataSchema = z.object({
       monthlyCustomers: z.object({
         current: z.number().min(0),
         target: z.number().min(0),
-        unit: z.literal('customers'),
+        unit: z.literal("customers"),
       }),
       monthlyRevenue: z.object({
         current: z.number().min(0),
         target: z.number().min(0),
-        unit: z.literal('revenue'),
+        unit: z.literal("revenue"),
       }),
       quarterlyGrowth: z.object({
         current: z.number(),
         target: z.number(),
-        unit: z.literal('percentage'),
+        unit: z.literal("percentage"),
       }),
     }),
   }),
@@ -152,7 +152,7 @@ export const DashboardDataSchema = z.object({
       CustomerSchema.extend({
         service: z.string().min(1).max(50),
         commission: z.number().min(0),
-      })
+      }),
     )
     .max(10),
   salesGoals: z
@@ -164,8 +164,8 @@ export const DashboardDataSchema = z.object({
         current: z.number().min(0),
         progress: z.number().min(0).max(100),
         deadline: z.string().datetime(),
-        status: z.enum(['active', 'completed', 'overdue']),
-      })
+        status: z.enum(["active", "completed", "overdue"]),
+      }),
     )
     .max(20),
 });
@@ -206,14 +206,14 @@ export const PaginatedResponseSchema = <T extends z.ZodType>(itemSchema: T) =>
 export const sanitizeInput = (input: string): string => {
   return input
     .trim()
-    .replace(/[<>]/g, '') // Basic XSS prevention
+    .replace(/[<>]/g, "") // Basic XSS prevention
     .slice(0, 1000); // Prevent extremely long inputs
 };
 
 export const sanitizeSearchTerm = (term: string): string => {
   return term
     .trim()
-    .replace(/[^\w\s@.-]/g, '') // Allow alphanumeric, spaces, email chars, and basic punctuation
+    .replace(/[^\w\s@.-]/g, "") // Allow alphanumeric, spaces, email chars, and basic punctuation
     .slice(0, 100);
 };
 

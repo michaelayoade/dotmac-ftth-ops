@@ -4,7 +4,6 @@ Metrics Service
 Computes and caches ISP operational metrics and KPIs.
 """
 
-import asyncio
 from datetime import UTC, datetime, timedelta
 
 import structlog
@@ -58,18 +57,11 @@ class MetricsService:
 
         logger.info("metrics.dashboard.computing", tenant_id=tenant_id)
 
-        # Compute metrics in parallel
-        (
-            subscriber_metrics,
-            network_metrics,
-            support_metrics,
-            revenue_metrics,
-        ) = await asyncio.gather(
-            self._get_subscriber_metrics(tenant_id),
-            self._get_network_metrics(tenant_id),
-            self._get_support_metrics(tenant_id),
-            self._get_revenue_metrics(tenant_id),
-        )
+        # Compute metrics sequentially to avoid concurrent session usage
+        subscriber_metrics = await self._get_subscriber_metrics(tenant_id)
+        network_metrics = await self._get_network_metrics(tenant_id)
+        support_metrics = await self._get_support_metrics(tenant_id)
+        revenue_metrics = await self._get_revenue_metrics(tenant_id)
 
         result = DashboardMetrics(
             subscriber_metrics=subscriber_metrics,

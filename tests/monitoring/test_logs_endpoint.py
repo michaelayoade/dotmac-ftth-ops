@@ -18,7 +18,7 @@ from dotmac.platform.monitoring.logs_router import logs_router
 def app():
     """Create FastAPI app with logs router."""
     app = FastAPI()
-    app.include_router(logs_router, prefix="/api/v1/monitoring")
+    app.include_router(logs_router, prefix="/api/v1")
     return app
 
 

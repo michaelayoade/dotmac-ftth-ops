@@ -4,13 +4,13 @@
  * View and manage subscription, add-ons, and usage
  */
 
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import React, { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -18,12 +18,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { AlertCircle, Loader2 } from 'lucide-react';
-import { useLicensing } from '../../../hooks/useLicensing';
-import { SubscriptionDashboard } from '../../../components/licensing/SubscriptionDashboard';
-import { PlanSelector } from '../../../components/licensing/PlanSelector';
-import { BillingCycle, ServicePlan } from '../../../types/licensing';
+} from "@/components/ui/dialog";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { useLicensing } from "../../../hooks/useLicensing";
+import { SubscriptionDashboard } from "../../../components/licensing/SubscriptionDashboard";
+import { PlanSelector } from "../../../components/licensing/PlanSelector";
+import { BillingCycle, ServicePlan } from "../../../types/licensing";
 
 export default function TenantSubscriptionPage() {
   const {
@@ -39,7 +39,7 @@ export default function TenantSubscriptionPage() {
   const [showPlanSelector, setShowPlanSelector] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<ServicePlan | null>(null);
   const [selectedBillingCycle, setSelectedBillingCycle] = useState<BillingCycle>(
-    BillingCycle.MONTHLY
+    BillingCycle.MONTHLY,
   );
   const [isUpgrading, setIsUpgrading] = useState(false);
 
@@ -55,7 +55,7 @@ export default function TenantSubscriptionPage() {
     setIsUpgrading(true);
     try {
       // Get tenant_id from auth context or API
-      const tenantId = 'current'; // This would come from auth context
+      const tenantId = "current"; // This would come from auth context
 
       await createSubscription({
         tenant_id: tenantId,
@@ -67,7 +67,7 @@ export default function TenantSubscriptionPage() {
       setShowPlanSelector(false);
       setSelectedPlan(null);
     } catch (error) {
-      console.error('Failed to create subscription:', error);
+      console.error("Failed to create subscription:", error);
     } finally {
       setIsUpgrading(false);
     }
@@ -109,16 +109,10 @@ export default function TenantSubscriptionPage() {
       <div className="space-y-6">
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Choose Your Plan</h1>
-          <p className="text-muted-foreground">
-            Select a plan that fits your business needs
-          </p>
+          <p className="text-muted-foreground">Select a plan that fits your business needs</p>
         </div>
 
-        <PlanSelector
-          plans={plans}
-          onSelectPlan={handleSelectPlan}
-          loading={isUpgrading}
-        />
+        <PlanSelector plans={plans} onSelectPlan={handleSelectPlan} loading={isUpgrading} />
 
         {/* Confirm Dialog */}
         <Dialog open={showPlanSelector} onOpenChange={setShowPlanSelector}>
@@ -173,7 +167,7 @@ export default function TenantSubscriptionPage() {
                     Subscribing...
                   </>
                 ) : (
-                  'Confirm Subscription'
+                  "Confirm Subscription"
                 )}
               </Button>
             </DialogFooter>

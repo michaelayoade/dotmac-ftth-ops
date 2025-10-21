@@ -1,4 +1,4 @@
-import type React from 'react';
+import type React from "react";
 
 /**
  * Centralized type definitions for @dotmac/primitives
@@ -13,7 +13,7 @@ export type {
   LineChartProps,
   MetricCardProps,
   PieChartProps,
-} from './data-display/Chart';
+} from "./data-display/Chart";
 // Re-export component props for easier access
 export type {
   Column,
@@ -21,7 +21,7 @@ export type {
   TableData,
   // Table types
   TableProps,
-} from './data-display/Table';
+} from "./data-display/Table";
 export type {
   AlertDescriptionProps,
   AlertProps,
@@ -33,7 +33,7 @@ export type {
   ToastProps,
   // Feedback types
   ToastProviderProps,
-} from './feedback/Feedback';
+} from "./feedback/Feedback";
 export type {
   CheckboxProps,
   FormFieldProps,
@@ -47,7 +47,7 @@ export type {
   RadioProps,
   SelectProps,
   TextareaProps,
-} from './forms';
+} from "./forms";
 
 export type {
   CardContentProps,
@@ -66,7 +66,7 @@ export type {
   SpacerProps,
   StackProps,
   VStackProps,
-} from './layout/Layout';
+} from "./layout/Layout";
 export type {
   BottomSheetProps,
   ConfirmationModalProps,
@@ -74,7 +74,7 @@ export type {
   FormModalProps,
   // Modal types
   ModalContentProps,
-} from './layout/Modal';
+} from "./layout/Modal";
 export type {
   BreadcrumbEllipsisProps,
   BreadcrumbItemProps,
@@ -90,52 +90,52 @@ export type {
   SidebarProps,
   TabItemProps,
   TabNavigationProps,
-} from './navigation/Navigation';
+} from "./navigation/Navigation";
 
 // Common utility types
-export type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+export type Size = "xs" | "sm" | "md" | "lg" | "xl";
 export type Variant =
-  | 'default'
-  | 'primary'
-  | 'secondary'
-  | 'success'
-  | 'error'
-  | 'warning'
-  | 'info';
-export type Orientation = 'horizontal' | 'vertical';
-export type Alignment = 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-export type Justification = 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+  | "default"
+  | "primary"
+  | "secondary"
+  | "success"
+  | "error"
+  | "warning"
+  | "info";
+export type Orientation = "horizontal" | "vertical";
+export type Alignment = "start" | "center" | "end" | "stretch" | "baseline";
+export type Justification = "start" | "center" | "end" | "between" | "around" | "evenly";
 
 // Component state types
-export type ComponentState = 'default' | 'hover' | 'active' | 'focus' | 'disabled' | 'loading';
-export type FeedbackState = 'success' | 'error' | 'warning' | 'info';
+export type ComponentState = "default" | "hover" | "active" | "focus" | "disabled" | "loading";
+export type FeedbackState = "success" | "error" | "warning" | "info";
 
 // Layout types
-export type Spacing = 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-export type Position = 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky';
+export type Spacing = "none" | "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
+export type Position = "static" | "relative" | "absolute" | "fixed" | "sticky";
 export type Display =
-  | 'block'
-  | 'inline'
-  | 'inline-block'
-  | 'flex'
-  | 'inline-flex'
-  | 'grid'
-  | 'inline-grid'
-  | 'none';
+  | "block"
+  | "inline"
+  | "inline-block"
+  | "flex"
+  | "inline-flex"
+  | "grid"
+  | "inline-grid"
+  | "none";
 
 // Color types
-export type ColorScheme = 'light' | 'dark' | 'auto';
+export type ColorScheme = "light" | "dark" | "auto";
 export type ColorPalette =
-  | 'gray'
-  | 'red'
-  | 'orange'
-  | 'yellow'
-  | 'green'
-  | 'teal'
-  | 'blue'
-  | 'cyan'
-  | 'purple'
-  | 'pink';
+  | "gray"
+  | "red"
+  | "orange"
+  | "yellow"
+  | "green"
+  | "teal"
+  | "blue"
+  | "cyan"
+  | "purple"
+  | "pink";
 
 // Theme types
 export interface ThemeConfig {
@@ -195,8 +195,8 @@ export interface PaginationOptions {
 
 export interface SortingOptions {
   field?: string;
-  order?: 'asc' | 'desc';
-  onChange?: (field: string, order: 'asc' | 'desc') => void;
+  order?: "asc" | "desc";
+  onChange?: (field: string, order: "asc" | "desc") => void;
 }
 
 export interface SelectionOptions<T = Record<string, unknown>> {
@@ -207,15 +207,15 @@ export interface SelectionOptions<T = Record<string, unknown>> {
 
 // Accessibility types
 export interface AriaProps {
-  'aria-label'?: string;
-  'aria-labelledby'?: string;
-  'aria-describedby'?: string;
-  'aria-expanded'?: boolean;
-  'aria-selected'?: boolean;
-  'aria-checked'?: boolean | 'mixed';
-  'aria-disabled'?: boolean;
-  'aria-hidden'?: boolean;
-  'aria-current'?: 'page' | 'step' | 'location' | 'date' | 'time' | 'true' | 'false';
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
+  "aria-describedby"?: string;
+  "aria-expanded"?: boolean;
+  "aria-selected"?: boolean;
+  "aria-checked"?: boolean | "mixed";
+  "aria-disabled"?: boolean;
+  "aria-hidden"?: boolean;
+  "aria-current"?: "page" | "step" | "location" | "date" | "time" | "true" | "false";
   role?: string;
 }
 
@@ -254,7 +254,7 @@ export interface ChartSeries {
   key: string;
   name?: string;
   color?: string;
-  type?: 'line' | 'bar' | 'area';
+  type?: "line" | "bar" | "area";
   data?: ChartDataPoint[];
 }
 
@@ -276,7 +276,7 @@ export interface ModalOptions {
 export interface ToastOptions {
   title?: string;
   description?: string;
-  variant?: FeedbackState | 'default';
+  variant?: FeedbackState | "default";
   duration?: number;
   action?: {
     label: string;
@@ -321,7 +321,7 @@ export interface ISPCustomer {
   phone?: string;
   address?: string;
   plan: string;
-  status: 'active' | 'suspended' | 'cancelled';
+  status: "active" | "suspended" | "cancelled";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -329,11 +329,11 @@ export interface ISPCustomer {
 export interface NetworkDevice {
   id: string;
   name: string;
-  type: 'router' | 'switch' | 'access_point' | 'modem' | 'firewall';
+  type: "router" | "switch" | "access_point" | "modem" | "firewall";
   model: string;
   ipAddress: string;
   macAddress: string;
-  status: 'online' | 'offline' | 'maintenance';
+  status: "online" | "offline" | "maintenance";
   location?: string;
   customerId?: string;
 }
@@ -352,8 +352,8 @@ export interface SupportTicket {
   id: string;
   subject: string;
   description: string;
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: "open" | "in_progress" | "resolved" | "closed";
+  priority: "low" | "medium" | "high" | "urgent";
   customerId: string;
   assignedTo?: string;
   createdAt: Date;
@@ -365,7 +365,7 @@ export interface Invoice {
   customerId: string;
   amount: number;
   currency: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+  status: "draft" | "sent" | "paid" | "overdue" | "cancelled";
   dueDate: Date;
   paidDate?: Date;
   items: InvoiceItem[];

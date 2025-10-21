@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Subscriber Provisioning Form with Dual-Stack Support
@@ -6,10 +6,10 @@
  * Complete subscriber provisioning including RADIUS, IP allocation, and service activation
  */
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -17,22 +17,22 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { DualStackIPInput } from '@/components/forms/DualStackIPInput';
-import { IPCIDRInput } from '@/components/forms/IPCIDRInput';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DualStackIPInput } from "@/components/forms/DualStackIPInput";
+import { IPCIDRInput } from "@/components/forms/IPCIDRInput";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
 const formSchema = z.object({
   // Basic Information
-  subscriber_id: z.string().min(1, 'Subscriber ID is required'),
-  username: z.string().min(1, 'Username is required'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  subscriber_id: z.string().min(1, "Subscriber ID is required"),
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 
   // RADIUS Configuration
   framed_ip_address: z.string().optional(),
@@ -62,7 +62,11 @@ export interface SubscriberProvisionFormProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: FormData) => Promise<void>;
-  availablePrefixes?: Array<{ id: number; prefix: string; family: 'ipv4' | 'ipv6' }>;
+  availablePrefixes?: Array<{
+    id: number;
+    prefix: string;
+    family: "ipv4" | "ipv6";
+  }>;
   availableProfiles?: Array<{ id: string; name: string }>;
   availableWireGuardServers?: Array<{ id: string; name: string }>;
 }
@@ -77,7 +81,7 @@ export function SubscriberProvisionForm({
 }: SubscriberProvisionFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('basic');
+  const [activeTab, setActiveTab] = useState("basic");
 
   const {
     register,
@@ -95,9 +99,9 @@ export function SubscriberProvisionForm({
     },
   });
 
-  const autoAllocateIPv4 = watch('auto_allocate_ipv4');
-  const autoAllocateIPv6 = watch('auto_allocate_ipv6');
-  const provisionWireGuard = watch('provision_wireguard');
+  const autoAllocateIPv4 = watch("auto_allocate_ipv4");
+  const autoAllocateIPv6 = watch("auto_allocate_ipv6");
+  const provisionWireGuard = watch("provision_wireguard");
 
   const handleFormSubmit = async (data: FormData) => {
     setError(null);
@@ -107,7 +111,7 @@ export function SubscriberProvisionForm({
       await onSubmit(data);
       handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to provision subscriber');
+      setError(err instanceof Error ? err.message : "Failed to provision subscriber");
     } finally {
       setIsSubmitting(false);
     }
@@ -116,7 +120,7 @@ export function SubscriberProvisionForm({
   const handleClose = () => {
     reset();
     setError(null);
-    setActiveTab('basic');
+    setActiveTab("basic");
     onClose();
   };
 
@@ -148,7 +152,7 @@ export function SubscriberProvisionForm({
                   </Label>
                   <Input
                     id="subscriber_id"
-                    {...register('subscriber_id')}
+                    {...register("subscriber_id")}
                     placeholder="SUB-12345"
                   />
                   {errors.subscriber_id && (
@@ -160,11 +164,7 @@ export function SubscriberProvisionForm({
                   <Label htmlFor="username">
                     Username <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="username"
-                    {...register('username')}
-                    placeholder="user@example.com"
-                  />
+                  <Input id="username" {...register("username")} placeholder="user@example.com" />
                   {errors.username && (
                     <p className="text-sm text-red-500">{errors.username.message}</p>
                   )}
@@ -178,7 +178,7 @@ export function SubscriberProvisionForm({
                 <Input
                   id="password"
                   type="password"
-                  {...register('password')}
+                  {...register("password")}
                   placeholder="Min 8 characters"
                 />
                 {errors.password && (
@@ -201,18 +201,16 @@ export function SubscriberProvisionForm({
                   <Checkbox
                     id="auto_allocate_ipv4"
                     checked={autoAllocateIPv4}
-                    onChange={(e) => setValue('auto_allocate_ipv4', e.target.checked)}
+                    onChange={(e) => setValue("auto_allocate_ipv4", e.target.checked)}
                   />
-                  <Label htmlFor="auto_allocate_ipv4">
-                    Auto-allocate IPv4 address
-                  </Label>
+                  <Label htmlFor="auto_allocate_ipv4">Auto-allocate IPv4 address</Label>
                 </div>
 
                 {!autoAllocateIPv4 && (
                   <IPCIDRInput
                     label="IPv4 Address (CIDR)"
-                    value={watch('framed_ip_address') || ''}
-                    onChange={(value) => setValue('framed_ip_address', value || undefined)}
+                    value={watch("framed_ip_address") || ""}
+                    onChange={(value) => setValue("framed_ip_address", value || undefined)}
                     allowIPv4={true}
                     allowIPv6={false}
                     error={errors.framed_ip_address?.message}
@@ -223,19 +221,17 @@ export function SubscriberProvisionForm({
                   <Checkbox
                     id="auto_allocate_ipv6"
                     checked={autoAllocateIPv6}
-                    onChange={(e) => setValue('auto_allocate_ipv6', e.target.checked)}
+                    onChange={(e) => setValue("auto_allocate_ipv6", e.target.checked)}
                   />
-                  <Label htmlFor="auto_allocate_ipv6">
-                    Auto-allocate IPv6 prefix
-                  </Label>
+                  <Label htmlFor="auto_allocate_ipv6">Auto-allocate IPv6 prefix</Label>
                 </div>
 
                 {!autoAllocateIPv6 && (
                   <>
                     <IPCIDRInput
                       label="IPv6 Prefix"
-                      value={watch('framed_ipv6_prefix') || ''}
-                      onChange={(value) => setValue('framed_ipv6_prefix', value || undefined)}
+                      value={watch("framed_ipv6_prefix") || ""}
+                      onChange={(value) => setValue("framed_ipv6_prefix", value || undefined)}
                       allowIPv4={false}
                       allowIPv6={true}
                       placeholder="2001:db8::/64"
@@ -244,8 +240,8 @@ export function SubscriberProvisionForm({
 
                     <IPCIDRInput
                       label="IPv6 Address (Optional)"
-                      value={watch('framed_ipv6_address') || ''}
-                      onChange={(value) => setValue('framed_ipv6_address', value || undefined)}
+                      value={watch("framed_ipv6_address") || ""}
+                      onChange={(value) => setValue("framed_ipv6_address", value || undefined)}
                       allowIPv4={false}
                       allowIPv6={true}
                       placeholder="2001:db8::1/128"
@@ -258,8 +254,8 @@ export function SubscriberProvisionForm({
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
                     {autoAllocateIPv4 && autoAllocateIPv6
-                      ? 'Dual-stack IPs will be automatically allocated from available prefixes'
-                      : 'Manual IP configuration requires valid CIDR notation'}
+                      ? "Dual-stack IPs will be automatically allocated from available prefixes"
+                      : "Manual IP configuration requires valid CIDR notation"}
                   </AlertDescription>
                 </Alert>
               </div>
@@ -271,7 +267,7 @@ export function SubscriberProvisionForm({
                 <Label htmlFor="bandwidth_profile_id">Bandwidth Profile</Label>
                 <select
                   id="bandwidth_profile_id"
-                  {...register('bandwidth_profile_id')}
+                  {...register("bandwidth_profile_id")}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
                   <option value="">Select profile...</option>
@@ -289,7 +285,7 @@ export function SubscriberProvisionForm({
                   <Input
                     id="session_timeout"
                     type="number"
-                    {...register('session_timeout', { valueAsNumber: true })}
+                    {...register("session_timeout", { valueAsNumber: true })}
                     placeholder="3600"
                   />
                 </div>
@@ -299,7 +295,7 @@ export function SubscriberProvisionForm({
                   <Input
                     id="idle_timeout"
                     type="number"
-                    {...register('idle_timeout', { valueAsNumber: true })}
+                    {...register("idle_timeout", { valueAsNumber: true })}
                     placeholder="600"
                   />
                 </div>
@@ -307,9 +303,7 @@ export function SubscriberProvisionForm({
 
               <Alert>
                 <CheckCircle2 className="h-4 w-4" />
-                <AlertDescription>
-                  Service limits will be enforced by RADIUS
-                </AlertDescription>
+                <AlertDescription>Service limits will be enforced by RADIUS</AlertDescription>
               </Alert>
             </TabsContent>
 
@@ -319,11 +313,9 @@ export function SubscriberProvisionForm({
                 <Checkbox
                   id="provision_wireguard"
                   checked={provisionWireGuard}
-                  onChange={(e) => setValue('provision_wireguard', e.target.checked)}
+                  onChange={(e) => setValue("provision_wireguard", e.target.checked)}
                 />
-                <Label htmlFor="provision_wireguard">
-                  Provision WireGuard VPN peer
-                </Label>
+                <Label htmlFor="provision_wireguard">Provision WireGuard VPN peer</Label>
               </div>
 
               {provisionWireGuard && (
@@ -331,7 +323,7 @@ export function SubscriberProvisionForm({
                   <Label htmlFor="wireguard_server_id">WireGuard Server</Label>
                   <select
                     id="wireguard_server_id"
-                    {...register('wireguard_server_id')}
+                    {...register("wireguard_server_id")}
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
                     <option value="">Select server...</option>
@@ -348,8 +340,8 @@ export function SubscriberProvisionForm({
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   {provisionWireGuard
-                    ? 'WireGuard peer will be created with dual-stack IPs if server supports IPv6'
-                    : 'VPN access can be configured later if needed'}
+                    ? "WireGuard peer will be created with dual-stack IPs if server supports IPv6"
+                    : "VPN access can be configured later if needed"}
                 </AlertDescription>
               </Alert>
             </TabsContent>
@@ -363,12 +355,7 @@ export function SubscriberProvisionForm({
           )}
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>

@@ -1,6 +1,6 @@
-import * as React from 'react';
-import Cookies from 'js-cookie';
-import { AuthContext } from '../AuthProvider';
+import * as React from "react";
+import Cookies from "js-cookie";
+import { AuthContext } from "../AuthProvider";
 import type {
   AuthConfig,
   AuthContextValue,
@@ -10,7 +10,7 @@ import type {
   UserRole,
   AuthTokens,
   PortalType,
-} from '../types';
+} from "../types";
 
 interface SimpleAuthProviderProps {
   children: React.ReactNode;
@@ -36,7 +36,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({
     isAuthenticated: false,
     isLoading: true,
     isRefreshing: false,
-    error: '',
+    error: "",
   });
 
   // Initialize auth state from storage
@@ -70,13 +70,13 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({
 
   const login = React.useCallback(
     async (credentials: LoginCredentials): Promise<void> => {
-      setState((prev) => ({ ...prev, isLoading: true, error: '' }));
+      setState((prev) => ({ ...prev, isLoading: true, error: "" }));
 
       try {
         const response = await fetch(config.endpoints.login, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             ...credentials,
@@ -86,7 +86,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.message || 'Authentication failed');
+          throw new Error(errorData.message || "Authentication failed");
         }
 
         const data = await response.json();
@@ -104,7 +104,9 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({
         localStorage.setItem(`simple_auth_${portal}_user`, JSON.stringify(user));
 
         if (credentials.rememberMe) {
-          Cookies.set(`simple_auth_${portal}_remember`, 'true', { expires: 30 });
+          Cookies.set(`simple_auth_${portal}_remember`, "true", {
+            expires: 30,
+          });
         }
 
         setState({
@@ -112,18 +114,18 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({
           isAuthenticated: true,
           isLoading: false,
           isRefreshing: false,
-          error: '',
+          error: "",
         });
       } catch (error) {
         setState((prev) => ({
           ...prev,
           isLoading: false,
-          error: error instanceof Error ? error.message : 'Authentication failed',
+          error: error instanceof Error ? error.message : "Authentication failed",
         }));
         throw error;
       }
     },
-    [config.endpoints.login, portal]
+    [config.endpoints.login, portal],
   );
 
   const logout = React.useCallback(async (): Promise<void> => {
@@ -134,10 +136,10 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({
 
       if (token) {
         await fetch(config.endpoints.logout, {
-          method: 'POST',
+          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }).catch(() => {
           // Ignore logout API errors, continue with cleanup
@@ -154,7 +156,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({
         isAuthenticated: false,
         isLoading: false,
         isRefreshing: false,
-        error: '',
+        error: "",
       });
     }
   }, [config.endpoints.logout, portal]);
@@ -167,10 +169,10 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({
 
     try {
       const response = await fetch(config.endpoints.refresh, {
-        method: 'POST',
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
@@ -187,7 +189,11 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({
           } as User;
 
           localStorage.setItem(`simple_auth_${portal}_user`, JSON.stringify(updatedUser));
-          setState((prev) => ({ ...prev, user: updatedUser, isRefreshing: false }));
+          setState((prev) => ({
+            ...prev,
+            user: updatedUser,
+            isRefreshing: false,
+          }));
         } else {
           setState((prev) => ({ ...prev, isRefreshing: false }));
         }
@@ -196,7 +202,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({
         await logout();
       }
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      console.error("Token refresh failed:", error);
       await logout();
     }
   }, [config.endpoints.refresh, portal, logout, state.user]);
@@ -210,25 +216,29 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({
 
       try {
         const response = await fetch(config.endpoints.profile, {
-          method: 'PATCH',
+          method: "PATCH",
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(updates),
         });
 
         if (response.ok) {
-          const updatedUser = { ...state.user, ...updates, updatedAt: new Date() };
+          const updatedUser = {
+            ...state.user,
+            ...updates,
+            updatedAt: new Date(),
+          };
           localStorage.setItem(`simple_auth_${portal}_user`, JSON.stringify(updatedUser));
           setState((prev) => ({ ...prev, user: updatedUser }));
         }
       } catch (error) {
-        console.error('Profile update failed:', error);
+        console.error("Profile update failed:", error);
         throw error;
       }
     },
-    [config.endpoints.profile, portal, state.user]
+    [config.endpoints.profile, portal, state.user],
   );
 
   // Permission and role checking
@@ -239,7 +249,7 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({
       const permissions = Array.isArray(permission) ? permission : [permission];
       return permissions.some((p) => state.user!.permissions.includes(p));
     },
-    [state.user, config.enablePermissions]
+    [state.user, config.enablePermissions],
   );
 
   const hasRole = React.useCallback(
@@ -249,11 +259,11 @@ export const SimpleAuthProvider: React.FC<SimpleAuthProviderProps> = ({
       const roles = Array.isArray(role) ? role : [role];
       return roles.includes(state.user.role);
     },
-    [state.user]
+    [state.user],
   );
 
   const isSuperAdmin = React.useCallback((): boolean => {
-    return state.user?.role === 'super_admin';
+    return state.user?.role === "super_admin";
   }, [state.user]);
 
   // Session management (simplified)

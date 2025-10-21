@@ -1,13 +1,16 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useTenantPaymentMethods, VerifyPaymentMethodRequest } from '@/hooks/useTenantPaymentMethods';
-import { PaymentMethodCard } from '@/components/tenant/billing/PaymentMethodCard';
-import { AddPaymentMethodModal } from '@/components/tenant/billing/AddPaymentMethodModal';
-import { PaymentMethodsPageSkeleton } from '@/components/tenant/billing/SkeletonLoaders';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import React, { useState } from "react";
+import {
+  useTenantPaymentMethods,
+  VerifyPaymentMethodRequest,
+} from "@/hooks/useTenantPaymentMethods";
+import { PaymentMethodCard } from "@/components/tenant/billing/PaymentMethodCard";
+import { AddPaymentMethodModal } from "@/components/tenant/billing/AddPaymentMethodModal";
+import { PaymentMethodsPageSkeleton } from "@/components/tenant/billing/SkeletonLoaders";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
   DialogContent,
@@ -15,10 +18,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { AlertCircle, CreditCard, Plus, Shield, Lock } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircle, CreditCard, Plus, Shield, Lock } from "lucide-react";
 
 export default function PaymentMethodsPage() {
   const {
@@ -41,8 +44,8 @@ export default function PaymentMethodsPage() {
 
   // Verification state
   const [paymentMethodToVerify, setPaymentMethodToVerify] = useState<string | null>(null);
-  const [microdeposit1, setMicrodeposit1] = useState('');
-  const [microdeposit2, setMicrodeposit2] = useState('');
+  const [microdeposit1, setMicrodeposit1] = useState("");
+  const [microdeposit2, setMicrodeposit2] = useState("");
 
   // Remove state
   const [paymentMethodToRemove, setPaymentMethodToRemove] = useState<string | null>(null);
@@ -55,7 +58,7 @@ export default function PaymentMethodsPage() {
       await addPaymentMethod(request);
       setAddModalOpen(false);
     } catch (err: any) {
-      setModalError(err.message || 'Failed to add payment method');
+      setModalError(err.message || "Failed to add payment method");
       throw err;
     } finally {
       setIsAdding(false);
@@ -67,7 +70,7 @@ export default function PaymentMethodsPage() {
     try {
       await setDefaultPaymentMethod(paymentMethodId);
     } catch (err: any) {
-      console.error('Failed to set default payment method:', err);
+      console.error("Failed to set default payment method:", err);
     } finally {
       setIsUpdating(false);
     }
@@ -87,7 +90,7 @@ export default function PaymentMethodsPage() {
       setRemoveModalOpen(false);
       setPaymentMethodToRemove(null);
     } catch (err: any) {
-      console.error('Failed to remove payment method:', err);
+      console.error("Failed to remove payment method:", err);
     } finally {
       setIsUpdating(false);
     }
@@ -95,8 +98,8 @@ export default function PaymentMethodsPage() {
 
   const handleVerify = (paymentMethodId: string) => {
     setPaymentMethodToVerify(paymentMethodId);
-    setMicrodeposit1('');
-    setMicrodeposit2('');
+    setMicrodeposit1("");
+    setMicrodeposit2("");
     setVerifyModalOpen(true);
   };
 
@@ -116,7 +119,7 @@ export default function PaymentMethodsPage() {
       setVerifyModalOpen(false);
       setPaymentMethodToVerify(null);
     } catch (err: any) {
-      setModalError(err.message || 'Verification failed. Please check the amounts and try again.');
+      setModalError(err.message || "Verification failed. Please check the amounts and try again.");
     } finally {
       setIsUpdating(false);
     }
@@ -143,7 +146,9 @@ export default function PaymentMethodsPage() {
       <div className="flex items-center justify-between">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Payment Methods</h1>
-          <p className="text-muted-foreground">Manage your payment methods and billing information.</p>
+          <p className="text-muted-foreground">
+            Manage your payment methods and billing information.
+          </p>
         </div>
         <Button onClick={() => setAddModalOpen(true)} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
@@ -158,8 +163,8 @@ export default function PaymentMethodsPage() {
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4" />
             <span>
-              <strong>Secure Payment Processing:</strong> All payment information is encrypted and securely processed.
-              We never store your full card number or CVV.
+              <strong>Secure Payment Processing:</strong> All payment information is encrypted and
+              securely processed. We never store your full card number or CVV.
             </span>
           </div>
         </AlertDescription>
@@ -190,7 +195,10 @@ export default function PaymentMethodsPage() {
             <p className="text-muted-foreground mb-6">
               Add a payment method to manage your subscription and make purchases.
             </p>
-            <Button onClick={() => setAddModalOpen(true)} className="flex items-center gap-2 mx-auto">
+            <Button
+              onClick={() => setAddModalOpen(true)}
+              className="flex items-center gap-2 mx-auto"
+            >
               <Plus className="w-4 h-4" />
               Add Your First Payment Method
             </Button>
@@ -202,8 +210,11 @@ export default function PaymentMethodsPage() {
       {defaultPaymentMethod && (
         <Alert>
           <AlertDescription>
-            <strong>Default Payment Method:</strong> Your {defaultPaymentMethod.method_type === 'card' ? 'card' : 'bank account'}{' '}
-            ending in {defaultPaymentMethod.method_type === 'card' ? defaultPaymentMethod.card_last4 : defaultPaymentMethod.bank_account_last4}{' '}
+            <strong>Default Payment Method:</strong> Your{" "}
+            {defaultPaymentMethod.method_type === "card" ? "card" : "bank account"} ending in{" "}
+            {defaultPaymentMethod.method_type === "card"
+              ? defaultPaymentMethod.card_last4
+              : defaultPaymentMethod.bank_account_last4}{" "}
             will be used for automatic billing.
           </AlertDescription>
         </Alert>
@@ -224,7 +235,8 @@ export default function PaymentMethodsPage() {
           <DialogHeader>
             <DialogTitle>Verify Bank Account</DialogTitle>
             <DialogDescription>
-              Check your bank statement for 2 small deposits (typically less than $1.00) and enter the exact amounts below.
+              Check your bank statement for 2 small deposits (typically less than $1.00) and enter
+              the exact amounts below.
             </DialogDescription>
           </DialogHeader>
 
@@ -266,7 +278,8 @@ export default function PaymentMethodsPage() {
 
             <Alert>
               <AlertDescription className="text-sm">
-                These deposits typically appear within 1-2 business days. If you don&apos;t see them yet, please check again later.
+                These deposits typically appear within 1-2 business days. If you don&apos;t see them
+                yet, please check again later.
               </AlertDescription>
             </Alert>
           </div>
@@ -287,7 +300,7 @@ export default function PaymentMethodsPage() {
               onClick={handleConfirmVerify}
               disabled={isUpdating || !microdeposit1 || !microdeposit2}
             >
-              {isUpdating ? 'Verifying...' : 'Verify Account'}
+              {isUpdating ? "Verifying..." : "Verify Account"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -306,7 +319,8 @@ export default function PaymentMethodsPage() {
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              If this is your only payment method, you may need to add a new one before your next billing cycle.
+              If this is your only payment method, you may need to add a new one before your next
+              billing cycle.
             </AlertDescription>
           </Alert>
 
@@ -322,7 +336,7 @@ export default function PaymentMethodsPage() {
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleConfirmRemove} disabled={isUpdating}>
-              {isUpdating ? 'Removing...' : 'Remove Payment Method'}
+              {isUpdating ? "Removing..." : "Remove Payment Method"}
             </Button>
           </DialogFooter>
         </DialogContent>

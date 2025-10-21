@@ -1,29 +1,36 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { useRBAC } from '@/contexts/RBACContext';
+} from "@/components/ui/select";
+import { useRBAC } from "@/contexts/RBACContext";
+import { useServiceAreaListGraphQL } from "@/hooks/useFiberGraphQL";
+import { ServiceAreaType } from "@/lib/graphql/generated";
+import { platformConfig } from "@/lib/config";
 import {
-  useServiceAreaListGraphQL,
-} from '@/hooks/useFiberGraphQL';
-import { ServiceAreaType } from '@/lib/graphql/generated';
-import { platformConfig } from '@/lib/config';
-import { MapPin, Search, Filter, ChevronLeft, ChevronRight, Cable, TrendingUp, Home } from 'lucide-react';
-import Link from 'next/link';
+  MapPin,
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  Cable,
+  TrendingUp,
+  Home,
+} from "lucide-react";
+import Link from "next/link";
 
 const SERVICE_AREA_TYPES: ServiceAreaType[] = [
   ServiceAreaType.Residential,
@@ -34,29 +41,23 @@ const SERVICE_AREA_TYPES: ServiceAreaType[] = [
 
 export default function ServiceAreasPage() {
   const { hasPermission } = useRBAC();
-  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission('isp.ipam.read');
+  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
 
   // Filter state
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [areaType, setAreaType] = useState<ServiceAreaType | undefined>(undefined);
   const [limit] = useState(50);
   const [offset, setOffset] = useState(0);
 
   // Fetch service areas with filters
-  const {
-    serviceAreas,
-    totalCount,
-    hasNextPage,
-    loading,
-    error,
-    refetch,
-  } = useServiceAreaListGraphQL({
-    limit,
-    offset,
-    areaType,
-    search,
-    pollInterval: 60000,
-  });
+  const { serviceAreas, totalCount, hasNextPage, loading, error, refetch } =
+    useServiceAreaListGraphQL({
+      limit,
+      offset,
+      areaType,
+      search,
+      pollInterval: 60000,
+    });
 
   if (!hasFiberAccess) {
     return (
@@ -88,41 +89,44 @@ export default function ServiceAreasPage() {
   };
 
   const handleClearFilters = () => {
-    setSearch('');
+    setSearch("");
     setAreaType(undefined);
     setOffset(0);
   };
 
   const formatType = (type: string) => {
-    return type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+    return type
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   const getAreaTypeBadgeVariant = (type: string) => {
     switch (type) {
-      case 'RESIDENTIAL':
-        return 'default';
-      case 'COMMERCIAL':
-        return 'secondary';
-      case 'INDUSTRIAL':
-        return 'outline';
-      case 'MIXED':
-        return 'secondary';
+      case "RESIDENTIAL":
+        return "default";
+      case "COMMERCIAL":
+        return "secondary";
+      case "INDUSTRIAL":
+        return "outline";
+      case "MIXED":
+        return "secondary";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
   const getPenetrationColor = (percent: number) => {
-    if (percent >= 75) return 'text-green-600';
-    if (percent >= 50) return 'text-green-500';
-    if (percent >= 25) return 'text-amber-500';
-    return 'text-red-600';
+    if (percent >= 75) return "text-green-600";
+    if (percent >= 50) return "text-green-500";
+    if (percent >= 25) return "text-amber-500";
+    return "text-red-600";
   };
 
   const getServiceableStatus = (isServiceable: boolean, isActive: boolean) => {
-    if (!isActive) return { label: 'Inactive', variant: 'secondary' as const };
-    if (isServiceable) return { label: 'Serviceable', variant: 'default' as const };
-    return { label: 'Not Serviceable', variant: 'destructive' as const };
+    if (!isActive) return { label: "Inactive", variant: "secondary" as const };
+    if (isServiceable) return { label: "Serviceable", variant: "default" as const };
+    return { label: "Not Serviceable", variant: "destructive" as const };
   };
 
   return (
@@ -167,7 +171,8 @@ export default function ServiceAreasPage() {
                 {serviceAreas.reduce((sum, area) => sum + area.homesPassed, 0).toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                {serviceAreas.reduce((sum, area) => sum + area.homesConnected, 0).toLocaleString()} connected
+                {serviceAreas.reduce((sum, area) => sum + area.homesConnected, 0).toLocaleString()}{" "}
+                connected
               </p>
             </CardContent>
           </Card>
@@ -241,9 +246,9 @@ export default function ServiceAreasPage() {
             <div className="space-y-2">
               <Label htmlFor="areaType">Area Type</Label>
               <Select
-                value={areaType || 'all'}
+                value={areaType || "all"}
                 onValueChange={(value) => {
-                  setAreaType(value === 'all' ? undefined : (value as ServiceAreaType));
+                  setAreaType(value === "all" ? undefined : (value as ServiceAreaType));
                   setOffset(0);
                 }}
               >
@@ -269,7 +274,7 @@ export default function ServiceAreasPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>
-              Service Areas{' '}
+              Service Areas{" "}
               {totalCount > 0 && <span className="text-muted-foreground">({totalCount})</span>}
             </CardTitle>
             {loading && <Badge variant="outline">Loading...</Badge>}
@@ -283,8 +288,8 @@ export default function ServiceAreasPage() {
               <h3 className="text-lg font-medium mb-2">No service areas found</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 {search || areaType
-                  ? 'Try adjusting your filters'
-                  : 'No service areas have been added to the system yet'}
+                  ? "Try adjusting your filters"
+                  : "No service areas have been added to the system yet"}
               </p>
               <Button variant="outline" onClick={() => refetch()}>
                 Refresh
@@ -324,7 +329,9 @@ export default function ServiceAreasPage() {
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">Penetration Rate</span>
-                            <span className={`text-lg font-bold ${getPenetrationColor(area.penetrationRatePercent || 0)}`}>
+                            <span
+                              className={`text-lg font-bold ${getPenetrationColor(area.penetrationRatePercent || 0)}`}
+                            >
                               {area.penetrationRatePercent?.toFixed(1) || 0}%
                             </span>
                           </div>
@@ -332,14 +339,16 @@ export default function ServiceAreasPage() {
                             <div
                               className={`h-2 rounded-full transition-all ${
                                 (area.penetrationRatePercent || 0) >= 75
-                                  ? 'bg-green-600'
+                                  ? "bg-green-600"
                                   : (area.penetrationRatePercent || 0) >= 50
-                                    ? 'bg-green-500'
+                                    ? "bg-green-500"
                                     : (area.penetrationRatePercent || 0) >= 25
-                                      ? 'bg-amber-500'
-                                      : 'bg-red-600'
+                                      ? "bg-amber-500"
+                                      : "bg-red-600"
                               }`}
-                              style={{ width: `${area.penetrationRatePercent || 0}%` }}
+                              style={{
+                                width: `${area.penetrationRatePercent || 0}%`,
+                              }}
                             />
                           </div>
                         </div>
@@ -348,7 +357,9 @@ export default function ServiceAreasPage() {
                         <div className="grid grid-cols-2 gap-4 pt-2 border-t">
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Homes Passed</div>
-                            <div className="text-lg font-semibold">{area.homesPassed.toLocaleString()}</div>
+                            <div className="text-lg font-semibold">
+                              {area.homesPassed.toLocaleString()}
+                            </div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Connected</div>
@@ -361,8 +372,12 @@ export default function ServiceAreasPage() {
                         {/* Businesses */}
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <div className="text-xs text-muted-foreground mb-1">Businesses Passed</div>
-                            <div className="text-sm font-medium">{area.businessesPassed.toLocaleString()}</div>
+                            <div className="text-xs text-muted-foreground mb-1">
+                              Businesses Passed
+                            </div>
+                            <div className="text-sm font-medium">
+                              {area.businessesPassed.toLocaleString()}
+                            </div>
                           </div>
                           <div>
                             <div className="text-xs text-muted-foreground mb-1">Connected</div>
@@ -432,8 +447,8 @@ export default function ServiceAreasPage() {
               {totalCount > limit && (
                 <div className="flex items-center justify-between pt-6 border-t mt-6">
                   <p className="text-sm text-muted-foreground">
-                    Showing {offset + 1} to {Math.min(offset + limit, totalCount)} of{' '}
-                    {totalCount} areas
+                    Showing {offset + 1} to {Math.min(offset + limit, totalCount)} of {totalCount}{" "}
+                    areas
                   </p>
                   <div className="flex gap-2">
                     <Button

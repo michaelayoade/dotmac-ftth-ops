@@ -20,7 +20,7 @@ export interface LoginCredentials {
 export interface PortalConfig {
   id: string;
   name: string;
-  type: 'admin' | 'customer' | 'reseller';
+  type: "admin" | "customer" | "reseller";
   subdomain?: string;
   customDomain?: string;
   tenantId: string;
@@ -39,7 +39,7 @@ export interface PortalConfig {
     allowPortalIdLogin: boolean;
     allowAccountNumberLogin: boolean;
   };
-  loginMethods: Array<'email' | 'portal_id' | 'account_number' | 'partner_code'>;
+  loginMethods: Array<"email" | "portal_id" | "account_number" | "partner_code">;
 }
 
 export interface AuthContext {
@@ -54,8 +54,8 @@ export interface AuthContext {
 }
 
 export interface LoginFlow {
-  step: 'portal_detection' | 'credential_entry' | 'mfa_verification' | 'complete';
-  portalType?: 'admin' | 'customer' | 'reseller';
+  step: "portal_detection" | "credential_entry" | "mfa_verification" | "complete";
+  portalType?: "admin" | "customer" | "reseller";
   availableLoginMethods: string[];
   requiredFields: string[];
   mfaRequired: boolean;
@@ -68,11 +68,11 @@ export interface RouteProtectionResult {
   isLoading: boolean;
   redirectPath?: string;
   reason?:
-    | 'portal_mismatch'
-    | 'insufficient_role'
-    | 'insufficient_permissions'
-    | 'missing_features'
-    | 'unauthenticated';
+    | "portal_mismatch"
+    | "insufficient_role"
+    | "insufficient_permissions"
+    | "missing_features"
+    | "unauthenticated";
 }
 
 export interface RouteConfig {
@@ -80,7 +80,7 @@ export interface RouteConfig {
   requiredRoles?: string[];
   requiredPermissions?: string[];
   requiredFeatures?: string[];
-  allowedPortals?: Array<'admin' | 'customer' | 'reseller'>;
+  allowedPortals?: Array<"admin" | "customer" | "reseller">;
   redirectTo?: string;
   exact?: boolean;
 }
@@ -90,7 +90,7 @@ export interface RouteGuardProps {
   requiredRoles?: string[];
   requiredPermissions?: string[];
   requiredFeatures?: string[];
-  allowedPortals?: Array<'admin' | 'customer' | 'reseller'>;
+  allowedPortals?: Array<"admin" | "customer" | "reseller">;
   fallback?: React.ReactNode;
   loadingComponent?: React.ReactNode;
   unauthorizedComponent?: React.ReactNode;

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import React from "react";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Skeleton loader for subscription card
@@ -233,10 +233,7 @@ export const InvoiceListSkeleton: React.FC = () => {
   return (
     <div className="space-y-2">
       {[1, 2, 3, 4, 5].map((i) => (
-        <div
-          key={i}
-          className="flex items-center justify-between p-4 rounded-lg border"
-        >
+        <div key={i} className="flex items-center justify-between p-4 rounded-lg border">
           <div className="flex items-center gap-4 flex-1">
             <Skeleton className="w-10 h-10 rounded-lg" />
             <div className="space-y-2 flex-1">

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Shield,
   Key,
@@ -12,26 +12,33 @@ import {
   ArrowUpRight,
   Activity,
   Eye,
-  FileWarning
-} from 'lucide-react';
-import { metricsService, SecurityMetrics } from '@/lib/services/metrics-service';
-import { AlertBanner } from '@/components/alerts/AlertBanner';
-import { apiClient } from '@/lib/api/client';
+  FileWarning,
+} from "lucide-react";
+import { metricsService, SecurityMetrics } from "@/lib/services/metrics-service";
+import { AlertBanner } from "@/components/alerts/AlertBanner";
+import { apiClient } from "@/lib/api/client";
 
 interface SecurityMetric {
   title: string;
   value: string | number;
   subtitle?: string;
   icon: React.ElementType;
-  status?: 'success' | 'warning' | 'danger';
+  status?: "success" | "warning" | "danger";
   href?: string;
 }
 
-function SecurityMetricCard({ title, value, subtitle, icon: Icon, status = 'success', href }: SecurityMetric) {
+function SecurityMetricCard({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  status = "success",
+  href,
+}: SecurityMetric) {
   const statusColors = {
-    success: 'text-green-400 bg-green-400/10',
-    warning: 'text-yellow-400 bg-yellow-400/10',
-    danger: 'text-red-400 bg-red-400/10'
+    success: "text-green-400 bg-green-400/10",
+    warning: "text-yellow-400 bg-yellow-400/10",
+    danger: "text-red-400 bg-red-400/10",
   };
 
   const content = (
@@ -40,9 +47,7 @@ function SecurityMetricCard({ title, value, subtitle, icon: Icon, status = 'succ
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
-          {subtitle && (
-            <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-          )}
+          {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
         </div>
         <div className={`p-3 rounded-lg ${statusColors[status]}`}>
           <Icon className="h-6 w-6" />
@@ -65,18 +70,23 @@ function SecurityMetricCard({ title, value, subtitle, icon: Icon, status = 'succ
 
 interface SecurityEvent {
   id: string;
-  type: 'auth_success' | 'auth_failure' | 'permission_change' | 'api_key_created' | 'secret_accessed';
+  type:
+    | "auth_success"
+    | "auth_failure"
+    | "permission_change"
+    | "api_key_created"
+    | "secret_accessed";
   description: string;
   user?: string;
   timestamp: string;
-  severity: 'info' | 'warning' | 'critical';
+  severity: "info" | "warning" | "critical";
 }
 
 function SecurityEventLog({ events }: { events: SecurityEvent[] }) {
   const severityColors = {
-    info: 'text-blue-600 dark:text-blue-400',
-    warning: 'text-yellow-600 dark:text-yellow-400',
-    critical: 'text-red-600 dark:text-red-400'
+    info: "text-blue-600 dark:text-blue-400",
+    warning: "text-yellow-600 dark:text-yellow-400",
+    critical: "text-red-600 dark:text-red-400",
   };
 
   const typeIcons = {
@@ -84,22 +94,23 @@ function SecurityEventLog({ events }: { events: SecurityEvent[] }) {
     auth_failure: AlertTriangle,
     permission_change: Shield,
     api_key_created: Key,
-    secret_accessed: Eye
+    secret_accessed: Eye,
   };
 
   return (
     <div className="rounded-lg border border-border bg-card">
       <div className="p-6 border-b border-border flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground">Security Events</h3>
-        <Link href="/dashboard/security-access/audit" className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+        <Link
+          href="/dashboard/security-access/audit"
+          className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+        >
           View all →
         </Link>
       </div>
       <div className="divide-y divide-border max-h-96 overflow-y-auto">
         {events.length === 0 ? (
-          <div className="p-6 text-center text-muted-foreground">
-            No recent security events
-          </div>
+          <div className="p-6 text-center text-muted-foreground">No recent security events</div>
         ) : (
           events.map((event) => {
             const Icon = typeIcons[event.type];
@@ -184,7 +195,9 @@ function AccessControlPanel({ data }: { data: AccessControlSummary }) {
               <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
                 <div
                   className="h-full bg-green-600 dark:bg-green-500 rounded-full"
-                  style={{ width: `${(data.mfaEnabled / data.totalUsers) * 100}%` }}
+                  style={{
+                    width: `${(data.mfaEnabled / data.totalUsers) * 100}%`,
+                  }}
                 />
               </div>
               <span className="text-sm text-muted-foreground">
@@ -227,33 +240,47 @@ export default function SecurityAccessPage() {
         totalRoles: 12, // This would come from a roles API
         apiKeys: securityMetrics.apiKeys.total || 0,
         secrets: securityMetrics.secrets.total || 0,
-        mfaEnabled: securityMetrics.auth.mfaEnabled || 0
+        mfaEnabled: securityMetrics.auth.mfaEnabled || 0,
       });
 
       // Fetch recent audit events
       try {
-        const eventsResponse = await apiClient.get<Array<Record<string, unknown>>>('/audit/activities/recent?limit=10');
+        const eventsResponse = await apiClient.get<Array<Record<string, unknown>>>(
+          "/audit/activities/recent?limit=10",
+        );
         if (eventsResponse.data) {
           const events: SecurityEvent[] = eventsResponse.data.map((e, index: number) => {
             const eventType = e.type as string;
-            const validTypes: SecurityEvent['type'][] = ['auth_success', 'auth_failure', 'permission_change', 'api_key_created', 'secret_accessed'];
-            const type: SecurityEvent['type'] = validTypes.includes(eventType as SecurityEvent['type'])
-              ? (eventType as SecurityEvent['type'])
-              : 'auth_success';
+            const validTypes: SecurityEvent["type"][] = [
+              "auth_success",
+              "auth_failure",
+              "permission_change",
+              "api_key_created",
+              "secret_accessed",
+            ];
+            const type: SecurityEvent["type"] = validTypes.includes(
+              eventType as SecurityEvent["type"],
+            )
+              ? (eventType as SecurityEvent["type"])
+              : "auth_success";
 
             const eventSeverity = e.severity as string;
-            const validSeverities: SecurityEvent['severity'][] = ['info', 'warning', 'critical'];
-            const severity: SecurityEvent['severity'] = validSeverities.includes(eventSeverity as SecurityEvent['severity'])
-              ? (eventSeverity as SecurityEvent['severity'])
-              : 'info';
+            const validSeverities: SecurityEvent["severity"][] = ["info", "warning", "critical"];
+            const severity: SecurityEvent["severity"] = validSeverities.includes(
+              eventSeverity as SecurityEvent["severity"],
+            )
+              ? (eventSeverity as SecurityEvent["severity"])
+              : "info";
 
             return {
               id: (e.id as string) || `event-${index}`,
               type,
-              description: (e.description as string) || (e.message as string) || 'Security event',
+              description: (e.description as string) || (e.message as string) || "Security event",
               user: (e.user_email as string) || (e.user_id as string),
-              timestamp: e.created_at ? new Date(e.created_at as string).toLocaleString() : 'Recently',
-              severity
+              timestamp: e.created_at
+                ? new Date(e.created_at as string).toLocaleString()
+                : "Recently",
+              severity,
             };
           });
           setRecentEvents(events);
@@ -264,43 +291,42 @@ export default function SecurityAccessPage() {
 
         if (securityMetrics.auth.failedAttempts > 0) {
           fallbackEvents.push({
-            id: 'auth-failures',
-            type: 'auth_failure',
+            id: "auth-failures",
+            type: "auth_failure",
             description: `${securityMetrics.auth.failedAttempts} failed login attempts`,
-            timestamp: 'Recent',
-            severity: 'warning'
+            timestamp: "Recent",
+            severity: "warning",
           });
         }
 
         if (securityMetrics.apiKeys.expiring > 0) {
           fallbackEvents.push({
-            id: 'api-keys-expiring',
-            type: 'api_key_created',
+            id: "api-keys-expiring",
+            type: "api_key_created",
             description: `${securityMetrics.apiKeys.expiring} API keys expiring soon`,
-            timestamp: 'This week',
-            severity: 'info'
+            timestamp: "This week",
+            severity: "info",
           });
         }
 
         if (securityMetrics.secrets.expired > 0) {
           fallbackEvents.push({
-            id: 'secrets-expired',
-            type: 'secret_accessed',
+            id: "secrets-expired",
+            type: "secret_accessed",
             description: `${securityMetrics.secrets.expired} secrets have expired`,
-            timestamp: 'Current',
-            severity: 'critical'
+            timestamp: "Current",
+            severity: "critical",
           });
         }
 
         setRecentEvents(fallbackEvents);
       }
     } catch (err) {
-      console.error('Failed to fetch security metrics:', err);
+      console.error("Failed to fetch security metrics:", err);
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <div className="space-y-8">
@@ -324,7 +350,10 @@ export default function SecurityAccessPage() {
               <p className="font-medium text-orange-600 dark:text-orange-400">Security Alert</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {metrics.auth.failedAttempts} failed authentication attempts detected.
-                <Link href="/dashboard/security-access/audit" className="ml-2 text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300">
+                <Link
+                  href="/dashboard/security-access/audit"
+                  className="ml-2 text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300"
+                >
                   Review security logs →
                 </Link>
               </p>
@@ -340,7 +369,9 @@ export default function SecurityAccessPage() {
           value={`${metrics?.compliance.score || 0}/100`}
           subtitle={`${metrics?.compliance.issues || 0} issues`}
           icon={Shield}
-          status={metrics?.compliance.score && metrics.compliance.score > 80 ? 'success' : 'warning'}
+          status={
+            metrics?.compliance.score && metrics.compliance.score > 80 ? "success" : "warning"
+          }
         />
         <SecurityMetricCard
           title="Active Sessions"
@@ -355,7 +386,7 @@ export default function SecurityAccessPage() {
           value={metrics?.apiKeys.total || 0}
           subtitle={`${metrics?.apiKeys.expiring || 0} expiring soon`}
           icon={Key}
-          status={metrics?.apiKeys.expiring && metrics.apiKeys.expiring > 0 ? 'warning' : 'success'}
+          status={metrics?.apiKeys.expiring && metrics.apiKeys.expiring > 0 ? "warning" : "success"}
           href="/dashboard/security-access/api-keys"
         />
         <SecurityMetricCard
@@ -363,7 +394,7 @@ export default function SecurityAccessPage() {
           value={metrics?.secrets.total || 0}
           subtitle={`${metrics?.secrets.rotated || 0} rotated recently`}
           icon={Lock}
-          status={metrics?.secrets.expired && metrics.secrets.expired > 0 ? 'danger' : 'success'}
+          status={metrics?.secrets.expired && metrics.secrets.expired > 0 ? "danger" : "success"}
           href="/dashboard/security-access/secrets"
         />
       </div>

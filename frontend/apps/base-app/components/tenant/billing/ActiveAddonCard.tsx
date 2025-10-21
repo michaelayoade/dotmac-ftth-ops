@@ -1,14 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { TenantAddon } from '@/hooks/useTenantAddons';
-import { format } from 'date-fns';
+import React, { useState } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { TenantAddon } from "@/hooks/useTenantAddons";
+import { format } from "date-fns";
 
 interface ActiveAddonCardProps {
   addon: TenantAddon;
@@ -19,10 +26,10 @@ interface ActiveAddonCardProps {
 }
 
 const statusColors: Record<string, string> = {
-  active: 'bg-green-500/10 text-green-500 border-green-500/20',
-  canceled: 'bg-red-500/10 text-red-500 border-red-500/20',
-  ended: 'bg-gray-500/10 text-gray-500 border-gray-500/20',
-  suspended: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
+  active: "bg-green-500/10 text-green-500 border-green-500/20",
+  canceled: "bg-red-500/10 text-red-500 border-red-500/20",
+  ended: "bg-gray-500/10 text-gray-500 border-gray-500/20",
+  suspended: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
 };
 
 export const ActiveAddonCard: React.FC<ActiveAddonCardProps> = ({
@@ -35,9 +42,9 @@ export const ActiveAddonCard: React.FC<ActiveAddonCardProps> = ({
   const [editMode, setEditMode] = useState(false);
   const [newQuantity, setNewQuantity] = useState(addon.quantity);
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+  const formatCurrency = (amount: number, currency: string = "USD") => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency,
     }).format(amount);
   };
@@ -54,13 +61,13 @@ export const ActiveAddonCard: React.FC<ActiveAddonCardProps> = ({
   };
 
   return (
-    <Card variant="default" className={addon.status !== 'active' ? 'opacity-75' : ''}>
+    <Card variant="default" className={addon.status !== "active" ? "opacity-75" : ""}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
             <CardTitle className="text-lg">{addon.addon_name}</CardTitle>
             <CardDescription className="text-sm">
-              Started {format(new Date(addon.started_at), 'MMM d, yyyy')}
+              Started {format(new Date(addon.started_at), "MMM d, yyyy")}
             </CardDescription>
           </div>
           <Badge className={statusColors[addon.status] || statusColors.active}>
@@ -88,14 +95,14 @@ export const ActiveAddonCard: React.FC<ActiveAddonCardProps> = ({
           <div>
             <p className="text-sm font-medium text-muted-foreground mb-1">Current Period</p>
             <p className="text-sm">
-              {format(new Date(addon.current_period_start), 'MMM d')} -{' '}
-              {format(new Date(addon.current_period_end), 'MMM d, yyyy')}
+              {format(new Date(addon.current_period_start), "MMM d")} -{" "}
+              {format(new Date(addon.current_period_end), "MMM d, yyyy")}
             </p>
           </div>
         )}
 
         {/* Quantity Management */}
-        {addon.status === 'active' && addon.quantity >= 1 && (
+        {addon.status === "active" && addon.quantity >= 1 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>Quantity</Label>
@@ -128,11 +135,7 @@ export const ActiveAddonCard: React.FC<ActiveAddonCardProps> = ({
                   onChange={(e) => setNewQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                   className="w-20 text-center"
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setNewQuantity(newQuantity + 1)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setNewQuantity(newQuantity + 1)}>
                   +
                 </Button>
                 <Button
@@ -140,7 +143,7 @@ export const ActiveAddonCard: React.FC<ActiveAddonCardProps> = ({
                   onClick={handleSaveQuantity}
                   disabled={isUpdating || newQuantity === addon.quantity}
                 >
-                  {isUpdating ? 'Saving...' : 'Save'}
+                  {isUpdating ? "Saving..." : "Save"}
                 </Button>
                 <Button
                   variant="ghost"
@@ -158,7 +161,7 @@ export const ActiveAddonCard: React.FC<ActiveAddonCardProps> = ({
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold">{addon.quantity}</span>
                 <span className="text-sm text-muted-foreground">
-                  {addon.quantity === 1 ? 'unit' : 'units'}
+                  {addon.quantity === 1 ? "unit" : "units"}
                 </span>
               </div>
             )}
@@ -177,15 +180,12 @@ export const ActiveAddonCard: React.FC<ActiveAddonCardProps> = ({
         )}
 
         {/* Cancellation Notice */}
-        {addon.status === 'canceled' && addon.canceled_at && (
+        {addon.status === "canceled" && addon.canceled_at && (
           <div className="rounded-md bg-yellow-500/10 border border-yellow-500/20 p-3">
             <p className="text-sm text-yellow-600 dark:text-yellow-500">
-              Canceled on {format(new Date(addon.canceled_at), 'MMM d, yyyy')}
+              Canceled on {format(new Date(addon.canceled_at), "MMM d, yyyy")}
               {addon.current_period_end && (
-                <>
-                  {' '}
-                  - Access until {format(new Date(addon.current_period_end), 'MMM d, yyyy')}
-                </>
+                <> - Access until {format(new Date(addon.current_period_end), "MMM d, yyyy")}</>
               )}
             </p>
           </div>
@@ -193,7 +193,7 @@ export const ActiveAddonCard: React.FC<ActiveAddonCardProps> = ({
       </CardContent>
 
       <CardFooter className="flex gap-2">
-        {addon.status === 'active' && onCancel && (
+        {addon.status === "active" && onCancel && (
           <Button
             variant="outline"
             onClick={() => onCancel(addon.tenant_addon_id)}
@@ -204,7 +204,7 @@ export const ActiveAddonCard: React.FC<ActiveAddonCardProps> = ({
           </Button>
         )}
 
-        {addon.status === 'canceled' && onReactivate && (
+        {addon.status === "canceled" && onReactivate && (
           <Button
             variant="default"
             onClick={() => onReactivate(addon.tenant_addon_id)}
@@ -215,7 +215,7 @@ export const ActiveAddonCard: React.FC<ActiveAddonCardProps> = ({
           </Button>
         )}
 
-        {addon.status === 'suspended' && (
+        {addon.status === "suspended" && (
           <Button variant="outline" disabled className="flex-1">
             Contact Support
           </Button>

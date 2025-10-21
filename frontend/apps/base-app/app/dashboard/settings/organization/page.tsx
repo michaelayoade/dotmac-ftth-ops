@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
+import React, { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -25,15 +25,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Building2,
   Users,
@@ -56,11 +56,16 @@ import {
   X,
   Loader2,
   BarChart3,
-} from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { useTenant } from '@/lib/contexts/tenant-context';
-import { tenantService, Tenant, TenantInvitation, TenantStats } from '@/lib/services/tenant-service';
-import { DomainVerificationCard } from '@/components/tenant/DomainVerificationCard';
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useTenant } from "@/lib/contexts/tenant-context";
+import {
+  tenantService,
+  Tenant,
+  TenantInvitation,
+  TenantStats,
+} from "@/lib/services/tenant-service";
+import { DomainVerificationCard } from "@/components/tenant/DomainVerificationCard";
 
 export default function OrganizationSettingsPage() {
   const { toast } = useToast();
@@ -76,8 +81,8 @@ export default function OrganizationSettingsPage() {
 
   // Form states
   const [formData, setFormData] = useState<Partial<Tenant>>({});
-  const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState('Member');
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("Member");
 
   const loadTenantData = useCallback(async () => {
     if (!currentTenant) return;
@@ -98,11 +103,11 @@ export default function OrganizationSettingsPage() {
       const invitationsData = await tenantService.listInvitations(currentTenant.id);
       setInvitations(invitationsData);
     } catch (error) {
-      console.error('Failed to load tenant data:', error);
+      console.error("Failed to load tenant data:", error);
       toast({
-        title: 'Error',
-        description: 'Failed to load organization data',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to load organization data",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -141,15 +146,15 @@ export default function OrganizationSettingsPage() {
 
       setIsEditing(false);
       toast({
-        title: 'Success',
-        description: 'Organization settings updated successfully',
+        title: "Success",
+        description: "Organization settings updated successfully",
       });
     } catch (error) {
-      console.error('Failed to save organization:', error);
+      console.error("Failed to save organization:", error);
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to update organization',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update organization",
+        variant: "destructive",
       });
     } finally {
       setIsSaving(false);
@@ -176,19 +181,19 @@ export default function OrganizationSettingsPage() {
       await loadTenantData();
 
       setIsInviteOpen(false);
-      setInviteEmail('');
-      setInviteRole('Member');
+      setInviteEmail("");
+      setInviteRole("Member");
 
       toast({
-        title: 'Success',
+        title: "Success",
         description: `Invitation sent to ${inviteEmail}`,
       });
     } catch (error) {
-      console.error('Failed to send invitation:', error);
+      console.error("Failed to send invitation:", error);
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to send invitation',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send invitation",
+        variant: "destructive",
       });
     }
   };
@@ -201,39 +206,72 @@ export default function OrganizationSettingsPage() {
       await loadTenantData();
 
       toast({
-        title: 'Success',
-        description: 'Invitation revoked successfully',
+        title: "Success",
+        description: "Invitation revoked successfully",
       });
     } catch (error) {
-      console.error('Failed to revoke invitation:', error);
+      console.error("Failed to revoke invitation:", error);
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to revoke invitation',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to revoke invitation",
+        variant: "destructive",
       });
     }
   };
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, { color: string; label: string }> = {
-      active: { color: 'bg-green-500/10 text-green-500 dark:bg-green-500/20', label: 'Active' },
-      trial: { color: 'bg-blue-500/10 text-blue-500 dark:bg-blue-500/20', label: 'Trial' },
-      suspended: { color: 'bg-orange-500/10 text-orange-500 dark:bg-orange-500/20', label: 'Suspended' },
-      cancelled: { color: 'bg-red-500/10 text-red-500 dark:bg-red-500/20', label: 'Cancelled' },
-      expired: { color: 'bg-red-500/10 text-red-500 dark:bg-red-500/20', label: 'Expired' },
+      active: {
+        color: "bg-green-500/10 text-green-500 dark:bg-green-500/20",
+        label: "Active",
+      },
+      trial: {
+        color: "bg-blue-500/10 text-blue-500 dark:bg-blue-500/20",
+        label: "Trial",
+      },
+      suspended: {
+        color: "bg-orange-500/10 text-orange-500 dark:bg-orange-500/20",
+        label: "Suspended",
+      },
+      cancelled: {
+        color: "bg-red-500/10 text-red-500 dark:bg-red-500/20",
+        label: "Cancelled",
+      },
+      expired: {
+        color: "bg-red-500/10 text-red-500 dark:bg-red-500/20",
+        label: "Expired",
+      },
     };
-    const variant = variants[status] || { color: 'bg-card0/10 text-foreground0', label: status };
+    const variant = variants[status] || {
+      color: "bg-card0/10 text-foreground0",
+      label: status,
+    };
     return <Badge className={variant.color}>{variant.label}</Badge>;
   };
 
   const getInvitationStatusBadge = (status: string) => {
     const variants: Record<string, { color: string; label: string }> = {
-      pending: { color: 'bg-yellow-500/10 text-yellow-500 dark:bg-yellow-500/20', label: 'Pending' },
-      accepted: { color: 'bg-green-500/10 text-green-500 dark:bg-green-500/20', label: 'Accepted' },
-      revoked: { color: 'bg-red-500/10 text-red-500 dark:bg-red-500/20', label: 'Revoked' },
-      expired: { color: 'bg-card0/10 text-foreground0 dark:bg-card0/20', label: 'Expired' },
+      pending: {
+        color: "bg-yellow-500/10 text-yellow-500 dark:bg-yellow-500/20",
+        label: "Pending",
+      },
+      accepted: {
+        color: "bg-green-500/10 text-green-500 dark:bg-green-500/20",
+        label: "Accepted",
+      },
+      revoked: {
+        color: "bg-red-500/10 text-red-500 dark:bg-red-500/20",
+        label: "Revoked",
+      },
+      expired: {
+        color: "bg-card0/10 text-foreground0 dark:bg-card0/20",
+        label: "Expired",
+      },
     };
-    const variant = variants[status] || { color: 'bg-card0/10 text-foreground0', label: status };
+    const variant = variants[status] || {
+      color: "bg-card0/10 text-foreground0",
+      label: status,
+    };
     return <Badge className={variant.color}>{variant.label}</Badge>;
   };
 
@@ -250,7 +288,9 @@ export default function OrganizationSettingsPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-orange-500 dark:text-orange-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground dark:text-white">No Organization Found</h3>
+          <h3 className="text-lg font-semibold text-foreground dark:text-white">
+            No Organization Found
+          </h3>
           <p className="text-foreground dark:text-muted-foreground mt-2">
             Unable to load organization data
           </p>
@@ -263,14 +303,16 @@ export default function OrganizationSettingsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground dark:text-white">Organization Settings</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground dark:text-white">
+          Organization Settings
+        </h1>
         <p className="text-foreground dark:text-muted-foreground mt-2">
           Manage your organization profile, team, and settings
         </p>
       </div>
 
       {/* Status Banner */}
-      {tenant.status !== 'active' && (
+      {tenant.status !== "active" && (
         <Card className="border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-950/20">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
@@ -280,12 +322,13 @@ export default function OrganizationSettingsPage() {
                   Account Status: {getStatusBadge(tenant.status)}
                 </p>
                 <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
-                  {tenant.status === 'trial' && tenant.trial_ends_at && (
-                    `Your trial period ends on ${new Date(tenant.trial_ends_at).toLocaleDateString()}`
-                  )}
-                  {tenant.status === 'suspended' && 'Your account has been suspended. Contact support for assistance.'}
-                  {tenant.status === 'cancelled' && 'Your account has been cancelled.'}
-                  {tenant.status === 'expired' && 'Your subscription has expired.'}
+                  {tenant.status === "trial" &&
+                    tenant.trial_ends_at &&
+                    `Your trial period ends on ${new Date(tenant.trial_ends_at).toLocaleDateString()}`}
+                  {tenant.status === "suspended" &&
+                    "Your account has been suspended. Contact support for assistance."}
+                  {tenant.status === "cancelled" && "Your account has been cancelled."}
+                  {tenant.status === "expired" && "Your subscription has expired."}
                 </p>
               </div>
             </div>
@@ -308,7 +351,9 @@ export default function OrganizationSettingsPage() {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-foreground dark:text-white">Organization Profile</CardTitle>
+                  <CardTitle className="text-foreground dark:text-white">
+                    Organization Profile
+                  </CardTitle>
                   <CardDescription className="text-foreground dark:text-muted-foreground">
                     Basic information about your organization
                   </CardDescription>
@@ -364,7 +409,7 @@ export default function OrganizationSettingsPage() {
                   <Label htmlFor="org-name">Organization Name</Label>
                   <Input
                     id="org-name"
-                    value={formData.name || ''}
+                    value={formData.name || ""}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     disabled={!isEditing}
                   />
@@ -373,7 +418,7 @@ export default function OrganizationSettingsPage() {
                   <Label htmlFor="org-slug">URL Slug</Label>
                   <Input
                     id="org-slug"
-                    value={formData.slug || ''}
+                    value={formData.slug || ""}
                     onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                     disabled={!isEditing}
                     placeholder="acme-corp"
@@ -383,7 +428,7 @@ export default function OrganizationSettingsPage() {
                   <Label htmlFor="org-description">Description</Label>
                   <Textarea
                     id="org-description"
-                    value={formData.description || ''}
+                    value={formData.description || ""}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     disabled={!isEditing}
                     rows={3}
@@ -394,7 +439,7 @@ export default function OrganizationSettingsPage() {
                   <Input
                     id="org-website"
                     type="url"
-                    value={formData.website || ''}
+                    value={formData.website || ""}
                     onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                     disabled={!isEditing}
                   />
@@ -404,8 +449,13 @@ export default function OrganizationSettingsPage() {
                   <Input
                     id="org-email"
                     type="email"
-                    value={formData.contact_email || ''}
-                    onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+                    value={formData.contact_email || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        contact_email: e.target.value,
+                      })
+                    }
                     disabled={!isEditing}
                   />
                 </div>
@@ -414,8 +464,13 @@ export default function OrganizationSettingsPage() {
                   <Input
                     id="org-phone"
                     type="tel"
-                    value={formData.contact_phone || ''}
-                    onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                    value={formData.contact_phone || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        contact_phone: e.target.value,
+                      })
+                    }
                     disabled={!isEditing}
                   />
                 </div>
@@ -423,7 +478,7 @@ export default function OrganizationSettingsPage() {
                   <Label htmlFor="org-industry">Industry</Label>
                   <Input
                     id="org-industry"
-                    value={formData.industry || ''}
+                    value={formData.industry || ""}
                     onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
                     disabled={!isEditing}
                     placeholder="Technology, Finance, etc."
@@ -433,7 +488,7 @@ export default function OrganizationSettingsPage() {
                   <Label htmlFor="org-size">Company Size</Label>
                   <Input
                     id="org-size"
-                    value={formData.company_size || ''}
+                    value={formData.company_size || ""}
                     onChange={(e) => setFormData({ ...formData, company_size: e.target.value })}
                     disabled={!isEditing}
                     placeholder="1-10, 11-50, etc."
@@ -449,11 +504,16 @@ export default function OrganizationSettingsPage() {
                     <Label htmlFor="org-street">Street Address</Label>
                     <Input
                       id="org-street"
-                      value={formData.address?.street || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        address: { ...formData.address, street: e.target.value }
-                      })}
+                      value={formData.address?.street || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          address: {
+                            ...formData.address,
+                            street: e.target.value,
+                          },
+                        })
+                      }
                       disabled={!isEditing}
                     />
                   </div>
@@ -461,11 +521,16 @@ export default function OrganizationSettingsPage() {
                     <Label htmlFor="org-city">City</Label>
                     <Input
                       id="org-city"
-                      value={formData.address?.city || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        address: { ...formData.address, city: e.target.value }
-                      })}
+                      value={formData.address?.city || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          address: {
+                            ...formData.address,
+                            city: e.target.value,
+                          },
+                        })
+                      }
                       disabled={!isEditing}
                     />
                   </div>
@@ -473,11 +538,16 @@ export default function OrganizationSettingsPage() {
                     <Label htmlFor="org-state">State/Province</Label>
                     <Input
                       id="org-state"
-                      value={formData.address?.state || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        address: { ...formData.address, state: e.target.value }
-                      })}
+                      value={formData.address?.state || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          address: {
+                            ...formData.address,
+                            state: e.target.value,
+                          },
+                        })
+                      }
                       disabled={!isEditing}
                     />
                   </div>
@@ -485,11 +555,13 @@ export default function OrganizationSettingsPage() {
                     <Label htmlFor="org-zip">ZIP/Postal Code</Label>
                     <Input
                       id="org-zip"
-                      value={formData.address?.zip || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        address: { ...formData.address, zip: e.target.value }
-                      })}
+                      value={formData.address?.zip || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          address: { ...formData.address, zip: e.target.value },
+                        })
+                      }
                       disabled={!isEditing}
                     />
                   </div>
@@ -497,11 +569,16 @@ export default function OrganizationSettingsPage() {
                     <Label htmlFor="org-country">Country</Label>
                     <Input
                       id="org-country"
-                      value={formData.address?.country || ''}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        address: { ...formData.address, country: e.target.value }
-                      })}
+                      value={formData.address?.country || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          address: {
+                            ...formData.address,
+                            country: e.target.value,
+                          },
+                        })
+                      }
                       disabled={!isEditing}
                     />
                   </div>
@@ -517,7 +594,9 @@ export default function OrganizationSettingsPage() {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="text-foreground dark:text-white">Team Invitations</CardTitle>
+                  <CardTitle className="text-foreground dark:text-white">
+                    Team Invitations
+                  </CardTitle>
                   <CardDescription className="text-foreground dark:text-muted-foreground">
                     Manage pending and sent invitations
                   </CardDescription>
@@ -532,7 +611,9 @@ export default function OrganizationSettingsPage() {
               {invitations.length === 0 ? (
                 <div className="text-center py-8">
                   <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-foreground dark:text-muted-foreground">No invitations sent yet</p>
+                  <p className="text-foreground dark:text-muted-foreground">
+                    No invitations sent yet
+                  </p>
                   <Button variant="outline" className="mt-4" onClick={() => setIsInviteOpen(true)}>
                     <UserPlus className="h-4 w-4 mr-2" />
                     Send First Invitation
@@ -569,7 +650,7 @@ export default function OrganizationSettingsPage() {
                           {new Date(invitation.expires_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="text-right">
-                          {invitation.status === 'pending' && (
+                          {invitation.status === "pending" && (
                             <DropdownMenu>
                               <DropdownMenuTrigger>
                                 <Button
@@ -680,12 +761,16 @@ export default function OrganizationSettingsPage() {
               {/* Plan and Status Info */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-foreground dark:text-white">Plan Information</CardTitle>
+                  <CardTitle className="text-foreground dark:text-white">
+                    Plan Information
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-foreground dark:text-muted-foreground">Current Plan</p>
+                      <p className="text-sm font-medium text-foreground dark:text-muted-foreground">
+                        Current Plan
+                      </p>
                       <p className="text-lg font-semibold text-foreground dark:text-white mt-1">
                         {tenantService.getPlanDisplayName(stats.plan)}
                       </p>
@@ -699,7 +784,9 @@ export default function OrganizationSettingsPage() {
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-foreground dark:text-muted-foreground">Account Status</p>
+                      <p className="text-sm font-medium text-foreground dark:text-muted-foreground">
+                        Account Status
+                      </p>
                       <p className="text-lg font-semibold text-foreground dark:text-white mt-1">
                         {tenantService.getStatusDisplayName(stats.status)}
                       </p>
@@ -707,33 +794,39 @@ export default function OrganizationSettingsPage() {
                     {getStatusBadge(stats.status)}
                   </div>
 
-                  {stats.days_until_trial_end !== undefined && stats.days_until_trial_end !== null && (
-                    <>
-                      <Separator />
-                      <div>
-                        <p className="text-sm font-medium text-foreground dark:text-muted-foreground">Trial Period</p>
-                        <p className="text-lg font-semibold text-foreground dark:text-white mt-1">
-                          {stats.days_until_trial_end > 0
-                            ? `${stats.days_until_trial_end} days remaining`
-                            : 'Expired'}
-                        </p>
-                      </div>
-                    </>
-                  )}
+                  {stats.days_until_trial_end !== undefined &&
+                    stats.days_until_trial_end !== null && (
+                      <>
+                        <Separator />
+                        <div>
+                          <p className="text-sm font-medium text-foreground dark:text-muted-foreground">
+                            Trial Period
+                          </p>
+                          <p className="text-lg font-semibold text-foreground dark:text-white mt-1">
+                            {stats.days_until_trial_end > 0
+                              ? `${stats.days_until_trial_end} days remaining`
+                              : "Expired"}
+                          </p>
+                        </div>
+                      </>
+                    )}
 
-                  {stats.days_until_subscription_end !== undefined && stats.days_until_subscription_end !== null && (
-                    <>
-                      <Separator />
-                      <div>
-                        <p className="text-sm font-medium text-foreground dark:text-muted-foreground">Subscription</p>
-                        <p className="text-lg font-semibold text-foreground dark:text-white mt-1">
-                          {stats.days_until_subscription_end > 0
-                            ? `Renews in ${stats.days_until_subscription_end} days`
-                            : 'Expired'}
-                        </p>
-                      </div>
-                    </>
-                  )}
+                  {stats.days_until_subscription_end !== undefined &&
+                    stats.days_until_subscription_end !== null && (
+                      <>
+                        <Separator />
+                        <div>
+                          <p className="text-sm font-medium text-foreground dark:text-muted-foreground">
+                            Subscription
+                          </p>
+                          <p className="text-lg font-semibold text-foreground dark:text-white mt-1">
+                            {stats.days_until_subscription_end > 0
+                              ? `Renews in ${stats.days_until_subscription_end} days`
+                              : "Expired"}
+                          </p>
+                        </div>
+                      </>
+                    )}
                 </CardContent>
               </Card>
             </>
@@ -754,11 +847,11 @@ export default function OrganizationSettingsPage() {
                 <div>
                   <p className="font-medium text-foreground dark:text-white">Current Plan</p>
                   <p className="text-sm text-foreground dark:text-muted-foreground">
-                    You are on the {tenantService.getPlanDisplayName(tenant.plan ?? 'free')} plan
+                    You are on the {tenantService.getPlanDisplayName(tenant.plan ?? "free")} plan
                   </p>
                 </div>
                 <Badge variant="default" className="text-lg px-3 py-1">
-                  {tenantService.getPlanDisplayName(tenant.plan ?? 'free')}
+                  {tenantService.getPlanDisplayName(tenant.plan ?? "free")}
                 </Badge>
               </div>
 
@@ -771,7 +864,7 @@ export default function OrganizationSettingsPage() {
                     <Input
                       id="billing-email"
                       type="email"
-                      value={tenant.billing_email || tenant.contact_email || ''}
+                      value={tenant.billing_email || tenant.contact_email || ""}
                       disabled
                       className="bg-card dark:bg-card"
                     />
@@ -780,7 +873,7 @@ export default function OrganizationSettingsPage() {
                     <Label htmlFor="tax-id">Tax ID</Label>
                     <Input
                       id="tax-id"
-                      value={tenant.tax_id || 'Not provided'}
+                      value={tenant.tax_id || "Not provided"}
                       disabled
                       className="bg-card dark:bg-card"
                     />
@@ -823,7 +916,9 @@ export default function OrganizationSettingsPage() {
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label className="text-foreground dark:text-white">Require 2FA for all members</Label>
+                  <Label className="text-foreground dark:text-white">
+                    Require 2FA for all members
+                  </Label>
                   <p className="text-sm text-foreground dark:text-muted-foreground">
                     Enforce two-factor authentication
                   </p>
@@ -888,7 +983,9 @@ export default function OrganizationSettingsPage() {
       <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
         <DialogContent className="bg-card">
           <DialogHeader>
-            <DialogTitle className="text-foreground dark:text-white">Invite Team Member</DialogTitle>
+            <DialogTitle className="text-foreground dark:text-white">
+              Invite Team Member
+            </DialogTitle>
             <DialogDescription className="text-foreground dark:text-muted-foreground">
               Send an invitation to join your organization
             </DialogDescription>

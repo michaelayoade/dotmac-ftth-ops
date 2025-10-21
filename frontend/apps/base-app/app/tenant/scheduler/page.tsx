@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Calendar, Clock, Play, Pause, Trash2, Edit, Plus, RefreshCw } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { useState } from "react";
+import { Calendar, Clock, Play, Pause, Trash2, Edit, Plus, RefreshCw } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -15,17 +15,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   useScheduledJobs,
   useJobChains,
@@ -35,8 +35,8 @@ import {
   useDeleteScheduledJob,
   useCreateJobChain,
   useExecuteJobChain,
-} from '@/hooks/useScheduler';
-import { useToast } from '@/components/ui/use-toast';
+} from "@/hooks/useScheduler";
+import { useToast } from "@/components/ui/use-toast";
 import {
   type ScheduledJobCreate,
   type ScheduledJobResponse,
@@ -44,11 +44,11 @@ import {
   type JobChainResponse as JobChain,
   JobPriority,
   JobExecutionMode,
-} from '@/types';
+} from "@/types";
 
 export default function JobSchedulerPage() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('scheduled');
+  const [activeTab, setActiveTab] = useState("scheduled");
   const [createScheduledJobOpen, setCreateScheduledJobOpen] = useState(false);
   const [createJobChainOpen, setCreateJobChainOpen] = useState(false);
 
@@ -68,7 +68,7 @@ export default function JobSchedulerPage() {
   const jobChains = jobChainsData || [];
 
   // Calculate statistics
-  const activeJobs = scheduledJobs.filter(j => j.is_active).length;
+  const activeJobs = scheduledJobs.filter((j) => j.is_active).length;
   const totalRuns = scheduledJobs.reduce((sum, j) => sum + (j.total_runs || 0), 0);
   const successfulRuns = scheduledJobs.reduce((sum, j) => sum + (j.successful_runs || 0), 0);
   const failedRuns = scheduledJobs.reduce((sum, j) => sum + (j.failed_runs || 0), 0);
@@ -77,32 +77,32 @@ export default function JobSchedulerPage() {
     try {
       await toggleScheduledJob.mutateAsync(jobId);
       toast({
-        title: 'Success',
-        description: 'Job status toggled successfully',
+        title: "Success",
+        description: "Job status toggled successfully",
       });
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error?.message || 'Failed to toggle job',
-        variant: 'destructive',
+        title: "Error",
+        description: error?.message || "Failed to toggle job",
+        variant: "destructive",
       });
     }
   };
 
   const handleDeleteJob = async (jobId: string) => {
-    if (!confirm('Are you sure you want to delete this scheduled job?')) return;
+    if (!confirm("Are you sure you want to delete this scheduled job?")) return;
 
     try {
       await deleteScheduledJob.mutateAsync(jobId);
       toast({
-        title: 'Success',
-        description: 'Job deleted successfully',
+        title: "Success",
+        description: "Job deleted successfully",
       });
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error?.message || 'Failed to delete job',
-        variant: 'destructive',
+        title: "Error",
+        description: error?.message || "Failed to delete job",
+        variant: "destructive",
       });
     }
   };
@@ -111,14 +111,14 @@ export default function JobSchedulerPage() {
     try {
       await executeJobChain.mutateAsync({ chainId });
       toast({
-        title: 'Success',
-        description: 'Job chain execution started',
+        title: "Success",
+        description: "Job chain execution started",
       });
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error?.message || 'Failed to execute chain',
-        variant: 'destructive',
+        title: "Error",
+        description: error?.message || "Failed to execute chain",
+        variant: "destructive",
       });
     }
   };
@@ -128,9 +128,7 @@ export default function JobSchedulerPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Job Scheduler</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage scheduled jobs and job chains
-          </p>
+          <p className="text-muted-foreground mt-1">Manage scheduled jobs and job chains</p>
         </div>
       </div>
 
@@ -143,9 +141,7 @@ export default function JobSchedulerPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{scheduledJobs.length}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {activeJobs} active
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{activeJobs} active</p>
           </CardContent>
         </Card>
 
@@ -156,9 +152,7 @@ export default function JobSchedulerPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalRuns}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              All time
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">All time</p>
           </CardContent>
         </Card>
 
@@ -198,7 +192,7 @@ export default function JobSchedulerPage() {
           </TabsList>
 
           <div className="flex gap-2">
-            {activeTab === 'scheduled' && (
+            {activeTab === "scheduled" && (
               <CreateScheduledJobDialog
                 open={createScheduledJobOpen}
                 onOpenChange={setCreateScheduledJobOpen}
@@ -207,20 +201,20 @@ export default function JobSchedulerPage() {
                     await createScheduledJob.mutateAsync(data);
                     setCreateScheduledJobOpen(false);
                     toast({
-                      title: 'Success',
-                      description: 'Scheduled job created successfully',
+                      title: "Success",
+                      description: "Scheduled job created successfully",
                     });
                   } catch (error: any) {
                     toast({
-                      title: 'Error',
-                      description: error?.message || 'Failed to create scheduled job',
-                      variant: 'destructive',
+                      title: "Error",
+                      description: error?.message || "Failed to create scheduled job",
+                      variant: "destructive",
                     });
                   }
                 }}
               />
             )}
-            {activeTab === 'chains' && (
+            {activeTab === "chains" && (
               <CreateJobChainDialog
                 open={createJobChainOpen}
                 onOpenChange={setCreateJobChainOpen}
@@ -229,14 +223,14 @@ export default function JobSchedulerPage() {
                     await createJobChain.mutateAsync(data);
                     setCreateJobChainOpen(false);
                     toast({
-                      title: 'Success',
-                      description: 'Job chain created successfully',
+                      title: "Success",
+                      description: "Job chain created successfully",
                     });
                   } catch (error: any) {
                     toast({
-                      title: 'Error',
-                      description: error?.message || 'Failed to create job chain',
-                      variant: 'destructive',
+                      title: "Error",
+                      description: error?.message || "Failed to create job chain",
+                      variant: "destructive",
                     });
                   }
                 }}
@@ -317,8 +311,8 @@ function ScheduledJobCard({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{job.name}</CardTitle>
-          <Badge variant={job.is_active ? 'default' : 'secondary'}>
-            {job.is_active ? 'Active' : 'Inactive'}
+          <Badge variant={job.is_active ? "default" : "secondary"}>
+            {job.is_active ? "Active" : "Inactive"}
           </Badge>
         </div>
         <CardDescription>{job.description || job.job_type}</CardDescription>
@@ -355,7 +349,7 @@ function ScheduledJobCard({
         <div className="flex gap-2 pt-2">
           <Button size="sm" variant="outline" onClick={onToggle} className="flex-1">
             {job.is_active ? <Pause className="h-3 w-3 mr-1" /> : <Play className="h-3 w-3 mr-1" />}
-            {job.is_active ? 'Pause' : 'Activate'}
+            {job.is_active ? "Pause" : "Activate"}
           </Button>
           <Button size="sm" variant="destructive" onClick={onDelete}>
             <Trash2 className="h-3 w-3" />
@@ -367,18 +361,12 @@ function ScheduledJobCard({
 }
 
 // Job Chain Card Component
-function JobChainCard({
-  chain,
-  onExecute,
-}: {
-  chain: JobChain;
-  onExecute: () => void;
-}) {
+function JobChainCard({ chain, onExecute }: { chain: JobChain; onExecute: () => void }) {
   const statusColors = {
-    pending: 'secondary',
-    running: 'default',
-    completed: 'default',
-    failed: 'destructive',
+    pending: "secondary",
+    running: "default",
+    completed: "default",
+    failed: "destructive",
   } as const;
 
   return (
@@ -386,7 +374,7 @@ function JobChainCard({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">{chain.name}</CardTitle>
-          <Badge variant={statusColors[chain.status as keyof typeof statusColors] || 'secondary'}>
+          <Badge variant={statusColors[chain.status as keyof typeof statusColors] || "secondary"}>
             {chain.status}
           </Badge>
         </div>
@@ -412,9 +400,7 @@ function JobChainCard({
         )}
 
         {chain.error_message && (
-          <div className="text-xs text-red-600 p-2 bg-red-50 rounded">
-            {chain.error_message}
-          </div>
+          <div className="text-xs text-red-600 p-2 bg-red-50 rounded">{chain.error_message}</div>
         )}
 
         <Button size="sm" onClick={onExecute} className="w-full">
@@ -437,8 +423,8 @@ function CreateScheduledJobDialog({
   onSubmit: (data: ScheduledJobCreate) => void;
 }) {
   const [formData, setFormData] = useState<ScheduledJobCreate>({
-    name: '',
-    job_type: '',
+    name: "",
+    job_type: "",
     cron_expression: null,
     interval_seconds: null,
     description: null,
@@ -496,8 +482,13 @@ function CreateScheduledJobDialog({
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value || null })}
+                value={formData.description || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    description: e.target.value || null,
+                  })
+                }
               />
             </div>
 
@@ -507,9 +498,12 @@ function CreateScheduledJobDialog({
                 <Input
                   id="cron_expression"
                   placeholder="0 0 * * *"
-                  value={formData.cron_expression || ''}
+                  value={formData.cron_expression || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, cron_expression: e.target.value || null })
+                    setFormData({
+                      ...formData,
+                      cron_expression: e.target.value || null,
+                    })
                   }
                 />
               </div>
@@ -519,7 +513,7 @@ function CreateScheduledJobDialog({
                   id="interval_seconds"
                   type="number"
                   placeholder="3600"
-                  value={formData.interval_seconds || ''}
+                  value={formData.interval_seconds || ""}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -557,7 +551,10 @@ function CreateScheduledJobDialog({
                   type="number"
                   value={formData.max_retries}
                   onChange={(e) =>
-                    setFormData({ ...formData, max_retries: parseInt(e.target.value) })
+                    setFormData({
+                      ...formData,
+                      max_retries: parseInt(e.target.value),
+                    })
                   }
                 />
               </div>
@@ -587,7 +584,7 @@ function CreateJobChainDialog({
   onSubmit: (data: JobChainCreate) => void;
 }) {
   const [formData, setFormData] = useState<JobChainCreate>({
-    name: '',
+    name: "",
     chain_definition: [],
     execution_mode: JobExecutionMode.SEQUENTIAL,
     description: null,
@@ -631,8 +628,13 @@ function CreateJobChainDialog({
               <Label htmlFor="chain_description">Description</Label>
               <Textarea
                 id="chain_description"
-                value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value || null })}
+                value={formData.description || ""}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    description: e.target.value || null,
+                  })
+                }
               />
             </div>
 
@@ -641,7 +643,10 @@ function CreateJobChainDialog({
               <Select
                 value={formData.execution_mode}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, execution_mode: value as JobExecutionMode })
+                  setFormData({
+                    ...formData,
+                    execution_mode: value as JobExecutionMode,
+                  })
                 }
               >
                 <SelectTrigger id="execution_mode">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   Wifi,
   WifiOff,
@@ -14,15 +14,15 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
-} from 'lucide-react';
-import { apiClient } from '@/lib/api/client';
-import { useToast } from '@/components/ui/use-toast';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+} from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface NetworkInfo {
-  connection_status: 'online' | 'offline' | 'degraded';
+  connection_status: "online" | "offline" | "degraded";
   ip_address?: string;
   ipv6_address?: string;
   mac_address?: string;
@@ -36,7 +36,7 @@ interface NetworkInfo {
   };
   installation_date?: string;
   installation_technician?: string;
-  installation_status: 'pending' | 'scheduled' | 'completed' | 'failed';
+  installation_status: "pending" | "scheduled" | "completed" | "failed";
   last_online?: string;
   uptime_hours?: number;
   signal_quality?: number;
@@ -62,23 +62,23 @@ interface CustomerNetworkProps {
   customerId: string;
 }
 
-const getConnectionStatusBadge = (status: NetworkInfo['connection_status']) => {
+const getConnectionStatusBadge = (status: NetworkInfo["connection_status"]) => {
   switch (status) {
-    case 'online':
+    case "online":
       return (
         <Badge className="bg-green-500">
           <CheckCircle2 className="w-3 h-3 mr-1" />
           Online
         </Badge>
       );
-    case 'offline':
+    case "offline":
       return (
         <Badge variant="destructive">
           <XCircle className="w-3 h-3 mr-1" />
           Offline
         </Badge>
       );
-    case 'degraded':
+    case "degraded":
       return (
         <Badge variant="secondary">
           <AlertCircle className="w-3 h-3 mr-1" />
@@ -88,26 +88,26 @@ const getConnectionStatusBadge = (status: NetworkInfo['connection_status']) => {
   }
 };
 
-const getInstallationStatusBadge = (status: NetworkInfo['installation_status']) => {
+const getInstallationStatusBadge = (status: NetworkInfo["installation_status"]) => {
   switch (status) {
-    case 'completed':
+    case "completed":
       return <Badge className="bg-green-500">Completed</Badge>;
-    case 'scheduled':
+    case "scheduled":
       return <Badge className="bg-blue-500">Scheduled</Badge>;
-    case 'pending':
+    case "pending":
       return <Badge variant="outline">Pending</Badge>;
-    case 'failed':
+    case "failed":
       return <Badge variant="destructive">Failed</Badge>;
   }
 };
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -128,14 +128,14 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
     try {
       setLoading(true);
       const response = await apiClient.get<NetworkInfo>(
-        `/api/v1/customers/${customerId}/network-info`
+        `/api/v1/customers/${customerId}/network-info`,
       );
       setNetworkInfo(response.data);
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to load network information',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to load network information",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -145,12 +145,12 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
   const fetchNetworkStats = useCallback(async () => {
     try {
       const response = await apiClient.get<NetworkStats>(
-        `/api/v1/customers/${customerId}/network-stats`
+        `/api/v1/customers/${customerId}/network-stats`,
       );
       setNetworkStats(response.data);
     } catch (error: any) {
       // Stats are optional, don't show error
-      console.error('Failed to load network stats:', error);
+      console.error("Failed to load network stats:", error);
     }
   }, [customerId]);
 
@@ -166,7 +166,7 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
   };
 
   const handleViewNetworkMonitoring = () => {
-    window.open('/dashboard/network', '_blank');
+    window.open("/dashboard/network", "_blank");
   };
 
   if (loading) {
@@ -182,7 +182,9 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
       <div className="text-center py-12">
         <WifiOff className="w-12 h-12 text-slate-600 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-slate-300 mb-2">No Network Information</h3>
-        <p className="text-slate-500 mb-4">Network information is not available for this customer.</p>
+        <p className="text-slate-500 mb-4">
+          Network information is not available for this customer.
+        </p>
       </div>
     );
   }
@@ -194,14 +196,14 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
         <div className="flex items-center gap-4">
           <div
             className={`w-12 h-12 rounded-full flex items-center justify-center ${
-              networkInfo.connection_status === 'online'
-                ? 'bg-green-500/20'
-                : networkInfo.connection_status === 'offline'
-                ? 'bg-red-500/20'
-                : 'bg-yellow-500/20'
+              networkInfo.connection_status === "online"
+                ? "bg-green-500/20"
+                : networkInfo.connection_status === "offline"
+                  ? "bg-red-500/20"
+                  : "bg-yellow-500/20"
             }`}
           >
-            {networkInfo.connection_status === 'online' ? (
+            {networkInfo.connection_status === "online" ? (
               <Wifi className="w-6 h-6 text-green-400" />
             ) : (
               <WifiOff className="w-6 h-6 text-red-400" />
@@ -221,7 +223,7 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button variant="outline" onClick={handleViewNetworkMonitoring}>
@@ -239,7 +241,7 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
               <div>
                 <p className="text-sm text-slate-400">IP Address</p>
                 <p className="text-lg font-semibold text-white">
-                  {networkInfo.ip_address || 'Not assigned'}
+                  {networkInfo.ip_address || "Not assigned"}
                 </p>
                 {networkInfo.ipv6_address && (
                   <p className="text-xs text-slate-500 mt-1">{networkInfo.ipv6_address}</p>
@@ -259,10 +261,10 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
                   <p className="text-lg font-semibold text-white">{networkInfo.signal_quality}%</p>
                   <p className="text-xs text-slate-500 mt-1">
                     {networkInfo.signal_quality >= 80
-                      ? 'Excellent'
+                      ? "Excellent"
                       : networkInfo.signal_quality >= 60
-                      ? 'Good'
-                      : 'Poor'}
+                        ? "Good"
+                        : "Poor"}
                   </p>
                 </div>
                 <Signal className="w-8 h-8 text-green-400" />
@@ -390,7 +392,7 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
                 <p>{networkInfo.service_location.address_line_2}</p>
               )}
               <p>
-                {networkInfo.service_location.city}, {networkInfo.service_location.state}{' '}
+                {networkInfo.service_location.city}, {networkInfo.service_location.state}{" "}
                 {networkInfo.service_location.postal_code}
               </p>
             </div>
@@ -408,7 +410,9 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
             <div className="space-y-3">
               <div>
                 <label className="text-sm text-slate-400">Status</label>
-                <div className="mt-1">{getInstallationStatusBadge(networkInfo.installation_status)}</div>
+                <div className="mt-1">
+                  {getInstallationStatusBadge(networkInfo.installation_status)}
+                </div>
               </div>
               {networkInfo.installation_date && (
                 <div>
@@ -445,7 +449,9 @@ export function CustomerNetwork({ customerId }: CustomerNetworkProps) {
               </div>
               <div>
                 <label className="text-sm text-slate-400">ONT Serial</label>
-                <p className="text-white font-medium font-mono">{networkInfo.olt_info.ont_serial}</p>
+                <p className="text-white font-medium font-mono">
+                  {networkInfo.olt_info.ont_serial}
+                </p>
               </div>
               {networkInfo.olt_info.distance_meters !== undefined && (
                 <div>

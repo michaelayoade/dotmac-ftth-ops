@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Template Management List Page
@@ -6,21 +6,21 @@
  * View and manage all communication templates.
  */
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useTemplates, useDeleteTemplate } from '@/hooks/useCommunications';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState } from "react";
+import Link from "next/link";
+import { useTemplates, useDeleteTemplate } from "@/hooks/useCommunications";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   FileText,
   Plus,
@@ -32,13 +32,9 @@ import {
   Edit,
   Trash2,
   Eye,
-} from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import {
-  CommunicationChannel,
-  type ListTemplatesParams,
-  getTimeAgo,
-} from '@/types/communications';
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { CommunicationChannel, type ListTemplatesParams, getTimeAgo } from "@/types/communications";
 
 export default function TemplatesPage() {
   const { toast } = useToast();
@@ -52,26 +48,28 @@ export default function TemplatesPage() {
   const { data, isLoading, error } = useTemplates(filters);
 
   const handleFilterChange = (key: keyof ListTemplatesParams, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+    setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
 
   const handleDelete = (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete template "${name}"? This action cannot be undone.`)) {
+    if (
+      !confirm(`Are you sure you want to delete template "${name}"? This action cannot be undone.`)
+    ) {
       return;
     }
 
     deleteTemplate.mutate(id, {
       onSuccess: () => {
         toast({
-          title: 'Template Deleted',
+          title: "Template Deleted",
           description: `Template "${name}" has been deleted`,
         });
       },
       onError: (error: any) => {
         toast({
-          title: 'Delete Failed',
-          description: error.response?.data?.detail || 'Failed to delete template',
-          variant: 'destructive',
+          title: "Delete Failed",
+          description: error.response?.data?.detail || "Failed to delete template",
+          variant: "destructive",
         });
       },
     });
@@ -131,8 +129,8 @@ export default function TemplatesPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search templates..."
-                  value={filters.search || ''}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  value={filters.search || ""}
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
                   className="pl-9"
                 />
               </div>
@@ -142,9 +140,9 @@ export default function TemplatesPage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Channel</label>
               <Select
-                value={filters.channel || 'all'}
+                value={filters.channel || "all"}
                 onValueChange={(value) =>
-                  handleFilterChange('channel', value === 'all' ? undefined : value)
+                  handleFilterChange("channel", value === "all" ? undefined : value)
                 }
               >
                 <SelectTrigger>
@@ -162,9 +160,15 @@ export default function TemplatesPage() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Status</label>
               <Select
-                value={filters.is_active === undefined ? 'all' : filters.is_active ? 'active' : 'inactive'}
+                value={
+                  filters.is_active === undefined
+                    ? "all"
+                    : filters.is_active
+                      ? "active"
+                      : "inactive"
+                }
                 onValueChange={(value) =>
-                  handleFilterChange('is_active', value === 'all' ? undefined : value === 'active')
+                  handleFilterChange("is_active", value === "all" ? undefined : value === "active")
                 }
               >
                 <SelectTrigger>
@@ -203,8 +207,8 @@ export default function TemplatesPage() {
                       </CardDescription>
                     )}
                   </div>
-                  <Badge variant={template.is_active ? 'default' : 'secondary'}>
-                    {template.is_active ? 'Active' : 'Inactive'}
+                  <Badge variant={template.is_active ? "default" : "secondary"}>
+                    {template.is_active ? "Active" : "Inactive"}
                   </Badge>
                 </div>
               </CardHeader>
@@ -239,14 +243,15 @@ export default function TemplatesPage() {
                 {/* Stats */}
                 <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
                   <span>Used {template.usage_count} times</span>
-                  {template.last_used_at && (
-                    <span>{getTimeAgo(template.last_used_at)}</span>
-                  )}
+                  {template.last_used_at && <span>{getTimeAgo(template.last_used_at)}</span>}
                 </div>
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-2">
-                  <Link href={`/dashboard/communications/templates/${template.id}`} className="flex-1">
+                  <Link
+                    href={`/dashboard/communications/templates/${template.id}`}
+                    className="flex-1"
+                  >
                     <Button variant="outline" size="sm" className="w-full">
                       <Eye className="h-4 w-4 mr-2" />
                       View
@@ -277,8 +282,8 @@ export default function TemplatesPage() {
             <h3 className="text-lg font-semibold mb-2">No templates found</h3>
             <p className="text-muted-foreground mb-4 text-center">
               {filters.search || filters.channel || filters.is_active !== undefined
-                ? 'Try adjusting your filters'
-                : 'Create your first template to get started'}
+                ? "Try adjusting your filters"
+                : "Create your first template to get started"}
             </p>
             <Link href="/dashboard/communications/templates/new">
               <Button>
@@ -294,7 +299,7 @@ export default function TemplatesPage() {
       {data && data.total > data.page_size && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            Showing {(data.page - 1) * data.page_size + 1} to{' '}
+            Showing {(data.page - 1) * data.page_size + 1} to{" "}
             {Math.min(data.page * data.page_size, data.total)} of {data.total} templates
           </p>
           <div className="flex gap-2">
@@ -302,7 +307,7 @@ export default function TemplatesPage() {
               variant="outline"
               size="sm"
               disabled={data.page === 1}
-              onClick={() => handleFilterChange('page', data.page - 1)}
+              onClick={() => handleFilterChange("page", data.page - 1)}
             >
               Previous
             </Button>
@@ -310,7 +315,7 @@ export default function TemplatesPage() {
               variant="outline"
               size="sm"
               disabled={data.page * data.page_size >= data.total}
-              onClick={() => handleFilterChange('page', data.page + 1)}
+              onClick={() => handleFilterChange("page", data.page + 1)}
             >
               Next
             </Button>

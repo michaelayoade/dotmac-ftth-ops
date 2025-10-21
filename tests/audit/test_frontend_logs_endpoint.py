@@ -12,6 +12,20 @@ from fastapi import status
 from httpx import AsyncClient
 
 from dotmac.platform.audit.models import ActivitySeverity, ActivityType
+from dotmac.platform.auth.core import UserInfo
+
+
+@pytest.fixture
+def mock_user_info() -> UserInfo:
+    """Provide a standard authenticated user for frontend log tests."""
+    return UserInfo(
+        user_id="test-user-123",
+        username="testuser",
+        email="test@example.com",
+        permissions=["read", "write", "security.audit.read"],
+        roles=["user"],
+        tenant_id="test-tenant",
+    )
 
 
 @pytest.mark.asyncio

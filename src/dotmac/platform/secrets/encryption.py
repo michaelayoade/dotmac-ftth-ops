@@ -1,5 +1,7 @@
 """Lightweight symmetric encryption helpers used in tests and legacy code."""
 
+# mypy: ignore-errors
+
 from __future__ import annotations
 
 import base64

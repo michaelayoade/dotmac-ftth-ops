@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Suspense } from 'react';
-import { CommunicationsDashboard } from '@/components/communications/CommunicationsDashboard';
+import { Suspense } from "react";
+import { CommunicationsDashboard } from "@/components/communications/CommunicationsDashboard";
 
 export default function CommunicationsPage() {
   return (

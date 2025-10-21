@@ -21,7 +21,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useBankAccounts, useVerifyBankAccount, useDeactivateBankAccount } from "@/hooks/useBankAccounts";
+import {
+  useBankAccounts,
+  useVerifyBankAccount,
+  useDeactivateBankAccount,
+} from "@/hooks/useBankAccounts";
 import type { CompanyBankAccountResponse } from "@/lib/services/bank-accounts-service";
 import { BankAccountDialog } from "./BankAccountDialog";
 import { BankAccountDetailsDialog } from "./BankAccountDetailsDialog";
@@ -107,16 +111,15 @@ export function BankAccountsTab() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => setIncludeInactive(!includeInactive)}
-          >
+          <Button variant="outline" onClick={() => setIncludeInactive(!includeInactive)}>
             {includeInactive ? "Hide Inactive" : "Show Inactive"}
           </Button>
-          <Button onClick={() => {
-            setSelectedAccount(null);
-            setShowAddDialog(true);
-          }}>
+          <Button
+            onClick={() => {
+              setSelectedAccount(null);
+              setShowAddDialog(true);
+            }}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Bank Account
           </Button>

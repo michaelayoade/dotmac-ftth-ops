@@ -353,6 +353,9 @@ namespace_packages = true
 # Cache
 incremental = true
 cache_dir = ".mypy_cache"
+mypy_path = ["stubs"]
+# Plugins
+plugins = ["strawberry.ext.mypy_plugin"]
 
 [tool.bandit]
 tests = ["B201", "B301"]

@@ -2,8 +2,8 @@
  * Real-time Performance Monitor
  * Tracks Core Web Vitals, React performance, and user experience metrics
  */
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Activity, Clock, Zap, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { Activity, Clock, Zap, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
 
 interface PerformanceMetrics {
   // Core Web Vitals
@@ -77,7 +77,7 @@ export function PerformanceMonitor({
   const [metrics, setMetrics] = useState<PerformanceMetrics>({});
   const [isSupported, setIsSupported] = useState(true);
   const [history, setHistory] = useState<Array<{ timestamp: number; metrics: PerformanceMetrics }>>(
-    []
+    [],
   );
   const observerRef = useRef<PerformanceObserver | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -86,7 +86,7 @@ export function PerformanceMonitor({
 
   // Collect Core Web Vitals
   const collectWebVitals = useCallback(() => {
-    if (!('PerformanceObserver' in window)) {
+    if (!("PerformanceObserver" in window)) {
       setIsSupported(false);
       return;
     }
@@ -102,16 +102,16 @@ export function PerformanceMonitor({
           const entryName = entry.name || entry.entryType;
 
           switch (entryName) {
-            case 'largest-contentful-paint':
+            case "largest-contentful-paint":
               setMetrics((prev) => ({ ...prev, lcp: entry.startTime }));
               break;
-            case 'first-input':
+            case "first-input":
               setMetrics((prev) => ({
                 ...prev,
                 fid: (entry as any).processingStart - entry.startTime,
               }));
               break;
-            case 'layout-shift':
+            case "layout-shift":
               if (!(entry as any).hadRecentInput) {
                 setMetrics((prev) => ({
                   ...prev,
@@ -119,7 +119,7 @@ export function PerformanceMonitor({
                 }));
               }
               break;
-            case 'first-contentful-paint':
+            case "first-contentful-paint":
               setMetrics((prev) => ({ ...prev, fcp: entry.startTime }));
               break;
           }
@@ -129,22 +129,22 @@ export function PerformanceMonitor({
       // Observe different entry types
       try {
         observer.observe({
-          entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift', 'paint'],
+          entryTypes: ["largest-contentful-paint", "first-input", "layout-shift", "paint"],
         });
         observerRef.current = observer;
       } catch (e) {
         // Fallback for older browsers
-        console.warn('Some performance metrics not supported:', e);
+        console.warn("Some performance metrics not supported:", e);
       }
     } catch (error) {
-      console.error('Failed to initialize performance observer:', error);
+      console.error("Failed to initialize performance observer:", error);
       setIsSupported(false);
     }
   }, []);
 
   // Collect additional metrics
   const collectAdditionalMetrics = useCallback(() => {
-    const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+    const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
     const memory = (performance as any).memory;
 
     const newMetrics: PerformanceMetrics = {};
@@ -231,10 +231,10 @@ export function PerformanceMonitor({
 
   if (!isSupported) {
     return (
-      <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-4'>
-        <div className='flex items-center gap-2'>
-          <AlertTriangle className='h-5 w-5 text-yellow-600' />
-          <span className='text-yellow-800'>
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-yellow-600" />
+          <span className="text-yellow-800">
             Performance monitoring not supported in this browser
           </span>
         </div>
@@ -243,76 +243,76 @@ export function PerformanceMonitor({
   }
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* Core Web Vitals */}
-      <div className='bg-white rounded-lg border border-gray-200 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 mb-4'>Core Web Vitals</h3>
-        <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Core Web Vitals</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <MetricCard
-            title='LCP'
-            description='Largest Contentful Paint'
+            title="LCP"
+            description="Largest Contentful Paint"
             value={metrics.lcp}
-            unit='ms'
+            unit="ms"
             threshold={mergedThresholds.lcp}
-            icon={<Clock className='h-5 w-5' />}
+            icon={<Clock className="h-5 w-5" />}
           />
           <MetricCard
-            title='FID'
-            description='First Input Delay'
+            title="FID"
+            description="First Input Delay"
             value={metrics.fid}
-            unit='ms'
+            unit="ms"
             threshold={mergedThresholds.fid}
-            icon={<Zap className='h-5 w-5' />}
+            icon={<Zap className="h-5 w-5" />}
           />
           <MetricCard
-            title='CLS'
-            description='Cumulative Layout Shift'
+            title="CLS"
+            description="Cumulative Layout Shift"
             value={metrics.cls}
-            unit=''
+            unit=""
             threshold={mergedThresholds.cls}
-            icon={<Activity className='h-5 w-5' />}
+            icon={<Activity className="h-5 w-5" />}
             precision={3}
           />
         </div>
       </div>
 
       {/* Additional Metrics */}
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-        <div className='bg-white rounded-lg border border-gray-200 p-6'>
-          <h4 className='text-md font-semibold text-gray-900 mb-3'>Loading Performance</h4>
-          <div className='space-y-3'>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h4 className="text-md font-semibold text-gray-900 mb-3">Loading Performance</h4>
+          <div className="space-y-3">
             <MetricRow
-              label='First Contentful Paint'
+              label="First Contentful Paint"
               value={metrics.fcp}
-              unit='ms'
+              unit="ms"
               threshold={mergedThresholds.fcp}
             />
             <MetricRow
-              label='Time to First Byte'
+              label="Time to First Byte"
               value={metrics.ttfb}
-              unit='ms'
+              unit="ms"
               threshold={mergedThresholds.ttfb}
             />
-            <MetricRow label='DOM Content Loaded' value={metrics.domContentLoaded} unit='ms' />
-            <MetricRow label='Load Complete' value={metrics.loadComplete} unit='ms' />
+            <MetricRow label="DOM Content Loaded" value={metrics.domContentLoaded} unit="ms" />
+            <MetricRow label="Load Complete" value={metrics.loadComplete} unit="ms" />
           </div>
         </div>
 
-        <div className='bg-white rounded-lg border border-gray-200 p-6'>
-          <h4 className='text-md font-semibold text-gray-900 mb-3'>React Performance</h4>
-          <div className='space-y-3'>
-            <MetricRow label='Render Time' value={metrics.renderTime} unit='ms' />
-            <MetricRow label='Commit Time' value={metrics.commitTime} unit='ms' />
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h4 className="text-md font-semibold text-gray-900 mb-3">React Performance</h4>
+          <div className="space-y-3">
+            <MetricRow label="Render Time" value={metrics.renderTime} unit="ms" />
+            <MetricRow label="Commit Time" value={metrics.commitTime} unit="ms" />
             <MetricRow
-              label='Memory Usage'
+              label="Memory Usage"
               value={metrics.usedJSHeapSize ? metrics.usedJSHeapSize / 1024 / 1024 : undefined}
-              unit='MB'
+              unit="MB"
               precision={1}
             />
             <MetricRow
-              label='Total Memory'
+              label="Total Memory"
               value={metrics.totalJSHeapSize ? metrics.totalJSHeapSize / 1024 / 1024 : undefined}
-              unit='MB'
+              unit="MB"
               precision={1}
             />
           </div>
@@ -321,28 +321,28 @@ export function PerformanceMonitor({
 
       {/* Performance Trends */}
       {showDetails && history.length > 5 && (
-        <div className='bg-white rounded-lg border border-gray-200 p-6'>
-          <h4 className='text-md font-semibold text-gray-900 mb-3'>Performance Trends</h4>
-          <div className='space-y-2'>
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h4 className="text-md font-semibold text-gray-900 mb-3">Performance Trends</h4>
+          <div className="space-y-2">
             {calculateTrends(history).map((trend, index) => (
               <div
                 key={index}
-                className='flex items-center justify-between p-2 rounded border border-gray-100'
+                className="flex items-center justify-between p-2 rounded border border-gray-100"
               >
-                <span className='text-sm font-medium text-gray-900'>{trend.metric}</span>
-                <div className='flex items-center gap-2'>
-                  {trend.direction === 'improving' ? (
-                    <TrendingDown className='h-4 w-4 text-green-500' />
-                  ) : trend.direction === 'degrading' ? (
-                    <TrendingUp className='h-4 w-4 text-red-500' />
+                <span className="text-sm font-medium text-gray-900">{trend.metric}</span>
+                <div className="flex items-center gap-2">
+                  {trend.direction === "improving" ? (
+                    <TrendingDown className="h-4 w-4 text-green-500" />
+                  ) : trend.direction === "degrading" ? (
+                    <TrendingUp className="h-4 w-4 text-red-500" />
                   ) : null}
                   <span
                     className={`text-sm ${
-                      trend.direction === 'improving'
-                        ? 'text-green-600'
-                        : trend.direction === 'degrading'
-                          ? 'text-red-600'
-                          : 'text-gray-600'
+                      trend.direction === "improving"
+                        ? "text-green-600"
+                        : trend.direction === "degrading"
+                          ? "text-red-600"
+                          : "text-gray-600"
                     }`}
                   >
                     {trend.change}
@@ -375,31 +375,31 @@ function MetricCard({
   precision?: number;
 }) {
   const getStatus = (val?: number) => {
-    if (!val || !threshold) return 'unknown';
-    if (val <= threshold.good) return 'good';
-    if (val <= threshold.poor) return 'needs-improvement';
-    return 'poor';
+    if (!val || !threshold) return "unknown";
+    if (val <= threshold.good) return "good";
+    if (val <= threshold.poor) return "needs-improvement";
+    return "poor";
   };
 
   const status = getStatus(value);
   const statusColors = {
-    good: 'bg-green-100 text-green-800 border-green-200',
-    'needs-improvement': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    poor: 'bg-red-100 text-red-800 border-red-200',
-    unknown: 'bg-gray-100 text-gray-800 border-gray-200',
+    good: "bg-green-100 text-green-800 border-green-200",
+    "needs-improvement": "bg-yellow-100 text-yellow-800 border-yellow-200",
+    poor: "bg-red-100 text-red-800 border-red-200",
+    unknown: "bg-gray-100 text-gray-800 border-gray-200",
   };
 
   return (
     <div className={`rounded-lg border p-4 ${statusColors[status]}`}>
-      <div className='flex items-center gap-2 mb-2'>
-        <div className='p-1 rounded bg-white/50'>{icon}</div>
+      <div className="flex items-center gap-2 mb-2">
+        <div className="p-1 rounded bg-white/50">{icon}</div>
         <div>
-          <h4 className='font-semibold'>{title}</h4>
-          <p className='text-sm opacity-80'>{description}</p>
+          <h4 className="font-semibold">{title}</h4>
+          <p className="text-sm opacity-80">{description}</p>
         </div>
       </div>
-      <div className='text-2xl font-bold'>
-        {value !== undefined ? `${value.toFixed(precision)}${unit}` : 'N/A'}
+      <div className="text-2xl font-bold">
+        {value !== undefined ? `${value.toFixed(precision)}${unit}` : "N/A"}
       </div>
     </div>
   );
@@ -419,25 +419,25 @@ function MetricRow({
   precision?: number;
 }) {
   const getStatus = (val?: number) => {
-    if (!val || !threshold) return 'unknown';
-    if (val <= threshold.good) return 'good';
-    if (val <= threshold.poor) return 'needs-improvement';
-    return 'poor';
+    if (!val || !threshold) return "unknown";
+    if (val <= threshold.good) return "good";
+    if (val <= threshold.poor) return "needs-improvement";
+    return "poor";
   };
 
   const status = getStatus(value);
   const statusColors = {
-    good: 'text-green-600',
-    'needs-improvement': 'text-yellow-600',
-    poor: 'text-red-600',
-    unknown: 'text-gray-600',
+    good: "text-green-600",
+    "needs-improvement": "text-yellow-600",
+    poor: "text-red-600",
+    unknown: "text-gray-600",
   };
 
   return (
-    <div className='flex items-center justify-between'>
-      <span className='text-sm text-gray-700'>{label}</span>
+    <div className="flex items-center justify-between">
+      <span className="text-sm text-gray-700">{label}</span>
       <span className={`text-sm font-medium ${statusColors[status]}`}>
-        {value !== undefined ? `${value.toFixed(precision)}${unit}` : 'N/A'}
+        {value !== undefined ? `${value.toFixed(precision)}${unit}` : "N/A"}
       </span>
     </div>
   );
@@ -451,11 +451,11 @@ function calculateTrends(history: Array<{ timestamp: number; metrics: Performanc
 
   const trends: Array<{
     metric: string;
-    direction: 'improving' | 'degrading' | 'stable';
+    direction: "improving" | "degrading" | "stable";
     change: string;
   }> = [];
 
-  const metrics = ['lcp', 'fid', 'cls', 'fcp', 'ttfb'] as const;
+  const metrics = ["lcp", "fid", "cls", "fcp", "ttfb"] as const;
 
   metrics.forEach((metric) => {
     const recentValues = recent
@@ -473,19 +473,19 @@ function calculateTrends(history: Array<{ timestamp: number; metrics: Performanc
     const change = ((recentAvg - olderAvg) / olderAvg) * 100;
     const absChange = Math.abs(change);
 
-    let direction: 'improving' | 'degrading' | 'stable';
+    let direction: "improving" | "degrading" | "stable";
     if (absChange < 5) {
-      direction = 'stable';
+      direction = "stable";
     } else if (change < 0) {
-      direction = 'improving'; // Lower is better for most metrics
+      direction = "improving"; // Lower is better for most metrics
     } else {
-      direction = 'degrading';
+      direction = "degrading";
     }
 
     trends.push({
       metric: metric.toUpperCase(),
       direction,
-      change: direction === 'stable' ? 'Stable' : `${absChange.toFixed(1)}%`,
+      change: direction === "stable" ? "Stable" : `${absChange.toFixed(1)}%`,
     });
   });
 

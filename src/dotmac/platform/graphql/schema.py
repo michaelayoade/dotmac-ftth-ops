@@ -24,18 +24,18 @@ from dotmac.platform.graphql.subscriptions.network import NetworkSubscriptions
 
 @strawberry.type
 class Query(
-    AnalyticsQueries,
-    RadiusQueries,
-    CustomerQueries,
-    PaymentQueries,
-    SubscriptionQueries,
-    TenantQueries,
-    UserQueries,
-    NetworkQueries,
-    OrchestrationQueries,
-    WirelessQueries,
-    FiberQueries,
-):  # type: ignore[misc]
+    AnalyticsQueries,  # type: ignore[misc]
+    RadiusQueries,  # type: ignore[misc]
+    CustomerQueries,  # type: ignore[misc]
+    PaymentQueries,  # type: ignore[misc]
+    SubscriptionQueries,  # type: ignore[misc]
+    TenantQueries,  # type: ignore[misc]
+    UserQueries,  # type: ignore[misc]
+    NetworkQueries,  # type: ignore[misc]
+    OrchestrationQueries,  # type: ignore[misc]
+    WirelessQueries,  # type: ignore[misc]
+    FiberQueries,  # type: ignore[misc]
+):
     """
     Root GraphQL query type.
 
@@ -62,7 +62,7 @@ class Query(
 
 
 @strawberry.type
-class Mutation(OrchestrationMutations):
+class Mutation(OrchestrationMutations):  # type: ignore[misc]
     """
     Root GraphQL mutation type.
 
@@ -82,7 +82,10 @@ class Mutation(OrchestrationMutations):
 
 
 @strawberry.type
-class RealtimeSubscription(CustomerSubscriptions, NetworkSubscriptions):
+class RealtimeSubscription(
+    CustomerSubscriptions,  # type: ignore[misc]
+    NetworkSubscriptions,  # type: ignore[misc]
+):
     """
     Root GraphQL subscription type for real-time updates.
 

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * WireGuard Server Form with Dual-Stack Support
@@ -6,9 +6,9 @@
  * Create/edit WireGuard VPN servers with IPv4 and IPv6
  */
 
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Dialog,
   DialogContent,
@@ -16,14 +16,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { DualStackIPInput } from '@/components/forms/DualStackIPInput';
-import { Loader2, AlertCircle, Info } from 'lucide-react';
-import { wireguardServerSchema, WireGuardServer } from '@/lib/validations/ip-address';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DualStackIPInput } from "@/components/forms/DualStackIPInput";
+import { Loader2, AlertCircle, Info } from "lucide-react";
+import { wireguardServerSchema, WireGuardServer } from "@/lib/validations/ip-address";
 
 type FormData = WireGuardServer;
 
@@ -32,7 +32,7 @@ export interface WireGuardServerFormProps {
   onClose: () => void;
   onSubmit: (data: FormData) => Promise<void>;
   initialData?: Partial<FormData>;
-  mode?: 'create' | 'edit';
+  mode?: "create" | "edit";
 }
 
 export function WireGuardServerForm({
@@ -40,7 +40,7 @@ export function WireGuardServerForm({
   onClose,
   onSubmit,
   initialData,
-  mode = 'create',
+  mode = "create",
 }: WireGuardServerFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,14 +57,14 @@ export function WireGuardServerForm({
     defaultValues: initialData || {
       listen_port: 51820,
       max_peers: 1000,
-      dns_servers: ['1.1.1.1', '1.0.0.1'],
-      allowed_ips: ['0.0.0.0/0', '::/0'],
+      dns_servers: ["1.1.1.1", "1.0.0.1"],
+      allowed_ips: ["0.0.0.0/0", "::/0"],
       persistent_keepalive: 25,
     },
   });
 
-  const serverIPv4 = watch('server_ipv4');
-  const serverIPv6 = watch('server_ipv6');
+  const serverIPv4 = watch("server_ipv4");
+  const serverIPv6 = watch("server_ipv6");
 
   const handleFormSubmit = async (data: FormData) => {
     setError(null);
@@ -74,7 +74,7 @@ export function WireGuardServerForm({
       await onSubmit(data);
       handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save WireGuard server');
+      setError(err instanceof Error ? err.message : "Failed to save WireGuard server");
     } finally {
       setIsSubmitting(false);
     }
@@ -91,11 +91,9 @@ export function WireGuardServerForm({
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'create' ? 'Create WireGuard Server' : 'Edit WireGuard Server'}
+            {mode === "create" ? "Create WireGuard Server" : "Edit WireGuard Server"}
           </DialogTitle>
-          <DialogDescription>
-            Configure VPN server with dual-stack support
-          </DialogDescription>
+          <DialogDescription>Configure VPN server with dual-stack support</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
@@ -108,23 +106,13 @@ export function WireGuardServerForm({
                 <Label htmlFor="name">
                   Server Name <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  id="name"
-                  {...register('name')}
-                  placeholder="VPN Server 1"
-                />
-                {errors.name && (
-                  <p className="text-sm text-red-500">{errors.name.message}</p>
-                )}
+                <Input id="name" {...register("name")} placeholder="VPN Server 1" />
+                {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  {...register('location')}
-                  placeholder="US East"
-                />
+                <Input id="location" {...register("location")} placeholder="US East" />
               </div>
             </div>
 
@@ -132,7 +120,7 @@ export function WireGuardServerForm({
               <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
-                {...register('description')}
+                {...register("description")}
                 placeholder="Primary VPN server for remote access"
               />
             </div>
@@ -148,15 +136,13 @@ export function WireGuardServerForm({
               </Label>
               <Input
                 id="public_endpoint"
-                {...register('public_endpoint')}
+                {...register("public_endpoint")}
                 placeholder="vpn.example.com:51820"
               />
               {errors.public_endpoint && (
                 <p className="text-sm text-red-500">{errors.public_endpoint.message}</p>
               )}
-              <p className="text-xs text-muted-foreground">
-                Format: hostname:port or IP:port
-              </p>
+              <p className="text-xs text-muted-foreground">Format: hostname:port or IP:port</p>
             </div>
 
             <div className="space-y-2">
@@ -164,7 +150,7 @@ export function WireGuardServerForm({
               <Input
                 id="listen_port"
                 type="number"
-                {...register('listen_port', { valueAsNumber: true })}
+                {...register("listen_port", { valueAsNumber: true })}
                 placeholder="51820"
               />
               {errors.listen_port && (
@@ -174,10 +160,10 @@ export function WireGuardServerForm({
 
             <DualStackIPInput
               label="Server IP Addresses"
-              ipv4Value={serverIPv4 || ''}
-              ipv6Value={serverIPv6 || ''}
-              onIPv4Change={(value) => setValue('server_ipv4', value)}
-              onIPv6Change={(value) => setValue('server_ipv6', value || null)}
+              ipv4Value={serverIPv4 || ""}
+              ipv6Value={serverIPv6 || ""}
+              onIPv4Change={(value) => setValue("server_ipv4", value)}
+              onIPv6Change={(value) => setValue("server_ipv6", value || null)}
               requireAtLeastOne={true}
               useCIDR={true}
               ipv4Error={errors.server_ipv4?.message}
@@ -190,8 +176,8 @@ export function WireGuardServerForm({
               <Info className="h-4 w-4" />
               <AlertDescription>
                 {serverIPv6
-                  ? 'Peers will automatically receive dual-stack IPs (IPv4 + IPv6)'
-                  : 'IPv6 is optional - peers will only get IPv4 addresses'}
+                  ? "Peers will automatically receive dual-stack IPs (IPv4 + IPv6)"
+                  : "IPv6 is optional - peers will only get IPv4 addresses"}
               </AlertDescription>
             </Alert>
           </div>
@@ -205,7 +191,7 @@ export function WireGuardServerForm({
               <Input
                 id="max_peers"
                 type="number"
-                {...register('max_peers', { valueAsNumber: true })}
+                {...register("max_peers", { valueAsNumber: true })}
                 placeholder="1000"
               />
               {errors.max_peers && (
@@ -214,44 +200,38 @@ export function WireGuardServerForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="persistent_keepalive">
-                Persistent Keepalive (seconds)
-              </Label>
+              <Label htmlFor="persistent_keepalive">Persistent Keepalive (seconds)</Label>
               <Input
                 id="persistent_keepalive"
                 type="number"
-                {...register('persistent_keepalive', { valueAsNumber: true })}
+                {...register("persistent_keepalive", { valueAsNumber: true })}
                 placeholder="25"
               />
-              <p className="text-xs text-muted-foreground">
-                Set to 0 to disable keepalive packets
-              </p>
+              <p className="text-xs text-muted-foreground">Set to 0 to disable keepalive packets</p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="dns_servers">DNS Servers (comma-separated)</Label>
               <Input
                 id="dns_servers"
-                {...register('dns_servers', {
-                  setValueAs: (value) => value.split(',').map((s: string) => s.trim()),
+                {...register("dns_servers", {
+                  setValueAs: (value) => value.split(",").map((s: string) => s.trim()),
                 })}
                 placeholder="1.1.1.1, 1.0.0.1"
-                defaultValue={watch('dns_servers')?.join(', ')}
+                defaultValue={watch("dns_servers")?.join(", ")}
               />
-              <p className="text-xs text-muted-foreground">
-                DNS servers for VPN clients
-              </p>
+              <p className="text-xs text-muted-foreground">DNS servers for VPN clients</p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="allowed_ips">Allowed IPs (comma-separated)</Label>
               <Input
                 id="allowed_ips"
-                {...register('allowed_ips', {
-                  setValueAs: (value) => value.split(',').map((s: string) => s.trim()),
+                {...register("allowed_ips", {
+                  setValueAs: (value) => value.split(",").map((s: string) => s.trim()),
                 })}
                 placeholder="0.0.0.0/0, ::/0"
-                defaultValue={watch('allowed_ips')?.join(', ')}
+                defaultValue={watch("allowed_ips")?.join(", ")}
               />
               <p className="text-xs text-muted-foreground">
                 Default: 0.0.0.0/0, ::/0 (full tunnel)
@@ -267,17 +247,12 @@ export function WireGuardServerForm({
           )}
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {mode === 'create' ? 'Create Server' : 'Save Changes'}
+              {mode === "create" ? "Create Server" : "Save Changes"}
             </Button>
           </DialogFooter>
         </form>

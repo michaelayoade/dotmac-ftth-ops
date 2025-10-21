@@ -4,8 +4,10 @@ DataLoaders for batching GraphQL queries.
 Prevents N+1 query problems by batching database requests.
 """
 
+from __future__ import annotations
+
 from collections import defaultdict
-from typing import Any
+from typing import Any, cast
 
 import structlog
 from sqlalchemy import select
@@ -761,100 +763,100 @@ class DataLoaderRegistry:
         """Get or create SessionLoader for this request."""
         if "session" not in self._loaders:
             self._loaders["session"] = SessionLoader(self.db)
-        return self._loaders["session"]
+        return cast(SessionLoader, self._loaders["session"])
 
     def get_customer_activity_loader(self) -> CustomerActivityLoader:
         """Get or create CustomerActivityLoader for this request."""
         if "customer_activity" not in self._loaders:
             self._loaders["customer_activity"] = CustomerActivityLoader(self.db)
-        return self._loaders["customer_activity"]
+        return cast(CustomerActivityLoader, self._loaders["customer_activity"])
 
     def get_customer_note_loader(self) -> CustomerNoteLoader:
         """Get or create CustomerNoteLoader for this request."""
         if "customer_note" not in self._loaders:
             self._loaders["customer_note"] = CustomerNoteLoader(self.db)
-        return self._loaders["customer_note"]
+        return cast(CustomerNoteLoader, self._loaders["customer_note"])
 
     def get_payment_customer_loader(self) -> PaymentCustomerLoader:
         """Get or create PaymentCustomerLoader for this request."""
         if "payment_customer" not in self._loaders:
             self._loaders["payment_customer"] = PaymentCustomerLoader(self.db)
-        return self._loaders["payment_customer"]
+        return cast(PaymentCustomerLoader, self._loaders["payment_customer"])
 
     def get_payment_invoice_loader(self) -> PaymentInvoiceLoader:
         """Get or create PaymentInvoiceLoader for this request."""
         if "payment_invoice" not in self._loaders:
             self._loaders["payment_invoice"] = PaymentInvoiceLoader(self.db)
-        return self._loaders["payment_invoice"]
+        return cast(PaymentInvoiceLoader, self._loaders["payment_invoice"])
 
     def get_tenant_settings_loader(self) -> TenantSettingsLoader:
         """Get or create TenantSettingsLoader for this request."""
         if "tenant_settings" not in self._loaders:
             self._loaders["tenant_settings"] = TenantSettingsLoader(self.db)
-        return self._loaders["tenant_settings"]
+        return cast(TenantSettingsLoader, self._loaders["tenant_settings"])
 
     def get_tenant_usage_loader(self) -> TenantUsageLoader:
         """Get or create TenantUsageLoader for this request."""
         if "tenant_usage" not in self._loaders:
             self._loaders["tenant_usage"] = TenantUsageLoader(self.db)
-        return self._loaders["tenant_usage"]
+        return cast(TenantUsageLoader, self._loaders["tenant_usage"])
 
     def get_tenant_invitations_loader(self) -> TenantInvitationsLoader:
         """Get or create TenantInvitationsLoader for this request."""
         if "tenant_invitations" not in self._loaders:
             self._loaders["tenant_invitations"] = TenantInvitationsLoader(self.db)
-        return self._loaders["tenant_invitations"]
+        return cast(TenantInvitationsLoader, self._loaders["tenant_invitations"])
 
     def get_user_roles_loader(self) -> UserRolesLoader:
         """Get or create UserRolesLoader for this request."""
         if "user_roles" not in self._loaders:
             self._loaders["user_roles"] = UserRolesLoader(self.db)
-        return self._loaders["user_roles"]
+        return cast(UserRolesLoader, self._loaders["user_roles"])
 
     def get_user_permissions_loader(self) -> UserPermissionsLoader:
         """Get or create UserPermissionsLoader for this request."""
         if "user_permissions" not in self._loaders:
             self._loaders["user_permissions"] = UserPermissionsLoader(self.db)
-        return self._loaders["user_permissions"]
+        return cast(UserPermissionsLoader, self._loaders["user_permissions"])
 
     def get_user_teams_loader(self) -> UserTeamsLoader:
         """Get or create UserTeamsLoader for this request."""
         if "user_teams" not in self._loaders:
             self._loaders["user_teams"] = UserTeamsLoader(self.db)
-        return self._loaders["user_teams"]
+        return cast(UserTeamsLoader, self._loaders["user_teams"])
 
     def get_profile_change_history_loader(self) -> ProfileChangeHistoryLoader:
         """Get or create ProfileChangeHistoryLoader for this request."""
         if "profile_changes" not in self._loaders:
             self._loaders["profile_changes"] = ProfileChangeHistoryLoader(self.db)
-        return self._loaders["profile_changes"]
+        return cast(ProfileChangeHistoryLoader, self._loaders["profile_changes"])
 
     def get_subscription_plan_loader(self) -> SubscriptionPlanLoader:
         """Get or create SubscriptionPlanLoader for this request."""
         if "subscription_plan" not in self._loaders:
             self._loaders["subscription_plan"] = SubscriptionPlanLoader(self.db)
-        return self._loaders["subscription_plan"]
+        return cast(SubscriptionPlanLoader, self._loaders["subscription_plan"])
 
     def get_subscription_customer_loader(self) -> SubscriptionCustomerLoader:
         """Get or create SubscriptionCustomerLoader for this request."""
         if "subscription_customer" not in self._loaders:
             self._loaders["subscription_customer"] = SubscriptionCustomerLoader(self.db)
-        return self._loaders["subscription_customer"]
+        return cast(SubscriptionCustomerLoader, self._loaders["subscription_customer"])
 
     def get_subscription_invoices_loader(self) -> SubscriptionInvoicesLoader:
         """Get or create SubscriptionInvoicesLoader for this request."""
         if "subscription_invoices" not in self._loaders:
             self._loaders["subscription_invoices"] = SubscriptionInvoicesLoader(self.db)
-        return self._loaders["subscription_invoices"]
+        return cast(SubscriptionInvoicesLoader, self._loaders["subscription_invoices"])
 
-    def get_device_traffic_loader(self) -> "DeviceTrafficLoader":
+    def get_device_traffic_loader(self) -> DeviceTrafficLoader:
         """Get or create DeviceTrafficLoader for this request."""
         if "device_traffic" not in self._loaders:
             self._loaders["device_traffic"] = DeviceTrafficLoader(self.db)
-        return self._loaders["device_traffic"]
+        return cast(DeviceTrafficLoader, self._loaders["device_traffic"])
 
-    def get_device_alerts_loader(self) -> "DeviceAlertsLoader":
+    def get_device_alerts_loader(self) -> DeviceAlertsLoader:
         """Get or create DeviceAlertsLoader for this request."""
         if "device_alerts" not in self._loaders:
             self._loaders["device_alerts"] = DeviceAlertsLoader(self.db)
-        return self._loaders["device_alerts"]
+        return cast(DeviceAlertsLoader, self._loaders["device_alerts"])

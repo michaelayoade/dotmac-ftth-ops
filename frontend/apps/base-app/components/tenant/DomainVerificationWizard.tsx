@@ -19,13 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { useDomainVerification, useDomainValidation } from "@/hooks/useDomainVerification";
@@ -97,9 +91,7 @@ export function DomainVerificationWizard({
   const [currentStep, setCurrentStep] = useState<WizardStep>("input");
   const [domain, setDomain] = useState("");
   const [method, setMethod] = useState<VerificationMethod>("dns_txt");
-  const [verificationData, setVerificationData] = useState<DomainVerificationResponse | null>(
-    null
-  );
+  const [verificationData, setVerificationData] = useState<DomainVerificationResponse | null>(null);
 
   const handleDomainChange = (value: string) => {
     // Convert to lowercase and trim
@@ -268,7 +260,11 @@ export function DomainVerificationWizard({
                     </SelectTrigger>
                     <SelectContent>
                       {VERIFICATION_METHODS.map((m) => (
-                        <SelectItem key={m.value} value={m.value} disabled={m.value === "meta_tag" || m.value === "file_upload"}>
+                        <SelectItem
+                          key={m.value}
+                          value={m.value}
+                          disabled={m.value === "meta_tag" || m.value === "file_upload"}
+                        >
                           <div className="flex items-center gap-2">
                             {m.label}
                             {m.recommended && (
@@ -354,7 +350,7 @@ export function DomainVerificationWizard({
                                   onClick={() =>
                                     copyToClipboard(
                                       verificationData.instructions!.dns_record!.value!,
-                                      "DNS record value"
+                                      "DNS record value",
                                     )
                                   }
                                 >
@@ -376,7 +372,7 @@ export function DomainVerificationWizard({
                                   onClick={() =>
                                     copyToClipboard(
                                       verificationData.instructions!.dns_record!.target!,
-                                      "DNS record target"
+                                      "DNS record target",
                                     )
                                   }
                                 >
@@ -416,7 +412,7 @@ export function DomainVerificationWizard({
                             onClick={() =>
                               copyToClipboard(
                                 verificationData.instructions!.verification_command!,
-                                "Verification command"
+                                "Verification command",
                               )
                             }
                           >
@@ -464,9 +460,7 @@ export function DomainVerificationWizard({
                   <div className="text-center py-8">
                     <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
                     <p className="text-lg font-medium">Checking verification...</p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      This may take a moment
-                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">This may take a moment</p>
                   </div>
                 )}
 

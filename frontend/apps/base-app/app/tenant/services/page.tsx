@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Activity,
   Plus,
@@ -24,26 +24,26 @@ import {
   Users,
   Server,
   AlertTriangle,
-} from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   useServiceStatistics,
   useServiceInstances,
@@ -54,9 +54,9 @@ import {
   useTerminateService,
   useModifyService,
   useHealthCheckService,
-} from '@/hooks/useServiceLifecycle';
-import type { ServiceInstanceSummary, ServiceStatusValue } from '@/types';
-import { useToast } from '@/components/ui/use-toast';
+} from "@/hooks/useServiceLifecycle";
+import type { ServiceInstanceSummary, ServiceStatusValue } from "@/types";
+import { useToast } from "@/components/ui/use-toast";
 
 function ServiceStatisticsCards() {
   const { data: statistics, isLoading } = useServiceStatistics();
@@ -82,32 +82,32 @@ function ServiceStatisticsCards() {
 
   const stats = [
     {
-      label: 'Total Services',
+      label: "Total Services",
       value: statistics.total_services,
       icon: Server,
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/20',
+      color: "text-blue-400",
+      bgColor: "bg-blue-500/20",
     },
     {
-      label: 'Active Services',
+      label: "Active Services",
       value: statistics.active_count,
       icon: CheckCircle,
-      color: 'text-green-400',
-      bgColor: 'bg-green-500/20',
+      color: "text-green-400",
+      bgColor: "bg-green-500/20",
     },
     {
-      label: 'Provisioning',
+      label: "Provisioning",
       value: statistics.provisioning_count,
       icon: Clock,
-      color: 'text-yellow-400',
-      bgColor: 'bg-yellow-500/20',
+      color: "text-yellow-400",
+      bgColor: "bg-yellow-500/20",
     },
     {
-      label: 'Suspended',
+      label: "Suspended",
       value: statistics.suspended_count,
       icon: AlertTriangle,
-      color: 'text-orange-400',
-      bgColor: 'bg-orange-500/20',
+      color: "text-orange-400",
+      bgColor: "bg-orange-500/20",
     },
   ];
 
@@ -135,36 +135,43 @@ function ServiceStatisticsCards() {
   );
 }
 
-function ServiceStatusBadge({ status }: { status: ServiceStatusValue | 'provisioning' | 'active' }) {
+function ServiceStatusBadge({
+  status,
+}: {
+  status: ServiceStatusValue | "provisioning" | "active";
+}) {
   const statusConfig: Record<
     string,
-    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: any }
+    {
+      label: string;
+      variant: "default" | "secondary" | "destructive" | "outline";
+      icon: any;
+    }
   > = {
     provisioning: {
-      label: 'Provisioning',
-      variant: 'secondary',
+      label: "Provisioning",
+      variant: "secondary",
       icon: Clock,
     },
     active: {
-      label: 'Active',
-      variant: 'default',
+      label: "Active",
+      variant: "default",
       icon: CheckCircle,
     },
     suspended: {
-      label: 'Suspended',
-      variant: 'outline',
+      label: "Suspended",
+      variant: "outline",
       icon: PauseCircle,
     },
     terminated: {
-      label: 'Terminated',
-      variant: 'destructive',
+      label: "Terminated",
+      variant: "destructive",
       icon: StopCircle,
     },
   };
 
   const normalizedStatus = status as keyof typeof statusConfig;
-  const configRecord =
-    (statusConfig[normalizedStatus] ?? statusConfig.provisioning)!;
+  const configRecord = (statusConfig[normalizedStatus] ?? statusConfig.provisioning)!;
   const Icon = configRecord.icon;
 
   return (
@@ -181,10 +188,10 @@ interface ServiceActionsMenuProps {
 }
 
 function ServiceActionsMenu({ service, onAction }: ServiceActionsMenuProps) {
-  const canActivate = service.status === 'provisioning';
-  const canSuspend = service.status === 'active';
-  const canResume = service.status === 'suspended';
-  const canTerminate = service.status !== 'terminated';
+  const canActivate = service.status === "provisioning";
+  const canSuspend = service.status === "active";
+  const canResume = service.status === "suspended";
+  const canTerminate = service.status !== "terminated";
 
   return (
     <DropdownMenu>
@@ -194,41 +201,41 @@ function ServiceActionsMenu({ service, onAction }: ServiceActionsMenuProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem onClick={() => onAction('view', service)}>
+        <DropdownMenuItem onClick={() => onAction("view", service)}>
           <Activity className="h-4 w-4 mr-2" />
           View Details
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onAction('health-check', service)}>
+        <DropdownMenuItem onClick={() => onAction("health-check", service)}>
           <Heart className="h-4 w-4 mr-2" />
           Health Check
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {canActivate && (
-          <DropdownMenuItem onClick={() => onAction('activate', service)}>
+          <DropdownMenuItem onClick={() => onAction("activate", service)}>
             <PlayCircle className="h-4 w-4 mr-2" />
             Activate Service
           </DropdownMenuItem>
         )}
         {canSuspend && (
-          <DropdownMenuItem onClick={() => onAction('suspend', service)}>
+          <DropdownMenuItem onClick={() => onAction("suspend", service)}>
             <PauseCircle className="h-4 w-4 mr-2" />
             Suspend Service
           </DropdownMenuItem>
         )}
         {canResume && (
-          <DropdownMenuItem onClick={() => onAction('resume', service)}>
+          <DropdownMenuItem onClick={() => onAction("resume", service)}>
             <PlayCircle className="h-4 w-4 mr-2" />
             Resume Service
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem onClick={() => onAction('modify', service)}>
+        <DropdownMenuItem onClick={() => onAction("modify", service)}>
           <Edit className="h-4 w-4 mr-2" />
           Modify Service
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {canTerminate && (
           <DropdownMenuItem
-            onClick={() => onAction('terminate', service)}
+            onClick={() => onAction("terminate", service)}
             className="text-red-400 focus:text-red-400"
           >
             <Trash2 className="h-4 w-4 mr-2" />
@@ -242,18 +249,24 @@ function ServiceActionsMenu({ service, onAction }: ServiceActionsMenuProps) {
 
 export default function ServicesPage() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ServiceStatusValue | 'provisioning' | 'active' | 'all'>('all');
-  const [serviceTypeFilter, setServiceTypeFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    ServiceStatusValue | "provisioning" | "active" | "all"
+  >("all");
+  const [serviceTypeFilter, setServiceTypeFilter] = useState<string>("all");
   const [showModifyModal, setShowModifyModal] = useState(false);
   const [showProvisionModal, setShowProvisionModal] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceInstanceSummary | null>(null);
   const { toast } = useToast();
 
   // API Hooks
-  const { data: services, isLoading, refetch } = useServiceInstances({
-    status: statusFilter === 'all' ? undefined : statusFilter,
-    serviceType: serviceTypeFilter === 'all' ? undefined : serviceTypeFilter,
+  const {
+    data: services,
+    isLoading,
+    refetch,
+  } = useServiceInstances({
+    status: statusFilter === "all" ? undefined : statusFilter,
+    serviceType: serviceTypeFilter === "all" ? undefined : serviceTypeFilter,
     limit: 100,
     offset: 0,
   });
@@ -271,7 +284,7 @@ export default function ServicesPage() {
 
     return services.filter((service) => {
       const matchesSearch =
-        searchQuery === '' ||
+        searchQuery === "" ||
         service.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
         service.customer_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         service.service_type.toLowerCase().includes(searchQuery.toLowerCase());
@@ -289,67 +302,71 @@ export default function ServicesPage() {
   const handleAction = async (action: string, service: ServiceInstanceSummary) => {
     try {
       switch (action) {
-        case 'activate':
+        case "activate":
           await activateMutation.mutateAsync({
             serviceId: service.id,
           });
           toast({
-            title: 'Service Activated',
+            title: "Service Activated",
             description: `Service ${service.id} has been activated successfully.`,
           });
           break;
 
-        case 'suspend':
+        case "suspend":
           await suspendMutation.mutateAsync({
             serviceId: service.id,
-            payload: { reason: 'Manual suspension via UI' },
+            payload: { reason: "Manual suspension via UI" },
           });
           toast({
-            title: 'Service Suspended',
+            title: "Service Suspended",
             description: `Service ${service.id} has been suspended.`,
           });
           break;
 
-        case 'resume':
+        case "resume":
           await resumeMutation.mutateAsync({
             serviceId: service.id,
           });
           toast({
-            title: 'Service Resumed',
+            title: "Service Resumed",
             description: `Service ${service.id} has been resumed.`,
           });
           break;
 
-        case 'terminate':
-          if (confirm('Are you sure you want to terminate this service? This action cannot be undone.')) {
+        case "terminate":
+          if (
+            confirm(
+              "Are you sure you want to terminate this service? This action cannot be undone.",
+            )
+          ) {
             await terminateMutation.mutateAsync({
               serviceId: service.id,
-              payload: { reason: 'Manual termination via UI' },
+              payload: { reason: "Manual termination via UI" },
             });
             toast({
-              title: 'Service Terminated',
+              title: "Service Terminated",
               description: `Service ${service.id} has been terminated.`,
-              variant: 'destructive',
+              variant: "destructive",
             });
           }
           break;
 
-        case 'health-check':
+        case "health-check":
           await healthCheckMutation.mutateAsync({
             serviceId: service.id,
           });
           toast({
-            title: 'Health Check Completed',
+            title: "Health Check Completed",
             description: `Health check for service ${service.id} completed successfully.`,
           });
           break;
 
-        case 'view':
+        case "view":
           // Navigate to service detail page
           router.push(`/tenant/services/${service.id}`);
           break;
 
-        case 'modify':
+        case "modify":
           // Open modify modal
           setSelectedService(service);
           setShowModifyModal(true);
@@ -360,9 +377,9 @@ export default function ServicesPage() {
       }
     } catch (error) {
       toast({
-        title: 'Operation Failed',
-        description: error instanceof Error ? error.message : 'An error occurred.',
-        variant: 'destructive',
+        title: "Operation Failed",
+        description: error instanceof Error ? error.message : "An error occurred.",
+        variant: "destructive",
       });
     }
   };
@@ -409,10 +426,7 @@ export default function ServicesPage() {
             </div>
 
             {/* Status Filter */}
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => setStatusFilter(value as any)}
-            >
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as any)}>
               <SelectTrigger className="w-full md:w-48 bg-slate-900 border-slate-700 text-white">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
@@ -426,10 +440,7 @@ export default function ServicesPage() {
             </Select>
 
             {/* Service Type Filter */}
-            <Select
-              value={serviceTypeFilter}
-              onValueChange={setServiceTypeFilter}
-            >
+            <Select value={serviceTypeFilter} onValueChange={setServiceTypeFilter}>
               <SelectTrigger className="w-full md:w-48 bg-slate-900 border-slate-700 text-white">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
@@ -450,7 +461,7 @@ export default function ServicesPage() {
               disabled={isLoading}
               className="border-slate-700"
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             </Button>
           </div>
 
@@ -468,9 +479,9 @@ export default function ServicesPage() {
                 <Server className="h-12 w-12 text-slate-600 mb-4" />
                 <p className="text-slate-400 text-lg mb-2">No services found</p>
                 <p className="text-slate-500 text-sm">
-                  {searchQuery || statusFilter !== 'all' || serviceTypeFilter !== 'all'
-                    ? 'Try adjusting your filters'
-                    : 'Provision your first service to get started'}
+                  {searchQuery || statusFilter !== "all" || serviceTypeFilter !== "all"
+                    ? "Try adjusting your filters"
+                    : "Provision your first service to get started"}
                 </p>
               </div>
             ) : (

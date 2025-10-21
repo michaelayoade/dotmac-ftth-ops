@@ -5,16 +5,16 @@
  * permissions, users, and secrets management.
  */
 
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import "@testing-library/jest-dom";
 
 // Mock Next.js router
 const mockPush = jest.fn();
-jest.mock('next/navigation', () => ({
+jest.mock("next/navigation", () => ({
   useRouter: () => ({
     push: mockPush,
-    pathname: '/dashboard/security-access',
+    pathname: "/dashboard/security-access",
   }),
 }));
 
@@ -52,8 +52,18 @@ const MockSecurityAccessDashboard = () => {
 // Mock API Keys Page
 const MockApiKeysPage = () => {
   const [keys, setKeys] = React.useState([
-    { id: '1', name: 'Production API', created: '2024-01-01', status: 'active' },
-    { id: '2', name: 'Development API', created: '2024-01-15', status: 'active' },
+    {
+      id: "1",
+      name: "Production API",
+      created: "2024-01-01",
+      status: "active",
+    },
+    {
+      id: "2",
+      name: "Development API",
+      created: "2024-01-15",
+      status: "active",
+    },
   ]);
 
   const [showCreateModal, setShowCreateModal] = React.useState(false);
@@ -97,9 +107,9 @@ const MockApiKeysPage = () => {
 // Mock Roles Page
 const MockRolesPage = () => {
   const roles = [
-    { id: '1', name: 'Admin', users: 5, permissions: 25 },
-    { id: '2', name: 'Developer', users: 12, permissions: 15 },
-    { id: '3', name: 'Viewer', users: 50, permissions: 5 },
+    { id: "1", name: "Admin", users: 5, permissions: 25 },
+    { id: "2", name: "Developer", users: 12, permissions: 15 },
+    { id: "3", name: "Viewer", users: 50, permissions: 5 },
   ];
 
   return (
@@ -120,101 +130,101 @@ const MockRolesPage = () => {
   );
 };
 
-describe('Security & Access Dashboard', () => {
-  it('should render the security dashboard', () => {
+describe("Security & Access Dashboard", () => {
+  it("should render the security dashboard", () => {
     render(<MockSecurityAccessDashboard />);
-    expect(screen.getByText('Security & Access')).toBeInTheDocument();
+    expect(screen.getByText("Security & Access")).toBeInTheDocument();
   });
 
-  it('should display all security categories', () => {
+  it("should display all security categories", () => {
     render(<MockSecurityAccessDashboard />);
 
-    expect(screen.getByTestId('api-keys-card')).toBeInTheDocument();
-    expect(screen.getByTestId('roles-card')).toBeInTheDocument();
-    expect(screen.getByTestId('permissions-card')).toBeInTheDocument();
-    expect(screen.getByTestId('users-card')).toBeInTheDocument();
-    expect(screen.getByTestId('secrets-card')).toBeInTheDocument();
+    expect(screen.getByTestId("api-keys-card")).toBeInTheDocument();
+    expect(screen.getByTestId("roles-card")).toBeInTheDocument();
+    expect(screen.getByTestId("permissions-card")).toBeInTheDocument();
+    expect(screen.getByTestId("users-card")).toBeInTheDocument();
+    expect(screen.getByTestId("secrets-card")).toBeInTheDocument();
   });
 
-  it('should display category descriptions', () => {
+  it("should display category descriptions", () => {
     render(<MockSecurityAccessDashboard />);
 
-    expect(screen.getByText('Manage API keys for external integrations')).toBeInTheDocument();
-    expect(screen.getByText('Define and manage user roles')).toBeInTheDocument();
-    expect(screen.getByText('Configure fine-grained permissions')).toBeInTheDocument();
-    expect(screen.getByText('Manage user accounts and access')).toBeInTheDocument();
-    expect(screen.getByText('Securely store and manage secrets')).toBeInTheDocument();
+    expect(screen.getByText("Manage API keys for external integrations")).toBeInTheDocument();
+    expect(screen.getByText("Define and manage user roles")).toBeInTheDocument();
+    expect(screen.getByText("Configure fine-grained permissions")).toBeInTheDocument();
+    expect(screen.getByText("Manage user accounts and access")).toBeInTheDocument();
+    expect(screen.getByText("Securely store and manage secrets")).toBeInTheDocument();
   });
 });
 
-describe('API Keys Page', () => {
-  it('should render API keys list', () => {
+describe("API Keys Page", () => {
+  it("should render API keys list", () => {
     render(<MockApiKeysPage />);
 
-    expect(screen.getByText('API Keys')).toBeInTheDocument();
-    expect(screen.getByTestId('api-key-1')).toBeInTheDocument();
-    expect(screen.getByTestId('api-key-2')).toBeInTheDocument();
+    expect(screen.getByText("API Keys")).toBeInTheDocument();
+    expect(screen.getByTestId("api-key-1")).toBeInTheDocument();
+    expect(screen.getByTestId("api-key-2")).toBeInTheDocument();
   });
 
-  it('should display API key details', () => {
+  it("should display API key details", () => {
     render(<MockApiKeysPage />);
 
-    expect(screen.getByText('Production API')).toBeInTheDocument();
-    expect(screen.getByText('Development API')).toBeInTheDocument();
-    expect(screen.getByText('Created: 2024-01-01')).toBeInTheDocument();
+    expect(screen.getByText("Production API")).toBeInTheDocument();
+    expect(screen.getByText("Development API")).toBeInTheDocument();
+    expect(screen.getByText("Created: 2024-01-01")).toBeInTheDocument();
   });
 
-  it('should show create API key button', () => {
+  it("should show create API key button", () => {
     render(<MockApiKeysPage />);
-    expect(screen.getByTestId('create-api-key-button')).toBeInTheDocument();
+    expect(screen.getByTestId("create-api-key-button")).toBeInTheDocument();
   });
 
-  it('should open create modal when button clicked', () => {
+  it("should open create modal when button clicked", () => {
     render(<MockApiKeysPage />);
 
-    const createButton = screen.getByTestId('create-api-key-button');
+    const createButton = screen.getByTestId("create-api-key-button");
     fireEvent.click(createButton);
 
-    expect(screen.getByTestId('create-modal')).toBeInTheDocument();
-    expect(screen.getByText('Create New API Key')).toBeInTheDocument();
+    expect(screen.getByTestId("create-modal")).toBeInTheDocument();
+    expect(screen.getByText("Create New API Key")).toBeInTheDocument();
   });
 
-  it('should close modal when cancel clicked', () => {
+  it("should close modal when cancel clicked", () => {
     render(<MockApiKeysPage />);
 
     // Open modal
-    fireEvent.click(screen.getByTestId('create-api-key-button'));
-    expect(screen.getByTestId('create-modal')).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("create-api-key-button"));
+    expect(screen.getByTestId("create-modal")).toBeInTheDocument();
 
     // Close modal
-    fireEvent.click(screen.getByTestId('close-modal-button'));
-    expect(screen.queryByTestId('create-modal')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("close-modal-button"));
+    expect(screen.queryByTestId("create-modal")).not.toBeInTheDocument();
   });
 });
 
-describe('Roles Page', () => {
-  it('should render roles list', () => {
+describe("Roles Page", () => {
+  it("should render roles list", () => {
     render(<MockRolesPage />);
 
-    expect(screen.getByText('Roles')).toBeInTheDocument();
-    expect(screen.getByTestId('role-1')).toBeInTheDocument();
-    expect(screen.getByTestId('role-2')).toBeInTheDocument();
-    expect(screen.getByTestId('role-3')).toBeInTheDocument();
+    expect(screen.getByText("Roles")).toBeInTheDocument();
+    expect(screen.getByTestId("role-1")).toBeInTheDocument();
+    expect(screen.getByTestId("role-2")).toBeInTheDocument();
+    expect(screen.getByTestId("role-3")).toBeInTheDocument();
   });
 
-  it('should display role names', () => {
+  it("should display role names", () => {
     render(<MockRolesPage />);
 
-    expect(screen.getByText('Admin')).toBeInTheDocument();
-    expect(screen.getByText('Developer')).toBeInTheDocument();
-    expect(screen.getByText('Viewer')).toBeInTheDocument();
+    expect(screen.getByText("Admin")).toBeInTheDocument();
+    expect(screen.getByText("Developer")).toBeInTheDocument();
+    expect(screen.getByText("Viewer")).toBeInTheDocument();
   });
 
-  it('should display role statistics', () => {
+  it("should display role statistics", () => {
     render(<MockRolesPage />);
 
-    expect(screen.getByText('5 users • 25 permissions')).toBeInTheDocument();
-    expect(screen.getByText('12 users • 15 permissions')).toBeInTheDocument();
-    expect(screen.getByText('50 users • 5 permissions')).toBeInTheDocument();
+    expect(screen.getByText("5 users • 25 permissions")).toBeInTheDocument();
+    expect(screen.getByText("12 users • 15 permissions")).toBeInTheDocument();
+    expect(screen.getByText("50 users • 5 permissions")).toBeInTheDocument();
   });
 });

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * IP Address List Component
@@ -6,7 +6,7 @@
  * Displays allocated IP addresses with filtering and management
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -14,11 +14,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,11 +26,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { IPAddress } from '@/types/netbox';
-import { detectIPFamily, IPFamily, formatIPAddress } from '@/lib/utils/ip-address';
-import { MoreHorizontal, Search, Copy, CheckCircle2 } from 'lucide-react';
-import { DualStackBadge } from '@/components/forms/IPAddressDisplay';
+} from "@/components/ui/dropdown-menu";
+import { IPAddress } from "@/types/netbox";
+import { detectIPFamily, IPFamily, formatIPAddress } from "@/lib/utils/ip-address";
+import { MoreHorizontal, Search, Copy, CheckCircle2 } from "lucide-react";
+import { DualStackBadge } from "@/components/forms/IPAddressDisplay";
 
 export interface IPAddressListProps {
   addresses: IPAddress[];
@@ -49,9 +49,9 @@ export function IPAddressList({
   isLoading = false,
   showTenant = false,
 }: IPAddressListProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [familyFilter, setFamilyFilter] = useState<'all' | 'ipv4' | 'ipv6'>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'reserved'>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [familyFilter, setFamilyFilter] = useState<"all" | "ipv4" | "ipv6">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "reserved">("all");
 
   const filteredAddresses = addresses.filter((addr) => {
     const matchesSearch =
@@ -61,11 +61,11 @@ export function IPAddressList({
 
     if (!matchesSearch) return false;
 
-    const family = detectIPFamily(addr.address.split('/')[0] ?? '');
-    if (familyFilter === 'ipv4' && family !== IPFamily.IPv4) return false;
-    if (familyFilter === 'ipv6' && family !== IPFamily.IPv6) return false;
+    const family = detectIPFamily(addr.address.split("/")[0] ?? "");
+    if (familyFilter === "ipv4" && family !== IPFamily.IPv4) return false;
+    if (familyFilter === "ipv6" && family !== IPFamily.IPv6) return false;
 
-    if (statusFilter !== 'all' && addr.status.value !== statusFilter) return false;
+    if (statusFilter !== "all" && addr.status.value !== statusFilter) return false;
 
     return true;
   });
@@ -77,9 +77,7 @@ export function IPAddressList({
     <Card>
       <CardHeader>
         <CardTitle>IP Addresses</CardTitle>
-        <CardDescription>
-          {addresses.length} allocated IP addresses
-        </CardDescription>
+        <CardDescription>{addresses.length} allocated IP addresses</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Filters */}
@@ -95,46 +93,46 @@ export function IPAddressList({
           </div>
           <div className="flex gap-2">
             <Button
-              variant={familyFilter === 'all' ? 'default' : 'outline'}
+              variant={familyFilter === "all" ? "default" : "outline"}
               size="sm"
-              onClick={() => setFamilyFilter('all')}
+              onClick={() => setFamilyFilter("all")}
             >
               All
             </Button>
             <Button
-              variant={familyFilter === 'ipv4' ? 'default' : 'outline'}
+              variant={familyFilter === "ipv4" ? "default" : "outline"}
               size="sm"
-              onClick={() => setFamilyFilter('ipv4')}
+              onClick={() => setFamilyFilter("ipv4")}
             >
               IPv4
             </Button>
             <Button
-              variant={familyFilter === 'ipv6' ? 'default' : 'outline'}
+              variant={familyFilter === "ipv6" ? "default" : "outline"}
               size="sm"
-              onClick={() => setFamilyFilter('ipv6')}
+              onClick={() => setFamilyFilter("ipv6")}
             >
               IPv6
             </Button>
           </div>
           <div className="flex gap-2">
             <Button
-              variant={statusFilter === 'all' ? 'default' : 'outline'}
+              variant={statusFilter === "all" ? "default" : "outline"}
               size="sm"
-              onClick={() => setStatusFilter('all')}
+              onClick={() => setStatusFilter("all")}
             >
               All Status
             </Button>
             <Button
-              variant={statusFilter === 'active' ? 'default' : 'outline'}
+              variant={statusFilter === "active" ? "default" : "outline"}
               size="sm"
-              onClick={() => setStatusFilter('active')}
+              onClick={() => setStatusFilter("active")}
             >
               Active
             </Button>
             <Button
-              variant={statusFilter === 'reserved' ? 'default' : 'outline'}
+              variant={statusFilter === "reserved" ? "default" : "outline"}
               size="sm"
-              onClick={() => setStatusFilter('reserved')}
+              onClick={() => setStatusFilter("reserved")}
             >
               Reserved
             </Button>
@@ -158,13 +156,19 @@ export function IPAddressList({
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={showTenant ? 7 : 6} className="text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={showTenant ? 7 : 6}
+                    className="text-center text-muted-foreground"
+                  >
                     Loading IP addresses...
                   </TableCell>
                 </TableRow>
               ) : groupedAddresses.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={showTenant ? 7 : 6} className="text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={showTenant ? 7 : 6}
+                    className="text-center text-muted-foreground"
+                  >
                     No IP addresses found
                   </TableCell>
                 </TableRow>
@@ -222,7 +226,7 @@ function AddressGroupRow({ group, showTenant, onEdit, onDelete, onCopy }: Addres
   const [copied, setCopied] = useState(false);
 
   const handleCopy = (address: string) => {
-    const ipOnly = address.split('/')[0] ?? '';
+    const ipOnly = address.split("/")[0] ?? "";
     navigator.clipboard.writeText(ipOnly);
     onCopy?.(ipOnly);
     setCopied(true);
@@ -230,8 +234,12 @@ function AddressGroupRow({ group, showTenant, onEdit, onDelete, onCopy }: Addres
   };
 
   if (group.isDualStack) {
-    const ipv4 = group.addresses.find((a) => detectIPFamily(a.address.split('/')[0] ?? '') === IPFamily.IPv4);
-    const ipv6 = group.addresses.find((a) => detectIPFamily(a.address.split('/')[0] ?? '') === IPFamily.IPv6);
+    const ipv4 = group.addresses.find(
+      (a) => detectIPFamily(a.address.split("/")[0] ?? "") === IPFamily.IPv4,
+    );
+    const ipv6 = group.addresses.find(
+      (a) => detectIPFamily(a.address.split("/")[0] ?? "") === IPFamily.IPv6,
+    );
     const primary = ipv4 || ipv6!;
 
     return (
@@ -270,9 +278,7 @@ function AddressGroupRow({ group, showTenant, onEdit, onDelete, onCopy }: Addres
           <DualStackBadge ipv4={ipv4?.address} ipv6={ipv6?.address} />
         </TableCell>
         <TableCell>
-          <Badge
-            variant={primary.status.value === 'active' ? 'default' : 'secondary'}
-          >
+          <Badge variant={primary.status.value === "active" ? "default" : "secondary"}>
             {primary.status.label}
           </Badge>
         </TableCell>
@@ -304,25 +310,17 @@ function AddressGroupRow({ group, showTenant, onEdit, onDelete, onCopy }: Addres
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              {onEdit && (
-                <DropdownMenuItem onClick={() => onEdit(primary)}>Edit</DropdownMenuItem>
-              )}
+              {onEdit && <DropdownMenuItem onClick={() => onEdit(primary)}>Edit</DropdownMenuItem>}
               {onDelete && (
                 <>
                   <DropdownMenuSeparator />
                   {ipv4 && (
-                    <DropdownMenuItem
-                      onClick={() => onDelete(ipv4.id)}
-                      className="text-red-600"
-                    >
+                    <DropdownMenuItem onClick={() => onDelete(ipv4.id)} className="text-red-600">
                       Delete IPv4
                     </DropdownMenuItem>
                   )}
                   {ipv6 && (
-                    <DropdownMenuItem
-                      onClick={() => onDelete(ipv6.id)}
-                      className="text-red-600"
-                    >
+                    <DropdownMenuItem onClick={() => onDelete(ipv6.id)} className="text-red-600">
                       Delete IPv6
                     </DropdownMenuItem>
                   )}
@@ -338,7 +336,7 @@ function AddressGroupRow({ group, showTenant, onEdit, onDelete, onCopy }: Addres
   // Single address
   const addr = group.addresses[0];
   if (!addr) return null;
-  const family = detectIPFamily(addr.address.split('/')[0] ?? '');
+  const family = detectIPFamily(addr.address.split("/")[0] ?? "");
 
   return (
     <TableRow>
@@ -356,12 +354,12 @@ function AddressGroupRow({ group, showTenant, onEdit, onDelete, onCopy }: Addres
         </div>
       </TableCell>
       <TableCell>
-        <Badge variant={family === IPFamily.IPv4 ? 'default' : 'secondary'}>
-          {family === IPFamily.IPv4 ? 'IPv4' : 'IPv6'}
+        <Badge variant={family === IPFamily.IPv4 ? "default" : "secondary"}>
+          {family === IPFamily.IPv4 ? "IPv4" : "IPv6"}
         </Badge>
       </TableCell>
       <TableCell>
-        <Badge variant={addr.status.value === 'active' ? 'default' : 'secondary'}>
+        <Badge variant={addr.status.value === "active" ? "default" : "secondary"}>
           {addr.status.label}
         </Badge>
       </TableCell>
@@ -393,16 +391,11 @@ function AddressGroupRow({ group, showTenant, onEdit, onDelete, onCopy }: Addres
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            {onEdit && (
-              <DropdownMenuItem onClick={() => onEdit(addr)}>Edit</DropdownMenuItem>
-            )}
+            {onEdit && <DropdownMenuItem onClick={() => onEdit(addr)}>Edit</DropdownMenuItem>}
             {onDelete && (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => onDelete(addr.id)}
-                  className="text-red-600"
-                >
+                <DropdownMenuItem onClick={() => onDelete(addr.id)} className="text-red-600">
                   Delete
                 </DropdownMenuItem>
               </>

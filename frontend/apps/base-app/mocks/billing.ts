@@ -25,16 +25,16 @@ export const mockInvoices = [
         description: "Professional Plan - Monthly",
         quantity: 1,
         unit_price: 50000,
-        total_price: 50000
+        total_price: 50000,
       },
       {
         item_id: "li_def456",
         description: "Additional Users (10)",
         quantity: 10,
         unit_price: 5000,
-        total_price: 50000
-      }
-    ]
+        total_price: 50000,
+      },
+    ],
   },
   {
     invoice_id: "inv_987654321xyz",
@@ -59,9 +59,9 @@ export const mockInvoices = [
         description: "Enterprise Plan - Annual",
         quantity: 1,
         unit_price: 250000,
-        total_price: 250000
-      }
-    ]
+        total_price: 250000,
+      },
+    ],
   },
   {
     invoice_id: "inv_draft123456",
@@ -79,8 +79,8 @@ export const mockInvoices = [
     amount_paid: 0,
     due_date: "2024-04-01T00:00:00Z",
     created_at: "2024-03-01T11:00:00Z",
-    updated_at: "2024-03-01T11:00:00Z"
-  }
+    updated_at: "2024-03-01T11:00:00Z",
+  },
 ];
 
 export const mockBillingSettings = {
@@ -99,17 +99,17 @@ export const mockBillingSettings = {
     email: "billing@acme.com",
     website: "https://acme.com",
     logo_url: "https://acme.com/logo.png",
-    brand_color: "#0EA5E9"
+    brand_color: "#0EA5E9",
   },
   tax_settings: {
     calculate_tax: true,
     tax_inclusive_pricing: false,
     tax_registrations: [
       { jurisdiction: "CA", registration_number: "CA-TAX-123456" },
-      { jurisdiction: "NY", registration_number: "NY-TAX-789012" }
+      { jurisdiction: "NY", registration_number: "NY-TAX-789012" },
     ],
     default_tax_rate: 8.75,
-    tax_provider: "internal"
+    tax_provider: "internal",
   },
   payment_settings: {
     enabled_payment_methods: ["card", "bank_account", "ach"],
@@ -119,7 +119,7 @@ export const mockBillingSettings = {
     late_payment_fee: 2.5,
     retry_failed_payments: true,
     max_retry_attempts: 3,
-    retry_interval_hours: 24
+    retry_interval_hours: 24,
   },
   invoice_settings: {
     invoice_number_prefix: "INV",
@@ -133,7 +133,7 @@ export const mockBillingSettings = {
     send_payment_reminders: true,
     reminder_schedule_days: [7, 3, 1],
     logo_on_invoices: true,
-    color_scheme: "#0EA5E9"
+    color_scheme: "#0EA5E9",
   },
   notification_settings: {
     send_invoice_notifications: true,
@@ -142,7 +142,7 @@ export const mockBillingSettings = {
     send_receipt_emails: true,
     webhook_url: "https://api.acme.com/webhooks/billing",
     webhook_events: ["invoice.created", "invoice.paid", "payment.failed"],
-    webhook_secret: "whsec_test123456789"
+    webhook_secret: "whsec_test123456789",
   },
   features_enabled: {
     invoicing: true,
@@ -151,8 +151,8 @@ export const mockBillingSettings = {
     receipts: true,
     tax_calculation: true,
     webhooks: true,
-    reporting: true
-  }
+    reporting: true,
+  },
 };
 
 export const mockPayments = [
@@ -166,10 +166,10 @@ export const mockPayments = [
     payment_method: "card",
     payment_method_details: {
       brand: "visa",
-      last4: "4242"
+      last4: "4242",
     },
     created_at: "2024-02-15T14:30:00Z",
-    processed_at: "2024-02-15T14:30:05Z"
+    processed_at: "2024-02-15T14:30:05Z",
   },
   {
     payment_id: "pay_xyz789012",
@@ -179,8 +179,8 @@ export const mockPayments = [
     currency: "USD",
     status: "pending",
     payment_method: "bank_account",
-    created_at: "2024-03-01T10:00:00Z"
-  }
+    created_at: "2024-03-01T10:00:00Z",
+  },
 ];
 
 export const mockSubscriptions = [
@@ -198,7 +198,7 @@ export const mockSubscriptions = [
     price: 50000,
     currency: "USD",
     created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-02-01T00:00:00Z"
+    updated_at: "2024-02-01T00:00:00Z",
   },
   {
     subscription_id: "sub_987654321",
@@ -214,8 +214,8 @@ export const mockSubscriptions = [
     price: 250000,
     currency: "USD",
     created_at: "2024-02-15T00:00:00Z",
-    updated_at: "2024-02-15T00:00:00Z"
-  }
+    updated_at: "2024-02-15T00:00:00Z",
+  },
 ];
 
 interface QueryParams {
@@ -233,12 +233,12 @@ export const billingMockHandlers = {
   getInvoices: (params?: QueryParams) => {
     let filtered = [...mockInvoices];
 
-    if (params?.status && params.status !== 'all') {
-      filtered = filtered.filter(inv => inv.status === params.status);
+    if (params?.status && params.status !== "all") {
+      filtered = filtered.filter((inv) => inv.status === params.status);
     }
 
     if (params?.customer_id) {
-      filtered = filtered.filter(inv => inv.customer_id === params.customer_id);
+      filtered = filtered.filter((inv) => inv.customer_id === params.customer_id);
     }
 
     // Pagination
@@ -252,14 +252,14 @@ export const billingMockHandlers = {
       total: filtered.length,
       page,
       page_size,
-      total_pages: Math.ceil(filtered.length / page_size)
+      total_pages: Math.ceil(filtered.length / page_size),
     };
   },
 
   getInvoice: (invoiceId: string) => {
-    const invoice = mockInvoices.find(inv => inv.invoice_id === invoiceId);
+    const invoice = mockInvoices.find((inv) => inv.invoice_id === invoiceId);
     if (!invoice) {
-      throw new Error('Invoice not found');
+      throw new Error("Invoice not found");
     }
     return invoice;
   },
@@ -269,16 +269,16 @@ export const billingMockHandlers = {
     let filtered = [...mockPayments];
 
     if (params?.status) {
-      filtered = filtered.filter(pay => pay.status === params.status);
+      filtered = filtered.filter((pay) => pay.status === params.status);
     }
 
     if (params?.invoice_id) {
-      filtered = filtered.filter(pay => pay.invoice_id === params.invoice_id);
+      filtered = filtered.filter((pay) => pay.invoice_id === params.invoice_id);
     }
 
     return {
       payments: filtered,
-      total: filtered.length
+      total: filtered.length,
     };
   },
 
@@ -287,16 +287,16 @@ export const billingMockHandlers = {
     let filtered = [...mockSubscriptions];
 
     if (params?.status) {
-      filtered = filtered.filter(sub => sub.status === params.status);
+      filtered = filtered.filter((sub) => sub.status === params.status);
     }
 
     if (params?.customer_id) {
-      filtered = filtered.filter(sub => sub.customer_id === params.customer_id);
+      filtered = filtered.filter((sub) => sub.customer_id === params.customer_id);
     }
 
     return {
       subscriptions: filtered,
-      total: filtered.length
+      total: filtered.length,
     };
   },
 
@@ -308,5 +308,5 @@ export const billingMockHandlers = {
     return { ...mockBillingSettings, ...settings };
   },
 
-  resetSettings: () => mockBillingSettings
+  resetSettings: () => mockBillingSettings,
 };

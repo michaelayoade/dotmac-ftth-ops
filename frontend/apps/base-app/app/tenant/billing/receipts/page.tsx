@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
@@ -31,23 +31,22 @@ export default function ReceiptsPage() {
 
   const handleDownloadPDF = async (receipt: Receipt) => {
     try {
-      const response = await apiClient.get(
-        `/api/v1/billing/receipts/${receipt.receipt_id}/pdf`,
-        { responseType: 'blob' }
-      );
+      const response = await apiClient.get(`/api/v1/billing/receipts/${receipt.receipt_id}/pdf`, {
+        responseType: "blob",
+      });
 
       // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.setAttribute('download', `receipt_${receipt.receipt_number}.pdf`);
+      link.setAttribute("download", `receipt_${receipt.receipt_number}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Failed to download receipt:', err);
-      alert('Failed to download receipt. Please try again.');
+      console.error("Failed to download receipt:", err);
+      alert("Failed to download receipt. Please try again.");
     }
   };
 
@@ -56,13 +55,16 @@ export default function ReceiptsPage() {
       await apiClient.post(`/api/v1/billing/receipts/${receipt.receipt_id}/email`);
       alert(`Receipt ${receipt.receipt_number} sent to ${receipt.customer_email}`);
     } catch (err) {
-      console.error('Failed to email receipt:', err);
-      alert('Failed to email receipt. Please try again.');
+      console.error("Failed to email receipt:", err);
+      alert("Failed to email receipt. Please try again.");
     }
   };
 
   const handlePrintReceipt = (receipt: Receipt) => {
-    const printWindow = window.open(`/api/v1/billing/receipts/${receipt.receipt_id}/html`, '_blank');
+    const printWindow = window.open(
+      `/api/v1/billing/receipts/${receipt.receipt_id}/html`,
+      "_blank",
+    );
     if (printWindow) {
       printWindow.onload = () => {
         printWindow.print();
@@ -71,7 +73,7 @@ export default function ReceiptsPage() {
   };
 
   const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   };
 
   return (
@@ -83,7 +85,8 @@ export default function ReceiptsPage() {
             <h1 className="text-3xl font-bold text-foreground">Receipts</h1>
           </div>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            View and manage payment receipts. Download PDFs, email receipts to customers, and track all transactions.
+            View and manage payment receipts. Download PDFs, email receipts to customers, and track
+            all transactions.
           </p>
         </div>
         <Button onClick={handleRefresh} variant="outline" size="sm">
@@ -149,7 +152,7 @@ export default function ReceiptsPage() {
           <CardContent>
             <ReceiptList
               key={refreshKey}
-              tenantId={currentTenant?.id ?? 'default-tenant'}
+              tenantId={currentTenant?.id ?? "default-tenant"}
               onReceiptSelect={handleReceiptSelect}
             />
           </CardContent>

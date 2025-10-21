@@ -19,7 +19,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
-import { platformAdminService, type PlatformAdminHealth } from "@/lib/services/platform-admin-service";
+import {
+  platformAdminService,
+  type PlatformAdminHealth,
+} from "@/lib/services/platform-admin-service";
 
 type NavSection = {
   href: string;
@@ -85,7 +88,8 @@ function PlatformAdminLayoutContent({ children }: PropsWithChildren) {
         setHealth(data);
       } catch (err) {
         if (!mounted) return;
-        const message = err instanceof Error ? err.message : "Failed to verify platform admin access.";
+        const message =
+          err instanceof Error ? err.message : "Failed to verify platform admin access.";
         setError(message);
       } finally {
         if (mounted) {
@@ -107,7 +111,7 @@ function PlatformAdminLayoutContent({ children }: PropsWithChildren) {
     }
 
     const matched = NAV_SECTIONS.find(
-      (section) => pathname === section.href || pathname.startsWith(`${section.href}/`)
+      (section) => pathname === section.href || pathname.startsWith(`${section.href}/`),
     );
 
     return matched ? matched.href : "/dashboard/platform-admin";
@@ -150,7 +154,9 @@ function PlatformAdminLayoutContent({ children }: PropsWithChildren) {
             <Shield className="h-8 w-8" />
             Platform Administration
           </h1>
-          <p className="mt-1 text-muted-foreground">Cross-tenant system management and monitoring</p>
+          <p className="mt-1 text-muted-foreground">
+            Cross-tenant system management and monitoring
+          </p>
         </div>
         <Badge variant="outline" className="flex items-center gap-2">
           <span className={cn("h-2 w-2 rounded-full", statusIndicatorClass)} />
@@ -197,7 +203,7 @@ function PlatformAdminLayoutContent({ children }: PropsWithChildren) {
                 "flex min-w-[180px] flex-1 items-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors",
                 isActive
                   ? "border-primary bg-primary/10 text-primary"
-                  : "border-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground"
+                  : "border-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground",
               )}
             >
               <Icon className="h-4 w-4 flex-shrink-0" />
@@ -210,7 +216,9 @@ function PlatformAdminLayoutContent({ children }: PropsWithChildren) {
       <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
         <aside>
           <div className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Administrative modules</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              Administrative modules
+            </p>
             <div className="space-y-2">
               {NAV_SECTIONS.map((section) => {
                 const isActive = activeHref === section.href;
@@ -223,7 +231,7 @@ function PlatformAdminLayoutContent({ children }: PropsWithChildren) {
                       "flex items-start gap-3 rounded-lg border px-3 py-3 text-left transition-colors",
                       isActive
                         ? "border-primary bg-primary/10 text-primary"
-                        : "border-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground"
+                        : "border-transparent text-muted-foreground hover:border-border hover:bg-accent hover:text-foreground",
                     )}
                   >
                     <Icon className="mt-0.5 h-5 w-5 flex-shrink-0" />

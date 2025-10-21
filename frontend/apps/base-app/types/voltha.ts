@@ -5,52 +5,52 @@
  * Maps to backend schemas in src/dotmac/platform/voltha/
  */
 
-import { DateString } from './common';
+import { DateString } from "./common";
 
 // ============================================================================
 // Enums
 // ============================================================================
 
 export enum DeviceAdminState {
-  UNKNOWN = 'UNKNOWN',
-  PREPROVISIONED = 'PREPROVISIONED',
-  ENABLED = 'ENABLED',
-  DISABLED = 'DISABLED',
-  DOWNLOADING_IMAGE = 'DOWNLOADING_IMAGE',
+  UNKNOWN = "UNKNOWN",
+  PREPROVISIONED = "PREPROVISIONED",
+  ENABLED = "ENABLED",
+  DISABLED = "DISABLED",
+  DOWNLOADING_IMAGE = "DOWNLOADING_IMAGE",
 }
 
 export enum DeviceOperStatus {
-  UNKNOWN = 'UNKNOWN',
-  DISCOVERED = 'DISCOVERED',
-  ACTIVATING = 'ACTIVATING',
-  ACTIVE = 'ACTIVE',
-  FAILED = 'FAILED',
-  RECONCILING = 'RECONCILING',
-  DELETED = 'DELETED',
+  UNKNOWN = "UNKNOWN",
+  DISCOVERED = "DISCOVERED",
+  ACTIVATING = "ACTIVATING",
+  ACTIVE = "ACTIVE",
+  FAILED = "FAILED",
+  RECONCILING = "RECONCILING",
+  DELETED = "DELETED",
 }
 
 export enum DeviceConnectStatus {
-  UNKNOWN = 'UNKNOWN',
-  UNREACHABLE = 'UNREACHABLE',
-  REACHABLE = 'REACHABLE',
+  UNKNOWN = "UNKNOWN",
+  UNREACHABLE = "UNREACHABLE",
+  REACHABLE = "REACHABLE",
 }
 
 export enum PortType {
-  UNKNOWN = 'UNKNOWN',
-  ETHERNET_NNI = 'ETHERNET_NNI',
-  ETHERNET_UNI = 'ETHERNET_UNI',
-  PON_OLT = 'PON_OLT',
-  PON_ONU = 'PON_ONU',
-  VENET_OLT = 'VENET_OLT',
-  VENET_ONU = 'VENET_ONU',
+  UNKNOWN = "UNKNOWN",
+  ETHERNET_NNI = "ETHERNET_NNI",
+  ETHERNET_UNI = "ETHERNET_UNI",
+  PON_OLT = "PON_OLT",
+  PON_ONU = "PON_ONU",
+  VENET_OLT = "VENET_OLT",
+  VENET_ONU = "VENET_ONU",
 }
 
 export enum AlarmSeverity {
-  INDETERMINATE = 'INDETERMINATE',
-  WARNING = 'WARNING',
-  MINOR = 'MINOR',
-  MAJOR = 'MAJOR',
-  CRITICAL = 'CRITICAL',
+  INDETERMINATE = "INDETERMINATE",
+  WARNING = "WARNING",
+  MINOR = "MINOR",
+  MAJOR = "MAJOR",
+  CRITICAL = "CRITICAL",
 }
 
 // ============================================================================
@@ -183,7 +183,7 @@ export interface VOLTHAAlarm {
   type: string;
   category: string;
   severity: AlarmSeverity | string;
-  state: 'RAISED' | 'CLEARED';
+  state: "RAISED" | "CLEARED";
   raised_ts: DateString;
   cleared_ts?: DateString;
   device_id: string;

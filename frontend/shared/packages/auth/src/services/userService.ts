@@ -3,7 +3,7 @@
  * Interfaces with DotMac backend to fetch user and tenant data
  */
 
-import type { User, PortalType } from '../types';
+import type { User, PortalType } from "../types";
 
 // This would typically interface with your backend API
 // For now, using a mock database that could be replaced with real DB calls
@@ -35,70 +35,70 @@ export interface DbTenant {
 // Mock database - replace with real database connections
 const mockUsers: DbUser[] = [
   {
-    id: 'user-123',
-    email: 'admin@dotmac.com',
-    name: 'Admin User',
-    role: 'admin',
-    permissions: ['users:read', 'users:write', 'billing:read', 'system:admin'],
-    tenant_id: 'tenant-1',
+    id: "user-123",
+    email: "admin@dotmac.com",
+    name: "Admin User",
+    role: "admin",
+    permissions: ["users:read", "users:write", "billing:read", "system:admin"],
+    tenant_id: "tenant-1",
     is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
   },
   {
-    id: 'user-456',
-    email: 'customer@example.com',
-    name: 'John Customer',
-    role: 'customer',
-    permissions: ['billing:read', 'tickets:create'],
-    tenant_id: 'tenant-1',
-    portal_id: 'customer-portal-123',
+    id: "user-456",
+    email: "customer@example.com",
+    name: "John Customer",
+    role: "customer",
+    permissions: ["billing:read", "tickets:create"],
+    tenant_id: "tenant-1",
+    portal_id: "customer-portal-123",
     is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
   },
   {
-    id: 'user-789',
-    email: 'reseller@partner.com',
-    name: 'Jane Reseller',
-    role: 'reseller',
-    permissions: ['customers:read', 'customers:create', 'billing:read', 'reports:read'],
-    tenant_id: 'tenant-2',
+    id: "user-789",
+    email: "reseller@partner.com",
+    name: "Jane Reseller",
+    role: "reseller",
+    permissions: ["customers:read", "customers:create", "billing:read", "reports:read"],
+    tenant_id: "tenant-2",
     is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
   },
   {
-    id: 'user-101112',
-    email: 'tech@field.com',
-    name: 'Bob Technician',
-    role: 'technician',
-    permissions: ['tickets:read', 'tickets:update', 'network:read'],
-    tenant_id: 'tenant-1',
+    id: "user-101112",
+    email: "tech@field.com",
+    name: "Bob Technician",
+    role: "technician",
+    permissions: ["tickets:read", "tickets:update", "network:read"],
+    tenant_id: "tenant-1",
     is_active: true,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
   },
 ];
 
 const mockTenants: DbTenant[] = [
   {
-    id: 'tenant-1',
-    name: 'DotMac ISP',
-    domain: 'dotmac.com',
+    id: "tenant-1",
+    name: "DotMac ISP",
+    domain: "dotmac.com",
     settings: {
       maxUsers: 1000,
-      features: ['billing', 'support', 'analytics'],
+      features: ["billing", "support", "analytics"],
     },
     is_active: true,
   },
   {
-    id: 'tenant-2',
-    name: 'Partner ISP',
-    domain: 'partner.com',
+    id: "tenant-2",
+    name: "Partner ISP",
+    domain: "partner.com",
     settings: {
       maxUsers: 500,
-      features: ['reseller', 'billing'],
+      features: ["reseller", "billing"],
     },
     is_active: true,
   },
@@ -113,14 +113,14 @@ export class UserService {
       // In production, this would be a database query
       // SELECT * FROM users WHERE id = ? AND tenant_id = ? AND is_active = true
       const dbUser = mockUsers.find(
-        (u) => u.id === userId && u.tenant_id === tenantId && u.is_active
+        (u) => u.id === userId && u.tenant_id === tenantId && u.is_active,
       );
 
       if (!dbUser) return null;
 
       return this.mapDbUserToUser(dbUser);
     } catch (error) {
-      console.error('Failed to get user by ID:', error);
+      console.error("Failed to get user by ID:", error);
       return null;
     }
   }
@@ -131,7 +131,7 @@ export class UserService {
   static async getUserByEmail(
     email: string,
     portalType: PortalType,
-    tenantId?: string
+    tenantId?: string,
   ): Promise<User | null> {
     try {
       // In production: SELECT * FROM users WHERE email = ? AND (tenant_id = ? OR portal_type = ?) AND is_active = true
@@ -140,7 +140,7 @@ export class UserService {
       // Filter by tenant if specified
       if (tenantId) {
         dbUser = mockUsers.find(
-          (u) => u.email === email && u.tenant_id === tenantId && u.is_active
+          (u) => u.email === email && u.tenant_id === tenantId && u.is_active,
         );
       }
 
@@ -148,7 +148,7 @@ export class UserService {
 
       return this.mapDbUserToUser(dbUser);
     } catch (error) {
-      console.error('Failed to get user by email:', error);
+      console.error("Failed to get user by email:", error);
       return null;
     }
   }
@@ -165,7 +165,7 @@ export class UserService {
         mockUsers[userIndex].updated_at = new Date().toISOString();
       }
     } catch (error) {
-      console.error('Failed to update last login:', error);
+      console.error("Failed to update last login:", error);
     }
   }
 
@@ -177,7 +177,7 @@ export class UserService {
       // In production: SELECT * FROM tenants WHERE id = ? AND is_active = true
       return mockTenants.find((t) => t.id === tenantId && t.is_active) || null;
     } catch (error) {
-      console.error('Failed to get tenant:', error);
+      console.error("Failed to get tenant:", error);
       return null;
     }
   }
@@ -188,7 +188,7 @@ export class UserService {
   static async verifyCredentials(
     email: string,
     password: string,
-    portalType: PortalType
+    portalType: PortalType,
   ): Promise<User | null> {
     try {
       // In production, this would hash the password and compare with stored hash
@@ -197,7 +197,7 @@ export class UserService {
 
       return this.getUserByEmail(email, portalType);
     } catch (error) {
-      console.error('Failed to verify credentials:', error);
+      console.error("Failed to verify credentials:", error);
       return null;
     }
   }

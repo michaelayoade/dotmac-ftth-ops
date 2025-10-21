@@ -79,6 +79,20 @@ class AuditActivity(Base, TimestampMixin, StrictTenantMixin):
 
     __tablename__ = "audit_activities"
 
+    def __init__(self, **kwargs: Any) -> None:
+        tenant_id = kwargs.get("tenant_id")
+        action = kwargs.get("action")
+        description = kwargs.get("description")
+
+        if not tenant_id:
+            raise ValueError("tenant_id is required for audit activities.")
+        if not action:
+            raise ValueError("action is required for audit activities.")
+        if not description:
+            raise ValueError("description is required for audit activities.")
+
+        super().__init__(**kwargs)
+
     id: Mapped[UUID] = mapped_column(
         PostgresUUID(as_uuid=True), primary_key=True, default=uuid4, index=True
     )

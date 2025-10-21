@@ -9,26 +9,26 @@
  * - Managing configuration state
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/components/ui/use-toast';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
 import {
   ossConfigService,
   type OSSService,
   type OSSServiceConfigResponse,
   type OSSServiceConfigUpdate,
-} from '@/lib/services/oss-config-service';
+} from "@/lib/services/oss-config-service";
 
 // ============================================
 // Query Keys
 // ============================================
 
 export const ossConfigKeys = {
-  all: ['oss-config'] as const,
-  lists: () => [...ossConfigKeys.all, 'list'] as const,
+  all: ["oss-config"] as const,
+  lists: () => [...ossConfigKeys.all, "list"] as const,
   list: (filters: Record<string, any>) => [...ossConfigKeys.lists(), filters] as const,
-  details: () => [...ossConfigKeys.all, 'detail'] as const,
+  details: () => [...ossConfigKeys.all, "detail"] as const,
   detail: (service: OSSService) => [...ossConfigKeys.details(), service] as const,
-  allConfigurations: () => [...ossConfigKeys.all, 'all-configurations'] as const,
+  allConfigurations: () => [...ossConfigKeys.all, "all-configurations"] as const,
 };
 
 // ============================================
@@ -100,12 +100,10 @@ export function useAllOSSConfigurations() {
  * });
  * ```
  */
-export function useUpdateOSSConfiguration(
-  options?: {
-    onSuccess?: (data: OSSServiceConfigResponse) => void;
-    onError?: (error: Error) => void;
-  }
-) {
+export function useUpdateOSSConfiguration(options?: {
+  onSuccess?: (data: OSSServiceConfigResponse) => void;
+  onError?: (error: Error) => void;
+}) {
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -113,12 +111,15 @@ export function useUpdateOSSConfiguration(
     Error,
     { service: OSSService; updates: OSSServiceConfigUpdate }
   >({
-    mutationFn: ({ service, updates }) =>
-      ossConfigService.updateConfiguration(service, updates),
+    mutationFn: ({ service, updates }) => ossConfigService.updateConfiguration(service, updates),
     onSuccess: (data, variables) => {
       // Invalidate and refetch related queries
-      queryClient.invalidateQueries({ queryKey: ossConfigKeys.detail(variables.service) });
-      queryClient.invalidateQueries({ queryKey: ossConfigKeys.allConfigurations() });
+      queryClient.invalidateQueries({
+        queryKey: ossConfigKeys.detail(variables.service),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ossConfigKeys.allConfigurations(),
+      });
 
       // toast.success(`${variables.service.toUpperCase()} configuration updated successfully`);
 
@@ -151,20 +152,22 @@ export function useUpdateOSSConfiguration(
  * resetConfig.mutate('voltha');
  * ```
  */
-export function useResetOSSConfiguration(
-  options?: {
-    onSuccess?: (service: OSSService) => void;
-    onError?: (error: Error) => void;
-  }
-) {
+export function useResetOSSConfiguration(options?: {
+  onSuccess?: (service: OSSService) => void;
+  onError?: (error: Error) => void;
+}) {
   const queryClient = useQueryClient();
 
   return useMutation<void, Error, OSSService>({
     mutationFn: (service) => ossConfigService.resetConfiguration(service),
     onSuccess: (_, service) => {
       // Invalidate and refetch related queries
-      queryClient.invalidateQueries({ queryKey: ossConfigKeys.detail(service) });
-      queryClient.invalidateQueries({ queryKey: ossConfigKeys.allConfigurations() });
+      queryClient.invalidateQueries({
+        queryKey: ossConfigKeys.detail(service),
+      });
+      queryClient.invalidateQueries({
+        queryKey: ossConfigKeys.allConfigurations(),
+      });
 
       // toast.success(`${service.toUpperCase()} configuration reset to defaults`);
 
@@ -201,17 +204,11 @@ export function useResetOSSConfiguration(
  * testConnection.mutate('voltha');
  * ```
  */
-export function useTestOSSConnection(
-  options?: {
-    onSuccess?: (result: { success: boolean; message: string; latency?: number }) => void;
-    onError?: (error: Error) => void;
-  }
-) {
-  return useMutation<
-    { success: boolean; message: string; latency?: number },
-    Error,
-    OSSService
-  >({
+export function useTestOSSConnection(options?: {
+  onSuccess?: (result: { success: boolean; message: string; latency?: number }) => void;
+  onError?: (error: Error) => void;
+}) {
+  return useMutation<{ success: boolean; message: string; latency?: number }, Error, OSSService>({
     mutationFn: (service) => ossConfigService.testConnection(service),
     onSuccess: (result, service) => {
       // if (result.success) {
@@ -287,15 +284,15 @@ export function useOSSConfigStatistics() {
 
   const statistics = {
     totalServices: configs?.length || 0,
-    configuredCount:
-      configs?.filter((c) => c.config.url && c.config.url !== '').length || 0,
+    configuredCount: configs?.filter((c) => c.config.url && c.config.url !== "").length || 0,
     overriddenCount: configs?.filter((c) => ossConfigService.hasOverrides(c)).length || 0,
-    services: configs?.map((c) => ({
-      service: c.service,
-      configured: !!c.config.url,
-      hasOverrides: ossConfigService.hasOverrides(c),
-      overrideCount: Object.keys(c.overrides).length,
-    })) || [],
+    services:
+      configs?.map((c) => ({
+        service: c.service,
+        configured: !!c.config.url,
+        hasOverrides: ossConfigService.hasOverrides(c),
+        overrideCount: Object.keys(c.overrides).length,
+      })) || [],
   };
 
   return {
@@ -326,12 +323,10 @@ export function useOSSConfigStatistics() {
  * ]);
  * ```
  */
-export function useBatchUpdateOSSConfiguration(
-  options?: {
-    onSuccess?: () => void;
-    onError?: (error: Error) => void;
-  }
-) {
+export function useBatchUpdateOSSConfiguration(options?: {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}) {
   const queryClient = useQueryClient();
 
   return useMutation<
@@ -342,8 +337,8 @@ export function useBatchUpdateOSSConfiguration(
     mutationFn: async (updates) => {
       const results = await Promise.all(
         updates.map(({ service, updates }) =>
-          ossConfigService.updateConfiguration(service, updates)
-        )
+          ossConfigService.updateConfiguration(service, updates),
+        ),
       );
       return results;
     },

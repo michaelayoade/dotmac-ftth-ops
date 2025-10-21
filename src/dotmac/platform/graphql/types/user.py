@@ -5,12 +5,111 @@ Provides types for users with role/permission batching, team membership,
 and profile change history via DataLoaders.
 """
 
+# NOTE: Strict typing in progress – ensure protocols mirror ORM models.
+
+# DEBUG sentinel
+
 from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING, Any, Protocol, Sequence
+from uuid import UUID
 
 import strawberry
 
+if TYPE_CHECKING:
+    from typing import TypeAlias
 
+    JSONScalar: TypeAlias = Any
+else:
+    from strawberry.scalars import JSON as JSONScalar
+
+
+class RoleModel(Protocol):
+    id: UUID
+    name: str
+    display_name: str
+    description: str | None
+    priority: int
+    is_active: bool
+    is_system: bool
+    is_default: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class PermissionModel(Protocol):
+    id: UUID
+    name: str
+    display_name: str
+    description: str | None
+    category: Enum
+    is_active: bool
+    is_system: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class TeamMembershipModel(Protocol):
+    id: UUID
+    team_id: UUID
+    role: str
+    is_active: bool
+    joined_at: datetime | None
+    left_at: datetime | None
+
+
+class ProfileChangeRecordModel(Protocol):
+    id: UUID
+    field_name: str
+    old_value: str | None
+    new_value: str | None
+    change_reason: str | None
+    changed_by_user_id: UUID
+    created_at: datetime
+    ip_address: str | None
+
+
+class UserModel(Protocol):
+    id: UUID
+    username: str
+    email: str
+    tenant_id: str | None
+    full_name: str | None
+    first_name: str | None
+    last_name: str | None
+    phone_number: str | None
+    phone: str | None
+    phone_verified: bool
+    bio: str | None
+    website: str | None
+    location: str | None
+    timezone: str | None
+    language: str | None
+    avatar_url: str | None
+    mfa_enabled: bool
+    last_login: datetime | None
+    last_login_ip: str | None
+    failed_login_attempts: int
+    locked_until: datetime | None
+    metadata_: dict[str, Any] | None
+    title: str | None
+    position: str | None
+    department: str | None
+    manager_name: str | None
+    employee_id: str | None
+    external_id: str | None
+    created_at: datetime
+    updated_at: datetime
+    status: str
+    is_active: bool
+    is_verified: bool
+    is_platform_admin: bool
+    is_superuser: bool
+    roles: Sequence[str] | None
+    permissions: Sequence[str] | None
+    metadata: dict[str, Any] | None
+    teams: Sequence[Any] | None
+    preferences: dict[str, Any] | None
 @strawberry.enum
 class UserStatusEnum(str, Enum):
     """User account status."""
@@ -39,7 +138,7 @@ class Role:
     permissions: list["Permission"] = strawberry.field(default_factory=list)
 
     @classmethod
-    def from_model(cls, role: any) -> "Role":
+    def from_model(cls, role: RoleModel) -> "Role":
         """Convert SQLAlchemy Role model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(role.id)),
@@ -90,7 +189,7 @@ class Permission:
     updated_at: datetime
 
     @classmethod
-    def from_model(cls, permission: any) -> "Permission":
+    def from_model(cls, permission: PermissionModel) -> "Permission":
         """Convert SQLAlchemy Permission model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(permission.id)),
@@ -118,7 +217,7 @@ class TeamMembership:
     left_at: datetime | None
 
     @classmethod
-    def from_model(cls, membership: any, team_name: str) -> "TeamMembership":
+    def from_model(cls, membership: TeamMembershipModel, team_name: str) -> "TeamMembership":
         """Convert SQLAlchemy TeamMember model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(membership.id)),
@@ -146,7 +245,7 @@ class ProfileChangeRecord:
     ip_address: str | None
 
     @classmethod
-    def from_model(cls, record: any, changed_by_username: str | None = None) -> "ProfileChangeRecord":
+    def from_model(cls, record: ProfileChangeRecordModel, changed_by_username: str | None = None) -> "ProfileChangeRecord":
         """Convert SQLAlchemy ProfileChangeHistory model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(record.id)),
@@ -213,7 +312,7 @@ class User:
     primary_role: str
 
     # Metadata (optional - can be large)
-    metadata: strawberry.scalars.JSON | None
+    metadata: JSONScalar | None
 
     # Relationships (conditionally loaded via DataLoaders)
     roles: list[Role] = strawberry.field(default_factory=list)
@@ -226,7 +325,7 @@ class User:
     permissions_legacy: list[str] = strawberry.field(default_factory=list)
 
     @classmethod
-    def from_model(cls, user: any, include_metadata: bool = False) -> "User":
+    def from_model(cls, user: UserModel, include_metadata: bool = False) -> "User":
         """Convert SQLAlchemy User model to GraphQL type."""
         # Determine status
         if not user.is_active:
@@ -253,7 +352,7 @@ class User:
             id=strawberry.ID(str(user.id)),
             username=user.username,
             email=user.email,
-            tenant_id=user.tenant_id,
+            tenant_id=str(user.tenant_id) if user.tenant_id else None,
             full_name=user.full_name,
             first_name=user.first_name,
             last_name=user.last_name,
@@ -287,8 +386,8 @@ class User:
             teams=[],
             profile_changes=[],
             # Legacy arrays from User model
-            roles_legacy=user.roles or [],
-            permissions_legacy=user.permissions or [],
+            roles_legacy=list(user.roles or []),
+            permissions_legacy=list(user.permissions or []),
         )
 
 

@@ -22,15 +22,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api/client";
-import {
-  DollarSign,
-  CreditCard,
-  Building2,
-  Wallet,
-  Check,
-  Upload,
-  X,
-} from "lucide-react";
+import { DollarSign, CreditCard, Building2, Wallet, Check, Upload, X } from "lucide-react";
 import { type Invoice, PaymentMethods, type PaymentMethod } from "@/types/billing";
 import { formatCurrency } from "@/lib/utils";
 
@@ -91,7 +83,7 @@ export function RecordPaymentModal({
 
     // Sort invoices by due date (oldest first)
     const sortedInvoices = [...invoices].sort(
-      (a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+      (a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime(),
     );
 
     let remainingAmount = paymentAmount;
@@ -161,7 +153,7 @@ export function RecordPaymentModal({
 
       if (paymentAmount > totalAmountDue) {
         const confirmed = confirm(
-          `Payment amount ($${paymentAmount.toFixed(2)}) exceeds total amount due ($${totalAmountDue.toFixed(2)}). Continue anyway?`
+          `Payment amount ($${paymentAmount.toFixed(2)}) exceeds total amount due ($${totalAmountDue.toFixed(2)}). Continue anyway?`,
         );
         if (!confirmed) {
           setIsSubmitting(false);
@@ -188,17 +180,17 @@ export function RecordPaymentModal({
         let receiptUrl: string | undefined;
         if (receiptFile) {
           const formData = new FormData();
-          formData.append('file', receiptFile);
+          formData.append("file", receiptFile);
 
-          const uploadResponse = await apiClient.post('/billing/receipts/upload', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
+          const uploadResponse = await apiClient.post("/billing/receipts/upload", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
           });
 
           receiptUrl = uploadResponse.data?.url;
         }
 
         // Record payment with receipt URL
-        await apiClient.post('/billing/payments', {
+        await apiClient.post("/billing/payments", {
           ...paymentData,
           receipt_url: receiptUrl,
         });
@@ -208,10 +200,11 @@ export function RecordPaymentModal({
           description: `Payment of ${formatCurrency(paymentAmount)} has been successfully recorded.`,
         });
       } catch (error) {
-        console.error('Failed to record payment:', error);
+        console.error("Failed to record payment:", error);
         toast({
           title: "Payment Failed",
-          description: error instanceof Error ? error.message : 'Failed to record payment. Please try again.',
+          description:
+            error instanceof Error ? error.message : "Failed to record payment. Please try again.",
           variant: "destructive",
         });
         setIsSubmitting(false);
@@ -266,9 +259,7 @@ export function RecordPaymentModal({
             <DollarSign className="h-5 w-5" />
             Record Payment
           </DialogTitle>
-          <DialogDescription>
-            Record a payment received from the customer
-          </DialogDescription>
+          <DialogDescription>Record a payment received from the customer</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -280,10 +271,7 @@ export function RecordPaymentModal({
             </div>
             <div className="space-y-2 max-h-32 overflow-y-auto">
               {invoices.map((invoice) => (
-                <div
-                  key={invoice.invoice_id}
-                  className="flex items-center justify-between text-sm"
-                >
+                <div key={invoice.invoice_id} className="flex items-center justify-between text-sm">
                   <span className="font-mono text-xs">{invoice.invoice_number}</span>
                   <span className="text-muted-foreground">
                     Due: {formatCurrency(invoice.amount_due)}
@@ -293,9 +281,7 @@ export function RecordPaymentModal({
             </div>
             <div className="flex items-center justify-between mt-3 pt-3 border-t">
               <span className="font-medium">Total Amount Due:</span>
-              <span className="text-lg font-bold">
-                {formatCurrency(totalAmountDue)}
-              </span>
+              <span className="text-lg font-bold">{formatCurrency(totalAmountDue)}</span>
             </div>
           </div>
 
@@ -313,9 +299,7 @@ export function RecordPaymentModal({
                   step="0.01"
                   min="0.01"
                   value={formData.amount}
-                  onChange={(e) =>
-                    setFormData({ ...formData, amount: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   className="pl-9"
                   placeholder="0.00"
                   required
@@ -323,8 +307,8 @@ export function RecordPaymentModal({
               </div>
               {parseFloat(formData.amount) > totalAmountDue && (
                 <p className="text-xs text-amber-400">
-                  Warning: Payment exceeds total amount due. Overpayment will be
-                  credited to customer account.
+                  Warning: Payment exceeds total amount due. Overpayment will be credited to
+                  customer account.
                 </p>
               )}
             </div>
@@ -400,9 +384,7 @@ export function RecordPaymentModal({
                 id="payment_date"
                 type="date"
                 value={formData.payment_date}
-                onChange={(e) =>
-                  setFormData({ ...formData, payment_date: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
                 max={new Date().toISOString().split("T")[0]}
                 required
               />
@@ -413,9 +395,7 @@ export function RecordPaymentModal({
               <Input
                 id="reference"
                 value={formData.reference}
-                onChange={(e) =>
-                  setFormData({ ...formData, reference: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
                 placeholder="e.g., Check #1234, Transfer ID"
               />
             </div>
@@ -425,9 +405,7 @@ export function RecordPaymentModal({
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Additional notes about this payment..."
                 rows={3}
               />
@@ -482,9 +460,7 @@ export function RecordPaymentModal({
                     key={dist.invoice.invoice_id}
                     className="flex items-center justify-between text-sm"
                   >
-                    <span className="font-mono text-xs">
-                      {dist.invoice.invoice_number}
-                    </span>
+                    <span className="font-mono text-xs">{dist.invoice.invoice_number}</span>
                     <span className="font-medium text-emerald-400">
                       {formatCurrency(dist.amount)}
                     </span>
@@ -492,9 +468,7 @@ export function RecordPaymentModal({
                 ))}
                 {parseFloat(formData.amount) > totalAmountDue && (
                   <div className="flex items-center justify-between text-sm pt-2 border-t">
-                    <span className="text-muted-foreground">
-                      Credit to Account
-                    </span>
+                    <span className="text-muted-foreground">Credit to Account</span>
                     <span className="font-medium text-amber-400">
                       {formatCurrency(parseFloat(formData.amount) - totalAmountDue)}
                     </span>
@@ -506,12 +480,7 @@ export function RecordPaymentModal({
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>

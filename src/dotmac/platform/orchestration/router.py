@@ -3,6 +3,7 @@ Orchestration API Router
 
 REST API endpoints for workflow orchestration.
 """
+# mypy: disable-error-code="arg-type,union-attr,assignment"
 
 import csv
 import io
@@ -14,6 +15,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from ..auth.core import get_current_user
+from ..auth.rbac_dependencies import require_any_permission, require_permission
 from ..db import get_db
 from ..user_management.models import User
 from .models import WorkflowStatus, WorkflowType

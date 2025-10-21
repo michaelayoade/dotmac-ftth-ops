@@ -35,9 +35,9 @@ export interface MockDataGuard {
  * Create a mock data guard with environment detection
  */
 export function createMockDataGuard(config?: MockDataConfig): MockDataGuard {
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  const isTest = process.env.NODE_ENV === 'test';
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isDevelopment = process.env.NODE_ENV === "development";
+  const isTest = process.env.NODE_ENV === "test";
+  const isProduction = process.env.NODE_ENV === "production";
 
   const shouldUseMockData =
     (isDevelopment && (config?.enableInDevelopment ?? true)) ||
@@ -57,7 +57,7 @@ export function createMockDataGuard(config?: MockDataConfig): MockDataGuard {
 export function mockData<T>(
   mockValue: T,
   productionFallback?: T,
-  config?: MockDataConfig
+  config?: MockDataConfig,
 ): T | undefined {
   const guard = createMockDataGuard(config);
 
@@ -80,7 +80,7 @@ export function mockData<T>(
     }
 
     // Log error for production mock data attempts
-    console.error('🚨 Attempted to use mock data in production environment');
+    console.error("🚨 Attempted to use mock data in production environment");
     return undefined;
   }
 
@@ -91,7 +91,7 @@ export function mockData<T>(
  * Development-only function that gets completely removed in production
  */
 export function devOnly<T>(fn: () => T): T | undefined {
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     return fn();
   }
   return undefined;
@@ -101,7 +101,7 @@ export function devOnly<T>(fn: () => T): T | undefined {
  * Test-only function that gets removed in production
  */
 export function testOnly<T>(fn: () => T): T | undefined {
-  if (process.env.NODE_ENV === 'test') {
+  if (process.env.NODE_ENV === "test") {
     return fn();
   }
   return undefined;
@@ -113,10 +113,10 @@ export function testOnly<T>(fn: () => T): T | undefined {
 export function useMockData<T>(
   mockValue: T,
   productionFallback?: T,
-  config?: MockDataConfig
+  config?: MockDataConfig,
 ): T | undefined {
   // This will be tree-shaken in production builds
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     return productionFallback;
   }
 
@@ -129,7 +129,7 @@ export function useMockData<T>(
 export function mockApiWrapper<TArgs extends any[], TReturn>(
   realApiCall: (...args: TArgs) => Promise<TReturn>,
   mockData: TReturn | (() => TReturn),
-  config?: MockDataConfig & { delay?: number }
+  config?: MockDataConfig & { delay?: number },
 ): (...args: TArgs) => Promise<TReturn> {
   return async (...args: TArgs): Promise<TReturn> => {
     const guard = createMockDataGuard(config);
@@ -139,7 +139,7 @@ export function mockApiWrapper<TArgs extends any[], TReturn>(
       const delay = config?.delay ?? 500;
       await new Promise((resolve) => setTimeout(resolve, delay));
 
-      const result = typeof mockData === 'function' ? (mockData as () => TReturn)() : mockData;
+      const result = typeof mockData === "function" ? (mockData as () => TReturn)() : mockData;
 
       if (guard.isDevelopment && config?.warningMessage) {
         console.warn(`🔧 Mock API Active: ${config.warningMessage}`);
@@ -184,13 +184,13 @@ export interface MockGenerator<T> {
 
 export function createMockGenerator<T>(
   factory: () => T,
-  config?: MockDataConfig
+  config?: MockDataConfig,
 ): MockGenerator<T> {
   return {
     generate(): T {
       const guard = createMockDataGuard(config);
       if (!guard.shouldUseMockData) {
-        throw new Error('Mock data generation attempted in production environment');
+        throw new Error("Mock data generation attempted in production environment");
       }
       return factory();
     },
@@ -205,7 +205,7 @@ export function createMockGenerator<T>(
           ...factory(),
           ...overrides,
         }),
-        config
+        config,
       );
     },
   };
@@ -216,19 +216,19 @@ export function createMockGenerator<T>(
  */
 export const safeConsole = {
   dev: (message: string, ...args: any[]): void => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       console.log(`🔧 [DEV] ${message}`, ...args);
     }
   },
 
   test: (message: string, ...args: any[]): void => {
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env.NODE_ENV === "test") {
       console.log(`🧪 [TEST] ${message}`, ...args);
     }
   },
 
   warn: (message: string, ...args: any[]): void => {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       console.warn(`⚠️ ${message}`, ...args);
     }
   },

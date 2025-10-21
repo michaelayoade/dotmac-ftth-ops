@@ -7,14 +7,14 @@
  * 2. Mock mode - Return deterministic data for UI testing
  */
 
-import { setupServer } from 'msw/node';
-import { handlers, mockHandlers } from '../apps/base-app/mocks/handlers';
+import { setupServer } from "msw/node";
+import { handlers, mockHandlers } from "../apps/base-app/mocks/handlers";
 
 // Determine mode from environment variable
-const MSW_MODE = process.env.MSW_MODE || 'proxy';
+const MSW_MODE = process.env.MSW_MODE || "proxy";
 
 // Select handlers based on mode
-const selectedHandlers = MSW_MODE === 'mock' ? mockHandlers : handlers;
+const selectedHandlers = MSW_MODE === "mock" ? mockHandlers : handlers;
 
 // Create MSW server
 export const server = setupServer(...selectedHandlers);
@@ -25,7 +25,7 @@ export const server = setupServer(...selectedHandlers);
 export function setupMSW() {
   // Start server before all tests
   server.listen({
-    onUnhandledRequest: 'bypass', // Let unhandled requests pass through
+    onUnhandledRequest: "bypass", // Let unhandled requests pass through
   });
 
   console.log(`[MSW] Server started in ${MSW_MODE} mode`);
@@ -35,7 +35,7 @@ export function setupMSW() {
     reset: () => server.resetHandlers(),
     close: () => {
       server.close();
-      console.log('[MSW] Server closed');
+      console.log("[MSW] Server closed");
     },
   };
 }

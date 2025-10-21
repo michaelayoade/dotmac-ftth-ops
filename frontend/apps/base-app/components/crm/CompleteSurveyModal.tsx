@@ -40,12 +40,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CompleteSurveyModalProps {
   open: boolean;
@@ -106,7 +101,8 @@ export function CompleteSurveyModal({
         fiber_extension_cost: survey.fiber_extension_cost?.toString() || "",
         nearest_olt_id: survey.nearest_olt_id || "",
         available_pon_ports: survey.available_pon_ports?.toString() || "",
-        estimated_installation_time_hours: survey.estimated_installation_time_hours?.toString() || "",
+        estimated_installation_time_hours:
+          survey.estimated_installation_time_hours?.toString() || "",
         installation_complexity: survey.installation_complexity || "",
         special_equipment_required: survey.special_equipment_required.join(", ") || "",
         recommendations: "",
@@ -139,29 +135,25 @@ export function CompleteSurveyModal({
   };
 
   const updatePhotoDescription = (photoId: string, description: string) => {
-    setPhotos(
-      photos.map((p) =>
-        p.id === photoId ? { ...p, description } : p
-      )
-    );
+    setPhotos(photos.map((p) => (p.id === photoId ? { ...p, description } : p)));
   };
 
   const uploadPhoto = async (photo: PhotoUpload): Promise<string> => {
     const formData = new FormData();
-    formData.append('file', photo.file);
-    formData.append('description', photo.description);
-    formData.append('category', 'site_survey');
+    formData.append("file", photo.file);
+    formData.append("description", photo.description);
+    formData.append("category", "site_survey");
 
     try {
-      const response = await apiClient.post('/storage/upload', formData, {
+      const response = await apiClient.post("/storage/upload", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
       });
 
-      return response.data?.url || response.data?.file_url || '';
+      return response.data?.url || response.data?.file_url || "";
     } catch (error) {
-      console.error('Failed to upload photo:', error);
+      console.error("Failed to upload photo:", error);
       throw error;
     }
   };
@@ -184,7 +176,11 @@ export function CompleteSurveyModal({
 
     try {
       // Upload photos to storage first
-      let photoUrls: Array<{ url: string; description: string; timestamp: string }> = [];
+      let photoUrls: Array<{
+        url: string;
+        description: string;
+        timestamp: string;
+      }> = [];
 
       if (photos.length > 0) {
         toast({
@@ -208,7 +204,9 @@ export function CompleteSurveyModal({
         });
 
         const uploadedPhotos = await Promise.all(uploadPromises);
-        photoUrls = uploadedPhotos.filter((p): p is { url: string; description: string; timestamp: string } => p !== null);
+        photoUrls = uploadedPhotos.filter(
+          (p): p is { url: string; description: string; timestamp: string } => p !== null,
+        );
 
         if (photoUrls.length < photos.length) {
           toast({
@@ -237,7 +235,10 @@ export function CompleteSurveyModal({
           : undefined,
         installation_complexity: formData.installation_complexity || undefined,
         special_equipment_required: formData.special_equipment_required
-          ? formData.special_equipment_required.split(",").map((s) => s.trim()).filter(Boolean)
+          ? formData.special_equipment_required
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
           : [],
         recommendations: formData.recommendations || undefined,
         obstacles: formData.obstacles || undefined,
@@ -290,8 +291,7 @@ export function CompleteSurveyModal({
         <DialogHeader>
           <DialogTitle>Complete Site Survey</DialogTitle>
           <DialogDescription>
-            Record technical assessment and installation requirements for{" "}
-            {survey.survey_number}
+            Record technical assessment and installation requirements for {survey.survey_number}
           </DialogDescription>
         </DialogHeader>
 
@@ -356,19 +356,13 @@ export function CompleteSurveyModal({
                       </p>
                     )}
                     {formData.serviceability === "serviceable" && (
-                      <p className="mt-1">
-                        Lead can proceed to quote generation
-                      </p>
+                      <p className="mt-1">Lead can proceed to quote generation</p>
                     )}
                     {formData.serviceability === "not_serviceable" && (
-                      <p className="mt-1 text-red-600">
-                        Lead should be disqualified
-                      </p>
+                      <p className="mt-1 text-red-600">Lead should be disqualified</p>
                     )}
                     {formData.serviceability === "requires_construction" && (
-                      <p className="mt-1">
-                        Quote should include fiber extension costs
-                      </p>
+                      <p className="mt-1">Quote should include fiber extension costs</p>
                     )}
                   </AlertDescription>
                 </Alert>
@@ -379,12 +373,13 @@ export function CompleteSurveyModal({
                   id="update_lead"
                   checked={formData.update_lead_serviceability}
                   onCheckedChange={(checked) =>
-                    setFormData({ ...formData, update_lead_serviceability: checked })
+                    setFormData({
+                      ...formData,
+                      update_lead_serviceability: checked,
+                    })
                   }
                 />
-                <Label htmlFor="update_lead">
-                  Automatically update lead serviceability
-                </Label>
+                <Label htmlFor="update_lead">Automatically update lead serviceability</Label>
               </div>
             </TabsContent>
 
@@ -415,12 +410,13 @@ export function CompleteSurveyModal({
                     id="requires_extension"
                     checked={formData.requires_fiber_extension}
                     onCheckedChange={(checked) =>
-                      setFormData({ ...formData, requires_fiber_extension: checked })
+                      setFormData({
+                        ...formData,
+                        requires_fiber_extension: checked,
+                      })
                     }
                   />
-                  <Label htmlFor="requires_extension">
-                    Requires Fiber Extension
-                  </Label>
+                  <Label htmlFor="requires_extension">Requires Fiber Extension</Label>
                 </div>
               </div>
 
@@ -436,7 +432,10 @@ export function CompleteSurveyModal({
                     step="0.01"
                     value={formData.fiber_extension_cost}
                     onChange={(e) =>
-                      setFormData({ ...formData, fiber_extension_cost: e.target.value })
+                      setFormData({
+                        ...formData,
+                        fiber_extension_cost: e.target.value,
+                      })
                     }
                     placeholder="e.g., 2500.00"
                   />
@@ -453,7 +452,10 @@ export function CompleteSurveyModal({
                     id="olt_id"
                     value={formData.nearest_olt_id}
                     onChange={(e) =>
-                      setFormData({ ...formData, nearest_olt_id: e.target.value })
+                      setFormData({
+                        ...formData,
+                        nearest_olt_id: e.target.value,
+                      })
                     }
                     placeholder="e.g., OLT-DOWNTOWN-03"
                   />
@@ -466,7 +468,10 @@ export function CompleteSurveyModal({
                     type="number"
                     value={formData.available_pon_ports}
                     onChange={(e) =>
-                      setFormData({ ...formData, available_pon_ports: e.target.value })
+                      setFormData({
+                        ...formData,
+                        available_pon_ports: e.target.value,
+                      })
                     }
                     placeholder="e.g., 12"
                   />
@@ -505,7 +510,10 @@ export function CompleteSurveyModal({
                   <Select
                     value={formData.installation_complexity}
                     onValueChange={(value: any) =>
-                      setFormData({ ...formData, installation_complexity: value })
+                      setFormData({
+                        ...formData,
+                        installation_complexity: value,
+                      })
                     }
                   >
                     <SelectTrigger id="complexity">
@@ -556,7 +564,10 @@ export function CompleteSurveyModal({
                   id="recommendations"
                   value={formData.recommendations}
                   onChange={(e) =>
-                    setFormData({ ...formData, recommendations: e.target.value })
+                    setFormData({
+                      ...formData,
+                      recommendations: e.target.value,
+                    })
                   }
                   placeholder="Recommended service plan, installation approach, upsell opportunities, etc."
                   rows={4}
@@ -571,9 +582,7 @@ export function CompleteSurveyModal({
                 <Textarea
                   id="obstacles"
                   value={formData.obstacles}
-                  onChange={(e) =>
-                    setFormData({ ...formData, obstacles: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, obstacles: e.target.value })}
                   placeholder="Permitting requirements, property owner approvals, utility coordination, access challenges, etc."
                   rows={4}
                 />
@@ -602,9 +611,7 @@ export function CompleteSurveyModal({
                     <p className="text-sm text-muted-foreground">
                       Click to upload photos or drag and drop
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      PNG, JPG up to 10MB each
-                    </p>
+                    <p className="text-xs text-muted-foreground">PNG, JPG up to 10MB each</p>
                   </label>
                 </div>
 
@@ -612,10 +619,7 @@ export function CompleteSurveyModal({
                 {photos.length > 0 && (
                   <div className="grid grid-cols-2 gap-4 mt-4">
                     {photos.map((photo) => (
-                      <div
-                        key={photo.id}
-                        className="relative border rounded-lg p-2 space-y-2"
-                      >
+                      <div key={photo.id} className="relative border rounded-lg p-2 space-y-2">
                         <div className="relative aspect-video">
                           <Image
                             src={photo.preview}
@@ -638,9 +642,7 @@ export function CompleteSurveyModal({
                         <Input
                           placeholder="Photo description..."
                           value={photo.description}
-                          onChange={(e) =>
-                            updatePhotoDescription(photo.id, e.target.value)
-                          }
+                          onChange={(e) => updatePhotoDescription(photo.id, e.target.value)}
                         />
                       </div>
                     ))}

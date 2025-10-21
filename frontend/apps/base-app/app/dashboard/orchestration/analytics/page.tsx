@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 import {
   TrendingUp,
   TrendingDown,
@@ -13,12 +13,8 @@ import {
   Download,
   Calendar,
   RefreshCw,
-} from 'lucide-react';
-import {
-  useOrchestrationStats,
-  useWorkflows,
-  type WorkflowType,
-} from '@/hooks/useOrchestration';
+} from "lucide-react";
+import { useOrchestrationStats, useWorkflows, type WorkflowType } from "@/hooks/useOrchestration";
 
 // ============================================================================
 // Utility Functions
@@ -26,9 +22,9 @@ import {
 
 function formatWorkflowType(type: WorkflowType): string {
   return type
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 // ============================================================================
@@ -57,7 +53,9 @@ function KPICard({
           <Icon className="h-6 w-6 text-muted-foreground" />
         </div>
         {trend !== undefined && (
-          <div className={`flex items-center gap-1 ${trend >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+          <div
+            className={`flex items-center gap-1 ${trend >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+          >
             {trend >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
             <span className="text-sm font-medium">{Math.abs(trend).toFixed(1)}%</span>
           </div>
@@ -65,12 +63,8 @@ function KPICard({
       </div>
       <p className="text-sm font-medium text-muted-foreground">{title}</p>
       <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
-      {subtitle && (
-        <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-      )}
-      {trendLabel && (
-        <p className="mt-2 text-xs text-muted-foreground">{trendLabel}</p>
-      )}
+      {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
+      {trendLabel && <p className="mt-2 text-xs text-muted-foreground">{trendLabel}</p>}
     </div>
   );
 }
@@ -101,7 +95,9 @@ function WorkflowTypeChart({ stats }: { stats: any }) {
             <div key={type} className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-foreground font-medium">{formatWorkflowType(type)}</span>
-                <span className="text-muted-foreground">{count} ({percentage.toFixed(1)}%)</span>
+                <span className="text-muted-foreground">
+                  {count} ({percentage.toFixed(1)}%)
+                </span>
               </div>
               <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div
@@ -118,10 +114,30 @@ function WorkflowTypeChart({ stats }: { stats: any }) {
 
 function StatusDistributionChart({ stats }: { stats: any }) {
   const data = [
-    { label: 'Completed', value: stats?.completed || 0, color: 'bg-green-500', textColor: 'text-green-600 dark:text-green-400' },
-    { label: 'Failed', value: stats?.failed || 0, color: 'bg-red-500', textColor: 'text-red-600 dark:text-red-400' },
-    { label: 'Running', value: stats?.running || 0, color: 'bg-blue-500', textColor: 'text-blue-600 dark:text-blue-400' },
-    { label: 'Pending', value: stats?.pending || 0, color: 'bg-gray-500', textColor: 'text-gray-600 dark:text-gray-400' },
+    {
+      label: "Completed",
+      value: stats?.completed || 0,
+      color: "bg-green-500",
+      textColor: "text-green-600 dark:text-green-400",
+    },
+    {
+      label: "Failed",
+      value: stats?.failed || 0,
+      color: "bg-red-500",
+      textColor: "text-red-600 dark:text-red-400",
+    },
+    {
+      label: "Running",
+      value: stats?.running || 0,
+      color: "bg-blue-500",
+      textColor: "text-blue-600 dark:text-blue-400",
+    },
+    {
+      label: "Pending",
+      value: stats?.pending || 0,
+      color: "bg-gray-500",
+      textColor: "text-gray-600 dark:text-gray-400",
+    },
   ];
 
   const total = data.reduce((sum, item) => sum + item.value, 0);
@@ -143,7 +159,9 @@ function StatusDistributionChart({ stats }: { stats: any }) {
             const percentage = (item.value / total) * 100;
             return (
               <div key={item.label} className="absolute inset-0 flex items-center justify-center">
-                <div className={`w-full h-full rounded-full ${item.color} opacity-${Math.floor(percentage / 10) * 10}`}>
+                <div
+                  className={`w-full h-full rounded-full ${item.color} opacity-${Math.floor(percentage / 10) * 10}`}
+                >
                   {/* This is a simplified representation - for a real donut chart, use a charting library */}
                 </div>
               </div>
@@ -162,9 +180,7 @@ function StatusDistributionChart({ stats }: { stats: any }) {
               <div className="flex-1">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-foreground">{item.label}</span>
-                  <span className={`text-sm font-medium ${item.textColor}`}>
-                    {item.value}
-                  </span>
+                  <span className={`text-sm font-medium ${item.textColor}`}>{item.value}</span>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {percentage.toFixed(1)}% of total
@@ -184,20 +200,19 @@ function StatusDistributionChart({ stats }: { stats: any }) {
 
 function PerformanceMetrics({ workflows }: { workflows: any[] }) {
   const metrics = useMemo(() => {
-    const completed = workflows.filter(w => w.status === 'completed');
-    const failed = workflows.filter(w => w.status === 'failed');
+    const completed = workflows.filter((w) => w.status === "completed");
+    const failed = workflows.filter((w) => w.status === "failed");
 
     const durations = completed
-      .filter(w => w.started_at && w.completed_at)
-      .map(w => {
+      .filter((w) => w.started_at && w.completed_at)
+      .map((w) => {
         const start = new Date(w.started_at).getTime();
         const end = new Date(w.completed_at).getTime();
         return (end - start) / 1000; // seconds
       });
 
-    const avgDuration = durations.length > 0
-      ? durations.reduce((a, b) => a + b, 0) / durations.length
-      : 0;
+    const avgDuration =
+      durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : 0;
 
     const minDuration = durations.length > 0 ? Math.min(...durations) : 0;
     const maxDuration = durations.length > 0 ? Math.max(...durations) : 0;
@@ -215,9 +230,10 @@ function PerformanceMetrics({ workflows }: { workflows: any[] }) {
       p50,
       p95,
       p99,
-      successRate: completed.length + failed.length > 0
-        ? (completed.length / (completed.length + failed.length)) * 100
-        : 0,
+      successRate:
+        completed.length + failed.length > 0
+          ? (completed.length / (completed.length + failed.length)) * 100
+          : 0,
       totalCompleted: completed.length,
       totalFailed: failed.length,
     };
@@ -237,11 +253,15 @@ function PerformanceMetrics({ workflows }: { workflows: any[] }) {
       </div>
       <div className="p-4 border border-border rounded-lg">
         <p className="text-xs text-muted-foreground mb-1">Min Duration</p>
-        <p className="text-2xl font-bold text-green-600 dark:text-green-400">{formatDuration(metrics.minDuration)}</p>
+        <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+          {formatDuration(metrics.minDuration)}
+        </p>
       </div>
       <div className="p-4 border border-border rounded-lg">
         <p className="text-xs text-muted-foreground mb-1">Max Duration</p>
-        <p className="text-2xl font-bold text-red-600 dark:text-red-400">{formatDuration(metrics.maxDuration)}</p>
+        <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+          {formatDuration(metrics.maxDuration)}
+        </p>
       </div>
       <div className="p-4 border border-border rounded-lg">
         <p className="text-xs text-muted-foreground mb-1">Success Rate</p>
@@ -261,7 +281,9 @@ function PerformanceMetrics({ workflows }: { workflows: any[] }) {
       </div>
       <div className="p-4 border border-border rounded-lg">
         <p className="text-xs text-muted-foreground mb-1">Total Executed</p>
-        <p className="text-xl font-bold text-foreground">{metrics.totalCompleted + metrics.totalFailed}</p>
+        <p className="text-xl font-bold text-foreground">
+          {metrics.totalCompleted + metrics.totalFailed}
+        </p>
       </div>
     </div>
   );
@@ -272,10 +294,14 @@ function PerformanceMetrics({ workflows }: { workflows: any[] }) {
 // ============================================================================
 
 export default function OrchestrationAnalyticsPage() {
-  const [timeRange, setTimeRange] = useState<'24h' | '7d' | '30d' | '90d'>('7d');
+  const [timeRange, setTimeRange] = useState<"24h" | "7d" | "30d" | "90d">("7d");
 
   const { stats, loading: statsLoading, refetch: refetchStats } = useOrchestrationStats();
-  const { workflows, loading: workflowsLoading, refetch: refetchWorkflows } = useWorkflows({
+  const {
+    workflows,
+    loading: workflowsLoading,
+    refetch: refetchWorkflows,
+  } = useWorkflows({
     pageSize: 100, // Get more data for analytics
   });
 
@@ -284,23 +310,28 @@ export default function OrchestrationAnalyticsPage() {
       generated_at: new Date().toISOString(),
       time_range: timeRange,
       summary: stats,
-      workflows: workflows.map(w => ({
+      workflows: workflows.map((w) => ({
         id: w.workflow_id,
         type: w.workflow_type,
         status: w.status,
-        duration: w.started_at && (w.completed_at || w.failed_at)
-          ? (new Date(w.completed_at || w.failed_at!).getTime() - new Date(w.started_at).getTime()) / 1000
-          : null,
+        duration:
+          w.started_at && (w.completed_at || w.failed_at)
+            ? (new Date(w.completed_at || w.failed_at!).getTime() -
+                new Date(w.started_at).getTime()) /
+              1000
+            : null,
         started_at: w.started_at,
         completed_at: w.completed_at || w.failed_at,
       })),
     };
 
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(report, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `orchestration-report-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `orchestration-report-${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -316,9 +347,7 @@ export default function OrchestrationAnalyticsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Orchestration Analytics</h1>
-          <p className="text-muted-foreground mt-1">
-            Performance metrics and workflow insights
-          </p>
+          <p className="text-muted-foreground mt-1">Performance metrics and workflow insights</p>
         </div>
         <div className="flex items-center gap-2">
           <select
@@ -365,7 +394,7 @@ export default function OrchestrationAnalyticsPage() {
         />
         <KPICard
           title="Avg Duration"
-          value={stats?.avg_duration_seconds ? `${stats.avg_duration_seconds.toFixed(1)}s` : 'N/A'}
+          value={stats?.avg_duration_seconds ? `${stats.avg_duration_seconds.toFixed(1)}s` : "N/A"}
           icon={Clock}
           trend={-12.3}
           trendLabel="faster than previous"
@@ -374,7 +403,7 @@ export default function OrchestrationAnalyticsPage() {
           title="Failed Workflows"
           value={stats?.failed || 0}
           icon={XCircle}
-          subtitle={`${((stats?.failed || 0) / (stats?.total || 1) * 100).toFixed(1)}% failure rate`}
+          subtitle={`${(((stats?.failed || 0) / (stats?.total || 1)) * 100).toFixed(1)}% failure rate`}
         />
       </div>
 
@@ -435,7 +464,9 @@ export default function OrchestrationAnalyticsPage() {
             <div className="flex items-start gap-3 p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg">
               <XCircle className="h-5 w-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-medium text-orange-900 dark:text-orange-100">Failed Workflows Detected</p>
+                <p className="font-medium text-orange-900 dark:text-orange-100">
+                  Failed Workflows Detected
+                </p>
                 <p className="text-sm text-orange-700 dark:text-orange-300 mt-1">
                   {stats.failed} workflows failed. Review logs to identify common failure patterns.
                 </p>

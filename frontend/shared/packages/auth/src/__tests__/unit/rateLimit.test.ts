@@ -3,7 +3,7 @@
  * Tests rate limiting logic for different thresholds and time windows
  */
 
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, vi } from "vitest";
 
 interface RateLimitEntry {
   attempts: number;
@@ -17,7 +17,7 @@ class RateLimiter {
   constructor(
     private maxAttempts: number = 5,
     private windowMs: number = 15 * 60 * 1000, // 15 minutes
-    private blockDurationMs: number = 30 * 60 * 1000 // 30 minutes
+    private blockDurationMs: number = 30 * 60 * 1000, // 30 minutes
   ) {}
 
   isAllowed(identifier: string): boolean {
@@ -97,16 +97,16 @@ class RateLimiter {
   }
 }
 
-describe('Rate Limiting', () => {
+describe("Rate Limiting", () => {
   let rateLimiter: RateLimiter;
 
   beforeEach(() => {
     rateLimiter = new RateLimiter(3, 60000, 120000); // 3 attempts, 1 min window, 2 min block
   });
 
-  describe('Basic Rate Limiting', () => {
-    test('should allow requests within limit', () => {
-      const identifier = 'user-123';
+  describe("Basic Rate Limiting", () => {
+    test("should allow requests within limit", () => {
+      const identifier = "user-123";
 
       expect(rateLimiter.isAllowed(identifier)).toBe(true);
       expect(rateLimiter.isAllowed(identifier)).toBe(true);
@@ -115,8 +115,8 @@ describe('Rate Limiting', () => {
       expect(rateLimiter.getAttempts(identifier)).toBe(3);
     });
 
-    test('should block requests after exceeding limit', () => {
-      const identifier = 'user-456';
+    test("should block requests after exceeding limit", () => {
+      const identifier = "user-456";
 
       // Make maximum allowed attempts
       for (let i = 0; i < 3; i++) {
@@ -128,9 +128,9 @@ describe('Rate Limiting', () => {
       expect(rateLimiter.getAttempts(identifier)).toBe(4);
     });
 
-    test('should track attempts per identifier separately', () => {
-      const user1 = 'user-111';
-      const user2 = 'user-222';
+    test("should track attempts per identifier separately", () => {
+      const user1 = "user-111";
+      const user2 = "user-222";
 
       // User 1 exceeds limit
       for (let i = 0; i < 4; i++) {
@@ -147,11 +147,11 @@ describe('Rate Limiting', () => {
     });
   });
 
-  describe('Time Window Behavior', () => {
-    test('should reset attempts after window expires', () => {
+  describe("Time Window Behavior", () => {
+    test("should reset attempts after window expires", () => {
       vi.useFakeTimers();
 
-      const identifier = 'user-789';
+      const identifier = "user-789";
 
       // Make maximum attempts
       for (let i = 0; i < 3; i++) {
@@ -171,10 +171,10 @@ describe('Rate Limiting', () => {
       vi.useRealTimers();
     });
 
-    test('should maintain block duration separately from window', () => {
+    test("should maintain block duration separately from window", () => {
       vi.useFakeTimers();
 
-      const identifier = 'user-blocked';
+      const identifier = "user-blocked";
 
       // Exceed limit to trigger block
       for (let i = 0; i < 4; i++) {
@@ -200,11 +200,11 @@ describe('Rate Limiting', () => {
     });
   });
 
-  describe('Time Until Reset', () => {
-    test('should return correct time until window reset', () => {
+  describe("Time Until Reset", () => {
+    test("should return correct time until window reset", () => {
       vi.useFakeTimers();
 
-      const identifier = 'user-time';
+      const identifier = "user-time";
 
       rateLimiter.isAllowed(identifier);
 
@@ -223,10 +223,10 @@ describe('Rate Limiting', () => {
       vi.useRealTimers();
     });
 
-    test('should return block time when user is blocked', () => {
+    test("should return block time when user is blocked", () => {
       vi.useFakeTimers();
 
-      const identifier = 'user-blocked-time';
+      const identifier = "user-blocked-time";
 
       // Trigger block
       for (let i = 0; i < 4; i++) {
@@ -242,9 +242,9 @@ describe('Rate Limiting', () => {
     });
   });
 
-  describe('Management Operations', () => {
-    test('should reset specific identifier', () => {
-      const identifier = 'user-reset';
+  describe("Management Operations", () => {
+    test("should reset specific identifier", () => {
+      const identifier = "user-reset";
 
       // Make some attempts
       rateLimiter.isAllowed(identifier);
@@ -260,11 +260,11 @@ describe('Rate Limiting', () => {
       expect(rateLimiter.getAttempts(identifier)).toBe(1);
     });
 
-    test('should cleanup expired entries', () => {
+    test("should cleanup expired entries", () => {
       vi.useFakeTimers();
 
-      const identifier1 = 'user-cleanup-1';
-      const identifier2 = 'user-cleanup-2';
+      const identifier1 = "user-cleanup-1";
+      const identifier2 = "user-cleanup-2";
 
       // Make attempts for both users
       rateLimiter.isAllowed(identifier1);
@@ -292,21 +292,21 @@ describe('Rate Limiting', () => {
     });
   });
 
-  describe('Different Rate Limit Configurations', () => {
-    test('should work with different limits', () => {
+  describe("Different Rate Limit Configurations", () => {
+    test("should work with different limits", () => {
       // Very strict limit
       const strictLimiter = new RateLimiter(1, 60000, 120000);
 
-      const identifier = 'strict-user';
+      const identifier = "strict-user";
 
       expect(strictLimiter.isAllowed(identifier)).toBe(true);
       expect(strictLimiter.isAllowed(identifier)).toBe(false); // Immediately blocked
     });
 
-    test('should work with very permissive limits', () => {
+    test("should work with very permissive limits", () => {
       const permissiveLimiter = new RateLimiter(100, 60000, 120000);
 
-      const identifier = 'permissive-user';
+      const identifier = "permissive-user";
 
       // Should allow many attempts
       for (let i = 0; i < 50; i++) {
@@ -317,9 +317,9 @@ describe('Rate Limiting', () => {
     });
   });
 
-  describe('Edge Cases', () => {
-    test('should handle rapid successive calls', () => {
-      const identifier = 'rapid-user';
+  describe("Edge Cases", () => {
+    test("should handle rapid successive calls", () => {
+      const identifier = "rapid-user";
 
       // Make rapid calls
       const results = [];
@@ -332,8 +332,8 @@ describe('Rate Limiting', () => {
       expect(results.slice(3)).toEqual([false, false, false, false, false, false, false]);
     });
 
-    test('should handle zero time scenarios', () => {
-      const identifier = 'zero-time';
+    test("should handle zero time scenarios", () => {
+      const identifier = "zero-time";
 
       // Multiple calls at exactly the same time
       const start = Date.now();

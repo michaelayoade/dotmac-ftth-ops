@@ -3,9 +3,9 @@
  * Handles tenant configuration and branding
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { TenantBranding, TenantSession } from '../../types/tenant';
-import { getISPApiClient } from '../../api/isp-client';
+import { useState, useCallback, useEffect } from "react";
+import { TenantBranding, TenantSession } from "../../types/tenant";
+import { getISPApiClient } from "../../api/isp-client";
 
 export interface UseTenantSettingsReturn {
   getTenantSetting: <T = any>(key: string, defaultValue?: T) => T;
@@ -34,45 +34,47 @@ export function useTenantSettings(session: TenantSession | null): UseTenantSetti
 
       return session.tenant.settings[key] ?? defaultValue;
     },
-    [session?.tenant?.settings]
+    [session?.tenant?.settings],
   );
 
   const updateTenantSetting = useCallback(
     async (key: string, value: any): Promise<void> => {
       if (!session?.tenant?.id) {
-        throw new Error('No active tenant session');
+        throw new Error("No active tenant session");
       }
 
       setIsLoading(true);
 
       try {
         const apiClient = getISPApiClient();
-        await apiClient.updateTenantSettings(session.tenant.id, { [key]: value });
+        await apiClient.updateTenantSettings(session.tenant.id, {
+          [key]: value,
+        });
 
         // Update local cache
         setCachedSettings((prev) => ({ ...prev, [key]: value }));
       } catch (error) {
         throw new Error(
-          `Failed to update setting: ${error instanceof Error ? error.message : 'Unknown error'}`
+          `Failed to update setting: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
       } finally {
         setIsLoading(false);
       }
     },
-    [session?.tenant?.id]
+    [session?.tenant?.id],
   );
 
   const getBranding = useCallback((): TenantBranding => {
     const defaultBranding: TenantBranding = {
-      logo_url: '',
-      primary_color: '#0ea5e9',
-      secondary_color: '#64748b',
-      accent_color: '#06b6d4',
-      font_family: 'Inter, sans-serif',
-      custom_css: '',
-      favicon_url: '',
-      login_background: '',
-      company_name: 'ISP Portal',
+      logo_url: "",
+      primary_color: "#0ea5e9",
+      secondary_color: "#64748b",
+      accent_color: "#06b6d4",
+      font_family: "Inter, sans-serif",
+      custom_css: "",
+      favicon_url: "",
+      login_background: "",
+      company_name: "ISP Portal",
     };
 
     if (!session?.tenant?.branding) {
@@ -88,14 +90,14 @@ export function useTenantSettings(session: TenantSession | null): UseTenantSetti
   const applyBranding = useCallback(() => {
     const branding = getBranding();
 
-    if (typeof document === 'undefined') return; // SSR check
+    if (typeof document === "undefined") return; // SSR check
 
     // Apply CSS custom properties
     const root = document.documentElement;
-    root.style.setProperty('--primary-color', branding.primary_color);
-    root.style.setProperty('--secondary-color', branding.secondary_color);
-    root.style.setProperty('--accent-color', branding.accent_color);
-    root.style.setProperty('--font-family', branding.font_family);
+    root.style.setProperty("--primary-color", branding.primary_color);
+    root.style.setProperty("--secondary-color", branding.secondary_color);
+    root.style.setProperty("--accent-color", branding.accent_color);
+    root.style.setProperty("--font-family", branding.font_family);
 
     // Update page title and favicon
     if (branding.company_name) {
@@ -105,8 +107,8 @@ export function useTenantSettings(session: TenantSession | null): UseTenantSetti
     if (branding.favicon_url) {
       let link = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
       if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
+        link = document.createElement("link");
+        link.rel = "icon";
         document.head.appendChild(link);
       }
       link.href = branding.favicon_url;
@@ -114,10 +116,10 @@ export function useTenantSettings(session: TenantSession | null): UseTenantSetti
 
     // Apply custom CSS if provided
     if (branding.custom_css) {
-      let style = document.getElementById('tenant-custom-css');
+      let style = document.getElementById("tenant-custom-css");
       if (!style) {
-        style = document.createElement('style');
-        style.id = 'tenant-custom-css';
+        style = document.createElement("style");
+        style.id = "tenant-custom-css";
         document.head.appendChild(style);
       }
       style.textContent = branding.custom_css;

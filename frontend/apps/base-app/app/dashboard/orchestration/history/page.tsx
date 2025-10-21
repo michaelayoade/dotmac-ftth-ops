@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 import {
   Filter,
   Download,
@@ -16,22 +16,22 @@ import {
   Activity,
   Eye,
   Trash2,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   useWorkflows,
   useWorkflow,
   type WorkflowStatus,
   type WorkflowType,
   type Workflow,
-} from '@/hooks/useOrchestration';
-import { apiClient } from '@/lib/api/client';
+} from "@/hooks/useOrchestration";
+import { apiClient } from "@/lib/api/client";
 
 // ============================================================================
 // Utility Functions
 // ============================================================================
 
 function formatDuration(startedAt?: string, completedAt?: string): string {
-  if (!startedAt) return 'N/A';
+  if (!startedAt) return "N/A";
   const start = new Date(startedAt).getTime();
   const end = completedAt ? new Date(completedAt).getTime() : Date.now();
   const seconds = Math.floor((end - start) / 1000);
@@ -43,37 +43,37 @@ function formatDuration(startedAt?: string, completedAt?: string): string {
 
 function formatWorkflowType(type: WorkflowType): string {
   return type
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 function getStatusColor(status: WorkflowStatus): string {
   switch (status) {
-    case 'completed':
-      return 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-950';
-    case 'running':
-      return 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950';
-    case 'failed':
-      return 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950';
-    case 'rolling_back':
-    case 'rolled_back':
-      return 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-950';
+    case "completed":
+      return "text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-950";
+    case "running":
+      return "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950";
+    case "failed":
+      return "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950";
+    case "rolling_back":
+    case "rolled_back":
+      return "text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-950";
     default:
-      return 'text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-950';
+      return "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-950";
   }
 }
 
 function getStatusIcon(status: WorkflowStatus) {
   switch (status) {
-    case 'completed':
+    case "completed":
       return CheckCircle2;
-    case 'running':
+    case "running":
       return Loader2;
-    case 'failed':
+    case "failed":
       return XCircle;
-    case 'rolling_back':
-    case 'rolled_back':
+    case "rolling_back":
+    case "rolled_back":
       return RefreshCw;
     default:
       return Clock;
@@ -85,13 +85,13 @@ function getStatusIcon(status: WorkflowStatus) {
 // ============================================================================
 
 interface FilterPanelProps {
-  statusFilter: WorkflowStatus | 'all';
-  typeFilter: WorkflowType | 'all';
+  statusFilter: WorkflowStatus | "all";
+  typeFilter: WorkflowType | "all";
   searchQuery: string;
   dateFrom: string;
   dateTo: string;
-  onStatusChange: (status: WorkflowStatus | 'all') => void;
-  onTypeChange: (type: WorkflowType | 'all') => void;
+  onStatusChange: (status: WorkflowStatus | "all") => void;
+  onTypeChange: (type: WorkflowType | "all") => void;
   onSearchChange: (query: string) => void;
   onDateFromChange: (date: string) => void;
   onDateToChange: (date: string) => void;
@@ -113,23 +113,23 @@ function FilterPanel({
 }: FilterPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const workflowTypes: (WorkflowType | 'all')[] = [
-    'all',
-    'provision_subscriber',
-    'deprovision_subscriber',
-    'activate_service',
-    'suspend_service',
-    'terminate_service',
-    'change_service_plan',
+  const workflowTypes: (WorkflowType | "all")[] = [
+    "all",
+    "provision_subscriber",
+    "deprovision_subscriber",
+    "activate_service",
+    "suspend_service",
+    "terminate_service",
+    "change_service_plan",
   ];
 
-  const statuses: (WorkflowStatus | 'all')[] = [
-    'all',
-    'completed',
-    'failed',
-    'running',
-    'pending',
-    'rolled_back',
+  const statuses: (WorkflowStatus | "all")[] = [
+    "all",
+    "completed",
+    "failed",
+    "running",
+    "pending",
+    "rolled_back",
   ];
 
   return (
@@ -141,7 +141,11 @@ function FilterPanel({
         >
           <Filter className="h-5 w-5" />
           Filters
-          {(statusFilter !== 'all' || typeFilter !== 'all' || searchQuery || dateFrom || dateTo) && (
+          {(statusFilter !== "all" ||
+            typeFilter !== "all" ||
+            searchQuery ||
+            dateFrom ||
+            dateTo) && (
             <span className="ml-2 px-2 py-0.5 bg-primary text-primary-foreground text-xs rounded-full">
               Active
             </span>
@@ -176,17 +180,15 @@ function FilterPanel({
 
           {/* Status Filter */}
           <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">
-              Status
-            </label>
+            <label className="text-sm font-medium text-foreground mb-2 block">Status</label>
             <select
               value={statusFilter}
-              onChange={(e) => onStatusChange(e.target.value as WorkflowStatus | 'all')}
+              onChange={(e) => onStatusChange(e.target.value as WorkflowStatus | "all")}
               className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {statuses.map((status) => (
                 <option key={status} value={status}>
-                  {status === 'all' ? 'All Statuses' : status.replace('_', ' ').toUpperCase()}
+                  {status === "all" ? "All Statuses" : status.replace("_", " ").toUpperCase()}
                 </option>
               ))}
             </select>
@@ -194,17 +196,15 @@ function FilterPanel({
 
           {/* Type Filter */}
           <div>
-            <label className="text-sm font-medium text-foreground mb-2 block">
-              Workflow Type
-            </label>
+            <label className="text-sm font-medium text-foreground mb-2 block">Workflow Type</label>
             <select
               value={typeFilter}
-              onChange={(e) => onTypeChange(e.target.value as WorkflowType | 'all')}
+              onChange={(e) => onTypeChange(e.target.value as WorkflowType | "all")}
               className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             >
               {workflowTypes.map((type) => (
                 <option key={type} value={type}>
-                  {type === 'all' ? 'All Types' : formatWorkflowType(type)}
+                  {type === "all" ? "All Types" : formatWorkflowType(type)}
                 </option>
               ))}
             </select>
@@ -213,9 +213,7 @@ function FilterPanel({
           {/* Date Range */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">
-                From Date
-              </label>
+              <label className="text-sm font-medium text-foreground mb-2 block">From Date</label>
               <input
                 type="date"
                 value={dateFrom}
@@ -224,9 +222,7 @@ function FilterPanel({
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">
-                To Date
-              </label>
+              <label className="text-sm font-medium text-foreground mb-2 block">To Date</label>
               <input
                 type="date"
                 value={dateTo}
@@ -273,14 +269,12 @@ function WorkflowTable({
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <Activity className="h-12 w-12 text-muted-foreground mb-4" />
         <p className="text-lg font-medium text-foreground">No workflows found</p>
-        <p className="text-sm text-muted-foreground mt-1">
-          Try adjusting your filters
-        </p>
+        <p className="text-sm text-muted-foreground mt-1">Try adjusting your filters</p>
       </div>
     );
   }
 
-  const allSelected = workflows.length > 0 && workflows.every(w => selectedIds.has(w.id));
+  const allSelected = workflows.length > 0 && workflows.every((w) => selectedIds.has(w.id));
 
   return (
     <div className="overflow-x-auto">
@@ -307,7 +301,10 @@ function WorkflowTable({
           {workflows.map((workflow) => {
             const StatusIcon = getStatusIcon(workflow.status);
             return (
-              <tr key={workflow.id} className="border-b border-border last:border-0 hover:bg-muted/50">
+              <tr
+                key={workflow.id}
+                className="border-b border-border last:border-0 hover:bg-muted/50"
+              >
                 <td className="py-4 pr-4">
                   <input
                     type="checkbox"
@@ -327,8 +324,12 @@ function WorkflowTable({
                   </span>
                 </td>
                 <td className="py-4 pr-4">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(workflow.status)}`}>
-                    <StatusIcon className={`h-3.5 w-3.5 ${workflow.status === 'running' ? 'animate-spin' : ''}`} />
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(workflow.status)}`}
+                  >
+                    <StatusIcon
+                      className={`h-3.5 w-3.5 ${workflow.status === "running" ? "animate-spin" : ""}`}
+                    />
                     {workflow.status.toUpperCase()}
                   </span>
                 </td>
@@ -336,7 +337,9 @@ function WorkflowTable({
                   {formatDuration(workflow.started_at, workflow.completed_at || workflow.failed_at)}
                 </td>
                 <td className="py-4 pr-4 text-sm text-muted-foreground">
-                  {workflow.started_at ? new Date(workflow.started_at).toLocaleString() : 'Not started'}
+                  {workflow.started_at
+                    ? new Date(workflow.started_at).toLocaleString()
+                    : "Not started"}
                 </td>
                 <td className="py-4">
                   <button
@@ -363,17 +366,17 @@ function WorkflowTable({
 export default function WorkflowHistoryPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(20);
-  const [statusFilter, setStatusFilter] = useState<WorkflowStatus | 'all'>('all');
-  const [typeFilter, setTypeFilter] = useState<WorkflowType | 'all'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [statusFilter, setStatusFilter] = useState<WorkflowStatus | "all">("all");
+  const [typeFilter, setTypeFilter] = useState<WorkflowType | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
 
   const { workflows, total, totalPages, loading, refetch } = useWorkflows({
-    status: statusFilter !== 'all' ? statusFilter : undefined,
-    workflowType: typeFilter !== 'all' ? typeFilter : undefined,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    workflowType: typeFilter !== "all" ? typeFilter : undefined,
     page,
     pageSize,
   });
@@ -396,7 +399,7 @@ export default function WorkflowHistoryPage() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedIds(new Set(filteredWorkflows.map(w => w.id)));
+      setSelectedIds(new Set(filteredWorkflows.map((w) => w.id)));
     } else {
       setSelectedIds(new Set());
     }
@@ -413,34 +416,36 @@ export default function WorkflowHistoryPage() {
   };
 
   const handleClearFilters = () => {
-    setStatusFilter('all');
-    setTypeFilter('all');
-    setSearchQuery('');
-    setDateFrom('');
-    setDateTo('');
+    setStatusFilter("all");
+    setTypeFilter("all");
+    setSearchQuery("");
+    setDateFrom("");
+    setDateTo("");
   };
 
   const handleExport = () => {
-    const selectedWorkflows = filteredWorkflows.filter(w => selectedIds.has(w.id));
+    const selectedWorkflows = filteredWorkflows.filter((w) => selectedIds.has(w.id));
     const dataToExport = selectedWorkflows.length > 0 ? selectedWorkflows : filteredWorkflows;
 
     const csv = [
-      ['Workflow ID', 'Type', 'Status', 'Started', 'Duration', 'Error'].join(','),
-      ...dataToExport.map(w => [
-        w.workflow_id,
-        w.workflow_type,
-        w.status,
-        w.started_at || '',
-        formatDuration(w.started_at, w.completed_at || w.failed_at),
-        w.error_message || '',
-      ].join(',')),
-    ].join('\n');
+      ["Workflow ID", "Type", "Status", "Started", "Duration", "Error"].join(","),
+      ...dataToExport.map((w) =>
+        [
+          w.workflow_id,
+          w.workflow_type,
+          w.status,
+          w.started_at || "",
+          formatDuration(w.started_at, w.completed_at || w.failed_at),
+          w.error_message || "",
+        ].join(","),
+      ),
+    ].join("\n");
 
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `workflows-${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `workflows-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -449,7 +454,11 @@ export default function WorkflowHistoryPage() {
     const workflowIds = Array.from(selectedIds);
     if (workflowIds.length === 0) return;
 
-    if (!confirm(`Are you sure you want to delete ${workflowIds.length} workflow(s)? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete ${workflowIds.length} workflow(s)? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
 
@@ -458,7 +467,7 @@ export default function WorkflowHistoryPage() {
       await Promise.all(
         workflowIds.map(async (id) => {
           await apiClient.delete(`/orchestration/workflows/${id}`);
-        })
+        }),
       );
 
       // Clear selection
@@ -470,8 +479,8 @@ export default function WorkflowHistoryPage() {
       // Refresh the list
       window.location.reload();
     } catch (error: any) {
-      console.error('Bulk delete failed:', error);
-      alert(`Failed to delete workflows: ${error.message || 'Unknown error'}`);
+      console.error("Bulk delete failed:", error);
+      alert(`Failed to delete workflows: ${error.message || "Unknown error"}`);
     }
   };
 
@@ -502,7 +511,7 @@ export default function WorkflowHistoryPage() {
             className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-colors"
           >
             <Download className="h-4 w-4" />
-            Export {selectedIds.size > 0 ? `(${selectedIds.size})` : 'All'}
+            Export {selectedIds.size > 0 ? `(${selectedIds.size})` : "All"}
           </button>
           <button
             onClick={refetch}
@@ -554,7 +563,7 @@ export default function WorkflowHistoryPage() {
       {/* Pagination */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => setPage(p => Math.max(1, p - 1))}
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page === 1}
           className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted transition-colors"
         >
@@ -565,7 +574,7 @@ export default function WorkflowHistoryPage() {
           Page {page} of {totalPages}
         </span>
         <button
-          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           disabled={page === totalPages}
           className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted transition-colors"
         >

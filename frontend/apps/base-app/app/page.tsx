@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { useBranding } from '@/hooks/useBranding';
-import { useAppConfig } from '@/providers/AppConfigContext';
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useBranding } from "@/hooks/useBranding";
+import { useAppConfig } from "@/providers/AppConfigContext";
 
 export default function HomePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -16,8 +16,8 @@ export default function HomePage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/auth/me', {
-          credentials: 'include',
+        const response = await fetch("/auth/me", {
+          credentials: "include",
         });
         setIsLoggedIn(response.ok);
       } catch (error) {
@@ -49,9 +49,7 @@ export default function HomePage() {
 
         <h1 className="text-5xl font-bold tracking-tight text-foreground mb-4">
           {branding.productName}
-          <span className="text-brand block">
-            {branding.productTagline || 'Ready to Deploy'}
-          </span>
+          <span className="text-brand block">{branding.productTagline || "Ready to Deploy"}</span>
         </h1>
 
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
@@ -127,10 +125,7 @@ export default function HomePage() {
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
           <span>
-            API:{' '}
-            <span className="text-emerald-400">
-              {apiBaseUrl.replace(/^https?:\/\//, '')}
-            </span>
+            API: <span className="text-emerald-400">{apiBaseUrl.replace(/^https?:\/\//, "")}</span>
           </span>
         </div>
         <div className="w-px h-4 bg-muted"></div>

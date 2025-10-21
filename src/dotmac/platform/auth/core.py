@@ -317,7 +317,7 @@ class JWTService:
         if not REDIS_AVAILABLE:
             return None
         if self._redis is None and redis_async is not None:
-            self._redis = await redis_async.from_url(self.redis_url, decode_responses=True)
+            self._redis = redis_async.from_url(self.redis_url, decode_responses=True)
         return self._redis
 
     async def revoke_token(self, token: str) -> bool:
@@ -452,6 +452,19 @@ class SessionManager:
         self._fallback_enabled = fallback_enabled
         self._redis_healthy = True
 
+        # SECURITY: Disable fallback automatically in production environments
+        try:
+            environment = getattr(settings, "environment", None)
+            env_value = getattr(environment, "value", str(environment)) if environment else "development"
+        except Exception:  # pragma: no cover - defensive
+            env_value = "development"
+
+        if self._fallback_enabled and str(env_value).lower() == "production":
+            logger.warning(
+                "Session fallback disabled for production deployment; Redis availability is required."
+            )
+            self._fallback_enabled = False
+
     async def _get_redis(self) -> Any | None:
         """Get Redis connection with health check."""
         if not REDIS_AVAILABLE:
@@ -461,7 +474,7 @@ class SessionManager:
 
         if self._redis is None and redis_async is not None:
             try:
-                self._redis = await redis_async.from_url(self.redis_url, decode_responses=True)
+                self._redis = redis_async.from_url(self.redis_url, decode_responses=True)
                 # Verify connection
                 await self._redis.ping()
                 self._redis_healthy = True
@@ -682,6 +695,12 @@ class APIKeyService:
         self._memory_lookup: dict[str, str] = {}
         self._serialize: Callable[[dict[str, Any]], str] = json.dumps
         self._deserialize: Callable[[str], dict[str, Any]] = json.loads
+        try:
+            environment = getattr(settings, "environment", None)
+            env_value = getattr(environment, "value", str(environment)) if environment else "development"
+        except Exception:  # pragma: no cover
+            env_value = "development"
+        self._fallback_allowed = str(env_value).lower() != "production"
 
     async def _get_redis(self) -> Any | None:
         """Get Redis connection."""
@@ -689,7 +708,7 @@ class APIKeyService:
             return None
 
         if self._redis is None and redis_async is not None:
-            self._redis = await redis_async.from_url(self.redis_url, decode_responses=True)
+            self._redis = redis_async.from_url(self.redis_url, decode_responses=True)
         return self._redis
 
     async def create_api_key(
@@ -734,6 +753,8 @@ class APIKeyService:
             # Store with hash as key instead of plaintext
             await client.set(f"api_key:{api_key_hash}", json.dumps(data))
         else:
+            if not self._fallback_allowed:
+                raise RuntimeError("API key service unavailable: Redis connection required")
             # Fallback to memory (also use hash)
             self._memory_keys[api_key_hash] = data
 
@@ -791,6 +812,10 @@ class APIKeyService:
 
                 return key_data
 
+            if not self._fallback_allowed:
+                logger.error("API key verification failed: Redis unavailable and fallback disabled.")
+                return None
+
             # Fallback to memory (also uses hash)
             return self._memory_keys.get(api_key_hash)
         except Exception as e:
@@ -819,6 +844,9 @@ class APIKeyService:
             if client:
                 deleted_count = await client.delete(f"api_key:{api_key_hash}")
                 return bool(deleted_count)
+            if not self._fallback_allowed:
+                logger.error("API key revocation failed: Redis unavailable and fallback disabled.")
+                return False
             # Fallback to memory (also uses hash)
             return bool(self._memory_keys.pop(api_key_hash, None))
         except Exception as e:
@@ -843,6 +871,9 @@ class APIKeyService:
             if client:
                 deleted_count = await client.delete(f"api_key:{api_key_hash}")
                 return bool(deleted_count)
+            if not self._fallback_allowed:
+                logger.error("API key revocation failed: Redis unavailable and fallback disabled.")
+                return False
             # Fallback to memory
             return bool(self._memory_keys.pop(api_key_hash, None))
         except Exception as e:
@@ -861,7 +892,7 @@ jwt_service = JWTService()
 # In production, Redis is mandatory for proper session management
 # Use settings.environment instead of os.getenv to respect .env files
 try:
-    _is_production = settings.environment.lower() in ("production", "prod")
+    _is_production = getattr(settings, "is_production", False)
 except (ImportError, AttributeError):
     # Fallback if settings not available
     _is_production = os.getenv("ENVIRONMENT", "development").lower() in ("production", "prod")

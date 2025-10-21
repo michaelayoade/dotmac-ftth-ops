@@ -31,12 +31,7 @@ interface CreateLeadModalProps {
   onCreate: (data: LeadCreateRequest) => Promise<any>;
 }
 
-export function CreateLeadModal({
-  isOpen,
-  onClose,
-  onSuccess,
-  onCreate,
-}: CreateLeadModalProps) {
+export function CreateLeadModal({ isOpen, onClose, onSuccess, onCreate }: CreateLeadModalProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("contact");
@@ -170,9 +165,7 @@ export function CreateLeadModal({
                   <Input
                     id="first_name"
                     value={formData.first_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, first_name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                     placeholder="John"
                     required
                   />
@@ -185,9 +178,7 @@ export function CreateLeadModal({
                   <Input
                     id="last_name"
                     value={formData.last_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, last_name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                     placeholder="Doe"
                     required
                   />
@@ -202,9 +193,7 @@ export function CreateLeadModal({
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="john.doe@example.com"
                   required
                 />
@@ -216,9 +205,7 @@ export function CreateLeadModal({
                   id="phone"
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="+1 (555) 123-4567"
                 />
                 <p className="text-xs text-muted-foreground">
@@ -231,9 +218,7 @@ export function CreateLeadModal({
                 <Input
                   id="company_name"
                   value={formData.company_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, company_name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                   placeholder="For business leads only"
                 />
               </div>
@@ -282,9 +267,7 @@ export function CreateLeadModal({
                   <Input
                     id="city"
                     value={formData.service_city}
-                    onChange={(e) =>
-                      setFormData({ ...formData, service_city: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, service_city: e.target.value })}
                     placeholder="Springfield"
                     required
                   />
@@ -332,9 +315,7 @@ export function CreateLeadModal({
                   <Label htmlFor="country">Country</Label>
                   <Select
                     value={formData.service_country}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, service_country: value })
-                    }
+                    onValueChange={(value) => setFormData({ ...formData, service_country: value })}
                   >
                     <SelectTrigger id="country">
                       <SelectValue />
@@ -350,8 +331,8 @@ export function CreateLeadModal({
 
               <div className="rounded-lg border border-dashed p-4 bg-muted/50">
                 <p className="text-sm text-muted-foreground">
-                  <strong>Note:</strong> Address autocomplete will be available in the next
-                  version. For now, please enter the address manually.
+                  <strong>Note:</strong> Address autocomplete will be available in the next version.
+                  For now, please enter the address manually.
                 </p>
               </div>
             </TabsContent>
@@ -415,9 +396,7 @@ export function CreateLeadModal({
                         type="checkbox"
                         id={type}
                         checked={selected}
-                        onChange={() =>
-                          handleServiceTypeToggle(type as keyof typeof serviceTypes)
-                        }
+                        onChange={() => handleServiceTypeToggle(type as keyof typeof serviceTypes)}
                         className="h-4 w-4 rounded border-gray-300"
                       />
                       <Label htmlFor={type} className="cursor-pointer">
@@ -435,7 +414,10 @@ export function CreateLeadModal({
                     id="bandwidth"
                     value={formData.desired_bandwidth}
                     onChange={(e) =>
-                      setFormData({ ...formData, desired_bandwidth: e.target.value })
+                      setFormData({
+                        ...formData,
+                        desired_bandwidth: e.target.value,
+                      })
                     }
                     placeholder="e.g., 100 Mbps, 1 Gbps"
                   />
@@ -480,9 +462,7 @@ export function CreateLeadModal({
                 <Textarea
                   id="notes"
                   value={formData.notes}
-                  onChange={(e) =>
-                    setFormData({ ...formData, notes: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   placeholder="Any additional information about this lead..."
                   rows={4}
                 />

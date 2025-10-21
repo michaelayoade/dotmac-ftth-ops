@@ -4,30 +4,30 @@
  * Modal for creating new notification templates with form validation.
  */
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { X } from 'lucide-react';
-import type { TemplateCreateRequest, CommunicationType } from '@/hooks/useNotifications';
+import { useState } from "react";
+import { X } from "lucide-react";
+import type { TemplateCreateRequest, CommunicationType } from "@/hooks/useNotifications";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 interface CreateTemplateModalProps {
   isOpen: boolean;
@@ -37,16 +37,16 @@ interface CreateTemplateModalProps {
 
 export function CreateTemplateModal({ isOpen, onClose, onCreate }: CreateTemplateModalProps) {
   const [formData, setFormData] = useState<TemplateCreateRequest>({
-    name: '',
-    description: '',
-    type: 'email',
-    subject_template: '',
-    text_template: '',
-    html_template: '',
+    name: "",
+    description: "",
+    type: "email",
+    subject_template: "",
+    text_template: "",
+    html_template: "",
     required_variables: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newVariable, setNewVariable] = useState('');
+  const [newVariable, setNewVariable] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,16 +56,16 @@ export function CreateTemplateModal({ isOpen, onClose, onCreate }: CreateTemplat
       await onCreate(formData);
       // Reset form
       setFormData({
-        name: '',
-        description: '',
-        type: 'email',
-        subject_template: '',
-        text_template: '',
-        html_template: '',
+        name: "",
+        description: "",
+        type: "email",
+        subject_template: "",
+        text_template: "",
+        html_template: "",
         required_variables: [],
       });
     } catch (err) {
-      console.error('Failed to create template:', err);
+      console.error("Failed to create template:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -77,7 +77,7 @@ export function CreateTemplateModal({ isOpen, onClose, onCreate }: CreateTemplat
         ...formData,
         required_variables: [...(formData.required_variables || []), newVariable],
       });
-      setNewVariable('');
+      setNewVariable("");
     }
   };
 
@@ -121,7 +121,7 @@ export function CreateTemplateModal({ isOpen, onClose, onCreate }: CreateTemplat
             <Label htmlFor="description">Description</Label>
             <Input
               id="description"
-              value={formData.description || ''}
+              value={formData.description || ""}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="e.g., Reminder sent when invoice is overdue"
             />
@@ -151,12 +151,12 @@ export function CreateTemplateModal({ isOpen, onClose, onCreate }: CreateTemplat
           </div>
 
           {/* Subject (Email only) */}
-          {formData.type === 'email' && (
+          {formData.type === "email" && (
             <div className="space-y-2">
               <Label htmlFor="subject">Email Subject</Label>
               <Input
                 id="subject"
-                value={formData.subject_template || ''}
+                value={formData.subject_template || ""}
                 onChange={(e) => setFormData({ ...formData, subject_template: e.target.value })}
                 placeholder="e.g., Invoice {{invoice_number}} is Overdue"
               />
@@ -169,22 +169,22 @@ export function CreateTemplateModal({ isOpen, onClose, onCreate }: CreateTemplat
           {/* Text Body */}
           <div className="space-y-2">
             <Label htmlFor="text_template">
-              {formData.type === 'sms' ? 'SMS Message' : 'Plain Text Body'}
+              {formData.type === "sms" ? "SMS Message" : "Plain Text Body"}
               <span className="text-red-500">*</span>
             </Label>
             <Textarea
               id="text_template"
-              value={formData.text_template || ''}
+              value={formData.text_template || ""}
               onChange={(e) => setFormData({ ...formData, text_template: e.target.value })}
               placeholder={
-                formData.type === 'sms'
-                  ? 'Hello {{customer_name}}, your invoice {{invoice_number}} is overdue. Please pay {{amount}} by {{due_date}}.'
-                  : 'Plain text version of your message...'
+                formData.type === "sms"
+                  ? "Hello {{customer_name}}, your invoice {{invoice_number}} is overdue. Please pay {{amount}} by {{due_date}}."
+                  : "Plain text version of your message..."
               }
               rows={6}
               required
             />
-            {formData.type === 'sms' && (
+            {formData.type === "sms" && (
               <p className="text-xs text-muted-foreground">
                 SMS messages are limited to 160 characters (longer messages will be split)
               </p>
@@ -192,12 +192,12 @@ export function CreateTemplateModal({ isOpen, onClose, onCreate }: CreateTemplat
           </div>
 
           {/* HTML Body (Email only) */}
-          {formData.type === 'email' && (
+          {formData.type === "email" && (
             <div className="space-y-2">
               <Label htmlFor="html_template">HTML Body (Optional)</Label>
               <Textarea
                 id="html_template"
-                value={formData.html_template || ''}
+                value={formData.html_template || ""}
                 onChange={(e) => setFormData({ ...formData, html_template: e.target.value })}
                 placeholder="<h1>Hello {{customer_name}}</h1><p>Your invoice...</p>"
                 rows={8}
@@ -218,7 +218,7 @@ export function CreateTemplateModal({ isOpen, onClose, onCreate }: CreateTemplat
                 onChange={(e) => setNewVariable(e.target.value)}
                 placeholder="e.g., customer_name"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     e.preventDefault();
                     handleAddVariable();
                   }
@@ -253,7 +253,7 @@ export function CreateTemplateModal({ isOpen, onClose, onCreate }: CreateTemplat
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating...' : 'Create Template'}
+              {isSubmitting ? "Creating..." : "Create Template"}
             </Button>
           </div>
         </form>

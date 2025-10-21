@@ -3,7 +3,7 @@
  * Provides global error handling configuration and services
  */
 
-import React, { createContext, useContext, useCallback, useEffect, useState } from 'react';
+import React, { createContext, useContext, useCallback, useEffect, useState } from "react";
 import {
   ISPError,
   setErrorLogger,
@@ -12,9 +12,9 @@ import {
   DEFAULT_ERROR_CONFIG,
   type ErrorHandlingConfig,
   type ErrorLogEntry,
-} from '../utils/errorUtils';
-import { useISPTenant } from '../hooks/useISPTenant';
-import { useNotifications } from '../hooks/useNotifications';
+} from "../utils/errorUtils";
+import { useISPTenant } from "../hooks/useISPTenant";
+import { useNotifications } from "../hooks/useNotifications";
 
 export interface ErrorHandlingContextValue {
   config: ErrorHandlingConfig;
@@ -45,7 +45,7 @@ export function ErrorHandlingProvider({
   initialConfig = {},
   onError,
   enableTelemetry = true,
-  telemetryEndpoint = '/api/telemetry/errors',
+  telemetryEndpoint = "/api/telemetry/errors",
 }: ErrorHandlingProviderProps) {
   const [config, setConfig] = useState<ErrorHandlingConfig>({
     ...DEFAULT_ERROR_CONFIG,
@@ -66,9 +66,9 @@ export function ErrorHandlingProvider({
     };
 
     globalErrors.forEach((error) => {
-      if (error.severity === 'critical') stats.criticalErrors++;
-      if (error.category === 'network') stats.networkErrors++;
-      if (error.category === 'authentication' || error.category === 'authorization')
+      if (error.severity === "critical") stats.criticalErrors++;
+      if (error.category === "network") stats.networkErrors++;
+      if (error.category === "authentication" || error.category === "authorization")
         stats.authErrors++;
     });
 
@@ -92,7 +92,7 @@ export function ErrorHandlingProvider({
       // Send to telemetry if enabled
       if (enableTelemetry && telemetryEndpoint) {
         sendToTelemetry(logEntry).catch((telemetryError) => {
-          console.warn('Failed to send error telemetry:', telemetryError);
+          console.warn("Failed to send error telemetry:", telemetryError);
         });
       }
 
@@ -100,11 +100,16 @@ export function ErrorHandlingProvider({
       onError?.(logEntry.error as ISPError, logEntry);
 
       // Show critical errors to user immediately
-      if (logEntry.error.severity === 'critical' && config.enableUserNotifications) {
+      if (logEntry.error.severity === "critical" && config.enableUserNotifications) {
         showError(`Critical error: ${logEntry.error.userMessage}`, {
           persistent: true,
           actions: logEntry.error.retryable
-            ? [{ label: 'Report Issue', action: () => reportIssue(logEntry.error as ISPError) }]
+            ? [
+                {
+                  label: "Report Issue",
+                  action: () => reportIssue(logEntry.error as ISPError),
+                },
+              ]
             : undefined,
         });
       }
@@ -123,45 +128,47 @@ export function ErrorHandlingProvider({
 
     try {
       await fetch(telemetryEndpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          ...(currentTenant && { 'X-Tenant-ID': currentTenant.id }),
+          "Content-Type": "application/json",
+          ...(currentTenant && { "X-Tenant-ID": currentTenant.id }),
         },
         body: JSON.stringify({
           ...logEntry,
           tenantId: currentTenant?.id,
           timestamp: new Date().toISOString(),
-          version: typeof window !== 'undefined' ? (window as any).__APP_VERSION__ : 'unknown',
+          version: typeof window !== "undefined" ? (window as any).__APP_VERSION__ : "unknown",
         }),
       });
     } catch (telemetryError) {
       // Silently fail telemetry - don't let telemetry errors affect the app
-      console.debug('Telemetry error:', telemetryError);
+      console.debug("Telemetry error:", telemetryError);
     }
   };
 
   // Report issue function
   const reportIssue = async (error: ISPError) => {
     try {
-      await fetch('/api/support/report-issue', {
-        method: 'POST',
+      await fetch("/api/support/report-issue", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          ...(currentTenant && { 'X-Tenant-ID': currentTenant.id }),
+          "Content-Type": "application/json",
+          ...(currentTenant && { "X-Tenant-ID": currentTenant.id }),
         },
         body: JSON.stringify({
           errorId: error.id,
           correlationId: error.correlationId,
-          userMessage: 'Automatically reported critical error',
+          userMessage: "Automatically reported critical error",
           context: error.context,
           technicalDetails: error.technicalDetails,
         }),
       });
 
-      showError('Issue reported successfully. Our team will investigate.', { type: 'success' });
+      showError("Issue reported successfully. Our team will investigate.", {
+        type: "success",
+      });
     } catch (reportError) {
-      showError('Failed to report issue. Please contact support directly.');
+      showError("Failed to report issue. Please contact support directly.");
     }
   };
 
@@ -174,24 +181,24 @@ export function ErrorHandlingProvider({
       logError(error, {
         tenantId: currentTenant?.id,
         userId:
-          typeof window !== 'undefined'
-            ? window.sessionStorage.getItem('userId') || undefined
+          typeof window !== "undefined"
+            ? window.sessionStorage.getItem("userId") || undefined
             : undefined,
         sessionId:
-          typeof window !== 'undefined'
-            ? window.sessionStorage.getItem('sessionId') || undefined
+          typeof window !== "undefined"
+            ? window.sessionStorage.getItem("sessionId") || undefined
             : undefined,
       });
 
       if (context) {
         console.group(`🔴 Error in ${context}`);
-        console.error('Error details:', error);
-        console.error('User message:', error.userMessage);
-        console.error('Technical details:', error.technicalDetails);
+        console.error("Error details:", error);
+        console.error("User message:", error.userMessage);
+        console.error("Technical details:", error.technicalDetails);
         console.groupEnd();
       }
     },
-    [currentTenant]
+    [currentTenant],
   );
 
   const clearGlobalErrors = useCallback(() => {
@@ -218,7 +225,7 @@ export function ErrorHandlingProvider({
 export function useErrorHandling(): ErrorHandlingContextValue {
   const context = useContext(ErrorHandlingContext);
   if (!context) {
-    throw new Error('useErrorHandling must be used within an ErrorHandlingProvider');
+    throw new Error("useErrorHandling must be used within an ErrorHandlingProvider");
   }
   return context;
 }
@@ -242,8 +249,8 @@ export function useErrorReporting() {
     reportBusinessError: (message: string, context?: string, details?: Record<string, any>) => {
       const ispError = new ISPError({
         message,
-        category: 'business',
-        severity: 'medium',
+        category: "business",
+        severity: "medium",
         context,
         retryable: false,
         technicalDetails: details,
@@ -261,7 +268,7 @@ export function ErrorDevOverlay() {
   const [isVisible, setIsVisible] = useState(false);
 
   // Only show in development
-  if (process.env.NODE_ENV !== 'development') {
+  if (process.env.NODE_ENV !== "development") {
     return null;
   }
 
@@ -270,15 +277,16 @@ export function ErrorDevOverlay() {
   }
 
   return (
-    <div className='fixed bottom-4 right-4 z-50'>
+    <div className="fixed bottom-4 right-4 z-50">
       {!isVisible && globalErrors.length > 0 && (
         <button
           onClick={() => setIsVisible(true)}
-          className='bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-red-700 transition-colors'
+          className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-red-700 transition-colors"
         >
-          🔴 {errorStats.totalErrors} Error{errorStats.totalErrors !== 1 ? 's' : ''}
+          🔴 {errorStats.totalErrors} Error
+          {errorStats.totalErrors !== 1 ? "s" : ""}
           {errorStats.criticalErrors > 0 && (
-            <span className='ml-1 bg-red-800 px-1 rounded text-xs'>
+            <span className="ml-1 bg-red-800 px-1 rounded text-xs">
               {errorStats.criticalErrors} Critical
             </span>
           )}
@@ -286,53 +294,53 @@ export function ErrorDevOverlay() {
       )}
 
       {isVisible && (
-        <div className='bg-white border border-red-200 rounded-lg shadow-xl max-w-md w-96 max-h-96 overflow-hidden'>
-          <div className='flex items-center justify-between p-3 bg-red-50 border-b'>
-            <h3 className='font-semibold text-red-800'>Recent Errors</h3>
-            <div className='flex gap-2'>
+        <div className="bg-white border border-red-200 rounded-lg shadow-xl max-w-md w-96 max-h-96 overflow-hidden">
+          <div className="flex items-center justify-between p-3 bg-red-50 border-b">
+            <h3 className="font-semibold text-red-800">Recent Errors</h3>
+            <div className="flex gap-2">
               <button
                 onClick={clearGlobalErrors}
-                className='text-xs text-red-600 hover:text-red-800'
+                className="text-xs text-red-600 hover:text-red-800"
               >
                 Clear
               </button>
               <button
                 onClick={() => setIsVisible(false)}
-                className='text-red-600 hover:text-red-800'
+                className="text-red-600 hover:text-red-800"
               >
                 ✕
               </button>
             </div>
           </div>
 
-          <div className='overflow-y-auto max-h-80 p-2'>
+          <div className="overflow-y-auto max-h-80 p-2">
             {globalErrors.map((error, index) => (
               <div
                 key={`${error.id}-${index}`}
-                className='mb-2 p-2 bg-gray-50 rounded border text-xs'
+                className="mb-2 p-2 bg-gray-50 rounded border text-xs"
               >
-                <div className='flex items-center justify-between mb-1'>
+                <div className="flex items-center justify-between mb-1">
                   <span
                     className={`px-1 rounded text-xs font-medium ${
-                      error.severity === 'critical'
-                        ? 'bg-red-100 text-red-800'
-                        : error.severity === 'high'
-                          ? 'bg-orange-100 text-orange-800'
-                          : error.severity === 'medium'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
+                      error.severity === "critical"
+                        ? "bg-red-100 text-red-800"
+                        : error.severity === "high"
+                          ? "bg-orange-100 text-orange-800"
+                          : error.severity === "medium"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-gray-100 text-gray-800"
                     }`}
                   >
                     {error.severity}
                   </span>
-                  <span className='text-gray-500'>
+                  <span className="text-gray-500">
                     {new Date(error.timestamp).toLocaleTimeString()}
                   </span>
                 </div>
-                <div className='font-medium text-gray-900 mb-1'>{error.message}</div>
-                <div className='text-gray-600'>{error.context}</div>
+                <div className="font-medium text-gray-900 mb-1">{error.message}</div>
+                <div className="text-gray-600">{error.context}</div>
                 {error.userMessage && (
-                  <div className='text-blue-600 mt-1'>User: {error.userMessage}</div>
+                  <div className="text-blue-600 mt-1">User: {error.userMessage}</div>
                 )}
               </div>
             ))}

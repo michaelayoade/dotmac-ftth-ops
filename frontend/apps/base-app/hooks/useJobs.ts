@@ -2,15 +2,15 @@
  * React hooks for managing active jobs with WebSocket controls
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { extractDataOrThrow } from '@/lib/api/response-helpers';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { extractDataOrThrow } from "@/lib/api/response-helpers";
 
 export interface Job {
   id: string;
   tenant_id: string;
   job_type: string;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled' | 'paused';
+  status: "pending" | "running" | "completed" | "failed" | "cancelled" | "paused";
   title: string;
   description?: string | null;
   items_total: number;
@@ -46,16 +46,14 @@ export function useJobs(options: UseJobsOptions = {}) {
   const { status, limit = 50, offset = 0 } = options;
 
   return useQuery({
-    queryKey: ['jobs', status, limit, offset],
+    queryKey: ["jobs", status, limit, offset],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (status) params.append('status', status);
-      params.append('limit', String(limit));
-      params.append('offset', String(offset));
+      if (status) params.append("status", status);
+      params.append("limit", String(limit));
+      params.append("offset", String(offset));
 
-      const response = await apiClient.get<JobsResponse>(
-        `/jobs?${params.toString()}`
-      );
+      const response = await apiClient.get<JobsResponse>(`/jobs?${params.toString()}`);
       return extractDataOrThrow(response);
     },
     staleTime: 5000, // 5 seconds
@@ -70,14 +68,12 @@ export function useCancelJob() {
 
   return useMutation({
     mutationFn: async (jobId: string) => {
-      const response = await apiClient.post<Job>(
-        `/jobs/${jobId}/cancel`
-      );
+      const response = await apiClient.post<Job>(`/jobs/${jobId}/cancel`);
       return extractDataOrThrow(response);
     },
     onSuccess: () => {
       // Invalidate jobs queries to refresh the list
-      queryClient.invalidateQueries({ queryKey: ['jobs'] });
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
     },
   });
 }
@@ -93,24 +89,24 @@ export function useJobWebSocket(jobId: string | null) {
     if (!jobId) return;
 
     // Get auth token from localStorage or cookies
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem("auth_token");
     if (!token) return;
 
-    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000'}/api/v1/realtime/ws/jobs/${jobId}?token=${token}`;
+    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000"}/api/v1/realtime/ws/jobs/${jobId}?token=${token}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
       setIsConnected(true);
-      console.log('WebSocket connected for job:', jobId);
+      console.log("WebSocket connected for job:", jobId);
     };
 
     ws.onclose = () => {
       setIsConnected(false);
-      console.log('WebSocket disconnected for job:', jobId);
+      console.log("WebSocket disconnected for job:", jobId);
     };
 
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
+      console.error("WebSocket error:", error);
     };
 
     setSocket(ws);
@@ -122,19 +118,19 @@ export function useJobWebSocket(jobId: string | null) {
 
   const cancelJob = React.useCallback(() => {
     if (socket && isConnected) {
-      socket.send(JSON.stringify({ type: 'cancel_job' }));
+      socket.send(JSON.stringify({ type: "cancel_job" }));
     }
   }, [socket, isConnected]);
 
   const pauseJob = React.useCallback(() => {
     if (socket && isConnected) {
-      socket.send(JSON.stringify({ type: 'pause_job' }));
+      socket.send(JSON.stringify({ type: "pause_job" }));
     }
   }, [socket, isConnected]);
 
   const resumeJob = React.useCallback(() => {
     if (socket && isConnected) {
-      socket.send(JSON.stringify({ type: 'resume_job' }));
+      socket.send(JSON.stringify({ type: "resume_job" }));
     }
   }, [socket, isConnected]);
 
@@ -147,4 +143,4 @@ export function useJobWebSocket(jobId: string | null) {
   };
 }
 
-import React from 'react';
+import React from "react";

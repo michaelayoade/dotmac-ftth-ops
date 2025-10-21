@@ -14,7 +14,13 @@ import {
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Download, UserMinus, AlertCircle } from "lucide-react";
 import { format, subMonths, eachMonthOfInterval } from "date-fns";
 
@@ -35,8 +41,7 @@ export function ChurnAnalysisChart() {
   // Generate sample data
   const data = useMemo<ChurnData[]>(() => {
     const now = new Date();
-    const months =
-      timeRange === "6m" ? 6 : timeRange === "12m" ? 12 : 24;
+    const months = timeRange === "6m" ? 6 : timeRange === "12m" ? 12 : 24;
     const dates = eachMonthOfInterval({
       start: subMonths(now, months - 1),
       end: now,
@@ -67,7 +72,14 @@ export function ChurnAnalysisChart() {
 
   const handleExport = () => {
     const csvContent = [
-      ["Month", "Total Customers", "Churned Customers", "Churn Rate (%)", "New Customers", "Net Growth"],
+      [
+        "Month",
+        "Total Customers",
+        "Churned Customers",
+        "Churn Rate (%)",
+        "New Customers",
+        "Net Growth",
+      ],
       ...data.map((d) => [
         d.month,
         d.totalCustomers,
@@ -100,9 +112,7 @@ export function ChurnAnalysisChart() {
               <UserMinus className="h-5 w-5" />
               Customer Churn Analysis
             </CardTitle>
-            <CardDescription>
-              Track customer retention and churn patterns
-            </CardDescription>
+            <CardDescription>Track customer retention and churn patterns</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Select value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
@@ -128,29 +138,23 @@ export function ChurnAnalysisChart() {
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Current Churn Rate</p>
             <p className="text-2xl font-bold text-red-500">
-              {(latestData ? latestData.churnRate.toFixed(2) : "0.00")}%
+              {latestData ? latestData.churnRate.toFixed(2) : "0.00"}%
             </p>
             <p className="text-xs text-muted-foreground">
-              {(latestData?.churnedCustomers ?? 0)} customers
+              {latestData?.churnedCustomers ?? 0} customers
             </p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Avg Churn Rate</p>
-            <p className="text-2xl font-bold">
-              {avgChurnRate.toFixed(2)}%
-            </p>
+            <p className="text-2xl font-bold">{avgChurnRate.toFixed(2)}%</p>
             <p className="text-xs text-muted-foreground">
               Over {timeRange === "6m" ? "6" : timeRange === "12m" ? "12" : "24"} months
             </p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Total Churned</p>
-            <p className="text-2xl font-bold text-red-500">
-              {totalChurned}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Since {data[0]?.month}
-            </p>
+            <p className="text-2xl font-bold text-red-500">{totalChurned}</p>
+            <p className="text-xs text-muted-foreground">Since {data[0]?.month}</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Net Growth</p>
@@ -162,9 +166,7 @@ export function ChurnAnalysisChart() {
               {netGrowthValue >= 0 ? "+" : ""}
               {netGrowthValue.toFixed(0)}
             </p>
-            <p className="text-xs text-muted-foreground">
-              Current month
-            </p>
+            <p className="text-xs text-muted-foreground">Current month</p>
           </div>
         </div>
 
@@ -175,8 +177,8 @@ export function ChurnAnalysisChart() {
             <div>
               <p className="font-semibold text-red-500">High Churn Alert</p>
               <p className="text-sm text-muted-foreground">
-                Current churn rate ({latestData.churnRate.toFixed(2)}%) is above the healthy threshold of 5%.
-                Consider implementing retention strategies.
+                Current churn rate ({latestData.churnRate.toFixed(2)}%) is above the healthy
+                threshold of 5%. Consider implementing retention strategies.
               </p>
             </div>
           </div>
@@ -185,10 +187,7 @@ export function ChurnAnalysisChart() {
         {/* Chart */}
         <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart
-              data={data}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
+            <ComposedChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis dataKey="month" className="text-xs" />
               <YAxis yAxisId="left" className="text-xs" />

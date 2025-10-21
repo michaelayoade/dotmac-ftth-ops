@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { AuthContext } from '../AuthProvider';
+import * as React from "react";
+import { AuthContext } from "../AuthProvider";
 import type {
   AuthConfig,
   AuthContextValue,
@@ -9,7 +9,7 @@ import type {
   UserRole,
   AuthTokens,
   PortalType,
-} from '../types';
+} from "../types";
 
 interface SecureAuthProviderProps {
   children: React.ReactNode;
@@ -37,7 +37,7 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
     isAuthenticated: false,
     isLoading: true,
     isRefreshing: false,
-    error: '',
+    error: "",
     loginAttempts: 0,
     lockedUntil: null,
   });
@@ -70,7 +70,7 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
           }
         }
       } catch (error) {
-        console.error('Auth initialization failed:', error);
+        console.error("Auth initialization failed:", error);
       } finally {
         setState((prev) => ({ ...prev, isLoading: false }));
       }
@@ -103,17 +103,17 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
   // Validate session with server
   const validateSession = React.useCallback(async (token: string): Promise<boolean> => {
     try {
-      const response = await fetch('/api/auth/validate', {
-        method: 'GET',
+      const response = await fetch("/api/auth/validate", {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
       return response.ok;
     } catch (error) {
-      console.error('Session validation failed:', error);
+      console.error("Session validation failed:", error);
       return false;
     }
   }, []);
@@ -132,14 +132,14 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
         throw new Error(`Account is locked. Try again in ${remainingTime} seconds.`);
       }
 
-      setState((prev) => ({ ...prev, isLoading: true, error: '' }));
+      setState((prev) => ({ ...prev, isLoading: true, error: "" }));
 
       try {
         const response = await fetch(config.endpoints.login, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            'X-Portal-Type': portal,
+            "Content-Type": "application/json",
+            "X-Portal-Type": portal,
           },
           body: JSON.stringify({
             ...credentials,
@@ -161,11 +161,11 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
               loginAttempts: newAttempts,
               lockedUntil: shouldLock ? Date.now() + config.lockoutDuration : null,
               isLoading: false,
-              error: errorData.message || 'Authentication failed',
+              error: errorData.message || "Authentication failed",
             };
           });
 
-          throw new Error(errorData.message || 'Authentication failed');
+          throw new Error(errorData.message || "Authentication failed");
         }
 
         const data = await response.json();
@@ -175,7 +175,7 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
           setState((prev) => ({
             ...prev,
             isLoading: false,
-            error: 'MFA verification required',
+            error: "MFA verification required",
           }));
           return;
         }
@@ -200,7 +200,7 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
           isRefreshing: false,
           loginAttempts: 0,
           lockedUntil: null,
-          error: '',
+          error: "",
         });
 
         setupSessionTimeout();
@@ -208,12 +208,12 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
         setState((prev) => ({
           ...prev,
           isLoading: false,
-          error: error instanceof Error ? error.message : 'Authentication failed',
+          error: error instanceof Error ? error.message : "Authentication failed",
         }));
         throw error;
       }
     },
-    [config, portal, isAccountLocked, state.lockedUntil, setupSessionTimeout]
+    [config, portal, isAccountLocked, state.lockedUntil, setupSessionTimeout],
   );
 
   const logout = React.useCallback(async (): Promise<void> => {
@@ -224,10 +224,10 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
 
       if (token) {
         await fetch(config.endpoints.logout, {
-          method: 'POST',
+          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         }).catch(() => {
           // Ignore logout API errors
@@ -249,7 +249,7 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
         isRefreshing: false,
         loginAttempts: 0,
         lockedUntil: null,
-        error: '',
+        error: "",
       });
     }
   }, [config.endpoints.logout, portal]);
@@ -265,9 +265,9 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
 
     try {
       const response = await fetch(config.endpoints.refresh, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ refreshToken: token }),
       });
@@ -283,7 +283,7 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
       setState((prev) => ({ ...prev, isRefreshing: false }));
       resetSessionTimeout();
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      console.error("Token refresh failed:", error);
       await logout();
     }
   }, [config.endpoints.refresh, logout, resetSessionTimeout, portal]);
@@ -297,49 +297,56 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
 
       try {
         const response = await fetch(config.endpoints.profile, {
-          method: 'PATCH',
+          method: "PATCH",
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(updates),
         });
 
         if (response.ok) {
-          const updatedUser = { ...state.user, ...updates, updatedAt: new Date() };
+          const updatedUser = {
+            ...state.user,
+            ...updates,
+            updatedAt: new Date(),
+          };
           localStorage.setItem(`secure_auth_${portal}_user`, JSON.stringify(updatedUser));
           setState((prev) => ({ ...prev, user: updatedUser }));
           resetSessionTimeout();
         }
       } catch (error) {
-        console.error('Profile update failed:', error);
+        console.error("Profile update failed:", error);
         throw error;
       }
     },
-    [config.endpoints.profile, state.user, resetSessionTimeout, portal]
+    [config.endpoints.profile, state.user, resetSessionTimeout, portal],
   );
 
   // MFA methods (simplified)
-  const setupMFA = React.useCallback(async (): Promise<{ qrCode: string; secret: string }> => {
+  const setupMFA = React.useCallback(async (): Promise<{
+    qrCode: string;
+    secret: string;
+  }> => {
     const token = localStorage.getItem(`secure_auth_${portal}_token`);
-    if (!token) throw new Error('Not authenticated');
+    if (!token) throw new Error("Not authenticated");
 
     try {
-      const response = await fetch('/api/auth/mfa/setup', {
-        method: 'POST',
+      const response = await fetch("/api/auth/mfa/setup", {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
       if (!response.ok) {
-        throw new Error('MFA setup failed');
+        throw new Error("MFA setup failed");
       }
 
       return await response.json();
     } catch (error) {
-      console.error('MFA setup failed:', error);
+      console.error("MFA setup failed:", error);
       throw error;
     }
   }, [portal]);
@@ -350,22 +357,22 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
       if (!token) return false;
 
       try {
-        const response = await fetch('/api/auth/mfa/verify', {
-          method: 'POST',
+        const response = await fetch("/api/auth/mfa/verify", {
+          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ code }),
         });
 
         return response.ok;
       } catch (error) {
-        console.error('MFA verification failed:', error);
+        console.error("MFA verification failed:", error);
         return false;
       }
     },
-    [portal]
+    [portal],
   );
 
   const disableMFA = React.useCallback(async (): Promise<void> => {
@@ -373,11 +380,11 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
     if (!token) return;
 
     try {
-      const response = await fetch('/api/auth/mfa/disable', {
-        method: 'POST',
+      const response = await fetch("/api/auth/mfa/disable", {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
       });
 
@@ -385,12 +392,15 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
         setState((prev) => ({
           ...prev,
           user: prev.user
-            ? { ...prev.user, metadata: { ...prev.user.metadata, mfaEnabled: false } }
+            ? {
+                ...prev.user,
+                metadata: { ...prev.user.metadata, mfaEnabled: false },
+              }
             : null,
         }));
       }
     } catch (error) {
-      console.error('MFA disable failed:', error);
+      console.error("MFA disable failed:", error);
       throw error;
     }
   }, [state.user, portal]);
@@ -403,7 +413,7 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
       const permissions = Array.isArray(permission) ? permission : [permission];
       return permissions.some((p) => state.user!.permissions.includes(p));
     },
-    [state.user, config.enablePermissions]
+    [state.user, config.enablePermissions],
   );
 
   const hasRole = React.useCallback(
@@ -413,11 +423,11 @@ export const SecureAuthProvider: React.FC<SecureAuthProviderProps> = ({
       const roles = Array.isArray(role) ? role : [role];
       return roles.includes(state.user.role);
     },
-    [state.user]
+    [state.user],
   );
 
   const isSuperAdmin = React.useCallback((): boolean => {
-    return state.user?.role === 'super_admin';
+    return state.user?.role === "super_admin";
   }, [state.user]);
 
   // Session management

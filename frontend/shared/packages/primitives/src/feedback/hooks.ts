@@ -1,9 +1,9 @@
 /**
  * Client-side hooks for feedback components
  */
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 // Simple modal hooks for compatibility
 export const useModal = () => {

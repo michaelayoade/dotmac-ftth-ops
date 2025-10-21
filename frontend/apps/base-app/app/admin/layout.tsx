@@ -73,7 +73,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10 lg:flex-row">
         <aside className="w-full lg:w-72">
           <nav className="space-y-4 rounded-xl border border-border bg-card p-4 shadow-sm">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Administrative areas</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">
+              Administrative areas
+            </p>
             <Separator className="bg-border/80" />
             <div className="space-y-2">
               {NAV_ITEMS.map((item) => {
@@ -91,8 +93,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       item.href === "/admin/users"
                         ? "users-link"
                         : item.href === "/admin/settings"
-                        ? "settings-link"
-                        : undefined
+                          ? "settings-link"
+                          : undefined
                     }
                   >
                     <item.icon className="mt-0.5 h-5 w-5 flex-shrink-0" />

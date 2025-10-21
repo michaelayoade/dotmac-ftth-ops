@@ -23,13 +23,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,11 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   DiscoveredONU,
   ONUDiscoveryResponse,
@@ -129,12 +119,13 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
     try {
       const response = await apiClient.post<ONUProvisionResponse>(
         "/api/v1/voltha/onus/provision",
-        provisionForm as ONUProvisionRequest
+        provisionForm as ONUProvisionRequest,
       );
 
       toast({
         title: "ONU Provisioned",
-        description: response.data.message || `ONU ${response.data.serial_number} provisioned successfully`,
+        description:
+          response.data.message || `ONU ${response.data.serial_number} provisioned successfully`,
       });
 
       setShowProvisionModal(false);
@@ -165,7 +156,7 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
     setSelectedONU(null);
     setProvisionForm({
       serial_number: "",
-      parent_device_id: olts.length > 0 ? (olts[0]?.root_device_id || "") : "",
+      parent_device_id: olts.length > 0 ? olts[0]?.root_device_id || "" : "",
       parent_port_no: 0,
       vlan: 100,
     });
@@ -205,7 +196,8 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
                 <Info className="h-4 w-4" />
                 <AlertTitle>No ONUs Found</AlertTitle>
                 <AlertDescription>
-                  No unprovisioned ONUs were discovered. Make sure ONUs are connected and powered on.
+                  No unprovisioned ONUs were discovered. Make sure ONUs are connected and powered
+                  on.
                 </AlertDescription>
               </Alert>
             ) : (
@@ -272,9 +264,7 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Provision ONU</DialogTitle>
-            <DialogDescription>
-              Configure and provision an optical network unit
-            </DialogDescription>
+            <DialogDescription>Configure and provision an optical network unit</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -297,7 +287,10 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
                 id="serial_number"
                 value={provisionForm.serial_number}
                 onChange={(e) =>
-                  setProvisionForm({ ...provisionForm, serial_number: e.target.value })
+                  setProvisionForm({
+                    ...provisionForm,
+                    serial_number: e.target.value,
+                  })
                 }
                 placeholder="ABCD12345678"
                 disabled={!!selectedONU}
@@ -312,7 +305,10 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
               <Select
                 value={provisionForm.parent_device_id}
                 onValueChange={(value) =>
-                  setProvisionForm({ ...provisionForm, parent_device_id: value })
+                  setProvisionForm({
+                    ...provisionForm,
+                    parent_device_id: value,
+                  })
                 }
                 disabled={!!selectedONU}
               >
@@ -341,13 +337,14 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
                 max="15"
                 value={provisionForm.parent_port_no}
                 onChange={(e) =>
-                  setProvisionForm({ ...provisionForm, parent_port_no: parseInt(e.target.value) || 0 })
+                  setProvisionForm({
+                    ...provisionForm,
+                    parent_port_no: parseInt(e.target.value) || 0,
+                  })
                 }
                 disabled={!!selectedONU}
               />
-              <p className="text-xs text-muted-foreground">
-                PON port on the OLT (typically 0-15)
-              </p>
+              <p className="text-xs text-muted-foreground">PON port on the OLT (typically 0-15)</p>
             </div>
 
             {/* VLAN */}
@@ -360,7 +357,10 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
                 max="4094"
                 value={provisionForm.vlan}
                 onChange={(e) =>
-                  setProvisionForm({ ...provisionForm, vlan: parseInt(e.target.value) || 100 })
+                  setProvisionForm({
+                    ...provisionForm,
+                    vlan: parseInt(e.target.value) || 100,
+                  })
                 }
               />
               <p className="text-xs text-muted-foreground">

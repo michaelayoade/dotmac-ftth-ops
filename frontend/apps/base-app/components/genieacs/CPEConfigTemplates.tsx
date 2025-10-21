@@ -25,23 +25,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
@@ -49,12 +39,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import {
   WiFiConfig,
@@ -225,7 +210,7 @@ export function CPEConfigTemplates() {
 
       const response = await apiClient.post<MassConfigResponse>(
         "/api/v1/genieacs/mass-config",
-        request
+        request,
       );
 
       toast({
@@ -265,7 +250,7 @@ export function CPEConfigTemplates() {
 
     if (editingTemplate.id.startsWith("custom-")) {
       // Update existing custom template
-      setTemplates(templates.map(t => t.id === editingTemplate.id ? editingTemplate : t));
+      setTemplates(templates.map((t) => (t.id === editingTemplate.id ? editingTemplate : t)));
     } else {
       // Create new custom template from existing
       const newTemplate: ConfigTemplate = {
@@ -295,7 +280,7 @@ export function CPEConfigTemplates() {
       return;
     }
 
-    setTemplates(templates.filter(t => t.id !== templateId));
+    setTemplates(templates.filter((t) => t.id !== templateId));
     toast({
       title: "Template Deleted",
       description: "Configuration template has been deleted",
@@ -345,7 +330,7 @@ export function CPEConfigTemplates() {
     setShowEditModal(true);
   };
 
-  const filteredTemplates = templates.filter(t => {
+  const filteredTemplates = templates.filter((t) => {
     if (activeTab === "all") return true;
     return t.category === activeTab;
   });
@@ -353,13 +338,15 @@ export function CPEConfigTemplates() {
   const getCategoryBadge = (category: string) => {
     const styles: Record<string, { variant: any; color: string }> = {
       residential: { variant: "default", color: "bg-blue-100 text-blue-800" },
-      business: { variant: "secondary", color: "bg-purple-100 text-purple-800" },
+      business: {
+        variant: "secondary",
+        color: "bg-purple-100 text-purple-800",
+      },
       custom: { variant: "outline", color: "bg-gray-100 text-gray-800" },
     };
 
     const normalizedCategory = category as keyof typeof styles;
-    const styleRecord =
-      (styles[normalizedCategory] ?? styles.custom)!;
+    const styleRecord = (styles[normalizedCategory] ?? styles.custom)!;
 
     return (
       <Badge variant={styleRecord.variant} className={styleRecord.color}>
@@ -401,9 +388,7 @@ export function CPEConfigTemplates() {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <CardTitle className="text-lg">{template.name}</CardTitle>
-                      <CardDescription className="mt-1">
-                        {template.description}
-                      </CardDescription>
+                      <CardDescription className="mt-1">{template.description}</CardDescription>
                     </div>
                     {getCategoryBadge(template.category)}
                   </div>
@@ -511,7 +496,9 @@ export function CPEConfigTemplates() {
               <AlertDescription className="text-xs mt-2 space-y-1">
                 {selectedTemplate?.wifi && <div>WiFi SSID: {selectedTemplate.wifi.ssid}</div>}
                 {selectedTemplate?.lan && <div>LAN IP: {selectedTemplate.lan.ip_address}</div>}
-                {selectedTemplate?.wan && <div>WAN Type: {selectedTemplate.wan.connection_type}</div>}
+                {selectedTemplate?.wan && (
+                  <div>WAN Type: {selectedTemplate.wan.connection_type}</div>
+                )}
               </AlertDescription>
             </Alert>
 
@@ -555,7 +542,12 @@ export function CPEConfigTemplates() {
                 min="1"
                 max="50"
                 value={applyForm.max_concurrent}
-                onChange={(e) => setApplyForm({ ...applyForm, max_concurrent: parseInt(e.target.value) || 10 })}
+                onChange={(e) =>
+                  setApplyForm({
+                    ...applyForm,
+                    max_concurrent: parseInt(e.target.value) || 10,
+                  })
+                }
               />
             </div>
 
@@ -595,9 +587,7 @@ export function CPEConfigTemplates() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Configuration Template</DialogTitle>
-            <DialogDescription>
-              Customize template configuration settings
-            </DialogDescription>
+            <DialogDescription>Customize template configuration settings</DialogDescription>
           </DialogHeader>
 
           {editingTemplate && (
@@ -615,7 +605,12 @@ export function CPEConfigTemplates() {
                   <Input
                     id="template_name"
                     value={editingTemplate.name}
-                    onChange={(e) => setEditingTemplate({ ...editingTemplate, name: e.target.value })}
+                    onChange={(e) =>
+                      setEditingTemplate({
+                        ...editingTemplate,
+                        name: e.target.value,
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -623,7 +618,12 @@ export function CPEConfigTemplates() {
                   <Textarea
                     id="template_description"
                     value={editingTemplate.description}
-                    onChange={(e) => setEditingTemplate({ ...editingTemplate, description: e.target.value })}
+                    onChange={(e) =>
+                      setEditingTemplate({
+                        ...editingTemplate,
+                        description: e.target.value,
+                      })
+                    }
                     rows={3}
                   />
                 </div>
@@ -635,10 +635,15 @@ export function CPEConfigTemplates() {
                   <Input
                     id="wifi_ssid"
                     value={editingTemplate.wifi?.ssid || ""}
-                    onChange={(e) => setEditingTemplate({
-                      ...editingTemplate,
-                      wifi: { ...(editingTemplate.wifi || {} as WiFiConfig), ssid: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setEditingTemplate({
+                        ...editingTemplate,
+                        wifi: {
+                          ...(editingTemplate.wifi || ({} as WiFiConfig)),
+                          ssid: e.target.value,
+                        },
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -647,20 +652,30 @@ export function CPEConfigTemplates() {
                     id="wifi_password"
                     type="password"
                     value={editingTemplate.wifi?.password || ""}
-                    onChange={(e) => setEditingTemplate({
-                      ...editingTemplate,
-                      wifi: { ...(editingTemplate.wifi || {} as WiFiConfig), password: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setEditingTemplate({
+                        ...editingTemplate,
+                        wifi: {
+                          ...(editingTemplate.wifi || ({} as WiFiConfig)),
+                          password: e.target.value,
+                        },
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="wifi_security">Security Mode</Label>
                   <Select
                     value={editingTemplate.wifi?.security_mode || "WPA2-PSK"}
-                    onValueChange={(value) => setEditingTemplate({
-                      ...editingTemplate,
-                      wifi: { ...(editingTemplate.wifi || {} as WiFiConfig), security_mode: value }
-                    })}
+                    onValueChange={(value) =>
+                      setEditingTemplate({
+                        ...editingTemplate,
+                        wifi: {
+                          ...(editingTemplate.wifi || ({} as WiFiConfig)),
+                          security_mode: value,
+                        },
+                      })
+                    }
                   >
                     <SelectTrigger id="wifi_security">
                       <SelectValue />
@@ -681,10 +696,15 @@ export function CPEConfigTemplates() {
                   <Input
                     id="lan_ip"
                     value={editingTemplate.lan?.ip_address || ""}
-                    onChange={(e) => setEditingTemplate({
-                      ...editingTemplate,
-                      lan: { ...(editingTemplate.lan || {} as LANConfig), ip_address: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setEditingTemplate({
+                        ...editingTemplate,
+                        lan: {
+                          ...(editingTemplate.lan || ({} as LANConfig)),
+                          ip_address: e.target.value,
+                        },
+                      })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -692,20 +712,30 @@ export function CPEConfigTemplates() {
                   <Input
                     id="lan_subnet"
                     value={editingTemplate.lan?.subnet_mask || ""}
-                    onChange={(e) => setEditingTemplate({
-                      ...editingTemplate,
-                      lan: { ...(editingTemplate.lan || {} as LANConfig), subnet_mask: e.target.value }
-                    })}
+                    onChange={(e) =>
+                      setEditingTemplate({
+                        ...editingTemplate,
+                        lan: {
+                          ...(editingTemplate.lan || ({} as LANConfig)),
+                          subnet_mask: e.target.value,
+                        },
+                      })
+                    }
                   />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch
                     id="lan_dhcp"
                     checked={editingTemplate.lan?.dhcp_enabled || false}
-                    onCheckedChange={(checked) => setEditingTemplate({
-                      ...editingTemplate,
-                      lan: { ...(editingTemplate.lan || {} as LANConfig), dhcp_enabled: checked }
-                    })}
+                    onCheckedChange={(checked) =>
+                      setEditingTemplate({
+                        ...editingTemplate,
+                        lan: {
+                          ...(editingTemplate.lan || ({} as LANConfig)),
+                          dhcp_enabled: checked,
+                        },
+                      })
+                    }
                   />
                   <Label htmlFor="lan_dhcp">DHCP Enabled</Label>
                 </div>
@@ -716,10 +746,15 @@ export function CPEConfigTemplates() {
                       <Input
                         id="dhcp_start"
                         value={editingTemplate.lan?.dhcp_start || ""}
-                        onChange={(e) => setEditingTemplate({
-                          ...editingTemplate,
-                          lan: { ...(editingTemplate.lan || {} as LANConfig), dhcp_start: e.target.value }
-                        })}
+                        onChange={(e) =>
+                          setEditingTemplate({
+                            ...editingTemplate,
+                            lan: {
+                              ...(editingTemplate.lan || ({} as LANConfig)),
+                              dhcp_start: e.target.value,
+                            },
+                          })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
@@ -727,10 +762,15 @@ export function CPEConfigTemplates() {
                       <Input
                         id="dhcp_end"
                         value={editingTemplate.lan?.dhcp_end || ""}
-                        onChange={(e) => setEditingTemplate({
-                          ...editingTemplate,
-                          lan: { ...(editingTemplate.lan || {} as LANConfig), dhcp_end: e.target.value }
-                        })}
+                        onChange={(e) =>
+                          setEditingTemplate({
+                            ...editingTemplate,
+                            lan: {
+                              ...(editingTemplate.lan || ({} as LANConfig)),
+                              dhcp_end: e.target.value,
+                            },
+                          })
+                        }
                       />
                     </div>
                   </>
@@ -742,10 +782,15 @@ export function CPEConfigTemplates() {
                   <Label htmlFor="wan_type">Connection Type</Label>
                   <Select
                     value={editingTemplate.wan?.connection_type || "PPPoE"}
-                    onValueChange={(value) => setEditingTemplate({
-                      ...editingTemplate,
-                      wan: { ...(editingTemplate.wan || {} as WANConfig), connection_type: value }
-                    })}
+                    onValueChange={(value) =>
+                      setEditingTemplate({
+                        ...editingTemplate,
+                        wan: {
+                          ...(editingTemplate.wan || ({} as WANConfig)),
+                          connection_type: value,
+                        },
+                      })
+                    }
                   >
                     <SelectTrigger id="wan_type">
                       <SelectValue />
@@ -766,10 +811,15 @@ export function CPEConfigTemplates() {
                     min="1"
                     max="4094"
                     value={editingTemplate.wan?.vlan_id || 100}
-                    onChange={(e) => setEditingTemplate({
-                      ...editingTemplate,
-                      wan: { ...(editingTemplate.wan || {} as WANConfig), vlan_id: parseInt(e.target.value) || 100 }
-                    })}
+                    onChange={(e) =>
+                      setEditingTemplate({
+                        ...editingTemplate,
+                        wan: {
+                          ...(editingTemplate.wan || ({} as WANConfig)),
+                          vlan_id: parseInt(e.target.value) || 100,
+                        },
+                      })
+                    }
                   />
                 </div>
               </TabsContent>

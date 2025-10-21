@@ -20,23 +20,19 @@ export function useDomainVerification(tenantId: string) {
     Error,
     InitiateVerificationRequest
   >({
-    mutationFn: (request) =>
-      domainVerificationService.initiateVerification(tenantId, request),
+    mutationFn: (request) => domainVerificationService.initiateVerification(tenantId, request),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["domain-status", tenantId] });
     },
   });
 
-  const checkMutation = useMutation<
-    DomainVerificationResponse,
-    Error,
-    CheckVerificationRequest
-  >({
-    mutationFn: (request) =>
-      domainVerificationService.checkVerification(tenantId, request),
+  const checkMutation = useMutation<DomainVerificationResponse, Error, CheckVerificationRequest>({
+    mutationFn: (request) => domainVerificationService.checkVerification(tenantId, request),
     onSuccess: (data) => {
       if (data.status === "verified") {
-        queryClient.invalidateQueries({ queryKey: ["domain-status", tenantId] });
+        queryClient.invalidateQueries({
+          queryKey: ["domain-status", tenantId],
+        });
       }
     },
   });

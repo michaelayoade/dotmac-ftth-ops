@@ -24,57 +24,46 @@ export interface GeoPath {
 // ============================================================================
 
 export type AccessPointType =
-  | 'indoor'
-  | 'outdoor'
-  | 'mesh'
-  | 'point_to_point'
-  | 'point_to_multipoint'
-  | 'omni_directional'
-  | 'sector';
+  | "indoor"
+  | "outdoor"
+  | "mesh"
+  | "point_to_point"
+  | "point_to_multipoint"
+  | "omni_directional"
+  | "sector";
 
-export type AccessPointStatus =
-  | 'online'
-  | 'offline'
-  | 'degraded'
-  | 'maintenance'
-  | 'planned';
+export type AccessPointStatus = "online" | "offline" | "degraded" | "maintenance" | "planned";
 
-export type FrequencyBand =
-  | '2.4ghz'
-  | '5ghz'
-  | '6ghz'
-  | '60ghz'
-  | 'sub_6ghz'
-  | 'mmwave';
+export type FrequencyBand = "2.4ghz" | "5ghz" | "6ghz" | "60ghz" | "sub_6ghz" | "mmwave";
 
 export type WirelessStandard =
-  | 'wifi_4'    // 802.11n
-  | 'wifi_5'    // 802.11ac
-  | 'wifi_6'    // 802.11ax
-  | 'wifi_6e'   // 802.11ax (6 GHz)
-  | 'wifi_7'    // 802.11be
-  | 'lte'
-  | '5g_nr';
+  | "wifi_4" // 802.11n
+  | "wifi_5" // 802.11ac
+  | "wifi_6" // 802.11ax
+  | "wifi_6e" // 802.11ax (6 GHz)
+  | "wifi_7" // 802.11be
+  | "lte"
+  | "5g_nr";
 
 export type EncryptionType =
-  | 'open'
-  | 'wep'
-  | 'wpa'
-  | 'wpa2'
-  | 'wpa3'
-  | 'wpa2_enterprise'
-  | 'wpa3_enterprise';
+  | "open"
+  | "wep"
+  | "wpa"
+  | "wpa2"
+  | "wpa3"
+  | "wpa2_enterprise"
+  | "wpa3_enterprise";
 
 export type AntennaType =
-  | 'internal'
-  | 'external_omni'
-  | 'external_directional'
-  | 'sector_120'
-  | 'sector_90'
-  | 'sector_60'
-  | 'parabolic'
-  | 'yagi'
-  | 'panel';
+  | "internal"
+  | "external_omni"
+  | "external_directional"
+  | "sector_120"
+  | "sector_90"
+  | "sector_60"
+  | "parabolic"
+  | "yagi"
+  | "panel";
 
 // ============================================================================
 // Access Point
@@ -122,7 +111,7 @@ export interface AccessPoint {
   memory_usage_percent?: number;
   uptime_seconds?: number;
   noise_floor_dbm?: number;
-  interference_level?: 'low' | 'medium' | 'high';
+  interference_level?: "low" | "medium" | "high";
 
   // Coverage
   coverage_radius_meters?: number;
@@ -140,10 +129,10 @@ export interface AccessPoint {
   site_name?: string;
   address?: string;
   floor_level?: number;
-  mounting_type?: 'ceiling' | 'wall' | 'pole' | 'tower' | 'rooftop';
+  mounting_type?: "ceiling" | "wall" | "pole" | "tower" | "rooftop";
 
   // Backhaul
-  backhaul_type?: 'ethernet' | 'fiber' | 'wireless' | 'microwave';
+  backhaul_type?: "ethernet" | "fiber" | "wireless" | "microwave";
   backhaul_capacity_mbps?: number;
 
   created_at: string;
@@ -175,8 +164,8 @@ export interface SSID {
   radius_enabled?: boolean;
 
   // Usage
-  purpose?: 'public' | 'private' | 'guest' | 'iot' | 'backhaul' | 'management';
-  service_type?: 'residential' | 'commercial' | 'hotspot';
+  purpose?: "public" | "private" | "guest" | "iot" | "backhaul" | "management";
+  service_type?: "residential" | "commercial" | "hotspot";
 
   created_at: string;
   updated_at: string;
@@ -224,7 +213,7 @@ export interface WirelessClient {
   wireless_standard: WirelessStandard;
 
   // Client Classification
-  device_type?: 'smartphone' | 'tablet' | 'laptop' | 'desktop' | 'iot' | 'camera' | 'unknown';
+  device_type?: "smartphone" | "tablet" | "laptop" | "desktop" | "iot" | "camera" | "unknown";
   os_type?: string;
 
   // Customer Association
@@ -242,7 +231,7 @@ export interface WirelessClient {
 export interface CoverageZone {
   id: string;
   name: string;
-  type: 'predicted' | 'measured' | 'planned';
+  type: "predicted" | "measured" | "planned";
 
   // Geographic Boundary
   boundary: GeoPath; // Polygon boundary
@@ -250,7 +239,7 @@ export interface CoverageZone {
   area_square_meters?: number;
 
   // Coverage Quality
-  coverage_level: 'excellent' | 'good' | 'fair' | 'poor' | 'none';
+  coverage_level: "excellent" | "good" | "fair" | "poor" | "none";
   min_signal_dbm: number;
   max_signal_dbm: number;
   avg_signal_dbm: number;
@@ -268,7 +257,7 @@ export interface CoverageZone {
   avg_throughput_mbps?: number;
 
   // Environment
-  environment_type?: 'urban' | 'suburban' | 'rural' | 'indoor' | 'dense_urban';
+  environment_type?: "urban" | "suburban" | "rural" | "indoor" | "dense_urban";
   interference_sources?: string[];
 
   created_at: string;
@@ -283,7 +272,7 @@ export interface SignalZone {
   id: string;
   boundary: GeoPath;
   signal_strength_dbm: number;
-  signal_quality: 'excellent' | 'good' | 'fair' | 'poor';
+  signal_quality: "excellent" | "good" | "fair" | "poor";
   color: string; // Hex color for visualization
 }
 
@@ -325,7 +314,7 @@ export interface RFAnalytics {
 }
 
 export interface InterferenceSource {
-  type: 'bluetooth' | 'microwave' | 'wireless_camera' | 'radar' | 'other_wifi' | 'unknown';
+  type: "bluetooth" | "microwave" | "wireless_camera" | "radar" | "other_wifi" | "unknown";
   frequency_mhz: number;
   strength_dbm: number;
   description?: string;
@@ -347,7 +336,7 @@ export interface NeighboringAP {
 export interface SiteSurvey {
   id: string;
   name: string;
-  status: 'planned' | 'in_progress' | 'completed' | 'cancelled';
+  status: "planned" | "in_progress" | "completed" | "cancelled";
 
   // Survey Area
   survey_area: GeoPath;
@@ -434,7 +423,13 @@ export interface WirelessInfrastructureStats {
 export interface MapLayer {
   id: string;
   name: string;
-  type: 'access_points' | 'coverage_zones' | 'signal_heat_map' | 'clients' | 'interference' | 'site_survey';
+  type:
+    | "access_points"
+    | "coverage_zones"
+    | "signal_heat_map"
+    | "clients"
+    | "interference"
+    | "site_survey";
   visible: boolean;
   color?: string;
   opacity?: number;
@@ -446,7 +441,7 @@ export interface MapViewState {
   zoom: number;
   layers: MapLayer[];
   selectedFeatures: {
-    type: 'access_point' | 'coverage_zone' | 'client' | 'measurement_point';
+    type: "access_point" | "coverage_zone" | "client" | "measurement_point";
     id: string;
   }[];
 }
@@ -532,14 +527,14 @@ export interface CreateSSIDRequest {
   max_clients?: number;
   rate_limit_download_mbps?: number;
   rate_limit_upload_mbps?: number;
-  purpose?: SSID['purpose'];
+  purpose?: SSID["purpose"];
 }
 
 export interface CreateCoverageZoneRequest {
   name: string;
-  type: CoverageZone['type'];
+  type: CoverageZone["type"];
   boundary: Coordinates[];
-  coverage_level: CoverageZone['coverage_level'];
+  coverage_level: CoverageZone["coverage_level"];
   min_signal_dbm: number;
   max_signal_dbm: number;
   avg_signal_dbm: number;

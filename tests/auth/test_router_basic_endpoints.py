@@ -20,7 +20,7 @@ from dotmac.platform.user_management.models import User
 def auth_test_app():
     """Create test app with auth router."""
     app = FastAPI()
-    app.include_router(auth_router, prefix="/auth")
+    app.include_router(auth_router)
 
     return app
 

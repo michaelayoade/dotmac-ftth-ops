@@ -3,12 +3,12 @@
  * Handles custom metrics and tracking functionality
  */
 
-import { useCallback } from 'react';
-import type { PerformanceMetrics, PerformanceObserverConfig } from './types';
+import { useCallback } from "react";
+import type { PerformanceMetrics, PerformanceObserverConfig } from "./types";
 
 export function useMetricTracking(
   metrics: React.MutableRefObject<PerformanceMetrics>,
-  config: PerformanceObserverConfig
+  config: PerformanceObserverConfig,
 ) {
   const trackCustomMetric = useCallback(
     (name: string, value: number) => {
@@ -21,7 +21,7 @@ export function useMetricTracking(
         console.log(`📊 Custom metric tracked: ${name} = ${value}`);
       }
     },
-    [config.enableCustomMetrics, config.enableConsoleLogging, metrics]
+    [config.enableCustomMetrics, config.enableConsoleLogging, metrics],
   );
 
   const trackInteraction = useCallback(
@@ -30,23 +30,23 @@ export function useMetricTracking(
       const duration = startTime ? endTime - startTime : endTime;
       trackCustomMetric(`interaction_${interactionName}`, duration);
     },
-    [trackCustomMetric]
+    [trackCustomMetric],
   );
 
   const trackApiCall = useCallback(
     (endpoint: string, duration: number, success: boolean) => {
-      const cleanEndpoint = endpoint.replace(/[^a-zA-Z0-9]/g, '_');
+      const cleanEndpoint = endpoint.replace(/[^a-zA-Z0-9]/g, "_");
       trackCustomMetric(`api_${cleanEndpoint}_duration`, duration);
       trackCustomMetric(`api_${cleanEndpoint}_success`, success ? 1 : 0);
     },
-    [trackCustomMetric]
+    [trackCustomMetric],
   );
 
   const trackComponentRender = useCallback(
     (componentName: string, renderTime: number) => {
       trackCustomMetric(`component_${componentName}_render`, renderTime);
     },
-    [trackCustomMetric]
+    [trackCustomMetric],
   );
 
   return {

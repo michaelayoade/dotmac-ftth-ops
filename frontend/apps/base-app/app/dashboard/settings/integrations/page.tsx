@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import React, { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -14,15 +14,15 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -30,7 +30,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Plug,
   Plus,
@@ -45,10 +45,14 @@ import {
   Pause,
   Loader2,
   Zap,
-} from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { pluginsService, type PluginInstance, type PluginConfig } from '@/lib/services/plugins-service';
-import { webhooksService, type WebhookSubscriptionResponse } from '@/lib/services/webhooks-service';
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  pluginsService,
+  type PluginInstance,
+  type PluginConfig,
+} from "@/lib/services/plugins-service";
+import { webhooksService, type WebhookSubscriptionResponse } from "@/lib/services/webhooks-service";
 
 export default function IntegrationsPage() {
   const { toast } = useToast();
@@ -68,12 +72,12 @@ export default function IntegrationsPage() {
   const [isConfigureOpen, setIsConfigureOpen] = useState(false);
   const [isConnectOpen, setIsConnectOpen] = useState(false);
   const [isWebhookOpen, setIsWebhookOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Form states
-  const [newPluginName, setNewPluginName] = useState('');
+  const [newPluginName, setNewPluginName] = useState("");
   const [newWebhook, setNewWebhook] = useState({
-    url: '',
+    url: "",
     events: [] as string[],
   });
 
@@ -92,9 +96,9 @@ export default function IntegrationsPage() {
       setWebhooks(webhooksResponse);
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to load data',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to load data",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -126,16 +130,16 @@ export default function IntegrationsPage() {
 
       await loadData();
       setIsConnectOpen(false);
-      setNewPluginName('');
+      setNewPluginName("");
       toast({
-        title: 'Success',
+        title: "Success",
         description: `Connected to ${selectedPlugin.name}`,
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to connect plugin',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to connect plugin",
+        variant: "destructive",
       });
     } finally {
       setIsActionLoading(false);
@@ -148,14 +152,14 @@ export default function IntegrationsPage() {
       await pluginsService.deletePluginInstance(instanceId);
       await loadData();
       toast({
-        title: 'Success',
-        description: 'Plugin disconnected',
+        title: "Success",
+        description: "Plugin disconnected",
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to disconnect plugin',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to disconnect plugin",
+        variant: "destructive",
       });
     } finally {
       setIsActionLoading(false);
@@ -168,14 +172,14 @@ export default function IntegrationsPage() {
       await pluginsService.refreshPluginInstance(instanceId);
       await loadData();
       toast({
-        title: 'Success',
-        description: 'Plugin refreshed',
+        title: "Success",
+        description: "Plugin refreshed",
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to refresh plugin',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to refresh plugin",
+        variant: "destructive",
       });
     } finally {
       setIsActionLoading(false);
@@ -196,16 +200,16 @@ export default function IntegrationsPage() {
 
       await loadData();
       setIsWebhookOpen(false);
-      setNewWebhook({ url: '', events: [] });
+      setNewWebhook({ url: "", events: [] });
       toast({
-        title: 'Success',
-        description: 'Webhook created successfully',
+        title: "Success",
+        description: "Webhook created successfully",
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to create webhook',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create webhook",
+        variant: "destructive",
       });
     } finally {
       setIsActionLoading(false);
@@ -222,14 +226,14 @@ export default function IntegrationsPage() {
       }
       await loadData();
       toast({
-        title: 'Success',
-        description: `Webhook ${isActive ? 'paused' : 'activated'}`,
+        title: "Success",
+        description: `Webhook ${isActive ? "paused" : "activated"}`,
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to toggle webhook',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to toggle webhook",
+        variant: "destructive",
       });
     } finally {
       setIsActionLoading(false);
@@ -242,14 +246,14 @@ export default function IntegrationsPage() {
       await webhooksService.deleteSubscription(webhookId);
       await loadData();
       toast({
-        title: 'Success',
-        description: 'Webhook deleted',
+        title: "Success",
+        description: "Webhook deleted",
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to delete webhook',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete webhook",
+        variant: "destructive",
       });
     } finally {
       setIsActionLoading(false);
@@ -261,14 +265,14 @@ export default function IntegrationsPage() {
       setIsActionLoading(true);
       await webhooksService.testWebhook(webhookId);
       toast({
-        title: 'Success',
-        description: 'Test webhook sent',
+        title: "Success",
+        description: "Test webhook sent",
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to test webhook',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to test webhook",
+        variant: "destructive",
       });
     } finally {
       setIsActionLoading(false);
@@ -278,22 +282,19 @@ export default function IntegrationsPage() {
   // Helper functions
   const getStatusBadge = (status: string) => {
     const color = pluginsService.getStatusColor(status);
-    return (
-      <Badge className={color}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
-    );
+    return <Badge className={color}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
   };
 
   const isPluginConnected = (pluginName: string) => {
-    return pluginInstances.some(instance => instance.plugin_name === pluginName);
+    return pluginInstances.some((instance) => instance.plugin_name === pluginName);
   };
 
   // Filter available plugins
   const searchLower = searchTerm.toLowerCase();
-  const filteredPlugins = availablePlugins.filter(plugin =>
-    plugin.name.toLowerCase().includes(searchLower) ||
-    (plugin.description?.toLowerCase() ?? '').includes(searchLower)
+  const filteredPlugins = availablePlugins.filter(
+    (plugin) =>
+      plugin.name.toLowerCase().includes(searchLower) ||
+      (plugin.description?.toLowerCase() ?? "").includes(searchLower),
   );
 
   if (isLoading) {
@@ -331,7 +332,9 @@ export default function IntegrationsPage() {
                 <Button
                   variant="outline"
                   className="mt-4"
-                  onClick={() => document.querySelector<HTMLElement>('[value="available"]')?.click()}
+                  onClick={() =>
+                    document.querySelector<HTMLElement>('[value="available"]')?.click()
+                  }
                 >
                   Browse Integrations
                 </Button>
@@ -438,7 +441,7 @@ export default function IntegrationsPage() {
             {filteredPlugins.map((plugin) => {
               const connected = isPluginConnected(plugin.name);
               return (
-                <Card key={plugin.name} className={connected ? 'opacity-50' : ''}>
+                <Card key={plugin.name} className={connected ? "opacity-50" : ""}>
                   <CardHeader>
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-muted rounded-lg">
@@ -457,11 +460,7 @@ export default function IntegrationsPage() {
                       <Badge variant="outline" className="text-xs">
                         {plugin.category}
                       </Badge>
-                      <Button
-                        size="sm"
-                        onClick={() => handleConnect(plugin)}
-                        disabled={connected}
-                      >
+                      <Button size="sm" onClick={() => handleConnect(plugin)} disabled={connected}>
                         {connected ? (
                           <>
                             <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -517,9 +516,7 @@ export default function IntegrationsPage() {
                   <TableBody>
                     {webhooks.map((webhook) => (
                       <TableRow key={webhook.id}>
-                        <TableCell className="font-mono text-sm">
-                          {webhook.url}
-                        </TableCell>
+                        <TableCell className="font-mono text-sm">{webhook.url}</TableCell>
                         <TableCell>
                           <div className="flex gap-1 flex-wrap">
                             {webhook.event_types.slice(0, 2).map((event, idx) => (
@@ -538,7 +535,7 @@ export default function IntegrationsPage() {
                           <Badge
                             className={webhooksService.getActiveStatusColor(webhook.is_active)}
                           >
-                            {webhook.is_active ? 'Active' : 'Paused'}
+                            {webhook.is_active ? "Active" : "Paused"}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -608,9 +605,7 @@ export default function IntegrationsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Connect to {selectedPlugin?.name}</DialogTitle>
-            <DialogDescription>
-              Create a new instance of this integration
-            </DialogDescription>
+            <DialogDescription>Create a new instance of this integration</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -627,17 +622,14 @@ export default function IntegrationsPage() {
             <Button variant="outline" onClick={() => setIsConnectOpen(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={handleCompleteConnection}
-              disabled={!newPluginName || isActionLoading}
-            >
+            <Button onClick={handleCompleteConnection} disabled={!newPluginName || isActionLoading}>
               {isActionLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Connecting...
                 </>
               ) : (
-                'Connect'
+                "Connect"
               )}
             </Button>
           </DialogFooter>
@@ -649,9 +641,7 @@ export default function IntegrationsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create Webhook</DialogTitle>
-            <DialogDescription>
-              Configure a new webhook endpoint
-            </DialogDescription>
+            <DialogDescription>Configure a new webhook endpoint</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -666,7 +656,7 @@ export default function IntegrationsPage() {
             <div className="space-y-2">
               <Label>Events</Label>
               <div className="space-y-2">
-                {webhooksService.getAvailableEventTypes().map(event => (
+                {webhooksService.getAvailableEventTypes().map((event) => (
                   <div key={event} className="flex items-center space-x-2">
                     <input
                       type="checkbox"
@@ -681,7 +671,7 @@ export default function IntegrationsPage() {
                         } else {
                           setNewWebhook({
                             ...newWebhook,
-                            events: newWebhook.events.filter(e => e !== event),
+                            events: newWebhook.events.filter((e) => e !== event),
                           });
                         }
                       }}
@@ -709,7 +699,7 @@ export default function IntegrationsPage() {
                   Creating...
                 </>
               ) : (
-                'Create Webhook'
+                "Create Webhook"
               )}
             </Button>
           </DialogFooter>

@@ -352,7 +352,7 @@ class TestAuthRouterFixes:
         from dotmac.platform.auth.router import auth_router
 
         app = FastAPI()
-        app.include_router(auth_router, prefix="/auth")
+        app.include_router(auth_router)
 
         return TestClient(app)
 

@@ -11,10 +11,10 @@
  * - Keyboard shortcuts
  */
 
-'use client';
+"use client";
 
-import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   CommandDialog,
   CommandEmpty,
@@ -24,7 +24,7 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from '@/components/ui/command';
+} from "@/components/ui/command";
 import {
   Search,
   Home,
@@ -41,10 +41,10 @@ import {
   Clock,
   TrendingUp,
   Loader2,
-} from 'lucide-react';
-import { useDebouncedSearch } from '@/hooks/useSearch';
-import { getEntityRoute, formatEntityType } from '@/types/search';
-import { Badge } from '@/components/ui/badge';
+} from "lucide-react";
+import { useDebouncedSearch } from "@/hooks/useSearch";
+import { getEntityRoute, formatEntityType } from "@/types/search";
+import { Badge } from "@/components/ui/badge";
 
 interface QuickAction {
   id: string;
@@ -58,7 +58,7 @@ interface QuickAction {
 export function GlobalCommandPalette() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Debounced search results
   const { data: results, isLoading } = useDebouncedSearch(searchQuery);
@@ -68,12 +68,12 @@ export function GlobalCommandPalette() {
 
   // Load recent searches on mount
   useEffect(() => {
-    const saved = localStorage.getItem('recentSearches');
+    const saved = localStorage.getItem("recentSearches");
     if (saved) {
       try {
         setRecentSearches(JSON.parse(saved));
       } catch (e) {
-        console.error('Failed to parse recent searches', e);
+        console.error("Failed to parse recent searches", e);
       }
     }
   }, []);
@@ -84,7 +84,7 @@ export function GlobalCommandPalette() {
 
     setRecentSearches((prev) => {
       const updated = [query, ...prev.filter((q) => q !== query)].slice(0, 5);
-      localStorage.setItem('recentSearches', JSON.stringify(updated));
+      localStorage.setItem("recentSearches", JSON.stringify(updated));
       return updated;
     });
   }, []);
@@ -92,93 +92,90 @@ export function GlobalCommandPalette() {
   // Keyboard shortcut listener
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen((open) => !open);
       }
     };
 
-    document.addEventListener('keydown', down);
-    return () => document.removeEventListener('keydown', down);
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
   }, []);
 
   // Quick actions
   const quickActions: QuickAction[] = [
     {
-      id: 'home',
-      label: 'Go to Dashboard',
+      id: "home",
+      label: "Go to Dashboard",
       icon: Home,
-      shortcut: '⌘H',
-      action: () => router.push('/dashboard'),
-      keywords: ['home', 'dashboard', 'overview'],
+      shortcut: "⌘H",
+      action: () => router.push("/dashboard"),
+      keywords: ["home", "dashboard", "overview"],
     },
     {
-      id: 'search',
-      label: 'Open Search Page',
+      id: "search",
+      label: "Open Search Page",
       icon: Search,
-      shortcut: '⌘S',
-      action: () => router.push('/dashboard/search'),
-      keywords: ['search', 'find', 'query'],
+      shortcut: "⌘S",
+      action: () => router.push("/dashboard/search"),
+      keywords: ["search", "find", "query"],
     },
     {
-      id: 'subscribers',
-      label: 'View Subscribers',
+      id: "subscribers",
+      label: "View Subscribers",
       icon: Users,
-      action: () => router.push('/dashboard/subscribers'),
-      keywords: ['subscribers', 'users', 'accounts'],
+      action: () => router.push("/dashboard/subscribers"),
+      keywords: ["subscribers", "users", "accounts"],
     },
     {
-      id: 'billing',
-      label: 'Billing & Revenue',
+      id: "billing",
+      label: "Billing & Revenue",
       icon: Receipt,
-      action: () => router.push('/dashboard/billing-revenue'),
-      keywords: ['billing', 'invoices', 'revenue', 'payments'],
+      action: () => router.push("/dashboard/billing-revenue"),
+      keywords: ["billing", "invoices", "revenue", "payments"],
     },
     {
-      id: 'support',
-      label: 'Support Tickets',
+      id: "support",
+      label: "Support Tickets",
       icon: Ticket,
-      action: () => router.push('/dashboard/support'),
-      keywords: ['support', 'tickets', 'help'],
+      action: () => router.push("/dashboard/support"),
+      keywords: ["support", "tickets", "help"],
     },
     {
-      id: 'network',
-      label: 'Network Inventory',
+      id: "network",
+      label: "Network Inventory",
       icon: Server,
-      action: () => router.push('/dashboard/network'),
-      keywords: ['network', 'devices', 'infrastructure'],
+      action: () => router.push("/dashboard/network"),
+      keywords: ["network", "devices", "infrastructure"],
     },
     {
-      id: 'communications',
-      label: 'Communications',
+      id: "communications",
+      label: "Communications",
       icon: Mail,
-      action: () => router.push('/dashboard/communications'),
-      keywords: ['email', 'sms', 'communications', 'messages'],
+      action: () => router.push("/dashboard/communications"),
+      keywords: ["email", "sms", "communications", "messages"],
     },
     {
-      id: 'audit',
-      label: 'Audit & Compliance',
+      id: "audit",
+      label: "Audit & Compliance",
       icon: Shield,
-      action: () => router.push('/dashboard/platform-admin/audit'),
-      keywords: ['audit', 'security', 'compliance', 'logs'],
+      action: () => router.push("/dashboard/platform-admin/audit"),
+      keywords: ["audit", "security", "compliance", "logs"],
     },
     {
-      id: 'settings',
-      label: 'Settings',
+      id: "settings",
+      label: "Settings",
       icon: Settings,
-      action: () => router.push('/dashboard/settings'),
-      keywords: ['settings', 'preferences', 'configuration'],
+      action: () => router.push("/dashboard/settings"),
+      keywords: ["settings", "preferences", "configuration"],
     },
   ];
 
   // Handle item selection
-  const handleSelect = useCallback(
-    (callback: () => void) => {
-      setOpen(false);
-      callback();
-    },
-    []
-  );
+  const handleSelect = useCallback((callback: () => void) => {
+    setOpen(false);
+    callback();
+  }, []);
 
   // Handle search result selection
   const handleSearchResultSelect = useCallback(
@@ -187,21 +184,18 @@ export function GlobalCommandPalette() {
       const route = getEntityRoute(entityType, entityId);
       handleSelect(() => router.push(route));
     },
-    [handleSelect, router, saveRecentSearch]
+    [handleSelect, router, saveRecentSearch],
   );
 
   // Handle recent search selection
-  const handleRecentSearchSelect = useCallback(
-    (query: string) => {
-      setSearchQuery(query);
-      // Don't close, let user see results
-    },
-    []
-  );
+  const handleRecentSearchSelect = useCallback((query: string) => {
+    setSearchQuery(query);
+    // Don't close, let user see results
+  }, []);
 
   // Clear search
   const handleClearSearch = useCallback(() => {
-    setSearchQuery('');
+    setSearchQuery("");
   }, []);
 
   return (
@@ -261,9 +255,7 @@ export function GlobalCommandPalette() {
                 >
                   <Icon className="mr-2 h-4 w-4" />
                   <span>{action.label}</span>
-                  {action.shortcut && (
-                    <CommandShortcut>{action.shortcut}</CommandShortcut>
-                  )}
+                  {action.shortcut && <CommandShortcut>{action.shortcut}</CommandShortcut>}
                 </CommandItem>
               );
             })}
@@ -278,24 +270,22 @@ export function GlobalCommandPalette() {
               {results.results.map((result: any) => {
                 // Determine icon based on entity type
                 const Icon =
-                  result.type === 'customer'
+                  result.type === "customer"
                     ? Users
-                    : result.type === 'invoice'
+                    : result.type === "invoice"
                       ? Receipt
-                      : result.type === 'ticket'
+                      : result.type === "ticket"
                         ? Ticket
-                        : result.type === 'device'
+                        : result.type === "device"
                           ? Server
-                          : result.type === 'service'
+                          : result.type === "service"
                             ? Package
                             : FileText;
 
                 return (
                   <CommandItem
                     key={`${result.type}-${result.id}`}
-                    onSelect={() =>
-                      handleSearchResultSelect(result.type, result.id, result.title)
-                    }
+                    onSelect={() => handleSearchResultSelect(result.type, result.id, result.title)}
                   >
                     <Icon className="mr-2 h-4 w-4" />
                     <div className="flex flex-col flex-1 min-w-0">
@@ -326,10 +316,10 @@ export function GlobalCommandPalette() {
             <CommandSeparator />
             <div className="p-2 text-xs text-muted-foreground text-center">
               <p>
-                Press <kbd className="px-1 py-0.5 bg-muted rounded">⌘K</kbd> to open •{' '}
+                Press <kbd className="px-1 py-0.5 bg-muted rounded">⌘K</kbd> to open •{" "}
                 <kbd className="px-1 py-0.5 bg-muted rounded">↑</kbd>
-                <kbd className="px-1 py-0.5 bg-muted rounded">↓</kbd> to navigate •{' '}
-                <kbd className="px-1 py-0.5 bg-muted rounded">Enter</kbd> to select •{' '}
+                <kbd className="px-1 py-0.5 bg-muted rounded">↓</kbd> to navigate •{" "}
+                <kbd className="px-1 py-0.5 bg-muted rounded">Enter</kbd> to select •{" "}
                 <kbd className="px-1 py-0.5 bg-muted rounded">Esc</kbd> to close
               </p>
             </div>

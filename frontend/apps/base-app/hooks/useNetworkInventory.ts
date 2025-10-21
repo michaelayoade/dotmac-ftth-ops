@@ -1,21 +1,27 @@
-import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { extractDataOrThrow } from '@/lib/api/response-helpers';
-import type { NetboxHealth, NetboxSite } from '@/types';
+import { useQuery, type UseQueryOptions, type UseQueryResult } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { extractDataOrThrow } from "@/lib/api/response-helpers";
+import type { NetboxHealth, NetboxSite } from "@/types";
 
-type NetboxHealthKey = ['netbox', 'health'];
-type NetboxSitesKey = ['netbox', 'sites', { limit: number; offset: number }];
+type NetboxHealthKey = ["netbox", "health"];
+type NetboxSitesKey = ["netbox", "sites", { limit: number; offset: number }];
 
 interface UseNetboxHealthOptions {
   enabled?: boolean;
-  queryOptions?: Omit<UseQueryOptions<NetboxHealth, Error, NetboxHealth, NetboxHealthKey>, 'queryKey' | 'queryFn'>;
+  queryOptions?: Omit<
+    UseQueryOptions<NetboxHealth, Error, NetboxHealth, NetboxHealthKey>,
+    "queryKey" | "queryFn"
+  >;
 }
 
 interface UseNetboxSitesOptions {
   limit?: number;
   offset?: number;
   enabled?: boolean;
-  queryOptions?: Omit<UseQueryOptions<NetboxSite[], Error, NetboxSite[], NetboxSitesKey>, 'queryKey' | 'queryFn'>;
+  queryOptions?: Omit<
+    UseQueryOptions<NetboxSite[], Error, NetboxSite[], NetboxSitesKey>,
+    "queryKey" | "queryFn"
+  >;
 }
 
 /**
@@ -26,9 +32,9 @@ export function useNetboxHealth({
   queryOptions,
 }: UseNetboxHealthOptions = {}): UseQueryResult<NetboxHealth, Error> {
   return useQuery<NetboxHealth, Error, NetboxHealth, NetboxHealthKey>({
-    queryKey: ['netbox', 'health'],
+    queryKey: ["netbox", "health"],
     queryFn: async () => {
-      const response = await apiClient.get<NetboxHealth>('/netbox/health');
+      const response = await apiClient.get<NetboxHealth>("/netbox/health");
       return extractDataOrThrow(response);
     },
     enabled,
@@ -47,9 +53,9 @@ export function useNetboxSites({
   queryOptions,
 }: UseNetboxSitesOptions = {}): UseQueryResult<NetboxSite[], Error> {
   return useQuery<NetboxSite[], Error, NetboxSite[], NetboxSitesKey>({
-    queryKey: ['netbox', 'sites', { limit, offset }],
+    queryKey: ["netbox", "sites", { limit, offset }],
     queryFn: async () => {
-      const response = await apiClient.get<NetboxSite[]>('/netbox/dcim/sites', {
+      const response = await apiClient.get<NetboxSite[]>("/netbox/dcim/sites", {
         params: { limit, offset },
       });
       return extractDataOrThrow(response);
@@ -59,4 +65,3 @@ export function useNetboxSites({
     ...queryOptions,
   });
 }
-

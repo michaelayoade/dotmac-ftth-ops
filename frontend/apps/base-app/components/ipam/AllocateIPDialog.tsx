@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Allocate IP Dialog Component
@@ -6,7 +6,7 @@
  * Dialog for allocating IP addresses from prefixes (single or dual-stack)
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,15 +14,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { IPAddressInput } from '@/components/forms/IPAddressInput';
-import { Loader2, AlertCircle } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { IPAddressInput } from "@/components/forms/IPAddressInput";
+import { Loader2, AlertCircle } from "lucide-react";
 
 export interface AllocateIPDialogProps {
   open: boolean;
@@ -32,11 +32,11 @@ export interface AllocateIPDialogProps {
   prefixCIDR?: string;
   ipv6PrefixId?: number;
   ipv6PrefixCIDR?: string;
-  mode?: 'single' | 'dual-stack' | 'bulk';
+  mode?: "single" | "dual-stack" | "bulk";
 }
 
 export interface IPAllocationData {
-  mode: 'single' | 'dual-stack' | 'bulk';
+  mode: "single" | "dual-stack" | "bulk";
   prefixId?: number;
   ipv6PrefixId?: number;
   description?: string;
@@ -53,13 +53,13 @@ export function AllocateIPDialog({
   prefixCIDR,
   ipv6PrefixId,
   ipv6PrefixCIDR,
-  mode = 'single',
+  mode = "single",
 }: AllocateIPDialogProps) {
-  const [activeTab, setActiveTab] = useState<'single' | 'dual-stack' | 'bulk'>(mode);
-  const [description, setDescription] = useState('');
-  const [dnsName, setDnsName] = useState('');
-  const [bulkCount, setBulkCount] = useState('10');
-  const [descriptionPrefix, setDescriptionPrefix] = useState('');
+  const [activeTab, setActiveTab] = useState<"single" | "dual-stack" | "bulk">(mode);
+  const [description, setDescription] = useState("");
+  const [dnsName, setDnsName] = useState("");
+  const [bulkCount, setBulkCount] = useState("10");
+  const [descriptionPrefix, setDescriptionPrefix] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,12 +74,12 @@ export function AllocateIPDialog({
         dnsName: dnsName || undefined,
       };
 
-      if (activeTab === 'single') {
+      if (activeTab === "single") {
         data.prefixId = prefixId;
-      } else if (activeTab === 'dual-stack') {
+      } else if (activeTab === "dual-stack") {
         data.prefixId = prefixId;
         data.ipv6PrefixId = ipv6PrefixId;
-      } else if (activeTab === 'bulk') {
+      } else if (activeTab === "bulk") {
         data.prefixId = prefixId;
         data.count = parseInt(bulkCount, 10);
         data.descriptionPrefix = descriptionPrefix;
@@ -88,33 +88,31 @@ export function AllocateIPDialog({
       await onAllocate(data);
       handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to allocate IP');
+      setError(err instanceof Error ? err.message : "Failed to allocate IP");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleClose = () => {
-    setDescription('');
-    setDnsName('');
-    setBulkCount('10');
-    setDescriptionPrefix('');
+    setDescription("");
+    setDnsName("");
+    setBulkCount("10");
+    setDescriptionPrefix("");
     setError(null);
     onClose();
   };
 
   const canSubmit =
-    (activeTab === 'bulk' && parseInt(bulkCount, 10) > 0 && parseInt(bulkCount, 10) <= 100) ||
-    activeTab !== 'bulk';
+    (activeTab === "bulk" && parseInt(bulkCount, 10) > 0 && parseInt(bulkCount, 10) <= 100) ||
+    activeTab !== "bulk";
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Allocate IP Address</DialogTitle>
-          <DialogDescription>
-            Allocate IP addresses from your prefixes
-          </DialogDescription>
+          <DialogDescription>Allocate IP addresses from your prefixes</DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
@@ -154,9 +152,7 @@ export function AllocateIPDialog({
                 value={dnsName}
                 onChange={(e) => setDnsName(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">
-                FQDN for reverse DNS lookup
-              </p>
+              <p className="text-xs text-muted-foreground">FQDN for reverse DNS lookup</p>
             </div>
           </TabsContent>
 
@@ -228,9 +224,7 @@ export function AllocateIPDialog({
                 value={bulkCount}
                 onChange={(e) => setBulkCount(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground">
-                Maximum 100 IPs per allocation
-              </p>
+              <p className="text-xs text-muted-foreground">Maximum 100 IPs per allocation</p>
             </div>
 
             <div className="space-y-2">
@@ -242,7 +236,8 @@ export function AllocateIPDialog({
                 onChange={(e) => setDescriptionPrefix(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Will be numbered: {descriptionPrefix || 'Server'}-1, {descriptionPrefix || 'Server'}-2, etc.
+                Will be numbered: {descriptionPrefix || "Server"}-1, {descriptionPrefix || "Server"}
+                -2, etc.
               </p>
             </div>
 

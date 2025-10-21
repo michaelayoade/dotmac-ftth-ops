@@ -2,12 +2,12 @@
  * Secure authentication store using Zustand with enhanced security
  */
 
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
-import type { User } from '../types';
-import { csrfProtection } from '../utils/csrfProtection';
-import { secureStorage } from '../utils/secureStorage';
+import type { User } from "../types";
+import { csrfProtection } from "../utils/csrfProtection";
+import { secureStorage } from "../utils/secureStorage";
 
 interface AuthState {
   user: User | null;
@@ -23,7 +23,7 @@ interface AuthActions {
     user: User,
     tokens?: TokenPair,
     sessionId?: string,
-    csrfToken?: string
+    csrfToken?: string,
   ) => Promise<void>;
   clearAuth: () => Promise<void>;
   updateUser: (updates: Partial<User>) => void;
@@ -33,7 +33,7 @@ interface AuthActions {
   isSessionValid: () => boolean;
   getValidToken: () => Promise<string | null>;
   refreshTokens: (
-    refreshFn: (token: string) => Promise<{ accessToken: string; refreshToken: string }>
+    refreshFn: (token: string) => Promise<{ accessToken: string; refreshToken: string }>,
   ) => Promise<boolean>;
 }
 
@@ -73,12 +73,12 @@ export const useAuthStore = create<AuthStore>()(
         // Store tokens securely (in practice, would use httpOnly cookies)
         if (tokens) {
           secureStorage.setItem(
-            'auth_tokens',
+            "auth_tokens",
             JSON.stringify({
               accessToken: tokens.accessToken,
               refreshToken: tokens.refreshToken,
               expiresAt: tokens.expiresAt,
-            })
+            }),
           );
         }
 
@@ -102,7 +102,7 @@ export const useAuthStore = create<AuthStore>()(
           csrfProtection.clearToken();
 
           // Clear auth tokens
-          secureStorage.removeItem('auth_tokens');
+          secureStorage.removeItem("auth_tokens");
 
           // Clear all secure storage (non-sensitive data only)
           secureStorage.clear();
@@ -155,7 +155,7 @@ export const useAuthStore = create<AuthStore>()(
 
       getValidToken: async () => {
         try {
-          const tokensData = secureStorage.getItem('auth_tokens');
+          const tokensData = secureStorage.getItem("auth_tokens");
           if (!tokensData) return null;
 
           const tokens = JSON.parse(tokensData);
@@ -174,7 +174,7 @@ export const useAuthStore = create<AuthStore>()(
 
       refreshTokens: async (refreshFn) => {
         try {
-          const tokensData = secureStorage.getItem('auth_tokens');
+          const tokensData = secureStorage.getItem("auth_tokens");
           if (!tokensData) return false;
 
           const tokens = JSON.parse(tokensData);
@@ -184,12 +184,12 @@ export const useAuthStore = create<AuthStore>()(
 
           // Store new tokens
           secureStorage.setItem(
-            'auth_tokens',
+            "auth_tokens",
             JSON.stringify({
               accessToken: newTokens.accessToken,
               refreshToken: newTokens.refreshToken,
               expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutes
-            })
+            }),
           );
 
           set({ lastActivity: Date.now() });
@@ -200,7 +200,7 @@ export const useAuthStore = create<AuthStore>()(
       },
     }),
     {
-      name: 'dotmac-session-state',
+      name: "dotmac-session-state",
       storage: createJSONStorage(() => {
         // Use secure storage wrapper
         return {
@@ -231,6 +231,6 @@ export const useAuthStore = create<AuthStore>()(
           state.clearAuth?.();
         }
       },
-    }
-  )
+    },
+  ),
 );

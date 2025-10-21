@@ -5,7 +5,7 @@
  * Maps to backend schemas in src/dotmac/platform/genieacs/
  */
 
-import { DateString } from './common';
+import { DateString } from "./common";
 
 // ============================================================================
 // Device Types
@@ -185,7 +185,7 @@ export interface MassConfigRequest {
 
 export interface MassConfigResult {
   device_id: string;
-  status: 'success' | 'failed' | 'pending' | 'in_progress' | 'skipped';
+  status: "success" | "failed" | "pending" | "in_progress" | "skipped";
   parameters_changed: Record<string, any>;
   error_message?: string;
   started_at?: DateString;
@@ -201,7 +201,7 @@ export interface MassConfigJob {
   completed_devices: number;
   failed_devices: number;
   pending_devices: number;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  status: "pending" | "running" | "completed" | "failed" | "cancelled";
   dry_run: boolean;
   created_at: DateString;
   started_at?: DateString;
@@ -248,7 +248,7 @@ export interface FirmwareUpgradeSchedule {
   completed_devices: number;
   failed_devices: number;
   pending_devices?: number;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  status: "pending" | "running" | "completed" | "failed" | "cancelled";
   created_at?: DateString;
   started_at?: DateString;
   completed_at?: DateString;
@@ -256,7 +256,7 @@ export interface FirmwareUpgradeSchedule {
 
 export interface FirmwareUpgradeResult {
   device_id: string;
-  status: 'success' | 'failed' | 'pending' | 'in_progress';
+  status: "success" | "failed" | "pending" | "in_progress";
   error_message?: string;
   started_at?: DateString;
   completed_at?: DateString;
@@ -347,14 +347,14 @@ export interface GenieACSHealthResponse {
 // Campaign Types (UI-specific)
 // ============================================================================
 
-export type CampaignType = 'firmware_upgrade' | 'mass_config' | 'reboot' | 'factory_reset';
+export type CampaignType = "firmware_upgrade" | "mass_config" | "reboot" | "factory_reset";
 
 export interface Campaign {
   id: string;
   type: CampaignType;
   name: string;
   description?: string;
-  status: 'draft' | 'scheduled' | 'running' | 'completed' | 'failed' | 'cancelled';
+  status: "draft" | "scheduled" | "running" | "completed" | "failed" | "cancelled";
   device_filter: Record<string, any>;
   total_devices: number;
   completed_devices: number;

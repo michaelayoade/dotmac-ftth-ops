@@ -3,11 +3,11 @@
  * Configures testing environment and mocks
  */
 
-import { vi, beforeEach, afterEach } from 'vitest';
-import '@testing-library/jest-dom';
+import { vi, beforeEach, afterEach } from "vitest";
+import "@testing-library/jest-dom";
 
 // Mock environment for tests
-Object.defineProperty(global, 'localStorage', {
+Object.defineProperty(global, "localStorage", {
   value: {
     getItem: vi.fn(),
     setItem: vi.fn(),
@@ -17,7 +17,7 @@ Object.defineProperty(global, 'localStorage', {
   writable: true,
 });
 
-Object.defineProperty(global, 'sessionStorage', {
+Object.defineProperty(global, "sessionStorage", {
   value: {
     getItem: vi.fn(),
     setItem: vi.fn(),
@@ -28,28 +28,28 @@ Object.defineProperty(global, 'sessionStorage', {
 });
 
 // Mock navigator
-Object.defineProperty(global, 'navigator', {
+Object.defineProperty(global, "navigator", {
   value: {
-    userAgent: 'Mozilla/5.0 (Test Environment) TestBrowser/1.0',
+    userAgent: "Mozilla/5.0 (Test Environment) TestBrowser/1.0",
   },
   writable: true,
 });
 
 // Mock location
-Object.defineProperty(global, 'location', {
+Object.defineProperty(global, "location", {
   value: {
-    protocol: 'http:',
-    hostname: 'localhost',
-    port: '3000',
-    pathname: '/',
-    search: '',
-    hash: '',
+    protocol: "http:",
+    hostname: "localhost",
+    port: "3000",
+    pathname: "/",
+    search: "",
+    hash: "",
   },
   writable: true,
 });
 
 // Mock window
-Object.defineProperty(global, 'window', {
+Object.defineProperty(global, "window", {
   value: {
     location: global.location,
     navigator: global.navigator,
@@ -60,7 +60,7 @@ Object.defineProperty(global, 'window', {
 });
 
 // Mock crypto for secure random generation
-Object.defineProperty(global, 'crypto', {
+Object.defineProperty(global, "crypto", {
   value: {
     randomUUID: () => `test-uuid-${Date.now()}-${Math.random()}`,
     getRandomValues: (arr: Uint8Array) => {
@@ -77,10 +77,10 @@ Object.defineProperty(global, 'crypto', {
 global.fetch = vi.fn();
 
 // Mock Intl for timezone detection
-Object.defineProperty(global, 'Intl', {
+Object.defineProperty(global, "Intl", {
   value: {
     DateTimeFormat: vi.fn(() => ({
-      resolvedOptions: () => ({ timeZone: 'America/New_York' }),
+      resolvedOptions: () => ({ timeZone: "America/New_York" }),
     })),
   },
   writable: true,

@@ -41,14 +41,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import {
-  Download,
-  FileText,
-  Filter,
-  MoreHorizontal,
-  Trash2,
-  X
-} from "lucide-react";
+import { Download, FileText, Filter, MoreHorizontal, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -157,11 +150,7 @@ export interface EnhancedDataTableProps<TData, TValue> {
 /**
  * Export table data to CSV
  */
-function exportToCSV<TData>(
-  data: TData[],
-  columns: (keyof TData)[],
-  filename: string
-): void {
+function exportToCSV<TData>(data: TData[], columns: (keyof TData)[], filename: string): void {
   if (data.length === 0) return;
 
   // Create CSV header
@@ -176,7 +165,7 @@ function exportToCSV<TData>(
         const stringValue = String(value ?? "");
         return stringValue.includes(",") ? `"${stringValue}"` : stringValue;
       })
-      .join(",")
+      .join(","),
   );
 
   // Combine and create blob
@@ -263,7 +252,7 @@ export function EnhancedDataTable<TData, TValue>({
   const [showFilters, setShowFilters] = React.useState(false);
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [activeQuickFilters, setActiveQuickFilters] = React.useState<string[]>(() =>
-    quickFilters.filter((filter) => filter.defaultActive).map((filter) => filter.label)
+    quickFilters.filter((filter) => filter.defaultActive).map((filter) => filter.label),
   );
 
   React.useEffect(() => {
@@ -300,7 +289,7 @@ export function EnhancedDataTable<TData, TValue>({
       Array.from(activeSet).every((label) => {
         const definition = quickFilters.find((filter) => filter.label === label);
         return definition ? definition.filter(item) : true;
-      })
+      }),
     );
   }, [data, quickFilters, activeQuickFilters]);
 
@@ -313,14 +302,18 @@ export function EnhancedDataTable<TData, TValue>({
 
   const globalFilterFn = React.useCallback(
     (row: Row<TData>, _columnId: string, filterValue: string) => {
-      const searchTerm = String(filterValue ?? "").trim().toLowerCase();
+      const searchTerm = String(filterValue ?? "")
+        .trim()
+        .toLowerCase();
       if (!searchTerm) return true;
 
       const fields = searchFields.length > 0 ? searchFields : [];
       if (fields.length === 0) {
-        return row
-          .getVisibleCells()
-          .some((cell) => String(cell.getValue() ?? "").toLowerCase().includes(searchTerm));
+        return row.getVisibleCells().some((cell) =>
+          String(cell.getValue() ?? "")
+            .toLowerCase()
+            .includes(searchTerm),
+        );
       }
 
       return fields.some((field) => {
@@ -329,7 +322,7 @@ export function EnhancedDataTable<TData, TValue>({
         return String(value).toLowerCase().includes(searchTerm);
       });
     },
-    [searchFields]
+    [searchFields],
   );
 
   const table = useReactTable({
@@ -345,9 +338,7 @@ export function EnhancedDataTable<TData, TValue>({
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: enableSearch ? globalFilterFn : undefined,
-    getRowId: getRowId
-      ? (originalRow, index) => String(getRowId(originalRow, index))
-      : undefined,
+    getRowId: getRowId ? (originalRow, index) => String(getRowId(originalRow, index)) : undefined,
     state: {
       sorting,
       columnFilters,
@@ -387,7 +378,7 @@ export function EnhancedDataTable<TData, TValue>({
       await action.action(selectedRows);
       table.resetRowSelection();
     },
-    [selectedRows, table]
+    [selectedRows, table],
   );
 
   const toggleQuickFilter = React.useCallback(
@@ -395,13 +386,13 @@ export function EnhancedDataTable<TData, TValue>({
       setActiveQuickFilters((previous) =>
         previous.includes(label)
           ? previous.filter((value) => value !== label)
-          : [...previous, label]
+          : [...previous, label],
       );
       if (isPaginated) {
         table.setPageIndex(0);
       }
     },
-    [table, isPaginated]
+    [table, isPaginated],
   );
 
   const hasToolbarContent =
@@ -424,181 +415,178 @@ export function EnhancedDataTable<TData, TValue>({
 
       {showToolbar && (
         <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-2 flex-1">
-            {enableSearch && (
-              <Input
-                placeholder={searchInputPlaceholder}
-                value={globalFilter}
-                onChange={(event) => setGlobalFilter(event.target.value)}
-                className="max-w-sm"
-                aria-label="Search table"
-              />
-            )}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-2 flex-1">
+              {enableSearch && (
+                <Input
+                  placeholder={searchInputPlaceholder}
+                  value={globalFilter}
+                  onChange={(event) => setGlobalFilter(event.target.value)}
+                  className="max-w-sm"
+                  aria-label="Search table"
+                />
+              )}
 
-            {filterable && filters.length > 0 && (
-              <Button
-                variant={showFilters ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-                aria-label="Toggle filters"
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {toolbarActions}
-
-            {exportable && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExport}
-                disabled={filteredData.length === 0}
-                aria-label="Export data"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
-            )}
-
-            {columnVisibility && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    Columns
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-card">
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                      >
-                        {column.id}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
-            {selectable && bulkActions.length > 0 && selectedRows.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    Actions ({selectedRows.length})
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-card">
-                  <DropdownMenuLabel>Bulk Actions</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {bulkActions.map((action, index) => {
-                    const Icon = action.icon;
-                    const isDisabled = action.disabled?.(selectedRows) ?? false;
-
-                    return (
-                      <DropdownMenuItem
-                        key={index}
-                        onClick={() => handleBulkAction(action)}
-                        disabled={isDisabled}
-                        className={cn(
-                          action.variant === "destructive" && "text-destructive focus:text-destructive"
-                        )}
-                      >
-                        {Icon && <Icon className="h-4 w-4 mr-2" />}
-                        {action.label}
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-        </div>
-
-        {quickFilters.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            {quickFilters.map((filter) => {
-              const isActive = activeQuickFilters.includes(filter.label);
-              const Icon = filter.icon;
-              return (
+              {filterable && filters.length > 0 && (
                 <Button
-                  key={filter.label}
+                  variant={showFilters ? "default" : "outline"}
                   size="sm"
-                  variant={isActive ? "default" : "outline"}
-                  onClick={() => toggleQuickFilter(filter.label)}
-                  className="gap-2"
+                  onClick={() => setShowFilters(!showFilters)}
+                  aria-label="Toggle filters"
                 >
-                  {Icon && <Icon className="h-4 w-4" />}
-                  {filter.label}
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filters
                 </Button>
-              );
-            })}
-            {activeQuickFilters.length > 0 && (
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {toolbarActions}
+
+              {exportable && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExport}
+                  disabled={filteredData.length === 0}
+                  aria-label="Export data"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              )}
+
+              {columnVisibility && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      Columns
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-card">
+                    {table
+                      .getAllColumns()
+                      .filter((column) => column.getCanHide())
+                      .map((column) => (
+                        <DropdownMenuCheckboxItem
+                          key={column.id}
+                          className="capitalize"
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                        >
+                          {column.id}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              {selectable && bulkActions.length > 0 && selectedRows.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      Actions ({selectedRows.length})
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-card">
+                    <DropdownMenuLabel>Bulk Actions</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {bulkActions.map((action, index) => {
+                      const Icon = action.icon;
+                      const isDisabled = action.disabled?.(selectedRows) ?? false;
+
+                      return (
+                        <DropdownMenuItem
+                          key={index}
+                          onClick={() => handleBulkAction(action)}
+                          disabled={isDisabled}
+                          className={cn(
+                            action.variant === "destructive" &&
+                              "text-destructive focus:text-destructive",
+                          )}
+                        >
+                          {Icon && <Icon className="h-4 w-4 mr-2" />}
+                          {action.label}
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
+
+          {quickFilters.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              {quickFilters.map((filter) => {
+                const isActive = activeQuickFilters.includes(filter.label);
+                const Icon = filter.icon;
+                return (
+                  <Button
+                    key={filter.label}
+                    size="sm"
+                    variant={isActive ? "default" : "outline"}
+                    onClick={() => toggleQuickFilter(filter.label)}
+                    className="gap-2"
+                  >
+                    {Icon && <Icon className="h-4 w-4" />}
+                    {filter.label}
+                  </Button>
+                );
+              })}
+              {activeQuickFilters.length > 0 && (
+                <Button size="sm" variant="ghost" onClick={() => setActiveQuickFilters([])}>
+                  Clear filters
+                </Button>
+              )}
+            </div>
+          )}
+
+          {filterable && showFilters && filters.length > 0 && (
+            <div className="flex items-center gap-4 p-4 border border-border rounded-md bg-muted/50">
+              {filters.map((filter) => (
+                <div key={filter.column} className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-muted-foreground">
+                    {filter.label}
+                  </label>
+                  {filter.type === "select" && filter.options ? (
+                    <select
+                      value={(table.getColumn(filter.column)?.getFilterValue() as string) ?? ""}
+                      onChange={(e) =>
+                        table.getColumn(filter.column)?.setFilterValue(e.target.value || undefined)
+                      }
+                      className="h-8 rounded-md border border-input bg-card px-3 text-sm"
+                    >
+                      <option value="">All</option>
+                      {filter.options.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <Input
+                      type={filter.type}
+                      value={(table.getColumn(filter.column)?.getFilterValue() as string) ?? ""}
+                      onChange={(e) =>
+                        table.getColumn(filter.column)?.setFilterValue(e.target.value || undefined)
+                      }
+                      className="h-8 w-40"
+                    />
+                  )}
+                </div>
+              ))}
               <Button
-                size="sm"
                 variant="ghost"
-                onClick={() => setActiveQuickFilters([])}
+                size="sm"
+                onClick={() => table.resetColumnFilters()}
+                className="mt-6"
               >
                 Clear filters
               </Button>
-            )}
-          </div>
-        )}
-
-        {filterable && showFilters && filters.length > 0 && (
-          <div className="flex items-center gap-4 p-4 border border-border rounded-md bg-muted/50">
-            {filters.map((filter) => (
-              <div key={filter.column} className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  {filter.label}
-                </label>
-                {filter.type === "select" && filter.options ? (
-                  <select
-                    value={(table.getColumn(filter.column)?.getFilterValue() as string) ?? ""}
-                    onChange={(e) =>
-                      table.getColumn(filter.column)?.setFilterValue(e.target.value || undefined)
-                    }
-                    className="h-8 rounded-md border border-input bg-card px-3 text-sm"
-                  >
-                    <option value="">All</option>
-                    {filter.options.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <Input
-                    type={filter.type}
-                    value={(table.getColumn(filter.column)?.getFilterValue() as string) ?? ""}
-                    onChange={(e) =>
-                      table.getColumn(filter.column)?.setFilterValue(e.target.value || undefined)
-                    }
-                    className="h-8 w-40"
-                  />
-                )}
-              </div>
-            ))}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => table.resetColumnFilters()}
-              className="mt-6"
-            >
-              Clear filters
-            </Button>
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
       )}
 
       <div className="rounded-md border border-border bg-card">

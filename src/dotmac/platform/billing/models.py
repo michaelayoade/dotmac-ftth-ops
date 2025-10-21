@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import Field
-from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Numeric, String, Text
+from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from dotmac.platform.billing.core.models import (
@@ -61,7 +61,7 @@ class BillingProductTable(BillingSQLModel):
     __tablename__ = "billing_products"
 
     # Primary key
-    product_id = Column(String(50), primary_key=True)
+    product_id: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
 
     # Product identification
     sku = Column(String(100), nullable=False)
@@ -92,6 +92,8 @@ class BillingProductTable(BillingSQLModel):
         Index("ix_billing_products_tenant_category", "tenant_id", "category"),
         Index("ix_billing_products_tenant_type", "tenant_id", "product_type"),
         Index("ix_billing_products_tenant_active", "tenant_id", "is_active"),
+        UniqueConstraint("product_id", name="uq_billing_products_product_id"),
+        UniqueConstraint("tenant_id", "product_id", name="uq_billing_products_tenant_product"),
         {"extend_existing": True},
     )
 

@@ -4,9 +4,9 @@
  * Provides standardized audit setup with minimal configuration
  */
 
-import React from 'react';
-import { AuditProvider } from './AuditProvider';
-import { useAuditInterceptor } from '../hooks/useAuditInterceptor';
+import React from "react";
+import { AuditProvider } from "./AuditProvider";
+import { useAuditInterceptor } from "../hooks/useAuditInterceptor";
 
 interface AuditWrapperContentProps {
   children: React.ReactNode;
@@ -46,13 +46,13 @@ export function AuditIntegrationWrapper({
   batchSize = 10,
   batchTimeout = 5000,
   enableLocalStorage = true,
-  enableConsoleLogging = process.env.NODE_ENV === 'development',
+  enableConsoleLogging = process.env.NODE_ENV === "development",
   interceptFetch = true,
   interceptClicks = true,
   interceptForms = true,
   interceptNavigation = true,
   excludeUrls = [/\/audit\//, /\/health/, /\/metrics/, /\/_next\//, /\/api\/auth\//],
-  excludeElements = ['.no-audit', '[data-no-audit]', '.audit-ignore'],
+  excludeElements = [".no-audit", "[data-no-audit]", ".audit-ignore"],
 }: AuditIntegrationWrapperProps) {
   if (!enabled) {
     return <>{children}</>;
@@ -84,14 +84,14 @@ export function AuditIntegrationWrapper({
 // Preset configurations for different app types
 export const AuditPresets = {
   customerPortal: {
-    serviceName: 'customer-portal',
+    serviceName: "customer-portal",
     batchSize: 15,
     batchTimeout: 3000,
-    excludeElements: ['.no-audit', '[data-no-audit]', '.customer-pii'],
+    excludeElements: [".no-audit", "[data-no-audit]", ".customer-pii"],
   },
 
   adminPortal: {
-    serviceName: 'admin-portal',
+    serviceName: "admin-portal",
     batchSize: 5,
     batchTimeout: 2000,
     interceptClicks: true,
@@ -99,21 +99,21 @@ export const AuditPresets = {
   },
 
   technicianApp: {
-    serviceName: 'technician-mobile',
+    serviceName: "technician-mobile",
     batchSize: 20,
     batchTimeout: 10000, // Longer timeout for mobile/offline scenarios
     enableLocalStorage: true,
   },
 
   resellerPortal: {
-    serviceName: 'reseller-portal',
+    serviceName: "reseller-portal",
     batchSize: 8,
     batchTimeout: 4000,
     excludeUrls: [/\/audit\//, /\/partner\//, /\/commission\//],
   },
 
   managementPortal: {
-    serviceName: 'management-portal',
+    serviceName: "management-portal",
     batchSize: 5,
     batchTimeout: 1000, // Fastest for management actions
     interceptNavigation: true,

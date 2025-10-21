@@ -6,8 +6,8 @@ Subscription-tier and feature-group based licensing for multi-tenant ISP platfor
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
-from uuid import uuid4
+from typing import Any, cast
+from uuid import UUID, uuid4
 
 from sqlalchemy import (
     JSON,
@@ -19,6 +19,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    UUID as SQLUUID,
 )
 from sqlalchemy import (
     Enum as SQLEnum,
@@ -134,7 +135,7 @@ class SubscriptionPlan(BaseModel):
     __tablename__ = "subscription_plans"
 
     # Primary key
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[UUID] = mapped_column(SQLUUID(as_uuid=True), primary_key=True, insert_default=lambda: uuid4())
 
     # Plan details
     plan_name: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
@@ -156,7 +157,7 @@ class SubscriptionPlan(BaseModel):
     is_public: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     # Metadata
-    metadata: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    custom_metadata: Mapped[dict[str, Any]] = mapped_column("metadata", JSON, nullable=False, default=dict)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
@@ -190,11 +191,14 @@ class PlanFeature(BaseModel):
     __tablename__ = "plan_features"
 
     # Primary key
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[UUID] = mapped_column(SQLUUID(as_uuid=True), primary_key=True, insert_default=lambda: uuid4())
 
     # Plan relationship
-    plan_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("subscription_plans.id", ondelete="CASCADE"), nullable=False, index=True
+    plan_id: Mapped[UUID] = mapped_column(
+        SQLUUID(as_uuid=True),
+        ForeignKey("subscription_plans.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Feature details
@@ -228,11 +232,14 @@ class PlanQuota(BaseModel):
     __tablename__ = "plan_quotas"
 
     # Primary key
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[UUID] = mapped_column(SQLUUID(as_uuid=True), primary_key=True, insert_default=lambda: uuid4())
 
     # Plan relationship
-    plan_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("subscription_plans.id", ondelete="CASCADE"), nullable=False, index=True
+    plan_id: Mapped[UUID] = mapped_column(
+        SQLUUID(as_uuid=True),
+        ForeignKey("subscription_plans.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Quota details
@@ -264,14 +271,14 @@ class TenantSubscription(BaseModel):
     __tablename__ = "tenant_subscriptions"
 
     # Primary key
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[UUID] = mapped_column(SQLUUID(as_uuid=True), primary_key=True, insert_default=lambda: uuid4())
 
     # Tenant
     tenant_id: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, index=True)
 
     # Plan relationship
-    plan_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("subscription_plans.id"), nullable=False, index=True
+    plan_id: Mapped[UUID] = mapped_column(
+        SQLUUID(as_uuid=True), ForeignKey("subscription_plans.id"), nullable=False, index=True
     )
 
     # Subscription details
@@ -302,7 +309,7 @@ class TenantSubscription(BaseModel):
     paypal_subscription_id: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
 
     # Metadata
-    metadata: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    custom_metadata: Mapped[dict[str, Any]] = mapped_column("metadata", JSON, nullable=False, default=dict)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
@@ -337,11 +344,14 @@ class TenantFeatureOverride(BaseModel):
     __tablename__ = "tenant_feature_overrides"
 
     # Primary key
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[UUID] = mapped_column(SQLUUID(as_uuid=True), primary_key=True, insert_default=lambda: uuid4())
 
     # Subscription relationship
-    subscription_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("tenant_subscriptions.id", ondelete="CASCADE"), nullable=False, index=True
+    subscription_id: Mapped[UUID] = mapped_column(
+        SQLUUID(as_uuid=True),
+        ForeignKey("tenant_subscriptions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Feature details
@@ -387,11 +397,14 @@ class TenantQuotaUsage(BaseModel):
     __tablename__ = "tenant_quota_usage"
 
     # Primary key
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[UUID] = mapped_column(SQLUUID(as_uuid=True), primary_key=True, insert_default=lambda: uuid4())
 
     # Subscription relationship
-    subscription_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("tenant_subscriptions.id", ondelete="CASCADE"), nullable=False, index=True
+    subscription_id: Mapped[UUID] = mapped_column(
+        SQLUUID(as_uuid=True),
+        ForeignKey("tenant_subscriptions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Quota details
@@ -434,7 +447,7 @@ class FeatureUsageLog(BaseModel):
     __tablename__ = "feature_usage_logs"
 
     # Primary key
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[UUID] = mapped_column(SQLUUID(as_uuid=True), primary_key=True, insert_default=lambda: uuid4())
 
     # Tenant
     tenant_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
@@ -454,7 +467,7 @@ class FeatureUsageLog(BaseModel):
     resource_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Metadata
-    metadata: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    custom_metadata: Mapped[dict[str, Any]] = mapped_column("metadata", JSON, nullable=False, default=dict)
 
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(
@@ -474,11 +487,11 @@ class SubscriptionEvent(BaseModel):
     __tablename__ = "subscription_events"
 
     # Primary key
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    id: Mapped[UUID] = mapped_column(SQLUUID(as_uuid=True), primary_key=True, insert_default=lambda: uuid4())
 
     # Subscription
-    subscription_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("tenant_subscriptions.id"), nullable=False, index=True
+    subscription_id: Mapped[UUID] = mapped_column(
+        SQLUUID(as_uuid=True), ForeignKey("tenant_subscriptions.id"), nullable=False, index=True
     )
 
     # Event details

@@ -6,35 +6,35 @@
  * with DataLoader batching to prevent N+1 query problems.
  */
 
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import { graphqlClient } from '@/lib/graphql-client';
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import { graphqlClient } from "@/lib/graphql-client";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export enum PaymentStatus {
-  PENDING = 'pending',
-  PROCESSING = 'processing',
-  SUCCEEDED = 'succeeded',
-  FAILED = 'failed',
-  REFUNDED = 'refunded',
-  CANCELLED = 'cancelled',
-  REQUIRES_ACTION = 'requires_action',
-  REQUIRES_CAPTURE = 'requires_capture',
-  REQUIRES_CONFIRMATION = 'requires_confirmation',
+  PENDING = "pending",
+  PROCESSING = "processing",
+  SUCCEEDED = "succeeded",
+  FAILED = "failed",
+  REFUNDED = "refunded",
+  CANCELLED = "cancelled",
+  REQUIRES_ACTION = "requires_action",
+  REQUIRES_CAPTURE = "requires_capture",
+  REQUIRES_CONFIRMATION = "requires_confirmation",
 }
 
 export enum PaymentMethodType {
-  CARD = 'card',
-  BANK_ACCOUNT = 'bank_account',
-  DIGITAL_WALLET = 'digital_wallet',
-  CASH = 'cash',
-  CHECK = 'check',
-  WIRE_TRANSFER = 'wire_transfer',
-  ACH = 'ach',
-  CRYPTO = 'crypto',
-  OTHER = 'other',
+  CARD = "card",
+  BANK_ACCOUNT = "bank_account",
+  DIGITAL_WALLET = "digital_wallet",
+  CASH = "cash",
+  CHECK = "check",
+  WIRE_TRANSFER = "wire_transfer",
+  ACH = "ach",
+  CRYPTO = "crypto",
+  OTHER = "other",
 }
 
 export interface PaymentCustomer {
@@ -249,12 +249,12 @@ export function usePayment(
     includeCustomer?: boolean;
     includeInvoice?: boolean;
     enabled?: boolean;
-  } = {}
+  } = {},
 ): UseQueryResult<Payment, Error> {
   const { includeCustomer = true, includeInvoice = true, enabled = true } = options;
 
   return useQuery({
-    queryKey: ['payment', paymentId, includeCustomer, includeInvoice],
+    queryKey: ["payment", paymentId, includeCustomer, includeInvoice],
     queryFn: async () => {
       const response = await graphqlClient.request<{ payment: Payment }>(GET_PAYMENT_QUERY, {
         id: paymentId,
@@ -279,7 +279,7 @@ export function usePayment(
  */
 export function usePayments(
   filters: PaymentFilters = {},
-  enabled = true
+  enabled = true,
 ): UseQueryResult<PaymentConnection, Error> {
   const {
     limit = 50,
@@ -293,21 +293,20 @@ export function usePayments(
   } = filters;
 
   return useQuery({
-    queryKey: ['payments', filters],
+    queryKey: ["payments", filters],
     queryFn: async () => {
-      const response = await graphqlClient.request<{ payments: PaymentConnection }>(
-        GET_PAYMENTS_QUERY,
-        {
-          limit,
-          offset,
-          status,
-          customerId,
-          dateFrom,
-          dateTo,
-          includeCustomer,
-          includeInvoice,
-        }
-      );
+      const response = await graphqlClient.request<{
+        payments: PaymentConnection;
+      }>(GET_PAYMENTS_QUERY, {
+        limit,
+        offset,
+        status,
+        customerId,
+        dateFrom,
+        dateTo,
+        includeCustomer,
+        includeInvoice,
+      });
       return response.payments;
     },
     enabled,
@@ -328,17 +327,16 @@ export function usePaymentMetrics(
     dateFrom?: string;
     dateTo?: string;
     enabled?: boolean;
-  } = {}
+  } = {},
 ): UseQueryResult<PaymentMetrics, Error> {
   const { dateFrom, dateTo, enabled = true } = options;
 
   return useQuery({
-    queryKey: ['payment-metrics', dateFrom, dateTo],
+    queryKey: ["payment-metrics", dateFrom, dateTo],
     queryFn: async () => {
-      const response = await graphqlClient.request<{ paymentMetrics: PaymentMetrics }>(
-        GET_PAYMENT_METRICS_QUERY,
-        { dateFrom, dateTo }
-      );
+      const response = await graphqlClient.request<{
+        paymentMetrics: PaymentMetrics;
+      }>(GET_PAYMENT_METRICS_QUERY, { dateFrom, dateTo });
       return response.paymentMetrics;
     },
     enabled,
@@ -358,7 +356,7 @@ export function useCustomerPayments(
     status?: PaymentStatus;
     includeInvoice?: boolean;
     enabled?: boolean;
-  } = {}
+  } = {},
 ): UseQueryResult<PaymentConnection, Error> {
   const { limit = 20, offset = 0, status, includeInvoice = true, enabled = true } = options;
 
@@ -371,7 +369,7 @@ export function useCustomerPayments(
       includeCustomer: false, // Already know the customer
       includeInvoice,
     },
-    enabled && !!customerId
+    enabled && !!customerId,
   );
 }
 
@@ -381,7 +379,7 @@ export function useCustomerPayments(
  */
 export function useRecentPayments(
   limit = 10,
-  enabled = true
+  enabled = true,
 ): UseQueryResult<PaymentConnection, Error> {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -394,7 +392,7 @@ export function useRecentPayments(
       includeCustomer: true,
       includeInvoice: false,
     },
-    enabled
+    enabled,
   );
 }
 
@@ -404,7 +402,7 @@ export function useRecentPayments(
  */
 export function useFailedPayments(
   limit = 20,
-  enabled = true
+  enabled = true,
 ): UseQueryResult<PaymentConnection, Error> {
   return usePayments(
     {
@@ -414,6 +412,6 @@ export function useFailedPayments(
       includeCustomer: true,
       includeInvoice: true,
     },
-    enabled
+    enabled,
   );
 }

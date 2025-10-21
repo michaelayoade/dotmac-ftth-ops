@@ -3,7 +3,7 @@
  * Handles secure, validated commission calculations with audit trails
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // Commission Tier Configuration
 export interface CommissionTier {
@@ -18,8 +18,8 @@ export interface CommissionTier {
 // Default commission tiers
 export const DEFAULT_COMMISSION_TIERS: CommissionTier[] = [
   {
-    id: 'bronze',
-    name: 'Bronze Partner',
+    id: "bronze",
+    name: "Bronze Partner",
     minimumRevenue: 0,
     baseRate: 0.05, // 5%
     productMultipliers: {
@@ -30,8 +30,8 @@ export const DEFAULT_COMMISSION_TIERS: CommissionTier[] = [
     },
   },
   {
-    id: 'silver',
-    name: 'Silver Partner',
+    id: "silver",
+    name: "Silver Partner",
     minimumRevenue: 50000,
     baseRate: 0.07, // 7%
     bonusRate: 0.01, // 1% bonus
@@ -43,8 +43,8 @@ export const DEFAULT_COMMISSION_TIERS: CommissionTier[] = [
     },
   },
   {
-    id: 'gold',
-    name: 'Gold Partner',
+    id: "gold",
+    name: "Gold Partner",
     minimumRevenue: 150000,
     baseRate: 0.1, // 10%
     bonusRate: 0.02, // 2% bonus
@@ -56,8 +56,8 @@ export const DEFAULT_COMMISSION_TIERS: CommissionTier[] = [
     },
   },
   {
-    id: 'platinum',
-    name: 'Platinum Partner',
+    id: "platinum",
+    name: "Platinum Partner",
     minimumRevenue: 500000,
     baseRate: 0.12, // 12%
     bonusRate: 0.03, // 3% bonus
@@ -74,8 +74,8 @@ export const DEFAULT_COMMISSION_TIERS: CommissionTier[] = [
 const CommissionCalculationInputSchema = z.object({
   customerId: z.string().min(1),
   partnerId: z.string().min(1),
-  partnerTier: z.enum(['bronze', 'silver', 'gold', 'platinum']),
-  productType: z.enum(['residential_basic', 'residential_premium', 'business_pro', 'enterprise']),
+  partnerTier: z.enum(["bronze", "silver", "gold", "platinum"]),
+  productType: z.enum(["residential_basic", "residential_premium", "business_pro", "enterprise"]),
   monthlyRevenue: z.number().min(0),
   partnerLifetimeRevenue: z.number().min(0),
   isNewCustomer: z.boolean(),
@@ -177,7 +177,7 @@ export class CommissionEngine {
 
     const baseCommission = baseAmount * tierMultiplier * productMultiplier;
     this.addAudit(
-      `Base commission: $${baseAmount} × ${tierMultiplier} × ${productMultiplier} = $${baseCommission.toFixed(2)}`
+      `Base commission: $${baseAmount} × ${tierMultiplier} × ${productMultiplier} = $${baseCommission.toFixed(2)}`,
     );
 
     // Calculate bonuses
@@ -187,12 +187,12 @@ export class CommissionEngine {
 
     const contractLengthBonus = this.calculateContractLengthBonus(
       validatedInput.contractLength,
-      baseCommission
+      baseCommission,
     );
 
     const territoryBonus = this.calculateTerritoryBonus(
       validatedInput.territoryBonus,
-      baseCommission
+      baseCommission,
     );
 
     this.addAudit(`New customer bonus: $${newCustomerBonus.toFixed(2)}`);
@@ -206,7 +206,7 @@ export class CommissionEngine {
     // Apply promotional adjustment
     const promotionalAdjustment = this.applyPromotionalAdjustment(
       validatedInput.promotionalRate,
-      prePromotionalTotal
+      prePromotionalTotal,
     );
 
     const totalCommission = promotionalAdjustment;
@@ -214,7 +214,7 @@ export class CommissionEngine {
     const effectiveRate = totalCommission / validatedInput.monthlyRevenue;
 
     this.addAudit(
-      `Final commission: $${totalCommission.toFixed(2)} (${(effectiveRate * 100).toFixed(2)}% effective rate)`
+      `Final commission: $${totalCommission.toFixed(2)} (${(effectiveRate * 100).toFixed(2)}% effective rate)`,
     );
 
     // Security check: Ensure commission doesn't exceed reasonable limits
@@ -259,7 +259,7 @@ export class CommissionEngine {
       } catch (error) {
         errors.push({
           index: i,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }
@@ -302,7 +302,7 @@ export class CommissionEngine {
   simulateCommission(
     baseRevenue: number,
     targetTier: string,
-    productMix: Record<string, number>
+    productMix: Record<string, number>,
   ): { projectedCommissions: number; revenueNeeded: number } {
     const tier = this.getTier(targetTier);
     let totalCommissions = 0;

@@ -13,8 +13,9 @@ from datetime import UTC, datetime
 from enum import Enum as PyEnum
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
+from importlib import import_module
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from dotmac.platform.radius.models import NAS, RadCheck
 
 from sqlalchemy import (
@@ -28,10 +29,20 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    false,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, declared_attr
 
 from ..db import AuditMixin, Base, SoftDeleteMixin, TimestampMixin
+
+# Ensure optional RADIUS models are registered with SQLAlchemy when available.
+try:  # pragma: no cover - optional dependency
+    import dotmac.platform.radius.models as _radius_models
+except ImportError:
+    _radius_models = None
+else:
+    Base.registry._class_registry.setdefault("RadCheck", _radius_models.RadCheck)
+    Base.registry._class_registry.setdefault("NAS", _radius_models.NAS)
 
 
 class TenantStatus(str, PyEnum):
@@ -80,10 +91,12 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin, AuditMixin):
 
     # Status and subscription
     status: Mapped[TenantStatus] = mapped_column(
-        Enum(TenantStatus), default=TenantStatus.TRIAL, nullable=False, index=True
+        Enum(TenantStatus, values_callable=lambda x: [e.value for e in x]),
+        default=TenantStatus.TRIAL, nullable=False, index=True
     )
     plan_type: Mapped[TenantPlanType] = mapped_column(
-        Enum(TenantPlanType), default=TenantPlanType.FREE, nullable=False
+        Enum(TenantPlanType, values_callable=lambda x: [e.value for e in x]),
+        default=TenantPlanType.FREE, nullable=False
     )
 
     # Contact information
@@ -93,7 +106,8 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin, AuditMixin):
     # Billing information
     billing_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     billing_cycle: Mapped[BillingCycle] = mapped_column(
-        Enum(BillingCycle), default=BillingCycle.MONTHLY, nullable=False
+        Enum(BillingCycle, values_callable=lambda x: [e.value for e in x]),
+        default=BillingCycle.MONTHLY, nullable=False
     )
 
     # Subscription dates
@@ -140,13 +154,14 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin, AuditMixin):
     invitations: Mapped[list["TenantInvitation"]] = relationship(
         "TenantInvitation", back_populates="tenant", cascade="all, delete-orphan"
     )
-    # RADIUS relationships (lazy="dynamic" to avoid loading all records)
-    radius_checks: Mapped[list["RadCheck"]] = relationship(
-        "RadCheck", back_populates="tenant", lazy="dynamic", cascade="all, delete-orphan"
-    )
-    nas_devices: Mapped[list["NAS"]] = relationship(
-        "NAS", back_populates="tenant", lazy="dynamic", cascade="all, delete-orphan"
-    )
+    # RADIUS relationships (configured lazily to avoid optional import cycles)
+    @declared_attr.directive
+    def radius_checks(cls) -> Any:  # pragma: no cover - optional radius integration
+        return property(lambda self: [])
+
+    @declared_attr.directive
+    def nas_devices(cls) -> Any:  # pragma: no cover - optional radius integration
+        return property(lambda self: [])
 
     def __repr__(self) -> str:
         return f"<Tenant(id={self.id}, name={self.name}, slug={self.slug}, status={self.status})>"

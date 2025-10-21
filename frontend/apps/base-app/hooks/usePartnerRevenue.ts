@@ -2,7 +2,7 @@
  * React Query hooks for partner revenue management
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 import {
   partnerRevenueService,
   type PartnerRevenueMetrics,
@@ -11,7 +11,7 @@ import {
   type RevenueMetricsFilters,
   type CommissionFilters,
   type PayoutFilters,
-} from '@/lib/services/partner-revenue-service';
+} from "@/lib/services/partner-revenue-service";
 
 // ============================================
 // Revenue Metrics Hooks
@@ -25,7 +25,7 @@ import {
  */
 export function useRevenueMetrics(filters: RevenueMetricsFilters = {}) {
   return useQuery<PartnerRevenueMetrics, Error>({
-    queryKey: ['partner-revenue-metrics', filters],
+    queryKey: ["partner-revenue-metrics", filters],
     queryFn: () => partnerRevenueService.getRevenueMetrics(filters),
     staleTime: 60000, // 1 minute
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -44,7 +44,7 @@ export function useRevenueMetrics(filters: RevenueMetricsFilters = {}) {
  */
 export function useCommissionEvents(filters: CommissionFilters = {}) {
   return useQuery<PartnerCommissionEvent[], Error>({
-    queryKey: ['partner-commissions', filters],
+    queryKey: ["partner-commissions", filters],
     queryFn: () => partnerRevenueService.listCommissionEvents(filters),
     staleTime: 30000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -59,7 +59,7 @@ export function useCommissionEvents(filters: CommissionFilters = {}) {
  */
 export function useCommissionEvent(commissionId: string | null) {
   return useQuery<PartnerCommissionEvent, Error>({
-    queryKey: ['partner-commission', commissionId],
+    queryKey: ["partner-commission", commissionId],
     queryFn: () => partnerRevenueService.getCommissionEvent(commissionId!),
     enabled: !!commissionId,
     staleTime: 30000,
@@ -79,7 +79,7 @@ export function useCommissionEvent(commissionId: string | null) {
  */
 export function usePayouts(filters: PayoutFilters = {}) {
   return useQuery<PartnerPayout[], Error>({
-    queryKey: ['partner-payouts', filters],
+    queryKey: ["partner-payouts", filters],
     queryFn: () => partnerRevenueService.listPayouts(filters),
     staleTime: 30000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
@@ -94,7 +94,7 @@ export function usePayouts(filters: PayoutFilters = {}) {
  */
 export function usePayout(payoutId: string | null) {
   return useQuery<PartnerPayout, Error>({
-    queryKey: ['partner-payout', payoutId],
+    queryKey: ["partner-payout", payoutId],
     queryFn: () => partnerRevenueService.getPayout(payoutId!),
     enabled: !!payoutId,
     staleTime: 30000,
@@ -116,7 +116,7 @@ export function useCommissionCalculator() {
     return partnerRevenueService.calculateCommission(baseAmount, rate);
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
+  const formatCurrency = (amount: number, currency: string = "USD") => {
     return partnerRevenueService.formatCurrency(amount, currency);
   };
 
@@ -152,30 +152,30 @@ export function useRevenueStatistics(filters: RevenueMetricsFilters = {}) {
 
     // From commission events
     approvedCommissions: commissions
-      .filter((c) => c.status === 'approved')
+      .filter((c) => c.status === "approved")
       .reduce((sum, c) => sum + c.commission_amount, 0),
     pendingCommissions: commissions
-      .filter((c) => c.status === 'pending')
+      .filter((c) => c.status === "pending")
       .reduce((sum, c) => sum + c.commission_amount, 0),
     paidCommissions: commissions
-      .filter((c) => c.status === 'paid')
+      .filter((c) => c.status === "paid")
       .reduce((sum, c) => sum + c.commission_amount, 0),
 
     // From payouts
     completedPayouts: payouts
-      .filter((p) => p.status === 'completed')
+      .filter((p) => p.status === "completed")
       .reduce((sum, p) => sum + p.total_amount, 0),
     pendingPayouts: payouts
-      .filter((p) => p.status === 'pending' || p.status === 'ready')
+      .filter((p) => p.status === "pending" || p.status === "ready")
       .reduce((sum, p) => sum + p.total_amount, 0),
     processingPayouts: payouts
-      .filter((p) => p.status === 'processing')
+      .filter((p) => p.status === "processing")
       .reduce((sum, p) => sum + p.total_amount, 0),
 
     // Counts
     totalPayoutsCount: payouts.length,
-    completedPayoutsCount: payouts.filter((p) => p.status === 'completed').length,
-    failedPayoutsCount: payouts.filter((p) => p.status === 'failed').length,
+    completedPayoutsCount: payouts.filter((p) => p.status === "completed").length,
+    failedPayoutsCount: payouts.filter((p) => p.status === "failed").length,
   };
 
   return {

@@ -7,7 +7,8 @@ from uuid import UUID, uuid4
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from dotmac.platform.auth.core import UserInfo, get_current_user
+from dotmac.platform.auth.core import UserInfo
+from dotmac.platform.auth.rbac_dependencies import require_admin
 
 from .core import DataFormat, TransferStatus
 from .models import (
@@ -24,16 +25,27 @@ logger = structlog.get_logger(__name__)
 data_transfer_router = APIRouter(prefix="/data-transfer", )
 
 
+def _safe_user_context(user: Any | None) -> tuple[str | None, str | None]:
+    """Return (user_id, tenant_id) tuples for optional user objects."""
+    if user is None:
+        return None, None
+    return getattr(user, "user_id", None), getattr(user, "tenant_id", None)
+
+
 @data_transfer_router.post("/import", response_model=TransferJobResponse)
 async def import_data(
-    request: ImportRequest, current_user: UserInfo = Depends(get_current_user)
+    request: ImportRequest, current_user: UserInfo | None = Depends(require_admin)
 ) -> TransferJobResponse:
     """Import data from external source."""
     try:
-        if current_user:
-            logger.info(f"User {current_user.user_id} importing from {request.source_path}")
-        else:
-            logger.info(f"Anonymous user importing from {request.source_path}")
+        user_id, tenant_id = _safe_user_context(current_user)
+        logger.info(
+            "data_transfer.import.request",
+            user_id=user_id or "unknown",
+            tenant_id=tenant_id,
+            source_path=request.source_path,
+            source_type=request.source_type.value,
+        )
 
         # Create job response
         job_id = uuid4()
@@ -57,7 +69,7 @@ async def import_data(
             },
         )
     except Exception as e:
-        logger.error(f"Error creating import job: {e}")
+        logger.exception("Error creating import job", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create import job",
@@ -66,14 +78,18 @@ async def import_data(
 
 @data_transfer_router.post("/export", response_model=TransferJobResponse)
 async def export_data(
-    request: ExportRequest, current_user: UserInfo = Depends(get_current_user)
+    request: ExportRequest, current_user: UserInfo | None = Depends(require_admin)
 ) -> TransferJobResponse:
     """Export data to external target."""
     try:
-        if current_user:
-            logger.info(f"User {current_user.user_id} exporting to {request.target_path}")
-        else:
-            logger.info(f"Anonymous user exporting to {request.target_path}")
+        user_id, tenant_id = _safe_user_context(current_user)
+        logger.info(
+            "data_transfer.export.request",
+            user_id=user_id or "unknown",
+            tenant_id=tenant_id,
+            target_path=request.target_path,
+            target_type=request.target_type.value,
+        )
 
         # Create job response
         job_id = uuid4()
@@ -98,7 +114,7 @@ async def export_data(
             },
         )
     except Exception as e:
-        logger.error(f"Error creating export job: {e}")
+        logger.exception("Error creating export job", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create export job",
@@ -107,14 +123,17 @@ async def export_data(
 
 @data_transfer_router.get("/jobs/{job_id}", response_model=TransferJobResponse)
 async def get_job_status(
-    job_id: str, current_user: UserInfo = Depends(get_current_user)
+    job_id: str, current_user: UserInfo | None = Depends(require_admin)
 ) -> TransferJobResponse:
     """Get data transfer job status."""
     try:
-        if current_user:
-            logger.info(f"User {current_user.user_id} checking job {job_id}")
-        else:
-            logger.info(f"Anonymous user checking job {job_id}")
+        user_id, tenant_id = _safe_user_context(current_user)
+        logger.info(
+            "data_transfer.job.status.request",
+            user_id=user_id or "unknown",
+            tenant_id=tenant_id,
+            job_id=job_id,
+        )
 
         # Parse UUID
         try:
@@ -144,7 +163,7 @@ async def get_job_status(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting job status: {e}")
+        logger.exception("Error getting job status", job_id=job_id, error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get job status",
@@ -157,14 +176,18 @@ async def list_jobs(
     job_status: TransferStatus | None = Query(None, description="Filter by status"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Page size"),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo | None = Depends(require_admin),
 ) -> TransferJobListResponse:
     """List data transfer jobs."""
     try:
-        if current_user:
-            logger.info(f"User {current_user.user_id} listing jobs")
-        else:
-            logger.info("Anonymous user listing jobs")
+        user_id, tenant_id = _safe_user_context(current_user)
+        logger.info(
+            "data_transfer.job.list.request",
+            user_id=user_id or "unknown",
+            tenant_id=tenant_id,
+            job_status=job_status.value if job_status else None,
+            transfer_type=type.value if type else None,
+        )
 
         # Return empty list for now
         return TransferJobListResponse(
@@ -175,7 +198,7 @@ async def list_jobs(
             has_more=False,
         )
     except Exception as e:
-        logger.error(f"Error listing jobs: {e}")
+        logger.exception("Error listing jobs", error=str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to list jobs",
@@ -184,18 +207,23 @@ async def list_jobs(
 
 @data_transfer_router.delete("/jobs/{job_id}")
 async def cancel_job(
-    job_id: str, current_user: UserInfo = Depends(get_current_user)
+    job_id: str, current_user: UserInfo | None = Depends(require_admin)
 ) -> dict[str, Any]:
     """Cancel a data transfer job."""
-    if current_user:
-        logger.info(f"User {current_user.user_id} cancelling job {job_id}")
-    else:
-        logger.info(f"Anonymous user cancelling job {job_id}")
+    user_id, tenant_id = _safe_user_context(current_user)
+    logger.info(
+        "data_transfer.job.cancel.request",
+        user_id=user_id or "unknown",
+        tenant_id=tenant_id,
+        job_id=job_id,
+    )
     return {"message": f"Job {job_id} cancelled"}
 
 
 @data_transfer_router.get("/formats", response_model=FormatsResponse)
-async def list_formats(current_user: UserInfo = Depends(get_current_user)) -> FormatsResponse:
+async def list_formats(
+    current_user: UserInfo | None = Depends(require_admin),
+) -> FormatsResponse:
     """List supported data formats."""
     # Define format info
     csv_info = DataFormatInfo(

@@ -4,8 +4,8 @@
  * React hook for interacting with the composable licensing API.
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import { useState, useEffect, useCallback } from "react";
+import axios from "axios";
 import {
   FeatureModule,
   QuotaDefinition,
@@ -24,9 +24,9 @@ import {
   ConsumeQuotaRequest,
   ReleaseQuotaRequest,
   UseLicensingReturn,
-} from '../types/licensing';
+} from "../types/licensing";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const LICENSING_API = `${API_BASE_URL}/api/v1/licensing`;
 
 /**
@@ -70,17 +70,23 @@ export function useLicensing(): UseLicensingReturn {
     }
   }, []);
 
-  const createModule = useCallback(async (data: CreateFeatureModuleRequest): Promise<FeatureModule> => {
-    const response = await axios.post<FeatureModule>(`${LICENSING_API}/modules`, data);
-    await fetchModules(); // Refresh list
-    return response.data;
-  }, [fetchModules]);
+  const createModule = useCallback(
+    async (data: CreateFeatureModuleRequest): Promise<FeatureModule> => {
+      const response = await axios.post<FeatureModule>(`${LICENSING_API}/modules`, data);
+      await fetchModules(); // Refresh list
+      return response.data;
+    },
+    [fetchModules],
+  );
 
-  const updateModule = useCallback(async (id: string, data: Partial<FeatureModule>): Promise<FeatureModule> => {
-    const response = await axios.patch<FeatureModule>(`${LICENSING_API}/modules/${id}`, data);
-    await fetchModules(); // Refresh list
-    return response.data;
-  }, [fetchModules]);
+  const updateModule = useCallback(
+    async (id: string, data: Partial<FeatureModule>): Promise<FeatureModule> => {
+      const response = await axios.patch<FeatureModule>(`${LICENSING_API}/modules/${id}`, data);
+      await fetchModules(); // Refresh list
+      return response.data;
+    },
+    [fetchModules],
+  );
 
   const getModule = useCallback(async (id: string): Promise<FeatureModule> => {
     const response = await axios.get<FeatureModule>(`${LICENSING_API}/modules/${id}`);
@@ -104,17 +110,23 @@ export function useLicensing(): UseLicensingReturn {
     }
   }, []);
 
-  const createQuota = useCallback(async (data: CreateQuotaDefinitionRequest): Promise<QuotaDefinition> => {
-    const response = await axios.post<QuotaDefinition>(`${LICENSING_API}/quotas`, data);
-    await fetchQuotas(); // Refresh list
-    return response.data;
-  }, [fetchQuotas]);
+  const createQuota = useCallback(
+    async (data: CreateQuotaDefinitionRequest): Promise<QuotaDefinition> => {
+      const response = await axios.post<QuotaDefinition>(`${LICENSING_API}/quotas`, data);
+      await fetchQuotas(); // Refresh list
+      return response.data;
+    },
+    [fetchQuotas],
+  );
 
-  const updateQuota = useCallback(async (id: string, data: Partial<QuotaDefinition>): Promise<QuotaDefinition> => {
-    const response = await axios.patch<QuotaDefinition>(`${LICENSING_API}/quotas/${id}`, data);
-    await fetchQuotas(); // Refresh list
-    return response.data;
-  }, [fetchQuotas]);
+  const updateQuota = useCallback(
+    async (id: string, data: Partial<QuotaDefinition>): Promise<QuotaDefinition> => {
+      const response = await axios.patch<QuotaDefinition>(`${LICENSING_API}/quotas/${id}`, data);
+      await fetchQuotas(); // Refresh list
+      return response.data;
+    },
+    [fetchQuotas],
+  );
 
   // ==========================================================================
   // Service Plans
@@ -133,31 +145,42 @@ export function useLicensing(): UseLicensingReturn {
     }
   }, []);
 
-  const createPlan = useCallback(async (data: CreateServicePlanRequest): Promise<ServicePlan> => {
-    const response = await axios.post<ServicePlan>(`${LICENSING_API}/plans`, data);
-    await fetchPlans(); // Refresh list
-    return response.data;
-  }, [fetchPlans]);
+  const createPlan = useCallback(
+    async (data: CreateServicePlanRequest): Promise<ServicePlan> => {
+      const response = await axios.post<ServicePlan>(`${LICENSING_API}/plans`, data);
+      await fetchPlans(); // Refresh list
+      return response.data;
+    },
+    [fetchPlans],
+  );
 
-  const updatePlan = useCallback(async (id: string, data: Partial<ServicePlan>): Promise<ServicePlan> => {
-    const response = await axios.patch<ServicePlan>(`${LICENSING_API}/plans/${id}`, data);
-    await fetchPlans(); // Refresh list
-    return response.data;
-  }, [fetchPlans]);
+  const updatePlan = useCallback(
+    async (id: string, data: Partial<ServicePlan>): Promise<ServicePlan> => {
+      const response = await axios.patch<ServicePlan>(`${LICENSING_API}/plans/${id}`, data);
+      await fetchPlans(); // Refresh list
+      return response.data;
+    },
+    [fetchPlans],
+  );
 
   const getPlan = useCallback(async (id: string): Promise<ServicePlan> => {
     const response = await axios.get<ServicePlan>(`${LICENSING_API}/plans/${id}`);
     return response.data;
   }, []);
 
-  const duplicatePlan = useCallback(async (id: string): Promise<ServicePlan> => {
-    const response = await axios.post<ServicePlan>(`${LICENSING_API}/plans/${id}/duplicate`);
-    await fetchPlans(); // Refresh list
-    return response.data;
-  }, [fetchPlans]);
+  const duplicatePlan = useCallback(
+    async (id: string): Promise<ServicePlan> => {
+      const response = await axios.post<ServicePlan>(`${LICENSING_API}/plans/${id}/duplicate`);
+      await fetchPlans(); // Refresh list
+      return response.data;
+    },
+    [fetchPlans],
+  );
 
   const calculatePlanPrice = useCallback(async (id: string, params: any) => {
-    const response = await axios.get(`${LICENSING_API}/plans/${id}/pricing`, { params });
+    const response = await axios.get(`${LICENSING_API}/plans/${id}/pricing`, {
+      params,
+    });
     return response.data;
   }, []);
 
@@ -169,7 +192,9 @@ export function useLicensing(): UseLicensingReturn {
     setSubscriptionLoading(true);
     setSubscriptionError(null);
     try {
-      const response = await axios.get<TenantSubscription>(`${LICENSING_API}/subscriptions/current`);
+      const response = await axios.get<TenantSubscription>(
+        `${LICENSING_API}/subscriptions/current`,
+      );
       setCurrentSubscription(response.data);
     } catch (error: any) {
       if (error.response?.status !== 404) {
@@ -180,30 +205,47 @@ export function useLicensing(): UseLicensingReturn {
     }
   }, []);
 
-  const createSubscription = useCallback(async (data: CreateSubscriptionRequest): Promise<TenantSubscription> => {
-    const response = await axios.post<TenantSubscription>(`${LICENSING_API}/subscriptions`, data);
-    await fetchCurrentSubscription(); // Refresh
-    return response.data;
-  }, [fetchCurrentSubscription]);
+  const createSubscription = useCallback(
+    async (data: CreateSubscriptionRequest): Promise<TenantSubscription> => {
+      const response = await axios.post<TenantSubscription>(`${LICENSING_API}/subscriptions`, data);
+      await fetchCurrentSubscription(); // Refresh
+      return response.data;
+    },
+    [fetchCurrentSubscription],
+  );
 
-  const addAddon = useCallback(async (data: AddAddonRequest): Promise<void> => {
-    await axios.post(`${LICENSING_API}/subscriptions/current/addons`, data);
-    await fetchCurrentSubscription(); // Refresh
-  }, [fetchCurrentSubscription]);
+  const addAddon = useCallback(
+    async (data: AddAddonRequest): Promise<void> => {
+      await axios.post(`${LICENSING_API}/subscriptions/current/addons`, data);
+      await fetchCurrentSubscription(); // Refresh
+    },
+    [fetchCurrentSubscription],
+  );
 
-  const removeAddon = useCallback(async (data: RemoveAddonRequest): Promise<void> => {
-    await axios.delete(`${LICENSING_API}/subscriptions/current/addons`, { data });
-    await fetchCurrentSubscription(); // Refresh
-  }, [fetchCurrentSubscription]);
+  const removeAddon = useCallback(
+    async (data: RemoveAddonRequest): Promise<void> => {
+      await axios.delete(`${LICENSING_API}/subscriptions/current/addons`, {
+        data,
+      });
+      await fetchCurrentSubscription(); // Refresh
+    },
+    [fetchCurrentSubscription],
+  );
 
   // ==========================================================================
   // Entitlements & Quotas
   // ==========================================================================
 
-  const checkEntitlement = useCallback(async (data: CheckEntitlementRequest): Promise<CheckEntitlementResponse> => {
-    const response = await axios.post<CheckEntitlementResponse>(`${LICENSING_API}/entitlements/check`, data);
-    return response.data;
-  }, []);
+  const checkEntitlement = useCallback(
+    async (data: CheckEntitlementRequest): Promise<CheckEntitlementResponse> => {
+      const response = await axios.post<CheckEntitlementResponse>(
+        `${LICENSING_API}/entitlements/check`,
+        data,
+      );
+      return response.data;
+    },
+    [],
+  );
 
   const checkQuota = useCallback(async (data: CheckQuotaRequest): Promise<CheckQuotaResponse> => {
     const response = await axios.post<CheckQuotaResponse>(`${LICENSING_API}/quotas/check`, data);
@@ -235,12 +277,7 @@ export function useLicensing(): UseLicensingReturn {
   // ==========================================================================
 
   const refetch = useCallback(async () => {
-    await Promise.all([
-      fetchModules(),
-      fetchQuotas(),
-      fetchPlans(),
-      fetchCurrentSubscription(),
-    ]);
+    await Promise.all([fetchModules(), fetchQuotas(), fetchPlans(), fetchCurrentSubscription()]);
   }, [fetchModules, fetchQuotas, fetchPlans, fetchCurrentSubscription]);
 
   return {
@@ -308,7 +345,7 @@ export function useFeatureEntitlement(moduleCode?: string, capabilityCode?: stri
       try {
         const response = await axios.post<CheckEntitlementResponse>(
           `${LICENSING_API}/entitlements/check`,
-          { module_code: moduleCode, capability_code: capabilityCode }
+          { module_code: moduleCode, capability_code: capabilityCode },
         );
         setEntitled(response.data.entitled);
       } catch (err) {
@@ -339,10 +376,10 @@ export function useQuotaCheck(quotaCode: string, quantity = 1) {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.post<CheckQuotaResponse>(
-        `${LICENSING_API}/quotas/check`,
-        { quota_code: quotaCode, quantity }
-      );
+      const response = await axios.post<CheckQuotaResponse>(`${LICENSING_API}/quotas/check`, {
+        quota_code: quotaCode,
+        quantity,
+      });
       setAvailable(response.data.available);
       setRemaining(response.data.remaining);
       setDetails(response.data);

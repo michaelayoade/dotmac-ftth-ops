@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState, useMemo, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { EnhancedDataTable, BulkAction } from '@/components/ui/EnhancedDataTable';
-import { createSortableHeader } from '@/components/ui/data-table';
-import { UniversalChart } from '@dotmac/primitives';
-import { AlarmDetailModal } from '@/components/faults/AlarmDetailModal';
+import { useState, useMemo, useCallback } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { EnhancedDataTable, BulkAction } from "@/components/ui/EnhancedDataTable";
+import { createSortableHeader } from "@/components/ui/data-table";
+import { UniversalChart } from "@dotmac/primitives";
+import { AlarmDetailModal } from "@/components/faults/AlarmDetailModal";
 import {
   CheckCircle,
   X,
@@ -16,18 +16,18 @@ import {
   Info,
   RefreshCw,
   FileText,
-  Bell
-} from 'lucide-react';
-import { ColumnDef } from '@tanstack/react-table';
-import { useRBAC } from '@/contexts/RBACContext';
+  Bell,
+} from "lucide-react";
+import { ColumnDef } from "@tanstack/react-table";
+import { useRBAC } from "@/contexts/RBACContext";
 import {
   useAlarms,
   useAlarmStatistics,
   useAlarmOperations,
   Alarm as AlarmType,
   AlarmSeverity,
-  AlarmStatus
-} from '@/hooks/useFaults';
+  AlarmStatus,
+} from "@/hooks/useFaults";
 
 // ============================================================================
 // Types
@@ -56,20 +56,20 @@ interface SLAComplianceData {
 
 const mockAlarms: Alarm[] = [
   {
-    id: '1',
-    tenant_id: 'demo-alpha',
-    alarm_id: 'ALM-001',
-    severity: 'critical',
-    status: 'active',
-    source: 'genieacs',
-    alarm_type: 'DEVICE_OFFLINE',
-    title: 'ONU Device Offline',
-    description: 'ONU device has not communicated in 15 minutes',
-    resource_type: 'onu',
-    resource_name: 'ONU-001-ABC',
-    customer_name: 'John Doe',
+    id: "1",
+    tenant_id: "demo-alpha",
+    alarm_id: "ALM-001",
+    severity: "critical",
+    status: "active",
+    source: "genieacs",
+    alarm_type: "DEVICE_OFFLINE",
+    title: "ONU Device Offline",
+    description: "ONU device has not communicated in 15 minutes",
+    resource_type: "onu",
+    resource_name: "ONU-001-ABC",
+    customer_name: "John Doe",
     subscriber_count: 1,
-    correlation_action: 'investigate',
+    correlation_action: "investigate",
     first_occurrence: new Date(Date.now() - 3600000).toISOString(),
     last_occurrence: new Date().toISOString(),
     occurrence_count: 3,
@@ -80,18 +80,18 @@ const mockAlarms: Alarm[] = [
     updated_at: new Date().toISOString(),
   },
   {
-    id: '2',
-    tenant_id: 'demo-alpha',
-    alarm_id: 'ALM-002',
-    severity: 'major',
-    status: 'acknowledged',
-    source: 'voltha',
-    alarm_type: 'HIGH_LATENCY',
-    title: 'High Network Latency Detected',
-    resource_type: 'olt',
-    resource_name: 'OLT-CORE-01',
+    id: "2",
+    tenant_id: "demo-alpha",
+    alarm_id: "ALM-002",
+    severity: "major",
+    status: "acknowledged",
+    source: "voltha",
+    alarm_type: "HIGH_LATENCY",
+    title: "High Network Latency Detected",
+    resource_type: "olt",
+    resource_name: "OLT-CORE-01",
     subscriber_count: 45,
-    correlation_action: 'monitor',
+    correlation_action: "monitor",
     first_occurrence: new Date(Date.now() - 7200000).toISOString(),
     last_occurrence: new Date(Date.now() - 1800000).toISOString(),
     occurrence_count: 12,
@@ -103,18 +103,18 @@ const mockAlarms: Alarm[] = [
     updated_at: new Date(Date.now() - 1800000).toISOString(),
   },
   {
-    id: '3',
-    tenant_id: 'demo-alpha',
-    alarm_id: 'ALM-003',
-    severity: 'minor',
-    status: 'active',
-    source: 'netbox',
-    alarm_type: 'CONFIG_DRIFT',
-    title: 'Configuration Drift Detected',
-    resource_type: 'device',
-    resource_name: 'SW-DIST-02',
+    id: "3",
+    tenant_id: "demo-alpha",
+    alarm_id: "ALM-003",
+    severity: "minor",
+    status: "active",
+    source: "netbox",
+    alarm_type: "CONFIG_DRIFT",
+    title: "Configuration Drift Detected",
+    resource_type: "device",
+    resource_name: "SW-DIST-02",
     subscriber_count: 0,
-    correlation_action: 'auto-remediate',
+    correlation_action: "auto-remediate",
     first_occurrence: new Date(Date.now() - 86400000).toISOString(),
     last_occurrence: new Date(Date.now() - 86400000).toISOString(),
     occurrence_count: 1,
@@ -147,14 +147,18 @@ const mockSLAData: SLAComplianceData[] = Array.from({ length: 30 }, (_, i) => ({
 
 export default function FaultManagementPage() {
   const { hasPermission } = useRBAC();
-  const [selectedTimeRange, setSelectedTimeRange] = useState<'24h' | '7d' | '30d'>('24h');
+  const [selectedTimeRange, setSelectedTimeRange] = useState<"24h" | "7d" | "30d">("24h");
   const [selectedAlarm, setSelectedAlarm] = useState<Alarm | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const hasFaultAccess = hasPermission('faults.alarms.read');
+  const hasFaultAccess = hasPermission("faults.alarms.read");
 
   // Fetch alarms from API
-  const { alarms: apiAlarms, isLoading: alarmsLoading, refetch: refetchAlarms } = useAlarms({
+  const {
+    alarms: apiAlarms,
+    isLoading: alarmsLoading,
+    refetch: refetchAlarms,
+  } = useAlarms({
     limit: 100,
     offset: 0,
   });
@@ -163,11 +167,16 @@ export default function FaultManagementPage() {
   const { statistics: apiStatistics } = useAlarmStatistics();
 
   // Alarm operations
-  const { acknowledgeAlarms, clearAlarms, createTickets, isLoading: operationsLoading } = useAlarmOperations();
+  const {
+    acknowledgeAlarms,
+    clearAlarms,
+    createTickets,
+    isLoading: operationsLoading,
+  } = useAlarmOperations();
 
   // Only use mock data in development mode with explicit flag
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  const useMockData = isDevelopment && process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+  const isDevelopment = process.env.NODE_ENV === "development";
+  const useMockData = isDevelopment && process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
 
   // In production, never fall back to mock data
   const alarms = useMockData && apiAlarms.length === 0 ? mockAlarms : apiAlarms;
@@ -175,7 +184,9 @@ export default function FaultManagementPage() {
 
   // Production safety: log warning if using mock data
   if (useMockData && apiAlarms.length === 0) {
-    console.warn('⚠️ DEVELOPMENT MODE: Using mock alarm data. Set NEXT_PUBLIC_USE_MOCK_DATA=false to test real API.');
+    console.warn(
+      "⚠️ DEVELOPMENT MODE: Using mock alarm data. Set NEXT_PUBLIC_USE_MOCK_DATA=false to test real API.",
+    );
   }
 
   // Calculate statistics (prefer API statistics, fallback to calculated)
@@ -190,11 +201,13 @@ export default function FaultManagementPage() {
     }
 
     // Fallback to calculated statistics
-    const active = alarms.filter(a => a.status === 'active').length;
-    const critical = alarms.filter(a => a.severity === 'critical' && a.status === 'active').length;
-    const acknowledged = alarms.filter(a => a.status === 'acknowledged').length;
+    const active = alarms.filter((a) => a.status === "active").length;
+    const critical = alarms.filter(
+      (a) => a.severity === "critical" && a.status === "active",
+    ).length;
+    const acknowledged = alarms.filter((a) => a.status === "acknowledged").length;
     const totalImpacted = alarms
-      .filter(a => a.status === 'active')
+      .filter((a) => a.status === "active")
       .reduce((sum, a) => sum + a.subscriber_count, 0);
 
     return { active, critical, acknowledged, totalImpacted };
@@ -206,16 +219,16 @@ export default function FaultManagementPage() {
 
   const columns: ColumnDef<Alarm>[] = [
     {
-      accessorKey: 'severity',
-      header: 'Severity',
+      accessorKey: "severity",
+      header: "Severity",
       cell: ({ row }) => {
-        const severity = row.getValue('severity') as AlarmSeverity;
+        const severity = row.getValue("severity") as AlarmSeverity;
         const config = {
-          critical: { color: 'bg-red-600 text-white', icon: AlertTriangle },
-          major: { color: 'bg-orange-500 text-white', icon: AlertTriangle },
-          minor: { color: 'bg-yellow-500 text-black', icon: Clock },
-          warning: { color: 'bg-yellow-400 text-black', icon: AlertTriangle },
-          info: { color: 'bg-blue-500 text-white', icon: Info },
+          critical: { color: "bg-red-600 text-white", icon: AlertTriangle },
+          major: { color: "bg-orange-500 text-white", icon: AlertTriangle },
+          minor: { color: "bg-yellow-500 text-black", icon: Clock },
+          warning: { color: "bg-yellow-400 text-black", icon: AlertTriangle },
+          info: { color: "bg-blue-500 text-white", icon: Info },
         };
         const { color, icon: Icon } = config[severity];
         return (
@@ -227,38 +240,34 @@ export default function FaultManagementPage() {
       },
     },
     {
-      accessorKey: 'alarm_type',
-      header: createSortableHeader('Type'),
-      cell: ({ row }) => (
-        <div className="font-mono text-xs">{row.getValue('alarm_type')}</div>
-      ),
+      accessorKey: "alarm_type",
+      header: createSortableHeader("Type"),
+      cell: ({ row }) => <div className="font-mono text-xs">{row.getValue("alarm_type")}</div>,
     },
     {
-      accessorKey: 'title',
-      header: createSortableHeader('Title'),
+      accessorKey: "title",
+      header: createSortableHeader("Title"),
       cell: ({ row }) => (
         <div className="max-w-md">
-          <div className="font-medium">{row.getValue('title')}</div>
+          <div className="font-medium">{row.getValue("title")}</div>
           {row.original.resource_name && (
-            <div className="text-xs text-muted-foreground mt-1">
-              {row.original.resource_name}
-            </div>
+            <div className="text-xs text-muted-foreground mt-1">{row.original.resource_name}</div>
           )}
         </div>
       ),
     },
     {
-      accessorKey: 'customer_name',
-      header: 'Customer',
+      accessorKey: "customer_name",
+      header: "Customer",
       cell: ({ row }) => {
-        const customerName = row.getValue('customer_name') as string | undefined;
+        const customerName = row.getValue("customer_name") as string | undefined;
         const subscriberCount = row.original.subscriber_count;
         return customerName || subscriberCount > 0 ? (
           <div>
-            <div>{customerName || 'Multiple'}</div>
+            <div>{customerName || "Multiple"}</div>
             {subscriberCount > 0 && (
               <div className="text-xs text-muted-foreground">
-                {subscriberCount} subscriber{subscriberCount !== 1 ? 's' : ''}
+                {subscriberCount} subscriber{subscriberCount !== 1 ? "s" : ""}
               </div>
             )}
           </div>
@@ -268,40 +277,43 @@ export default function FaultManagementPage() {
       },
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
+      accessorKey: "status",
+      header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue('status') as AlarmStatus;
+        const status = row.getValue("status") as AlarmStatus;
         const statusConfig = {
-          active: { color: 'bg-red-500 text-white', label: 'Active' },
-          acknowledged: { color: 'bg-yellow-500 text-black', label: 'Acknowledged' },
-          cleared: { color: 'bg-blue-500 text-white', label: 'Cleared' },
-          resolved: { color: 'bg-green-500 text-white', label: 'Resolved' },
+          active: { color: "bg-red-500 text-white", label: "Active" },
+          acknowledged: {
+            color: "bg-yellow-500 text-black",
+            label: "Acknowledged",
+          },
+          cleared: { color: "bg-blue-500 text-white", label: "Cleared" },
+          resolved: { color: "bg-green-500 text-white", label: "Resolved" },
         };
         const { color, label } = statusConfig[status];
         return <Badge className={color}>{label}</Badge>;
       },
     },
     {
-      accessorKey: 'occurrence_count',
-      header: createSortableHeader('Count'),
+      accessorKey: "occurrence_count",
+      header: createSortableHeader("Count"),
       cell: ({ row }) => (
         <div className="text-center">
-          <Badge variant="outline">{row.getValue('occurrence_count')}</Badge>
+          <Badge variant="outline">{row.getValue("occurrence_count")}</Badge>
         </div>
       ),
     },
     {
-      accessorKey: 'last_occurrence',
-      header: createSortableHeader('Last Seen'),
+      accessorKey: "last_occurrence",
+      header: createSortableHeader("Last Seen"),
       cell: ({ row }) => {
-        const date = new Date(row.getValue('last_occurrence'));
+        const date = new Date(row.getValue("last_occurrence"));
         const now = new Date();
         const diff = now.getTime() - date.getTime();
         const minutes = Math.floor(diff / 60000);
         const hours = Math.floor(minutes / 60);
 
-        let timeAgo = '';
+        let timeAgo = "";
         if (hours > 24) {
           timeAgo = `${Math.floor(hours / 24)}d ago`;
         } else if (hours > 0) {
@@ -313,9 +325,7 @@ export default function FaultManagementPage() {
         return (
           <div>
             <div className="text-sm">{timeAgo}</div>
-            <div className="text-xs text-muted-foreground">
-              {date.toLocaleTimeString()}
-            </div>
+            <div className="text-xs text-muted-foreground">{date.toLocaleTimeString()}</div>
           </div>
         );
       },
@@ -328,23 +338,23 @@ export default function FaultManagementPage() {
 
   const bulkActions: BulkAction<Alarm>[] = [
     {
-      label: 'Acknowledge',
+      label: "Acknowledge",
       icon: CheckCircle,
       action: async (selected) => {
-        const alarmIds = selected.map(a => a.id);
-        const success = await acknowledgeAlarms(alarmIds, 'Bulk acknowledged via dashboard');
+        const alarmIds = selected.map((a) => a.id);
+        const success = await acknowledgeAlarms(alarmIds, "Bulk acknowledged via dashboard");
 
         if (success) {
           await refetchAlarms();
         }
       },
-      disabled: (selected) => selected.every(a => a.status !== 'active'),
+      disabled: (selected) => selected.every((a) => a.status !== "active"),
     },
     {
-      label: 'Clear Alarms',
+      label: "Clear Alarms",
       icon: X,
       action: async (selected) => {
-        const alarmIds = selected.map(a => a.id);
+        const alarmIds = selected.map((a) => a.id);
         const success = await clearAlarms(alarmIds);
 
         if (success) {
@@ -353,11 +363,11 @@ export default function FaultManagementPage() {
       },
     },
     {
-      label: 'Create Ticket',
+      label: "Create Ticket",
       icon: FileText,
       action: async (selected) => {
-        const alarmIds = selected.map(a => a.id);
-        const success = await createTickets(alarmIds, 'normal');
+        const alarmIds = selected.map((a) => a.id);
+        const success = await createTickets(alarmIds, "normal");
 
         if (success) {
           alert(`Successfully created tickets for ${selected.length} alarm(s)`);
@@ -393,7 +403,7 @@ export default function FaultManagementPage() {
           </p>
         </div>
         <Button onClick={() => refetchAlarms()} variant="outline" disabled={isLoading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
           Refresh
         </Button>
       </header>
@@ -406,9 +416,7 @@ export default function FaultManagementPage() {
             <CardTitle className="text-3xl">{statistics.active}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xs text-muted-foreground">
-              Currently active in the system
-            </div>
+            <div className="text-xs text-muted-foreground">Currently active in the system</div>
           </CardContent>
         </Card>
 
@@ -418,9 +426,7 @@ export default function FaultManagementPage() {
             <CardTitle className="text-3xl text-red-600">{statistics.critical}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xs text-muted-foreground">
-              Requiring immediate attention
-            </div>
+            <div className="text-xs text-muted-foreground">Requiring immediate attention</div>
           </CardContent>
         </Card>
 
@@ -430,9 +436,7 @@ export default function FaultManagementPage() {
             <CardTitle className="text-3xl">{statistics.acknowledged}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xs text-muted-foreground">
-              Being handled by operators
-            </div>
+            <div className="text-xs text-muted-foreground">Being handled by operators</div>
           </CardContent>
         </Card>
 
@@ -442,9 +446,7 @@ export default function FaultManagementPage() {
             <CardTitle className="text-3xl">{statistics.totalImpacted}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xs text-muted-foreground">
-              Affected by active alarms
-            </div>
+            <div className="text-xs text-muted-foreground">Affected by active alarms</div>
           </CardContent>
         </Card>
       </div>
@@ -453,26 +455,24 @@ export default function FaultManagementPage() {
       <Card>
         <CardHeader>
           <CardTitle>Alarm Frequency (Last 24 Hours)</CardTitle>
-          <CardDescription>
-            Alarms by severity over time
-          </CardDescription>
+          <CardDescription>Alarms by severity over time</CardDescription>
         </CardHeader>
         <CardContent>
           <UniversalChart
-            {...{
+            {...({
               type: "bar",
               data: mockFrequencyData,
               series: [
-                { key: 'critical', name: 'Critical', color: '#dc2626' },
-                { key: 'major', name: 'Major', color: '#f97316' },
-                { key: 'minor', name: 'Minor', color: '#eab308' },
-                { key: 'warning', name: 'Warning', color: '#facc15' },
-                { key: 'info', name: 'Info', color: '#3b82f6' },
+                { key: "critical", name: "Critical", color: "#dc2626" },
+                { key: "major", name: "Major", color: "#f97316" },
+                { key: "minor", name: "Minor", color: "#eab308" },
+                { key: "warning", name: "Warning", color: "#facc15" },
+                { key: "info", name: "Info", color: "#3b82f6" },
               ],
-              xAxis: { dataKey: 'hour' },
+              xAxis: { dataKey: "hour" },
               height: 300,
               stacked: true,
-            } as any}
+            } as any)}
           />
         </CardContent>
       </Card>
@@ -481,29 +481,37 @@ export default function FaultManagementPage() {
       <Card>
         <CardHeader>
           <CardTitle>SLA Compliance Trends</CardTitle>
-          <CardDescription>
-            Network availability compliance over the last 30 days
-          </CardDescription>
+          <CardDescription>Network availability compliance over the last 30 days</CardDescription>
         </CardHeader>
         <CardContent>
           <UniversalChart
-            {...{
+            {...({
               type: "line",
               data: mockSLAData,
               series: [
-                { key: 'compliance', name: 'Actual Compliance', type: 'area', color: '#10b981' },
-                { key: 'target', name: 'Target (99.9%)', strokeDashArray: '5 5', color: '#6b7280' },
+                {
+                  key: "compliance",
+                  name: "Actual Compliance",
+                  type: "area",
+                  color: "#10b981",
+                },
+                {
+                  key: "target",
+                  name: "Target (99.9%)",
+                  strokeDashArray: "5 5",
+                  color: "#6b7280",
+                },
               ],
-              xAxis: { dataKey: 'date' },
+              xAxis: { dataKey: "date" },
               yAxis: {
                 left: {
                   format: (v: number) => `${v.toFixed(1)}%`,
-                  domain: [95, 100]
-                }
+                  domain: [95, 100],
+                },
               },
               height: 300,
               smooth: true,
-            } as any}
+            } as any)}
           />
         </CardContent>
       </Card>
@@ -527,41 +535,49 @@ export default function FaultManagementPage() {
             bulkActions={bulkActions}
             exportable
             exportFilename="alarms"
-            exportColumns={['alarm_id', 'severity', 'status', 'alarm_type', 'title', 'resource_name', 'customer_name']}
+            exportColumns={[
+              "alarm_id",
+              "severity",
+              "status",
+              "alarm_type",
+              "title",
+              "resource_name",
+              "customer_name",
+            ]}
             filterable
             filters={[
               {
-                column: 'severity',
-                label: 'Severity',
-                type: 'select',
+                column: "severity",
+                label: "Severity",
+                type: "select",
                 options: [
-                  { label: 'Critical', value: 'critical' },
-                  { label: 'Major', value: 'major' },
-                  { label: 'Minor', value: 'minor' },
-                  { label: 'Warning', value: 'warning' },
-                  { label: 'Info', value: 'info' },
+                  { label: "Critical", value: "critical" },
+                  { label: "Major", value: "major" },
+                  { label: "Minor", value: "minor" },
+                  { label: "Warning", value: "warning" },
+                  { label: "Info", value: "info" },
                 ],
               },
               {
-                column: 'status',
-                label: 'Status',
-                type: 'select',
+                column: "status",
+                label: "Status",
+                type: "select",
                 options: [
-                  { label: 'Active', value: 'active' },
-                  { label: 'Acknowledged', value: 'acknowledged' },
-                  { label: 'Cleared', value: 'cleared' },
-                  { label: 'Resolved', value: 'resolved' },
+                  { label: "Active", value: "active" },
+                  { label: "Acknowledged", value: "acknowledged" },
+                  { label: "Cleared", value: "cleared" },
+                  { label: "Resolved", value: "resolved" },
                 ],
               },
               {
-                column: 'source',
-                label: 'Source',
-                type: 'select',
+                column: "source",
+                label: "Source",
+                type: "select",
                 options: [
-                  { label: 'GenieACS', value: 'genieacs' },
-                  { label: 'VOLTHA', value: 'voltha' },
-                  { label: 'NetBox', value: 'netbox' },
-                  { label: 'Manual', value: 'manual' },
+                  { label: "GenieACS", value: "genieacs" },
+                  { label: "VOLTHA", value: "voltha" },
+                  { label: "NetBox", value: "netbox" },
+                  { label: "Manual", value: "manual" },
                 ],
               },
             ]}

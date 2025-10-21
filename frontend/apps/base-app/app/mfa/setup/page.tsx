@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
@@ -73,7 +73,8 @@ export default function MfaSetupPage() {
       setSetupData(null);
       toast({
         title: "Unable to start MFA",
-        description: error instanceof Error ? error.message : "Failed to enable multi-factor authentication.",
+        description:
+          error instanceof Error ? error.message : "Failed to enable multi-factor authentication.",
         variant: "destructive",
       });
     } finally {
@@ -101,7 +102,8 @@ export default function MfaSetupPage() {
     } catch (error) {
       toast({
         title: "Failed to send SMS",
-        description: error instanceof Error ? error.message : "Could not send verification message.",
+        description:
+          error instanceof Error ? error.message : "Could not send verification message.",
         variant: "destructive",
       });
     } finally {
@@ -123,10 +125,12 @@ export default function MfaSetupPage() {
           <Badge variant="outline" className="w-fit">
             Security
           </Badge>
-          <h1 className="text-3xl font-semibold text-foreground">Set up multi-factor authentication</h1>
+          <h1 className="text-3xl font-semibold text-foreground">
+            Set up multi-factor authentication
+          </h1>
           <p className="text-muted-foreground">
-            Add an extra layer of protection to your account. Once enabled, you&apos;ll be asked for a verification
-            code in addition to your password.
+            Add an extra layer of protection to your account. Once enabled, you&apos;ll be asked for
+            a verification code in addition to your password.
           </p>
         </div>
 
@@ -138,7 +142,8 @@ export default function MfaSetupPage() {
                 Choose your verification method
               </CardTitle>
               <CardDescription>
-                Switch between authenticator app or SMS backup codes. You can change this preference at any time.
+                Switch between authenticator app or SMS backup codes. You can change this preference
+                at any time.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -201,11 +206,14 @@ export default function MfaSetupPage() {
                         data-testid="mfa-qr-code"
                       />
                     ) : (
-                      <QrCode className="mx-auto h-16 w-16 text-primary" data-testid="qr-code-placeholder" />
+                      <QrCode
+                        className="mx-auto h-16 w-16 text-primary"
+                        data-testid="qr-code-placeholder"
+                      />
                     )}
                     <p className="mt-4 text-sm text-muted-foreground">
-                      Scan the QR code with your authenticator app. If you can&apos;t scan it, enter the setup key
-                      manually.
+                      Scan the QR code with your authenticator app. If you can&apos;t scan it, enter
+                      the setup key manually.
                     </p>
                     <code className="mt-4 inline-block rounded bg-background px-3 py-1 text-sm font-mono tracking-widest text-foreground">
                       {setupData?.secret ?? "•••• •••• •••• ••••"}
@@ -213,16 +221,24 @@ export default function MfaSetupPage() {
                   </div>
 
                   <div className="space-y-2" data-testid="backup-codes">
-                    <Label className="text-sm font-medium text-foreground">One-time recovery codes</Label>
+                    <Label className="text-sm font-medium text-foreground">
+                      One-time recovery codes
+                    </Label>
                     <p className="text-xs text-muted-foreground">
                       Store these codes in a secure location. Each code can only be used once.
                     </p>
                     <div className="rounded-lg border border-border bg-card p-3 text-sm font-mono leading-6 text-foreground">
-                      {(setupData?.backup_codes ?? ["815 392", "467 028", "982 140", "053 771", "622 904"]).map(
-                        (code) => (
-                          <div key={code}>{code}</div>
-                        )
-                      )}
+                      {(
+                        setupData?.backup_codes ?? [
+                          "815 392",
+                          "467 028",
+                          "982 140",
+                          "053 771",
+                          "622 904",
+                        ]
+                      ).map((code) => (
+                        <div key={code}>{code}</div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -230,8 +246,8 @@ export default function MfaSetupPage() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3 rounded-lg border border-blue-500/30 bg-blue-500/10 p-4 text-sm text-blue-100">
                     <MessageSquare className="h-5 w-5 text-blue-300" />
-                    SMS is best used as a backup option. We recommend enabling an authenticator app for stronger
-                    security.
+                    SMS is best used as a backup option. We recommend enabling an authenticator app
+                    for stronger security.
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="text-sm font-medium text-foreground">
@@ -247,7 +263,8 @@ export default function MfaSetupPage() {
                       onChange={(event) => setPhoneNumber(event.target.value)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      We&apos;ll send a test message to confirm delivery. Message and data rates may apply.
+                      We&apos;ll send a test message to confirm delivery. Message and data rates may
+                      apply.
                     </p>
                     <Button
                       type="button"
@@ -275,27 +292,31 @@ export default function MfaSetupPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg font-semibold">How it works</CardTitle>
-              <CardDescription>Follow these steps to finish enabling multi-factor authentication.</CardDescription>
+              <CardDescription>
+                Follow these steps to finish enabling multi-factor authentication.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <div className="rounded-lg border border-border bg-card p-4">
                   <p className="text-sm font-semibold text-foreground">1. Configure your device</p>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Install an authenticator app or ensure your mobile number is accurate if you&apos;re using SMS codes.
+                    Install an authenticator app or ensure your mobile number is accurate if
+                    you&apos;re using SMS codes.
                   </p>
                 </div>
                 <div className="rounded-lg border border-border bg-card p-4">
                   <p className="text-sm font-semibold text-foreground">2. Verify a test code</p>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    After scanning or adding the code, enter a current six-digit token to confirm everything is working.
+                    After scanning or adding the code, enter a current six-digit token to confirm
+                    everything is working.
                   </p>
                 </div>
                 <div className="rounded-lg border border-border bg-card p-4">
                   <p className="text-sm font-semibold text-foreground">3. Save recovery options</p>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Download or copy the one-time recovery codes. These let you access your account if you lose your
-                    device.
+                    Download or copy the one-time recovery codes. These let you access your account
+                    if you lose your device.
                   </p>
                 </div>
               </div>
@@ -312,7 +333,9 @@ export default function MfaSetupPage() {
         </div>
 
         <div className="rounded-lg border border-dashed border-muted-foreground/40 bg-card/40 p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Need help?</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Need help?
+          </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Read the{" "}
             <Link href="/docs/security/mfa" className="text-primary underline underline-offset-4">

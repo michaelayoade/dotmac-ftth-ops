@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState, useMemo } from "react";
@@ -66,7 +66,8 @@ export default function FiberMapsPage() {
   const { distributionPoints, isLoading: dpLoading } = useDistributionPoints({});
   const { serviceAreas, isLoading: areasLoading } = useServiceAreas({});
   const { stats, isLoading: statsLoading } = useFiberInfrastructureStats();
-  const { viewState, updateCenter, updateZoom, toggleLayer, selectFeature, clearSelection } = useMapView();
+  const { viewState, updateCenter, updateZoom, toggleLayer, selectFeature, clearSelection } =
+    useMapView();
 
   const isLoading = cablesLoading || splicesLoading || dpLoading || areasLoading;
 
@@ -75,17 +76,22 @@ export default function FiberMapsPage() {
     const markers: MapMarker[] = [];
 
     // Add splice points
-    if (viewState.layers.find(l => l.id === 'splice_points')?.visible) {
-      splicePoints.forEach(sp => {
+    if (viewState.layers.find((l) => l.id === "splice_points")?.visible) {
+      splicePoints.forEach((sp) => {
         markers.push({
           id: sp.id,
           position: sp.coordinates,
-          type: 'fiber',
-          status: sp.status === 'operational' ? 'active' : sp.status === 'fault' ? 'error' : 'maintenance',
+          type: "fiber",
+          status:
+            sp.status === "operational"
+              ? "active"
+              : sp.status === "fault"
+                ? "error"
+                : "maintenance",
           title: sp.name,
           subtitle: `${sp.type} - ${sp.splice_count}/${sp.capacity} splices`,
           metadata: {
-            type: 'splice_point',
+            type: "splice_point",
             data: sp,
           },
         });
@@ -93,17 +99,17 @@ export default function FiberMapsPage() {
     }
 
     // Add distribution points
-    if (viewState.layers.find(l => l.id === 'distribution_points')?.visible) {
-      distributionPoints.forEach(dp => {
+    if (viewState.layers.find((l) => l.id === "distribution_points")?.visible) {
+      distributionPoints.forEach((dp) => {
         markers.push({
           id: dp.id,
           position: dp.coordinates,
-          type: 'tower',
+          type: "tower",
           status: dp.status,
           title: dp.name,
           subtitle: `${dp.type.toUpperCase()} - ${dp.ports_used}/${dp.capacity} ports`,
           metadata: {
-            type: 'distribution_point',
+            type: "distribution_point",
             data: dp,
           },
         });
@@ -115,18 +121,23 @@ export default function FiberMapsPage() {
 
   // Convert cables to map paths
   const mapPaths = useMemo(() => {
-    if (!viewState.layers.find(l => l.id === 'cables')?.visible) return [];
+    if (!viewState.layers.find((l) => l.id === "cables")?.visible) return [];
 
-    return cables.map(cable => ({
+    return cables.map((cable) => ({
       id: cable.id,
       coordinates: cable.path.coordinates,
-      color: cable.status === 'active' ? '#3b82f6' :
-             cable.status === 'planned' ? '#f59e0b' :
-             cable.status === 'damaged' ? '#ef4444' : '#6b7280',
+      color:
+        cable.status === "active"
+          ? "#3b82f6"
+          : cable.status === "planned"
+            ? "#f59e0b"
+            : cable.status === "damaged"
+              ? "#ef4444"
+              : "#6b7280",
       width: 3,
       label: cable.cable_name,
       metadata: {
-        type: 'cable',
+        type: "cable",
         data: cable,
       },
     }));
@@ -134,18 +145,23 @@ export default function FiberMapsPage() {
 
   // Convert service areas to map polygons
   const mapPolygons = useMemo(() => {
-    if (!viewState.layers.find(l => l.id === 'service_areas')?.visible) return [];
+    if (!viewState.layers.find((l) => l.id === "service_areas")?.visible) return [];
 
-    return serviceAreas.map(area => ({
+    return serviceAreas.map((area) => ({
       id: area.id,
       coordinates: area.boundary.coordinates,
-      color: area.coverage_status === 'covered' ? '#10b981' :
-             area.coverage_status === 'partial' ? '#f59e0b' :
-             area.coverage_status === 'planned' ? '#3b82f6' : '#6b7280',
+      color:
+        area.coverage_status === "covered"
+          ? "#10b981"
+          : area.coverage_status === "partial"
+            ? "#f59e0b"
+            : area.coverage_status === "planned"
+              ? "#3b82f6"
+              : "#6b7280",
       opacity: 0.2,
       label: area.name,
       metadata: {
-        type: 'service_area',
+        type: "service_area",
         data: area,
       },
     }));
@@ -154,7 +170,10 @@ export default function FiberMapsPage() {
   const handleMarkerClick = (marker: MapMarker) => {
     const { type, data } = marker.metadata || {};
     if (type && data) {
-      selectFeature(type as "cable" | "splice_point" | "distribution_point" | "service_area", data.id);
+      selectFeature(
+        type as "cable" | "splice_point" | "distribution_point" | "service_area",
+        data.id,
+      );
     }
   };
 
@@ -177,7 +196,7 @@ export default function FiberMapsPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button>
@@ -208,9 +227,7 @@ export default function FiberMapsPage() {
               <CardTitle className="text-3xl">{stats.total_splice_points}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-xs text-muted-foreground">
-                Network connection points
-              </div>
+              <div className="text-xs text-muted-foreground">Network connection points</div>
             </CardContent>
           </Card>
 
@@ -220,9 +237,7 @@ export default function FiberMapsPage() {
               <CardTitle className="text-3xl">{stats.total_distribution_points}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-xs text-muted-foreground">
-                FDT/FDH hubs
-              </div>
+              <div className="text-xs text-muted-foreground">FDT/FDH hubs</div>
             </CardContent>
           </Card>
 
@@ -248,9 +263,7 @@ export default function FiberMapsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-xs text-muted-foreground">
-                Fiber capacity used
-              </div>
+              <div className="text-xs text-muted-foreground">Fiber capacity used</div>
             </CardContent>
           </Card>
         </div>
@@ -268,13 +281,13 @@ export default function FiberMapsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {viewState.layers.map(layer => (
+              {viewState.layers.map((layer) => (
                 <div key={layer.id} className="flex items-center justify-between">
-                  <Label htmlFor={layer.id} className="text-sm cursor-pointer flex items-center gap-2">
-                    <div
-                      className="w-3 h-3 rounded"
-                      style={{ backgroundColor: layer.color }}
-                    />
+                  <Label
+                    htmlFor={layer.id}
+                    className="text-sm cursor-pointer flex items-center gap-2"
+                  >
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: layer.color }} />
                     {layer.name}
                   </Label>
                   <Switch
@@ -375,9 +388,9 @@ export default function FiberMapsPage() {
         {/* Map View */}
         <div className="col-span-9 space-y-4">
           <Card className="overflow-hidden">
-            <div className="relative" style={{ height: '600px' }}>
+            <div className="relative" style={{ height: "600px" }}>
               <UniversalMap
-                {...{
+                {...({
                   markers: mapMarkers as any,
                   paths: mapPaths,
                   polygons: mapPolygons,
@@ -387,15 +400,23 @@ export default function FiberMapsPage() {
                   onCenterChange: updateCenter,
                   onZoomChange: updateZoom,
                   mapType: "network_topology",
-                } as any}
+                } as any)}
               />
 
               {/* Map Controls Overlay */}
               <div className="absolute top-4 right-4 flex flex-col gap-2">
-                <Button size="icon" variant="secondary" onClick={() => updateZoom(viewState.zoom + 1)}>
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  onClick={() => updateZoom(viewState.zoom + 1)}
+                >
                   <ZoomIn className="w-4 h-4" />
                 </Button>
-                <Button size="icon" variant="secondary" onClick={() => updateZoom(viewState.zoom - 1)}>
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  onClick={() => updateZoom(viewState.zoom - 1)}
+                >
                   <ZoomOut className="w-4 h-4" />
                 </Button>
                 <Button size="icon" variant="secondary">
@@ -429,23 +450,25 @@ export default function FiberMapsPage() {
                     <div>
                       <h3 className="font-semibold mb-2">Cable Types</h3>
                       <div className="space-y-1">
-                        {stats && Object.entries(stats.cables_by_type).map(([type, count]) => (
-                          <div key={type} className="flex justify-between text-sm">
-                            <span className="capitalize">{type.replace('_', ' ')}</span>
-                            <Badge variant="secondary">{count}</Badge>
-                          </div>
-                        ))}
+                        {stats &&
+                          Object.entries(stats.cables_by_type).map(([type, count]) => (
+                            <div key={type} className="flex justify-between text-sm">
+                              <span className="capitalize">{type.replace("_", " ")}</span>
+                              <Badge variant="secondary">{count}</Badge>
+                            </div>
+                          ))}
                       </div>
                     </div>
                     <div>
                       <h3 className="font-semibold mb-2">Cable Status</h3>
                       <div className="space-y-1">
-                        {stats && Object.entries(stats.cables_by_status).map(([status, count]) => (
-                          <div key={status} className="flex justify-between text-sm">
-                            <span className="capitalize">{status.replace('_', ' ')}</span>
-                            <Badge variant="secondary">{count}</Badge>
-                          </div>
-                        ))}
+                        {stats &&
+                          Object.entries(stats.cables_by_status).map(([status, count]) => (
+                            <div key={status} className="flex justify-between text-sm">
+                              <span className="capitalize">{status.replace("_", " ")}</span>
+                              <Badge variant="secondary">{count}</Badge>
+                            </div>
+                          ))}
                       </div>
                     </div>
                   </div>
@@ -462,18 +485,20 @@ export default function FiberMapsPage() {
                       </Button>
                     </div>
                   ) : (
-                    cables.slice(0, 10).map(cable => (
-                      <div key={cable.id} className="border rounded-lg p-3 hover:bg-accent cursor-pointer">
+                    cables.slice(0, 10).map((cable) => (
+                      <div
+                        key={cable.id}
+                        className="border rounded-lg p-3 hover:bg-accent cursor-pointer"
+                      >
                         <div className="flex items-center justify-between">
                           <div>
                             <h4 className="font-medium">{cable.cable_name}</h4>
                             <p className="text-xs text-muted-foreground">
-                              {cable.fiber_count} fibers • {cable.length_meters.toFixed(0)}m • {cable.cable_type}
+                              {cable.fiber_count} fibers • {cable.length_meters.toFixed(0)}m •{" "}
+                              {cable.cable_type}
                             </p>
                           </div>
-                          <Badge
-                            variant={cable.status === 'active' ? 'default' : 'secondary'}
-                          >
+                          <Badge variant={cable.status === "active" ? "default" : "secondary"}>
                             {cable.status}
                           </Badge>
                         </div>
@@ -489,8 +514,11 @@ export default function FiberMapsPage() {
                       <p>No splice points found</p>
                     </div>
                   ) : (
-                    splicePoints.slice(0, 10).map(sp => (
-                      <div key={sp.id} className="border rounded-lg p-3 hover:bg-accent cursor-pointer">
+                    splicePoints.slice(0, 10).map((sp) => (
+                      <div
+                        key={sp.id}
+                        className="border rounded-lg p-3 hover:bg-accent cursor-pointer"
+                      >
                         <div className="flex items-center justify-between">
                           <div>
                             <h4 className="font-medium">{sp.name}</h4>
@@ -498,9 +526,7 @@ export default function FiberMapsPage() {
                               {sp.type} • {sp.splice_count}/{sp.capacity} splices
                             </p>
                           </div>
-                          <Badge
-                            variant={sp.status === 'operational' ? 'default' : 'destructive'}
-                          >
+                          <Badge variant={sp.status === "operational" ? "default" : "destructive"}>
                             {sp.status}
                           </Badge>
                         </div>
@@ -516,17 +542,21 @@ export default function FiberMapsPage() {
                       <p>No service areas defined</p>
                     </div>
                   ) : (
-                    serviceAreas.slice(0, 10).map(area => (
-                      <div key={area.id} className="border rounded-lg p-3 hover:bg-accent cursor-pointer">
+                    serviceAreas.slice(0, 10).map((area) => (
+                      <div
+                        key={area.id}
+                        className="border rounded-lg p-3 hover:bg-accent cursor-pointer"
+                      >
                         <div className="flex items-center justify-between">
                           <div>
                             <h4 className="font-medium">{area.name}</h4>
                             <p className="text-xs text-muted-foreground">
-                              {area.type} • {area.premises_count || 0} premises • {area.active_customers || 0} customers
+                              {area.type} • {area.premises_count || 0} premises •{" "}
+                              {area.active_customers || 0} customers
                             </p>
                           </div>
                           <Badge
-                            variant={area.coverage_status === 'covered' ? 'default' : 'secondary'}
+                            variant={area.coverage_status === "covered" ? "default" : "secondary"}
                           >
                             {area.coverage_status}
                           </Badge>

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Real-Time Connection Status Indicator
@@ -7,21 +7,13 @@
  * with visual indicators and connection details.
  */
 
-import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import {
-  Activity,
-  AlertCircle,
-  CheckCircle,
-  RefreshCw,
-  Wifi,
-  WifiOff,
-  X,
-} from 'lucide-react';
-import { useRealtimeHealth } from '../../hooks/useRealtime';
-import type { ConnectionStatus } from '../../types/realtime';
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Activity, AlertCircle, CheckCircle, RefreshCw, Wifi, WifiOff, X } from "lucide-react";
+import { useRealtimeHealth } from "../../hooks/useRealtime";
+import type { ConnectionStatus } from "../../types/realtime";
 
 export interface ConnectionStatusIndicatorProps {
   /**
@@ -31,7 +23,7 @@ export interface ConnectionStatusIndicatorProps {
   /**
    * Position of the indicator
    */
-  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+  position?: "top-right" | "top-left" | "bottom-right" | "bottom-left";
   /**
    * Show as inline component (not floating)
    */
@@ -40,31 +32,24 @@ export interface ConnectionStatusIndicatorProps {
 
 export function ConnectionStatusIndicator({
   showDetails: initialShowDetails = false,
-  position = 'bottom-right',
+  position = "bottom-right",
   inline = false,
 }: ConnectionStatusIndicatorProps) {
   const [showDetails, setShowDetails] = useState(initialShowDetails);
-  const { overallStatus, statuses, allConnected, anyError } =
-    useRealtimeHealth();
+  const { overallStatus, statuses, allConnected, anyError } = useRealtimeHealth();
 
   const positionClasses = {
-    'top-right': 'top-4 right-4',
-    'top-left': 'top-4 left-4',
-    'bottom-right': 'bottom-4 right-4',
-    'bottom-left': 'bottom-4 left-4',
+    "top-right": "top-4 right-4",
+    "top-left": "top-4 left-4",
+    "bottom-right": "bottom-4 right-4",
+    "bottom-left": "bottom-4 left-4",
   };
 
   return (
-    <div
-      className={
-        inline
-          ? ''
-          : `fixed ${positionClasses[position]} z-50 transition-all`
-      }
-    >
+    <div className={inline ? "" : `fixed ${positionClasses[position]} z-50 transition-all`}>
       {/* Compact Status Badge */}
       <div
-        className={`flex items-center gap-2 ${showDetails ? 'mb-2' : ''}`}
+        className={`flex items-center gap-2 ${showDetails ? "mb-2" : ""}`}
         onClick={() => !showDetails && setShowDetails(true)}
         role="button"
         tabIndex={0}
@@ -80,11 +65,7 @@ export function ConnectionStatusIndicator({
               <Activity className="h-4 w-4" />
               Real-Time Connections
             </h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowDetails(false)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setShowDetails(false)}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -119,9 +100,7 @@ export function ConnectionStatusIndicator({
 
           <div className="mt-3 pt-3 border-t">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                Overall Status
-              </span>
+              <span className="text-xs text-muted-foreground">Overall Status</span>
               <StatusBadge status={overallStatus} />
             </div>
           </div>
@@ -133,8 +112,7 @@ export function ConnectionStatusIndicator({
                 <span className="font-semibold">Connection Issue</span>
               </div>
               <p className="mt-1">
-                Some real-time features may not be available. Check your network
-                connection.
+                Some real-time features may not be available. Check your network connection.
               </p>
             </div>
           )}
@@ -157,55 +135,55 @@ function StatusBadge({
   const config = {
     connected: {
       icon: CheckCircle,
-      color: 'bg-green-500',
-      textColor: 'text-green-700',
-      label: 'Connected',
+      color: "bg-green-500",
+      textColor: "text-green-700",
+      label: "Connected",
     },
     connecting: {
       icon: RefreshCw,
-      color: 'bg-yellow-500',
-      textColor: 'text-yellow-700',
-      label: 'Connecting',
-      animate: 'animate-spin',
+      color: "bg-yellow-500",
+      textColor: "text-yellow-700",
+      label: "Connecting",
+      animate: "animate-spin",
     },
     reconnecting: {
       icon: RefreshCw,
-      color: 'bg-yellow-500',
-      textColor: 'text-yellow-700',
-      label: 'Reconnecting',
-      animate: 'animate-spin',
+      color: "bg-yellow-500",
+      textColor: "text-yellow-700",
+      label: "Reconnecting",
+      animate: "animate-spin",
     },
     disconnected: {
       icon: WifiOff,
-      color: 'bg-gray-500',
-      textColor: 'text-gray-700',
-      label: 'Disconnected',
+      color: "bg-gray-500",
+      textColor: "text-gray-700",
+      label: "Disconnected",
     },
     error: {
       icon: AlertCircle,
-      color: 'bg-red-500',
-      textColor: 'text-red-700',
-      label: 'Error',
+      color: "bg-red-500",
+      textColor: "text-red-700",
+      label: "Error",
     },
   };
 
   const configItem = config[status];
   const { icon: Icon, color, textColor, label } = configItem;
-  const animate = 'animate' in configItem ? configItem.animate : '';
+  const animate = "animate" in configItem ? configItem.animate : "";
 
   if (!showLabel) {
     return (
       <div
         className={`flex items-center gap-1 px-2 py-1 rounded-full ${color} text-white cursor-pointer hover:opacity-90 transition-opacity`}
       >
-        <Icon className={`h-3 w-3 ${animate || ''}`} />
+        <Icon className={`h-3 w-3 ${animate || ""}`} />
       </div>
     );
   }
 
   return (
     <Badge className={`${color} text-white flex items-center gap-1`}>
-      <Icon className={`h-3 w-3 ${animate || ''}`} />
+      <Icon className={`h-3 w-3 ${animate || ""}`} />
       <span className="text-xs font-medium">{label}</span>
     </Badge>
   );
@@ -223,9 +201,9 @@ function ConnectionRow({
   status: ConnectionStatus;
   description: string;
 }) {
-  const isConnected = status === 'connected';
-  const isError = status === 'error';
-  const isConnecting = status === 'connecting' || status === 'reconnecting';
+  const isConnected = status === "connected";
+  const isError = status === "error";
+  const isConnecting = status === "connecting" || status === "reconnecting";
 
   return (
     <div className="flex items-center justify-between py-2">
@@ -233,12 +211,8 @@ function ConnectionRow({
         <div className="flex items-center gap-2">
           {isConnected && <Wifi className="h-3 w-3 text-green-500" />}
           {isError && <AlertCircle className="h-3 w-3 text-red-500" />}
-          {isConnecting && (
-            <RefreshCw className="h-3 w-3 text-yellow-500 animate-spin" />
-          )}
-          {status === 'disconnected' && (
-            <WifiOff className="h-3 w-3 text-gray-500" />
-          )}
+          {isConnecting && <RefreshCw className="h-3 w-3 text-yellow-500 animate-spin" />}
+          {status === "disconnected" && <WifiOff className="h-3 w-3 text-gray-500" />}
           <span className="text-sm font-medium">{label}</span>
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
@@ -263,7 +237,7 @@ export function CompactConnectionStatus() {
           <AlertCircle className="h-4 w-4 text-yellow-500" />
         )}
         <span className="text-sm text-muted-foreground">
-          {allConnected ? 'Live' : 'Connecting'}
+          {allConnected ? "Live" : "Connecting"}
         </span>
       </div>
     </div>

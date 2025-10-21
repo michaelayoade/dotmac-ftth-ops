@@ -11,6 +11,6 @@ import {
   NotificationProvider,
   Modal,
   Toast,
-} from './src/index';
+} from "./src/index";
 
-console.log('Primitives exports working');
+console.log("Primitives exports working");

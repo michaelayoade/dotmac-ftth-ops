@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Building2,
   Plus,
@@ -32,8 +32,8 @@ import {
   FileText,
   CheckSquare,
   Square,
-} from 'lucide-react';
-import { platformConfig } from '@/lib/config';
+} from "lucide-react";
+import { platformConfig } from "@/lib/config";
 
 // Types
 interface BankAccount {
@@ -43,12 +43,12 @@ interface BankAccount {
   bank_name: string;
   bank_country: string;
   account_number_last_four: string;
-  account_type: 'checking' | 'savings' | 'business' | 'money_market';
+  account_type: "checking" | "savings" | "business" | "money_market";
   currency: string;
   routing_number: string | null;
   swift_code: string | null;
   iban: string | null;
-  status: 'pending' | 'verified' | 'failed' | 'suspended';
+  status: "pending" | "verified" | "failed" | "suspended";
   is_primary: boolean;
   is_active: boolean;
   accepts_deposits: boolean;
@@ -80,72 +80,72 @@ interface BankAccountSummary {
 }
 
 const tabs = [
-  { id: 'accounts', label: 'Bank Accounts', icon: Building2 },
-  { id: 'payments', label: 'Manual Payments', icon: Receipt },
-  { id: 'reconciliation', label: 'Reconciliation', icon: CheckSquare },
+  { id: "accounts", label: "Bank Accounts", icon: Building2 },
+  { id: "payments", label: "Manual Payments", icon: Receipt },
+  { id: "reconciliation", label: "Reconciliation", icon: CheckSquare },
 ];
 
 const paymentMethods = [
-  { value: 'cash', label: 'Cash', icon: Banknote },
-  { value: 'check', label: 'Check', icon: FileText },
-  { value: 'bank_transfer', label: 'Bank Transfer', icon: Building2 },
-  { value: 'wire_transfer', label: 'Wire Transfer', icon: Link },
-  { value: 'mobile_money', label: 'Mobile Money', icon: Smartphone },
+  { value: "cash", label: "Cash", icon: Banknote },
+  { value: "check", label: "Check", icon: FileText },
+  { value: "bank_transfer", label: "Bank Transfer", icon: Building2 },
+  { value: "wire_transfer", label: "Wire Transfer", icon: Link },
+  { value: "mobile_money", label: "Mobile Money", icon: Smartphone },
 ];
 
 export default function BankingPage() {
-  const [activeTab, setActiveTab] = useState('accounts');
+  const [activeTab, setActiveTab] = useState("accounts");
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<BankAccountSummary | null>(null);
   const [manualPayments, setManualPayments] = useState<ManualPayment[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddAccount, setShowAddAccount] = useState(false);
   const [showRecordPayment, setShowRecordPayment] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("cash");
   const [showAccountNumber, setShowAccountNumber] = useState<number | null>(null);
 
   // Form states
   const [accountForm, setAccountForm] = useState({
-    account_name: '',
-    account_nickname: '',
-    bank_name: '',
-    bank_address: '',
-    bank_country: 'US',
-    account_number: '',
-    account_type: 'business',
-    currency: 'USD',
-    routing_number: '',
-    swift_code: '',
-    iban: '',
+    account_name: "",
+    account_nickname: "",
+    bank_name: "",
+    bank_address: "",
+    bank_country: "US",
+    account_number: "",
+    account_type: "business",
+    currency: "USD",
+    routing_number: "",
+    swift_code: "",
+    iban: "",
     is_primary: false,
     accepts_deposits: true,
-    notes: '',
+    notes: "",
   });
 
   const [paymentForm, setPaymentForm] = useState({
-    customer_id: '',
-    invoice_id: '',
+    customer_id: "",
+    invoice_id: "",
     bank_account_id: null as number | null,
     amount: 0,
-    currency: 'USD',
-    payment_date: new Date().toISOString().split('T')[0],
-    notes: '',
+    currency: "USD",
+    payment_date: new Date().toISOString().split("T")[0],
+    notes: "",
     // Method-specific fields
-    cash_register_id: '',
-    cashier_name: '',
-    check_number: '',
-    check_bank_name: '',
-    sender_name: '',
-    sender_bank: '',
-    sender_account_last_four: '',
-    mobile_number: '',
-    mobile_provider: '',
+    cash_register_id: "",
+    cashier_name: "",
+    check_number: "",
+    check_bank_name: "",
+    sender_name: "",
+    sender_bank: "",
+    sender_account_last_four: "",
+    mobile_number: "",
+    mobile_provider: "",
   });
 
   useEffect(() => {
-    if (activeTab === 'accounts') {
+    if (activeTab === "accounts") {
       loadBankAccounts();
-    } else if (activeTab === 'payments') {
+    } else if (activeTab === "payments") {
       loadManualPayments();
     }
   }, [activeTab]);
@@ -154,17 +154,17 @@ export default function BankingPage() {
     setLoading(true);
     try {
       const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts`, {
-        credentials: 'include'
+        credentials: "include",
       });
 
       if (response.ok) {
         const data = await response.json();
         setBankAccounts(data);
       } else if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
     } catch (error) {
-      console.error('Failed to load bank accounts:', error);
+      console.error("Failed to load bank accounts:", error);
     } finally {
       setLoading(false);
     }
@@ -172,18 +172,21 @@ export default function BankingPage() {
 
   const loadAccountSummary = async (accountId: number) => {
     try {
-      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts/${accountId}/summary`, {
-        credentials: 'include'
-      });
+      const response = await fetch(
+        `${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts/${accountId}/summary`,
+        {
+          credentials: "include",
+        },
+      );
 
       if (response.ok) {
         const data = await response.json();
         setSelectedAccount(data);
       } else if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
     } catch (error) {
-      console.error('Failed to load account summary:', error);
+      console.error("Failed to load account summary:", error);
     }
   };
 
@@ -191,22 +194,22 @@ export default function BankingPage() {
     setLoading(true);
     try {
       const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/payments/search`, {
-        method: 'POST',
-        credentials: 'include',
+        method: "POST",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({})
+        body: JSON.stringify({}),
       });
 
       if (response.ok) {
         const data = await response.json();
         setManualPayments(data);
       } else if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
     } catch (error) {
-      console.error('Failed to load manual payments:', error);
+      console.error("Failed to load manual payments:", error);
     } finally {
       setLoading(false);
     }
@@ -215,12 +218,12 @@ export default function BankingPage() {
   const handleCreateAccount = async () => {
     try {
       const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts`, {
-        method: 'POST',
-        credentials: 'include',
+        method: "POST",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(accountForm)
+        body: JSON.stringify(accountForm),
       });
 
       if (response.ok) {
@@ -229,13 +232,13 @@ export default function BankingPage() {
         resetAccountForm();
       }
     } catch (error) {
-      console.error('Failed to create bank account:', error);
+      console.error("Failed to create bank account:", error);
     }
   };
 
   const handleRecordPayment = async () => {
     try {
-      const endpoint = `${platformConfig.api.baseUrl}/api/v1/billing/payments/${selectedPaymentMethod.replace('_', '-')}`;
+      const endpoint = `${platformConfig.api.baseUrl}/api/v1/billing/payments/${selectedPaymentMethod.replace("_", "-")}`;
 
       const paymentData = {
         ...paymentForm,
@@ -243,12 +246,12 @@ export default function BankingPage() {
       };
 
       const response = await fetch(endpoint, {
-        method: 'POST',
-        credentials: 'include',
+        method: "POST",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(paymentData)
+        body: JSON.stringify(paymentData),
       });
 
       if (response.ok) {
@@ -257,94 +260,100 @@ export default function BankingPage() {
         resetPaymentForm();
       }
     } catch (error) {
-      console.error('Failed to record payment:', error);
+      console.error("Failed to record payment:", error);
     }
   };
 
   const handleVerifyAccount = async (accountId: number) => {
     try {
-      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts/${accountId}/verify`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts/${accountId}/verify`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ notes: "Verified via admin panel" }),
         },
-        body: JSON.stringify({ notes: 'Verified via admin panel' })
-      });
+      );
 
       if (response.ok) {
         await loadBankAccounts();
       }
     } catch (error) {
-      console.error('Failed to verify account:', error);
+      console.error("Failed to verify account:", error);
     }
   };
 
   const handleVerifyPayment = async (paymentId: number) => {
     try {
-      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/payments/${paymentId}/verify`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await fetch(
+        `${platformConfig.api.baseUrl}/api/v1/billing/payments/${paymentId}/verify`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
 
       if (response.ok) {
         await loadManualPayments();
       }
     } catch (error) {
-      console.error('Failed to verify payment:', error);
+      console.error("Failed to verify payment:", error);
     }
   };
 
   const resetAccountForm = () => {
     setAccountForm({
-      account_name: '',
-      account_nickname: '',
-      bank_name: '',
-      bank_address: '',
-      bank_country: 'US',
-      account_number: '',
-      account_type: 'business',
-      currency: 'USD',
-      routing_number: '',
-      swift_code: '',
-      iban: '',
+      account_name: "",
+      account_nickname: "",
+      bank_name: "",
+      bank_address: "",
+      bank_country: "US",
+      account_number: "",
+      account_type: "business",
+      currency: "USD",
+      routing_number: "",
+      swift_code: "",
+      iban: "",
       is_primary: false,
       accepts_deposits: true,
-      notes: '',
+      notes: "",
     });
   };
 
   const resetPaymentForm = () => {
     setPaymentForm({
-      customer_id: '',
-      invoice_id: '',
+      customer_id: "",
+      invoice_id: "",
       bank_account_id: null,
       amount: 0,
-      currency: 'USD',
-      payment_date: new Date().toISOString().split('T')[0],
-      notes: '',
-      cash_register_id: '',
-      cashier_name: '',
-      check_number: '',
-      check_bank_name: '',
-      sender_name: '',
-      sender_bank: '',
-      sender_account_last_four: '',
-      mobile_number: '',
-      mobile_provider: '',
+      currency: "USD",
+      payment_date: new Date().toISOString().split("T")[0],
+      notes: "",
+      cash_register_id: "",
+      cashier_name: "",
+      check_number: "",
+      check_bank_name: "",
+      sender_name: "",
+      sender_bank: "",
+      sender_account_last_four: "",
+      mobile_number: "",
+      mobile_provider: "",
     });
   };
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      verified: 'bg-emerald-500/10 text-emerald-400',
-      pending: 'bg-amber-500/10 text-amber-400',
-      failed: 'bg-rose-500/10 text-rose-400',
-      suspended: 'bg-muted/10 text-muted-foreground',
-      reconciled: 'bg-sky-500/10 text-sky-400',
+      verified: "bg-emerald-500/10 text-emerald-400",
+      pending: "bg-amber-500/10 text-amber-400",
+      failed: "bg-rose-500/10 text-rose-400",
+      suspended: "bg-muted/10 text-muted-foreground",
+      reconciled: "bg-sky-500/10 text-sky-400",
     };
 
     const icons = {
@@ -356,7 +365,9 @@ export default function BankingPage() {
     };
 
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${styles[status as keyof typeof styles] || styles.pending}`}>
+      <span
+        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${styles[status as keyof typeof styles] || styles.pending}`}
+      >
         {icons[status as keyof typeof icons]}
         {status}
       </span>
@@ -382,7 +393,9 @@ export default function BankingPage() {
         <div className="text-center py-12 bg-accent/50 rounded-lg border border-border">
           <Building2 className="h-12 w-12 text-foreground mx-auto mb-3" />
           <p className="text-muted-foreground">No bank accounts configured</p>
-          <p className="text-sm text-muted-foreground mt-1">Add your company bank accounts to receive payments</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Add your company bank accounts to receive payments
+          </p>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -450,7 +463,7 @@ export default function BankingPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {account.status === 'pending' && (
+                  {account.status === "pending" && (
                     <button
                       onClick={() => handleVerifyAccount(account.id)}
                       className="px-3 py-1.5 text-sm bg-emerald-500/10 text-emerald-400 rounded-lg hover:bg-emerald-500/20"
@@ -501,7 +514,7 @@ export default function BankingPage() {
               <div className="text-sm text-muted-foreground">
                 {selectedAccount.last_reconciliation
                   ? new Date(selectedAccount.last_reconciliation).toLocaleDateString()
-                  : 'Never'}
+                  : "Never"}
               </div>
             </div>
           </div>
@@ -548,7 +561,9 @@ export default function BankingPage() {
         <div className="text-center py-12 bg-accent/50 rounded-lg border border-border">
           <Receipt className="h-12 w-12 text-foreground mx-auto mb-3" />
           <p className="text-muted-foreground">No manual payments recorded</p>
-          <p className="text-sm text-muted-foreground mt-1">Record cash, check, and other manual payments here</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Record cash, check, and other manual payments here
+          </p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -584,11 +599,15 @@ export default function BankingPage() {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      {payment.payment_method === 'cash' && <Banknote className="h-4 w-4" />}
-                      {payment.payment_method === 'check' && <FileText className="h-4 w-4" />}
-                      {payment.payment_method === 'bank_transfer' && <Building2 className="h-4 w-4" />}
-                      {payment.payment_method === 'mobile_money' && <Smartphone className="h-4 w-4" />}
-                      <span className="capitalize">{payment.payment_method.replace('_', ' ')}</span>
+                      {payment.payment_method === "cash" && <Banknote className="h-4 w-4" />}
+                      {payment.payment_method === "check" && <FileText className="h-4 w-4" />}
+                      {payment.payment_method === "bank_transfer" && (
+                        <Building2 className="h-4 w-4" />
+                      )}
+                      {payment.payment_method === "mobile_money" && (
+                        <Smartphone className="h-4 w-4" />
+                      )}
+                      <span className="capitalize">{payment.payment_method.replace("_", " ")}</span>
                     </div>
                   </td>
                   <td className="py-3 px-4 text-right">
@@ -613,7 +632,7 @@ export default function BankingPage() {
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
-                      {payment.status === 'pending' && (
+                      {payment.status === "pending" && (
                         <button
                           onClick={() => handleVerifyPayment(payment.id)}
                           className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300"
@@ -647,7 +666,9 @@ export default function BankingPage() {
       <div className="bg-accent/50 border border-border rounded-lg p-6">
         <div className="text-center">
           <CheckSquare className="h-12 w-12 text-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">Reconciliation helps match payments with bank statements</p>
+          <p className="text-muted-foreground">
+            Reconciliation helps match payments with bank statements
+          </p>
           <p className="text-sm text-muted-foreground mt-2">
             Upload bank statements or manually reconcile payments to ensure accurate records
           </p>
@@ -671,7 +692,9 @@ export default function BankingPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-foreground">Banking & Payments</h1>
-          <p className="text-muted-foreground mt-1">Manage bank accounts and record manual payments</p>
+          <p className="text-muted-foreground mt-1">
+            Manage bank accounts and record manual payments
+          </p>
         </div>
 
         {/* Tabs */}
@@ -683,8 +706,8 @@ export default function BankingPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 py-3 px-1 border-b-2 transition-colors text-sm font-medium ${
                   activeTab === tab.id
-                    ? 'border-sky-500 text-sky-400'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                    ? "border-sky-500 text-sky-400"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                 }`}
               >
                 <tab.icon className="h-4 w-4" />
@@ -696,9 +719,9 @@ export default function BankingPage() {
 
         {/* Content */}
         <div className="bg-card/50 border border-border rounded-lg p-6">
-          {activeTab === 'accounts' && renderBankAccounts()}
-          {activeTab === 'payments' && renderManualPayments()}
-          {activeTab === 'reconciliation' && renderReconciliation()}
+          {activeTab === "accounts" && renderBankAccounts()}
+          {activeTab === "payments" && renderManualPayments()}
+          {activeTab === "reconciliation" && renderReconciliation()}
         </div>
 
         {/* Add Bank Account Modal */}
@@ -716,7 +739,12 @@ export default function BankingPage() {
                     <input
                       type="text"
                       value={accountForm.account_name}
-                      onChange={(e) => setAccountForm({ ...accountForm, account_name: e.target.value })}
+                      onChange={(e) =>
+                        setAccountForm({
+                          ...accountForm,
+                          account_name: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="Company Name on Account"
                     />
@@ -728,7 +756,12 @@ export default function BankingPage() {
                     <input
                       type="text"
                       value={accountForm.account_nickname}
-                      onChange={(e) => setAccountForm({ ...accountForm, account_nickname: e.target.value })}
+                      onChange={(e) =>
+                        setAccountForm({
+                          ...accountForm,
+                          account_nickname: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="Main Operating Account"
                     />
@@ -743,7 +776,12 @@ export default function BankingPage() {
                     <input
                       type="text"
                       value={accountForm.bank_name}
-                      onChange={(e) => setAccountForm({ ...accountForm, bank_name: e.target.value })}
+                      onChange={(e) =>
+                        setAccountForm({
+                          ...accountForm,
+                          bank_name: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="Chase Bank"
                     />
@@ -755,7 +793,12 @@ export default function BankingPage() {
                     <input
                       type="text"
                       value={accountForm.account_number}
-                      onChange={(e) => setAccountForm({ ...accountForm, account_number: e.target.value })}
+                      onChange={(e) =>
+                        setAccountForm({
+                          ...accountForm,
+                          account_number: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
                       placeholder="1234567890"
                     />
@@ -769,7 +812,12 @@ export default function BankingPage() {
                     </label>
                     <select
                       value={accountForm.account_type}
-                      onChange={(e) => setAccountForm({ ...accountForm, account_type: e.target.value })}
+                      onChange={(e) =>
+                        setAccountForm({
+                          ...accountForm,
+                          account_type: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                       <option value="checking">Checking</option>
@@ -784,7 +832,12 @@ export default function BankingPage() {
                     </label>
                     <select
                       value={accountForm.currency}
-                      onChange={(e) => setAccountForm({ ...accountForm, currency: e.target.value })}
+                      onChange={(e) =>
+                        setAccountForm({
+                          ...accountForm,
+                          currency: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                       <option value="USD">USD</option>
@@ -799,7 +852,12 @@ export default function BankingPage() {
                     </label>
                     <select
                       value={accountForm.bank_country}
-                      onChange={(e) => setAccountForm({ ...accountForm, bank_country: e.target.value })}
+                      onChange={(e) =>
+                        setAccountForm({
+                          ...accountForm,
+                          bank_country: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                       <option value="US">United States</option>
@@ -818,7 +876,12 @@ export default function BankingPage() {
                     <input
                       type="text"
                       value={accountForm.routing_number}
-                      onChange={(e) => setAccountForm({ ...accountForm, routing_number: e.target.value })}
+                      onChange={(e) =>
+                        setAccountForm({
+                          ...accountForm,
+                          routing_number: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
                       placeholder="021000021"
                     />
@@ -830,7 +893,12 @@ export default function BankingPage() {
                     <input
                       type="text"
                       value={accountForm.swift_code}
-                      onChange={(e) => setAccountForm({ ...accountForm, swift_code: e.target.value })}
+                      onChange={(e) =>
+                        setAccountForm({
+                          ...accountForm,
+                          swift_code: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
                       placeholder="CHASUS33"
                     />
@@ -854,7 +922,12 @@ export default function BankingPage() {
                     <input
                       type="checkbox"
                       checked={accountForm.is_primary}
-                      onChange={(e) => setAccountForm({ ...accountForm, is_primary: e.target.checked })}
+                      onChange={(e) =>
+                        setAccountForm({
+                          ...accountForm,
+                          is_primary: e.target.checked,
+                        })
+                      }
                       className="h-4 w-4 rounded border-border bg-accent text-sky-500"
                     />
                     <span className="text-sm text-muted-foreground">Set as primary account</span>
@@ -863,10 +936,17 @@ export default function BankingPage() {
                     <input
                       type="checkbox"
                       checked={accountForm.accepts_deposits}
-                      onChange={(e) => setAccountForm({ ...accountForm, accepts_deposits: e.target.checked })}
+                      onChange={(e) =>
+                        setAccountForm({
+                          ...accountForm,
+                          accepts_deposits: e.target.checked,
+                        })
+                      }
                       className="h-4 w-4 rounded border-border bg-accent text-sky-500"
                     />
-                    <span className="text-sm text-muted-foreground">Accept deposits to this account</span>
+                    <span className="text-sm text-muted-foreground">
+                      Accept deposits to this account
+                    </span>
                   </label>
                 </div>
 
@@ -923,8 +1003,8 @@ export default function BankingPage() {
                       onClick={() => setSelectedPaymentMethod(method.value)}
                       className={`p-3 border rounded-lg flex flex-col items-center gap-2 transition-colors ${
                         selectedPaymentMethod === method.value
-                          ? 'border-sky-500 bg-sky-500/10 text-sky-400'
-                          : 'border-border text-muted-foreground hover:bg-accent'
+                          ? "border-sky-500 bg-sky-500/10 text-sky-400"
+                          : "border-border text-muted-foreground hover:bg-accent"
                       }`}
                     >
                       <method.icon className="h-5 w-5" />
@@ -943,7 +1023,12 @@ export default function BankingPage() {
                     <input
                       type="text"
                       value={paymentForm.customer_id}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, customer_id: e.target.value })}
+                      onChange={(e) =>
+                        setPaymentForm({
+                          ...paymentForm,
+                          customer_id: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="CUST-001"
                     />
@@ -955,7 +1040,12 @@ export default function BankingPage() {
                     <input
                       type="text"
                       value={paymentForm.invoice_id}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, invoice_id: e.target.value })}
+                      onChange={(e) =>
+                        setPaymentForm({
+                          ...paymentForm,
+                          invoice_id: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="INV-001 (optional)"
                     />
@@ -970,7 +1060,12 @@ export default function BankingPage() {
                     <input
                       type="number"
                       value={paymentForm.amount}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, amount: parseFloat(e.target.value) })}
+                      onChange={(e) =>
+                        setPaymentForm({
+                          ...paymentForm,
+                          amount: parseFloat(e.target.value),
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="0.00"
                       step="0.01"
@@ -982,7 +1077,12 @@ export default function BankingPage() {
                     </label>
                     <select
                       value={paymentForm.currency}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, currency: e.target.value })}
+                      onChange={(e) =>
+                        setPaymentForm({
+                          ...paymentForm,
+                          currency: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                       <option value="USD">USD</option>
@@ -997,14 +1097,19 @@ export default function BankingPage() {
                     <input
                       type="date"
                       value={paymentForm.payment_date}
-                      onChange={(e) => setPaymentForm({ ...paymentForm, payment_date: e.target.value })}
+                      onChange={(e) =>
+                        setPaymentForm({
+                          ...paymentForm,
+                          payment_date: e.target.value,
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
                 </div>
 
                 {/* Method-specific fields */}
-                {selectedPaymentMethod === 'cash' && (
+                {selectedPaymentMethod === "cash" && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">
@@ -1013,7 +1118,12 @@ export default function BankingPage() {
                       <input
                         type="text"
                         value={paymentForm.cash_register_id}
-                        onChange={(e) => setPaymentForm({ ...paymentForm, cash_register_id: e.target.value })}
+                        onChange={(e) =>
+                          setPaymentForm({
+                            ...paymentForm,
+                            cash_register_id: e.target.value,
+                          })
+                        }
                         className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                         placeholder="REG-001"
                       />
@@ -1025,7 +1135,12 @@ export default function BankingPage() {
                       <input
                         type="text"
                         value={paymentForm.cashier_name}
-                        onChange={(e) => setPaymentForm({ ...paymentForm, cashier_name: e.target.value })}
+                        onChange={(e) =>
+                          setPaymentForm({
+                            ...paymentForm,
+                            cashier_name: e.target.value,
+                          })
+                        }
                         className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                         placeholder="John Doe"
                       />
@@ -1033,7 +1148,7 @@ export default function BankingPage() {
                   </div>
                 )}
 
-                {selectedPaymentMethod === 'check' && (
+                {selectedPaymentMethod === "check" && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">
@@ -1042,7 +1157,12 @@ export default function BankingPage() {
                       <input
                         type="text"
                         value={paymentForm.check_number}
-                        onChange={(e) => setPaymentForm({ ...paymentForm, check_number: e.target.value })}
+                        onChange={(e) =>
+                          setPaymentForm({
+                            ...paymentForm,
+                            check_number: e.target.value,
+                          })
+                        }
                         className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                         placeholder="1234"
                       />
@@ -1054,7 +1174,12 @@ export default function BankingPage() {
                       <input
                         type="text"
                         value={paymentForm.check_bank_name}
-                        onChange={(e) => setPaymentForm({ ...paymentForm, check_bank_name: e.target.value })}
+                        onChange={(e) =>
+                          setPaymentForm({
+                            ...paymentForm,
+                            check_bank_name: e.target.value,
+                          })
+                        }
                         className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                         placeholder="Wells Fargo"
                       />
@@ -1062,7 +1187,8 @@ export default function BankingPage() {
                   </div>
                 )}
 
-                {(selectedPaymentMethod === 'bank_transfer' || selectedPaymentMethod === 'wire_transfer') && (
+                {(selectedPaymentMethod === "bank_transfer" ||
+                  selectedPaymentMethod === "wire_transfer") && (
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">
@@ -1071,7 +1197,12 @@ export default function BankingPage() {
                       <input
                         type="text"
                         value={paymentForm.sender_name}
-                        onChange={(e) => setPaymentForm({ ...paymentForm, sender_name: e.target.value })}
+                        onChange={(e) =>
+                          setPaymentForm({
+                            ...paymentForm,
+                            sender_name: e.target.value,
+                          })
+                        }
                         className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                         placeholder="Company Name / Individual"
                       />
@@ -1084,7 +1215,12 @@ export default function BankingPage() {
                         <input
                           type="text"
                           value={paymentForm.sender_bank}
-                          onChange={(e) => setPaymentForm({ ...paymentForm, sender_bank: e.target.value })}
+                          onChange={(e) =>
+                            setPaymentForm({
+                              ...paymentForm,
+                              sender_bank: e.target.value,
+                            })
+                          }
                           className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                           placeholder="Bank of America"
                         />
@@ -1096,7 +1232,12 @@ export default function BankingPage() {
                         <input
                           type="text"
                           value={paymentForm.sender_account_last_four}
-                          onChange={(e) => setPaymentForm({ ...paymentForm, sender_account_last_four: e.target.value })}
+                          onChange={(e) =>
+                            setPaymentForm({
+                              ...paymentForm,
+                              sender_account_last_four: e.target.value,
+                            })
+                          }
                           className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono"
                           placeholder="1234"
                           maxLength={4}
@@ -1106,7 +1247,7 @@ export default function BankingPage() {
                   </div>
                 )}
 
-                {selectedPaymentMethod === 'mobile_money' && (
+                {selectedPaymentMethod === "mobile_money" && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-2">
@@ -1115,7 +1256,12 @@ export default function BankingPage() {
                       <input
                         type="text"
                         value={paymentForm.mobile_number}
-                        onChange={(e) => setPaymentForm({ ...paymentForm, mobile_number: e.target.value })}
+                        onChange={(e) =>
+                          setPaymentForm({
+                            ...paymentForm,
+                            mobile_number: e.target.value,
+                          })
+                        }
                         className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                         placeholder="+254700000000"
                       />
@@ -1127,7 +1273,12 @@ export default function BankingPage() {
                       <input
                         type="text"
                         value={paymentForm.mobile_provider}
-                        onChange={(e) => setPaymentForm({ ...paymentForm, mobile_provider: e.target.value })}
+                        onChange={(e) =>
+                          setPaymentForm({
+                            ...paymentForm,
+                            mobile_provider: e.target.value,
+                          })
+                        }
                         className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                         placeholder="M-Pesa"
                       />
@@ -1140,17 +1291,20 @@ export default function BankingPage() {
                     Deposit To Account
                   </label>
                   <select
-                    value={paymentForm.bank_account_id || ''}
-                    onChange={(e) => setPaymentForm({
-                      ...paymentForm,
-                      bank_account_id: e.target.value ? parseInt(e.target.value) : null
-                    })}
+                    value={paymentForm.bank_account_id || ""}
+                    onChange={(e) =>
+                      setPaymentForm({
+                        ...paymentForm,
+                        bank_account_id: e.target.value ? parseInt(e.target.value) : null,
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="">Select bank account</option>
                     {bankAccounts.map((account) => (
                       <option key={account.id} value={account.id}>
-                        {account.account_nickname || account.account_name} - ••••{account.account_number_last_four}
+                        {account.account_nickname || account.account_name} - ••••
+                        {account.account_number_last_four}
                       </option>
                     ))}
                   </select>

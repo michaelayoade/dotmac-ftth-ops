@@ -6,8 +6,8 @@ SQLAlchemy models for software licensing, activation, compliance, and auditing.
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
-from uuid import uuid4
+from typing import Any, cast
+from uuid import UUID, uuid4
 
 from sqlalchemy import (
     JSON,
@@ -20,6 +20,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    UUID as SQLUUID,
 )
 from sqlalchemy import (
     Enum as SQLEnum,
@@ -162,8 +163,8 @@ class License(BaseModel):
     )
 
     # Customer/Reseller relationships
-    customer_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("customers.id"), nullable=True, index=True
+    customer_id: Mapped[UUID | None] = mapped_column(
+        SQLUUID(as_uuid=True), ForeignKey("customers.id"), nullable=True, index=True
     )
     reseller_id: Mapped[str | None] = mapped_column(
         String(36), nullable=True, index=True
@@ -394,8 +395,8 @@ class LicenseOrder(BaseModel):
     order_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
 
     # Customer/Reseller
-    customer_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("customers.id"), nullable=True, index=True
+    customer_id: Mapped[UUID | None] = mapped_column(
+        SQLUUID(as_uuid=True), ForeignKey("customers.id"), nullable=True, index=True
     )
     reseller_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     tenant_id: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -426,8 +427,8 @@ class LicenseOrder(BaseModel):
     )
 
     # Billing integration
-    invoice_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("invoices.id"), nullable=True, index=True
+    invoice_id: Mapped[UUID | None] = mapped_column(
+        SQLUUID(as_uuid=True), ForeignKey("invoices.invoice_id"), nullable=True, index=True
     )
     subscription_id: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
 
@@ -472,8 +473,8 @@ class ComplianceAudit(BaseModel):
     audit_type: Mapped[AuditType] = mapped_column(
         SQLEnum(AuditType), nullable=False, index=True
     )
-    customer_id: Mapped[str | None] = mapped_column(
-        String(36), ForeignKey("customers.id"), nullable=True, index=True
+    customer_id: Mapped[UUID | None] = mapped_column(
+        SQLUUID(as_uuid=True), ForeignKey("customers.id"), nullable=True, index=True
     )
     product_ids: Mapped[list[str]] = mapped_column(JSON, nullable=False)
     audit_scope: Mapped[AuditScope] = mapped_column(SQLEnum(AuditScope), nullable=False)

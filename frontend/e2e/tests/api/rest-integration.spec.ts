@@ -2,13 +2,13 @@
  * E2E tests for REST API integration
  * Tests API calls and their effects on the UI
  */
-import { test, expect, type Page, type APIRequestContext } from '@playwright/test';
+import { test, expect, type Page, type APIRequestContext } from "@playwright/test";
 
-test.describe('REST API Integration', () => {
-  const BASE_URL = 'http://localhost:8000';
-  const APP_URL = 'http://localhost:3000';
-  const TEST_USERNAME = 'admin';
-  const TEST_PASSWORD = 'admin123';
+test.describe("REST API Integration", () => {
+  const BASE_URL = "http://localhost:8000";
+  const APP_URL = "http://localhost:3000";
+  const TEST_USERNAME = "admin";
+  const TEST_PASSWORD = "admin123";
 
   let authToken: string;
 
@@ -19,8 +19,8 @@ test.describe('REST API Integration', () => {
     const response = await request.post(`${BASE_URL}/api/v1/auth/login`, {
       data: {
         username: TEST_USERNAME,
-        password: TEST_PASSWORD
-      }
+        password: TEST_PASSWORD,
+      },
     });
 
     expect(response.ok()).toBeTruthy();
@@ -33,25 +33,25 @@ test.describe('REST API Integration', () => {
     authToken = await authenticate(request);
   });
 
-  test.describe('API Error Handling', () => {
-    test('should handle 422 validation errors in UI', async ({ page }) => {
+  test.describe("API Error Handling", () => {
+    test("should handle 422 validation errors in UI", async ({ page }) => {
       await page.goto(`${APP_URL}/dashboard`);
 
       // Intercept API call to return validation error
-      await page.route('**/api/v1/**', route => {
-        if (route.request().method() === 'POST') {
+      await page.route("**/api/v1/**", (route) => {
+        if (route.request().method() === "POST") {
           route.fulfill({
             status: 422,
-            contentType: 'application/json',
+            contentType: "application/json",
             body: JSON.stringify({
               detail: [
                 {
-                  loc: ['body', 'email'],
-                  msg: 'Email already exists',
-                  type: 'value_error'
-                }
-              ]
-            })
+                  loc: ["body", "email"],
+                  msg: "Email already exists",
+                  type: "value_error",
+                },
+              ],
+            }),
           });
         } else {
           route.continue();
@@ -71,17 +71,17 @@ test.describe('REST API Integration', () => {
       }
     });
 
-    test('should handle 500 errors gracefully', async ({ page }) => {
+    test("should handle 500 errors gracefully", async ({ page }) => {
       await page.goto(`${APP_URL}/dashboard`);
 
       // Intercept API calls to return 500 error
-      await page.route('**/api/v1/**', route => {
+      await page.route("**/api/v1/**", (route) => {
         route.fulfill({
           status: 500,
-          contentType: 'application/json',
+          contentType: "application/json",
           body: JSON.stringify({
-            detail: 'Internal server error'
-          })
+            detail: "Internal server error",
+          }),
         });
       });
 
@@ -89,27 +89,31 @@ test.describe('REST API Integration', () => {
       await page.reload();
 
       // Look for error handling UI
-      const errorBanner = page.locator('.error-banner, [role="alert"], .alert-error, text=/error|failed/i').first();
+      const errorBanner = page
+        .locator('.error-banner, [role="alert"], .alert-error, text=/error|failed/i')
+        .first();
 
       // Give it time to appear
       await page.waitForTimeout(1000);
 
       // Document that error handling exists (or doesn't)
       const hasErrorHandling = await errorBanner.isVisible().catch(() => false);
-      console.log('500 Error handling present:', hasErrorHandling);
+      console.log("500 Error handling present:", hasErrorHandling);
     });
 
-    test('should handle network timeouts', async ({ page }) => {
+    test("should handle network timeouts", async ({ page }) => {
       await page.goto(`${APP_URL}/dashboard`);
 
       // Intercept API calls and delay response
-      await page.route('**/api/v1/**', async route => {
-        await new Promise(resolve => setTimeout(resolve, 10000)); // 10 second delay
-        route.abort('timedout');
+      await page.route("**/api/v1/**", async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 10000)); // 10 second delay
+        route.abort("timedout");
       });
 
       // Try to trigger an API call
-      const refreshButton = page.locator('[data-testid="refresh"], button:has-text("Refresh"), button:has-text("Reload")').first();
+      const refreshButton = page
+        .locator('[data-testid="refresh"], button:has-text("Refresh"), button:has-text("Reload")')
+        .first();
 
       if (await refreshButton.isVisible({ timeout: 2000 }).catch(() => false)) {
         await refreshButton.click();
@@ -118,20 +122,22 @@ test.describe('REST API Integration', () => {
         await page.waitForTimeout(2000);
 
         // Check for timeout handling
-        const timeoutError = page.locator('text=/timeout|timed out|taking too long/i').first();
-        const hasTimeoutHandling = await timeoutError.isVisible({ timeout: 1000 }).catch(() => false);
-        console.log('Timeout error handling present:', hasTimeoutHandling);
+        const timeoutError = page.locator("text=/timeout|timed out|taking too long/i").first();
+        const hasTimeoutHandling = await timeoutError
+          .isVisible({ timeout: 1000 })
+          .catch(() => false);
+        console.log("Timeout error handling present:", hasTimeoutHandling);
       }
     });
   });
 
-  test.describe('API Response Handling', () => {
-    test('should display API data in UI', async ({ page, request }) => {
+  test.describe("API Response Handling", () => {
+    test("should display API data in UI", async ({ page, request }) => {
       // Login first
       await page.goto(`${APP_URL}/login`);
-      await page.getByTestId('email-input').fill(TEST_USERNAME);
-      await page.getByTestId('password-input').fill(TEST_PASSWORD);
-      await page.getByTestId('submit-button').click();
+      await page.getByTestId("email-input").fill(TEST_USERNAME);
+      await page.getByTestId("password-input").fill(TEST_PASSWORD);
+      await page.getByTestId("submit-button").click();
 
       await page.waitForURL(/dashboard/, { timeout: 10000 });
 
@@ -140,22 +146,22 @@ test.describe('REST API Integration', () => {
 
       if (await dataElements.isVisible({ timeout: 2000 }).catch(() => false)) {
         await expect(dataElements).toBeVisible();
-        console.log('UI displays API data');
+        console.log("UI displays API data");
       } else {
-        console.log('No obvious API data display elements found');
+        console.log("No obvious API data display elements found");
       }
     });
 
-    test('should handle empty API responses', async ({ page }) => {
+    test("should handle empty API responses", async ({ page }) => {
       await page.goto(`${APP_URL}/dashboard`);
 
       // Intercept API to return empty array
-      await page.route('**/api/v1/**', route => {
-        if (route.request().method() === 'GET') {
+      await page.route("**/api/v1/**", (route) => {
+        if (route.request().method() === "GET") {
           route.fulfill({
             status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify([])
+            contentType: "application/json",
+            body: JSON.stringify([]),
           });
         } else {
           route.continue();
@@ -165,27 +171,31 @@ test.describe('REST API Integration', () => {
       await page.reload();
 
       // Look for empty state messaging
-      const emptyState = page.locator('[data-testid="empty-state"], .empty-state, text=/no data|no items|nothing to show/i').first();
+      const emptyState = page
+        .locator(
+          '[data-testid="empty-state"], .empty-state, text=/no data|no items|nothing to show/i',
+        )
+        .first();
 
       await page.waitForTimeout(1000);
 
       const hasEmptyState = await emptyState.isVisible().catch(() => false);
-      console.log('Empty state handling present:', hasEmptyState);
+      console.log("Empty state handling present:", hasEmptyState);
     });
   });
 
-  test.describe('API Authentication', () => {
-    test('should handle unauthorized (401) responses', async ({ page }) => {
+  test.describe("API Authentication", () => {
+    test("should handle unauthorized (401) responses", async ({ page }) => {
       await page.goto(`${APP_URL}/dashboard`);
 
       // Intercept API to return 401
-      await page.route('**/api/v1/**', route => {
+      await page.route("**/api/v1/**", (route) => {
         route.fulfill({
           status: 401,
-          contentType: 'application/json',
+          contentType: "application/json",
           body: JSON.stringify({
-            detail: 'Unauthorized'
-          })
+            detail: "Unauthorized",
+          }),
         });
       });
 
@@ -194,29 +204,29 @@ test.describe('REST API Integration', () => {
       // Should redirect to login
       await page.waitForTimeout(2000);
 
-      const isOnLogin = page.url().includes('/login');
-      console.log('Redirects to login on 401:', isOnLogin);
+      const isOnLogin = page.url().includes("/login");
+      console.log("Redirects to login on 401:", isOnLogin);
 
       if (isOnLogin) {
         await expect(page).toHaveURL(/login/);
       }
     });
 
-    test('should include auth headers in API requests', async ({ page }) => {
+    test("should include auth headers in API requests", async ({ page }) => {
       // Login first
       await page.goto(`${APP_URL}/login`);
-      await page.getByTestId('email-input').fill(TEST_USERNAME);
-      await page.getByTestId('password-input').fill(TEST_PASSWORD);
-      await page.getByTestId('submit-button').click();
+      await page.getByTestId("email-input").fill(TEST_USERNAME);
+      await page.getByTestId("password-input").fill(TEST_PASSWORD);
+      await page.getByTestId("submit-button").click();
 
       await page.waitForURL(/dashboard/, { timeout: 10000 });
 
       // Monitor API requests
       let hasAuthHeader = false;
-      page.on('request', request => {
-        if (request.url().includes('/api/v1/')) {
+      page.on("request", (request) => {
+        if (request.url().includes("/api/v1/")) {
           const headers = request.headers();
-          if (headers['authorization'] || headers['cookie']) {
+          if (headers["authorization"] || headers["cookie"]) {
             hasAuthHeader = true;
           }
         }
@@ -227,20 +237,20 @@ test.describe('REST API Integration', () => {
 
       await page.waitForTimeout(1000);
 
-      console.log('API requests include auth:', hasAuthHeader);
+      console.log("API requests include auth:", hasAuthHeader);
     });
   });
 
-  test.describe('CORS and Security', () => {
-    test('should handle CORS properly', async ({ request }) => {
+  test.describe("CORS and Security", () => {
+    test("should handle CORS properly", async ({ request }) => {
       // Test OPTIONS preflight request
       const response = await request.fetch(`${BASE_URL}/api/v1/health`, {
-        method: 'OPTIONS',
+        method: "OPTIONS",
         headers: {
-          'Origin': APP_URL,
-          'Access-Control-Request-Method': 'GET',
-          'Access-Control-Request-Headers': 'Content-Type'
-        }
+          Origin: APP_URL,
+          "Access-Control-Request-Method": "GET",
+          "Access-Control-Request-Headers": "Content-Type",
+        },
       });
 
       // Backend should respond to OPTIONS
@@ -248,32 +258,32 @@ test.describe('REST API Integration', () => {
 
       // Should have CORS headers
       const headers = response.headers();
-      console.log('CORS Headers present:', {
-        'access-control-allow-origin': !!headers['access-control-allow-origin'],
-        'access-control-allow-methods': !!headers['access-control-allow-methods']
+      console.log("CORS Headers present:", {
+        "access-control-allow-origin": !!headers["access-control-allow-origin"],
+        "access-control-allow-methods": !!headers["access-control-allow-methods"],
       });
     });
 
-    test('should use HTTPS in production mode', async () => {
+    test("should use HTTPS in production mode", async () => {
       // This test just documents security expectations
-      const isProduction = process.env.NODE_ENV === 'production';
+      const isProduction = process.env.NODE_ENV === "production";
 
       if (isProduction) {
         expect(BASE_URL).toMatch(/^https:/);
         expect(APP_URL).toMatch(/^https:/);
       } else {
-        console.log('Running in development mode - HTTP is acceptable');
+        console.log("Running in development mode - HTTP is acceptable");
       }
     });
   });
 
-  test.describe('API Performance', () => {
-    test('should handle concurrent requests', async ({ page }) => {
+  test.describe("API Performance", () => {
+    test("should handle concurrent requests", async ({ page }) => {
       // Login first
       await page.goto(`${APP_URL}/login`);
-      await page.getByTestId('email-input').fill(TEST_USERNAME);
-      await page.getByTestId('password-input').fill(TEST_PASSWORD);
-      await page.getByTestId('submit-button').click();
+      await page.getByTestId("email-input").fill(TEST_USERNAME);
+      await page.getByTestId("password-input").fill(TEST_PASSWORD);
+      await page.getByTestId("submit-button").click();
 
       await page.waitForURL(/dashboard/, { timeout: 10000 });
 
@@ -282,16 +292,16 @@ test.describe('REST API Integration', () => {
       let maxConcurrent = 0;
       let currentConcurrent = 0;
 
-      page.on('request', request => {
-        if (request.url().includes('/api/v1/')) {
+      page.on("request", (request) => {
+        if (request.url().includes("/api/v1/")) {
           requestCount++;
           currentConcurrent++;
           maxConcurrent = Math.max(maxConcurrent, currentConcurrent);
         }
       });
 
-      page.on('response', response => {
-        if (response.url().includes('/api/v1/')) {
+      page.on("response", (response) => {
+        if (response.url().includes("/api/v1/")) {
           currentConcurrent--;
         }
       });
@@ -301,26 +311,26 @@ test.describe('REST API Integration', () => {
 
       await page.waitForTimeout(2000);
 
-      console.log('API Requests:', {
+      console.log("API Requests:", {
         total: requestCount,
-        maxConcurrent: maxConcurrent
+        maxConcurrent: maxConcurrent,
       });
     });
 
-    test('should cache repeated requests', async ({ page }) => {
+    test("should cache repeated requests", async ({ page }) => {
       // Login first
       await page.goto(`${APP_URL}/login`);
-      await page.getByTestId('email-input').fill(TEST_USERNAME);
-      await page.getByTestId('password-input').fill(TEST_PASSWORD);
-      await page.getByTestId('submit-button').click();
+      await page.getByTestId("email-input").fill(TEST_USERNAME);
+      await page.getByTestId("password-input").fill(TEST_PASSWORD);
+      await page.getByTestId("submit-button").click();
 
       await page.waitForURL(/dashboard/, { timeout: 10000 });
 
       // Track requests to same endpoint
       const requests: Map<string, number> = new Map();
 
-      page.on('request', request => {
-        if (request.url().includes('/api/v1/')) {
+      page.on("request", (request) => {
+        if (request.url().includes("/api/v1/")) {
           const url = request.url();
           requests.set(url, (requests.get(url) || 0) + 1);
         }
@@ -336,8 +346,8 @@ test.describe('REST API Integration', () => {
       // Check if same endpoints are being called multiple times
       const repeatedRequests = Array.from(requests.entries()).filter(([_, count]) => count > 1);
 
-      console.log('Repeated API requests:', repeatedRequests.length);
-      console.log('Sample repeated requests:', repeatedRequests.slice(0, 3));
+      console.log("Repeated API requests:", repeatedRequests.length);
+      console.log("Sample repeated requests:", repeatedRequests.slice(0, 3));
     });
   });
 });

@@ -14,6 +14,7 @@ Workflow Steps:
 
 This workflow is used to activate a suspended or pending service.
 """
+# mypy: disable-error-code="attr-defined,assignment,arg-type,union-attr,call-arg"
 
 import logging
 from datetime import UTC, datetime

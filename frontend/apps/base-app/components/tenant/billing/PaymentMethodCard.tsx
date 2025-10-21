@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { PaymentMethod } from '@/hooks/useTenantPaymentMethods';
-import { CreditCard, Building2, Wallet, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import React from "react";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { PaymentMethod } from "@/hooks/useTenantPaymentMethods";
+import { CreditCard, Building2, Wallet, CheckCircle, AlertCircle, Clock } from "lucide-react";
 
 interface PaymentMethodCardProps {
   paymentMethod: PaymentMethod;
@@ -16,26 +16,26 @@ interface PaymentMethodCardProps {
 }
 
 const statusColors: Record<string, string> = {
-  active: 'bg-green-500/10 text-green-500 border-green-500/20',
-  pending_verification: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-  verification_failed: 'bg-red-500/10 text-red-500 border-red-500/20',
-  expired: 'bg-gray-500/10 text-gray-500 border-gray-500/20',
-  inactive: 'bg-gray-500/10 text-gray-500 border-gray-500/20',
+  active: "bg-green-500/10 text-green-500 border-green-500/20",
+  pending_verification: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+  verification_failed: "bg-red-500/10 text-red-500 border-red-500/20",
+  expired: "bg-gray-500/10 text-gray-500 border-gray-500/20",
+  inactive: "bg-gray-500/10 text-gray-500 border-gray-500/20",
 };
 
 const getCardBrandIcon = (brand?: string) => {
   // Return emoji or use actual brand icons
   const icons: Record<string, string> = {
-    visa: '💳',
-    mastercard: '💳',
-    amex: '💳',
-    discover: '💳',
-    diners: '💳',
-    jcb: '💳',
-    unionpay: '💳',
-    unknown: '💳',
+    visa: "💳",
+    mastercard: "💳",
+    amex: "💳",
+    discover: "💳",
+    diners: "💳",
+    jcb: "💳",
+    unionpay: "💳",
+    unknown: "💳",
   };
-  return icons[brand || 'unknown'] || '💳';
+  return icons[brand || "unknown"] || "💳";
 };
 
 export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
@@ -47,11 +47,11 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
 }) => {
   const getMethodIcon = () => {
     switch (paymentMethod.method_type) {
-      case 'card':
+      case "card":
         return <CreditCard className="w-5 h-5" />;
-      case 'bank_account':
+      case "bank_account":
         return <Building2 className="w-5 h-5" />;
-      case 'wallet':
+      case "wallet":
         return <Wallet className="w-5 h-5" />;
       default:
         return <CreditCard className="w-5 h-5" />;
@@ -59,49 +59,51 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
   };
 
   const getMethodDisplay = () => {
-    if (paymentMethod.method_type === 'card') {
+    if (paymentMethod.method_type === "card") {
       return {
-        title: `${paymentMethod.card_brand?.toUpperCase() || 'Card'} •••• ${paymentMethod.card_last4}`,
-        subtitle: paymentMethod.card_exp_month && paymentMethod.card_exp_year
-          ? `Expires ${String(paymentMethod.card_exp_month).padStart(2, '0')}/${paymentMethod.card_exp_year}`
-          : null,
+        title: `${paymentMethod.card_brand?.toUpperCase() || "Card"} •••• ${paymentMethod.card_last4}`,
+        subtitle:
+          paymentMethod.card_exp_month && paymentMethod.card_exp_year
+            ? `Expires ${String(paymentMethod.card_exp_month).padStart(2, "0")}/${paymentMethod.card_exp_year}`
+            : null,
         icon: getCardBrandIcon(paymentMethod.card_brand),
       };
     }
 
-    if (paymentMethod.method_type === 'bank_account') {
+    if (paymentMethod.method_type === "bank_account") {
       return {
-        title: `${paymentMethod.bank_name || 'Bank Account'} •••• ${paymentMethod.bank_account_last4}`,
+        title: `${paymentMethod.bank_name || "Bank Account"} •••• ${paymentMethod.bank_account_last4}`,
         subtitle: paymentMethod.bank_account_type
-          ? paymentMethod.bank_account_type.charAt(0).toUpperCase() + paymentMethod.bank_account_type.slice(1)
+          ? paymentMethod.bank_account_type.charAt(0).toUpperCase() +
+            paymentMethod.bank_account_type.slice(1)
           : null,
-        icon: '🏦',
+        icon: "🏦",
       };
     }
 
-    if (paymentMethod.method_type === 'wallet') {
+    if (paymentMethod.method_type === "wallet") {
       return {
-        title: paymentMethod.wallet_type || 'Digital Wallet',
+        title: paymentMethod.wallet_type || "Digital Wallet",
         subtitle: null,
-        icon: '📱',
+        icon: "📱",
       };
     }
 
     return {
-      title: paymentMethod.method_type.replace('_', ' ').toUpperCase(),
+      title: paymentMethod.method_type.replace("_", " ").toUpperCase(),
       subtitle: null,
-      icon: '💳',
+      icon: "💳",
     };
   };
 
   const display = getMethodDisplay();
   const statusColor = statusColors[paymentMethod.status] || statusColors.active;
 
-  const needsVerification = paymentMethod.status === 'pending_verification' &&
-                           paymentMethod.method_type === 'bank_account';
+  const needsVerification =
+    paymentMethod.status === "pending_verification" && paymentMethod.method_type === "bank_account";
 
   return (
-    <Card variant="default" className={paymentMethod.is_default ? 'ring-2 ring-primary' : ''}>
+    <Card variant="default" className={paymentMethod.is_default ? "ring-2 ring-primary" : ""}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -112,9 +114,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
               <div className="flex items-center gap-2">
                 <p className="font-medium">{display.title}</p>
                 {paymentMethod.is_default && (
-                  <Badge className="bg-primary/10 text-primary border-primary/20">
-                    Default
-                  </Badge>
+                  <Badge className="bg-primary/10 text-primary border-primary/20">Default</Badge>
                 )}
               </div>
               {display.subtitle && (
@@ -124,14 +124,14 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
           </div>
 
           <Badge className={statusColor}>
-            {paymentMethod.status === 'pending_verification' ? (
+            {paymentMethod.status === "pending_verification" ? (
               <Clock className="w-3 h-3 mr-1" />
-            ) : paymentMethod.status === 'verification_failed' ? (
+            ) : paymentMethod.status === "verification_failed" ? (
               <AlertCircle className="w-3 h-3 mr-1" />
             ) : paymentMethod.is_verified ? (
               <CheckCircle className="w-3 h-3 mr-1" />
             ) : null}
-            {paymentMethod.status.replace('_', ' ').toUpperCase()}
+            {paymentMethod.status.replace("_", " ").toUpperCase()}
           </Badge>
         </div>
       </CardHeader>
@@ -160,13 +160,14 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
         {needsVerification && (
           <div className="mt-3 rounded-md bg-yellow-500/10 border border-yellow-500/20 p-3">
             <p className="text-sm text-yellow-600 dark:text-yellow-500">
-              <strong>Verification Required:</strong> Check your bank statement for 2 small deposits and verify this account.
+              <strong>Verification Required:</strong> Check your bank statement for 2 small deposits
+              and verify this account.
             </p>
           </div>
         )}
 
         {/* Verification Failed */}
-        {paymentMethod.status === 'verification_failed' && (
+        {paymentMethod.status === "verification_failed" && (
           <div className="mt-3 rounded-md bg-red-500/10 border border-red-500/20 p-3">
             <p className="text-sm text-red-600 dark:text-red-500">
               Verification failed. Please try again or contact support.
@@ -175,7 +176,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
         )}
 
         {/* Expired Notice */}
-        {paymentMethod.status === 'expired' && (
+        {paymentMethod.status === "expired" && (
           <div className="mt-3 rounded-md bg-gray-500/10 border border-gray-500/20 p-3">
             <p className="text-sm text-muted-foreground">
               This payment method has expired. Please add a new one.
@@ -197,7 +198,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
           </Button>
         )}
 
-        {!paymentMethod.is_default && paymentMethod.status === 'active' && onSetDefault && (
+        {!paymentMethod.is_default && paymentMethod.status === "active" && onSetDefault && (
           <Button
             variant="outline"
             size="sm"
@@ -205,7 +206,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
             disabled={isUpdating}
             className="flex-1"
           >
-            {isUpdating ? 'Setting...' : 'Set as Default'}
+            {isUpdating ? "Setting..." : "Set as Default"}
           </Button>
         )}
 
@@ -217,7 +218,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
             disabled={isUpdating || paymentMethod.is_default}
             className="flex-1"
           >
-            {isUpdating ? 'Removing...' : 'Remove'}
+            {isUpdating ? "Removing..." : "Remove"}
           </Button>
         )}
       </CardFooter>

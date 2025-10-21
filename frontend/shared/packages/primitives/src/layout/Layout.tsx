@@ -2,146 +2,146 @@
  * Unstyled, composable Layout primitives (Dashboard, Grid, Stack, Container)
  */
 
-import { Slot } from '@radix-ui/react-slot';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { clsx } from 'clsx';
-import type React from 'react';
-import { forwardRef } from 'react';
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { clsx } from "clsx";
+import type React from "react";
+import { forwardRef } from "react";
 
 // Container variants
-const containerVariants = cva('', {
+const containerVariants = cva("", {
   variants: {
     size: {
-      xs: '',
-      sm: '',
-      md: '',
-      lg: '',
-      xl: '',
-      '2xl': '',
-      full: '',
+      xs: "",
+      sm: "",
+      md: "",
+      lg: "",
+      xl: "",
+      "2xl": "",
+      full: "",
     },
     padding: {
-      none: '',
-      sm: '',
-      md: '',
-      lg: '',
-      xl: '',
+      none: "",
+      sm: "",
+      md: "",
+      lg: "",
+      xl: "",
     },
   },
   defaultVariants: {
-    size: 'lg',
-    padding: 'md',
+    size: "lg",
+    padding: "md",
   },
 });
 
 // Grid variants
-const gridVariants = cva('', {
+const gridVariants = cva("", {
   variants: {
     cols: {
-      1: '',
-      2: '',
-      3: '',
-      4: '',
-      5: '',
-      6: '',
-      7: '',
-      8: '',
-      9: '',
-      10: '',
-      11: '',
-      12: '',
+      1: "",
+      2: "",
+      3: "",
+      4: "",
+      5: "",
+      6: "",
+      7: "",
+      8: "",
+      9: "",
+      10: "",
+      11: "",
+      12: "",
     },
     gap: {
-      none: '',
-      xs: '',
-      sm: '',
-      md: '',
-      lg: '',
-      xl: '',
+      none: "",
+      xs: "",
+      sm: "",
+      md: "",
+      lg: "",
+      xl: "",
     },
     responsive: {
-      true: '',
-      false: '',
+      true: "",
+      false: "",
     },
   },
   defaultVariants: {
     cols: 1,
-    gap: 'md',
+    gap: "md",
     responsive: false,
   },
 });
 
 // Stack variants
-const stackVariants = cva('', {
+const stackVariants = cva("", {
   variants: {
     direction: {
-      row: '',
-      column: '',
-      'row-reverse': '',
-      'column-reverse': '',
+      row: "",
+      column: "",
+      "row-reverse": "",
+      "column-reverse": "",
     },
     gap: {
-      none: '',
-      xs: '',
-      sm: '',
-      md: '',
-      lg: '',
-      xl: '',
+      none: "",
+      xs: "",
+      sm: "",
+      md: "",
+      lg: "",
+      xl: "",
     },
     align: {
-      start: '',
-      center: '',
-      end: '',
-      stretch: '',
-      baseline: '',
+      start: "",
+      center: "",
+      end: "",
+      stretch: "",
+      baseline: "",
     },
     justify: {
-      start: '',
-      center: '',
-      end: '',
-      between: '',
-      around: '',
-      evenly: '',
+      start: "",
+      center: "",
+      end: "",
+      between: "",
+      around: "",
+      evenly: "",
     },
     wrap: {
-      nowrap: '',
-      wrap: '',
-      'wrap-reverse': '',
+      nowrap: "",
+      wrap: "",
+      "wrap-reverse": "",
     },
   },
   defaultVariants: {
-    direction: 'column',
-    gap: 'md',
-    align: 'stretch',
-    justify: 'start',
-    wrap: 'nowrap',
+    direction: "column",
+    gap: "md",
+    align: "stretch",
+    justify: "start",
+    wrap: "nowrap",
   },
 });
 
 // Dashboard variants
-const dashboardVariants = cva('', {
+const dashboardVariants = cva("", {
   variants: {
     layout: {
-      sidebar: '',
-      'sidebar-right': '',
-      topbar: '',
-      'sidebar-topbar': '',
-      fullwidth: '',
+      sidebar: "",
+      "sidebar-right": "",
+      topbar: "",
+      "sidebar-topbar": "",
+      fullwidth: "",
     },
     sidebarWidth: {
-      sm: '',
-      md: '',
-      lg: '',
-      xl: '',
+      sm: "",
+      md: "",
+      lg: "",
+      xl: "",
     },
     responsive: {
-      true: '',
-      false: '',
+      true: "",
+      false: "",
     },
   },
   defaultVariants: {
-    layout: 'sidebar',
-    sidebarWidth: 'md',
+    layout: "sidebar",
+    sidebarWidth: "md",
     responsive: true,
   },
 });
@@ -158,26 +158,26 @@ export interface ContainerProps
 export const Container = forwardRef<HTMLDivElement, ContainerProps>(
   (
     { className, size, padding, fluid = false, centerContent = false, asChild = false, ...props },
-    ref
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
 
     return (
       <Comp
         ref={ref}
         className={clsx(
-          containerVariants({ size: fluid ? 'full' : size, padding }),
-          'container',
+          containerVariants({ size: fluid ? "full" : size, padding }),
+          "container",
           {
-            'container-fluid': fluid,
-            'container-center': centerContent,
+            "container-fluid": fluid,
+            "container-center": centerContent,
           },
-          className
+          className,
         )}
         {...props}
       />
     );
-  }
+  },
 );
 
 // Grid Component
@@ -206,9 +206,9 @@ export const Grid = forwardRef<HTMLDivElement, GridProps>(
       style,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
 
     const gridStyle = {
       ...style,
@@ -221,12 +221,12 @@ export const Grid = forwardRef<HTMLDivElement, GridProps>(
     return (
       <Comp
         ref={ref}
-        className={clsx(gridVariants({ cols, gap, responsive }), 'grid', className)}
+        className={clsx(gridVariants({ cols, gap, responsive }), "grid", className)}
         style={gridStyle}
         {...props}
       />
     );
-  }
+  },
 );
 
 // Grid Item Component
@@ -254,9 +254,9 @@ export const GridItem = forwardRef<HTMLDivElement, GridItemProps>(
       style,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
 
     const gridItemStyle = {
       ...style,
@@ -269,9 +269,9 @@ export const GridItem = forwardRef<HTMLDivElement, GridItemProps>(
     };
 
     return (
-      <Comp ref={ref} className={clsx('grid-item', className)} style={gridItemStyle} {...props} />
+      <Comp ref={ref} className={clsx("grid-item", className)} style={gridItemStyle} {...props} />
     );
-  }
+  },
 );
 
 // Stack Component (Flexbox)
@@ -297,44 +297,44 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       asChild = false,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
 
     return (
       <Comp
         ref={ref}
         className={clsx(
           stackVariants({ direction, gap, align, justify, wrap }),
-          'stack',
+          "stack",
           {
-            'stack-grow': grow,
-            'stack-shrink': shrink,
+            "stack-grow": grow,
+            "stack-shrink": shrink,
           },
-          className
+          className,
         )}
         {...props}
       />
     );
-  }
+  },
 );
 
 // HStack (Horizontal Stack)
-export interface HStackProps extends Omit<StackProps, 'direction'> {
+export interface HStackProps extends Omit<StackProps, "direction"> {
   // Implementation pending
 }
 
 export const HStack = forwardRef<HTMLDivElement, HStackProps>((props, ref) => {
-  return <Stack ref={ref} direction='row' {...props} />;
+  return <Stack ref={ref} direction="row" {...props} />;
 });
 
 // VStack (Vertical Stack)
-export interface VStackProps extends Omit<StackProps, 'direction'> {
+export interface VStackProps extends Omit<StackProps, "direction"> {
   // Implementation pending
 }
 
 export const VStack = forwardRef<HTMLDivElement, VStackProps>((props, ref) => {
-  return <Stack ref={ref} direction='column' {...props} />;
+  return <Stack ref={ref} direction="column" {...props} />;
 });
 
 // Dashboard Layout Component
@@ -361,65 +361,65 @@ export const Dashboard = forwardRef<HTMLDivElement, DashboardProps>(
       asChild = false,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
 
     return (
       <Comp
         ref={ref}
         className={clsx(
           dashboardVariants({ layout, sidebarWidth, responsive }),
-          'dashboard',
-          className
+          "dashboard",
+          className,
         )}
         {...props}
       >
-        {(layout === 'sidebar' || layout === 'sidebar-right' || layout === 'sidebar-topbar') &&
+        {(layout === "sidebar" || layout === "sidebar-right" || layout === "sidebar-topbar") &&
         sidebar ? (
-          <aside className='dashboard-sidebar'>{sidebar}</aside>
+          <aside className="dashboard-sidebar">{sidebar}</aside>
         ) : null}
 
-        <div className='dashboard-main'>
-          {(layout === 'topbar' || layout === 'sidebar-topbar') && topbar ? (
-            <header className='dashboard-topbar'>{topbar}</header>
+        <div className="dashboard-main">
+          {(layout === "topbar" || layout === "sidebar-topbar") && topbar ? (
+            <header className="dashboard-topbar">{topbar}</header>
           ) : null}
 
-          <main className='dashboard-content'>{children}</main>
+          <main className="dashboard-content">{children}</main>
 
-          {footer ? <footer className='dashboard-footer'>{footer}</footer> : null}
+          {footer ? <footer className="dashboard-footer">{footer}</footer> : null}
         </div>
       </Comp>
     );
-  }
+  },
 );
 
 // Section Component
 export interface SectionProps extends React.HTMLAttributes<HTMLElement> {
   asChild?: boolean;
-  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  margin?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  padding?: "none" | "sm" | "md" | "lg" | "xl";
+  margin?: "none" | "sm" | "md" | "lg" | "xl";
 }
 
 export const Section = forwardRef<HTMLElement, SectionProps>(
-  ({ className, padding = 'md', margin = 'none', asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'section';
+  ({ className, padding = "md", margin = "none", asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "section";
 
     return (
       <Comp
         ref={ref}
-        className={clsx('section', `padding-${padding}`, `margin-${margin}`, className)}
+        className={clsx("section", `padding-${padding}`, `margin-${margin}`, className)}
         {...props}
       />
     );
-  }
+  },
 );
 
 // Card Component
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   asChild?: boolean;
-  variant?: 'default' | 'outlined' | 'elevated' | 'filled';
-  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  variant?: "default" | "outlined" | "elevated" | "filled";
+  padding?: "none" | "sm" | "md" | "lg" | "xl";
   interactive?: boolean;
 }
 
@@ -427,32 +427,32 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
   (
     {
       className,
-      variant = 'default',
-      padding = 'md',
+      variant = "default",
+      padding = "md",
       interactive = false,
       asChild = false,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
 
     return (
       <Comp
         ref={ref}
         className={clsx(
-          'card',
+          "card",
           `variant-${variant}`,
           `padding-${padding}`,
           {
             interactive,
           },
-          className
+          className,
         )}
         {...props}
       />
     );
-  }
+  },
 );
 
 // Card Header
@@ -462,10 +462,10 @@ export interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
   ({ className, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
 
-    return <Comp ref={ref} className={clsx('card-header', className)} {...props} />;
-  }
+    return <Comp ref={ref} className={clsx("card-header", className)} {...props} />;
+  },
 );
 
 // Card Content
@@ -475,10 +475,10 @@ export interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const CardContent = forwardRef<HTMLDivElement, CardContentProps>(
   ({ className, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
 
-    return <Comp ref={ref} className={clsx('card-content', className)} {...props} />;
-  }
+    return <Comp ref={ref} className={clsx("card-content", className)} {...props} />;
+  },
 );
 
 // Card Footer
@@ -488,37 +488,37 @@ export interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
   ({ className, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
 
-    return <Comp ref={ref} className={clsx('card-footer', className)} {...props} />;
-  }
+    return <Comp ref={ref} className={clsx("card-footer", className)} {...props} />;
+  },
 );
 
 // Divider Component
 export interface DividerProps extends React.HTMLAttributes<HTMLDivElement> {
   asChild?: boolean;
-  orientation?: 'horizontal' | 'vertical';
+  orientation?: "horizontal" | "vertical";
   decorative?: boolean;
   label?: string;
 }
 
 export const Divider = forwardRef<HTMLDivElement, DividerProps>(
   (
-    { className, orientation = 'horizontal', decorative = false, label, asChild = false, ...props },
-    ref
+    { className, orientation = "horizontal", decorative = false, label, asChild = false, ...props },
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
 
     if (label) {
       return (
         <Comp
           ref={ref}
-          className={clsx('divider', 'divider-with-label', `orientation-${orientation}`, className)}
-          role={decorative ? 'presentation' : 'separator'}
+          className={clsx("divider", "divider-with-label", `orientation-${orientation}`, className)}
+          role={decorative ? "presentation" : "separator"}
           aria-orientation={orientation}
           {...props}
         >
-          <span className='divider-label'>{label}</span>
+          <span className="divider-label">{label}</span>
         </Comp>
       );
     }
@@ -526,64 +526,64 @@ export const Divider = forwardRef<HTMLDivElement, DividerProps>(
     return (
       <Comp
         ref={ref}
-        className={clsx('divider', `orientation-${orientation}`, className)}
-        role={decorative ? 'presentation' : 'separator'}
+        className={clsx("divider", `orientation-${orientation}`, className)}
+        role={decorative ? "presentation" : "separator"}
         aria-orientation={orientation}
         {...props}
       />
     );
-  }
+  },
 );
 
 // Spacer Component
 export interface SpacerProps extends React.HTMLAttributes<HTMLDivElement> {
   asChild?: boolean;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  axis?: 'horizontal' | 'vertical' | 'both';
+  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
+  axis?: "horizontal" | "vertical" | "both";
 }
 
 export const Spacer = forwardRef<HTMLDivElement, SpacerProps>(
-  ({ className, size = 'md', axis = 'vertical', asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'div';
+  ({ className, size = "md", axis = "vertical", asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "div";
 
     return (
       <Comp
         ref={ref}
-        className={clsx('spacer', `size-${size}`, `axis-${axis}`, className)}
-        aria-hidden='true'
+        className={clsx("spacer", `size-${size}`, `axis-${axis}`, className)}
+        aria-hidden="true"
         {...props}
       />
     );
-  }
+  },
 );
 
 // Center Component
 export interface CenterProps extends React.HTMLAttributes<HTMLDivElement> {
   asChild?: boolean;
-  axis?: 'horizontal' | 'vertical' | 'both';
+  axis?: "horizontal" | "vertical" | "both";
 }
 
 export const Center = forwardRef<HTMLDivElement, CenterProps>(
-  ({ className, axis = 'both', asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'div';
+  ({ className, axis = "both", asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "div";
 
-    return <Comp ref={ref} className={clsx('center', `axis-${axis}`, className)} {...props} />;
-  }
+    return <Comp ref={ref} className={clsx("center", `axis-${axis}`, className)} {...props} />;
+  },
 );
 
 // Set display names
-Container.displayName = 'Container';
-Grid.displayName = 'Grid';
-GridItem.displayName = 'GridItem';
-Stack.displayName = 'Stack';
-HStack.displayName = 'HStack';
-VStack.displayName = 'VStack';
-Dashboard.displayName = 'Dashboard';
-Section.displayName = 'Section';
-Card.displayName = 'Card';
-CardHeader.displayName = 'CardHeader';
-CardContent.displayName = 'CardContent';
-CardFooter.displayName = 'CardFooter';
-Divider.displayName = 'Divider';
-Spacer.displayName = 'Spacer';
-Center.displayName = 'Center';
+Container.displayName = "Container";
+Grid.displayName = "Grid";
+GridItem.displayName = "GridItem";
+Stack.displayName = "Stack";
+HStack.displayName = "HStack";
+VStack.displayName = "VStack";
+Dashboard.displayName = "Dashboard";
+Section.displayName = "Section";
+Card.displayName = "Card";
+CardHeader.displayName = "CardHeader";
+CardContent.displayName = "CardContent";
+CardFooter.displayName = "CardFooter";
+Divider.displayName = "Divider";
+Spacer.displayName = "Spacer";
+Center.displayName = "Center";

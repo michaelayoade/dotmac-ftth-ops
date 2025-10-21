@@ -3,9 +3,9 @@
  * Provides CSRF token management and validation
  */
 
-'use client';
+"use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
 interface CSRFContextValue {
   token: string | null;
@@ -23,10 +23,10 @@ interface CSRFProviderProps {
 
 // Generate a cryptographically secure token
 const generateSecureToken = (): string => {
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
-    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
   }
 
   // Fallback for environments without crypto.getRandomValues
@@ -44,8 +44,8 @@ export function CSRFProvider({ children, endpoint }: CSRFProviderProps) {
 
       try {
         const response = await fetch(endpoint, {
-          method: 'GET',
-          credentials: 'include',
+          method: "GET",
+          credentials: "include",
         });
 
         if (response.ok) {
@@ -53,7 +53,7 @@ export function CSRFProvider({ children, endpoint }: CSRFProviderProps) {
           setServerToken(data.token);
         }
       } catch (error) {
-        console.warn('Failed to fetch server CSRF token:', error);
+        console.warn("Failed to fetch server CSRF token:", error);
       }
     };
 
@@ -66,24 +66,24 @@ export function CSRFProvider({ children, endpoint }: CSRFProviderProps) {
     setToken(initialToken);
 
     // Store in session storage for validation
-    sessionStorage.setItem('csrf-token', initialToken);
+    sessionStorage.setItem("csrf-token", initialToken);
 
     // Set up cleanup
     return () => {
-      sessionStorage.removeItem('csrf-token');
+      sessionStorage.removeItem("csrf-token");
     };
   }, []);
 
   const generateToken = (): string => {
     const newToken = generateSecureToken();
     setToken(newToken);
-    sessionStorage.setItem('csrf-token', newToken);
+    sessionStorage.setItem("csrf-token", newToken);
     return newToken;
   };
 
   const validateToken = (tokenToValidate: string): boolean => {
     // Check against both client and server tokens
-    const storedToken = sessionStorage.getItem('csrf-token');
+    const storedToken = sessionStorage.getItem("csrf-token");
     return tokenToValidate === storedToken || (serverToken && tokenToValidate === serverToken);
   };
 
@@ -104,7 +104,7 @@ export function CSRFProvider({ children, endpoint }: CSRFProviderProps) {
 export function useCSRF(): CSRFContextValue {
   const context = useContext(CSRFContext);
   if (!context) {
-    throw new Error('useCSRF must be used within a CSRFProvider');
+    throw new Error("useCSRF must be used within a CSRFProvider");
   }
   return context;
 }
@@ -115,12 +115,12 @@ interface CSRFTokenProps {
   hidden?: boolean;
 }
 
-export function CSRFToken({ name = 'csrf_token', hidden = true }: CSRFTokenProps) {
+export function CSRFToken({ name = "csrf_token", hidden = true }: CSRFTokenProps) {
   const { token } = useCSRF();
 
   if (!token) return null;
 
-  return <input type={hidden ? 'hidden' : 'text'} name={name} value={token} readOnly />;
+  return <input type={hidden ? "hidden" : "text"} name={name} value={token} readOnly />;
 }
 
 // Higher-order component for CSRF protection
@@ -140,23 +140,23 @@ export function useSecureFetch() {
 
   const secureFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
     if (!token) {
-      throw new Error('CSRF token not available');
+      throw new Error("CSRF token not available");
     }
 
     const headers = new Headers(options.headers);
-    headers.set('X-CSRF-Token', token);
-    headers.set('Content-Type', 'application/json');
+    headers.set("X-CSRF-Token", token);
+    headers.set("Content-Type", "application/json");
 
     const response = await fetch(url, {
       ...options,
       headers,
-      credentials: 'include', // Include cookies for session-based CSRF
+      credentials: "include", // Include cookies for session-based CSRF
     });
 
     // Validate response for potential CSRF attacks
-    const responseToken = response.headers.get('X-CSRF-Token');
+    const responseToken = response.headers.get("X-CSRF-Token");
     if (responseToken && !validateToken(responseToken)) {
-      throw new Error('CSRF token validation failed');
+      throw new Error("CSRF token validation failed");
     }
 
     return response;

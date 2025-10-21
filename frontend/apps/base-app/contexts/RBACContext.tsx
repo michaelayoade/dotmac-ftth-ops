@@ -3,13 +3,13 @@
  * Manages roles, permissions, and access control throughout the application
  */
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { logger } from '@/lib/logger';
-import { handleError } from '@/lib/utils/error-handler';
-import { useToast } from '@/components/ui/use-toast';
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import axios from "axios";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
+import { handleError } from "@/lib/utils/error-handler";
+import { useToast } from "@/components/ui/use-toast";
 
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:
@@ -21,27 +21,27 @@ import { useToast } from '@/components/ui/use-toast';
  * Permission categories matching backend
  */
 export enum PermissionCategory {
-  USERS = 'users',
-  BILLING = 'billing',
-  ANALYTICS = 'analytics',
-  COMMUNICATIONS = 'communications',
-  INFRASTRUCTURE = 'infrastructure',
-  SECRETS = 'secrets',
-  CUSTOMERS = 'customers',
-  SETTINGS = 'settings',
-  SYSTEM = 'system'
+  USERS = "users",
+  BILLING = "billing",
+  ANALYTICS = "analytics",
+  COMMUNICATIONS = "communications",
+  INFRASTRUCTURE = "infrastructure",
+  SECRETS = "secrets",
+  CUSTOMERS = "customers",
+  SETTINGS = "settings",
+  SYSTEM = "system",
 }
 
 /**
  * Permission actions
  */
 export enum PermissionAction {
-  CREATE = 'create',
-  READ = 'read',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  EXECUTE = 'execute',
-  MANAGE = 'manage'
+  CREATE = "create",
+  READ = "read",
+  UPDATE = "update",
+  DELETE = "delete",
+  EXECUTE = "execute",
+  MANAGE = "manage",
 }
 
 /**
@@ -108,7 +108,7 @@ export interface UserPermissionGrant {
 }
 
 const EMPTY_USER_PERMISSIONS: UserPermissions = {
-  user_id: 'unknown',
+  user_id: "unknown",
   roles: [],
   direct_permissions: [],
   effective_permissions: [],
@@ -121,13 +121,13 @@ const EMPTY_USER_PERMISSIONS: UserPermissions = {
 const rbacApi = {
   // Permissions
   fetchPermissions: async (category?: PermissionCategory): Promise<Permission[]> => {
-    const params = category ? `?category=${category}` : '';
+    const params = category ? `?category=${category}` : "";
     try {
       const response = await apiClient.get(`/auth/rbac/permissions${params}`);
       return response.data as Permission[];
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 403) {
-        logger.warn('Permissions list returned 403. Returning empty permissions array.');
+        logger.warn("Permissions list returned 403. Returning empty permissions array.");
         return [];
       }
       throw error;
@@ -140,16 +140,15 @@ const rbacApi = {
       return response.data as Permission;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 403) {
-        logger.warn(
-          'Single permission fetch returned 403. Returning minimal permission record.',
-          { permission: name }
-        );
+        logger.warn("Single permission fetch returned 403. Returning minimal permission record.", {
+          permission: name,
+        });
         return {
           name,
           display_name: name,
           category: PermissionCategory.SYSTEM,
           is_system: false,
-          description: 'Permission unavailable due to insufficient access.',
+          description: "Permission unavailable due to insufficient access.",
         } as Permission;
       }
       throw error;
@@ -163,7 +162,7 @@ const rbacApi = {
       return response.data as Role[];
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 403) {
-        logger.warn('Roles endpoint returned 403. Returning empty roles array.');
+        logger.warn("Roles endpoint returned 403. Returning empty roles array.");
         return [];
       }
       throw error;
@@ -171,7 +170,7 @@ const rbacApi = {
   },
 
   createRole: async (data: RoleCreateRequest): Promise<Role> => {
-    const response = await apiClient.post('/auth/rbac/roles', data);
+    const response = await apiClient.post("/auth/rbac/roles", data);
     return response.data as Role;
   },
 
@@ -187,11 +186,11 @@ const rbacApi = {
   // User permissions
   fetchMyPermissions: async (): Promise<UserPermissions> => {
     try {
-      const response = await apiClient.get('/auth/rbac/my-permissions');
+      const response = await apiClient.get("/auth/rbac/my-permissions");
       return response.data as UserPermissions;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 403) {
-        logger.warn('My permissions endpoint returned 403. Defaulting to safe permissions.');
+        logger.warn("My permissions endpoint returned 403. Defaulting to safe permissions.");
         return EMPTY_USER_PERMISSIONS;
       }
       throw error;
@@ -204,10 +203,9 @@ const rbacApi = {
       return response.data as UserPermissions;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response?.status === 403) {
-        logger.warn(
-          'User permissions endpoint returned 403. Defaulting to safe permissions.',
-          { userId }
-        );
+        logger.warn("User permissions endpoint returned 403. Defaulting to safe permissions.", {
+          userId,
+        });
         return { ...EMPTY_USER_PERMISSIONS, user_id: userId };
       }
       throw error;
@@ -215,15 +213,15 @@ const rbacApi = {
   },
 
   assignRoleToUser: async (data: UserRoleAssignment): Promise<void> => {
-    await apiClient.post('/auth/rbac/users/assign-role', data);
+    await apiClient.post("/auth/rbac/users/assign-role", data);
   },
 
   revokeRoleFromUser: async (data: UserRoleAssignment): Promise<void> => {
-    await apiClient.post('/auth/rbac/users/revoke-role', data);
+    await apiClient.post("/auth/rbac/users/revoke-role", data);
   },
 
   grantPermissionToUser: async (data: UserPermissionGrant): Promise<void> => {
-    await apiClient.post('/auth/rbac/users/grant-permission', data);
+    await apiClient.post("/auth/rbac/users/grant-permission", data);
   },
 };
 
@@ -270,30 +268,32 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
 
   // Check if in E2E test mode
-  const isE2ETest = typeof window !== 'undefined' && (window as any).__e2e_test__;
+  const isE2ETest = typeof window !== "undefined" && (window as any).__e2e_test__;
 
   // Fetch current user permissions (skip in E2E test mode)
   const {
     data: permissions,
     isLoading: loading,
     error,
-    refetch: refreshPermissions
+    refetch: refreshPermissions,
   } = useQuery({
-    queryKey: ['rbac', 'my-permissions'],
-    queryFn: isE2ETest ? async () => ({
-      user_id: 'e2e-test-user',
-      roles: [],
-      direct_permissions: [],
-      effective_permissions: [],
-      is_superuser: true
-    }) : rbacApi.fetchMyPermissions,
+    queryKey: ["rbac", "my-permissions"],
+    queryFn: isE2ETest
+      ? async () => ({
+          user_id: "e2e-test-user",
+          roles: [],
+          direct_permissions: [],
+          effective_permissions: [],
+          is_superuser: true,
+        })
+      : rbacApi.fetchMyPermissions,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 1,
   });
 
   // Fetch all roles (skip in E2E test mode)
   const { data: roles = [] } = useQuery({
-    queryKey: ['rbac', 'roles'],
+    queryKey: ["rbac", "roles"],
     queryFn: isE2ETest ? async () => [] : () => rbacApi.fetchRoles(true),
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
@@ -303,68 +303,83 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const assignedRoles = permissions?.roles ?? [];
   const isSuperuser = permissions?.is_superuser ?? false;
 
-  const hasPermission = useCallback((permission: string): boolean => {
-    if (!permissions) return false;
-    if (isSuperuser) return true;
+  const hasPermission = useCallback(
+    (permission: string): boolean => {
+      if (!permissions) return false;
+      if (isSuperuser) return true;
 
-    return effectivePermissions.some(p =>
-      p.name === permission || p.name === '*' || p.name.endsWith('.*')
-    );
-  }, [permissions, effectivePermissions, isSuperuser]);
+      return effectivePermissions.some(
+        (p) => p.name === permission || p.name === "*" || p.name.endsWith(".*"),
+      );
+    },
+    [permissions, effectivePermissions, isSuperuser],
+  );
 
-  const hasAnyPermission = useCallback((perms: string[]): boolean => {
-    if (!permissions) return false;
-    if (isSuperuser) return true;
+  const hasAnyPermission = useCallback(
+    (perms: string[]): boolean => {
+      if (!permissions) return false;
+      if (isSuperuser) return true;
 
-    return perms.some(perm => hasPermission(perm));
-  }, [permissions, hasPermission, isSuperuser]);
+      return perms.some((perm) => hasPermission(perm));
+    },
+    [permissions, hasPermission, isSuperuser],
+  );
 
-  const hasAllPermissions = useCallback((perms: string[]): boolean => {
-    if (!permissions) return false;
-    if (isSuperuser) return true;
+  const hasAllPermissions = useCallback(
+    (perms: string[]): boolean => {
+      if (!permissions) return false;
+      if (isSuperuser) return true;
 
-    return perms.every(perm => hasPermission(perm));
-  }, [permissions, hasPermission, isSuperuser]);
+      return perms.every((perm) => hasPermission(perm));
+    },
+    [permissions, hasPermission, isSuperuser],
+  );
 
-  const hasRole = useCallback((role: string): boolean => {
-    if (!permissions) return false;
-    if (isSuperuser) return true;
+  const hasRole = useCallback(
+    (role: string): boolean => {
+      if (!permissions) return false;
+      if (isSuperuser) return true;
 
-    return assignedRoles.some(r => r.name === role);
-  }, [permissions, assignedRoles, isSuperuser]);
+      return assignedRoles.some((r) => r.name === role);
+    },
+    [permissions, assignedRoles, isSuperuser],
+  );
 
-  const canAccess = useCallback((category: PermissionCategory, action?: PermissionAction): boolean => {
-    if (!permissions) return false;
-    if (isSuperuser) return true;
+  const canAccess = useCallback(
+    (category: PermissionCategory, action?: PermissionAction): boolean => {
+      if (!permissions) return false;
+      if (isSuperuser) return true;
 
-    const permissionName = action ? `${category}.${action}` : `${category}.*`;
+      const permissionName = action ? `${category}.${action}` : `${category}.*`;
 
-    return effectivePermissions.some(p => {
-      // Exact match
-      if (p.name === permissionName) return true;
+      return effectivePermissions.some((p) => {
+        // Exact match
+        if (p.name === permissionName) return true;
 
-      // Wildcard match (e.g., users.* matches users.read)
-      if (p.name === `${category}.*`) return true;
+        // Wildcard match (e.g., users.* matches users.read)
+        if (p.name === `${category}.*`) return true;
 
-      // System wildcard
-      if (p.name === '*') return true;
+        // System wildcard
+        if (p.name === "*") return true;
 
-      // Category and action match
-      if (p.category === category && (!action || p.action === action)) return true;
+        // Category and action match
+        if (p.category === category && (!action || p.action === action)) return true;
 
-      return false;
-    });
-  }, [permissions, isSuperuser, effectivePermissions]);
+        return false;
+      });
+    },
+    [permissions, isSuperuser, effectivePermissions],
+  );
 
   // Role management mutations
   const createRoleMutation = useMutation({
     mutationFn: rbacApi.createRole,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rbac', 'roles'] });
-      toast({ title: 'Success', description: 'Role created successfully' });
+      queryClient.invalidateQueries({ queryKey: ["rbac", "roles"] });
+      toast({ title: "Success", description: "Role created successfully" });
     },
     onError: (error) => {
-      handleError(error, 'Failed to create role', true);
+      handleError(error, "Failed to create role", true);
     },
   });
 
@@ -372,22 +387,22 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
     mutationFn: ({ name, data }: { name: string; data: RoleUpdateRequest }) =>
       rbacApi.updateRole(name, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rbac', 'roles'] });
-      toast({ title: 'Success', description: 'Role updated successfully' });
+      queryClient.invalidateQueries({ queryKey: ["rbac", "roles"] });
+      toast({ title: "Success", description: "Role updated successfully" });
     },
     onError: (error) => {
-      handleError(error, 'Failed to update role', true);
+      handleError(error, "Failed to update role", true);
     },
   });
 
   const deleteRoleMutation = useMutation({
     mutationFn: rbacApi.deleteRole,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['rbac', 'roles'] });
-      toast({ title: 'Success', description: 'Role deleted successfully' });
+      queryClient.invalidateQueries({ queryKey: ["rbac", "roles"] });
+      toast({ title: "Success", description: "Role deleted successfully" });
     },
     onError: (error) => {
-      handleError(error, 'Failed to delete role', true);
+      handleError(error, "Failed to delete role", true);
     },
   });
 
@@ -395,33 +410,42 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const assignRoleMutation = useMutation({
     mutationFn: rbacApi.assignRoleToUser,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['rbac', 'users', variables.user_id] });
-      toast({ title: 'Success', description: 'Role assigned successfully' });
+      queryClient.invalidateQueries({
+        queryKey: ["rbac", "users", variables.user_id],
+      });
+      toast({ title: "Success", description: "Role assigned successfully" });
     },
     onError: (error) => {
-      handleError(error, 'Failed to assign role', true);
+      handleError(error, "Failed to assign role", true);
     },
   });
 
   const revokeRoleMutation = useMutation({
     mutationFn: rbacApi.revokeRoleFromUser,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['rbac', 'users', variables.user_id] });
-      toast({ title: 'Success', description: 'Role revoked successfully' });
+      queryClient.invalidateQueries({
+        queryKey: ["rbac", "users", variables.user_id],
+      });
+      toast({ title: "Success", description: "Role revoked successfully" });
     },
     onError: (error) => {
-      handleError(error, 'Failed to revoke role', true);
+      handleError(error, "Failed to revoke role", true);
     },
   });
 
   const grantPermissionMutation = useMutation({
     mutationFn: rbacApi.grantPermissionToUser,
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['rbac', 'users', variables.user_id] });
-      toast({ title: 'Success', description: 'Permission granted successfully' });
+      queryClient.invalidateQueries({
+        queryKey: ["rbac", "users", variables.user_id],
+      });
+      toast({
+        title: "Success",
+        description: "Permission granted successfully",
+      });
     },
     onError: (error) => {
-      handleError(error, 'Failed to grant permission', true);
+      handleError(error, "Failed to grant permission", true);
     },
   });
 
@@ -446,13 +470,22 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       await deleteRoleMutation.mutateAsync(name);
     },
     assignRole: async (userId, roleName) => {
-      await assignRoleMutation.mutateAsync({ user_id: userId, role_name: roleName });
+      await assignRoleMutation.mutateAsync({
+        user_id: userId,
+        role_name: roleName,
+      });
     },
     revokeRole: async (userId, roleName) => {
-      await revokeRoleMutation.mutateAsync({ user_id: userId, role_name: roleName });
+      await revokeRoleMutation.mutateAsync({
+        user_id: userId,
+        role_name: roleName,
+      });
     },
     grantPermission: async (userId, permissionName) => {
-      await grantPermissionMutation.mutateAsync({ user_id: userId, permission_name: permissionName });
+      await grantPermissionMutation.mutateAsync({
+        user_id: userId,
+        permission_name: permissionName,
+      });
     },
     refreshPermissions: () => refreshPermissions(),
     getAllPermissions: () => rbacApi.fetchPermissions(),
@@ -460,21 +493,17 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   // Log permission changes in development
   useEffect(() => {
-    if (permissions && process.env.NODE_ENV === 'development') {
-      logger.info('User permissions loaded', {
+    if (permissions && process.env.NODE_ENV === "development") {
+      logger.info("User permissions loaded", {
         userId: permissions.user_id,
-        roles: permissions.roles.map(r => r.name),
+        roles: permissions.roles.map((r) => r.name),
         permissionCount: permissions.effective_permissions.length,
         isSuperuser: permissions.is_superuser,
       });
     }
   }, [permissions]);
 
-  return (
-    <RBACContext.Provider value={contextValue}>
-      {children}
-    </RBACContext.Provider>
-  );
+  return <RBACContext.Provider value={contextValue}>{children}</RBACContext.Provider>;
 }
 
 /**
@@ -483,7 +512,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 export function useRBAC() {
   const context = useContext(RBACContext);
   if (!context) {
-    throw new Error('useRBAC must be used within RBACProvider');
+    throw new Error("useRBAC must be used within RBACProvider");
   }
   return context;
 }
@@ -512,7 +541,10 @@ export function useRole(role: string): boolean {
 /**
  * Hook for category access
  */
-export function useCategoryAccess(category: PermissionCategory, action?: PermissionAction): boolean {
+export function useCategoryAccess(
+  category: PermissionCategory,
+  action?: PermissionAction,
+): boolean {
   const { canAccess } = useRBAC();
   return canAccess(category, action);
 }

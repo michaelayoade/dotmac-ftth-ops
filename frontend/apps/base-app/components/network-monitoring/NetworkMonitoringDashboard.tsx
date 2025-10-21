@@ -18,13 +18,7 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@/components/ui/use-toast";
 import { logger } from "@/lib/utils/logger";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -48,13 +42,33 @@ import {
 const getStatusBadge = (status: DeviceStatus) => {
   switch (status) {
     case DeviceStatus.ONLINE:
-      return <Badge className="bg-green-500"><CheckCircle2 className="w-3 h-3 mr-1" />Online</Badge>;
+      return (
+        <Badge className="bg-green-500">
+          <CheckCircle2 className="w-3 h-3 mr-1" />
+          Online
+        </Badge>
+      );
     case DeviceStatus.OFFLINE:
-      return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Offline</Badge>;
+      return (
+        <Badge variant="destructive">
+          <XCircle className="w-3 h-3 mr-1" />
+          Offline
+        </Badge>
+      );
     case DeviceStatus.DEGRADED:
-      return <Badge variant="secondary"><AlertCircle className="w-3 h-3 mr-1" />Degraded</Badge>;
+      return (
+        <Badge variant="secondary">
+          <AlertCircle className="w-3 h-3 mr-1" />
+          Degraded
+        </Badge>
+      );
     default:
-      return <Badge variant="outline"><WifiOff className="w-3 h-3 mr-1" />Unknown</Badge>;
+      return (
+        <Badge variant="outline">
+          <WifiOff className="w-3 h-3 mr-1" />
+          Unknown
+        </Badge>
+      );
   }
 };
 
@@ -72,17 +86,17 @@ const getSeverityBadge = (severity: AlertSeverity) => {
 };
 
 const formatBytes = (bytes: number) => {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 };
 
 const formatBandwidth = (bps: number) => {
-  if (bps === 0) return '0 bps';
+  if (bps === 0) return "0 bps";
   const k = 1000;
-  const sizes = ['bps', 'Kbps', 'Mbps', 'Gbps'];
+  const sizes = ["bps", "Kbps", "Mbps", "Gbps"];
   const i = Math.floor(Math.log(bps) / Math.log(k));
   return `${(bps / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
 };
@@ -103,27 +117,23 @@ export function NetworkMonitoringDashboard() {
       setError(null);
 
       // Fetch overview
-      const overviewResponse = await apiClient.get<NetworkOverview>(
-        "/api/v1/network/overview"
-      );
+      const overviewResponse = await apiClient.get<NetworkOverview>("/api/v1/network/overview");
       setOverview(overviewResponse.data);
 
       // Fetch top devices (limited)
-      const devicesResponse = await apiClient.get<DeviceHealth[]>(
-        "/api/v1/network/devices",
-        { params: { limit: 10 } }
-      );
+      const devicesResponse = await apiClient.get<DeviceHealth[]>("/api/v1/network/devices", {
+        params: { limit: 10 },
+      });
       setDevices(devicesResponse.data);
 
       // Fetch recent alerts
-      const alertsResponse = await apiClient.get<NetworkAlert[]>(
-        "/api/v1/network/alerts",
-        { params: { active_only: true, limit: 5 } }
-      );
+      const alertsResponse = await apiClient.get<NetworkAlert[]>("/api/v1/network/alerts", {
+        params: { active_only: true, limit: 5 },
+      });
       setAlerts(alertsResponse.data);
-
     } catch (err: any) {
-      const errorMessage = err?.response?.data?.detail || err.message || "Failed to load network monitoring data";
+      const errorMessage =
+        err?.response?.data?.detail || err.message || "Failed to load network monitoring data";
       setError(errorMessage);
       logger.error("Failed to fetch network monitoring data", err);
       toast({
@@ -199,12 +209,8 @@ export function NetworkMonitoringDashboard() {
           <h2 className="text-2xl font-bold">Network Monitoring</h2>
           <p className="text-gray-600">Real-time network health and performance</p>
         </div>
-        <Button
-          onClick={handleRefresh}
-          disabled={refreshing}
-          variant="outline"
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+        <Button onClick={handleRefresh} disabled={refreshing} variant="outline">
+          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
           Refresh
         </Button>
       </div>
@@ -309,7 +315,7 @@ export function NetworkMonitoringDashboard() {
                       <TableCell>
                         {device.cpu_usage_percent !== undefined
                           ? `${device.cpu_usage_percent.toFixed(1)}%`
-                          : 'N/A'}
+                          : "N/A"}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -398,12 +404,12 @@ export function NetworkMonitoringDashboard() {
                     <TableCell>
                       {summary.avg_cpu_usage !== undefined
                         ? `${summary.avg_cpu_usage.toFixed(1)}%`
-                        : 'N/A'}
+                        : "N/A"}
                     </TableCell>
                     <TableCell>
                       {summary.avg_memory_usage !== undefined
                         ? `${summary.avg_memory_usage.toFixed(1)}%`
-                        : 'N/A'}
+                        : "N/A"}
                     </TableCell>
                   </TableRow>
                 ))}

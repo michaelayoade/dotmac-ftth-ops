@@ -3,47 +3,31 @@
 import { useState, useEffect } from "react";
 import { Bell, BellOff, X, AlertCircle, WifiOff, Wifi } from "lucide-react";
 import { useWebSocket, useNetworkMonitoring } from "@/lib/websocket/hooks";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function RealTimeAlerts() {
-  const {
-    connectionState,
-    isConnected,
-    isReconnecting,
-  } = useWebSocket();
+  const { connectionState, isConnected, isReconnecting } = useWebSocket();
 
-  const {
-    alerts,
-    deviceUpdates,
-    lastUpdate,
-    clearAlerts,
-    dismissAlert,
-  } = useNetworkMonitoring();
+  const { alerts, deviceUpdates, lastUpdate, clearAlerts, dismissAlert } = useNetworkMonitoring();
 
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [showDismissed, setShowDismissed] = useState(false);
 
   // Play sound for critical alerts
   useEffect(() => {
-    if (soundEnabled && alerts.length > 0 && alerts[0].severity === 'critical') {
+    if (soundEnabled && alerts.length > 0 && alerts[0].severity === "critical") {
       // Play notification sound (you would need to add an actual sound file)
       // const audio = new Audio('/sounds/alert.mp3');
       // audio.play().catch(() => {});
     }
   }, [alerts, soundEnabled]);
 
-  const criticalAlerts = alerts.filter(a => a.severity === 'critical');
-  const warningAlerts = alerts.filter(a => a.severity === 'warning');
-  const infoAlerts = alerts.filter(a => a.severity === 'info');
+  const criticalAlerts = alerts.filter((a) => a.severity === "critical");
+  const warningAlerts = alerts.filter((a) => a.severity === "warning");
+  const infoAlerts = alerts.filter((a) => a.severity === "info");
 
   return (
     <div className="space-y-4">
@@ -92,16 +76,8 @@ export function RealTimeAlerts() {
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setSoundEnabled(!soundEnabled)}
-              >
-                {soundEnabled ? (
-                  <Bell className="w-4 h-4" />
-                ) : (
-                  <BellOff className="w-4 h-4" />
-                )}
+              <Button variant="outline" size="sm" onClick={() => setSoundEnabled(!soundEnabled)}>
+                {soundEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
               </Button>
               <Button
                 variant="outline"
@@ -134,24 +110,22 @@ export function RealTimeAlerts() {
           {/* Alerts List */}
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {alerts.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No alerts at this time
-              </div>
+              <div className="text-center py-8 text-muted-foreground">No alerts at this time</div>
             ) : (
               alerts.map((alert, index) => (
                 <Alert
                   key={alert.id || index}
                   variant={
-                    alert.severity === 'critical' || alert.severity === 'error'
-                      ? 'destructive'
-                      : 'default'
+                    alert.severity === "critical" || alert.severity === "error"
+                      ? "destructive"
+                      : "default"
                   }
                   className="relative"
                 >
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span>{alert.title || 'Network Alert'}</span>
+                      <span>{alert.title || "Network Alert"}</span>
                       <Badge variant="outline" className="text-xs">
                         {alert.severity}
                       </Badge>
@@ -190,9 +164,7 @@ export function RealTimeAlerts() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Recent Device Updates</CardTitle>
-            <CardDescription>
-              Latest status changes and metrics
-            </CardDescription>
+            <CardDescription>Latest status changes and metrics</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -208,12 +180,11 @@ export function RealTimeAlerts() {
                     <div className="text-xs text-muted-foreground">
                       {update.status_change
                         ? `Status: ${update.old_status} → ${update.new_status}`
-                        : update.message || 'Metrics updated'}
+                        : update.message || "Metrics updated"}
                     </div>
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {update.timestamp &&
-                      new Date(update.timestamp).toLocaleTimeString()}
+                    {update.timestamp && new Date(update.timestamp).toLocaleTimeString()}
                   </div>
                 </div>
               ))}

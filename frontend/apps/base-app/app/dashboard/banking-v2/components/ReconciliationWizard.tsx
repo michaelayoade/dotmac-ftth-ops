@@ -161,9 +161,7 @@ export function ReconciliationWizard({
 
   const togglePaymentSelection = (paymentId: number) => {
     setSelectedPayments((prev) =>
-      prev.includes(paymentId)
-        ? prev.filter((id) => id !== paymentId)
-        : [...prev, paymentId]
+      prev.includes(paymentId) ? prev.filter((id) => id !== paymentId) : [...prev, paymentId],
     );
   };
 
@@ -210,9 +208,7 @@ export function ReconciliationWizard({
               <Label htmlFor="bank_account_id">Bank Account *</Label>
               <Select
                 value={setupData.bank_account_id}
-                onValueChange={(value) =>
-                  setSetupData({ ...setupData, bank_account_id: value })
-                }
+                onValueChange={(value) => setSetupData({ ...setupData, bank_account_id: value })}
               >
                 <SelectTrigger id="bank_account_id">
                   <SelectValue placeholder="Select bank account" />
@@ -235,9 +231,7 @@ export function ReconciliationWizard({
                   id="period_start"
                   type="date"
                   value={setupData.period_start}
-                  onChange={(e) =>
-                    setSetupData({ ...setupData, period_start: e.target.value })
-                  }
+                  onChange={(e) => setSetupData({ ...setupData, period_start: e.target.value })}
                   required
                 />
               </div>
@@ -248,9 +242,7 @@ export function ReconciliationWizard({
                   id="period_end"
                   type="date"
                   value={setupData.period_end}
-                  onChange={(e) =>
-                    setSetupData({ ...setupData, period_end: e.target.value })
-                  }
+                  onChange={(e) => setSetupData({ ...setupData, period_end: e.target.value })}
                   required
                 />
               </div>
@@ -264,7 +256,10 @@ export function ReconciliationWizard({
                 step="0.01"
                 value={setupData.statement_balance}
                 onChange={(e) =>
-                  setSetupData({ ...setupData, statement_balance: e.target.value })
+                  setSetupData({
+                    ...setupData,
+                    statement_balance: e.target.value,
+                  })
                 }
                 required
                 placeholder="0.00"
@@ -356,9 +351,7 @@ export function ReconciliationWizard({
                           />
                           <div className="flex-1">
                             <div className="flex items-center justify-between">
-                              <span className="font-medium">
-                                Customer: {payment.customer_id}
-                              </span>
+                              <span className="font-medium">Customer: {payment.customer_id}</span>
                               <span className="font-bold">
                                 {payment.currency} {payment.amount.toFixed(2)}
                               </span>
@@ -403,9 +396,8 @@ export function ReconciliationWizard({
                   <span className="text-sm text-muted-foreground">Bank Account</span>
                   <p className="font-medium">
                     {
-                      bankAccounts?.find(
-                        (a) => a.id === parseInt(setupData.bank_account_id)
-                      )?.account_name
+                      bankAccounts?.find((a) => a.id === parseInt(setupData.bank_account_id))
+                        ?.account_name
                     }
                   </p>
                 </div>

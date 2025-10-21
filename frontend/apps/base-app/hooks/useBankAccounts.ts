@@ -79,8 +79,12 @@ export function useUpdateBankAccount() {
       bankAccountsService.updateBankAccount(accountId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["bank-account", variables.accountId] });
-      queryClient.invalidateQueries({ queryKey: ["bank-account-summary", variables.accountId] });
+      queryClient.invalidateQueries({
+        queryKey: ["bank-account", variables.accountId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["bank-account-summary", variables.accountId],
+      });
       toast({
         title: "Bank Account Updated",
         description: "The bank account has been updated successfully.",
@@ -105,8 +109,12 @@ export function useVerifyBankAccount() {
       bankAccountsService.verifyBankAccount(accountId, notes),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["bank-accounts"] });
-      queryClient.invalidateQueries({ queryKey: ["bank-account", variables.accountId] });
-      queryClient.invalidateQueries({ queryKey: ["bank-account-summary", variables.accountId] });
+      queryClient.invalidateQueries({
+        queryKey: ["bank-account", variables.accountId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["bank-account-summary", variables.accountId],
+      });
       toast({
         title: "Bank Account Verified",
         description: "The bank account has been verified successfully.",
@@ -264,8 +272,13 @@ export function useVerifyPayment() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: ({ paymentId, verificationNotes }: { paymentId: number; verificationNotes?: string }) =>
-      bankAccountsService.verifyPayment(paymentId, verificationNotes),
+    mutationFn: ({
+      paymentId,
+      verificationNotes,
+    }: {
+      paymentId: number;
+      verificationNotes?: string;
+    }) => bankAccountsService.verifyPayment(paymentId, verificationNotes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["manual-payments"] });
       toast({
@@ -288,7 +301,8 @@ export function useReconcilePayments() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: (request: ReconcilePaymentRequest) => bankAccountsService.reconcilePayments(request),
+    mutationFn: (request: ReconcilePaymentRequest) =>
+      bankAccountsService.reconcilePayments(request),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["manual-payments"] });
       queryClient.invalidateQueries({ queryKey: ["bank-account-summary"] });

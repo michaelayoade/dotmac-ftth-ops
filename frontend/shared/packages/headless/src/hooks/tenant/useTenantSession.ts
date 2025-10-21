@@ -3,9 +3,9 @@
  * Handles tenant loading, switching, and session state
  */
 
-import { useState, useCallback } from 'react';
-import { TenantSession, ISPTenant } from '../../types/tenant';
-import { getISPApiClient } from '../../api/isp-client';
+import { useState, useCallback } from "react";
+import { TenantSession, ISPTenant } from "../../types/tenant";
+import { getISPApiClient } from "../../api/isp-client";
 
 export interface UseTenantSessionReturn {
   session: TenantSession | null;
@@ -24,7 +24,7 @@ export function useTenantSession(): UseTenantSessionReturn {
 
   const loadTenant = useCallback(async (tenantId: string) => {
     if (!tenantId) {
-      setError('Tenant ID is required');
+      setError("Tenant ID is required");
       return;
     }
 
@@ -39,7 +39,7 @@ export function useTenantSession(): UseTenantSessionReturn {
       const newSession: TenantSession = {
         tenant,
         user: null, // Will be populated by auth hook
-        isActive: tenant.status === 'ACTIVE',
+        isActive: tenant.status === "ACTIVE",
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
         lastActivity: new Date().toISOString(),
         sessionId: `session_${tenantId}_${Date.now()}`,
@@ -49,7 +49,7 @@ export function useTenantSession(): UseTenantSessionReturn {
 
       setSession(newSession);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load tenant';
+      const errorMessage = err instanceof Error ? err.message : "Failed to load tenant";
       setError(errorMessage);
       setSession(null);
     } finally {
@@ -61,7 +61,7 @@ export function useTenantSession(): UseTenantSessionReturn {
     async (tenantId: string) => {
       await loadTenant(tenantId);
     },
-    [loadTenant]
+    [loadTenant],
   );
 
   const refreshTenant = useCallback(async () => {

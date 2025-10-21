@@ -14,13 +14,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -208,7 +202,7 @@ export function ReportingDashboard() {
         },
         {
           responseType: "blob",
-        }
+        },
       );
 
       // Create download link
@@ -217,7 +211,7 @@ export function ReportingDashboard() {
       link.href = url;
       link.setAttribute(
         "download",
-        `${reportId}-${new Date().toISOString().split("T")[0]}.${format}`
+        `${reportId}-${new Date().toISOString().split("T")[0]}.${format}`,
       );
       document.body.appendChild(link);
       link.click();
@@ -376,7 +370,9 @@ export function ReportingDashboard() {
                             <SelectContent>
                               {param.options?.map((option) => (
                                 <SelectItem key={option} value={option}>
-                                  {option.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                                  {option
+                                    .replace(/_/g, " ")
+                                    .replace(/\b\w/g, (l) => l.toUpperCase())}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -389,9 +385,7 @@ export function ReportingDashboard() {
 
                 {/* Export Options */}
                 <div className="pt-3 border-t">
-                  <div className="text-xs font-medium text-muted-foreground mb-2">
-                    Export as:
-                  </div>
+                  <div className="text-xs font-medium text-muted-foreground mb-2">Export as:</div>
                   <div className="flex gap-2 flex-wrap">
                     {report.formats.map((format) => (
                       <Button

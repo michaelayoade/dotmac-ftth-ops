@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 /**
@@ -10,11 +10,11 @@ export const dynamicParams = true;
  * List and manage VPN servers with filtering and search.
  */
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Server,
   Plus,
@@ -27,29 +27,25 @@ import {
   TrendingUp,
   Globe,
   RefreshCw,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   useWireGuardServers,
   useDeleteWireGuardServer,
   useServerHealth,
-} from '../../../../../hooks/useWireGuard';
+} from "../../../../../hooks/useWireGuard";
 import type {
   ListServersParams,
   WireGuardServer,
   WireGuardServerStatus,
-} from '../../../../../types/wireguard';
-import {
-  SERVER_STATUS_COLORS,
-  formatBytes,
-  getTimeAgo,
-} from '../../../../../types/wireguard';
+} from "../../../../../types/wireguard";
+import { SERVER_STATUS_COLORS, formatBytes, getTimeAgo } from "../../../../../types/wireguard";
 
 export default function WireGuardServersPage() {
   const [filters, setFilters] = useState<ListServersParams>({
     limit: 50,
     offset: 0,
   });
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: servers = [], isLoading, error } = useWireGuardServers(filters);
   const { mutate: deleteServer } = useDeleteWireGuardServer();
@@ -69,7 +65,7 @@ export default function WireGuardServersPage() {
 
   const clearFilters = () => {
     setFilters({ limit: 50, offset: 0 });
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
   const handleDelete = (serverId: string, serverName: string) => {
@@ -84,7 +80,7 @@ export default function WireGuardServersPage() {
     searchTerm
       ? server.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         server.location?.toLowerCase().includes(searchTerm.toLowerCase())
-      : true
+      : true,
   );
 
   return (
@@ -120,7 +116,7 @@ export default function WireGuardServersPage() {
                 placeholder="Search by name or location..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 className="pl-10 pr-4 py-2 w-full border rounded-md"
               />
             </div>
@@ -130,10 +126,8 @@ export default function WireGuardServersPage() {
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <select
-              value={filters.status || ''}
-              onChange={(e) =>
-                handleFilterChange('status', e.target.value || undefined)
-              }
+              value={filters.status || ""}
+              onChange={(e) => handleFilterChange("status", e.target.value || undefined)}
               className="border rounded-md px-3 py-2"
             >
               <option value="">All Status</option>
@@ -175,11 +169,7 @@ export default function WireGuardServersPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {filteredServers.map((server) => (
-            <ServerCard
-              key={server.id}
-              server={server}
-              onDelete={handleDelete}
-            />
+            <ServerCard key={server.id} server={server} onDelete={handleDelete} />
           ))}
         </div>
       )}
@@ -201,13 +191,13 @@ function ServerCard({
   const { data: health } = useServerHealth(server.id);
 
   const getStatusColor = (status: WireGuardServerStatus): string => {
-    return SERVER_STATUS_COLORS[status] || 'bg-gray-500';
+    return SERVER_STATUS_COLORS[status] || "bg-gray-500";
   };
 
   const getCapacityColor = (utilization: number): string => {
-    if (utilization >= 90) return 'bg-red-500';
-    if (utilization >= 75) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (utilization >= 90) return "bg-red-500";
+    if (utilization >= 75) return "bg-yellow-500";
+    return "bg-green-500";
   };
 
   return (
@@ -228,16 +218,12 @@ function ServerCard({
                 </p>
               )}
             </div>
-            <Badge className={getStatusColor(server.status)}>
-              {server.status}
-            </Badge>
+            <Badge className={getStatusColor(server.status)}>{server.status}</Badge>
           </div>
 
           {/* Description */}
           {server.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {server.description}
-            </p>
+            <p className="text-sm text-muted-foreground line-clamp-2">{server.description}</p>
           )}
 
           {/* Endpoint */}
@@ -260,9 +246,11 @@ function ServerCard({
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all ${getCapacityColor(
-                  server.utilization_percent
+                  server.utilization_percent,
                 )}`}
-                style={{ width: `${Math.min(server.utilization_percent, 100)}%` }}
+                style={{
+                  width: `${Math.min(server.utilization_percent, 100)}%`,
+                }}
               />
             </div>
             <p className="text-xs text-muted-foreground text-right">
@@ -275,15 +263,11 @@ function ServerCard({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs text-muted-foreground">Total Received</p>
-                <p className="font-semibold text-sm">
-                  {formatBytes(server.total_rx_bytes)}
-                </p>
+                <p className="font-semibold text-sm">{formatBytes(server.total_rx_bytes)}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Total Sent</p>
-                <p className="font-semibold text-sm">
-                  {formatBytes(server.total_tx_bytes)}
-                </p>
+                <p className="font-semibold text-sm">{formatBytes(server.total_tx_bytes)}</p>
               </div>
             </div>
           </div>
@@ -298,11 +282,11 @@ function ServerCard({
                 </span>
                 <Badge
                   className={
-                    health.status === 'healthy'
-                      ? 'bg-green-500'
-                      : health.status === 'degraded'
-                        ? 'bg-yellow-500'
-                        : 'bg-red-500'
+                    health.status === "healthy"
+                      ? "bg-green-500"
+                      : health.status === "degraded"
+                        ? "bg-yellow-500"
+                        : "bg-red-500"
                   }
                 >
                   {health.status}

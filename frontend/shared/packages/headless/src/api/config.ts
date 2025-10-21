@@ -1,6 +1,6 @@
-import { setGlobalErrorHandler } from '../hooks/useErrorHandler';
+import { setGlobalErrorHandler } from "../hooks/useErrorHandler";
 
-import { type ApiClient, createApiClient } from './client';
+import { type ApiClient, createApiClient } from "./client";
 
 export interface ApiConfig {
   baseUrl: string;
@@ -20,19 +20,19 @@ export interface ApiEnvironments {
 // Default configurations for different environments
 export const defaultConfigs: ApiEnvironments = {
   development: {
-    baseUrl: 'http://localhost:8000',
+    baseUrl: "http://localhost:8000",
     timeout: 10000,
     retryAttempts: 2,
     enableErrorLogging: true,
   },
   staging: {
-    baseUrl: 'https://api-staging.dotmac.com',
+    baseUrl: "https://api-staging.dotmac.com",
     timeout: 15000,
     retryAttempts: 3,
     enableErrorLogging: true,
   },
   production: {
-    baseUrl: 'https://api.dotmac.com',
+    baseUrl: "https://api.dotmac.com",
     timeout: 10000,
     retryAttempts: 3,
     enableErrorLogging: false,
@@ -44,7 +44,7 @@ let currentConfig: ApiConfig | null = null;
 
 export function initializeApi(config?: Partial<ApiConfig>): ApiClient {
   // Determine environment
-  const environment = (process.env.NODE_ENV || 'development') as keyof ApiEnvironments;
+  const environment = (process.env.NODE_ENV || "development") as keyof ApiEnvironments;
   const baseConfig = defaultConfigs[environment];
 
   // Override with environment variables
@@ -84,10 +84,10 @@ export function initializeApi(config?: Partial<ApiConfig>): ApiClient {
       }
 
       // Redirect to login if in browser
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         const currentPath = window.location.pathname;
-        if (!currentPath.includes('/auth/login')) {
-          window.location.href = '/auth/login';
+        if (!currentPath.includes("/auth/login")) {
+          window.location.href = "/auth/login";
         }
       }
     },
@@ -121,7 +121,7 @@ export function isApiInitialized(): boolean {
 
 export function requireApiClient(): ApiClient {
   if (!currentClient) {
-    throw new Error('API client not initialized. Call initializeApi() first.');
+    throw new Error("API client not initialized. Call initializeApi() first.");
   }
   return currentClient;
 }
@@ -133,7 +133,7 @@ export async function checkApiHealth(): Promise<{
   error?: string;
 }> {
   if (!currentClient || !currentConfig) {
-    return { available: false, error: 'API client not initialized' };
+    return { available: false, error: "API client not initialized" };
   }
 
   const startTime = Date.now();
@@ -141,7 +141,7 @@ export async function checkApiHealth(): Promise<{
   try {
     // Try a simple health check endpoint
     await fetch(`${currentConfig.baseUrl}/health`, {
-      method: 'GET',
+      method: "GET",
       signal: AbortSignal.timeout(5000),
     });
 
@@ -151,13 +151,13 @@ export async function checkApiHealth(): Promise<{
     return {
       available: false,
       latency: Date.now() - startTime,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }
 
 // Initialize API client automatically if environment variables are present
-if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE_URL) {
+if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_API_BASE_URL) {
   try {
     initializeApi();
   } catch (_error) {

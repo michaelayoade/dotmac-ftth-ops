@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { X, UserPlus, Search, Users, Calendar, Trash2 } from 'lucide-react';
-import { toast } from '@/components/ui/toast';
-import { apiClient } from '@/lib/api/client';
+import { useState, useEffect, useCallback } from "react";
+import { X, UserPlus, Search, Users, Calendar, Trash2 } from "lucide-react";
+import { toast } from "@/components/ui/toast";
+import { apiClient } from "@/lib/api/client";
 
 interface Role {
   id: string;
@@ -39,21 +39,21 @@ interface AssignRoleModalProps {
 export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleModalProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [assignedUsers, setAssignedUsers] = useState<(User & UserRoleAssignment)[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
-  const [expiresAt, setExpiresAt] = useState('');
+  const [expiresAt, setExpiresAt] = useState("");
   const [loading, setLoading] = useState(true);
   const [assigning, setAssigning] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     try {
-      const response = await apiClient.get('/users');
+      const response = await apiClient.get("/users");
       if (response.data) {
         setUsers(response.data as User[]);
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
-      toast.error('Failed to load users');
+      console.error("Error fetching users:", error);
+      toast.error("Failed to load users");
     }
   }, []);
 
@@ -65,7 +65,7 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
         setAssignedUsers(response.data as (User & UserRoleAssignment)[]);
       }
     } catch (error) {
-      console.error('Error fetching role assignments:', error);
+      console.error("Error fetching role assignments:", error);
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
 
   const handleAssignRole = useCallback(async () => {
     if (selectedUsers.size === 0) {
-      toast.error('Please select at least one user');
+      toast.error("Please select at least one user");
       return;
     }
 
@@ -91,52 +91,55 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
           expires_at: expiresAt ? new Date(expiresAt).toISOString() : undefined,
         };
 
-        return apiClient.post('/auth/rbac/users/assign-role', assignData);
+        return apiClient.post("/auth/rbac/users/assign-role", assignData);
       });
 
       const results = await Promise.all(assignments);
-      const failed = results.filter(r => r.status < 200 || r.status >= 300);
+      const failed = results.filter((r) => r.status < 200 || r.status >= 300);
 
       if (failed.length === 0) {
         toast.success(`Role assigned to ${selectedUsers.size} user(s)`);
         setSelectedUsers(new Set());
-        setExpiresAt('');
+        setExpiresAt("");
         fetchRoleAssignments();
         onAssign();
       } else {
         toast.error(`Failed to assign role to ${failed.length} user(s)`);
       }
     } catch (error) {
-      console.error('Error assigning role:', error);
-      toast.error('Failed to assign role');
+      console.error("Error assigning role:", error);
+      toast.error("Failed to assign role");
     } finally {
       setAssigning(false);
     }
   }, [selectedUsers, role.name, expiresAt, onAssign, fetchRoleAssignments]);
 
-  const handleRevokeRole = useCallback(async (userId: string) => {
-    if (!confirm('Are you sure you want to revoke this role assignment?')) {
-      return;
-    }
-
-    try {
-      const response = await apiClient.post('/auth/rbac/users/revoke-role', {
-        user_id: userId,
-        role_name: role.name,
-      });
-
-      if (response.status >= 200 && response.status < 300) {
-        toast.success('Role revoked successfully');
-        fetchRoleAssignments();
-        onAssign();
-      } else {
-        toast.error('Failed to revoke role');
+  const handleRevokeRole = useCallback(
+    async (userId: string) => {
+      if (!confirm("Are you sure you want to revoke this role assignment?")) {
+        return;
       }
-    } catch (error) {
-      console.error('Error revoking role:', error);
-      toast.error('Failed to revoke role');
-    }
-  }, [role.name, onAssign, fetchRoleAssignments]);
+
+      try {
+        const response = await apiClient.post("/auth/rbac/users/revoke-role", {
+          user_id: userId,
+          role_name: role.name,
+        });
+
+        if (response.status >= 200 && response.status < 300) {
+          toast.success("Role revoked successfully");
+          fetchRoleAssignments();
+          onAssign();
+        } else {
+          toast.error("Failed to revoke role");
+        }
+      } catch (error) {
+        console.error("Error revoking role:", error);
+        toast.error("Failed to revoke role");
+      }
+    },
+    [role.name, onAssign, fetchRoleAssignments],
+  );
 
   const toggleUserSelection = (userId: string) => {
     const newSelected = new Set(selectedUsers);
@@ -149,13 +152,14 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
   };
 
   // Filter users that don't already have this role and match search
-  const assignedUserIds = new Set(assignedUsers.map(u => u.id));
-  const availableUsers = users.filter(user =>
-    !assignedUserIds.has(user.id) &&
-    user.is_active &&
-    (user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     (user.full_name && user.full_name.toLowerCase().includes(searchQuery.toLowerCase())))
+  const assignedUserIds = new Set(assignedUsers.map((u) => u.id));
+  const availableUsers = users.filter(
+    (user) =>
+      !assignedUserIds.has(user.id) &&
+      user.is_active &&
+      (user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (user.full_name && user.full_name.toLowerCase().includes(searchQuery.toLowerCase()))),
   );
 
   return (
@@ -202,12 +206,10 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                        {(user.full_name || user.username)?.[0]?.toUpperCase() ?? 'U'}
+                        {(user.full_name || user.username)?.[0]?.toUpperCase() ?? "U"}
                       </div>
                       <div>
-                        <p className="text-white font-medium">
-                          {user.full_name || user.username}
-                        </p>
+                        <p className="text-white font-medium">{user.full_name || user.username}</p>
                         <p className="text-slate-400 text-sm">{user.email}</p>
                         <div className="flex items-center gap-4 text-xs text-slate-500 mt-1">
                           <span>Assigned: {new Date(user.granted_at).toLocaleDateString()}</span>
@@ -235,9 +237,7 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
 
           {/* Assign New Users */}
           <div>
-            <h3 className="text-lg font-medium text-white mb-4">
-              Assign to New Users
-            </h3>
+            <h3 className="text-lg font-medium text-white mb-4">Assign to New Users</h3>
 
             {/* Search */}
             <div className="relative mb-4">
@@ -268,7 +268,9 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
             <div className="space-y-2">
               {availableUsers.length === 0 ? (
                 <div className="text-slate-400 text-center py-4">
-                  {searchQuery ? 'No users match your search' : 'All active users already have this role'}
+                  {searchQuery
+                    ? "No users match your search"
+                    : "All active users already have this role"}
                 </div>
               ) : (
                 availableUsers.map((user) => (
@@ -276,8 +278,8 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
                     key={user.id}
                     className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
                       selectedUsers.has(user.id)
-                        ? 'bg-sky-500/20 border border-sky-500/50'
-                        : 'bg-slate-700/50 hover:bg-slate-700'
+                        ? "bg-sky-500/20 border border-sky-500/50"
+                        : "bg-slate-700/50 hover:bg-slate-700"
                     }`}
                     onClick={() => toggleUserSelection(user.id)}
                   >
@@ -288,12 +290,10 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
                       className="rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
                     />
                     <div className="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
-                      {(user.full_name || user.username)?.[0]?.toUpperCase() ?? 'U'}
+                      {(user.full_name || user.username)?.[0]?.toUpperCase() ?? "U"}
                     </div>
                     <div className="flex-1">
-                      <p className="text-white font-medium">
-                        {user.full_name || user.username}
-                      </p>
+                      <p className="text-white font-medium">{user.full_name || user.username}</p>
                       <p className="text-slate-400 text-sm">{user.email}</p>
                     </div>
                   </div>
@@ -305,9 +305,7 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
 
         {/* Footer */}
         <div className="flex items-center justify-between p-6 border-t border-slate-700">
-          <div className="text-sm text-slate-400">
-            {selectedUsers.size} user(s) selected
-          </div>
+          <div className="text-sm text-slate-400">{selectedUsers.size} user(s) selected</div>
           <div className="flex items-center gap-3">
             <button
               onClick={onClose}
@@ -321,7 +319,9 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
               className="flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded hover:bg-sky-600 transition-colors disabled:opacity-50"
             >
               <UserPlus className="h-4 w-4" />
-              {assigning ? 'Assigning...' : `Assign Role ${selectedUsers.size > 0 ? `(${selectedUsers.size})` : ''}`}
+              {assigning
+                ? "Assigning..."
+                : `Assign Role ${selectedUsers.size > 0 ? `(${selectedUsers.size})` : ""}`}
             </button>
           </div>
         </div>

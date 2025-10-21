@@ -1,13 +1,20 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Addon } from '@/hooks/useTenantAddons';
-import { Check, Star } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Addon } from "@/hooks/useTenantAddons";
+import { Check, Star } from "lucide-react";
 
 interface AddonCardProps {
   addon: Addon;
@@ -16,17 +23,17 @@ interface AddonCardProps {
 }
 
 const addonTypeColors: Record<string, string> = {
-  feature: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  resource: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
-  service: 'bg-green-500/10 text-green-500 border-green-500/20',
-  user_seats: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
-  integration: 'bg-pink-500/10 text-pink-500 border-pink-500/20',
+  feature: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  resource: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+  service: "bg-green-500/10 text-green-500 border-green-500/20",
+  user_seats: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+  integration: "bg-pink-500/10 text-pink-500 border-pink-500/20",
 };
 
 const billingTypeLabels: Record<string, string> = {
-  one_time: 'One-time',
-  recurring: 'Recurring',
-  metered: 'Pay-as-you-go',
+  one_time: "One-time",
+  recurring: "Recurring",
+  metered: "Pay-as-you-go",
 };
 
 export const AddonCard: React.FC<AddonCardProps> = ({
@@ -36,9 +43,9 @@ export const AddonCard: React.FC<AddonCardProps> = ({
 }) => {
   const [quantity, setQuantity] = useState(addon.min_quantity);
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+  const formatCurrency = (amount: number, currency: string = "USD") => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency,
     }).format(amount);
   };
@@ -56,7 +63,7 @@ export const AddonCard: React.FC<AddonCardProps> = ({
   };
 
   return (
-    <Card variant={addon.is_featured ? 'elevated' : 'default'} className="relative">
+    <Card variant={addon.is_featured ? "elevated" : "default"} className="relative">
       {/* Featured Badge */}
       {addon.is_featured && (
         <div className="absolute -top-2 -right-2 z-10">
@@ -83,7 +90,7 @@ export const AddonCard: React.FC<AddonCardProps> = ({
 
           {/* Type Badge */}
           <Badge className={addonTypeColors[addon.addon_type] || addonTypeColors.feature}>
-            {addon.addon_type.replace('_', ' ')}
+            {addon.addon_type.replace("_", " ")}
           </Badge>
         </div>
       </CardHeader>
@@ -92,10 +99,14 @@ export const AddonCard: React.FC<AddonCardProps> = ({
         {/* Pricing */}
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold">{formatCurrency(addon.price, addon.currency)}</span>
+            <span className="text-2xl font-bold">
+              {formatCurrency(addon.price, addon.currency)}
+            </span>
             <span className="text-sm text-muted-foreground">
-              {addon.billing_type === 'recurring' ? '/ month' : ''}
-              {addon.billing_type === 'metered' && addon.metered_unit ? `/ ${addon.metered_unit}` : ''}
+              {addon.billing_type === "recurring" ? "/ month" : ""}
+              {addon.billing_type === "metered" && addon.metered_unit
+                ? `/ ${addon.metered_unit}`
+                : ""}
             </span>
           </div>
 
@@ -112,13 +123,15 @@ export const AddonCard: React.FC<AddonCardProps> = ({
         </div>
 
         {/* Metered Info */}
-        {addon.billing_type === 'metered' && addon.included_quantity && addon.included_quantity > 0 && (
-          <div className="text-sm">
-            <p className="text-muted-foreground">
-              Includes {addon.included_quantity} {addon.metered_unit} per month
-            </p>
-          </div>
-        )}
+        {addon.billing_type === "metered" &&
+          addon.included_quantity &&
+          addon.included_quantity > 0 && (
+            <div className="text-sm">
+              <p className="text-muted-foreground">
+                Includes {addon.included_quantity} {addon.metered_unit} per month
+              </p>
+            </div>
+          )}
 
         {/* Quantity Selector */}
         {addon.is_quantity_based && (
@@ -143,7 +156,7 @@ export const AddonCard: React.FC<AddonCardProps> = ({
                   const val = parseInt(e.target.value) || addon.min_quantity;
                   const bounded = Math.max(
                     addon.min_quantity,
-                    addon.max_quantity ? Math.min(val, addon.max_quantity) : val
+                    addon.max_quantity ? Math.min(val, addon.max_quantity) : val,
                   );
                   setQuantity(bounded);
                 }}
@@ -154,9 +167,7 @@ export const AddonCard: React.FC<AddonCardProps> = ({
                 size="sm"
                 onClick={() =>
                   setQuantity(
-                    addon.max_quantity
-                      ? Math.min(addon.max_quantity, quantity + 1)
-                      : quantity + 1
+                    addon.max_quantity ? Math.min(addon.max_quantity, quantity + 1) : quantity + 1,
                   )
                 }
                 disabled={addon.max_quantity ? quantity >= addon.max_quantity : false}
@@ -165,9 +176,7 @@ export const AddonCard: React.FC<AddonCardProps> = ({
               </Button>
             </div>
             {addon.max_quantity && (
-              <p className="text-xs text-muted-foreground">
-                Max: {addon.max_quantity}
-              </p>
+              <p className="text-xs text-muted-foreground">Max: {addon.max_quantity}</p>
             )}
           </div>
         )}
@@ -206,9 +215,9 @@ export const AddonCard: React.FC<AddonCardProps> = ({
           onClick={handlePurchase}
           disabled={isPurchasing}
           className="w-full"
-          variant={addon.is_featured ? 'default' : 'outline'}
+          variant={addon.is_featured ? "default" : "outline"}
         >
-          {isPurchasing ? 'Adding...' : 'Add to Subscription'}
+          {isPurchasing ? "Adding..." : "Add to Subscription"}
         </Button>
       </CardFooter>
     </Card>

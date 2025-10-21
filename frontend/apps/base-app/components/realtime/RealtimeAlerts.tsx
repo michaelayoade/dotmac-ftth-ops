@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Real-Time Alerts Notification System
@@ -7,11 +7,11 @@
  * for critical system and network alerts.
  */
 
-import { useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { AlertCircle, AlertTriangle, Info, XCircle } from 'lucide-react';
-import { useAlertEvents } from '../../hooks/useRealtime';
-import type { AlertEvent } from '../../types/realtime';
+import { useEffect } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { AlertCircle, AlertTriangle, Info, XCircle } from "lucide-react";
+import { useAlertEvents } from "../../hooks/useRealtime";
+import type { AlertEvent } from "../../types/realtime";
 
 export interface RealtimeAlertsProps {
   /**
@@ -21,7 +21,7 @@ export interface RealtimeAlertsProps {
   /**
    * Minimum severity level to show notifications
    */
-  minSeverity?: 'info' | 'warning' | 'error' | 'critical';
+  minSeverity?: "info" | "warning" | "error" | "critical";
   /**
    * Custom alert handler
    */
@@ -37,7 +37,7 @@ const SEVERITY_LEVELS = {
 
 export function RealtimeAlerts({
   enabled = true,
-  minSeverity = 'warning',
+  minSeverity = "warning",
   onAlert,
 }: RealtimeAlertsProps) {
   const minLevel = SEVERITY_LEVELS[minSeverity];
@@ -56,9 +56,9 @@ export function RealtimeAlerts({
     }
 
     // Show toast notification based on event type and severity
-    if (event.event_type === 'alert.raised') {
+    if (event.event_type === "alert.raised") {
       showAlertToast(event, toast);
-    } else if (event.event_type === 'alert.cleared') {
+    } else if (event.event_type === "alert.cleared") {
       showClearedToast(event, toast);
     }
   }, enabled);
@@ -69,27 +69,27 @@ export function RealtimeAlerts({
 /**
  * Show toast notification for raised alert
  */
-function showAlertToast(event: AlertEvent, toast: ReturnType<typeof useToast>['toast']) {
+function showAlertToast(event: AlertEvent, toast: ReturnType<typeof useToast>["toast"]) {
   const { severity, message, source } = event;
 
   const description = `Source: ${source}`;
 
   switch (severity) {
-    case 'critical':
-    case 'error':
+    case "critical":
+    case "error":
       toast({
         title: message,
         description,
-        variant: 'destructive',
+        variant: "destructive",
       });
       break;
 
-    case 'warning':
-    case 'info':
+    case "warning":
+    case "info":
       toast({
         title: message,
         description,
-        variant: 'default',
+        variant: "default",
       });
       break;
   }
@@ -98,11 +98,11 @@ function showAlertToast(event: AlertEvent, toast: ReturnType<typeof useToast>['t
 /**
  * Show toast notification for cleared alert
  */
-function showClearedToast(event: AlertEvent, toast: ReturnType<typeof useToast>['toast']) {
+function showClearedToast(event: AlertEvent, toast: ReturnType<typeof useToast>["toast"]) {
   toast({
-    title: 'Alert Cleared',
+    title: "Alert Cleared",
     description: `${event.message} (Source: ${event.source})`,
-    variant: 'default',
+    variant: "default",
   });
 }
 
@@ -110,18 +110,16 @@ function showClearedToast(event: AlertEvent, toast: ReturnType<typeof useToast>[
  * Alert counter component for displaying active alerts count
  */
 export function useAlertCount() {
-  const [activeAlerts, setActiveAlerts] = React.useState<Map<string, AlertEvent>>(
-    new Map()
-  );
+  const [activeAlerts, setActiveAlerts] = React.useState<Map<string, AlertEvent>>(new Map());
 
   useAlertEvents((event) => {
-    if (event.event_type === 'alert.raised') {
+    if (event.event_type === "alert.raised") {
       setActiveAlerts((prev) => {
         const next = new Map(prev);
         next.set(event.alert_id, event);
         return next;
       });
-    } else if (event.event_type === 'alert.cleared') {
+    } else if (event.event_type === "alert.cleared") {
       setActiveAlerts((prev) => {
         const next = new Map(prev);
         next.delete(event.alert_id);
@@ -133,14 +131,11 @@ export function useAlertCount() {
   return {
     count: activeAlerts.size,
     alerts: Array.from(activeAlerts.values()),
-    criticalCount: Array.from(activeAlerts.values()).filter(
-      (a) => a.severity === 'critical'
-    ).length,
-    errorCount: Array.from(activeAlerts.values()).filter(
-      (a) => a.severity === 'error'
-    ).length,
+    criticalCount: Array.from(activeAlerts.values()).filter((a) => a.severity === "critical")
+      .length,
+    errorCount: Array.from(activeAlerts.values()).filter((a) => a.severity === "error").length,
   };
 }
 
 // Need to import React for useState
-import React from 'react';
+import React from "react";

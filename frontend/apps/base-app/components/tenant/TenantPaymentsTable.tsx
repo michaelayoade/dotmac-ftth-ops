@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { format } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
-import { formatCurrency } from '@/lib/utils/currency';
-import type { Payment, PaymentStatus } from '@/types/billing';
+import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/utils/currency";
+import type { Payment, PaymentStatus } from "@/types/billing";
 
 interface TenantPaymentsTableProps {
   payments: Payment[];
 }
 
-const statusVariant: Record<PaymentStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-  pending: 'secondary',
-  processing: 'secondary',
-  succeeded: 'default',
-  failed: 'destructive',
-  cancelled: 'outline',
-  refunded: 'outline',
-  partial_refund: 'outline',
+const statusVariant: Record<PaymentStatus, "default" | "secondary" | "destructive" | "outline"> = {
+  pending: "secondary",
+  processing: "secondary",
+  succeeded: "default",
+  failed: "destructive",
+  cancelled: "outline",
+  refunded: "outline",
+  partial_refund: "outline",
 };
 
 export default function TenantPaymentsTable({ payments }: TenantPaymentsTableProps) {
@@ -44,16 +44,19 @@ export default function TenantPaymentsTable({ payments }: TenantPaymentsTablePro
               </td>
               <td className="px-3 py-2 text-foreground">
                 {formatCurrency(
-                  (payment.amount?.amount ?? 0) / (payment.amount?.minor_unit ?? payment.amount?.minorUnit ?? 100),
-                  payment.amount?.currency ?? 'USD'
+                  (payment.amount?.amount ?? 0) /
+                    (payment.amount?.minor_unit ?? payment.amount?.minorUnit ?? 100),
+                  payment.amount?.currency ?? "USD",
                 )}
               </td>
               <td className="px-3 py-2">
-                <Badge variant={statusVariant[payment.status]}>{payment.status.toLowerCase()}</Badge>
+                <Badge variant={statusVariant[payment.status]}>
+                  {payment.status.toLowerCase()}
+                </Badge>
               </td>
               <td className="px-3 py-2 text-muted-foreground">{payment.method}</td>
               <td className="px-3 py-2 text-muted-foreground">
-                {payment.processedAt ? format(new Date(payment.processedAt), 'MMM d, yyyy p') : '—'}
+                {payment.processedAt ? format(new Date(payment.processedAt), "MMM d, yyyy p") : "—"}
               </td>
             </tr>
           ))}

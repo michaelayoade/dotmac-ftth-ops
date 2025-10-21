@@ -1,11 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
-import axios from 'axios';
-import { apiClient } from '@/lib/api/client';
-import { logger } from '@/lib/logger';
+import { useState, useCallback, useEffect } from "react";
+import axios from "axios";
+import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 
 export interface ServiceHealth {
   name: string;
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   message: string;
   required: boolean;
   uptime?: number;
@@ -32,30 +32,41 @@ export const useHealth = () => {
     setError(null);
 
     try {
-      const response = await apiClient.get<HealthSummary>('/ready');
+      const response = await apiClient.get<HealthSummary>("/ready");
 
       const payload = response.data as
         | HealthSummary
         | { success: boolean; data: HealthSummary }
         | { error?: { message?: string }; data?: HealthSummary };
 
-      if (payload && typeof payload === 'object' && 'success' in payload && payload.success && payload.data) {
+      if (
+        payload &&
+        typeof payload === "object" &&
+        "success" in payload &&
+        payload.success &&
+        payload.data
+      ) {
         setHealth(payload.data);
-      } else if (payload && typeof payload === 'object' && 'error' in payload && payload.error?.message) {
+      } else if (
+        payload &&
+        typeof payload === "object" &&
+        "error" in payload &&
+        payload.error?.message
+      ) {
         setError(payload.error.message);
         setHealth({
-          status: 'degraded',
+          status: "degraded",
           healthy: false,
           services: [],
           failed_services: [],
           version: undefined,
           timestamp: new Date().toISOString(),
         });
-      } else if (payload && typeof payload === 'object' && 'services' in payload) {
+      } else if (payload && typeof payload === "object" && "services" in payload) {
         setHealth(payload as HealthSummary);
       } else {
         setHealth({
-          status: 'unknown',
+          status: "unknown",
           healthy: false,
           services: [],
           failed_services: [],
@@ -67,7 +78,7 @@ export const useHealth = () => {
       const isAxiosError = axios.isAxiosError(err);
       const status = isAxiosError ? err.response?.status : undefined;
       const fallback: HealthSummary = {
-        status: status === 403 ? 'forbidden' : 'degraded',
+        status: status === 403 ? "forbidden" : "degraded",
         healthy: false,
         services: [],
         failed_services: [],
@@ -75,12 +86,15 @@ export const useHealth = () => {
         timestamp: new Date().toISOString(),
       };
 
-      logger.error('Failed to fetch health data', err instanceof Error ? err : new Error(String(err)));
+      logger.error(
+        "Failed to fetch health data",
+        err instanceof Error ? err : new Error(String(err)),
+      );
       setHealth(fallback);
       setError(
         status === 403
-          ? 'You do not have permission to view service health.'
-          : 'Service health is temporarily unavailable.'
+          ? "You do not have permission to view service health."
+          : "Service health is temporarily unavailable.",
       );
     } finally {
       setLoading(false);

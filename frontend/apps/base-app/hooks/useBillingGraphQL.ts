@@ -6,28 +6,28 @@
  * with DataLoader batching for customer/plan/invoice data.
  */
 
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import { graphqlClient } from '@/lib/graphql-client';
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import { graphqlClient } from "@/lib/graphql-client";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export enum SubscriptionStatus {
-  ACTIVE = 'active',
-  TRIALING = 'trialing',
-  PAST_DUE = 'past_due',
-  CANCELED = 'canceled',
-  PAUSED = 'paused',
-  INCOMPLETE = 'incomplete',
-  INCOMPLETE_EXPIRED = 'incomplete_expired',
+  ACTIVE = "active",
+  TRIALING = "trialing",
+  PAST_DUE = "past_due",
+  CANCELED = "canceled",
+  PAUSED = "paused",
+  INCOMPLETE = "incomplete",
+  INCOMPLETE_EXPIRED = "incomplete_expired",
 }
 
 export enum BillingCycle {
-  MONTHLY = 'monthly',
-  QUARTERLY = 'quarterly',
-  ANNUAL = 'annual',
-  LIFETIME = 'lifetime',
+  MONTHLY = "monthly",
+  QUARTERLY = "quarterly",
+  ANNUAL = "annual",
+  LIFETIME = "lifetime",
 }
 
 export interface SubscriptionCustomer {
@@ -435,7 +435,7 @@ export function useSubscription(
     includePlan?: boolean;
     includeInvoices?: boolean;
     enabled?: boolean;
-  } = {}
+  } = {},
 ): UseQueryResult<Subscription, Error> {
   const {
     includeCustomer = true,
@@ -445,17 +445,16 @@ export function useSubscription(
   } = options;
 
   return useQuery({
-    queryKey: ['subscription', subscriptionId, includeCustomer, includePlan, includeInvoices],
+    queryKey: ["subscription", subscriptionId, includeCustomer, includePlan, includeInvoices],
     queryFn: async () => {
-      const response = await graphqlClient.request<{ subscription: Subscription }>(
-        GET_SUBSCRIPTION_QUERY,
-        {
-          id: subscriptionId,
-          includeCustomer,
-          includePlan,
-          includeInvoices,
-        }
-      );
+      const response = await graphqlClient.request<{
+        subscription: Subscription;
+      }>(GET_SUBSCRIPTION_QUERY, {
+        id: subscriptionId,
+        includeCustomer,
+        includePlan,
+        includeInvoices,
+      });
       return response.subscription;
     },
     enabled: enabled && !!subscriptionId,
@@ -482,7 +481,7 @@ export function useSubscriptions(
     includePlan?: boolean;
     includeInvoices?: boolean;
   } = {},
-  enabled = true
+  enabled = true,
 ): UseQueryResult<SubscriptionConnection, Error> {
   const {
     page = 1,
@@ -496,21 +495,20 @@ export function useSubscriptions(
   } = filters;
 
   return useQuery({
-    queryKey: ['subscriptions', filters],
+    queryKey: ["subscriptions", filters],
     queryFn: async () => {
-      const response = await graphqlClient.request<{ subscriptions: SubscriptionConnection }>(
-        GET_SUBSCRIPTIONS_QUERY,
-        {
-          page,
-          pageSize,
-          status,
-          billingCycle,
-          search,
-          includeCustomer,
-          includePlan,
-          includeInvoices,
-        }
-      );
+      const response = await graphqlClient.request<{
+        subscriptions: SubscriptionConnection;
+      }>(GET_SUBSCRIPTIONS_QUERY, {
+        page,
+        pageSize,
+        status,
+        billingCycle,
+        search,
+        includeCustomer,
+        includePlan,
+        includeInvoices,
+      });
       return response.subscriptions;
     },
     enabled,
@@ -528,15 +526,13 @@ export function useSubscriptions(
  * - Churn rate and growth rate
  * - Trial conversion metrics
  */
-export function useSubscriptionMetrics(
-  enabled = true
-): UseQueryResult<SubscriptionMetrics, Error> {
+export function useSubscriptionMetrics(enabled = true): UseQueryResult<SubscriptionMetrics, Error> {
   return useQuery({
-    queryKey: ['subscription-metrics'],
+    queryKey: ["subscription-metrics"],
     queryFn: async () => {
-      const response = await graphqlClient.request<{ subscriptionMetrics: SubscriptionMetrics }>(
-        GET_SUBSCRIPTION_METRICS_QUERY
-      );
+      const response = await graphqlClient.request<{
+        subscriptionMetrics: SubscriptionMetrics;
+      }>(GET_SUBSCRIPTION_METRICS_QUERY);
       return response.subscriptionMetrics;
     },
     enabled,
@@ -554,12 +550,12 @@ export function useBillingPlans(
     isActive?: boolean;
     billingCycle?: BillingCycle;
   } = {},
-  enabled = true
+  enabled = true,
 ): UseQueryResult<PlanConnection, Error> {
   const { page = 1, pageSize = 20, isActive, billingCycle } = filters;
 
   return useQuery({
-    queryKey: ['billing-plans', filters],
+    queryKey: ["billing-plans", filters],
     queryFn: async () => {
       const response = await graphqlClient.request<{ plans: PlanConnection }>(GET_PLANS_QUERY, {
         page,
@@ -584,22 +580,21 @@ export function useProducts(
     isActive?: boolean;
     category?: string;
   } = {},
-  enabled = true
+  enabled = true,
 ): UseQueryResult<ProductConnection, Error> {
   const { page = 1, pageSize = 20, isActive, category } = filters;
 
   return useQuery({
-    queryKey: ['products', filters],
+    queryKey: ["products", filters],
     queryFn: async () => {
-      const response = await graphqlClient.request<{ products: ProductConnection }>(
-        GET_PRODUCTS_QUERY,
-        {
-          page,
-          pageSize,
-          isActive,
-          category,
-        }
-      );
+      const response = await graphqlClient.request<{
+        products: ProductConnection;
+      }>(GET_PRODUCTS_QUERY, {
+        page,
+        pageSize,
+        isActive,
+        category,
+      });
       return response.products;
     },
     enabled,
@@ -613,16 +608,15 @@ export function useProducts(
  * This hook uses the analytics endpoint for cached metrics calculation
  */
 export function useBillingMetrics(
-  period = '30d',
-  enabled = true
+  period = "30d",
+  enabled = true,
 ): UseQueryResult<BillingMetrics, Error> {
   return useQuery({
-    queryKey: ['billing-metrics', period],
+    queryKey: ["billing-metrics", period],
     queryFn: async () => {
-      const response = await graphqlClient.request<{ billingMetrics: BillingMetrics }>(
-        GET_BILLING_METRICS_QUERY,
-        { period }
-      );
+      const response = await graphqlClient.request<{
+        billingMetrics: BillingMetrics;
+      }>(GET_BILLING_METRICS_QUERY, { period });
       return response.billingMetrics;
     },
     enabled,
@@ -640,16 +634,15 @@ export function useBillingMetrics(
  * - System monitoring metrics
  */
 export function useDashboardOverview(
-  period = '30d',
-  enabled = true
+  period = "30d",
+  enabled = true,
 ): UseQueryResult<DashboardOverview, Error> {
   return useQuery({
-    queryKey: ['dashboard-overview', period],
+    queryKey: ["dashboard-overview", period],
     queryFn: async () => {
-      const response = await graphqlClient.request<{ dashboardOverview: DashboardOverview }>(
-        GET_DASHBOARD_OVERVIEW_QUERY,
-        { period }
-      );
+      const response = await graphqlClient.request<{
+        dashboardOverview: DashboardOverview;
+      }>(GET_DASHBOARD_OVERVIEW_QUERY, { period });
       return response.dashboardOverview;
     },
     enabled,
@@ -669,14 +662,14 @@ export function useActiveSubscriptions(
     includeCustomer?: boolean;
     includePlan?: boolean;
   } = {},
-  enabled = true
+  enabled = true,
 ): UseQueryResult<SubscriptionConnection, Error> {
   return useSubscriptions(
     {
       ...options,
       status: SubscriptionStatus.ACTIVE,
     },
-    enabled
+    enabled,
   );
 }
 
@@ -686,7 +679,7 @@ export function useActiveSubscriptions(
  */
 export function useCustomerSubscriptions(
   customerId: string,
-  enabled = true
+  enabled = true,
 ): UseQueryResult<SubscriptionConnection, Error> {
   return useSubscriptions(
     {
@@ -695,7 +688,7 @@ export function useCustomerSubscriptions(
       includePlan: true,
       includeInvoices: true,
     },
-    enabled && !!customerId
+    enabled && !!customerId,
   );
 }
 
@@ -705,7 +698,7 @@ export function useCustomerSubscriptions(
  */
 export function useActiveBillingPlans(
   billingCycle?: BillingCycle,
-  enabled = true
+  enabled = true,
 ): UseQueryResult<PlanConnection, Error> {
   return useBillingPlans(
     {
@@ -713,6 +706,6 @@ export function useActiveBillingPlans(
       billingCycle,
       pageSize: 100, // Get all active plans
     },
-    enabled
+    enabled,
   );
 }

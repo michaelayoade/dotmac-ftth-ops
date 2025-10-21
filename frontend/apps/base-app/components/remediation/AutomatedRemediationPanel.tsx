@@ -14,21 +14,11 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface RemediationAction {
   id: string;
@@ -117,11 +107,7 @@ const REMEDIATION_ACTIONS: RemediationAction[] = [
     icon: "Zap",
     severity: "medium",
     autoEnabled: false,
-    conditions: [
-      "IP conflict detected",
-      "Duplicate IP in NetBox",
-      "CPE has wrong IP",
-    ],
+    conditions: ["IP conflict detected", "Duplicate IP in NetBox", "CPE has wrong IP"],
     actions: [
       "Release current IP from NetBox",
       "Trigger DHCP renewal on CPE",
@@ -139,14 +125,14 @@ export function AutomatedRemediationPanel({ subscriberId }: AutomatedRemediation
   const { toast } = useToast();
 
   const [remediationSettings, setRemediationSettings] = useState<Map<string, boolean>>(
-    new Map(REMEDIATION_ACTIONS.map(action => [action.id, action.autoEnabled]))
+    new Map(REMEDIATION_ACTIONS.map((action) => [action.id, action.autoEnabled])),
   );
   const [executingAction, setExecutingAction] = useState<string | null>(null);
   const [history, setHistory] = useState<RemediationHistory[]>([]);
   const [showHistory, setShowHistory] = useState(false);
 
   const toggleAutoRemediation = async (actionId: string, enabled: boolean) => {
-    setRemediationSettings(prev => new Map(prev).set(actionId, enabled));
+    setRemediationSettings((prev) => new Map(prev).set(actionId, enabled));
 
     try {
       await apiClient.post(`/api/v1/remediation/settings`, {
@@ -157,11 +143,11 @@ export function AutomatedRemediationPanel({ subscriberId }: AutomatedRemediation
 
       toast({
         title: enabled ? "Auto-remediation enabled" : "Auto-remediation disabled",
-        description: `${REMEDIATION_ACTIONS.find(a => a.id === actionId)?.name} ${enabled ? "will run automatically" : "requires manual trigger"}`,
+        description: `${REMEDIATION_ACTIONS.find((a) => a.id === actionId)?.name} ${enabled ? "will run automatically" : "requires manual trigger"}`,
       });
     } catch (err: any) {
       // Revert on error
-      setRemediationSettings(prev => new Map(prev).set(actionId, !enabled));
+      setRemediationSettings((prev) => new Map(prev).set(actionId, !enabled));
       toast({
         title: "Failed to update settings",
         description: err?.response?.data?.detail || "Could not save auto-remediation settings",
@@ -183,16 +169,13 @@ export function AutomatedRemediationPanel({ subscriberId }: AutomatedRemediation
     setExecutingAction(actionId);
 
     try {
-      const response = await apiClient.post(
-        `/api/v1/remediation/execute`,
-        {
-          action_id: actionId,
-          subscriber_id: subscriberId,
-          manual_trigger: true,
-        }
-      );
+      const response = await apiClient.post(`/api/v1/remediation/execute`, {
+        action_id: actionId,
+        subscriber_id: subscriberId,
+        manual_trigger: true,
+      });
 
-      const action = REMEDIATION_ACTIONS.find(a => a.id === actionId);
+      const action = REMEDIATION_ACTIONS.find((a) => a.id === actionId);
 
       toast({
         title: "Remediation successful",
@@ -200,18 +183,20 @@ export function AutomatedRemediationPanel({ subscriberId }: AutomatedRemediation
       });
 
       // Add to history
-      setHistory(prev => [{
-        id: response.data.remediation_id,
-        action_name: action?.name || actionId,
-        subscriber_id: subscriberId,
-        triggered_at: new Date().toISOString(),
-        completed_at: new Date().toISOString(),
-        success: true,
-        auto_triggered: false,
-      }, ...prev]);
-
+      setHistory((prev) => [
+        {
+          id: response.data.remediation_id,
+          action_name: action?.name || actionId,
+          subscriber_id: subscriberId,
+          triggered_at: new Date().toISOString(),
+          completed_at: new Date().toISOString(),
+          success: true,
+          auto_triggered: false,
+        },
+        ...prev,
+      ]);
     } catch (err: any) {
-      const action = REMEDIATION_ACTIONS.find(a => a.id === actionId);
+      const action = REMEDIATION_ACTIONS.find((a) => a.id === actionId);
 
       toast({
         title: "Remediation failed",
@@ -220,16 +205,18 @@ export function AutomatedRemediationPanel({ subscriberId }: AutomatedRemediation
       });
 
       // Add failed attempt to history
-      setHistory(prev => [{
-        id: `failed-${Date.now()}`,
-        action_name: action?.name || actionId,
-        subscriber_id: subscriberId || "unknown",
-        triggered_at: new Date().toISOString(),
-        success: false,
-        error_message: err?.response?.data?.detail || "Unknown error",
-        auto_triggered: false,
-      }, ...prev]);
-
+      setHistory((prev) => [
+        {
+          id: `failed-${Date.now()}`,
+          action_name: action?.name || actionId,
+          subscriber_id: subscriberId || "unknown",
+          triggered_at: new Date().toISOString(),
+          success: false,
+          error_message: err?.response?.data?.detail || "Unknown error",
+          auto_triggered: false,
+        },
+        ...prev,
+      ]);
     } finally {
       setExecutingAction(null);
     }
@@ -267,11 +254,7 @@ export function AutomatedRemediationPanel({ subscriberId }: AutomatedRemediation
             Configure automatic fixes for common service issues
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowHistory(!showHistory)}
-        >
+        <Button variant="outline" size="sm" onClick={() => setShowHistory(!showHistory)}>
           <History className="w-4 h-4 mr-2" />
           {showHistory ? "Hide" : "Show"} History
         </Button>
@@ -288,9 +271,7 @@ export function AutomatedRemediationPanel({ subscriberId }: AutomatedRemediation
                     <Wrench className="w-4 h-4" />
                     <CardTitle className="text-base">{action.name}</CardTitle>
                   </div>
-                  <CardDescription className="text-sm">
-                    {action.description}
-                  </CardDescription>
+                  <CardDescription className="text-sm">{action.description}</CardDescription>
                 </div>
                 {getSeverityBadge(action.severity)}
               </div>
@@ -366,9 +347,7 @@ export function AutomatedRemediationPanel({ subscriberId }: AutomatedRemediation
         <Card>
           <CardHeader>
             <CardTitle>Remediation History</CardTitle>
-            <CardDescription>
-              Recent automatic and manual remediation executions
-            </CardDescription>
+            <CardDescription>Recent automatic and manual remediation executions</CardDescription>
           </CardHeader>
           <CardContent>
             {history.length === 0 ? (
@@ -391,7 +370,8 @@ export function AutomatedRemediationPanel({ subscriberId }: AutomatedRemediation
                       <div>
                         <div className="font-medium text-sm">{item.action_name}</div>
                         <div className="text-xs text-muted-foreground">
-                          {item.auto_triggered ? "Auto-triggered" : "Manual"} • {new Date(item.triggered_at).toLocaleString()}
+                          {item.auto_triggered ? "Auto-triggered" : "Manual"} •{" "}
+                          {new Date(item.triggered_at).toLocaleString()}
                         </div>
                         {item.error_message && (
                           <div className="text-xs text-red-600 mt-1">{item.error_message}</div>

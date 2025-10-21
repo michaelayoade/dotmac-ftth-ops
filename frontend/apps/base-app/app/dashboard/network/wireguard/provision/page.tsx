@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 /**
@@ -13,25 +13,25 @@ export const dynamicParams = true;
  * - Provides download links for configuration
  */
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useProvisionVPNService } from '@/hooks/useWireGuard';
-import type { VPNProvisionRequest } from '@/types/wireguard';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useProvisionVPNService } from "@/hooks/useWireGuard";
+import type { VPNProvisionRequest } from "@/types/wireguard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
   Loader2,
@@ -42,10 +42,10 @@ import {
   AlertCircle,
   Download,
   ExternalLink,
-} from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
-type ProvisioningStep = 'form' | 'provisioning' | 'success' | 'error';
+type ProvisioningStep = "form" | "provisioning" | "success" | "error";
 
 interface ProvisioningResult {
   server_id: string;
@@ -59,19 +59,19 @@ export default function ProvisionVPNPage() {
   const { toast } = useToast();
   const provisionService = useProvisionVPNService();
 
-  const [step, setStep] = useState<ProvisioningStep>('form');
+  const [step, setStep] = useState<ProvisioningStep>("form");
   const [result, setResult] = useState<ProvisioningResult | null>(null);
 
   const [formData, setFormData] = useState<VPNProvisionRequest>({
-    customer_id: '',
-    peer_name: '',
-    server_name: '',
-    server_location: '',
+    customer_id: "",
+    peer_name: "",
+    server_name: "",
+    server_location: "",
     listen_port: 51820,
-    subnet: '10.8.0.0/24',
-    dns_servers: '1.1.1.1, 8.8.8.8',
+    subnet: "10.8.0.0/24",
+    dns_servers: "1.1.1.1, 8.8.8.8",
     initial_peer_count: 1,
-    peer_name_prefix: 'peer',
+    peer_name_prefix: "peer",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -81,28 +81,25 @@ export default function ProvisionVPNPage() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.server_name || formData.server_name.trim().length === 0) {
-      newErrors.server_name = 'Server name is required';
+      newErrors.server_name = "Server name is required";
     }
 
     if (!formData.server_location || formData.server_location.trim().length === 0) {
-      newErrors.server_location = 'Server location is required';
+      newErrors.server_location = "Server location is required";
     }
 
     if (!formData.listen_port || formData.listen_port < 1 || formData.listen_port > 65535) {
-      newErrors.listen_port = 'Port must be between 1 and 65535';
+      newErrors.listen_port = "Port must be between 1 and 65535";
     }
 
     if (!formData.subnet) {
-      newErrors.subnet = 'Subnet is required';
+      newErrors.subnet = "Subnet is required";
     } else if (!/^\d+\.\d+\.\d+\.\d+\/\d+$/.test(formData.subnet)) {
-      newErrors.subnet = 'Invalid subnet format (use CIDR notation, e.g., 10.8.0.0/24)';
+      newErrors.subnet = "Invalid subnet format (use CIDR notation, e.g., 10.8.0.0/24)";
     }
 
-    if (
-      (formData.initial_peer_count ?? 0) < 0 ||
-      (formData.initial_peer_count ?? 0) > 10
-    ) {
-      newErrors.initial_peer_count = 'Peer count must be between 0 and 10';
+    if ((formData.initial_peer_count ?? 0) < 0 || (formData.initial_peer_count ?? 0) > 10) {
+      newErrors.initial_peer_count = "Peer count must be between 0 and 10";
     }
 
     setErrors(newErrors);
@@ -114,14 +111,14 @@ export default function ProvisionVPNPage() {
 
     if (!validate()) {
       toast({
-        title: 'Validation Error',
-        description: 'Please fix the errors in the form',
-        variant: 'destructive',
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
+        variant: "destructive",
       });
       return;
     }
 
-    setStep('provisioning');
+    setStep("provisioning");
 
     provisionService.mutate(formData, {
       onSuccess: (data) => {
@@ -131,18 +128,18 @@ export default function ProvisionVPNPage() {
           peer_ids: data.peers?.map((p: any) => p.id) ?? [],
           peer_names: data.peers?.map((p: any) => p.peer_name) ?? [],
         });
-        setStep('success');
+        setStep("success");
         toast({
-          title: 'VPN Service Provisioned',
+          title: "VPN Service Provisioned",
           description: `Server "${data.server.name}" and ${data.peers?.length ?? 0} peer(s) created successfully`,
         });
       },
       onError: (error: any) => {
-        setStep('error');
+        setStep("error");
         toast({
-          title: 'Provisioning Failed',
-          description: error.response?.data?.detail || 'Failed to provision VPN service',
-          variant: 'destructive',
+          title: "Provisioning Failed",
+          description: error.response?.data?.detail || "Failed to provision VPN service",
+          variant: "destructive",
         });
       },
     });
@@ -160,7 +157,7 @@ export default function ProvisionVPNPage() {
   };
 
   // Form Step
-  if (step === 'form') {
+  if (step === "form") {
     return (
       <div className="space-y-6">
         {/* Header */}
@@ -185,8 +182,8 @@ export default function ProvisionVPNPage() {
         <Alert>
           <Zap className="h-4 w-4" />
           <AlertDescription>
-            This wizard will create a complete VPN service including server configuration,
-            key generation, and initial peer(s). Perfect for quick deployments!
+            This wizard will create a complete VPN service including server configuration, key
+            generation, and initial peer(s). Perfect for quick deployments!
           </AlertDescription>
         </Alert>
 
@@ -210,7 +207,7 @@ export default function ProvisionVPNPage() {
                   <Input
                     id="server_name"
                     value={formData.server_name}
-                    onChange={(e) => handleChange('server_name', e.target.value)}
+                    onChange={(e) => handleChange("server_name", e.target.value)}
                     placeholder="e.g., vpn-us-east-1"
                   />
                   {errors.server_name && (
@@ -225,7 +222,7 @@ export default function ProvisionVPNPage() {
                   <Input
                     id="server_location"
                     value={formData.server_location}
-                    onChange={(e) => handleChange('server_location', e.target.value)}
+                    onChange={(e) => handleChange("server_location", e.target.value)}
                     placeholder="e.g., US East (Virginia)"
                   />
                   {errors.server_location && (
@@ -241,7 +238,7 @@ export default function ProvisionVPNPage() {
                     min={1}
                     max={65535}
                     value={formData.listen_port}
-                    onChange={(e) => handleChange('listen_port', parseInt(e.target.value, 10))}
+                    onChange={(e) => handleChange("listen_port", parseInt(e.target.value, 10))}
                   />
                   <p className="text-sm text-muted-foreground">Default: 51820</p>
                   {errors.listen_port && (
@@ -254,7 +251,7 @@ export default function ProvisionVPNPage() {
                   <Input
                     id="subnet"
                     value={formData.subnet}
-                    onChange={(e) => handleChange('subnet', e.target.value)}
+                    onChange={(e) => handleChange("subnet", e.target.value)}
                     placeholder="10.8.0.0/24"
                   />
                   <p className="text-sm text-muted-foreground">CIDR notation</p>
@@ -266,7 +263,7 @@ export default function ProvisionVPNPage() {
                   <Input
                     id="dns_servers"
                     value={formData.dns_servers}
-                    onChange={(e) => handleChange('dns_servers', e.target.value)}
+                    onChange={(e) => handleChange("dns_servers", e.target.value)}
                     placeholder="1.1.1.1, 8.8.8.8"
                   />
                   <p className="text-sm text-muted-foreground">Comma-separated</p>
@@ -289,7 +286,7 @@ export default function ProvisionVPNPage() {
                   <Select
                     value={formData.initial_peer_count?.toString()}
                     onValueChange={(value) =>
-                      handleChange('initial_peer_count', parseInt(value, 10))
+                      handleChange("initial_peer_count", parseInt(value, 10))
                     }
                   >
                     <SelectTrigger id="initial_peer_count">
@@ -318,11 +315,11 @@ export default function ProvisionVPNPage() {
                     <Input
                       id="peer_name_prefix"
                       value={formData.peer_name_prefix}
-                      onChange={(e) => handleChange('peer_name_prefix', e.target.value)}
+                      onChange={(e) => handleChange("peer_name_prefix", e.target.value)}
                       placeholder="peer"
                     />
                     <p className="text-sm text-muted-foreground">
-                      Peers will be named: {formData.peer_name_prefix}-1,{' '}
+                      Peers will be named: {formData.peer_name_prefix}-1,{" "}
                       {formData.peer_name_prefix}-2, etc.
                     </p>
                   </div>
@@ -332,8 +329,8 @@ export default function ProvisionVPNPage() {
                   <Label htmlFor="notes">Notes (optional)</Label>
                   <Textarea
                     id="notes"
-                    value={formData.notes || ''}
-                    onChange={(e) => handleChange('notes', e.target.value)}
+                    value={formData.notes || ""}
+                    onChange={(e) => handleChange("notes", e.target.value)}
                     placeholder="Notes about this VPN service..."
                     rows={3}
                   />
@@ -352,7 +349,7 @@ export default function ProvisionVPNPage() {
                 <li className="flex items-start gap-2">
                   <CheckCircle2 className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
                   <span>
-                    1 WireGuard server with auto-generated keys at{' '}
+                    1 WireGuard server with auto-generated keys at{" "}
                     <span className="font-mono">{formData.subnet}</span>
                   </span>
                 </li>
@@ -392,7 +389,7 @@ export default function ProvisionVPNPage() {
   }
 
   // Provisioning Step
-  if (step === 'provisioning') {
+  if (step === "provisioning") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px] space-y-6">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -412,7 +409,7 @@ export default function ProvisionVPNPage() {
   }
 
   // Success Step
-  if (step === 'success' && result) {
+  if (step === "success" && result) {
     return (
       <div className="space-y-6">
         {/* Success Header */}
@@ -422,9 +419,7 @@ export default function ProvisionVPNPage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold">VPN Service Provisioned!</h1>
-            <p className="text-muted-foreground mt-2">
-              Your WireGuard VPN service is ready to use
-            </p>
+            <p className="text-muted-foreground mt-2">Your WireGuard VPN service is ready to use</p>
           </div>
         </div>
 
@@ -499,10 +494,7 @@ export default function ProvisionVPNPage() {
 
             <div className="flex flex-col gap-2 pt-4">
               {result.peer_ids.map((peerId, idx) => (
-                <Link
-                  key={peerId}
-                  href={`/dashboard/network/wireguard/peers/${peerId}`}
-                >
+                <Link key={peerId} href={`/dashboard/network/wireguard/peers/${peerId}`}>
                   <Button variant="outline" className="w-full justify-start">
                     <Download className="h-4 w-4 mr-2" />
                     Download Config for {result.peer_names[idx]}
@@ -524,7 +516,7 @@ export default function ProvisionVPNPage() {
           <Button
             variant="outline"
             onClick={() => {
-              setStep('form');
+              setStep("form");
               setResult(null);
             }}
           >
@@ -536,7 +528,7 @@ export default function ProvisionVPNPage() {
   }
 
   // Error Step
-  if (step === 'error') {
+  if (step === "error") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px] space-y-6">
         <div className="h-20 w-20 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center">
@@ -549,7 +541,7 @@ export default function ProvisionVPNPage() {
           </p>
         </div>
         <div className="flex gap-4">
-          <Button onClick={() => setStep('form')}>Try Again</Button>
+          <Button onClick={() => setStep("form")}>Try Again</Button>
           <Link href="/dashboard/network/wireguard">
             <Button variant="outline">Back to Dashboard</Button>
           </Link>

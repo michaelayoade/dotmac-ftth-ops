@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect, Page } from "@playwright/test";
 
 /**
  * Visual Regression Testing with Playwright
@@ -12,35 +12,34 @@ import { test, expect, Page } from '@playwright/test';
  */
 
 // Helper to login before tests
-async function loginAsUser(page: Page, username = 'admin', password = 'admin123') {
-  await page.goto('/login');
+async function loginAsUser(page: Page, username = "admin", password = "admin123") {
+  await page.goto("/login");
   await page.fill('[data-testid="email-input"]', username);
   await page.fill('[data-testid="password-input"]', password);
   await page.click('[data-testid="submit-button"]');
   await page.waitForURL(/.*dashboard/);
 }
 
-test.describe('Visual Regression Tests', () => {
-
+test.describe("Visual Regression Tests", () => {
   // ============================================================================
   // Full Page Screenshots
   // ============================================================================
 
-  test('login page - full page screenshot', async ({ page }) => {
-    await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+  test("login page - full page screenshot", async ({ page }) => {
+    await page.goto("/login");
+    await page.waitForLoadState("networkidle");
 
     // Capture full page screenshot
-    await expect(page).toHaveScreenshot('login-page.png', {
+    await expect(page).toHaveScreenshot("login-page.png", {
       fullPage: true,
     });
   });
 
-  test('dashboard - full page screenshot', async ({ page }) => {
+  test("dashboard - full page screenshot", async ({ page }) => {
     await loginAsUser(page);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
-    await expect(page).toHaveScreenshot('dashboard-page.png', {
+    await expect(page).toHaveScreenshot("dashboard-page.png", {
       fullPage: true,
     });
   });
@@ -49,58 +48,58 @@ test.describe('Visual Regression Tests', () => {
   // Component Screenshots
   // ============================================================================
 
-  test('dashboard - user profile card', async ({ page }) => {
+  test("dashboard - user profile card", async ({ page }) => {
     await loginAsUser(page);
 
     // Capture specific component
-    const profileCard = page.locator('text=User Profile').locator('..');
-    await expect(profileCard).toHaveScreenshot('user-profile-card.png');
+    const profileCard = page.locator("text=User Profile").locator("..");
+    await expect(profileCard).toHaveScreenshot("user-profile-card.png");
   });
 
-  test('dashboard - platform services grid', async ({ page }) => {
+  test("dashboard - platform services grid", async ({ page }) => {
     await loginAsUser(page);
 
-    const servicesGrid = page.locator('text=Platform Services').locator('..');
-    await expect(servicesGrid).toHaveScreenshot('platform-services-grid.png');
+    const servicesGrid = page.locator("text=Platform Services").locator("..");
+    await expect(servicesGrid).toHaveScreenshot("platform-services-grid.png");
   });
 
-  test('dashboard - api status card', async ({ page }) => {
+  test("dashboard - api status card", async ({ page }) => {
     await loginAsUser(page);
 
-    const statusCard = page.locator('text=API Status').locator('..');
-    await expect(statusCard).toHaveScreenshot('api-status-card.png');
+    const statusCard = page.locator("text=API Status").locator("..");
+    await expect(statusCard).toHaveScreenshot("api-status-card.png");
   });
 
   // ============================================================================
   // Responsive Screenshots - Different Viewports
   // ============================================================================
 
-  test('dashboard - mobile viewport (375px)', async ({ page }) => {
+  test("dashboard - mobile viewport (375px)", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await loginAsUser(page);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
-    await expect(page).toHaveScreenshot('dashboard-mobile-375.png', {
+    await expect(page).toHaveScreenshot("dashboard-mobile-375.png", {
       fullPage: true,
     });
   });
 
-  test('dashboard - tablet viewport (768px)', async ({ page }) => {
+  test("dashboard - tablet viewport (768px)", async ({ page }) => {
     await page.setViewportSize({ width: 768, height: 1024 });
     await loginAsUser(page);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
-    await expect(page).toHaveScreenshot('dashboard-tablet-768.png', {
+    await expect(page).toHaveScreenshot("dashboard-tablet-768.png", {
       fullPage: true,
     });
   });
 
-  test('dashboard - desktop viewport (1440px)', async ({ page }) => {
+  test("dashboard - desktop viewport (1440px)", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await loginAsUser(page);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
-    await expect(page).toHaveScreenshot('dashboard-desktop-1440.png', {
+    await expect(page).toHaveScreenshot("dashboard-desktop-1440.png", {
       fullPage: true,
     });
   });
@@ -109,23 +108,23 @@ test.describe('Visual Regression Tests', () => {
   // Dark Mode Screenshots
   // ============================================================================
 
-  test('dashboard - dark mode', async ({ page }) => {
+  test("dashboard - dark mode", async ({ page }) => {
     // Set dark mode preference
-    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.emulateMedia({ colorScheme: "dark" });
     await loginAsUser(page);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
-    await expect(page).toHaveScreenshot('dashboard-dark-mode.png', {
+    await expect(page).toHaveScreenshot("dashboard-dark-mode.png", {
       fullPage: true,
     });
   });
 
-  test('login page - dark mode', async ({ page }) => {
-    await page.emulateMedia({ colorScheme: 'dark' });
-    await page.goto('/login');
-    await page.waitForLoadState('networkidle');
+  test("login page - dark mode", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto("/login");
+    await page.waitForLoadState("networkidle");
 
-    await expect(page).toHaveScreenshot('login-dark-mode.png', {
+    await expect(page).toHaveScreenshot("login-dark-mode.png", {
       fullPage: true,
     });
   });
@@ -134,45 +133,45 @@ test.describe('Visual Regression Tests', () => {
   // Interactive State Screenshots
   // ============================================================================
 
-  test('login page - form filled state', async ({ page }) => {
-    await page.goto('/login');
+  test("login page - form filled state", async ({ page }) => {
+    await page.goto("/login");
 
     // Fill form but don't submit
-    await page.fill('[data-testid="email-input"]', 'test-user');
-    await page.fill('[data-testid="password-input"]', 'password123');
+    await page.fill('[data-testid="email-input"]', "test-user");
+    await page.fill('[data-testid="password-input"]', "password123");
 
-    await expect(page).toHaveScreenshot('login-form-filled.png');
+    await expect(page).toHaveScreenshot("login-form-filled.png");
   });
 
-  test('dashboard - navigation hover states', async ({ page }) => {
+  test("dashboard - navigation hover states", async ({ page }) => {
     await loginAsUser(page);
 
     // Hover over navigation item
-    const navItem = page.locator('text=Manage Customers').first();
+    const navItem = page.locator("text=Manage Customers").first();
     await navItem.hover();
 
-    await expect(page).toHaveScreenshot('dashboard-nav-hover.png');
+    await expect(page).toHaveScreenshot("dashboard-nav-hover.png");
   });
 
   // ============================================================================
   // Error State Screenshots
   // ============================================================================
 
-  test('dashboard - api error state', async ({ page }) => {
+  test("dashboard - api error state", async ({ page }) => {
     await loginAsUser(page);
 
     // Mock API error
-    await page.route('**/health', route => {
+    await page.route("**/health", (route) => {
       route.fulfill({
         status: 500,
-        json: { error: 'Internal server error' },
+        json: { error: "Internal server error" },
       });
     });
 
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState("networkidle");
 
-    await expect(page).toHaveScreenshot('dashboard-api-error.png', {
+    await expect(page).toHaveScreenshot("dashboard-api-error.png", {
       fullPage: true,
     });
   });
@@ -181,14 +180,14 @@ test.describe('Visual Regression Tests', () => {
   // Empty State Screenshots
   // ============================================================================
 
-  test('customers page - empty state', async ({ page }) => {
+  test("customers page - empty state", async ({ page }) => {
     await loginAsUser(page);
-    await page.goto('/dashboard/customers');
+    await page.goto("/dashboard/customers");
 
     // Wait for empty state to render
-    await page.waitForSelector('text=No customers found', { timeout: 5000 }).catch(() => {});
+    await page.waitForSelector("text=No customers found", { timeout: 5000 }).catch(() => {});
 
-    await expect(page).toHaveScreenshot('customers-empty-state.png', {
+    await expect(page).toHaveScreenshot("customers-empty-state.png", {
       fullPage: true,
     });
   });
@@ -197,26 +196,26 @@ test.describe('Visual Regression Tests', () => {
   // Custom Screenshot Options
   // ============================================================================
 
-  test('dashboard - high precision screenshot', async ({ page }) => {
+  test("dashboard - high precision screenshot", async ({ page }) => {
     await loginAsUser(page);
 
-    await expect(page).toHaveScreenshot('dashboard-high-precision.png', {
+    await expect(page).toHaveScreenshot("dashboard-high-precision.png", {
       fullPage: true,
       // Override config for this specific test
-      maxDiffPixels: 10,      // Stricter pixel difference
-      threshold: 0.1,         // Stricter threshold
+      maxDiffPixels: 10, // Stricter pixel difference
+      threshold: 0.1, // Stricter threshold
     });
   });
 
-  test('dashboard - mask dynamic content', async ({ page }) => {
+  test("dashboard - mask dynamic content", async ({ page }) => {
     await loginAsUser(page);
 
-    await expect(page).toHaveScreenshot('dashboard-masked.png', {
+    await expect(page).toHaveScreenshot("dashboard-masked.png", {
       fullPage: true,
       // Mask elements that change frequently (timestamps, etc.)
       mask: [
-        page.locator('text=User ID:').locator('..'),  // Mask user ID
-        page.locator('time'),                          // Mask timestamps
+        page.locator("text=User ID:").locator(".."), // Mask user ID
+        page.locator("time"), // Mask timestamps
       ],
     });
   });
@@ -225,42 +224,41 @@ test.describe('Visual Regression Tests', () => {
   // Multi-Page Workflow Screenshots
   // ============================================================================
 
-  test('customer creation workflow', async ({ page }) => {
+  test("customer creation workflow", async ({ page }) => {
     await loginAsUser(page);
 
     // Step 1: Navigate to customers
-    await page.goto('/dashboard/customers');
-    await expect(page).toHaveScreenshot('workflow-1-customers-list.png');
+    await page.goto("/dashboard/customers");
+    await expect(page).toHaveScreenshot("workflow-1-customers-list.png");
 
     // Step 2: Click create button
-    await page.click('text=Create Customer').catch(() => {});
-    await expect(page).toHaveScreenshot('workflow-2-create-form.png');
+    await page.click("text=Create Customer").catch(() => {});
+    await expect(page).toHaveScreenshot("workflow-2-create-form.png");
 
     // Step 3: Fill form
-    await page.fill('input[name="name"]', 'Test Customer').catch(() => {});
-    await page.fill('input[name="email"]', 'test@customer.com').catch(() => {});
-    await expect(page).toHaveScreenshot('workflow-3-form-filled.png');
+    await page.fill('input[name="name"]', "Test Customer").catch(() => {});
+    await page.fill('input[name="email"]', "test@customer.com").catch(() => {});
+    await expect(page).toHaveScreenshot("workflow-3-form-filled.png");
   });
 
   // ============================================================================
   // Loading State Screenshots
   // ============================================================================
 
-  test('dashboard - loading state', async ({ page }) => {
+  test("dashboard - loading state", async ({ page }) => {
     await loginAsUser(page);
 
     // Intercept API to delay response
-    await page.route('**/api/**', route => {
+    await page.route("**/api/**", (route) => {
       setTimeout(() => route.continue(), 2000);
     });
 
-    await page.goto('/dashboard');
+    await page.goto("/dashboard");
 
     // Capture loading state
-    await page.waitForSelector('.animate-pulse', { timeout: 1000 }).catch(() => {});
-    await expect(page).toHaveScreenshot('dashboard-loading.png');
+    await page.waitForSelector(".animate-pulse", { timeout: 1000 }).catch(() => {});
+    await expect(page).toHaveScreenshot("dashboard-loading.png");
   });
-
 });
 
 /**

@@ -26,22 +26,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   DeviceInfo,
   DeviceListResponse,
@@ -90,9 +80,7 @@ export function DeviceManagement() {
 
   const handleViewDetails = async (deviceId: string) => {
     try {
-      const response = await apiClient.get<DeviceResponse>(
-        `/api/v1/genieacs/devices/${deviceId}`
-      );
+      const response = await apiClient.get<DeviceResponse>(`/api/v1/genieacs/devices/${deviceId}`);
       setSelectedDevice(response.data);
       setShowDetailsModal(true);
     } catch (err: any) {
@@ -199,9 +187,7 @@ export function DeviceManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Online</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {stats?.online_devices || 0}
-                </p>
+                <p className="text-2xl font-bold text-green-600">{stats?.online_devices || 0}</p>
               </div>
               <CheckCircle2 className="w-8 h-8 text-green-600" />
             </div>
@@ -213,9 +199,7 @@ export function DeviceManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Offline</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {stats?.offline_devices || 0}
-                </p>
+                <p className="text-2xl font-bold text-red-600">{stats?.offline_devices || 0}</p>
               </div>
               <XCircle className="w-8 h-8 text-red-600" />
             </div>
@@ -227,9 +211,7 @@ export function DeviceManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Models</p>
-                <p className="text-2xl font-bold">
-                  {stats ? Object.keys(stats.models).length : 0}
-                </p>
+                <p className="text-2xl font-bold">{stats ? Object.keys(stats.models).length : 0}</p>
               </div>
               <Filter className="w-8 h-8 text-muted-foreground" />
             </div>
@@ -243,9 +225,7 @@ export function DeviceManagement() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>CPE Devices</CardTitle>
-              <CardDescription>
-                Manage customer premises equipment devices
-              </CardDescription>
+              <CardDescription>Manage customer premises equipment devices</CardDescription>
             </div>
             <Button onClick={loadData} variant="outline" size="sm">
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
@@ -341,9 +321,7 @@ export function DeviceManagement() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Device Details</DialogTitle>
-            <DialogDescription>
-              {selectedDevice?.device_id}
-            </DialogDescription>
+            <DialogDescription>{selectedDevice?.device_id}</DialogDescription>
           </DialogHeader>
 
           {selectedDevice && (
@@ -362,7 +340,9 @@ export function DeviceManagement() {
                     {selectedDevice.device_info.Manufacturer && (
                       <div>
                         <span className="text-muted-foreground">Manufacturer:</span>
-                        <p className="font-medium mt-1">{selectedDevice.device_info.Manufacturer}</p>
+                        <p className="font-medium mt-1">
+                          {selectedDevice.device_info.Manufacturer}
+                        </p>
                       </div>
                     )}
                     {selectedDevice.device_info.ModelName && (
@@ -374,19 +354,25 @@ export function DeviceManagement() {
                     {selectedDevice.device_info.SerialNumber && (
                       <div>
                         <span className="text-muted-foreground">Serial Number:</span>
-                        <p className="font-medium mt-1">{selectedDevice.device_info.SerialNumber}</p>
+                        <p className="font-medium mt-1">
+                          {selectedDevice.device_info.SerialNumber}
+                        </p>
                       </div>
                     )}
                     {selectedDevice.device_info.HardwareVersion && (
                       <div>
                         <span className="text-muted-foreground">Hardware Version:</span>
-                        <p className="font-medium mt-1">{selectedDevice.device_info.HardwareVersion}</p>
+                        <p className="font-medium mt-1">
+                          {selectedDevice.device_info.HardwareVersion}
+                        </p>
                       </div>
                     )}
                     {selectedDevice.device_info.SoftwareVersion && (
                       <div>
                         <span className="text-muted-foreground">Software Version:</span>
-                        <p className="font-medium mt-1">{selectedDevice.device_info.SoftwareVersion}</p>
+                        <p className="font-medium mt-1">
+                          {selectedDevice.device_info.SoftwareVersion}
+                        </p>
                       </div>
                     )}
                   </div>

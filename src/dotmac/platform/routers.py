@@ -14,6 +14,7 @@ import structlog
 from fastapi import Depends, FastAPI
 from fastapi.security import HTTPBearer
 
+from dotmac.platform.graphql.context import Context
 from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
@@ -115,7 +116,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.search.router",
         router_name="search_router",
-        prefix="/api/v1",  # Module has /search prefix
+        prefix="/api/v1/search",
         tags=["Search"],
         description="Search functionality",
     ),
@@ -151,7 +152,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.tenant.router",
         router_name="router",
-        prefix="/api/v1",  # Module has /tenant prefix
+        prefix="/api/v1/tenants",  # Router mounts at root; prefix adds tenants path
         tags=["Tenant Management"],
         description="Multi-tenant organization management",
         requires_auth=True,
@@ -160,7 +161,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.tenant.router",
         router_name="router",
-        prefix="/api/v1",  # Module has /tenant prefix
+        prefix="/api/v1/tenant",  # Legacy singular path support
         tags=["Tenant Management"],
         description="Legacy tenant endpoints (singular prefix)",
         requires_auth=True,
@@ -192,7 +193,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.tenant.oss_router",
         router_name="router",
-        prefix="/api/v1",  # Module has /tenant/oss prefix
+        prefix="",  # Router already includes /api/v1/tenant/oss prefix
         tags=["Tenant OSS"],
         description="Tenant-specific OSS integration configuration",
         requires_auth=True,
@@ -207,7 +208,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.customer_management.router",
         router_name="router",
-        prefix="/api/v1",  # Module has /customers prefix
+        prefix="/api/v1",
         tags=["Customer Management"],
         description="Customer relationship management",
     ),
@@ -814,6 +815,7 @@ def register_routers(app: FastAPI) -> None:
         graphql_app = GraphQLRouter(
             schema,
             path="/api/v1/graphql",
+            context_getter=Context.get_context,
         )
 
         # Add router directly without prefix
@@ -880,7 +882,7 @@ def get_api_info() -> dict[str, Any]:
         "base_path": "/api/v1",
         "endpoints": endpoints,
         "graphql_endpoint": "/api/v1/graphql",
-        "graphql_playground": "/api/v1/graphql" if settings.environment != "production" else None,
+        "graphql_playground": "/api/v1/graphql" if not settings.is_production else None,
         "public_endpoints": [
             "/health",
             "/ready",

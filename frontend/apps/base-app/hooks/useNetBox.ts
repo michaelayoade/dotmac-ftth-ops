@@ -4,9 +4,9 @@
  * React hooks for NetBox API integration
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { useToast } from "@/components/ui/use-toast";
 import type {
   IPAddress,
   CreateIPAddressRequest,
@@ -35,9 +35,9 @@ import type {
   NetBoxHealth,
   IPAllocationRequest,
   AvailableIP,
-} from '@/types/netbox';
+} from "@/types/netbox";
 
-const API_BASE = '/netbox';
+const API_BASE = "/netbox";
 
 // ============================================================================
 // Health
@@ -45,7 +45,7 @@ const API_BASE = '/netbox';
 
 export function useNetBoxHealth() {
   return useQuery({
-    queryKey: ['netbox', 'health'],
+    queryKey: ["netbox", "health"],
     queryFn: async () => {
       const response = await apiClient.get<NetBoxHealth>(`${API_BASE}/health`);
       return response.data;
@@ -67,16 +67,16 @@ interface UseIPAddressesParams {
 
 export function useIPAddresses(params: UseIPAddressesParams = {}) {
   return useQuery({
-    queryKey: ['netbox', 'ip-addresses', params],
+    queryKey: ["netbox", "ip-addresses", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.tenant) searchParams.append('tenant', params.tenant);
-      if (params.vrf_id) searchParams.append('vrf_id', params.vrf_id.toString());
-      if (params.limit) searchParams.append('limit', params.limit.toString());
-      if (params.offset) searchParams.append('offset', params.offset.toString());
+      if (params.tenant) searchParams.append("tenant", params.tenant);
+      if (params.vrf_id) searchParams.append("vrf_id", params.vrf_id.toString());
+      if (params.limit) searchParams.append("limit", params.limit.toString());
+      if (params.offset) searchParams.append("offset", params.offset.toString());
 
       const response = await apiClient.get<IPAddress[]>(
-        `${API_BASE}/ipam/ip-addresses?${searchParams.toString()}`
+        `${API_BASE}/ipam/ip-addresses?${searchParams.toString()}`,
       );
       return response.data;
     },
@@ -85,9 +85,9 @@ export function useIPAddresses(params: UseIPAddressesParams = {}) {
 
 export function useIPAddress(ipId: number | undefined) {
   return useQuery({
-    queryKey: ['netbox', 'ip-addresses', ipId],
+    queryKey: ["netbox", "ip-addresses", ipId],
     queryFn: async () => {
-      if (!ipId) throw new Error('IP Address ID is required');
+      if (!ipId) throw new Error("IP Address ID is required");
       const response = await apiClient.get<IPAddress>(`${API_BASE}/ipam/ip-addresses/${ipId}`);
       return response.data;
     },
@@ -105,17 +105,17 @@ export function useCreateIPAddress() {
       return response.data;
     },
     onSuccess: (ip) => {
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'ip-addresses'] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "ip-addresses"] });
       toast({
-        title: 'IP Address Created',
+        title: "IP Address Created",
         description: `IP address ${ip.address} has been created successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create IP address',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create IP address",
+        variant: "destructive",
       });
     },
   });
@@ -129,22 +129,22 @@ export function useUpdateIPAddress() {
     mutationFn: async ({ id, data }: { id: number; data: UpdateIPAddressRequest }) => {
       const response = await apiClient.patch<IPAddress>(
         `${API_BASE}/ipam/ip-addresses/${id}`,
-        data
+        data,
       );
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'ip-addresses'] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "ip-addresses"] });
       toast({
-        title: 'IP Address Updated',
-        description: 'IP address has been updated successfully',
+        title: "IP Address Updated",
+        description: "IP address has been updated successfully",
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to update IP address',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to update IP address",
+        variant: "destructive",
       });
     },
   });
@@ -159,17 +159,17 @@ export function useDeleteIPAddress() {
       await apiClient.delete(`${API_BASE}/ipam/ip-addresses/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'ip-addresses'] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "ip-addresses"] });
       toast({
-        title: 'IP Address Deleted',
-        description: 'IP address has been deleted successfully',
+        title: "IP Address Deleted",
+        description: "IP address has been deleted successfully",
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to delete IP address',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to delete IP address",
+        variant: "destructive",
       });
     },
   });
@@ -189,17 +189,17 @@ interface UsePrefixesParams {
 
 export function usePrefixes(params: UsePrefixesParams = {}) {
   return useQuery({
-    queryKey: ['netbox', 'prefixes', params],
+    queryKey: ["netbox", "prefixes", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.tenant) searchParams.append('tenant', params.tenant);
-      if (params.site) searchParams.append('site', params.site);
-      if (params.vrf_id) searchParams.append('vrf_id', params.vrf_id.toString());
-      if (params.limit) searchParams.append('limit', params.limit.toString());
-      if (params.offset) searchParams.append('offset', params.offset.toString());
+      if (params.tenant) searchParams.append("tenant", params.tenant);
+      if (params.site) searchParams.append("site", params.site);
+      if (params.vrf_id) searchParams.append("vrf_id", params.vrf_id.toString());
+      if (params.limit) searchParams.append("limit", params.limit.toString());
+      if (params.offset) searchParams.append("offset", params.offset.toString());
 
       const response = await apiClient.get<Prefix[]>(
-        `${API_BASE}/ipam/prefixes?${searchParams.toString()}`
+        `${API_BASE}/ipam/prefixes?${searchParams.toString()}`,
       );
       return response.data;
     },
@@ -208,9 +208,9 @@ export function usePrefixes(params: UsePrefixesParams = {}) {
 
 export function usePrefix(prefixId: number | undefined) {
   return useQuery({
-    queryKey: ['netbox', 'prefixes', prefixId],
+    queryKey: ["netbox", "prefixes", prefixId],
     queryFn: async () => {
-      if (!prefixId) throw new Error('Prefix ID is required');
+      if (!prefixId) throw new Error("Prefix ID is required");
       const response = await apiClient.get<Prefix>(`${API_BASE}/ipam/prefixes/${prefixId}`);
       return response.data;
     },
@@ -228,17 +228,17 @@ export function useCreatePrefix() {
       return response.data;
     },
     onSuccess: (prefix) => {
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'prefixes'] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "prefixes"] });
       toast({
-        title: 'Prefix Created',
+        title: "Prefix Created",
         description: `Prefix ${prefix.prefix} has been created successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create prefix',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create prefix",
+        variant: "destructive",
       });
     },
   });
@@ -246,11 +246,11 @@ export function useCreatePrefix() {
 
 export function useAvailableIPs(prefixId: number | undefined) {
   return useQuery({
-    queryKey: ['netbox', 'prefixes', prefixId, 'available-ips'],
+    queryKey: ["netbox", "prefixes", prefixId, "available-ips"],
     queryFn: async () => {
-      if (!prefixId) throw new Error('Prefix ID is required');
+      if (!prefixId) throw new Error("Prefix ID is required");
       const response = await apiClient.get<AvailableIP[]>(
-        `${API_BASE}/ipam/prefixes/${prefixId}/available-ips`
+        `${API_BASE}/ipam/prefixes/${prefixId}/available-ips`,
       );
       return response.data;
     },
@@ -266,23 +266,23 @@ export function useAllocateIP() {
     mutationFn: async ({ prefixId, data }: { prefixId: number; data: IPAllocationRequest }) => {
       const response = await apiClient.post<IPAddress>(
         `${API_BASE}/ipam/prefixes/${prefixId}/allocate-ip`,
-        data
+        data,
       );
       return response.data;
     },
     onSuccess: (ip) => {
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'ip-addresses'] });
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'prefixes'] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "ip-addresses"] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "prefixes"] });
       toast({
-        title: 'IP Allocated',
+        title: "IP Allocated",
         description: `IP address ${ip.address} has been allocated successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to allocate IP address',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to allocate IP address",
+        variant: "destructive",
       });
     },
   });
@@ -294,7 +294,7 @@ export function useAllocateIP() {
 
 export function useVRFs() {
   return useQuery({
-    queryKey: ['netbox', 'vrfs'],
+    queryKey: ["netbox", "vrfs"],
     queryFn: async () => {
       const response = await apiClient.get<VRF[]>(`${API_BASE}/ipam/vrfs`);
       return response.data;
@@ -312,17 +312,17 @@ export function useCreateVRF() {
       return response.data;
     },
     onSuccess: (vrf) => {
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'vrfs'] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "vrfs"] });
       toast({
-        title: 'VRF Created',
+        title: "VRF Created",
         description: `VRF ${vrf.name} has been created successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create VRF',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create VRF",
+        variant: "destructive",
       });
     },
   });
@@ -340,15 +340,15 @@ interface UseVLANsParams {
 
 export function useVLANs(params: UseVLANsParams = {}) {
   return useQuery({
-    queryKey: ['netbox', 'vlans', params],
+    queryKey: ["netbox", "vlans", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.site) searchParams.append('site', params.site);
-      if (params.limit) searchParams.append('limit', params.limit.toString());
-      if (params.offset) searchParams.append('offset', params.offset.toString());
+      if (params.site) searchParams.append("site", params.site);
+      if (params.limit) searchParams.append("limit", params.limit.toString());
+      if (params.offset) searchParams.append("offset", params.offset.toString());
 
       const response = await apiClient.get<VLAN[]>(
-        `${API_BASE}/ipam/vlans?${searchParams.toString()}`
+        `${API_BASE}/ipam/vlans?${searchParams.toString()}`,
       );
       return response.data;
     },
@@ -357,9 +357,9 @@ export function useVLANs(params: UseVLANsParams = {}) {
 
 export function useVLAN(vlanId: number | undefined) {
   return useQuery({
-    queryKey: ['netbox', 'vlans', vlanId],
+    queryKey: ["netbox", "vlans", vlanId],
     queryFn: async () => {
-      if (!vlanId) throw new Error('VLAN ID is required');
+      if (!vlanId) throw new Error("VLAN ID is required");
       const response = await apiClient.get<VLAN>(`${API_BASE}/ipam/vlans/${vlanId}`);
       return response.data;
     },
@@ -377,17 +377,17 @@ export function useCreateVLAN() {
       return response.data;
     },
     onSuccess: (vlan) => {
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'vlans'] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "vlans"] });
       toast({
-        title: 'VLAN Created',
+        title: "VLAN Created",
         description: `VLAN ${vlan.vid} (${vlan.name}) has been created successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create VLAN',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create VLAN",
+        variant: "destructive",
       });
     },
   });
@@ -403,17 +403,17 @@ export function useUpdateVLAN() {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'vlans'] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "vlans"] });
       toast({
-        title: 'VLAN Updated',
-        description: 'VLAN has been updated successfully',
+        title: "VLAN Updated",
+        description: "VLAN has been updated successfully",
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to update VLAN',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to update VLAN",
+        variant: "destructive",
       });
     },
   });
@@ -430,14 +430,14 @@ interface UseSitesParams {
 
 export function useSites(params: UseSitesParams = {}) {
   return useQuery({
-    queryKey: ['netbox', 'sites', params],
+    queryKey: ["netbox", "sites", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.limit) searchParams.append('limit', params.limit.toString());
-      if (params.offset) searchParams.append('offset', params.offset.toString());
+      if (params.limit) searchParams.append("limit", params.limit.toString());
+      if (params.offset) searchParams.append("offset", params.offset.toString());
 
       const response = await apiClient.get<Site[]>(
-        `${API_BASE}/dcim/sites?${searchParams.toString()}`
+        `${API_BASE}/dcim/sites?${searchParams.toString()}`,
       );
       return response.data;
     },
@@ -446,9 +446,9 @@ export function useSites(params: UseSitesParams = {}) {
 
 export function useSite(siteId: number | undefined) {
   return useQuery({
-    queryKey: ['netbox', 'sites', siteId],
+    queryKey: ["netbox", "sites", siteId],
     queryFn: async () => {
-      if (!siteId) throw new Error('Site ID is required');
+      if (!siteId) throw new Error("Site ID is required");
       const response = await apiClient.get<Site>(`${API_BASE}/dcim/sites/${siteId}`);
       return response.data;
     },
@@ -466,17 +466,17 @@ export function useCreateSite() {
       return response.data;
     },
     onSuccess: (site) => {
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'sites'] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "sites"] });
       toast({
-        title: 'Site Created',
+        title: "Site Created",
         description: `Site ${site.name} has been created successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create site',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create site",
+        variant: "destructive",
       });
     },
   });
@@ -494,15 +494,15 @@ interface UseDevicesParams {
 
 export function useDevices(params: UseDevicesParams = {}) {
   return useQuery({
-    queryKey: ['netbox', 'devices', params],
+    queryKey: ["netbox", "devices", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.site) searchParams.append('site', params.site);
-      if (params.limit) searchParams.append('limit', params.limit.toString());
-      if (params.offset) searchParams.append('offset', params.offset.toString());
+      if (params.site) searchParams.append("site", params.site);
+      if (params.limit) searchParams.append("limit", params.limit.toString());
+      if (params.offset) searchParams.append("offset", params.offset.toString());
 
       const response = await apiClient.get<Device[]>(
-        `${API_BASE}/dcim/devices?${searchParams.toString()}`
+        `${API_BASE}/dcim/devices?${searchParams.toString()}`,
       );
       return response.data;
     },
@@ -511,9 +511,9 @@ export function useDevices(params: UseDevicesParams = {}) {
 
 export function useDevice(deviceId: number | undefined) {
   return useQuery({
-    queryKey: ['netbox', 'devices', deviceId],
+    queryKey: ["netbox", "devices", deviceId],
     queryFn: async () => {
-      if (!deviceId) throw new Error('Device ID is required');
+      if (!deviceId) throw new Error("Device ID is required");
       const response = await apiClient.get<Device>(`${API_BASE}/dcim/devices/${deviceId}`);
       return response.data;
     },
@@ -531,17 +531,17 @@ export function useCreateDevice() {
       return response.data;
     },
     onSuccess: (device) => {
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'devices'] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "devices"] });
       toast({
-        title: 'Device Created',
+        title: "Device Created",
         description: `Device ${device.name} has been created successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create device',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create device",
+        variant: "destructive",
       });
     },
   });
@@ -557,17 +557,17 @@ export function useUpdateDevice() {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'devices'] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "devices"] });
       toast({
-        title: 'Device Updated',
-        description: 'Device has been updated successfully',
+        title: "Device Updated",
+        description: "Device has been updated successfully",
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to update device',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to update device",
+        variant: "destructive",
       });
     },
   });
@@ -585,15 +585,15 @@ interface UseInterfacesParams {
 
 export function useInterfaces(params: UseInterfacesParams = {}) {
   return useQuery({
-    queryKey: ['netbox', 'interfaces', params],
+    queryKey: ["netbox", "interfaces", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.device) searchParams.append('device_id', params.device.toString());
-      if (params.limit) searchParams.append('limit', params.limit.toString());
-      if (params.offset) searchParams.append('offset', params.offset.toString());
+      if (params.device) searchParams.append("device_id", params.device.toString());
+      if (params.limit) searchParams.append("limit", params.limit.toString());
+      if (params.offset) searchParams.append("offset", params.offset.toString());
 
       const response = await apiClient.get<Interface[]>(
-        `${API_BASE}/dcim/interfaces?${searchParams.toString()}`
+        `${API_BASE}/dcim/interfaces?${searchParams.toString()}`,
       );
       return response.data;
     },
@@ -610,17 +610,17 @@ export function useCreateInterface() {
       return response.data;
     },
     onSuccess: (iface) => {
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'interfaces'] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "interfaces"] });
       toast({
-        title: 'Interface Created',
+        title: "Interface Created",
         description: `Interface ${iface.name} has been created successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create interface',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create interface",
+        variant: "destructive",
       });
     },
   });
@@ -632,7 +632,7 @@ export function useCreateInterface() {
 
 export function useCircuits() {
   return useQuery({
-    queryKey: ['netbox', 'circuits'],
+    queryKey: ["netbox", "circuits"],
     queryFn: async () => {
       const response = await apiClient.get<Circuit[]>(`${API_BASE}/circuits`);
       return response.data;
@@ -650,17 +650,17 @@ export function useCreateCircuit() {
       return response.data;
     },
     onSuccess: (circuit) => {
-      queryClient.invalidateQueries({ queryKey: ['netbox', 'circuits'] });
+      queryClient.invalidateQueries({ queryKey: ["netbox", "circuits"] });
       toast({
-        title: 'Circuit Created',
+        title: "Circuit Created",
         description: `Circuit ${circuit.cid} has been created successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create circuit',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create circuit",
+        variant: "destructive",
       });
     },
   });
@@ -668,7 +668,7 @@ export function useCreateCircuit() {
 
 export function useCircuitProviders() {
   return useQuery({
-    queryKey: ['netbox', 'circuit-providers'],
+    queryKey: ["netbox", "circuit-providers"],
     queryFn: async () => {
       const response = await apiClient.get<CircuitProvider[]>(`${API_BASE}/circuit-providers`);
       return response.data;
@@ -678,7 +678,7 @@ export function useCircuitProviders() {
 
 export function useCircuitTypes() {
   return useQuery({
-    queryKey: ['netbox', 'circuit-types'],
+    queryKey: ["netbox", "circuit-types"],
     queryFn: async () => {
       const response = await apiClient.get<CircuitType[]>(`${API_BASE}/circuit-types`);
       return response.data;

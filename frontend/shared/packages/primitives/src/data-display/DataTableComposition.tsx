@@ -4,7 +4,7 @@
  * Breaks down the complex AdvancedDataTable into composable parts
  */
 
-import React, { useCallback } from 'react';
+import React, { useCallback } from "react";
 
 // Composition interfaces
 export interface DataTableState {
@@ -27,7 +27,7 @@ export interface DataTableActions {
 export const useDataTableFilters = (
   initialFilters: Record<string, unknown> = {
     // Implementation pending
-  }
+  },
 ) => {
   const [filters, setFilters] = React.useState(initialFilters);
 
@@ -55,7 +55,7 @@ export const useDataTableSelection = (multiSelect = true) => {
         return prev.includes(id) ? [] : [id];
       });
     },
-    [multiSelect]
+    [multiSelect],
   );
 
   const selectAll = useCallback((ids: string[]) => {

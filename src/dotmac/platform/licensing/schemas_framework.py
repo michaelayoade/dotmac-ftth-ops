@@ -115,7 +115,7 @@ class QuotaDefinitionCreate(BaseModel):
     pricing_model: PricingModel
     overage_rate: float = Field(..., ge=0)
     is_metered: bool = False
-    reset_period: str | None = Field(None, pattern="^(MONTHLY|QUARTERLY|ANNUAL)$")
+    reset_period: str | None = None  # MONTHLY, QUARTERLY, or ANNUAL
     config: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -148,7 +148,7 @@ class QuotaDefinitionUpdate(BaseModel):
     pricing_model: PricingModel | None = None
     overage_rate: float | None = Field(None, ge=0)
     is_metered: bool | None = None
-    reset_period: str | None = Field(None, pattern="^(MONTHLY|QUARTERLY|ANNUAL)$")
+    reset_period: str | None = None  # MONTHLY, QUARTERLY, or ANNUAL
     config: dict[str, Any] | None = None
     is_active: bool | None = None
 
@@ -181,9 +181,9 @@ class PlanQuotaConfig(BaseModel):
     pricing_tiers: list[dict[str, Any]] = Field(default_factory=list)
     config: dict[str, Any] = Field(default_factory=dict)
 
-    @field_validator("quantity")
+    @field_validator("quantity", mode="before")
     @classmethod
-    def validate_quantity(cls, v):
+    def validate_quantity(cls, v: int) -> int:
         if v < -1:
             raise ValueError("quantity must be -1 (unlimited) or non-negative")
         return v

@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
@@ -93,7 +93,12 @@ export default function DataTransferPage() {
               Monitor and manage data import and export operations
             </p>
           </div>
-          <Button onClick={() => refetch()} disabled={isLoading} variant="outline" className="gap-2">
+          <Button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            variant="outline"
+            className="gap-2"
+          >
             <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
@@ -104,9 +109,7 @@ export default function DataTransferPage() {
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to load transfer jobs: {error.message}
-          </AlertDescription>
+          <AlertDescription>Failed to load transfer jobs: {error.message}</AlertDescription>
         </Alert>
       )}
 
@@ -130,9 +133,7 @@ export default function DataTransferPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalJobs}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                All time
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">All time</p>
             </CardContent>
           </Card>
 
@@ -145,9 +146,7 @@ export default function DataTransferPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-400">{stats.running}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Active jobs
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Active jobs</p>
             </CardContent>
           </Card>
 
@@ -161,7 +160,9 @@ export default function DataTransferPage() {
             <CardContent>
               <div className="text-2xl font-bold text-emerald-400">{stats.completed}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.totalJobs > 0 ? `${((stats.completed / stats.totalJobs) * 100).toFixed(1)}% success` : "N/A"}
+                {stats.totalJobs > 0
+                  ? `${((stats.completed / stats.totalJobs) * 100).toFixed(1)}% success`
+                  : "N/A"}
               </p>
             </CardContent>
           </Card>
@@ -175,9 +176,7 @@ export default function DataTransferPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-400">{stats.failed}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Requires attention
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Requires attention</p>
             </CardContent>
           </Card>
         </div>
@@ -241,8 +240,12 @@ export default function DataTransferPage() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      {job.type === "import" && <ArrowDownToLine className="h-5 w-5 text-blue-400" />}
-                      {job.type === "export" && <ArrowUpFromLine className="h-5 w-5 text-purple-400" />}
+                      {job.type === "import" && (
+                        <ArrowDownToLine className="h-5 w-5 text-blue-400" />
+                      )}
+                      {job.type === "export" && (
+                        <ArrowUpFromLine className="h-5 w-5 text-purple-400" />
+                      )}
                       {job.type === "sync" && <RefreshCw className="h-5 w-5 text-cyan-400" />}
                       {job.type === "migrate" && <TrendingUp className="h-5 w-5 text-orange-400" />}
                       <CardTitle className="text-lg">{job.name}</CardTitle>
@@ -251,7 +254,9 @@ export default function DataTransferPage() {
                       <Badge variant="outline" className={getTypeColor(job.type)}>
                         {job.type.toUpperCase()}
                       </Badge>
-                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border ${getStatusColor(job.status)}`}>
+                      <span
+                        className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border ${getStatusColor(job.status)}`}
+                      >
                         {getStatusIcon(job.status)} {job.status}
                       </span>
                       <span className="text-xs">•</span>
@@ -288,7 +293,8 @@ export default function DataTransferPage() {
                     <Progress value={job.progress} className="h-2" />
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>
-                        {job.records_processed.toLocaleString()} / {job.records_total?.toLocaleString() || "?"} records
+                        {job.records_processed.toLocaleString()} /{" "}
+                        {job.records_total?.toLocaleString() || "?"} records
                       </span>
                       <span>ETA: {calculateETA(job)}</span>
                     </div>
@@ -315,8 +321,10 @@ export default function DataTransferPage() {
                       {job.started_at
                         ? formatDuration(
                             job.completed_at
-                              ? (new Date(job.completed_at).getTime() - new Date(job.started_at).getTime()) / 1000
-                              : (Date.now() - new Date(job.started_at).getTime()) / 1000
+                              ? (new Date(job.completed_at).getTime() -
+                                  new Date(job.started_at).getTime()) /
+                                  1000
+                              : (Date.now() - new Date(job.started_at).getTime()) / 1000,
                           )
                         : "Not started"}
                     </p>
@@ -325,8 +333,12 @@ export default function DataTransferPage() {
                     <p className="text-xs text-muted-foreground">Success Rate</p>
                     <p className="text-sm font-semibold text-emerald-400">
                       {job.records_processed + job.records_failed > 0
-                        ? ((job.records_processed / (job.records_processed + job.records_failed)) * 100).toFixed(1)
-                        : "100.0"}%
+                        ? (
+                            (job.records_processed / (job.records_processed + job.records_failed)) *
+                            100
+                          ).toFixed(1)
+                        : "100.0"}
+                      %
                     </p>
                   </div>
                 </div>

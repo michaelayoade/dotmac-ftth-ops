@@ -36,7 +36,7 @@ async function fetchCommissions(
   partnerId: string,
   status?: string,
   page: number = 1,
-  pageSize: number = 20
+  pageSize: number = 20,
 ): Promise<CommissionListResponse> {
   const params = new URLSearchParams({
     partner_id: partnerId,
@@ -48,15 +48,12 @@ async function fetchCommissions(
     params.append("status", status);
   }
 
-  const response = await fetch(
-    `${API_BASE}/api/v1/partners/commissions?${params.toString()}`,
-    {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  const response = await fetch(`${API_BASE}/api/v1/partners/commissions?${params.toString()}`, {
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
   if (!response.ok) {
     throw new Error("Failed to fetch commissions");
@@ -65,9 +62,7 @@ async function fetchCommissions(
   return response.json();
 }
 
-export default function CommissionTrackingView({
-  partnerId,
-}: CommissionTrackingViewProps) {
+export default function CommissionTrackingView({ partnerId }: CommissionTrackingViewProps) {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [page, setPage] = useState(1);
 
@@ -77,11 +72,7 @@ export default function CommissionTrackingView({
   });
 
   if (isLoading) {
-    return (
-      <div className="text-center py-8 text-slate-400">
-        Loading commissions...
-      </div>
-    );
+    return <div className="text-center py-8 text-slate-400">Loading commissions...</div>;
   }
 
   if (error) {
@@ -116,12 +107,8 @@ export default function CommissionTrackingView({
       <div className="grid gap-4 md:grid-cols-3">
         <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
           <div className="text-sm text-slate-400 mb-1">Total Commissions</div>
-          <div className="text-2xl font-bold text-white">
-            ${totalCommissions.toLocaleString()}
-          </div>
-          <div className="text-xs text-slate-500 mt-1">
-            {commissions.length} events
-          </div>
+          <div className="text-2xl font-bold text-white">${totalCommissions.toLocaleString()}</div>
+          <div className="text-xs text-slate-500 mt-1">{commissions.length} events</div>
         </div>
         <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
           <div className="text-sm text-slate-400 mb-1">Pending</div>
@@ -142,9 +129,7 @@ export default function CommissionTrackingView({
       {/* Filters */}
       <div className="flex gap-4 items-center">
         <div className="flex-1">
-          <label className="block text-sm text-slate-400 mb-2">
-            Filter by Status
-          </label>
+          <label className="block text-sm text-slate-400 mb-2">Filter by Status</label>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -163,9 +148,7 @@ export default function CommissionTrackingView({
       {/* Commissions Table */}
       <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
         {commissions.length === 0 ? (
-          <div className="text-center py-12 text-slate-400">
-            No commissions found
-          </div>
+          <div className="text-center py-12 text-slate-400">No commissions found</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -196,10 +179,7 @@ export default function CommissionTrackingView({
               </thead>
               <tbody className="divide-y divide-slate-700">
                 {commissions.map((commission) => (
-                  <tr
-                    key={commission.id}
-                    className="hover:bg-slate-700/50 transition-colors"
-                  >
+                  <tr key={commission.id} className="hover:bg-slate-700/50 transition-colors">
                     <td className="px-4 py-3 text-sm text-white">
                       {new Date(commission.event_date).toLocaleDateString()}
                     </td>
@@ -242,8 +222,7 @@ export default function CommissionTrackingView({
         <div className="flex justify-between items-center">
           <div className="text-sm text-slate-400">
             Showing {(page - 1) * data.page_size + 1} to{" "}
-            {Math.min(page * data.page_size, data.total)} of {data.total}{" "}
-            commissions
+            {Math.min(page * data.page_size, data.total)} of {data.total} commissions
           </div>
           <div className="flex gap-2">
             <button

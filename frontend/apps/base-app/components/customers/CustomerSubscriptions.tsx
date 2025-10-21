@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   Wifi,
   TrendingUp,
@@ -10,11 +10,11 @@ import {
   AlertCircle,
   Plus,
   ExternalLink,
-} from 'lucide-react';
-import { apiClient } from '@/lib/api/client';
-import { useToast } from '@/components/ui/use-toast';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+} from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -22,19 +22,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Subscription {
   id: string;
   plan_name: string;
-  status: 'active' | 'suspended' | 'cancelled' | 'pending';
+  status: "active" | "suspended" | "cancelled" | "pending";
   bandwidth_download_mbps: number;
   bandwidth_upload_mbps: number;
   monthly_fee: number;
   start_date: string;
   end_date?: string;
-  billing_cycle: 'monthly' | 'quarterly' | 'annually';
+  billing_cycle: "monthly" | "quarterly" | "annually";
   auto_renew: boolean;
   service_type: string;
 }
@@ -43,30 +43,30 @@ interface CustomerSubscriptionsProps {
   customerId: string;
 }
 
-const getStatusBadge = (status: Subscription['status']) => {
+const getStatusBadge = (status: Subscription["status"]) => {
   switch (status) {
-    case 'active':
+    case "active":
       return (
         <Badge className="bg-green-500">
           <CheckCircle2 className="w-3 h-3 mr-1" />
           Active
         </Badge>
       );
-    case 'suspended':
+    case "suspended":
       return (
         <Badge variant="secondary">
           <AlertCircle className="w-3 h-3 mr-1" />
           Suspended
         </Badge>
       );
-    case 'cancelled':
+    case "cancelled":
       return (
         <Badge variant="destructive">
           <XCircle className="w-3 h-3 mr-1" />
           Cancelled
         </Badge>
       );
-    case 'pending':
+    case "pending":
       return (
         <Badge variant="outline">
           <AlertCircle className="w-3 h-3 mr-1" />
@@ -77,17 +77,17 @@ const getStatusBadge = (status: Subscription['status']) => {
 };
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
   }).format(amount);
 };
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 };
 
@@ -100,14 +100,14 @@ export function CustomerSubscriptions({ customerId }: CustomerSubscriptionsProps
     try {
       setLoading(true);
       const response = await apiClient.get<{ subscriptions: Subscription[] }>(
-        `/api/v1/customers/${customerId}/subscriptions`
+        `/api/v1/customers/${customerId}/subscriptions`,
       );
       setSubscriptions(response.data.subscriptions);
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to load subscriptions',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to load subscriptions",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -120,7 +120,7 @@ export function CustomerSubscriptions({ customerId }: CustomerSubscriptionsProps
 
   const handleManageSubscription = (subscriptionId: string) => {
     // Navigate to subscription management page
-    window.open(`/tenant/subscriptions/${subscriptionId}`, '_blank');
+    window.open(`/tenant/subscriptions/${subscriptionId}`, "_blank");
   };
 
   if (loading) {
@@ -136,7 +136,9 @@ export function CustomerSubscriptions({ customerId }: CustomerSubscriptionsProps
       <div className="text-center py-12">
         <Wifi className="w-12 h-12 text-slate-600 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-slate-300 mb-2">No Active Subscriptions</h3>
-        <p className="text-slate-500 mb-4">This customer doesn&apos;t have any subscriptions yet.</p>
+        <p className="text-slate-500 mb-4">
+          This customer doesn&apos;t have any subscriptions yet.
+        </p>
         <Button>
           <Plus className="w-4 h-4 mr-2" />
           Add Subscription
@@ -145,7 +147,7 @@ export function CustomerSubscriptions({ customerId }: CustomerSubscriptionsProps
     );
   }
 
-  const activeSubscription = subscriptions.find((s) => s.status === 'active');
+  const activeSubscription = subscriptions.find((s) => s.status === "active");
 
   return (
     <div className="space-y-6">
@@ -201,7 +203,7 @@ export function CustomerSubscriptions({ customerId }: CustomerSubscriptionsProps
                   {formatDate(activeSubscription.start_date)}
                 </p>
                 <p className="text-sm text-slate-500">
-                  {activeSubscription.auto_renew ? 'Auto-renew enabled' : 'Manual renewal'}
+                  {activeSubscription.auto_renew ? "Auto-renew enabled" : "Manual renewal"}
                 </p>
               </div>
             </div>
@@ -252,7 +254,7 @@ export function CustomerSubscriptions({ customerId }: CustomerSubscriptionsProps
                   {formatDate(subscription.start_date)}
                 </TableCell>
                 <TableCell className="text-slate-300">
-                  {subscription.end_date ? formatDate(subscription.end_date) : '-'}
+                  {subscription.end_date ? formatDate(subscription.end_date) : "-"}
                 </TableCell>
                 <TableCell>
                   <Button

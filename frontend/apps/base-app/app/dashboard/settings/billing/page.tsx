@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Building2,
   Receipt,
@@ -26,9 +26,9 @@ import {
   Webhook,
   ToggleLeft,
   ToggleRight,
-  Palette
-} from 'lucide-react';
-import { apiClient } from '@/lib/api/client';
+  Palette,
+} from "lucide-react";
+import { apiClient } from "@/lib/api/client";
 
 interface BillingSettings {
   company_info: {
@@ -51,7 +51,10 @@ interface BillingSettings {
   tax_settings: {
     calculate_tax: boolean;
     tax_inclusive_pricing: boolean;
-    tax_registrations: Array<{ jurisdiction: string; registration_number: string }>;
+    tax_registrations: Array<{
+      jurisdiction: string;
+      registration_number: string;
+    }>;
     default_tax_rate: number;
     tax_provider: string;
   };
@@ -101,61 +104,61 @@ interface BillingSettings {
 
 const defaultSettings: BillingSettings = {
   company_info: {
-    name: '',
-    legal_name: '',
-    tax_id: '',
-    registration_number: '',
-    address_line1: '',
-    address_line2: '',
-    city: '',
-    state: '',
-    postal_code: '',
-    country: 'US',
-    phone: '',
-    email: '',
-    website: '',
-    logo_url: '',
-    brand_color: '#0EA5E9'
+    name: "",
+    legal_name: "",
+    tax_id: "",
+    registration_number: "",
+    address_line1: "",
+    address_line2: "",
+    city: "",
+    state: "",
+    postal_code: "",
+    country: "US",
+    phone: "",
+    email: "",
+    website: "",
+    logo_url: "",
+    brand_color: "#0EA5E9",
   },
   tax_settings: {
     calculate_tax: true,
     tax_inclusive_pricing: false,
     tax_registrations: [],
     default_tax_rate: 0,
-    tax_provider: ''
+    tax_provider: "",
   },
   payment_settings: {
-    enabled_payment_methods: ['card', 'bank_account'],
-    default_currency: 'USD',
-    supported_currencies: ['USD'],
+    enabled_payment_methods: ["card", "bank_account"],
+    default_currency: "USD",
+    supported_currencies: ["USD"],
     default_payment_terms: 30,
     late_payment_fee: 0,
     retry_failed_payments: true,
     max_retry_attempts: 3,
-    retry_interval_hours: 24
+    retry_interval_hours: 24,
   },
   invoice_settings: {
-    invoice_number_prefix: 'INV',
-    invoice_number_format: '{prefix}-{year}-{sequence:06d}',
+    invoice_number_prefix: "INV",
+    invoice_number_format: "{prefix}-{year}-{sequence:06d}",
     default_due_days: 30,
     include_payment_instructions: true,
-    payment_instructions: '',
-    footer_text: '',
-    terms_and_conditions: '',
+    payment_instructions: "",
+    footer_text: "",
+    terms_and_conditions: "",
     send_invoice_emails: true,
     send_payment_reminders: true,
     reminder_schedule_days: [7, 3, 1],
     logo_on_invoices: true,
-    color_scheme: '#0EA5E9'
+    color_scheme: "#0EA5E9",
   },
   notification_settings: {
     send_invoice_notifications: true,
     send_payment_confirmations: true,
     send_overdue_notices: true,
     send_receipt_emails: true,
-    webhook_url: '',
+    webhook_url: "",
     webhook_events: [],
-    webhook_secret: ''
+    webhook_secret: "",
   },
   features_enabled: {
     invoicing: true,
@@ -164,25 +167,28 @@ const defaultSettings: BillingSettings = {
     receipts: true,
     tax_calculation: true,
     webhooks: true,
-    reporting: true
-  }
+    reporting: true,
+  },
 };
 
 const tabs = [
-  { id: 'company', label: 'Company', icon: Building2 },
-  { id: 'invoice', label: 'Invoice & Numbering', icon: FileText },
-  { id: 'payment', label: 'Payment', icon: CreditCard },
-  { id: 'tax', label: 'Tax', icon: Calculator },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'features', label: 'Features', icon: ToggleRight },
+  { id: "company", label: "Company", icon: Building2 },
+  { id: "invoice", label: "Invoice & Numbering", icon: FileText },
+  { id: "payment", label: "Payment", icon: CreditCard },
+  { id: "tax", label: "Tax", icon: Calculator },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "features", label: "Features", icon: ToggleRight },
 ];
 
 export default function BillingSettingsPage() {
-  const [activeTab, setActiveTab] = useState('company');
+  const [activeTab, setActiveTab] = useState("company");
   const [settings, setSettings] = useState<BillingSettings>(defaultSettings);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     loadSettings();
@@ -191,13 +197,13 @@ export default function BillingSettingsPage() {
   const loadSettings = async () => {
     setLoading(true);
     try {
-      const response = await apiClient.get('/billing/settings');
+      const response = await apiClient.get("/billing/settings");
       if (response.data) {
         setSettings(response.data as BillingSettings);
       }
     } catch (error) {
-      console.error('Failed to load billing settings:', error);
-      setMessage({ type: 'error', text: 'Failed to load settings' });
+      console.error("Failed to load billing settings:", error);
+      setMessage({ type: "error", text: "Failed to load settings" });
     } finally {
       setLoading(false);
     }
@@ -209,37 +215,38 @@ export default function BillingSettingsPage() {
 
     try {
       const body = section
-        ? settings[`${section}_settings` as keyof BillingSettings] || settings[section as keyof BillingSettings]
+        ? settings[`${section}_settings` as keyof BillingSettings] ||
+          settings[section as keyof BillingSettings]
         : settings;
 
-      const response = await apiClient.put('/billing/settings', body);
+      const response = await apiClient.put("/billing/settings", body);
       if (response.data) {
         setSettings(response.data as BillingSettings);
       }
-      setMessage({ type: 'success', text: 'Settings saved successfully!' });
+      setMessage({ type: "success", text: "Settings saved successfully!" });
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
-      console.error('Error saving settings:', error);
-      setMessage({ type: 'error', text: 'Failed to save settings' });
+      console.error("Error saving settings:", error);
+      setMessage({ type: "error", text: "Failed to save settings" });
     } finally {
       setSaving(false);
     }
   };
 
   const resetToDefaults = async () => {
-    if (!confirm('Are you sure you want to reset all settings to defaults?')) return;
+    if (!confirm("Are you sure you want to reset all settings to defaults?")) return;
 
     setSaving(true);
     try {
-      const response = await apiClient.post('/billing/settings/reset');
+      const response = await apiClient.post("/billing/settings/reset");
       if (response.data) {
         setSettings(response.data as BillingSettings);
       }
-      setMessage({ type: 'success', text: 'Settings reset to defaults!' });
+      setMessage({ type: "success", text: "Settings reset to defaults!" });
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
-      console.error('Error resetting settings:', error);
-      setMessage({ type: 'error', text: 'Failed to reset settings' });
+      console.error("Error resetting settings:", error);
+      setMessage({ type: "error", text: "Failed to reset settings" });
     } finally {
       setSaving(false);
     }
@@ -247,7 +254,7 @@ export default function BillingSettingsPage() {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'company':
+      case "company":
         return (
           <div className="space-y-6">
             <div>
@@ -261,11 +268,16 @@ export default function BillingSettingsPage() {
                   </label>
                   <input
                     type="text"
-                    value={settings.company_info.name || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      company_info: { ...settings.company_info, name: e.target.value }
-                    })}
+                    value={settings.company_info.name || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        company_info: {
+                          ...settings.company_info,
+                          name: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="Acme Corporation"
                   />
@@ -277,11 +289,16 @@ export default function BillingSettingsPage() {
                   </label>
                   <input
                     type="text"
-                    value={settings.company_info.legal_name || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      company_info: { ...settings.company_info, legal_name: e.target.value }
-                    })}
+                    value={settings.company_info.legal_name || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        company_info: {
+                          ...settings.company_info,
+                          legal_name: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="Acme Corporation Ltd."
                   />
@@ -293,11 +310,16 @@ export default function BillingSettingsPage() {
                   </label>
                   <input
                     type="text"
-                    value={settings.company_info.tax_id || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      company_info: { ...settings.company_info, tax_id: e.target.value }
-                    })}
+                    value={settings.company_info.tax_id || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        company_info: {
+                          ...settings.company_info,
+                          tax_id: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="12-3456789"
                   />
@@ -309,11 +331,16 @@ export default function BillingSettingsPage() {
                   </label>
                   <input
                     type="text"
-                    value={settings.company_info.registration_number || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      company_info: { ...settings.company_info, registration_number: e.target.value }
-                    })}
+                    value={settings.company_info.registration_number || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        company_info: {
+                          ...settings.company_info,
+                          registration_number: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="C123456"
                   />
@@ -329,63 +356,94 @@ export default function BillingSettingsPage() {
                   </label>
                   <input
                     type="text"
-                    value={settings.company_info.address_line1 || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      company_info: { ...settings.company_info, address_line1: e.target.value }
-                    })}
+                    value={settings.company_info.address_line1 || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        company_info: {
+                          ...settings.company_info,
+                          address_line1: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="123 Business Street"
                   />
                   <input
                     type="text"
-                    value={settings.company_info.address_line2 || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      company_info: { ...settings.company_info, address_line2: e.target.value }
-                    })}
+                    value={settings.company_info.address_line2 || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        company_info: {
+                          ...settings.company_info,
+                          address_line2: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500 mt-2"
                     placeholder="Suite 100 (optional)"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">City *</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
+                    City *
+                  </label>
                   <input
                     type="text"
-                    value={settings.company_info.city || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      company_info: { ...settings.company_info, city: e.target.value }
-                    })}
+                    value={settings.company_info.city || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        company_info: {
+                          ...settings.company_info,
+                          city: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="San Francisco"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">State/Province</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
+                    State/Province
+                  </label>
                   <input
                     type="text"
-                    value={settings.company_info.state || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      company_info: { ...settings.company_info, state: e.target.value }
-                    })}
+                    value={settings.company_info.state || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        company_info: {
+                          ...settings.company_info,
+                          state: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="CA"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">Postal Code *</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
+                    Postal Code *
+                  </label>
                   <input
                     type="text"
-                    value={settings.company_info.postal_code || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      company_info: { ...settings.company_info, postal_code: e.target.value }
-                    })}
+                    value={settings.company_info.postal_code || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        company_info: {
+                          ...settings.company_info,
+                          postal_code: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="94105"
                   />
@@ -397,11 +455,16 @@ export default function BillingSettingsPage() {
                     Country *
                   </label>
                   <select
-                    value={settings.company_info.country || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      company_info: { ...settings.company_info, country: e.target.value }
-                    })}
+                    value={settings.company_info.country || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        company_info: {
+                          ...settings.company_info,
+                          country: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                   >
                     <option value="US">United States</option>
@@ -423,11 +486,16 @@ export default function BillingSettingsPage() {
                   </label>
                   <input
                     type="tel"
-                    value={settings.company_info.phone || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      company_info: { ...settings.company_info, phone: e.target.value }
-                    })}
+                    value={settings.company_info.phone || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        company_info: {
+                          ...settings.company_info,
+                          phone: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="+1 (555) 123-4567"
                   />
@@ -440,11 +508,16 @@ export default function BillingSettingsPage() {
                   </label>
                   <input
                     type="email"
-                    value={settings.company_info.email || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      company_info: { ...settings.company_info, email: e.target.value }
-                    })}
+                    value={settings.company_info.email || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        company_info: {
+                          ...settings.company_info,
+                          email: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="billing@company.com"
                   />
@@ -457,11 +530,16 @@ export default function BillingSettingsPage() {
                   </label>
                   <input
                     type="url"
-                    value={settings.company_info.website || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      company_info: { ...settings.company_info, website: e.target.value }
-                    })}
+                    value={settings.company_info.website || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        company_info: {
+                          ...settings.company_info,
+                          website: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="https://company.com"
                   />
@@ -475,20 +553,30 @@ export default function BillingSettingsPage() {
                   <div className="flex gap-2">
                     <input
                       type="color"
-                      value={settings.company_info.brand_color || ''}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        company_info: { ...settings.company_info, brand_color: e.target.value }
-                      })}
+                      value={settings.company_info.brand_color || ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          company_info: {
+                            ...settings.company_info,
+                            brand_color: e.target.value,
+                          },
+                        })
+                      }
                       className="h-10 w-20 bg-accent border border-border rounded cursor-pointer"
                     />
                     <input
                       type="text"
-                      value={settings.company_info.brand_color || ''}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        company_info: { ...settings.company_info, brand_color: e.target.value }
-                      })}
+                      value={settings.company_info.brand_color || ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          company_info: {
+                            ...settings.company_info,
+                            brand_color: e.target.value,
+                          },
+                        })
+                      }
                       className="flex-1 px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="#0EA5E9"
                     />
@@ -498,26 +586,30 @@ export default function BillingSettingsPage() {
 
               <div className="mt-6">
                 <button
-                  onClick={() => saveSettings('company')}
+                  onClick={() => saveSettings("company")}
                   disabled={saving}
                   className="px-4 py-2 bg-sky-500 hover:bg-sky-600 disabled:bg-muted text-white rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Save className="h-4 w-4" />
-                  {saving ? 'Saving...' : 'Save Company Info'}
+                  {saving ? "Saving..." : "Save Company Info"}
                 </button>
               </div>
             </div>
           </div>
         );
 
-      case 'invoice':
+      case "invoice":
         return (
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-medium text-foreground mb-4">Invoice & Numbering Settings</h3>
+              <h3 className="text-lg font-medium text-foreground mb-4">
+                Invoice & Numbering Settings
+              </h3>
 
               <div className="bg-muted/50 border border-border rounded-lg p-4 mb-6">
-                <h4 className="text-sm font-medium text-foreground mb-3">Invoice Numbering System</h4>
+                <h4 className="text-sm font-medium text-foreground mb-3">
+                  Invoice Numbering System
+                </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-muted-foreground mb-2">
@@ -526,11 +618,16 @@ export default function BillingSettingsPage() {
                     </label>
                     <input
                       type="text"
-                      value={settings.invoice_settings.invoice_number_prefix || ''}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        invoice_settings: { ...settings.invoice_settings, invoice_number_prefix: e.target.value }
-                      })}
+                      value={settings.invoice_settings.invoice_number_prefix || ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          invoice_settings: {
+                            ...settings.invoice_settings,
+                            invoice_number_prefix: e.target.value,
+                          },
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="INV"
                       maxLength={10}
@@ -542,18 +639,35 @@ export default function BillingSettingsPage() {
                       Number Format Template
                     </label>
                     <select
-                      value={settings.invoice_settings.invoice_number_format || ''}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        invoice_settings: { ...settings.invoice_settings, invoice_number_format: e.target.value }
-                      })}
+                      value={settings.invoice_settings.invoice_number_format || ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          invoice_settings: {
+                            ...settings.invoice_settings,
+                            invoice_number_format: e.target.value,
+                          },
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
-                      <option value="{prefix}-{year}-{sequence:06d}">{settings.invoice_settings.invoice_number_prefix}-2024-000001</option>
-                      <option value="{prefix}/{year}/{sequence:04d}">{settings.invoice_settings.invoice_number_prefix}/2024/0001</option>
-                      <option value="{prefix}-{sequence:08d}">{settings.invoice_settings.invoice_number_prefix}-00000001</option>
+                      <option value="{prefix}-{year}-{sequence:06d}">
+                        {settings.invoice_settings.invoice_number_prefix}
+                        -2024-000001
+                      </option>
+                      <option value="{prefix}/{year}/{sequence:04d}">
+                        {settings.invoice_settings.invoice_number_prefix}
+                        /2024/0001
+                      </option>
+                      <option value="{prefix}-{sequence:08d}">
+                        {settings.invoice_settings.invoice_number_prefix}
+                        -00000001
+                      </option>
                       <option value="{year}{month:02d}-{sequence:04d}">202401-0001</option>
-                      <option value="{prefix}_{year}_{month:02d}_{sequence:04d}">{settings.invoice_settings.invoice_number_prefix}_2024_01_0001</option>
+                      <option value="{prefix}_{year}_{month:02d}_{sequence:04d}">
+                        {settings.invoice_settings.invoice_number_prefix}
+                        _2024_01_0001
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -570,11 +684,16 @@ export default function BillingSettingsPage() {
                   </label>
                   <input
                     type="number"
-                    value={settings.invoice_settings.default_due_days || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      invoice_settings: { ...settings.invoice_settings, default_due_days: parseInt(e.target.value) }
-                    })}
+                    value={settings.invoice_settings.default_due_days || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        invoice_settings: {
+                          ...settings.invoice_settings,
+                          default_due_days: parseInt(e.target.value),
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     min="0"
                     max="365"
@@ -589,20 +708,30 @@ export default function BillingSettingsPage() {
                   <div className="flex gap-2">
                     <input
                       type="color"
-                      value={settings.invoice_settings.color_scheme || ''}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        invoice_settings: { ...settings.invoice_settings, color_scheme: e.target.value }
-                      })}
+                      value={settings.invoice_settings.color_scheme || ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          invoice_settings: {
+                            ...settings.invoice_settings,
+                            color_scheme: e.target.value,
+                          },
+                        })
+                      }
                       className="h-10 w-20 bg-accent border border-border rounded cursor-pointer"
                     />
                     <input
                       type="text"
-                      value={settings.invoice_settings.color_scheme || ''}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        invoice_settings: { ...settings.invoice_settings, color_scheme: e.target.value }
-                      })}
+                      value={settings.invoice_settings.color_scheme || ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          invoice_settings: {
+                            ...settings.invoice_settings,
+                            color_scheme: e.target.value,
+                          },
+                        })
+                      }
                       className="flex-1 px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
@@ -612,23 +741,31 @@ export default function BillingSettingsPage() {
               <div className="space-y-4 mt-6">
                 <div className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg">
                   <div>
-                    <div className="text-sm font-medium text-foreground">Include Payment Instructions</div>
-                    <div className="text-xs text-muted-foreground">Show payment instructions on invoices</div>
+                    <div className="text-sm font-medium text-foreground">
+                      Include Payment Instructions
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Show payment instructions on invoices
+                    </div>
                   </div>
                   <button
-                    onClick={() => setSettings({
-                      ...settings,
-                      invoice_settings: {
-                        ...settings.invoice_settings,
-                        include_payment_instructions: !settings.invoice_settings.include_payment_instructions
-                      }
-                    })}
+                    onClick={() =>
+                      setSettings({
+                        ...settings,
+                        invoice_settings: {
+                          ...settings.invoice_settings,
+                          include_payment_instructions:
+                            !settings.invoice_settings.include_payment_instructions,
+                        },
+                      })
+                    }
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    {settings.invoice_settings.include_payment_instructions ?
-                      <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" /> :
+                    {settings.invoice_settings.include_payment_instructions ? (
+                      <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" />
+                    ) : (
                       <ToggleLeft className="h-6 w-6" />
-                    }
+                    )}
                   </button>
                 </div>
 
@@ -638,11 +775,16 @@ export default function BillingSettingsPage() {
                       Payment Instructions
                     </label>
                     <textarea
-                      value={settings.invoice_settings.payment_instructions || ''}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        invoice_settings: { ...settings.invoice_settings, payment_instructions: e.target.value }
-                      })}
+                      value={settings.invoice_settings.payment_instructions || ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          invoice_settings: {
+                            ...settings.invoice_settings,
+                            payment_instructions: e.target.value,
+                          },
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                       rows={3}
                       maxLength={500}
@@ -656,11 +798,16 @@ export default function BillingSettingsPage() {
                     Footer Text
                   </label>
                   <textarea
-                    value={settings.invoice_settings.footer_text || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      invoice_settings: { ...settings.invoice_settings, footer_text: e.target.value }
-                    })}
+                    value={settings.invoice_settings.footer_text || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        invoice_settings: {
+                          ...settings.invoice_settings,
+                          footer_text: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     rows={2}
                     maxLength={500}
@@ -673,11 +820,16 @@ export default function BillingSettingsPage() {
                     Terms and Conditions
                   </label>
                   <textarea
-                    value={settings.invoice_settings.terms_and_conditions || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      invoice_settings: { ...settings.invoice_settings, terms_and_conditions: e.target.value }
-                    })}
+                    value={settings.invoice_settings.terms_and_conditions || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        invoice_settings: {
+                          ...settings.invoice_settings,
+                          terms_and_conditions: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     rows={4}
                     maxLength={2000}
@@ -688,22 +840,27 @@ export default function BillingSettingsPage() {
                 <div className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg">
                   <div>
                     <div className="text-sm font-medium text-foreground">Logo on Invoices</div>
-                    <div className="text-xs text-muted-foreground">Display company logo on PDF invoices</div>
+                    <div className="text-xs text-muted-foreground">
+                      Display company logo on PDF invoices
+                    </div>
                   </div>
                   <button
-                    onClick={() => setSettings({
-                      ...settings,
-                      invoice_settings: {
-                        ...settings.invoice_settings,
-                        logo_on_invoices: !settings.invoice_settings.logo_on_invoices
-                      }
-                    })}
+                    onClick={() =>
+                      setSettings({
+                        ...settings,
+                        invoice_settings: {
+                          ...settings.invoice_settings,
+                          logo_on_invoices: !settings.invoice_settings.logo_on_invoices,
+                        },
+                      })
+                    }
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    {settings.invoice_settings.logo_on_invoices ?
-                      <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" /> :
+                    {settings.invoice_settings.logo_on_invoices ? (
+                      <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" />
+                    ) : (
                       <ToggleLeft className="h-6 w-6" />
-                    }
+                    )}
                   </button>
                 </div>
               </div>
@@ -713,44 +870,56 @@ export default function BillingSettingsPage() {
                 <div className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg">
                   <div>
                     <div className="text-sm font-medium text-foreground">Send Invoice Emails</div>
-                    <div className="text-xs text-muted-foreground">Automatically email invoices to customers</div>
+                    <div className="text-xs text-muted-foreground">
+                      Automatically email invoices to customers
+                    </div>
                   </div>
                   <button
-                    onClick={() => setSettings({
-                      ...settings,
-                      invoice_settings: {
-                        ...settings.invoice_settings,
-                        send_invoice_emails: !settings.invoice_settings.send_invoice_emails
-                      }
-                    })}
+                    onClick={() =>
+                      setSettings({
+                        ...settings,
+                        invoice_settings: {
+                          ...settings.invoice_settings,
+                          send_invoice_emails: !settings.invoice_settings.send_invoice_emails,
+                        },
+                      })
+                    }
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    {settings.invoice_settings.send_invoice_emails ?
-                      <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" /> :
+                    {settings.invoice_settings.send_invoice_emails ? (
+                      <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" />
+                    ) : (
                       <ToggleLeft className="h-6 w-6" />
-                    }
+                    )}
                   </button>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg">
                   <div>
-                    <div className="text-sm font-medium text-foreground">Send Payment Reminders</div>
-                    <div className="text-xs text-muted-foreground">Send reminder emails for unpaid invoices</div>
+                    <div className="text-sm font-medium text-foreground">
+                      Send Payment Reminders
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Send reminder emails for unpaid invoices
+                    </div>
                   </div>
                   <button
-                    onClick={() => setSettings({
-                      ...settings,
-                      invoice_settings: {
-                        ...settings.invoice_settings,
-                        send_payment_reminders: !settings.invoice_settings.send_payment_reminders
-                      }
-                    })}
+                    onClick={() =>
+                      setSettings({
+                        ...settings,
+                        invoice_settings: {
+                          ...settings.invoice_settings,
+                          send_payment_reminders: !settings.invoice_settings.send_payment_reminders,
+                        },
+                      })
+                    }
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    {settings.invoice_settings.send_payment_reminders ?
-                      <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" /> :
+                    {settings.invoice_settings.send_payment_reminders ? (
+                      <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" />
+                    ) : (
                       <ToggleLeft className="h-6 w-6" />
-                    }
+                    )}
                   </button>
                 </div>
 
@@ -770,7 +939,10 @@ export default function BillingSettingsPage() {
                             newDays[index] = parseInt(e.target.value);
                             setSettings({
                               ...settings,
-                              invoice_settings: { ...settings.invoice_settings, reminder_schedule_days: newDays }
+                              invoice_settings: {
+                                ...settings.invoice_settings,
+                                reminder_schedule_days: newDays,
+                              },
                             });
                           }}
                           className="w-20 px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -779,26 +951,28 @@ export default function BillingSettingsPage() {
                         />
                       ))}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">Reminders will be sent 7, 3, and 1 day(s) before due date</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Reminders will be sent 7, 3, and 1 day(s) before due date
+                    </p>
                   </div>
                 )}
               </div>
 
               <div className="mt-6">
                 <button
-                  onClick={() => saveSettings('invoice')}
+                  onClick={() => saveSettings("invoice")}
                   disabled={saving}
                   className="px-4 py-2 bg-sky-500 hover:bg-sky-600 disabled:bg-muted text-white rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Save className="h-4 w-4" />
-                  {saving ? 'Saving...' : 'Save Invoice Settings'}
+                  {saving ? "Saving..." : "Save Invoice Settings"}
                 </button>
               </div>
             </div>
           </div>
         );
 
-      case 'payment':
+      case "payment":
         return (
           <div className="space-y-6">
             <div>
@@ -806,27 +980,43 @@ export default function BillingSettingsPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-muted-foreground mb-2">Enabled Payment Methods</label>
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
+                    Enabled Payment Methods
+                  </label>
                   <div className="space-y-2">
-                    {['card', 'bank_account', 'digital_wallet', 'check', 'wire_transfer'].map((method) => (
-                      <label key={method} className="flex items-center gap-3 p-3 bg-muted/50 border border-border rounded-lg cursor-pointer hover:bg-muted">
-                        <input
-                          type="checkbox"
-                          checked={settings.payment_settings.enabled_payment_methods.includes(method)}
-                          onChange={(e) => {
-                            const methods = e.target.checked
-                              ? [...settings.payment_settings.enabled_payment_methods, method]
-                              : settings.payment_settings.enabled_payment_methods.filter(m => m !== method);
-                            setSettings({
-                              ...settings,
-                              payment_settings: { ...settings.payment_settings, enabled_payment_methods: methods }
-                            });
-                          }}
-                          className="h-4 w-4 rounded border-border bg-accent text-sky-500"
-                        />
-                        <span className="text-sm text-foreground capitalize">{method.replace('_', ' ')}</span>
-                      </label>
-                    ))}
+                    {["card", "bank_account", "digital_wallet", "check", "wire_transfer"].map(
+                      (method) => (
+                        <label
+                          key={method}
+                          className="flex items-center gap-3 p-3 bg-muted/50 border border-border rounded-lg cursor-pointer hover:bg-muted"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={settings.payment_settings.enabled_payment_methods.includes(
+                              method,
+                            )}
+                            onChange={(e) => {
+                              const methods = e.target.checked
+                                ? [...settings.payment_settings.enabled_payment_methods, method]
+                                : settings.payment_settings.enabled_payment_methods.filter(
+                                    (m) => m !== method,
+                                  );
+                              setSettings({
+                                ...settings,
+                                payment_settings: {
+                                  ...settings.payment_settings,
+                                  enabled_payment_methods: methods,
+                                },
+                              });
+                            }}
+                            className="h-4 w-4 rounded border-border bg-accent text-sky-500"
+                          />
+                          <span className="text-sm text-foreground capitalize">
+                            {method.replace("_", " ")}
+                          </span>
+                        </label>
+                      ),
+                    )}
                   </div>
                 </div>
 
@@ -837,11 +1027,16 @@ export default function BillingSettingsPage() {
                       Default Currency
                     </label>
                     <select
-                      value={settings.payment_settings.default_currency || ''}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        payment_settings: { ...settings.payment_settings, default_currency: e.target.value }
-                      })}
+                      value={settings.payment_settings.default_currency || ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          payment_settings: {
+                            ...settings.payment_settings,
+                            default_currency: e.target.value,
+                          },
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                       <option value="USD">USD - US Dollar</option>
@@ -859,11 +1054,16 @@ export default function BillingSettingsPage() {
                     </label>
                     <input
                       type="number"
-                      value={settings.payment_settings.default_payment_terms || ''}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        payment_settings: { ...settings.payment_settings, default_payment_terms: parseInt(e.target.value) }
-                      })}
+                      value={settings.payment_settings.default_payment_terms || ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          payment_settings: {
+                            ...settings.payment_settings,
+                            default_payment_terms: parseInt(e.target.value),
+                          },
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                       min="0"
                       max="365"
@@ -877,11 +1077,16 @@ export default function BillingSettingsPage() {
                     </label>
                     <input
                       type="number"
-                      value={settings.payment_settings.late_payment_fee || ''}
-                      onChange={(e) => setSettings({
-                        ...settings,
-                        payment_settings: { ...settings.payment_settings, late_payment_fee: parseFloat(e.target.value) }
-                      })}
+                      value={settings.payment_settings.late_payment_fee || ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          payment_settings: {
+                            ...settings.payment_settings,
+                            late_payment_fee: parseFloat(e.target.value),
+                          },
+                        })
+                      }
                       className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                       min="0"
                       max="100"
@@ -891,27 +1096,36 @@ export default function BillingSettingsPage() {
                 </div>
 
                 <div className="bg-muted/50 border border-border rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-foreground mb-3">Failed Payment Retry Settings</h4>
+                  <h4 className="text-sm font-medium text-foreground mb-3">
+                    Failed Payment Retry Settings
+                  </h4>
 
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <div className="text-sm font-medium text-foreground">Retry Failed Payments</div>
-                      <div className="text-xs text-muted-foreground">Automatically retry failed payment attempts</div>
+                      <div className="text-sm font-medium text-foreground">
+                        Retry Failed Payments
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Automatically retry failed payment attempts
+                      </div>
                     </div>
                     <button
-                      onClick={() => setSettings({
-                        ...settings,
-                        payment_settings: {
-                          ...settings.payment_settings,
-                          retry_failed_payments: !settings.payment_settings.retry_failed_payments
-                        }
-                      })}
+                      onClick={() =>
+                        setSettings({
+                          ...settings,
+                          payment_settings: {
+                            ...settings.payment_settings,
+                            retry_failed_payments: !settings.payment_settings.retry_failed_payments,
+                          },
+                        })
+                      }
                       className="text-muted-foreground hover:text-foreground"
                     >
-                      {settings.payment_settings.retry_failed_payments ?
-                        <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" /> :
+                      {settings.payment_settings.retry_failed_payments ? (
+                        <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" />
+                      ) : (
                         <ToggleLeft className="h-6 w-6" />
-                      }
+                      )}
                     </button>
                   </div>
 
@@ -924,11 +1138,16 @@ export default function BillingSettingsPage() {
                         </label>
                         <input
                           type="number"
-                          value={settings.payment_settings.max_retry_attempts || ''}
-                          onChange={(e) => setSettings({
-                            ...settings,
-                            payment_settings: { ...settings.payment_settings, max_retry_attempts: parseInt(e.target.value) }
-                          })}
+                          value={settings.payment_settings.max_retry_attempts || ""}
+                          onChange={(e) =>
+                            setSettings({
+                              ...settings,
+                              payment_settings: {
+                                ...settings.payment_settings,
+                                max_retry_attempts: parseInt(e.target.value),
+                              },
+                            })
+                          }
                           className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                           min="1"
                           max="10"
@@ -941,11 +1160,16 @@ export default function BillingSettingsPage() {
                         </label>
                         <input
                           type="number"
-                          value={settings.payment_settings.retry_interval_hours || ''}
-                          onChange={(e) => setSettings({
-                            ...settings,
-                            payment_settings: { ...settings.payment_settings, retry_interval_hours: parseInt(e.target.value) }
-                          })}
+                          value={settings.payment_settings.retry_interval_hours || ""}
+                          onChange={(e) =>
+                            setSettings({
+                              ...settings,
+                              payment_settings: {
+                                ...settings.payment_settings,
+                                retry_interval_hours: parseInt(e.target.value),
+                              },
+                            })
+                          }
                           className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                           min="1"
                           max="168"
@@ -958,19 +1182,19 @@ export default function BillingSettingsPage() {
 
               <div className="mt-6">
                 <button
-                  onClick={() => saveSettings('payment')}
+                  onClick={() => saveSettings("payment")}
                   disabled={saving}
                   className="px-4 py-2 bg-sky-500 hover:bg-sky-600 disabled:bg-muted text-white rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Save className="h-4 w-4" />
-                  {saving ? 'Saving...' : 'Save Payment Settings'}
+                  {saving ? "Saving..." : "Save Payment Settings"}
                 </button>
               </div>
             </div>
           </div>
         );
 
-      case 'tax':
+      case "tax":
         return (
           <div className="space-y-6">
             <div>
@@ -979,23 +1203,30 @@ export default function BillingSettingsPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg">
                   <div>
-                    <div className="text-sm font-medium text-foreground">Calculate Tax Automatically</div>
-                    <div className="text-xs text-muted-foreground">Enable automatic tax calculation on invoices</div>
+                    <div className="text-sm font-medium text-foreground">
+                      Calculate Tax Automatically
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Enable automatic tax calculation on invoices
+                    </div>
                   </div>
                   <button
-                    onClick={() => setSettings({
-                      ...settings,
-                      tax_settings: {
-                        ...settings.tax_settings,
-                        calculate_tax: !settings.tax_settings.calculate_tax
-                      }
-                    })}
+                    onClick={() =>
+                      setSettings({
+                        ...settings,
+                        tax_settings: {
+                          ...settings.tax_settings,
+                          calculate_tax: !settings.tax_settings.calculate_tax,
+                        },
+                      })
+                    }
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    {settings.tax_settings.calculate_tax ?
-                      <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" /> :
+                    {settings.tax_settings.calculate_tax ? (
+                      <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" />
+                    ) : (
                       <ToggleLeft className="h-6 w-6" />
-                    }
+                    )}
                   </button>
                 </div>
 
@@ -1005,19 +1236,22 @@ export default function BillingSettingsPage() {
                     <div className="text-xs text-muted-foreground">Prices already include tax</div>
                   </div>
                   <button
-                    onClick={() => setSettings({
-                      ...settings,
-                      tax_settings: {
-                        ...settings.tax_settings,
-                        tax_inclusive_pricing: !settings.tax_settings.tax_inclusive_pricing
-                      }
-                    })}
+                    onClick={() =>
+                      setSettings({
+                        ...settings,
+                        tax_settings: {
+                          ...settings.tax_settings,
+                          tax_inclusive_pricing: !settings.tax_settings.tax_inclusive_pricing,
+                        },
+                      })
+                    }
                     className="text-muted-foreground hover:text-foreground"
                   >
-                    {settings.tax_settings.tax_inclusive_pricing ?
-                      <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" /> :
+                    {settings.tax_settings.tax_inclusive_pricing ? (
+                      <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" />
+                    ) : (
                       <ToggleLeft className="h-6 w-6" />
-                    }
+                    )}
                   </button>
                 </div>
 
@@ -1028,11 +1262,16 @@ export default function BillingSettingsPage() {
                   </label>
                   <input
                     type="number"
-                    value={settings.tax_settings.default_tax_rate || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      tax_settings: { ...settings.tax_settings, default_tax_rate: parseFloat(e.target.value) }
-                    })}
+                    value={settings.tax_settings.default_tax_rate || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        tax_settings: {
+                          ...settings.tax_settings,
+                          default_tax_rate: parseFloat(e.target.value),
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     min="0"
                     max="100"
@@ -1047,13 +1286,16 @@ export default function BillingSettingsPage() {
                     </label>
                     <button
                       onClick={() => {
-                        const newReg = { jurisdiction: '', registration_number: '' };
+                        const newReg = {
+                          jurisdiction: "",
+                          registration_number: "",
+                        };
                         setSettings({
                           ...settings,
                           tax_settings: {
                             ...settings.tax_settings,
-                            tax_registrations: [...settings.tax_settings.tax_registrations, newReg]
-                          }
+                            tax_registrations: [...settings.tax_settings.tax_registrations, newReg],
+                          },
                         });
                       }}
                       className="px-3 py-1 text-xs bg-muted hover:bg-accent text-foreground rounded-lg"
@@ -1067,15 +1309,21 @@ export default function BillingSettingsPage() {
                       <div key={index} className="flex gap-2">
                         <input
                           type="text"
-                          value={reg.jurisdiction || ''}
+                          value={reg.jurisdiction || ""}
                           onChange={(e) => {
                             const newRegs = [...settings.tax_settings.tax_registrations];
                             const existingReg = newRegs[index];
                             if (existingReg) {
-                              newRegs[index] = { ...existingReg, jurisdiction: e.target.value };
+                              newRegs[index] = {
+                                ...existingReg,
+                                jurisdiction: e.target.value,
+                              };
                               setSettings({
                                 ...settings,
-                                tax_settings: { ...settings.tax_settings, tax_registrations: newRegs }
+                                tax_settings: {
+                                  ...settings.tax_settings,
+                                  tax_registrations: newRegs,
+                                },
                               });
                             }
                           }}
@@ -1084,15 +1332,21 @@ export default function BillingSettingsPage() {
                         />
                         <input
                           type="text"
-                          value={reg.registration_number || ''}
+                          value={reg.registration_number || ""}
                           onChange={(e) => {
                             const newRegs = [...settings.tax_settings.tax_registrations];
                             const existingReg = newRegs[index];
                             if (existingReg) {
-                              newRegs[index] = { ...existingReg, registration_number: e.target.value };
+                              newRegs[index] = {
+                                ...existingReg,
+                                registration_number: e.target.value,
+                              };
                               setSettings({
                                 ...settings,
-                                tax_settings: { ...settings.tax_settings, tax_registrations: newRegs }
+                                tax_settings: {
+                                  ...settings.tax_settings,
+                                  tax_registrations: newRegs,
+                                },
                               });
                             }
                           }}
@@ -1101,10 +1355,15 @@ export default function BillingSettingsPage() {
                         />
                         <button
                           onClick={() => {
-                            const newRegs = settings.tax_settings.tax_registrations.filter((_, i) => i !== index);
+                            const newRegs = settings.tax_settings.tax_registrations.filter(
+                              (_, i) => i !== index,
+                            );
                             setSettings({
                               ...settings,
-                              tax_settings: { ...settings.tax_settings, tax_registrations: newRegs }
+                              tax_settings: {
+                                ...settings.tax_settings,
+                                tax_registrations: newRegs,
+                              },
                             });
                           }}
                           className="px-3 py-2 text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300"
@@ -1119,19 +1378,19 @@ export default function BillingSettingsPage() {
 
               <div className="mt-6">
                 <button
-                  onClick={() => saveSettings('tax')}
+                  onClick={() => saveSettings("tax")}
                   disabled={saving}
                   className="px-4 py-2 bg-sky-500 hover:bg-sky-600 disabled:bg-muted text-white rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Save className="h-4 w-4" />
-                  {saving ? 'Saving...' : 'Save Tax Settings'}
+                  {saving ? "Saving..." : "Save Tax Settings"}
                 </button>
               </div>
             </div>
           </div>
         );
 
-      case 'notifications':
+      case "notifications":
         return (
           <div className="space-y-6">
             <div>
@@ -1140,30 +1399,57 @@ export default function BillingSettingsPage() {
               <h4 className="text-md font-medium text-foreground mb-3">Email Notifications</h4>
               <div className="space-y-4">
                 {[
-                  { key: 'send_invoice_notifications', label: 'Invoice Notifications', desc: 'Send emails when invoices are created' },
-                  { key: 'send_payment_confirmations', label: 'Payment Confirmations', desc: 'Send emails when payments are received' },
-                  { key: 'send_overdue_notices', label: 'Overdue Notices', desc: 'Send emails for overdue invoices' },
-                  { key: 'send_receipt_emails', label: 'Receipt Emails', desc: 'Send receipts after successful payments' },
+                  {
+                    key: "send_invoice_notifications",
+                    label: "Invoice Notifications",
+                    desc: "Send emails when invoices are created",
+                  },
+                  {
+                    key: "send_payment_confirmations",
+                    label: "Payment Confirmations",
+                    desc: "Send emails when payments are received",
+                  },
+                  {
+                    key: "send_overdue_notices",
+                    label: "Overdue Notices",
+                    desc: "Send emails for overdue invoices",
+                  },
+                  {
+                    key: "send_receipt_emails",
+                    label: "Receipt Emails",
+                    desc: "Send receipts after successful payments",
+                  },
                 ].map((item) => (
-                  <div key={item.key} className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg">
+                  <div
+                    key={item.key}
+                    className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg"
+                  >
                     <div>
                       <div className="text-sm font-medium text-foreground">{item.label}</div>
                       <div className="text-xs text-muted-foreground">{item.desc}</div>
                     </div>
                     <button
-                      onClick={() => setSettings({
-                        ...settings,
-                        notification_settings: {
-                          ...settings.notification_settings,
-                          [item.key]: !settings.notification_settings[item.key as keyof typeof settings.notification_settings]
-                        }
-                      })}
+                      onClick={() =>
+                        setSettings({
+                          ...settings,
+                          notification_settings: {
+                            ...settings.notification_settings,
+                            [item.key]:
+                              !settings.notification_settings[
+                                item.key as keyof typeof settings.notification_settings
+                              ],
+                          },
+                        })
+                      }
                       className="text-muted-foreground hover:text-foreground"
                     >
-                      {settings.notification_settings[item.key as keyof typeof settings.notification_settings] ?
-                        <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" /> :
+                      {settings.notification_settings[
+                        item.key as keyof typeof settings.notification_settings
+                      ] ? (
+                        <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" />
+                      ) : (
                         <ToggleLeft className="h-6 w-6" />
-                      }
+                      )}
                     </button>
                   </div>
                 ))}
@@ -1178,11 +1464,16 @@ export default function BillingSettingsPage() {
                   </label>
                   <input
                     type="url"
-                    value={settings.notification_settings.webhook_url || ''}
-                    onChange={(e) => setSettings({
-                      ...settings,
-                      notification_settings: { ...settings.notification_settings, webhook_url: e.target.value }
-                    })}
+                    value={settings.notification_settings.webhook_url || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        notification_settings: {
+                          ...settings.notification_settings,
+                          webhook_url: e.target.value,
+                        },
+                      })
+                    }
                     className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="https://your-api.com/webhooks/billing"
                   />
@@ -1193,7 +1484,13 @@ export default function BillingSettingsPage() {
                     Webhook Events
                   </label>
                   <div className="space-y-2">
-                    {['invoice.created', 'invoice.paid', 'payment.succeeded', 'payment.failed', 'subscription.updated'].map((event) => (
+                    {[
+                      "invoice.created",
+                      "invoice.paid",
+                      "payment.succeeded",
+                      "payment.failed",
+                      "subscription.updated",
+                    ].map((event) => (
                       <label key={event} className="flex items-center gap-3">
                         <input
                           type="checkbox"
@@ -1201,10 +1498,15 @@ export default function BillingSettingsPage() {
                           onChange={(e) => {
                             const events = e.target.checked
                               ? [...settings.notification_settings.webhook_events, event]
-                              : settings.notification_settings.webhook_events.filter(e => e !== event);
+                              : settings.notification_settings.webhook_events.filter(
+                                  (e) => e !== event,
+                                );
                             setSettings({
                               ...settings,
-                              notification_settings: { ...settings.notification_settings, webhook_events: events }
+                              notification_settings: {
+                                ...settings.notification_settings,
+                                webhook_events: events,
+                              },
                             });
                           }}
                           className="h-4 w-4 rounded border-border bg-accent text-sky-500"
@@ -1218,54 +1520,64 @@ export default function BillingSettingsPage() {
 
               <div className="mt-6">
                 <button
-                  onClick={() => saveSettings('notifications')}
+                  onClick={() => saveSettings("notifications")}
                   disabled={saving}
                   className="px-4 py-2 bg-sky-500 hover:bg-sky-600 disabled:bg-muted text-white rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Save className="h-4 w-4" />
-                  {saving ? 'Saving...' : 'Save Notification Settings'}
+                  {saving ? "Saving..." : "Save Notification Settings"}
                 </button>
               </div>
             </div>
           </div>
         );
 
-      case 'features':
+      case "features":
         return (
           <div className="space-y-6">
             <div>
               <h3 className="text-lg font-medium text-foreground mb-4">Feature Toggles</h3>
-              <p className="text-sm text-muted-foreground mb-6">Enable or disable specific billing features for your organization</p>
+              <p className="text-sm text-muted-foreground mb-6">
+                Enable or disable specific billing features for your organization
+              </p>
 
               <div className="space-y-4">
                 {Object.entries(settings.features_enabled).map(([feature, enabled]) => (
-                  <div key={feature} className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg">
+                  <div
+                    key={feature}
+                    className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg"
+                  >
                     <div>
-                      <div className="text-sm font-medium text-foreground capitalize">{feature.replace('_', ' ')}</div>
+                      <div className="text-sm font-medium text-foreground capitalize">
+                        {feature.replace("_", " ")}
+                      </div>
                       <div className="text-xs text-muted-foreground">
-                        {feature === 'invoicing' && 'Create and manage invoices'}
-                        {feature === 'payments' && 'Accept and process payments'}
-                        {feature === 'credit_notes' && 'Issue credit notes and refunds'}
-                        {feature === 'receipts' && 'Generate payment receipts'}
-                        {feature === 'tax_calculation' && 'Automatic tax calculation'}
-                        {feature === 'webhooks' && 'Send webhook notifications'}
-                        {feature === 'reporting' && 'Advanced reporting and analytics'}
+                        {feature === "invoicing" && "Create and manage invoices"}
+                        {feature === "payments" && "Accept and process payments"}
+                        {feature === "credit_notes" && "Issue credit notes and refunds"}
+                        {feature === "receipts" && "Generate payment receipts"}
+                        {feature === "tax_calculation" && "Automatic tax calculation"}
+                        {feature === "webhooks" && "Send webhook notifications"}
+                        {feature === "reporting" && "Advanced reporting and analytics"}
                       </div>
                     </div>
                     <button
-                      onClick={() => setSettings({
-                        ...settings,
-                        features_enabled: {
-                          ...settings.features_enabled,
-                          [feature]: !enabled
-                        }
-                      })}
+                      onClick={() =>
+                        setSettings({
+                          ...settings,
+                          features_enabled: {
+                            ...settings.features_enabled,
+                            [feature]: !enabled,
+                          },
+                        })
+                      }
                       className="text-muted-foreground hover:text-foreground"
                     >
-                      {enabled ?
-                        <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" /> :
+                      {enabled ? (
+                        <ToggleRight className="h-6 w-6 text-sky-600 dark:text-sky-400" />
+                      ) : (
                         <ToggleLeft className="h-6 w-6" />
-                      }
+                      )}
                     </button>
                   </div>
                 ))}
@@ -1273,12 +1585,12 @@ export default function BillingSettingsPage() {
 
               <div className="mt-6 flex gap-3">
                 <button
-                  onClick={() => saveSettings('features')}
+                  onClick={() => saveSettings("features")}
                   disabled={saving}
                   className="px-4 py-2 bg-sky-500 hover:bg-sky-600 disabled:bg-muted text-white rounded-lg transition-colors flex items-center gap-2"
                 >
                   <Save className="h-4 w-4" />
-                  {saving ? 'Saving...' : 'Save Feature Settings'}
+                  {saving ? "Saving..." : "Save Feature Settings"}
                 </button>
               </div>
             </div>
@@ -1296,17 +1608,21 @@ export default function BillingSettingsPage() {
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-semibold text-foreground">Billing Settings</h1>
-          <p className="text-muted-foreground mt-1">Configure billing, invoicing, and payment settings for your organization</p>
+          <p className="text-muted-foreground mt-1">
+            Configure billing, invoicing, and payment settings for your organization
+          </p>
         </div>
 
         {/* Success/Error Messages */}
         {message && (
-          <div className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
-            message.type === 'success'
-              ? 'bg-green-100 dark:bg-green-950/20 border border-green-500/20 text-green-600 dark:text-green-400'
-              : 'bg-rose-100 dark:bg-rose-950/20 border border-rose-500/20 text-rose-600 dark:text-rose-400'
-          }`}>
-            {message.type === 'success' ? (
+          <div
+            className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
+              message.type === "success"
+                ? "bg-green-100 dark:bg-green-950/20 border border-green-500/20 text-green-600 dark:text-green-400"
+                : "bg-rose-100 dark:bg-rose-950/20 border border-rose-500/20 text-rose-600 dark:text-rose-400"
+            }`}
+          >
+            {message.type === "success" ? (
               <CheckCircle className="h-4 w-4 flex-shrink-0" />
             ) : (
               <AlertCircle className="h-4 w-4 flex-shrink-0" />
@@ -1324,8 +1640,8 @@ export default function BillingSettingsPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 py-3 px-1 border-b-2 transition-colors text-sm font-medium ${
                   activeTab === tab.id
-                    ? 'border-sky-500 text-sky-600 dark:text-sky-400'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                    ? "border-sky-500 text-sky-600 dark:text-sky-400"
+                    : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                 }`}
               >
                 <tab.icon className="h-4 w-4" />

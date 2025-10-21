@@ -31,17 +31,33 @@ const availableMetrics = [
   { id: "mrr", label: "Monthly Recurring Revenue", category: "Billing" },
   { id: "arr", label: "Annual Recurring Revenue", category: "Billing" },
   { id: "new_customers", label: "New Customers", category: "Customers" },
-  { id: "churned_customers", label: "Churned Customers", category: "Customers" },
+  {
+    id: "churned_customers",
+    label: "Churned Customers",
+    category: "Customers",
+  },
   { id: "active_customers", label: "Active Customers", category: "Customers" },
   { id: "churn_rate", label: "Churn Rate", category: "Customers" },
-  { id: "avg_customer_value", label: "Average Customer Value", category: "Billing" },
+  {
+    id: "avg_customer_value",
+    label: "Average Customer Value",
+    category: "Billing",
+  },
   { id: "ltv", label: "Customer Lifetime Value", category: "Billing" },
   { id: "cac", label: "Customer Acquisition Cost", category: "Marketing" },
   { id: "open_tickets", label: "Open Tickets", category: "Support" },
   { id: "resolved_tickets", label: "Resolved Tickets", category: "Support" },
-  { id: "avg_resolution_time", label: "Avg Resolution Time", category: "Support" },
+  {
+    id: "avg_resolution_time",
+    label: "Avg Resolution Time",
+    category: "Support",
+  },
   { id: "network_uptime", label: "Network Uptime %", category: "Operations" },
-  { id: "bandwidth_usage", label: "Total Bandwidth Usage", category: "Operations" },
+  {
+    id: "bandwidth_usage",
+    label: "Total Bandwidth Usage",
+    category: "Operations",
+  },
 ];
 
 const groupByOptions = [
@@ -95,7 +111,7 @@ export function CustomReportBuilder() {
 
     try {
       // Save report configuration to backend
-      await apiClient.post('/analytics/reports', {
+      await apiClient.post("/analytics/reports", {
         name: config.name,
         description: config.description,
         date_range: config.dateRange,
@@ -109,10 +125,11 @@ export function CustomReportBuilder() {
         description: `Custom report "${config.name}" has been saved successfully.`,
       });
     } catch (error) {
-      console.error('Failed to save report:', error);
+      console.error("Failed to save report:", error);
       toast({
         title: "Save Failed",
-        description: error instanceof Error ? error.message : "Failed to save report. Please try again.",
+        description:
+          error instanceof Error ? error.message : "Failed to save report. Please try again.",
         variant: "destructive",
       });
     }
@@ -130,7 +147,7 @@ export function CustomReportBuilder() {
 
     try {
       // Generate report data from backend
-      const response = await apiClient.post('/analytics/reports/generate', {
+      const response = await apiClient.post("/analytics/reports/generate", {
         date_range: config.dateRange,
         metrics: config.metrics,
         group_by: config.groupBy,
@@ -151,10 +168,11 @@ export function CustomReportBuilder() {
       // Optional: Store report data in state for display
       // setGeneratedReport(reportData);
     } catch (error) {
-      console.error('Failed to generate report:', error);
+      console.error("Failed to generate report:", error);
       toast({
         title: "Generation Failed",
-        description: error instanceof Error ? error.message : "Failed to generate report. Please try again.",
+        description:
+          error instanceof Error ? error.message : "Failed to generate report. Please try again.",
         variant: "destructive",
       });
     }
@@ -171,10 +189,13 @@ export function CustomReportBuilder() {
     }
 
     // Generate sample CSV
-    const headers = ["Date", ...config.metrics.map((m) => {
-      const metric = availableMetrics.find((am) => am.id === m);
-      return metric?.label || m;
-    })];
+    const headers = [
+      "Date",
+      ...config.metrics.map((m) => {
+        const metric = availableMetrics.find((am) => am.id === m);
+        return metric?.label || m;
+      }),
+    ];
 
     const csvContent = headers.join(",");
 
@@ -195,13 +216,16 @@ export function CustomReportBuilder() {
   };
 
   // Group metrics by category
-  const metricsByCategory = availableMetrics.reduce((acc, metric) => {
-    if (!acc[metric.category]) {
-      acc[metric.category] = [];
-    }
-    acc[metric.category]?.push(metric);
-    return acc;
-  }, {} as Record<string, typeof availableMetrics>);
+  const metricsByCategory = availableMetrics.reduce(
+    (acc, metric) => {
+      if (!acc[metric.category]) {
+        acc[metric.category] = [];
+      }
+      acc[metric.category]?.push(metric);
+      return acc;
+    },
+    {} as Record<string, typeof availableMetrics>,
+  );
 
   return (
     <Card>
@@ -312,7 +336,8 @@ export function CustomReportBuilder() {
 
           {config.metrics.length > 0 && (
             <p className="text-sm text-muted-foreground">
-              {config.metrics.length} metric{config.metrics.length !== 1 ? "s" : ""} selected
+              {config.metrics.length} metric
+              {config.metrics.length !== 1 ? "s" : ""} selected
             </p>
           )}
         </div>

@@ -1,16 +1,16 @@
 // Main exports
-export { HttpClient } from './http-client';
-export { TenantResolver } from './tenant-resolver';
-export { ErrorNormalizer } from './error-normalizer';
-export { RetryHandler } from './retry-handler';
-export { AuthInterceptor } from './auth-interceptor';
+export { HttpClient } from "./http-client";
+export { TenantResolver } from "./tenant-resolver";
+export { ErrorNormalizer } from "./error-normalizer";
+export { RetryHandler } from "./retry-handler";
+export { AuthInterceptor } from "./auth-interceptor";
 
 // Platform services integration
 export {
   PlatformInterceptors,
   createPlatformInterceptors,
-  addPlatformInterceptors
-} from './platform-interceptors';
+  addPlatformInterceptors,
+} from "./platform-interceptors";
 
 // Type exports
 export type {
@@ -20,18 +20,27 @@ export type {
   ApiError,
   HttpMethod,
   RetryConfig,
-  TenantConfig
-} from './types';
+  TenantConfig,
+} from "./types";
 
-export type { AuthConfig } from './auth-interceptor';
-export type { PlatformInterceptorConfig } from './platform-interceptors';
-export type { paths as OpenAPIPaths, operations as OpenAPIOperations, components as OpenAPIComponents } from './generated-schema';
-export { createApiQuery, useApiQuery, useApiMutation, createHttpClientForQuery } from './react-query';
+export type { AuthConfig } from "./auth-interceptor";
+export type { PlatformInterceptorConfig } from "./platform-interceptors";
+export type {
+  paths as OpenAPIPaths,
+  operations as OpenAPIOperations,
+  components as OpenAPIComponents,
+} from "./generated-schema";
+export {
+  createApiQuery,
+  useApiQuery,
+  useApiMutation,
+  createHttpClientForQuery,
+} from "./react-query";
 
 // Default instance for convenience
 export const httpClient = HttpClient.createFromHostname({
   timeout: 30000,
-  retries: 3
+  retries: 3,
 }).enableAuth();
 
 // Utility functions

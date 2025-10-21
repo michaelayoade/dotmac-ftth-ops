@@ -4,9 +4,9 @@
  * Provides hooks for managing user notifications, templates, and bulk sending.
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
-import { apiClient } from '@/lib/api/client';
+import { useState, useEffect, useCallback } from "react";
+import axios from "axios";
+import { apiClient } from "@/lib/api/client";
 
 // ============================================================================
 // Type Definitions
@@ -14,55 +14,55 @@ import { apiClient } from '@/lib/api/client';
 
 export type NotificationType =
   // Service lifecycle
-  | 'subscriber_provisioned'
-  | 'subscriber_deprovisioned'
-  | 'subscriber_suspended'
-  | 'subscriber_reactivated'
-  | 'service_activated'
-  | 'service_failed'
+  | "subscriber_provisioned"
+  | "subscriber_deprovisioned"
+  | "subscriber_suspended"
+  | "subscriber_reactivated"
+  | "service_activated"
+  | "service_failed"
   // Network events
-  | 'service_outage'
-  | 'service_restored'
-  | 'bandwidth_limit_reached'
-  | 'connection_quality_degraded'
+  | "service_outage"
+  | "service_restored"
+  | "bandwidth_limit_reached"
+  | "connection_quality_degraded"
   // Billing events
-  | 'invoice_generated'
-  | 'invoice_due'
-  | 'invoice_overdue'
-  | 'payment_received'
-  | 'payment_failed'
-  | 'subscription_renewed'
-  | 'subscription_cancelled'
+  | "invoice_generated"
+  | "invoice_due"
+  | "invoice_overdue"
+  | "payment_received"
+  | "payment_failed"
+  | "subscription_renewed"
+  | "subscription_cancelled"
   // Dunning events
-  | 'dunning_reminder'
-  | 'dunning_suspension_warning'
-  | 'dunning_final_notice'
+  | "dunning_reminder"
+  | "dunning_suspension_warning"
+  | "dunning_final_notice"
   // CRM events
-  | 'lead_assigned'
-  | 'quote_sent'
-  | 'quote_accepted'
-  | 'quote_rejected'
-  | 'site_survey_scheduled'
-  | 'site_survey_completed'
+  | "lead_assigned"
+  | "quote_sent"
+  | "quote_accepted"
+  | "quote_rejected"
+  | "site_survey_scheduled"
+  | "site_survey_completed"
   // Ticketing events
-  | 'ticket_created'
-  | 'ticket_assigned'
-  | 'ticket_updated'
-  | 'ticket_resolved'
-  | 'ticket_closed'
-  | 'ticket_reopened'
+  | "ticket_created"
+  | "ticket_assigned"
+  | "ticket_updated"
+  | "ticket_resolved"
+  | "ticket_closed"
+  | "ticket_reopened"
   // System events
-  | 'password_reset'
-  | 'account_locked'
-  | 'two_factor_enabled'
-  | 'api_key_expiring'
+  | "password_reset"
+  | "account_locked"
+  | "two_factor_enabled"
+  | "api_key_expiring"
   // Custom
-  | 'system_announcement'
-  | 'custom';
+  | "system_announcement"
+  | "custom";
 
-export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type NotificationPriority = "low" | "medium" | "high" | "urgent";
 
-export type NotificationChannel = 'in_app' | 'email' | 'sms' | 'push' | 'webhook';
+export type NotificationChannel = "in_app" | "email" | "sms" | "push" | "webhook";
 
 export interface Notification {
   id: string;
@@ -112,15 +112,15 @@ export interface NotificationCreateRequest {
   metadata?: Record<string, any>;
 }
 
-export type CommunicationType = 'email' | 'webhook' | 'sms' | 'push';
+export type CommunicationType = "email" | "webhook" | "sms" | "push";
 
 export type CommunicationStatus =
-  | 'pending'
-  | 'sent'
-  | 'delivered'
-  | 'failed'
-  | 'bounced'
-  | 'cancelled';
+  | "pending"
+  | "sent"
+  | "delivered"
+  | "failed"
+  | "bounced"
+  | "cancelled";
 
 export interface CommunicationTemplate {
   id: string;
@@ -201,7 +201,7 @@ export interface BulkNotificationRequest {
 export interface BulkNotificationResponse {
   job_id: string;
   total_recipients: number;
-  status: 'queued' | 'processing' | 'completed' | 'failed';
+  status: "queued" | "processing" | "completed" | "failed";
   scheduled_at?: string;
 }
 
@@ -240,16 +240,16 @@ export function useNotifications(options?: {
 
       const params = new URLSearchParams();
       if (options?.unreadOnly) {
-        params.set('unread_only', 'true');
+        params.set("unread_only", "true");
       }
       if (options?.priority) {
-        params.set('priority', options.priority);
+        params.set("priority", options.priority);
       }
       if (options?.notificationType) {
-        params.set('notification_type', options.notificationType);
+        params.set("notification_type", options.notificationType);
       }
 
-      const endpoint = buildUrlWithParams('/notifications', params);
+      const endpoint = buildUrlWithParams("/notifications", params);
       const response = await apiClient.get<NotificationListResponse>(endpoint);
 
       if (response.data) {
@@ -258,13 +258,13 @@ export function useNotifications(options?: {
       }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 403) {
-        console.warn('Notifications endpoint returned 403. Using empty fallback data.');
+        console.warn("Notifications endpoint returned 403. Using empty fallback data.");
         setNotifications([]);
         setUnreadCount(0);
         setError(null);
       } else {
-        console.error('Failed to fetch notifications:', err);
-        setError(err instanceof Error ? err : new Error('Failed to fetch notifications'));
+        console.error("Failed to fetch notifications:", err);
+        setError(err instanceof Error ? err : new Error("Failed to fetch notifications"));
       }
     } finally {
       setIsLoading(false);
@@ -282,100 +282,92 @@ export function useNotifications(options?: {
     return undefined;
   }, [fetchNotifications, options?.autoRefresh, options?.refreshInterval]);
 
-  const markAsRead = useCallback(
-    async (notificationId: string): Promise<boolean> => {
-      try {
-        await apiClient.post(`/notifications/${notificationId}/read`, {});
-
-        // Update local state
-        setNotifications((prev) =>
-          prev.map((n) =>
-            n.id === notificationId ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
-          )
-        );
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-
-        return true;
-      } catch (err) {
-        console.error('Failed to mark notification as read:', err);
-        return false;
-      }
-    },
-    []
-  );
-
-  const markAsUnread = useCallback(
-    async (notificationId: string): Promise<boolean> => {
-      try {
-        await apiClient.post(`/notifications/${notificationId}/unread`, {});
-
-        // Update local state
-        setNotifications((prev) =>
-          prev.map((n) =>
-            n.id === notificationId ? { ...n, is_read: false, read_at: undefined } : n
-          )
-        );
-        setUnreadCount((prev) => prev + 1);
-
-        return true;
-      } catch (err) {
-        console.error('Failed to mark notification as unread:', err);
-        return false;
-      }
-    },
-    []
-  );
-
-  const markAllAsRead = useCallback(async (): Promise<boolean> => {
+  const markAsRead = useCallback(async (notificationId: string): Promise<boolean> => {
     try {
-      await apiClient.post('/notifications/mark-all-read');
+      await apiClient.post(`/notifications/${notificationId}/read`, {});
 
       // Update local state
       setNotifications((prev) =>
-        prev.map((n) => ({ ...n, is_read: true, read_at: new Date().toISOString() }))
+        prev.map((n) =>
+          n.id === notificationId ? { ...n, is_read: true, read_at: new Date().toISOString() } : n,
+        ),
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+
+      return true;
+    } catch (err) {
+      console.error("Failed to mark notification as read:", err);
+      return false;
+    }
+  }, []);
+
+  const markAsUnread = useCallback(async (notificationId: string): Promise<boolean> => {
+    try {
+      await apiClient.post(`/notifications/${notificationId}/unread`, {});
+
+      // Update local state
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notificationId ? { ...n, is_read: false, read_at: undefined } : n,
+        ),
+      );
+      setUnreadCount((prev) => prev + 1);
+
+      return true;
+    } catch (err) {
+      console.error("Failed to mark notification as unread:", err);
+      return false;
+    }
+  }, []);
+
+  const markAllAsRead = useCallback(async (): Promise<boolean> => {
+    try {
+      await apiClient.post("/notifications/mark-all-read");
+
+      // Update local state
+      setNotifications((prev) =>
+        prev.map((n) => ({
+          ...n,
+          is_read: true,
+          read_at: new Date().toISOString(),
+        })),
       );
       setUnreadCount(0);
 
       return true;
     } catch (err) {
-      console.error('Failed to mark all as read:', err);
+      console.error("Failed to mark all as read:", err);
       return false;
     }
   }, []);
 
-  const archiveNotification = useCallback(
-    async (notificationId: string): Promise<boolean> => {
-      try {
-        await apiClient.post(`/notifications/${notificationId}/archive`, {});
+  const archiveNotification = useCallback(async (notificationId: string): Promise<boolean> => {
+    try {
+      await apiClient.post(`/notifications/${notificationId}/archive`, {});
 
-        // Remove from local state
-        setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+      // Remove from local state
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
 
-        return true;
-      } catch (err) {
-        console.error('Failed to archive notification:', err);
-        return false;
-      }
-    },
-    []
-  );
+      return true;
+    } catch (err) {
+      console.error("Failed to archive notification:", err);
+      return false;
+    }
+  }, []);
 
-  const deleteNotification = useCallback(
-    async (notificationId: string): Promise<boolean> => {
-      try {
-        await apiClient.delete(`/notifications/${notificationId}`);
+  const deleteNotification = useCallback(async (notificationId: string): Promise<boolean> => {
+    try {
+      await apiClient.delete(`/notifications/${notificationId}`);
 
-        // Remove from local state
-        setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+      // Remove from local state
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
 
-        return true;
-      } catch (err) {
-        console.error('Failed to delete notification:', err);
-        return false;
-      }
-    },
-    []
-  );
+      return true;
+    } catch (err) {
+      console.error("Failed to delete notification:", err);
+      return false;
+    }
+  }, []);
 
   return {
     notifications,
@@ -410,13 +402,13 @@ export function useNotificationTemplates(options?: {
 
       const params = new URLSearchParams();
       if (options?.type) {
-        params.set('type', options.type);
+        params.set("type", options.type);
       }
       if (options?.activeOnly) {
-        params.set('active_only', 'true');
+        params.set("active_only", "true");
       }
 
-      const endpoint = buildUrlWithParams('/communications/templates', params);
+      const endpoint = buildUrlWithParams("/communications/templates", params);
       const response = await apiClient.get<CommunicationTemplate[]>(endpoint);
 
       if (response.data) {
@@ -424,12 +416,12 @@ export function useNotificationTemplates(options?: {
       }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 403) {
-        console.warn('Templates endpoint returned 403. Falling back to empty template list.');
+        console.warn("Templates endpoint returned 403. Falling back to empty template list.");
         setTemplates([]);
         setError(null);
       } else {
-        console.error('Failed to fetch templates:', err);
-        setError(err instanceof Error ? err : new Error('Failed to fetch templates'));
+        console.error("Failed to fetch templates:", err);
+        setError(err instanceof Error ? err : new Error("Failed to fetch templates"));
       }
     } finally {
       setIsLoading(false);
@@ -444,8 +436,8 @@ export function useNotificationTemplates(options?: {
     async (data: TemplateCreateRequest): Promise<CommunicationTemplate | null> => {
       try {
         const response = await apiClient.post<CommunicationTemplate>(
-          '/communications/templates',
-          data
+          "/communications/templates",
+          data,
         );
 
         if (response.data) {
@@ -454,67 +446,69 @@ export function useNotificationTemplates(options?: {
         }
         return null;
       } catch (err) {
-        console.error('Failed to create template:', err);
+        console.error("Failed to create template:", err);
         throw err;
       }
     },
-    []
+    [],
   );
 
   const updateTemplate = useCallback(
-    async (templateId: string, data: TemplateUpdateRequest): Promise<CommunicationTemplate | null> => {
+    async (
+      templateId: string,
+      data: TemplateUpdateRequest,
+    ): Promise<CommunicationTemplate | null> => {
       try {
         const response = await apiClient.patch<CommunicationTemplate>(
           `/communications/templates/${templateId}`,
-          data
+          data,
         );
 
         if (response.data) {
-          setTemplates((prev) =>
-            prev.map((t) => (t.id === templateId ? response.data : t))
-          );
+          setTemplates((prev) => prev.map((t) => (t.id === templateId ? response.data : t)));
           return response.data;
         }
         return null;
       } catch (err) {
-        console.error('Failed to update template:', err);
+        console.error("Failed to update template:", err);
         throw err;
       }
     },
-    []
+    [],
   );
 
-  const deleteTemplate = useCallback(
-    async (templateId: string): Promise<boolean> => {
-      try {
-        await apiClient.delete(`/communications/templates/${templateId}`);
+  const deleteTemplate = useCallback(async (templateId: string): Promise<boolean> => {
+    try {
+      await apiClient.delete(`/communications/templates/${templateId}`);
 
-        setTemplates((prev) => prev.filter((t) => t.id !== templateId));
+      setTemplates((prev) => prev.filter((t) => t.id !== templateId));
 
-        return true;
-      } catch (err) {
-        console.error('Failed to delete template:', err);
-        return false;
-      }
-    },
-    []
-  );
+      return true;
+    } catch (err) {
+      console.error("Failed to delete template:", err);
+      return false;
+    }
+  }, []);
 
   const renderTemplatePreview = useCallback(
-    async (templateId: string, data: Record<string, any>): Promise<{ subject?: string; text?: string; html?: string } | null> => {
+    async (
+      templateId: string,
+      data: Record<string, any>,
+    ): Promise<{ subject?: string; text?: string; html?: string } | null> => {
       try {
-        const response = await apiClient.post<{ subject?: string; text?: string; html?: string }>(
-          `/communications/templates/${templateId}/render`,
-          { data }
-        );
+        const response = await apiClient.post<{
+          subject?: string;
+          text?: string;
+          html?: string;
+        }>(`/communications/templates/${templateId}/render`, { data });
 
         return response.data || null;
       } catch (err) {
-        console.error('Failed to render template preview:', err);
+        console.error("Failed to render template preview:", err);
         return null;
       }
     },
-    []
+    [],
   );
 
   return {
@@ -553,16 +547,19 @@ export function useCommunicationLogs(options?: {
       setError(null);
 
       const params = new URLSearchParams();
-      if (options?.type) params.set('type', options.type);
-      if (options?.status) params.set('status', options.status);
-      if (options?.recipient) params.set('recipient', options.recipient);
-      if (options?.startDate) params.set('start_date', options.startDate);
-      if (options?.endDate) params.set('end_date', options.endDate);
-      if (options?.page) params.set('page', options.page.toString());
-      if (options?.pageSize) params.set('page_size', options.pageSize.toString());
+      if (options?.type) params.set("type", options.type);
+      if (options?.status) params.set("status", options.status);
+      if (options?.recipient) params.set("recipient", options.recipient);
+      if (options?.startDate) params.set("start_date", options.startDate);
+      if (options?.endDate) params.set("end_date", options.endDate);
+      if (options?.page) params.set("page", options.page.toString());
+      if (options?.pageSize) params.set("page_size", options.pageSize.toString());
 
-      const endpoint = buildUrlWithParams('/communications/logs', params);
-      const response = await apiClient.get<{ logs: CommunicationLog[]; total: number }>(endpoint);
+      const endpoint = buildUrlWithParams("/communications/logs", params);
+      const response = await apiClient.get<{
+        logs: CommunicationLog[];
+        total: number;
+      }>(endpoint);
 
       if (response.data) {
         setLogs(response.data.logs);
@@ -570,18 +567,26 @@ export function useCommunicationLogs(options?: {
       }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 403) {
-        console.warn('Communications logs endpoint returned 403. Falling back to empty log set.');
+        console.warn("Communications logs endpoint returned 403. Falling back to empty log set.");
         setLogs([]);
         setTotal(0);
         setError(null);
       } else {
-        console.error('Failed to fetch communication logs:', err);
-        setError(err instanceof Error ? err : new Error('Failed to fetch logs'));
+        console.error("Failed to fetch communication logs:", err);
+        setError(err instanceof Error ? err : new Error("Failed to fetch logs"));
       }
     } finally {
       setIsLoading(false);
     }
-  }, [options?.type, options?.status, options?.recipient, options?.startDate, options?.endDate, options?.page, options?.pageSize]);
+  }, [
+    options?.type,
+    options?.status,
+    options?.recipient,
+    options?.startDate,
+    options?.endDate,
+    options?.page,
+    options?.pageSize,
+  ]);
 
   useEffect(() => {
     fetchLogs();
@@ -594,11 +599,11 @@ export function useCommunicationLogs(options?: {
         await fetchLogs(); // Refresh logs
         return true;
       } catch (err) {
-        console.error('Failed to retry communication:', err);
+        console.error("Failed to retry communication:", err);
         return false;
       }
     },
-    [fetchLogs]
+    [fetchLogs],
   );
 
   return {
@@ -624,35 +629,35 @@ export function useBulkNotifications() {
         setIsLoading(true);
 
         const response = await apiClient.post<BulkNotificationResponse>(
-          '/notifications/bulk',
-          data
+          "/notifications/bulk",
+          data,
         );
 
         return response.data || null;
       } catch (err) {
-        console.error('Failed to send bulk notification:', err);
+        console.error("Failed to send bulk notification:", err);
         throw err;
       } finally {
         setIsLoading(false);
       }
     },
-    []
+    [],
   );
 
   const getBulkJobStatus = useCallback(
     async (jobId: string): Promise<BulkNotificationResponse | null> => {
       try {
         const response = await apiClient.get<BulkNotificationResponse>(
-          `/notifications/bulk/${jobId}`
+          `/notifications/bulk/${jobId}`,
         );
 
         return response.data || null;
       } catch (err) {
-        console.error('Failed to get bulk job status:', err);
+        console.error("Failed to get bulk job status:", err);
         return null;
       }
     },
-    []
+    [],
   );
 
   return {
@@ -666,10 +671,7 @@ export function useBulkNotifications() {
 // Hook: useUnreadCount (Lightweight for header badge)
 // ============================================================================
 
-export function useUnreadCount(options?: {
-  autoRefresh?: boolean;
-  refreshInterval?: number;
-}) {
+export function useUnreadCount(options?: { autoRefresh?: boolean; refreshInterval?: number }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -677,19 +679,19 @@ export function useUnreadCount(options?: {
     try {
       setIsLoading(true);
 
-      const response = await apiClient.get<{ unread_count: number }>(
-        '/notifications/unread-count'
-      );
+      const response = await apiClient.get<{ unread_count: number }>("/notifications/unread-count");
 
       if (response.data) {
         setUnreadCount(response.data.unread_count);
       }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 403) {
-        console.warn('Unread count endpoint returned 403. Defaulting to zero unread notifications.');
+        console.warn(
+          "Unread count endpoint returned 403. Defaulting to zero unread notifications.",
+        );
         setUnreadCount(0);
       } else {
-        console.error('Failed to fetch unread count:', err);
+        console.error("Failed to fetch unread count:", err);
       }
     } finally {
       setIsLoading(false);

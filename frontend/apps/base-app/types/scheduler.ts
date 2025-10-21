@@ -3,15 +3,15 @@
  */
 
 export enum JobPriority {
-  LOW = 'low',
-  NORMAL = 'normal',
-  HIGH = 'high',
-  URGENT = 'urgent',
+  LOW = "low",
+  NORMAL = "normal",
+  HIGH = "high",
+  URGENT = "urgent",
 }
 
 export enum JobExecutionMode {
-  SEQUENTIAL = 'sequential',
-  PARALLEL = 'parallel',
+  SEQUENTIAL = "sequential",
+  PARALLEL = "parallel",
 }
 
 // =============================================================================

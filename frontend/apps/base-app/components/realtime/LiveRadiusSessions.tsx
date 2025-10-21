@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Live RADIUS Sessions Monitor
@@ -7,10 +7,10 @@
  * with automatic updates via WebSocket.
  */
 
-import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Activity,
   RefreshCw,
@@ -20,11 +20,11 @@ import {
   Wifi,
   Clock,
   XCircle,
-} from 'lucide-react';
-import { useSessionsWebSocket } from '../../hooks/useRealtime';
-import type { RADIUSSessionEvent } from '../../types/realtime';
-import { CompactConnectionStatus } from './ConnectionStatusIndicator';
-import { useNetworkDiagnostics } from '@/hooks/useNetworkDiagnostics';
+} from "lucide-react";
+import { useSessionsWebSocket } from "../../hooks/useRealtime";
+import type { RADIUSSessionEvent } from "../../types/realtime";
+import { CompactConnectionStatus } from "./ConnectionStatusIndicator";
+import { useNetworkDiagnostics } from "@/hooks/useNetworkDiagnostics";
 
 interface Session {
   session_id: string;
@@ -67,14 +67,14 @@ export function LiveRadiusSessions({
   const handleSessionEvent = (event: RADIUSSessionEvent) => {
     const sessionId = event.session_id;
 
-    if (event.event_type === 'session.started') {
+    if (event.event_type === "session.started") {
       setSessions((prev) => {
         const next = new Map(prev);
         next.set(sessionId, {
           session_id: sessionId,
           username: event.username,
           nas_ip_address: event.nas_ip_address,
-          framed_ip_address: event.framed_ip_address || '',
+          framed_ip_address: event.framed_ip_address || "",
           bytes_in: event.bytes_in,
           bytes_out: event.bytes_out,
           session_time: event.session_time,
@@ -90,7 +90,7 @@ export function LiveRadiusSessions({
 
         return next;
       });
-    } else if (event.event_type === 'session.updated') {
+    } else if (event.event_type === "session.updated") {
       setSessions((prev) => {
         const next = new Map(prev);
         const existing = next.get(sessionId);
@@ -105,7 +105,7 @@ export function LiveRadiusSessions({
         }
         return next;
       });
-    } else if (event.event_type === 'session.stopped') {
+    } else if (event.event_type === "session.stopped") {
       setSessions((prev) => {
         const next = new Map(prev);
         next.delete(sessionId);
@@ -116,7 +116,7 @@ export function LiveRadiusSessions({
 
   const handleDisconnectSession = async (session: Session) => {
     const confirmed = confirm(
-      `Are you sure you want to disconnect session for user "${session.username}"?\n\nThis will immediately terminate their connection.`
+      `Are you sure you want to disconnect session for user "${session.username}"?\n\nThis will immediately terminate their connection.`,
     );
     if (!confirmed) return;
 
@@ -155,15 +155,11 @@ export function LiveRadiusSessions({
           </div>
           <div className="p-3 bg-green-50 rounded">
             <p className="text-xs text-green-900">Total RX</p>
-            <p className="text-xl font-bold text-green-900">
-              {formatBytes(totalBytesIn)}
-            </p>
+            <p className="text-xl font-bold text-green-900">{formatBytes(totalBytesIn)}</p>
           </div>
           <div className="p-3 bg-blue-50 rounded">
             <p className="text-xs text-blue-900">Total TX</p>
-            <p className="text-xl font-bold text-blue-900">
-              {formatBytes(totalBytesOut)}
-            </p>
+            <p className="text-xl font-bold text-blue-900">{formatBytes(totalBytesOut)}</p>
           </div>
         </div>
       </Card>
@@ -177,16 +173,11 @@ export function LiveRadiusSessions({
           <div className="flex items-center gap-2">
             <Wifi className="h-6 w-6 text-primary" />
             <h2 className="text-2xl font-bold">Live RADIUS Sessions</h2>
-            <Badge
-              variant={isConnected ? 'default' : 'secondary'}
-              className="ml-2"
-            >
-              {isConnected ? 'Live' : 'Disconnected'}
+            <Badge variant={isConnected ? "default" : "secondary"} className="ml-2">
+              {isConnected ? "Live" : "Disconnected"}
             </Badge>
           </div>
-          <p className="text-muted-foreground mt-1">
-            Real-time authentication session monitoring
-          </p>
+          <p className="text-muted-foreground mt-1">Real-time authentication session monitoring</p>
         </div>
         <CompactConnectionStatus />
       </div>
@@ -207,9 +198,7 @@ export function LiveRadiusSessions({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-green-900">Total RX</p>
-              <p className="text-2xl font-bold text-green-900">
-                {formatBytes(totalBytesIn)}
-              </p>
+              <p className="text-2xl font-bold text-green-900">{formatBytes(totalBytesIn)}</p>
             </div>
             <TrendingDown className="h-10 w-10 text-green-600" />
           </div>
@@ -219,9 +208,7 @@ export function LiveRadiusSessions({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-blue-900">Total TX</p>
-              <p className="text-2xl font-bold text-blue-900">
-                {formatBytes(totalBytesOut)}
-              </p>
+              <p className="text-2xl font-bold text-blue-900">{formatBytes(totalBytesOut)}</p>
             </div>
             <TrendingUp className="h-10 w-10 text-blue-600" />
           </div>
@@ -246,8 +233,8 @@ export function LiveRadiusSessions({
           <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <p className="text-muted-foreground">
             {isConnected
-              ? 'No active sessions. Waiting for connections...'
-              : 'Connect to view live sessions'}
+              ? "No active sessions. Waiting for connections..."
+              : "Connect to view live sessions"}
           </p>
         </div>
       ) : (
@@ -295,7 +282,7 @@ export function LiveRadiusSessions({
                       {session.nas_ip_address}
                     </td>
                     <td className="px-4 py-3 text-sm font-mono text-muted-foreground">
-                      {session.framed_ip_address || 'N/A'}
+                      {session.framed_ip_address || "N/A"}
                     </td>
                     <td className="px-4 py-3 text-sm text-right font-semibold text-green-600">
                       {formatBytes(session.bytes_in)}
@@ -337,8 +324,7 @@ export function LiveRadiusSessions({
       {sessionList.length >= maxSessions && (
         <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-900">
           <p>
-            Showing most recent {maxSessions} sessions. Some older sessions may
-            not be displayed.
+            Showing most recent {maxSessions} sessions. Some older sessions may not be displayed.
           </p>
         </div>
       )}
@@ -348,9 +334,9 @@ export function LiveRadiusSessions({
 
 // Helper functions
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
+  if (bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const sizes = ["B", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }

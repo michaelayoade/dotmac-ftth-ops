@@ -4,9 +4,9 @@
  * React hooks for wireless infrastructure that match backend API exactly
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { useToast } from "@/components/ui/use-toast";
 import type {
   WirelessDevice,
   WirelessRadio,
@@ -23,9 +23,9 @@ import type {
   UpdateRadioRequest,
   CreateCoverageZoneRequest,
   CreateSignalMeasurementRequest,
-} from '@/types/wireless-backend';
+} from "@/types/wireless-backend";
 
-const API_BASE = '/wireless';
+const API_BASE = "/wireless";
 
 // ============================================================================
 // Wireless Devices
@@ -43,17 +43,17 @@ export function useWirelessDevices(params: UseDevicesParams = {}) {
   const { toast } = useToast();
 
   return useQuery({
-    queryKey: ['wireless', 'devices', params],
+    queryKey: ["wireless", "devices", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.device_type) searchParams.append('device_type', params.device_type);
-      if (params.status) searchParams.append('status', params.status);
-      if (params.site_name) searchParams.append('site_name', params.site_name);
-      if (params.limit) searchParams.append('limit', params.limit.toString());
-      if (params.offset) searchParams.append('offset', params.offset.toString());
+      if (params.device_type) searchParams.append("device_type", params.device_type);
+      if (params.status) searchParams.append("status", params.status);
+      if (params.site_name) searchParams.append("site_name", params.site_name);
+      if (params.limit) searchParams.append("limit", params.limit.toString());
+      if (params.offset) searchParams.append("offset", params.offset.toString());
 
       const response = await apiClient.get<WirelessDevice[]>(
-        `${API_BASE}/devices?${searchParams.toString()}`
+        `${API_BASE}/devices?${searchParams.toString()}`,
       );
       return response.data;
     },
@@ -63,9 +63,9 @@ export function useWirelessDevices(params: UseDevicesParams = {}) {
 
 export function useWirelessDevice(deviceId: string | undefined) {
   return useQuery({
-    queryKey: ['wireless', 'devices', deviceId],
+    queryKey: ["wireless", "devices", deviceId],
     queryFn: async () => {
-      if (!deviceId) throw new Error('Device ID is required');
+      if (!deviceId) throw new Error("Device ID is required");
       const response = await apiClient.get<WirelessDevice>(`${API_BASE}/devices/${deviceId}`);
       return response.data;
     },
@@ -84,18 +84,18 @@ export function useCreateDevice() {
       return response.data;
     },
     onSuccess: (device) => {
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'devices'] });
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'statistics'] });
+      queryClient.invalidateQueries({ queryKey: ["wireless", "devices"] });
+      queryClient.invalidateQueries({ queryKey: ["wireless", "statistics"] });
       toast({
-        title: 'Device Created',
+        title: "Device Created",
         description: `${device.name} has been created successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create device',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create device",
+        variant: "destructive",
       });
     },
   });
@@ -111,18 +111,18 @@ export function useUpdateDevice() {
       return response.data;
     },
     onSuccess: (device) => {
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'devices'] });
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'statistics'] });
+      queryClient.invalidateQueries({ queryKey: ["wireless", "devices"] });
+      queryClient.invalidateQueries({ queryKey: ["wireless", "statistics"] });
       toast({
-        title: 'Device Updated',
+        title: "Device Updated",
         description: `${device.name} has been updated successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to update device',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to update device",
+        variant: "destructive",
       });
     },
   });
@@ -137,18 +137,18 @@ export function useDeleteDevice() {
       await apiClient.delete(`${API_BASE}/devices/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'devices'] });
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'statistics'] });
+      queryClient.invalidateQueries({ queryKey: ["wireless", "devices"] });
+      queryClient.invalidateQueries({ queryKey: ["wireless", "statistics"] });
       toast({
-        title: 'Device Deleted',
-        description: 'Device has been deleted successfully',
+        title: "Device Deleted",
+        description: "Device has been deleted successfully",
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to delete device',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to delete device",
+        variant: "destructive",
       });
     },
   });
@@ -156,11 +156,11 @@ export function useDeleteDevice() {
 
 export function useDeviceHealth(deviceId: string | undefined) {
   return useQuery({
-    queryKey: ['wireless', 'devices', deviceId, 'health'],
+    queryKey: ["wireless", "devices", deviceId, "health"],
     queryFn: async () => {
-      if (!deviceId) throw new Error('Device ID is required');
+      if (!deviceId) throw new Error("Device ID is required");
       const response = await apiClient.get<DeviceHealthSummary>(
-        `${API_BASE}/devices/${deviceId}/health`
+        `${API_BASE}/devices/${deviceId}/health`,
       );
       return response.data;
     },
@@ -181,15 +181,15 @@ interface UseRadiosParams {
 
 export function useWirelessRadios(params: UseRadiosParams = {}) {
   return useQuery({
-    queryKey: ['wireless', 'radios', params],
+    queryKey: ["wireless", "radios", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.device_id) searchParams.append('device_id', params.device_id);
-      if (params.limit) searchParams.append('limit', params.limit.toString());
-      if (params.offset) searchParams.append('offset', params.offset.toString());
+      if (params.device_id) searchParams.append("device_id", params.device_id);
+      if (params.limit) searchParams.append("limit", params.limit.toString());
+      if (params.offset) searchParams.append("offset", params.offset.toString());
 
       const response = await apiClient.get<WirelessRadio[]>(
-        `${API_BASE}/radios?${searchParams.toString()}`
+        `${API_BASE}/radios?${searchParams.toString()}`,
       );
       return response.data;
     },
@@ -199,9 +199,9 @@ export function useWirelessRadios(params: UseRadiosParams = {}) {
 
 export function useWirelessRadio(radioId: string | undefined) {
   return useQuery({
-    queryKey: ['wireless', 'radios', radioId],
+    queryKey: ["wireless", "radios", radioId],
     queryFn: async () => {
-      if (!radioId) throw new Error('Radio ID is required');
+      if (!radioId) throw new Error("Radio ID is required");
       const response = await apiClient.get<WirelessRadio>(`${API_BASE}/radios/${radioId}`);
       return response.data;
     },
@@ -220,18 +220,20 @@ export function useCreateRadio() {
       return response.data;
     },
     onSuccess: (radio) => {
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'radios'] });
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'devices', radio.device_id] });
+      queryClient.invalidateQueries({ queryKey: ["wireless", "radios"] });
+      queryClient.invalidateQueries({
+        queryKey: ["wireless", "devices", radio.device_id],
+      });
       toast({
-        title: 'Radio Created',
+        title: "Radio Created",
         description: `${radio.radio_name} has been created successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create radio',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create radio",
+        variant: "destructive",
       });
     },
   });
@@ -247,18 +249,20 @@ export function useUpdateRadio() {
       return response.data;
     },
     onSuccess: (radio) => {
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'radios'] });
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'devices', radio.device_id] });
+      queryClient.invalidateQueries({ queryKey: ["wireless", "radios"] });
+      queryClient.invalidateQueries({
+        queryKey: ["wireless", "devices", radio.device_id],
+      });
       toast({
-        title: 'Radio Updated',
+        title: "Radio Updated",
         description: `${radio.radio_name} has been updated successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to update radio',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to update radio",
+        variant: "destructive",
       });
     },
   });
@@ -273,17 +277,17 @@ export function useDeleteRadio() {
       await apiClient.delete(`${API_BASE}/radios/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'radios'] });
+      queryClient.invalidateQueries({ queryKey: ["wireless", "radios"] });
       toast({
-        title: 'Radio Deleted',
-        description: 'Radio has been deleted successfully',
+        title: "Radio Deleted",
+        description: "Radio has been deleted successfully",
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to delete radio',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to delete radio",
+        variant: "destructive",
       });
     },
   });
@@ -301,15 +305,15 @@ interface UseCoverageZonesParams {
 
 export function useCoverageZones(params: UseCoverageZonesParams = {}) {
   return useQuery({
-    queryKey: ['wireless', 'coverage-zones', params],
+    queryKey: ["wireless", "coverage-zones", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.device_id) searchParams.append('device_id', params.device_id);
-      if (params.limit) searchParams.append('limit', params.limit.toString());
-      if (params.offset) searchParams.append('offset', params.offset.toString());
+      if (params.device_id) searchParams.append("device_id", params.device_id);
+      if (params.limit) searchParams.append("limit", params.limit.toString());
+      if (params.offset) searchParams.append("offset", params.offset.toString());
 
       const response = await apiClient.get<CoverageZone[]>(
-        `${API_BASE}/coverage-zones?${searchParams.toString()}`
+        `${API_BASE}/coverage-zones?${searchParams.toString()}`,
       );
       return response.data;
     },
@@ -327,17 +331,19 @@ export function useCreateCoverageZone() {
       return response.data;
     },
     onSuccess: (zone) => {
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'coverage-zones'] });
+      queryClient.invalidateQueries({
+        queryKey: ["wireless", "coverage-zones"],
+      });
       toast({
-        title: 'Coverage Zone Created',
+        title: "Coverage Zone Created",
         description: `${zone.zone_name} has been created successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create coverage zone',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create coverage zone",
+        variant: "destructive",
       });
     },
   });
@@ -352,17 +358,19 @@ export function useDeleteCoverageZone() {
       await apiClient.delete(`${API_BASE}/coverage-zones/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'coverage-zones'] });
+      queryClient.invalidateQueries({
+        queryKey: ["wireless", "coverage-zones"],
+      });
       toast({
-        title: 'Coverage Zone Deleted',
-        description: 'Coverage zone has been deleted successfully',
+        title: "Coverage Zone Deleted",
+        description: "Coverage zone has been deleted successfully",
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to delete coverage zone',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to delete coverage zone",
+        variant: "destructive",
       });
     },
   });
@@ -380,15 +388,15 @@ interface UseSignalMeasurementsParams {
 
 export function useSignalMeasurements(params: UseSignalMeasurementsParams = {}) {
   return useQuery({
-    queryKey: ['wireless', 'signal-measurements', params],
+    queryKey: ["wireless", "signal-measurements", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.device_id) searchParams.append('device_id', params.device_id);
-      if (params.limit) searchParams.append('limit', params.limit.toString());
-      if (params.offset) searchParams.append('offset', params.offset.toString());
+      if (params.device_id) searchParams.append("device_id", params.device_id);
+      if (params.limit) searchParams.append("limit", params.limit.toString());
+      if (params.offset) searchParams.append("offset", params.offset.toString());
 
       const response = await apiClient.get<SignalMeasurement[]>(
-        `${API_BASE}/signal-measurements?${searchParams.toString()}`
+        `${API_BASE}/signal-measurements?${searchParams.toString()}`,
       );
       return response.data;
     },
@@ -404,18 +412,20 @@ export function useCreateSignalMeasurement() {
     mutationFn: async (data: CreateSignalMeasurementRequest) => {
       const response = await apiClient.post<SignalMeasurement>(
         `${API_BASE}/signal-measurements`,
-        data
+        data,
       );
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wireless', 'signal-measurements'] });
+      queryClient.invalidateQueries({
+        queryKey: ["wireless", "signal-measurements"],
+      });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create signal measurement',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create signal measurement",
+        variant: "destructive",
       });
     },
   });
@@ -434,16 +444,17 @@ interface UseClientsParams {
 
 export function useWirelessClients(params: UseClientsParams = {}) {
   return useQuery({
-    queryKey: ['wireless', 'clients', params],
+    queryKey: ["wireless", "clients", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.device_id) searchParams.append('device_id', params.device_id);
-      if (params.connected !== undefined) searchParams.append('connected', params.connected.toString());
-      if (params.limit) searchParams.append('limit', params.limit.toString());
-      if (params.offset) searchParams.append('offset', params.offset.toString());
+      if (params.device_id) searchParams.append("device_id", params.device_id);
+      if (params.connected !== undefined)
+        searchParams.append("connected", params.connected.toString());
+      if (params.limit) searchParams.append("limit", params.limit.toString());
+      if (params.offset) searchParams.append("offset", params.offset.toString());
 
       const response = await apiClient.get<WirelessClient[]>(
-        `${API_BASE}/clients?${searchParams.toString()}`
+        `${API_BASE}/clients?${searchParams.toString()}`,
       );
       return response.data;
     },
@@ -457,7 +468,7 @@ export function useWirelessClients(params: UseClientsParams = {}) {
 
 export function useWirelessStatistics() {
   return useQuery({
-    queryKey: ['wireless', 'statistics'],
+    queryKey: ["wireless", "statistics"],
     queryFn: async () => {
       const response = await apiClient.get<WirelessStatistics>(`${API_BASE}/statistics`);
       return response.data;

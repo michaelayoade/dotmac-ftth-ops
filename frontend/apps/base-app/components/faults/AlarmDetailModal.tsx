@@ -11,25 +11,25 @@
  * - Export functionality
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   AlertTriangle,
   AlertCircle,
@@ -50,11 +50,11 @@ import {
   X,
   Edit,
   Save,
-  RefreshCw
-} from 'lucide-react';
-import { format } from 'date-fns';
-import { apiClient } from '@/lib/api/client';
-import type { Alarm, AlarmSeverity, AlarmStatus } from '@/hooks/useFaults';
+  RefreshCw,
+} from "lucide-react";
+import { format } from "date-fns";
+import { apiClient } from "@/lib/api/client";
+import type { Alarm, AlarmSeverity, AlarmStatus } from "@/hooks/useFaults";
 
 // ============================================================================
 // Types
@@ -103,13 +103,13 @@ interface AlarmDetailModalProps {
 
 const getSeverityColor = (severity: AlarmSeverity): string => {
   const colors: Record<AlarmSeverity, string> = {
-    critical: 'bg-red-500',
-    major: 'bg-orange-500',
-    minor: 'bg-yellow-500',
-    warning: 'bg-blue-500',
-    info: 'bg-gray-500',
+    critical: "bg-red-500",
+    major: "bg-orange-500",
+    minor: "bg-yellow-500",
+    warning: "bg-blue-500",
+    info: "bg-gray-500",
   };
-  return colors[severity] || 'bg-gray-500';
+  return colors[severity] || "bg-gray-500";
 };
 
 const getSeverityIcon = (severity: AlarmSeverity) => {
@@ -125,12 +125,12 @@ const getSeverityIcon = (severity: AlarmSeverity) => {
 
 const getStatusColor = (status: AlarmStatus): string => {
   const colors: Record<AlarmStatus, string> = {
-    active: 'bg-red-100 text-red-800 border-red-200',
-    acknowledged: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    cleared: 'bg-blue-100 text-blue-800 border-blue-200',
-    resolved: 'bg-green-100 text-green-800 border-green-200',
+    active: "bg-red-100 text-red-800 border-red-200",
+    acknowledged: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    cleared: "bg-blue-100 text-blue-800 border-blue-200",
+    resolved: "bg-green-100 text-green-800 border-green-200",
   };
-  return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+  return colors[status] || "bg-gray-100 text-gray-800 border-gray-200";
 };
 
 const formatDuration = (start: string, end?: string): string => {
@@ -152,17 +152,12 @@ const formatDuration = (start: string, end?: string): string => {
 // Main Component
 // ============================================================================
 
-export function AlarmDetailModal({
-  alarm,
-  open,
-  onClose,
-  onUpdate
-}: AlarmDetailModalProps) {
-  const [activeTab, setActiveTab] = useState('details');
+export function AlarmDetailModal({ alarm, open, onClose, onUpdate }: AlarmDetailModalProps) {
+  const [activeTab, setActiveTab] = useState("details");
   const [history, setHistory] = useState<AlarmHistory[]>([]);
   const [notes, setNotes] = useState<AlarmNote[]>([]);
   const [relatedTickets, setRelatedTickets] = useState<RelatedTicket[]>([]);
-  const [newNote, setNewNote] = useState('');
+  const [newNote, setNewNote] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSavingNote, setIsSavingNote] = useState(false);
 
@@ -172,26 +167,20 @@ export function AlarmDetailModal({
     setIsLoading(true);
     try {
       // Fetch history
-      const historyResponse = await apiClient.get(
-        `/api/v1/faults/alarms/${alarm.id}/history`
-      );
+      const historyResponse = await apiClient.get(`/api/v1/faults/alarms/${alarm.id}/history`);
       setHistory(historyResponse.data || []);
 
       // Fetch notes
-      const notesResponse = await apiClient.get(
-        `/api/v1/faults/alarms/${alarm.id}/notes`
-      );
+      const notesResponse = await apiClient.get(`/api/v1/faults/alarms/${alarm.id}/notes`);
       setNotes(notesResponse.data || []);
 
       // Fetch related tickets if ticket_id exists
       if (alarm.ticket_id) {
-        const ticketResponse = await apiClient.get(
-          `/api/v1/tickets/${alarm.ticket_id}`
-        );
+        const ticketResponse = await apiClient.get(`/api/v1/tickets/${alarm.ticket_id}`);
         setRelatedTickets([ticketResponse.data]);
       }
     } catch (error) {
-      console.error('Failed to fetch alarm details:', error);
+      console.error("Failed to fetch alarm details:", error);
     } finally {
       setIsLoading(false);
     }
@@ -209,12 +198,12 @@ export function AlarmDetailModal({
 
     try {
       await apiClient.post(`/api/v1/faults/alarms/${alarm.id}/acknowledge`, {
-        note: 'Acknowledged from detail view'
+        note: "Acknowledged from detail view",
       });
       onUpdate?.();
       fetchAlarmDetails();
     } catch (error) {
-      console.error('Failed to acknowledge alarm:', error);
+      console.error("Failed to acknowledge alarm:", error);
     }
   };
 
@@ -226,7 +215,7 @@ export function AlarmDetailModal({
       onUpdate?.();
       fetchAlarmDetails();
     } catch (error) {
-      console.error('Failed to clear alarm:', error);
+      console.error("Failed to clear alarm:", error);
     }
   };
 
@@ -235,12 +224,12 @@ export function AlarmDetailModal({
 
     try {
       await apiClient.post(`/api/v1/faults/alarms/${alarm.id}/create-ticket`, {
-        priority: alarm.severity === 'critical' ? 'urgent' : 'normal'
+        priority: alarm.severity === "critical" ? "urgent" : "normal",
       });
       onUpdate?.();
       fetchAlarmDetails();
     } catch (error) {
-      console.error('Failed to create ticket:', error);
+      console.error("Failed to create ticket:", error);
     }
   };
 
@@ -250,12 +239,12 @@ export function AlarmDetailModal({
     setIsSavingNote(true);
     try {
       await apiClient.post(`/api/v1/faults/alarms/${alarm.id}/notes`, {
-        content: newNote
+        content: newNote,
       });
-      setNewNote('');
+      setNewNote("");
       fetchAlarmDetails();
     } catch (error) {
-      console.error('Failed to add note:', error);
+      console.error("Failed to add note:", error);
     } finally {
       setIsSavingNote(false);
     }
@@ -268,14 +257,14 @@ export function AlarmDetailModal({
       alarm,
       history,
       notes,
-      exported_at: new Date().toISOString()
+      exported_at: new Date().toISOString(),
     };
 
     const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: 'application/json'
+      type: "application/json",
     });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `alarm-${alarm.alarm_id}-${Date.now()}.json`;
     document.body.appendChild(a);
@@ -294,14 +283,10 @@ export function AlarmDetailModal({
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <div className={`p-2 rounded-lg ${getSeverityColor(alarm.severity)}`}>
-                  <div className="text-white">
-                    {getSeverityIcon(alarm.severity)}
-                  </div>
+                  <div className="text-white">{getSeverityIcon(alarm.severity)}</div>
                 </div>
                 <div>
-                  <DialogTitle className="text-xl font-semibold">
-                    {alarm.title}
-                  </DialogTitle>
+                  <DialogTitle className="text-xl font-semibold">{alarm.title}</DialogTitle>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant="outline" className="font-mono text-xs">
                       {alarm.alarm_id}
@@ -317,19 +302,11 @@ export function AlarmDetailModal({
               </div>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExport}
-              >
+              <Button variant="outline" size="sm" onClick={handleExport}>
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-              >
+              <Button variant="ghost" size="sm" onClick={onClose}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -340,41 +317,25 @@ export function AlarmDetailModal({
 
         {/* Quick Actions */}
         <div className="flex gap-2 py-2">
-          {alarm.status === 'active' && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleAcknowledge}
-            >
+          {alarm.status === "active" && (
+            <Button size="sm" variant="outline" onClick={handleAcknowledge}>
               <CheckCircle className="h-4 w-4 mr-2" />
               Acknowledge
             </Button>
           )}
-          {(alarm.status === 'active' || alarm.status === 'acknowledged') && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleClear}
-            >
+          {(alarm.status === "active" || alarm.status === "acknowledged") && (
+            <Button size="sm" variant="outline" onClick={handleClear}>
               <X className="h-4 w-4 mr-2" />
               Clear
             </Button>
           )}
           {!alarm.ticket_id && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleCreateTicket}
-            >
+            <Button size="sm" variant="outline" onClick={handleCreateTicket}>
               <FileText className="h-4 w-4 mr-2" />
               Create Ticket
             </Button>
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={fetchAlarmDetails}
-          >
+          <Button size="sm" variant="outline" onClick={fetchAlarmDetails}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
@@ -383,7 +344,11 @@ export function AlarmDetailModal({
         <Separator />
 
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex-1 flex flex-col overflow-hidden"
+        >
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="details">Details</TabsTrigger>
             <TabsTrigger value="history">
@@ -416,7 +381,7 @@ export function AlarmDetailModal({
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm font-medium">
-                      {format(new Date(alarm.first_occurrence), 'PPp')}
+                      {format(new Date(alarm.first_occurrence), "PPp")}
                     </div>
                   </CardContent>
                 </Card>
@@ -426,7 +391,7 @@ export function AlarmDetailModal({
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm font-medium">
-                      {format(new Date(alarm.last_occurrence), 'PPp')}
+                      {format(new Date(alarm.last_occurrence), "PPp")}
                     </div>
                   </CardContent>
                 </Card>
@@ -445,9 +410,7 @@ export function AlarmDetailModal({
                     <CardDescription>Occurrences</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-sm font-medium">
-                      {alarm.occurrence_count}
-                    </div>
+                    <div className="text-sm font-medium">{alarm.occurrence_count}</div>
                   </CardContent>
                 </Card>
               </div>
@@ -467,9 +430,7 @@ export function AlarmDetailModal({
                   {alarm.message && (
                     <div>
                       <Label className="text-xs text-muted-foreground">Message</Label>
-                      <p className="text-sm mt-1 font-mono bg-muted p-2 rounded">
-                        {alarm.message}
-                      </p>
+                      <p className="text-sm mt-1 font-mono bg-muted p-2 rounded">{alarm.message}</p>
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-4">
@@ -607,24 +568,28 @@ export function AlarmDetailModal({
                             <div className="flex items-center justify-between">
                               <p className="text-sm font-medium">{entry.action}</p>
                               <p className="text-xs text-muted-foreground">
-                                {format(new Date(entry.timestamp), 'PPp')}
+                                {format(new Date(entry.timestamp), "PPp")}
                               </p>
                             </div>
                             {entry.details && (
                               <p className="text-sm text-muted-foreground">{entry.details}</p>
                             )}
                             {entry.user && (
-                              <p className="text-xs text-muted-foreground">
-                                by {entry.user}
-                              </p>
+                              <p className="text-xs text-muted-foreground">by {entry.user}</p>
                             )}
                             {entry.previous_status && entry.new_status && (
                               <div className="flex items-center gap-2 mt-2">
-                                <Badge variant="outline" className={getStatusColor(entry.previous_status)}>
+                                <Badge
+                                  variant="outline"
+                                  className={getStatusColor(entry.previous_status)}
+                                >
                                   {entry.previous_status}
                                 </Badge>
                                 <span className="text-muted-foreground">→</span>
-                                <Badge variant="outline" className={getStatusColor(entry.new_status)}>
+                                <Badge
+                                  variant="outline"
+                                  className={getStatusColor(entry.new_status)}
+                                >
                                   {entry.new_status}
                                 </Badge>
                               </div>
@@ -658,7 +623,7 @@ export function AlarmDetailModal({
                     size="sm"
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {isSavingNote ? 'Saving...' : 'Add Note'}
+                    {isSavingNote ? "Saving..." : "Add Note"}
                   </Button>
                 </CardContent>
               </Card>
@@ -683,7 +648,7 @@ export function AlarmDetailModal({
                               <p className="text-sm font-medium">{note.user_name}</p>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                              {format(new Date(note.created_at), 'PPp')}
+                              {format(new Date(note.created_at), "PPp")}
                             </p>
                           </div>
                           <p className="text-sm whitespace-pre-wrap">{note.content}</p>
@@ -753,9 +718,7 @@ export function AlarmDetailModal({
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base">Correlated Alarms</CardTitle>
-                    <CardDescription>
-                      Correlation ID: {alarm.correlation_id}
-                    </CardDescription>
+                    <CardDescription>Correlation ID: {alarm.correlation_id}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-muted-foreground text-center py-4">

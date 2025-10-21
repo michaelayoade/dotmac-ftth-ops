@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import Link from "next/link";
@@ -14,7 +14,8 @@ export default function TenantSupportPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-bold text-foreground">Support & Resources</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Access help articles, raise support tickets, and view recent status updates for the DotMac platform.
+          Access help articles, raise support tickets, and view recent status updates for the DotMac
+          platform.
         </p>
       </header>
 
@@ -23,7 +24,11 @@ export default function TenantSupportPage() {
           title="Raise a ticket"
           description="Reach the DotMac support team with prioritized response SLAs."
           icon={LifeBuoy}
-          action={<Button asChild><Link href="/support">Open support portal</Link></Button>}
+          action={
+            <Button asChild>
+              <Link href="/support">Open support portal</Link>
+            </Button>
+          }
         />
         <SupportCard
           title="Contact success"
@@ -61,10 +66,12 @@ export default function TenantSupportPage() {
         </CardHeader>
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <p>
-            • <span className="font-medium text-foreground">May 18</span> – Billing engine scaling event resolved within 8 minutes.
+            • <span className="font-medium text-foreground">May 18</span> – Billing engine scaling
+            event resolved within 8 minutes.
           </p>
           <p>
-            • <span className="font-medium text-foreground">May 11</span> – Planned infrastructure maintenance completed with no downtime.
+            • <span className="font-medium text-foreground">May 11</span> – Planned infrastructure
+            maintenance completed with no downtime.
           </p>
         </CardContent>
       </Card>

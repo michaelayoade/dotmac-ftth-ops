@@ -21,8 +21,8 @@ State is organized by "context" - typically the component or page name. This ens
 
 ```typescript
 // Each component gets its own state context
-const tableState = useDataTable('customer-management');
-const filtersState = useFilters('invoice-list');
+const tableState = useDataTable("customer-management");
+const filtersState = useFilters("invoice-list");
 ```
 
 ### State Categories
@@ -40,10 +40,10 @@ const filtersState = useFilters('invoice-list');
 
 ```typescript
 // Old approach - lots of boilerplate
-const [searchTerm, setSearchTerm] = useState('');
-const [statusFilter, setStatusFilter] = useState('all');
-const [sortBy, setSortBy] = useState('name');
-const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+const [searchTerm, setSearchTerm] = useState("");
+const [statusFilter, setStatusFilter] = useState("all");
+const [sortBy, setSortBy] = useState("name");
+const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 const [currentPage, setCurrentPage] = useState(1);
 const [itemsPerPage, setItemsPerPage] = useState(25);
 const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
@@ -55,7 +55,7 @@ const [error, setError] = useState<string | null>(null);
 
 ```typescript
 // New approach - single hook with all common patterns
-const { filters, pagination, selection, loading } = useDataTable<Customer>('customer-management');
+const { filters, pagination, selection, loading } = useDataTable<Customer>("customer-management");
 
 // All the previous functionality is now available through the returned objects:
 // filters.searchTerm, filters.setSearch(), etc.
@@ -71,7 +71,7 @@ const { filters, pagination, selection, loading } = useDataTable<Customer>('cust
 Handles all filtering and sorting logic:
 
 ```typescript
-const filters = useFilters('customer-list');
+const filters = useFilters("customer-list");
 
 // Available properties and methods:
 filters.searchTerm; // Current search term
@@ -82,10 +82,10 @@ filters.dateRange; // { start: Date | null, end: Date | null }
 filters.hasActiveFilters; // boolean
 
 // Methods:
-filters.setSearch('term');
-filters.setStatus('active');
-filters.setSort('name', 'desc');
-filters.toggleSort('name');
+filters.setSearch("term");
+filters.setStatus("active");
+filters.setSort("name", "desc");
+filters.toggleSort("name");
 filters.setRange(startDate, endDate);
 filters.resetFilter();
 ```
@@ -95,7 +95,7 @@ filters.resetFilter();
 Manages pagination state:
 
 ```typescript
-const pagination = usePagination('invoice-list');
+const pagination = usePagination("invoice-list");
 
 // Properties:
 pagination.currentPage; // Current page number
@@ -120,7 +120,7 @@ pagination.setTotal(1250);
 Handles multi-selection patterns:
 
 ```typescript
-const selection = useSelection<Customer>('customer-table');
+const selection = useSelection<Customer>("customer-table");
 
 // Properties:
 selection.selectedItems; // Array of selected items
@@ -141,7 +141,7 @@ selection.isSelected(customer);
 Manages loading and error states:
 
 ```typescript
-const loading = useLoading('customer-api');
+const loading = useLoading("customer-api");
 
 // Properties:
 loading.isLoading; // Current loading state
@@ -149,9 +149,9 @@ loading.error; // Error message or null
 loading.lastUpdated; // Last successful update timestamp
 
 // Methods:
-loading.startLoading('operation-id');
+loading.startLoading("operation-id");
 loading.stopLoading();
-loading.setError('Error message');
+loading.setError("Error message");
 loading.clearError();
 ```
 
@@ -163,9 +163,9 @@ Global notification system:
 const { addSuccess, addError, addWarning, notifications } = useNotifications();
 
 // Add notifications
-addSuccess('Customer updated successfully');
-addError('Failed to save customer');
-addWarning('Customer email not verified');
+addSuccess("Customer updated successfully");
+addError("Failed to save customer");
+addWarning("Customer email not verified");
 
 // Access active notifications
 notifications.forEach((notification) => {
@@ -179,9 +179,9 @@ notifications.forEach((notification) => {
 
 ```typescript
 export function CustomerManagement() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('name');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("name");
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -208,7 +208,7 @@ export function CustomerManagement() {
 
 ```typescript
 export function CustomerManagement() {
-  const { filters, pagination, selection, loading } = useDataTable<Customer>('customer-management');
+  const { filters, pagination, selection, loading } = useDataTable<Customer>("customer-management");
   const { addSuccess, addError } = useNotifications();
 
   // All state management is now handled by the consolidated hooks
@@ -224,10 +224,10 @@ export function CustomerManagement() {
     try {
       await customerApi.update(customer);
       loading.stopLoading();
-      addSuccess('Customer updated successfully');
+      addSuccess("Customer updated successfully");
     } catch (error) {
       loading.setError(error.message);
-      addError('Failed to update customer');
+      addError("Failed to update customer");
     }
   };
 
@@ -240,12 +240,12 @@ export function CustomerManagement() {
 ### Form State with Error Handling
 
 ```typescript
-const formState = useFormState('customer-form');
+const formState = useFormState("customer-form");
 
 const handleSubmit = () => {
   formState.handleSubmit(() => api.saveCustomer(formData), {
-    successMessage: 'Customer saved successfully',
-    errorMessage: 'Failed to save customer',
+    successMessage: "Customer saved successfully",
+    errorMessage: "Failed to save customer",
   });
 };
 ```
@@ -254,22 +254,22 @@ const handleSubmit = () => {
 
 ```typescript
 // Different contexts for different data tables on the same page
-const customerTable = useDataTable('page-customers');
-const invoiceTable = useDataTable('page-invoices');
-const activityTable = useDataTable('page-activity');
+const customerTable = useDataTable("page-customers");
+const invoiceTable = useDataTable("page-invoices");
+const activityTable = useDataTable("page-activity");
 ```
 
 ### Custom Filter Extensions
 
 ```typescript
-const filters = useFilters('customer-advanced');
+const filters = useFilters("customer-advanced");
 
 // Add custom filters using the customFilters object
 filters.updateFilter({
   customFilters: {
     ...filters.customFilters,
-    region: 'north',
-    planType: 'premium',
+    region: "north",
+    planType: "premium",
   },
 });
 ```
@@ -288,9 +288,9 @@ filters.updateFilter({
 All hooks are fully typed. For selection hooks, specify the item type:
 
 ```typescript
-const selection = useSelection<Customer>('customer-table');
-const filters = useFilters('customer-list'); // FilterState is inferred
-const pagination = usePagination('customer-list'); // PaginationState is inferred
+const selection = useSelection<Customer>("customer-table");
+const filters = useFilters("customer-list"); // FilterState is inferred
+const pagination = usePagination("customer-list"); // PaginationState is inferred
 ```
 
 ## Performance Considerations

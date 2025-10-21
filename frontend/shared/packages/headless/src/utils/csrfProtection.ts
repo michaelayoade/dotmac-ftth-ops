@@ -2,8 +2,8 @@
  * CSRF (Cross-Site Request Forgery) protection utilities
  */
 
-import { secureStorage } from './secureStorage';
-import { tokenManager } from './tokenManager';
+import { secureStorage } from "./secureStorage";
+import { tokenManager } from "./tokenManager";
 
 export interface CSRFConfig {
   headerName: string;
@@ -14,10 +14,10 @@ export interface CSRFConfig {
 
 class CSRFProtection {
   private readonly config: CSRFConfig = {
-    headerName: 'X-CSRF-Token',
-    tokenName: 'csrf_token',
-    cookieName: '__dotmac_csrf',
-    enabledMethods: ['POST', 'PUT', 'PATCH', 'DELETE'],
+    headerName: "X-CSRF-Token",
+    tokenName: "csrf_token",
+    cookieName: "__dotmac_csrf",
+    enabledMethods: ["POST", "PUT", "PATCH", "DELETE"],
   };
 
   /**
@@ -31,9 +31,9 @@ class CSRFProtection {
 
       // Convert to base64url
       return btoa(String.fromCharCode(...array))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=/g, "");
     } catch (_error) {
       return this.generateFallbackToken();
     }
@@ -43,8 +43,8 @@ class CSRFProtection {
    * Fallback token generation for older browsers
    */
   private generateFallbackToken(): string {
-    let token = '';
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    let token = "";
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
     for (let i = 0; i < 43; i++) {
       token += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -61,7 +61,7 @@ class CSRFProtection {
       // Store in secure storage
       secureStorage.setItem(this.config.tokenName, token, {
         secure: true,
-        sameSite: 'strict',
+        sameSite: "strict",
         maxAge: 60 * 60, // 1 hour
       });
     } catch (_error) {
@@ -102,7 +102,7 @@ class CSRFProtection {
 
       return token;
     } catch (_error) {
-      throw new Error('CSRF initialization failed');
+      throw new Error("CSRF initialization failed");
     }
   }
 
@@ -196,7 +196,7 @@ class CSRFProtection {
       this.storeToken(newToken);
       return newToken;
     } catch (_error) {
-      throw new Error('CSRF token rotation failed');
+      throw new Error("CSRF token rotation failed");
     }
   }
 

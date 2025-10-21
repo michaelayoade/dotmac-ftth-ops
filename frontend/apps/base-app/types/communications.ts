@@ -11,48 +11,48 @@
  * Communication channel types
  */
 export enum CommunicationChannel {
-  EMAIL = 'email',
-  SMS = 'sms',
-  PUSH = 'push',
-  IN_APP = 'in_app',
+  EMAIL = "email",
+  SMS = "sms",
+  PUSH = "push",
+  IN_APP = "in_app",
 }
 
 /**
  * Communication status
  */
 export enum CommunicationStatus {
-  PENDING = 'pending',
-  QUEUED = 'queued',
-  SENDING = 'sending',
-  SENT = 'sent',
-  DELIVERED = 'delivered',
-  FAILED = 'failed',
-  BOUNCED = 'bounced',
-  OPENED = 'opened',
-  CLICKED = 'clicked',
+  PENDING = "pending",
+  QUEUED = "queued",
+  SENDING = "sending",
+  SENT = "sent",
+  DELIVERED = "delivered",
+  FAILED = "failed",
+  BOUNCED = "bounced",
+  OPENED = "opened",
+  CLICKED = "clicked",
 }
 
 /**
  * Template variable types
  */
 export enum TemplateVariableType {
-  STRING = 'string',
-  NUMBER = 'number',
-  BOOLEAN = 'boolean',
-  DATE = 'date',
-  URL = 'url',
-  EMAIL = 'email',
+  STRING = "string",
+  NUMBER = "number",
+  BOOLEAN = "boolean",
+  DATE = "date",
+  URL = "url",
+  EMAIL = "email",
 }
 
 /**
  * Bulk operation status
  */
 export enum BulkOperationStatus {
-  PENDING = 'pending',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
+  PENDING = "pending",
+  PROCESSING = "processing",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  CANCELLED = "cancelled",
 }
 
 // ==================== Base Types ====================
@@ -307,7 +307,7 @@ export interface BulkOperationStatusResponse {
  */
 export interface TaskStatusResponse {
   task_id: string;
-  status: 'pending' | 'started' | 'success' | 'failure' | 'retry' | 'revoked';
+  status: "pending" | "started" | "success" | "failure" | "retry" | "revoked";
   result?: any;
   error?: string;
   progress?: {
@@ -405,8 +405,8 @@ export interface ListCommunicationsParams {
   date_to?: string;
   page?: number;
   page_size?: number;
-  sort_by?: 'created_at' | 'sent_at' | 'status';
-  sort_order?: 'asc' | 'desc';
+  sort_by?: "created_at" | "sent_at" | "status";
+  sort_order?: "asc" | "desc";
 }
 
 /**
@@ -446,19 +446,19 @@ export function getStatusColor(status: CommunicationStatus): string {
   switch (status) {
     case CommunicationStatus.SENT:
     case CommunicationStatus.DELIVERED:
-      return 'text-green-600 bg-green-100';
+      return "text-green-600 bg-green-100";
     case CommunicationStatus.OPENED:
     case CommunicationStatus.CLICKED:
-      return 'text-blue-600 bg-blue-100';
+      return "text-blue-600 bg-blue-100";
     case CommunicationStatus.PENDING:
     case CommunicationStatus.QUEUED:
     case CommunicationStatus.SENDING:
-      return 'text-yellow-600 bg-yellow-100';
+      return "text-yellow-600 bg-yellow-100";
     case CommunicationStatus.FAILED:
     case CommunicationStatus.BOUNCED:
-      return 'text-red-600 bg-red-100';
+      return "text-red-600 bg-red-100";
     default:
-      return 'text-gray-600 bg-gray-100';
+      return "text-gray-600 bg-gray-100";
   }
 }
 
@@ -467,9 +467,9 @@ export function getStatusColor(status: CommunicationStatus): string {
  */
 export function getStatusLabel(status: CommunicationStatus): string {
   return status
-    .split('_')
+    .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .join(" ");
 }
 
 /**
@@ -478,15 +478,15 @@ export function getStatusLabel(status: CommunicationStatus): string {
 export function getChannelIcon(channel: CommunicationChannel): string {
   switch (channel) {
     case CommunicationChannel.EMAIL:
-      return 'mail';
+      return "mail";
     case CommunicationChannel.SMS:
-      return 'message-square';
+      return "message-square";
     case CommunicationChannel.PUSH:
-      return 'bell';
+      return "bell";
     case CommunicationChannel.IN_APP:
-      return 'inbox';
+      return "inbox";
     default:
-      return 'send';
+      return "send";
   }
 }
 
@@ -510,7 +510,7 @@ export function isValidEmail(email: string): boolean {
  */
 export function parseEmails(input: string): EmailRecipient[] {
   return input
-    .split(',')
+    .split(",")
     .map((email) => email.trim())
     .filter((email) => email.length > 0 && isValidEmail(email))
     .map((email) => ({ email }));
@@ -527,10 +527,10 @@ export function getTimeAgo(dateString: string): string {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
   return date.toLocaleDateString();
 }
 
@@ -556,7 +556,7 @@ export function extractTemplateVariables(template: string): string[] {
  */
 export function validateTemplateVariables(
   template: string,
-  providedVariables: Record<string, any>
+  providedVariables: Record<string, any>,
 ): { valid: boolean; missing: string[] } {
   const required = extractTemplateVariables(template);
   const provided = Object.keys(providedVariables);
@@ -574,14 +574,14 @@ export function validateTemplateVariables(
 export function getBulkProgressColor(status: BulkOperationStatus): string {
   switch (status) {
     case BulkOperationStatus.COMPLETED:
-      return 'bg-green-500';
+      return "bg-green-500";
     case BulkOperationStatus.PROCESSING:
-      return 'bg-blue-500';
+      return "bg-blue-500";
     case BulkOperationStatus.FAILED:
     case BulkOperationStatus.CANCELLED:
-      return 'bg-red-500';
+      return "bg-red-500";
     default:
-      return 'bg-gray-500';
+      return "bg-gray-500";
   }
 }
 

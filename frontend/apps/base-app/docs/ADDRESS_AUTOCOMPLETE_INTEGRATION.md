@@ -125,16 +125,16 @@ The `AddressComponents` interface provides:
 
 ```typescript
 interface AddressComponents {
-  streetNumber?: string;          // "123"
-  route?: string;                  // "Main Street"
-  locality?: string;               // "San Francisco" (city)
+  streetNumber?: string; // "123"
+  route?: string; // "Main Street"
+  locality?: string; // "San Francisco" (city)
   administrativeAreaLevel1?: string; // "CA" (state/province - short name)
   administrativeAreaLevel2?: string; // "San Francisco County" (county)
-  country?: string;                // "United States"
-  postalCode?: string;             // "94102"
-  formattedAddress?: string;       // "123 Main St, San Francisco, CA 94102, USA"
-  latitude?: number;               // 37.7749
-  longitude?: number;              // -122.4194
+  country?: string; // "United States"
+  postalCode?: string; // "94102"
+  formattedAddress?: string; // "123 Main St, San Francisco, CA 94102, USA"
+  latitude?: number; // 37.7749
+  longitude?: number; // -122.4194
 }
 ```
 
@@ -142,7 +142,7 @@ interface AddressComponents {
 
 ```typescript
 interface AddressAutocompleteProps {
-  value?: string;                  // Current address value
+  value?: string; // Current address value
   onChange?: (address: string, components?: AddressComponents) => void;
   onSelect?: (address: string, components: AddressComponents) => void;
   placeholder?: string;
@@ -150,7 +150,7 @@ interface AddressAutocompleteProps {
   required?: boolean;
   disabled?: boolean;
   className?: string;
-  apiKey?: string;                 // Optional: override environment variable
+  apiKey?: string; // Optional: override environment variable
 }
 ```
 
@@ -172,6 +172,7 @@ interface AddressAutocompleteProps {
 ### Graceful Degradation
 
 If Google Maps API key is not configured:
+
 - Component still renders as a normal input
 - Shows helpful message: "Manual address entry (Google Maps API key not configured)"
 - All form functionality works normally
@@ -179,6 +180,7 @@ If Google Maps API key is not configured:
 ## Testing Without API Key
 
 The component works perfectly fine without an API key - it simply becomes a regular text input. This is useful for:
+
 - Local development without API key
 - Testing in environments without API access
 - Providing fallback for production if API quota exceeded
@@ -186,12 +188,14 @@ The component works perfectly fine without an API key - it simply becomes a regu
 ## Cost Considerations
 
 Google Places Autocomplete pricing (as of 2024):
+
 - **Autocomplete - Per Session**: $2.83 per 1000 requests
 - **Geocoding**: $5.00 per 1000 requests
 
 A "session" is one complete address selection (all keystrokes + final selection count as 1 session).
 
 **Budget-friendly tips:**
+
 - Use session-based pricing (default in this component)
 - Implement debouncing (add if needed)
 - Set up billing alerts in Google Cloud Console
@@ -202,8 +206,12 @@ A "session" is one complete address selection (all keystrokes + final selection 
 ### Migrating CreateLeadModal
 
 1. Import the component:
+
 ```typescript
-import { AddressAutocomplete, type AddressComponents } from "@/components/forms/AddressAutocomplete";
+import {
+  AddressAutocomplete,
+  type AddressComponents,
+} from "@/components/forms/AddressAutocomplete";
 ```
 
 2. Replace manual address line 1 input with AddressAutocomplete
@@ -222,6 +230,7 @@ Same process as CreateLeadModal - replace service_address field with AddressAuto
 
 **Cause**: Google Maps script failed to load
 **Solutions**:
+
 - Check API key is valid
 - Verify Places API is enabled
 - Check browser console for errors
@@ -231,6 +240,7 @@ Same process as CreateLeadModal - replace service_address field with AddressAuto
 
 **Cause**: API request failed or no results
 **Solutions**:
+
 - Open browser network tab and check for 403/400 errors
 - Verify API key has Places API enabled
 - Check API key restrictions
@@ -240,6 +250,7 @@ Same process as CreateLeadModal - replace service_address field with AddressAuto
 
 **Cause**: API key HTTP referrer restrictions don't match your domain
 **Solutions**:
+
 - Add your domain to API key restrictions in Google Cloud Console
 - For development: Add `localhost:3000/*`
 - For production: Add `yourdomain.com/*`
@@ -259,13 +270,13 @@ Same process as CreateLeadModal - replace service_address field with AddressAuto
 ### Debouncing for Cost Optimization
 
 ```typescript
-import { useDebouncedCallback } from 'use-debounce';
+import { useDebouncedCallback } from "use-debounce";
 
 const debouncedOnChange = useDebouncedCallback(
   (value) => {
     // Fetch suggestions
   },
-  300 // Wait 300ms after user stops typing
+  300, // Wait 300ms after user stops typing
 );
 ```
 
@@ -287,6 +298,7 @@ autocompleteService.current!.getPlacePredictions(
 ## Future Enhancements
 
 Potential improvements:
+
 - [ ] Built-in debouncing
 - [ ] Country/region filtering via props
 - [ ] Support for business/establishment addresses

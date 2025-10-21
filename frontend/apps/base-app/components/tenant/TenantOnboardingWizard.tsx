@@ -21,16 +21,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { useTenantOnboarding, useSlugGeneration, usePasswordGeneration } from "@/hooks/useTenantOnboarding";
+import {
+  useTenantOnboarding,
+  useSlugGeneration,
+  usePasswordGeneration,
+} from "@/hooks/useTenantOnboarding";
 import {
   Building2,
   User,
@@ -388,9 +386,7 @@ export function TenantOnboardingWizard({
             <Building2 className="h-5 w-5" />
             Tenant Onboarding Wizard
           </DialogTitle>
-          <DialogDescription>
-            Create and configure a new tenant in your platform
-          </DialogDescription>
+          <DialogDescription>Create and configure a new tenant in your platform</DialogDescription>
         </DialogHeader>
 
         {/* Progress Indicator */}
@@ -402,10 +398,11 @@ export function TenantOnboardingWizard({
                   className={`flex items-center justify-center w-8 h-8 rounded-full ${
                     currentStep === step
                       ? "bg-primary text-primary-foreground"
-                      : ["tenant", "admin", "config", "invitations", "review"].indexOf(currentStep) >
-                        index
-                      ? "bg-green-500 text-white"
-                      : "bg-muted text-muted-foreground"
+                      : ["tenant", "admin", "config", "invitations", "review"].indexOf(
+                            currentStep,
+                          ) > index
+                        ? "bg-green-500 text-white"
+                        : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {["tenant", "admin", "config", "invitations", "review"].indexOf(currentStep) >
@@ -817,11 +814,7 @@ export function TenantOnboardingWizard({
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => removeInvitation(index)}
-                    >
+                    <Button variant="outline" size="icon" onClick={() => removeInvitation(index)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -841,7 +834,9 @@ export function TenantOnboardingWizard({
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Review & Options</CardTitle>
-                <CardDescription>Review your configuration and set onboarding options</CardDescription>
+                <CardDescription>
+                  Review your configuration and set onboarding options
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="bg-muted p-4 rounded-lg space-y-2">
@@ -897,9 +892,7 @@ export function TenantOnboardingWizard({
                         </div>
                       ))}
                       {invitations.length > 3 && (
-                        <div className="text-muted-foreground">
-                          + {invitations.length - 3} more
-                        </div>
+                        <div className="text-muted-foreground">+ {invitations.length - 3} more</div>
                       )}
                     </div>
                   </div>

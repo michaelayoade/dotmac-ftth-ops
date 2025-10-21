@@ -4,8 +4,8 @@
  * Provides hooks for all 24 API endpoints with proper type safety.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
 import type {
   ListPeersParams,
   ListServersParams,
@@ -25,34 +25,33 @@ import type {
   WireGuardServiceProvisionResponse,
   WireGuardSyncStatsRequest,
   WireGuardSyncStatsResponse,
-} from '../types/wireguard';
+} from "../types/wireguard";
 
-const API_BASE = '/wireguard';
+const API_BASE = "/wireguard";
 
 // ============================================================================
 // Query Keys
 // ============================================================================
 
-const baseKey = ['wireguard'] as const;
+const baseKey = ["wireguard"] as const;
 
 export const wireGuardKeys = {
   all: baseKey,
   servers: {
-    all: [...baseKey, 'servers'] as const,
-    lists: () => [...baseKey, 'servers', 'list'] as const,
-    list: (params: ListServersParams) =>
-      [...baseKey, 'servers', 'list', params] as const,
-    detail: (id: string) => [...baseKey, 'servers', 'detail', id] as const,
-    health: (id: string) => [...baseKey, 'servers', 'health', id] as const,
+    all: [...baseKey, "servers"] as const,
+    lists: () => [...baseKey, "servers", "list"] as const,
+    list: (params: ListServersParams) => [...baseKey, "servers", "list", params] as const,
+    detail: (id: string) => [...baseKey, "servers", "detail", id] as const,
+    health: (id: string) => [...baseKey, "servers", "health", id] as const,
   },
   peers: {
-    all: [...baseKey, 'peers'] as const,
-    lists: () => [...baseKey, 'peers', 'list'] as const,
-    list: (params: ListPeersParams) => [...baseKey, 'peers', 'list', params] as const,
-    detail: (id: string) => [...baseKey, 'peers', 'detail', id] as const,
-    config: (id: string) => [...baseKey, 'peers', 'config', id] as const,
+    all: [...baseKey, "peers"] as const,
+    lists: () => [...baseKey, "peers", "list"] as const,
+    list: (params: ListPeersParams) => [...baseKey, "peers", "list", params] as const,
+    detail: (id: string) => [...baseKey, "peers", "detail", id] as const,
+    config: (id: string) => [...baseKey, "peers", "config", id] as const,
   },
-  dashboard: () => [...baseKey, 'dashboard'] as const,
+  dashboard: () => [...baseKey, "dashboard"] as const,
 };
 
 // ============================================================================
@@ -67,10 +66,10 @@ export function useWireGuardServers(params: ListServersParams = {}) {
     queryKey: wireGuardKeys.servers.list(params),
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.status) searchParams.append('status', params.status);
-      if (params.location) searchParams.append('location', params.location);
-      if (params.limit) searchParams.append('limit', String(params.limit));
-      if (params.offset) searchParams.append('offset', String(params.offset));
+      if (params.status) searchParams.append("status", params.status);
+      if (params.location) searchParams.append("location", params.location);
+      if (params.limit) searchParams.append("limit", String(params.limit));
+      if (params.offset) searchParams.append("offset", String(params.offset));
 
       const url = `${API_BASE}/servers?${searchParams.toString()}`;
       const response = await apiClient.get<WireGuardServer[]>(url);
@@ -87,9 +86,7 @@ export function useWireGuardServer(serverId: string | undefined) {
   return useQuery({
     queryKey: wireGuardKeys.servers.detail(serverId!),
     queryFn: async () => {
-      const response = await apiClient.get<WireGuardServer>(
-        `${API_BASE}/servers/${serverId}`
-      );
+      const response = await apiClient.get<WireGuardServer>(`${API_BASE}/servers/${serverId}`);
       return response.data;
     },
     enabled: !!serverId,
@@ -101,13 +98,11 @@ export function useWireGuardServer(serverId: string | undefined) {
  * Get server health status
  */
 export function useServerHealth(serverId: string | undefined) {
-  
-
   return useQuery({
     queryKey: wireGuardKeys.servers.health(serverId!),
     queryFn: async () => {
       const response = await apiClient.get<WireGuardServerHealthResponse>(
-        `${API_BASE}/servers/${serverId}/health`
+        `${API_BASE}/servers/${serverId}/health`,
       );
       return response.data;
     },
@@ -121,19 +116,17 @@ export function useServerHealth(serverId: string | undefined) {
  * Create a new WireGuard server
  */
 export function useCreateWireGuardServer() {
-  
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: WireGuardServerCreate) => {
-      const response = await apiClient.post<WireGuardServer>(
-        `${API_BASE}/servers`,
-        data
-      );
+      const response = await apiClient.post<WireGuardServer>(`${API_BASE}/servers`, data);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: wireGuardKeys.servers.lists() });
+      queryClient.invalidateQueries({
+        queryKey: wireGuardKeys.servers.lists(),
+      });
       queryClient.invalidateQueries({ queryKey: wireGuardKeys.dashboard() });
     },
   });
@@ -143,20 +136,13 @@ export function useCreateWireGuardServer() {
  * Update a WireGuard server
  */
 export function useUpdateWireGuardServer() {
-  
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      serverId,
-      data,
-    }: {
-      serverId: string;
-      data: WireGuardServerUpdate;
-    }) => {
+    mutationFn: async ({ serverId, data }: { serverId: string; data: WireGuardServerUpdate }) => {
       const response = await apiClient.patch<WireGuardServer>(
         `${API_BASE}/servers/${serverId}`,
-        data
+        data,
       );
       return response.data;
     },
@@ -164,7 +150,9 @@ export function useUpdateWireGuardServer() {
       queryClient.invalidateQueries({
         queryKey: wireGuardKeys.servers.detail(variables.serverId),
       });
-      queryClient.invalidateQueries({ queryKey: wireGuardKeys.servers.lists() });
+      queryClient.invalidateQueries({
+        queryKey: wireGuardKeys.servers.lists(),
+      });
       queryClient.invalidateQueries({ queryKey: wireGuardKeys.dashboard() });
     },
   });
@@ -174,7 +162,6 @@ export function useUpdateWireGuardServer() {
  * Delete a WireGuard server (soft delete)
  */
 export function useDeleteWireGuardServer() {
-  
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -183,7 +170,9 @@ export function useDeleteWireGuardServer() {
       return serverId;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: wireGuardKeys.servers.lists() });
+      queryClient.invalidateQueries({
+        queryKey: wireGuardKeys.servers.lists(),
+      });
       queryClient.invalidateQueries({ queryKey: wireGuardKeys.dashboard() });
     },
   });
@@ -197,19 +186,16 @@ export function useDeleteWireGuardServer() {
  * List WireGuard peers with optional filters
  */
 export function useWireGuardPeers(params: ListPeersParams = {}) {
-  
-
   return useQuery({
     queryKey: wireGuardKeys.peers.list(params),
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.server_id) searchParams.append('server_id', params.server_id);
-      if (params.customer_id) searchParams.append('customer_id', params.customer_id);
-      if (params.subscriber_id)
-        searchParams.append('subscriber_id', params.subscriber_id);
-      if (params.status) searchParams.append('status', params.status);
-      if (params.limit) searchParams.append('limit', String(params.limit));
-      if (params.offset) searchParams.append('offset', String(params.offset));
+      if (params.server_id) searchParams.append("server_id", params.server_id);
+      if (params.customer_id) searchParams.append("customer_id", params.customer_id);
+      if (params.subscriber_id) searchParams.append("subscriber_id", params.subscriber_id);
+      if (params.status) searchParams.append("status", params.status);
+      if (params.limit) searchParams.append("limit", String(params.limit));
+      if (params.offset) searchParams.append("offset", String(params.offset));
 
       const url = `${API_BASE}/peers?${searchParams.toString()}`;
       const response = await apiClient.get<WireGuardPeer[]>(url);
@@ -223,14 +209,10 @@ export function useWireGuardPeers(params: ListPeersParams = {}) {
  * Get a single WireGuard peer by ID
  */
 export function useWireGuardPeer(peerId: string | undefined) {
-  
-
   return useQuery({
     queryKey: wireGuardKeys.peers.detail(peerId!),
     queryFn: async () => {
-      const response = await apiClient.get<WireGuardPeer>(
-        `${API_BASE}/peers/${peerId}`
-      );
+      const response = await apiClient.get<WireGuardPeer>(`${API_BASE}/peers/${peerId}`);
       return response.data;
     },
     enabled: !!peerId,
@@ -242,13 +224,11 @@ export function useWireGuardPeer(peerId: string | undefined) {
  * Get peer configuration file
  */
 export function usePeerConfig(peerId: string | undefined, enabled: boolean = false) {
-  
-
   return useQuery({
     queryKey: wireGuardKeys.peers.config(peerId!),
     queryFn: async () => {
       const response = await apiClient.get<WireGuardPeerConfigResponse>(
-        `${API_BASE}/peers/${peerId}/config`
+        `${API_BASE}/peers/${peerId}/config`,
       );
       return response.data;
     },
@@ -261,7 +241,6 @@ export function usePeerConfig(peerId: string | undefined, enabled: boolean = fal
  * Create a new WireGuard peer
  */
 export function useCreateWireGuardPeer() {
-  
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -283,21 +262,11 @@ export function useCreateWireGuardPeer() {
  * Update a WireGuard peer
  */
 export function useUpdateWireGuardPeer() {
-  
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      peerId,
-      data,
-    }: {
-      peerId: string;
-      data: WireGuardPeerUpdate;
-    }) => {
-      const response = await apiClient.patch<WireGuardPeer>(
-        `${API_BASE}/peers/${peerId}`,
-        data
-      );
+    mutationFn: async ({ peerId, data }: { peerId: string; data: WireGuardPeerUpdate }) => {
+      const response = await apiClient.patch<WireGuardPeer>(`${API_BASE}/peers/${peerId}`, data);
       return response.data;
     },
     onSuccess: (data, variables) => {
@@ -317,7 +286,6 @@ export function useUpdateWireGuardPeer() {
  * Delete a WireGuard peer (soft delete)
  */
 export function useDeleteWireGuardPeer() {
-  
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -327,7 +295,9 @@ export function useDeleteWireGuardPeer() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: wireGuardKeys.peers.lists() });
-      queryClient.invalidateQueries({ queryKey: wireGuardKeys.servers.lists() });
+      queryClient.invalidateQueries({
+        queryKey: wireGuardKeys.servers.lists(),
+      });
       queryClient.invalidateQueries({ queryKey: wireGuardKeys.dashboard() });
     },
   });
@@ -337,19 +307,22 @@ export function useDeleteWireGuardPeer() {
  * Regenerate peer configuration (new keypair)
  */
 export function useRegeneratePeerConfig() {
-  
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (peerId: string) => {
       const response = await apiClient.post<WireGuardPeer>(
-        `${API_BASE}/peers/${peerId}/regenerate`
+        `${API_BASE}/peers/${peerId}/regenerate`,
       );
       return response.data;
     },
     onSuccess: (data, peerId) => {
-      queryClient.invalidateQueries({ queryKey: wireGuardKeys.peers.detail(peerId) });
-      queryClient.invalidateQueries({ queryKey: wireGuardKeys.peers.config(peerId) });
+      queryClient.invalidateQueries({
+        queryKey: wireGuardKeys.peers.detail(peerId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: wireGuardKeys.peers.config(peerId),
+      });
     },
   });
 }
@@ -362,14 +335,13 @@ export function useRegeneratePeerConfig() {
  * Create multiple peers in bulk
  */
 export function useCreateBulkPeers() {
-  
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: WireGuardBulkPeerCreateRequest) => {
       const response = await apiClient.post<WireGuardBulkPeerCreateResponse>(
         `${API_BASE}/peers/bulk`,
-        data
+        data,
       );
       return response.data;
     },
@@ -394,14 +366,13 @@ export function useCreateBulkPeers() {
  * Sync peer statistics from WireGuard container
  */
 export function useSyncPeerStats() {
-  
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: WireGuardSyncStatsRequest) => {
       const response = await apiClient.post<WireGuardSyncStatsResponse>(
         `${API_BASE}/stats/sync`,
-        data
+        data,
       );
       return response.data;
     },
@@ -420,13 +391,11 @@ export function useSyncPeerStats() {
  * Get dashboard statistics
  */
 export function useDashboardStats() {
-  
-
   return useQuery({
     queryKey: wireGuardKeys.dashboard(),
     queryFn: async () => {
       const response = await apiClient.get<WireGuardDashboardStatsResponse>(
-        `${API_BASE}/dashboard`
+        `${API_BASE}/dashboard`,
       );
       return response.data;
     },
@@ -443,20 +412,21 @@ export function useDashboardStats() {
  * Provision VPN service for a customer (one-click setup)
  */
 export function useProvisionVPNService() {
-  
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: WireGuardServiceProvisionRequest) => {
       const response = await apiClient.post<WireGuardServiceProvisionResponse>(
         `${API_BASE}/provision`,
-        data
+        data,
       );
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: wireGuardKeys.peers.lists() });
-      queryClient.invalidateQueries({ queryKey: wireGuardKeys.servers.lists() });
+      queryClient.invalidateQueries({
+        queryKey: wireGuardKeys.servers.lists(),
+      });
       queryClient.invalidateQueries({ queryKey: wireGuardKeys.dashboard() });
     },
   });
@@ -470,19 +440,17 @@ export function useProvisionVPNService() {
  * Download peer configuration file
  */
 export function useDownloadPeerConfig() {
-  
-
   return useMutation({
     mutationFn: async (peerId: string) => {
       const response = await apiClient.get<WireGuardPeerConfigResponse>(
-        `${API_BASE}/peers/${peerId}/config`
+        `${API_BASE}/peers/${peerId}/config`,
       );
       const config = response.data;
 
       // Create blob and download
-      const blob = new Blob([config.config_file], { type: 'text/plain' });
+      const blob = new Blob([config.config_file], { type: "text/plain" });
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = `${config.peer_name}.conf`;
       document.body.appendChild(link);
@@ -499,13 +467,11 @@ export function useDownloadPeerConfig() {
  * Get peer QR code (future implementation)
  */
 export function usePeerQRCode(peerId: string | undefined, enabled: boolean = false) {
-  
-
   return useQuery({
-    queryKey: [...wireGuardKeys.peers.all, 'qr-code', peerId],
+    queryKey: [...wireGuardKeys.peers.all, "qr-code", peerId],
     queryFn: async () => {
       const response = await apiClient.get<WireGuardPeerQRCodeResponse>(
-        `${API_BASE}/peers/${peerId}/qr-code`
+        `${API_BASE}/peers/${peerId}/qr-code`,
       );
       return response.data;
     },

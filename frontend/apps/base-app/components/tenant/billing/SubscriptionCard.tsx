@@ -1,13 +1,20 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { TenantSubscription } from '@/hooks/useTenantSubscription';
-import { formatCurrency } from '@/lib/utils';
-import { format } from 'date-fns';
+import React from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { TenantSubscription } from "@/hooks/useTenantSubscription";
+import { formatCurrency } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface SubscriptionCardProps {
   subscription: TenantSubscription;
@@ -17,11 +24,11 @@ interface SubscriptionCardProps {
 }
 
 const statusColors = {
-  active: 'bg-green-500/10 text-green-500 border-green-500/20',
-  trialing: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-  past_due: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
-  canceled: 'bg-red-500/10 text-red-500 border-red-500/20',
-  unpaid: 'bg-red-500/10 text-red-500 border-red-500/20',
+  active: "bg-green-500/10 text-green-500 border-green-500/20",
+  trialing: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  past_due: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
+  canceled: "bg-red-500/10 text-red-500 border-red-500/20",
+  unpaid: "bg-red-500/10 text-red-500 border-red-500/20",
 };
 
 export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
@@ -44,11 +51,13 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
           <div>
             <CardTitle>{subscription.plan_name}</CardTitle>
             <CardDescription>
-              {formatCurrency(subscription.price_amount, subscription.currency)} /{' '}
+              {formatCurrency(subscription.price_amount, subscription.currency)} /{" "}
               {subscription.billing_cycle}
             </CardDescription>
           </div>
-          <Badge className={statusColor}>{subscription.status.replace('_', ' ').toUpperCase()}</Badge>
+          <Badge className={statusColor}>
+            {subscription.status.replace("_", " ").toUpperCase()}
+          </Badge>
         </div>
       </CardHeader>
 
@@ -57,16 +66,16 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
         <div>
           <p className="text-sm font-medium text-muted-foreground mb-1">Current Period</p>
           <p className="text-sm">
-            {format(new Date(subscription.current_period_start), 'MMM d, yyyy')} -{' '}
-            {format(new Date(subscription.current_period_end), 'MMM d, yyyy')}
+            {format(new Date(subscription.current_period_start), "MMM d, yyyy")} -{" "}
+            {format(new Date(subscription.current_period_end), "MMM d, yyyy")}
           </p>
         </div>
 
         {/* Trial Period */}
-        {subscription.status === 'trialing' && subscription.trial_end && (
+        {subscription.status === "trialing" && subscription.trial_end && (
           <div>
             <p className="text-sm font-medium text-muted-foreground mb-1">Trial Ends</p>
-            <p className="text-sm">{format(new Date(subscription.trial_end), 'MMM d, yyyy')}</p>
+            <p className="text-sm">{format(new Date(subscription.trial_end), "MMM d, yyyy")}</p>
           </div>
         )}
 
@@ -74,8 +83,8 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
         {subscription.cancel_at_period_end && (
           <div className="rounded-md bg-yellow-500/10 border border-yellow-500/20 p-3">
             <p className="text-sm text-yellow-600 dark:text-yellow-500">
-              Your subscription will be canceled on{' '}
-              {format(new Date(subscription.current_period_end), 'MMM d, yyyy')}
+              Your subscription will be canceled on{" "}
+              {format(new Date(subscription.current_period_end), "MMM d, yyyy")}
             </p>
           </div>
         )}
@@ -98,7 +107,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
                   <Progress
                     value={calculateUsagePercentage(
                       subscription.usage.users.current,
-                      subscription.usage.users.limit
+                      subscription.usage.users.limit,
                     )}
                   />
                 )}
@@ -118,7 +127,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
                   <Progress
                     value={calculateUsagePercentage(
                       subscription.usage.storage.current,
-                      subscription.usage.storage.limit
+                      subscription.usage.storage.limit,
                     )}
                   />
                 )}
@@ -139,7 +148,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
                   <Progress
                     value={calculateUsagePercentage(
                       subscription.usage.api_calls.current,
-                      subscription.usage.api_calls.limit
+                      subscription.usage.api_calls.limit,
                     )}
                   />
                 )}
@@ -150,7 +159,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
       </CardContent>
 
       <CardFooter className="flex gap-2">
-        {subscription.status === 'active' && !subscription.cancel_at_period_end && (
+        {subscription.status === "active" && !subscription.cancel_at_period_end && (
           <>
             {onUpgrade && (
               <Button variant="default" onClick={onUpgrade} className="flex-1">
@@ -171,7 +180,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = ({
           </Button>
         )}
 
-        {subscription.status === 'past_due' && (
+        {subscription.status === "past_due" && (
           <Button variant="default" className="w-full">
             Update Payment Method
           </Button>

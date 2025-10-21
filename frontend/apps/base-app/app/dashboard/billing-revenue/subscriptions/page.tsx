@@ -1,17 +1,11 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -19,16 +13,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -36,9 +30,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
 import {
   CreditCard,
   Plus,
@@ -54,13 +48,13 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle,
-} from 'lucide-react';
-import { format } from 'date-fns';
+} from "lucide-react";
+import { format } from "date-fns";
 import {
   useSubscriptionListGraphQL,
   useSubscriptionMetricsGraphQL,
-} from '@/hooks/useSubscriptionsGraphQL';
-import { SubscriptionStatusEnum } from '@/lib/graphql/generated';
+} from "@/hooks/useSubscriptionsGraphQL";
+import { SubscriptionStatusEnum } from "@/lib/graphql/generated";
 
 interface Subscription {
   id: string;
@@ -68,10 +62,10 @@ interface Subscription {
   customer_email: string;
   plan_name: string;
   plan_id: string;
-  status: 'active' | 'paused' | 'cancelled' | 'past_due' | 'trialing';
+  status: "active" | "paused" | "cancelled" | "past_due" | "trialing";
   amount: number;
   currency: string;
-  billing_cycle: 'monthly' | 'quarterly' | 'annual';
+  billing_cycle: "monthly" | "quarterly" | "annual";
   current_period_start: string;
   current_period_end: string;
   trial_end?: string;
@@ -84,7 +78,7 @@ interface Subscription {
 
 export default function SubscriptionsPage() {
   const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<SubscriptionStatusEnum | undefined>(undefined);
   const [showNewSubscriptionDialog, setShowNewSubscriptionDialog] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
@@ -116,24 +110,25 @@ export default function SubscriptionsPage() {
   });
 
   // Transform GraphQL subscriptions data
-  const subscriptions: Subscription[] = graphqlSubscriptions.map(sub => ({
+  const subscriptions: Subscription[] = graphqlSubscriptions.map((sub) => ({
     id: sub.id,
-    customer_name: sub.customer?.name || 'Unknown Customer',
-    customer_email: sub.customer?.email || '',
-    plan_name: sub.plan?.name || 'Unknown Plan',
+    customer_name: sub.customer?.name || "Unknown Customer",
+    customer_email: sub.customer?.email || "",
+    plan_name: sub.plan?.name || "Unknown Plan",
     plan_id: sub.planId,
-    status: sub.status.toLowerCase() as Subscription['status'],
+    status: sub.status.toLowerCase() as Subscription["status"],
     amount: sub.plan?.price || 0,
-    currency: sub.plan?.currency || 'USD',
-    billing_cycle: (sub.plan?.billingCycle?.toLowerCase() as Subscription['billing_cycle']) || 'monthly',
+    currency: sub.plan?.currency || "USD",
+    billing_cycle:
+      (sub.plan?.billingCycle?.toLowerCase() as Subscription["billing_cycle"]) || "monthly",
     current_period_start: sub.currentPeriodStart,
     current_period_end: sub.currentPeriodEnd,
     trial_end: sub.trialEnd || undefined,
     cancel_at_period_end: false, // Would need to add this field to GraphQL schema
     created_at: sub.createdAt,
     next_billing_date: sub.currentPeriodEnd,
-    payment_method: 'Card on file',
-    mrr: sub.plan?.billingCycle?.toLowerCase() === 'monthly' ? (sub.plan?.price || 0) : 0,
+    payment_method: "Card on file",
+    mrr: sub.plan?.billingCycle?.toLowerCase() === "monthly" ? sub.plan?.price || 0 : 0,
   }));
 
   // Metrics from GraphQL
@@ -149,47 +144,57 @@ export default function SubscriptionsPage() {
     try {
       // API call would go here
       toast({
-        title: 'Success',
+        title: "Success",
         description: `Subscription ${subscription.id} has been paused`,
       });
       refetchSubscriptions();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to pause subscription',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to pause subscription",
+        variant: "destructive",
       });
     }
   };
 
   const handleCancelSubscription = async (subscription: Subscription) => {
-    if (!confirm(`Are you sure you want to cancel this subscription? This action cannot be undone.`)) {
+    if (
+      !confirm(`Are you sure you want to cancel this subscription? This action cannot be undone.`)
+    ) {
       return;
     }
 
     try {
       // API call would go here
       toast({
-        title: 'Success',
+        title: "Success",
         description: `Subscription ${subscription.id} will be cancelled at the end of the billing period`,
       });
       refetchSubscriptions();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to cancel subscription',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to cancel subscription",
+        variant: "destructive",
       });
     }
   };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      active: { label: 'Active', variant: 'default' as const, icon: CheckCircle },
-      paused: { label: 'Paused', variant: 'outline' as const, icon: Pause },
-      cancelled: { label: 'Cancelled', variant: 'secondary' as const, icon: X },
-      past_due: { label: 'Past Due', variant: 'destructive' as const, icon: AlertCircle },
-      trialing: { label: 'Trial', variant: 'default' as const, icon: Calendar },
+      active: {
+        label: "Active",
+        variant: "default" as const,
+        icon: CheckCircle,
+      },
+      paused: { label: "Paused", variant: "outline" as const, icon: Pause },
+      cancelled: { label: "Cancelled", variant: "secondary" as const, icon: X },
+      past_due: {
+        label: "Past Due",
+        variant: "destructive" as const,
+        icon: AlertCircle,
+      },
+      trialing: { label: "Trial", variant: "default" as const, icon: Calendar },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.active;
@@ -204,8 +209,8 @@ export default function SubscriptionsPage() {
   };
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency: currency,
     }).format(amount);
   };
@@ -240,7 +245,9 @@ export default function SubscriptionsPage() {
             <CardTitle className="text-sm font-medium">Active</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{metrics.active}</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              {metrics.active}
+            </div>
             <p className="text-xs text-muted-foreground">Currently active</p>
           </CardContent>
         </Card>
@@ -249,7 +256,7 @@ export default function SubscriptionsPage() {
             <CardTitle className="text-sm font-medium">MRR</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(metrics.mrr, 'USD')}</div>
+            <div className="text-2xl font-bold">{formatCurrency(metrics.mrr, "USD")}</div>
             <p className="text-xs text-muted-foreground">Monthly recurring</p>
           </CardContent>
         </Card>
@@ -258,7 +265,9 @@ export default function SubscriptionsPage() {
             <CardTitle className="text-sm font-medium">Churn Rate</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600 dark:text-red-400">{metrics.churnRate}%</div>
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+              {metrics.churnRate}%
+            </div>
             <p className="text-xs text-muted-foreground">Last 30 days</p>
           </CardContent>
         </Card>
@@ -292,8 +301,14 @@ export default function SubscriptionsPage() {
                 />
               </div>
               <select
-                value={statusFilter || 'all'}
-                onChange={(e) => setStatusFilter(e.target.value === 'all' ? undefined : e.target.value as SubscriptionStatusEnum)}
+                value={statusFilter || "all"}
+                onChange={(e) =>
+                  setStatusFilter(
+                    e.target.value === "all"
+                      ? undefined
+                      : (e.target.value as SubscriptionStatusEnum),
+                  )
+                }
                 className="h-10 w-[150px] rounded-md border border-border bg-card px-3 text-sm text-foreground"
               >
                 <option value="all">All Status</option>
@@ -344,7 +359,9 @@ export default function SubscriptionsPage() {
                     <TableCell>
                       <div>
                         <div className="font-medium">{subscription.customer_name}</div>
-                        <div className="text-sm text-muted-foreground">{subscription.customer_email}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {subscription.customer_email}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -366,16 +383,16 @@ export default function SubscriptionsPage() {
                     </TableCell>
                     <TableCell className="capitalize">{subscription.billing_cycle}</TableCell>
                     <TableCell>
-                      {subscription.status === 'trialing' && subscription.trial_end ? (
+                      {subscription.status === "trialing" && subscription.trial_end ? (
                         <div>
                           <div className="text-sm">Trial ends</div>
                           <div className="text-xs text-muted-foreground">
-                            {format(new Date(subscription.trial_end), 'MMM d, yyyy')}
+                            {format(new Date(subscription.trial_end), "MMM d, yyyy")}
                           </div>
                         </div>
                       ) : (
                         <div className="text-sm">
-                          {format(new Date(subscription.next_billing_date), 'MMM d, yyyy')}
+                          {format(new Date(subscription.next_billing_date), "MMM d, yyyy")}
                         </div>
                       )}
                     </TableCell>
@@ -397,7 +414,7 @@ export default function SubscriptionsPage() {
                         >
                           View
                         </Button>
-                        {subscription.status === 'active' && (
+                        {subscription.status === "active" && (
                           <>
                             <Button
                               size="sm"
@@ -419,7 +436,7 @@ export default function SubscriptionsPage() {
                             </Button>
                           </>
                         )}
-                        {subscription.status === 'paused' && (
+                        {subscription.status === "paused" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -485,13 +502,15 @@ export default function SubscriptionsPage() {
             <Button variant="outline" onClick={() => setShowNewSubscriptionDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={() => {
-              toast({
-                title: 'Success',
-                description: 'Subscription created successfully',
-              });
-              setShowNewSubscriptionDialog(false);
-            }}>
+            <Button
+              onClick={() => {
+                toast({
+                  title: "Success",
+                  description: "Subscription created successfully",
+                });
+                setShowNewSubscriptionDialog(false);
+              }}
+            >
               Create Subscription
             </Button>
           </DialogFooter>
@@ -531,20 +550,20 @@ export default function SubscriptionsPage() {
                 <div>
                   <Label>Current Period</Label>
                   <div className="mt-1 text-sm">
-                    {format(new Date(selectedSubscription.current_period_start), 'MMM d')} -{' '}
-                    {format(new Date(selectedSubscription.current_period_end), 'MMM d, yyyy')}
+                    {format(new Date(selectedSubscription.current_period_start), "MMM d")} -{" "}
+                    {format(new Date(selectedSubscription.current_period_end), "MMM d, yyyy")}
                   </div>
                 </div>
                 <div>
                   <Label>Next Billing Date</Label>
                   <div className="mt-1">
-                    {format(new Date(selectedSubscription.next_billing_date), 'MMM d, yyyy')}
+                    {format(new Date(selectedSubscription.next_billing_date), "MMM d, yyyy")}
                   </div>
                 </div>
                 <div>
                   <Label>Created</Label>
                   <div className="mt-1 text-sm">
-                    {format(new Date(selectedSubscription.created_at), 'MMM d, yyyy')}
+                    {format(new Date(selectedSubscription.created_at), "MMM d, yyyy")}
                   </div>
                 </div>
                 <div>

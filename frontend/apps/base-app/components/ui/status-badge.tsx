@@ -53,21 +53,34 @@ interface StatusBadgeProps {
 }
 
 const variantStyles: Record<StatusVariant, string> = {
-  success: "bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400 border-green-200 dark:border-green-900/20",
-  warning: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/20",
-  error: "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400 border-red-200 dark:border-red-900/20",
+  success:
+    "bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400 border-green-200 dark:border-green-900/20",
+  warning:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/20",
+  error:
+    "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400 border-red-200 dark:border-red-900/20",
   info: "bg-blue-100 text-blue-800 dark:bg-blue-950/20 dark:text-blue-400 border-blue-200 dark:border-blue-900/20",
-  pending: "bg-orange-100 text-orange-800 dark:bg-orange-950/20 dark:text-orange-400 border-orange-200 dark:border-orange-900/20",
-  active: "bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400 border-green-200 dark:border-green-900/20",
-  inactive: "bg-gray-100 text-gray-800 dark:bg-gray-950/20 dark:text-gray-400 border-gray-200 dark:border-gray-900/20",
-  suspended: "bg-orange-100 text-orange-800 dark:bg-orange-950/20 dark:text-orange-400 border-orange-200 dark:border-orange-900/20",
-  terminated: "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400 border-red-200 dark:border-red-900/20",
+  pending:
+    "bg-orange-100 text-orange-800 dark:bg-orange-950/20 dark:text-orange-400 border-orange-200 dark:border-orange-900/20",
+  active:
+    "bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400 border-green-200 dark:border-green-900/20",
+  inactive:
+    "bg-gray-100 text-gray-800 dark:bg-gray-950/20 dark:text-gray-400 border-gray-200 dark:border-gray-900/20",
+  suspended:
+    "bg-orange-100 text-orange-800 dark:bg-orange-950/20 dark:text-orange-400 border-orange-200 dark:border-orange-900/20",
+  terminated:
+    "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400 border-red-200 dark:border-red-900/20",
   paid: "bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400 border-green-200 dark:border-green-900/20",
-  unpaid: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/20",
-  overdue: "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400 border-red-200 dark:border-red-900/20",
-  draft: "bg-gray-100 text-gray-800 dark:bg-gray-950/20 dark:text-gray-400 border-gray-200 dark:border-gray-900/20",
-  published: "bg-blue-100 text-blue-800 dark:bg-blue-950/20 dark:text-blue-400 border-blue-200 dark:border-blue-900/20",
-  archived: "bg-gray-100 text-gray-800 dark:bg-gray-950/20 dark:text-gray-400 border-gray-200 dark:border-gray-900/20",
+  unpaid:
+    "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-900/20",
+  overdue:
+    "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400 border-red-200 dark:border-red-900/20",
+  draft:
+    "bg-gray-100 text-gray-800 dark:bg-gray-950/20 dark:text-gray-400 border-gray-200 dark:border-gray-900/20",
+  published:
+    "bg-blue-100 text-blue-800 dark:bg-blue-950/20 dark:text-blue-400 border-blue-200 dark:border-blue-900/20",
+  archived:
+    "bg-gray-100 text-gray-800 dark:bg-gray-950/20 dark:text-gray-400 border-gray-200 dark:border-gray-900/20",
   default: "bg-muted text-muted-foreground border-border",
 };
 
@@ -109,16 +122,13 @@ export function StatusBadge({
         "inline-flex items-center gap-1.5 rounded-full border font-medium",
         variantStyles[variant],
         sizeStyles[size],
-        className
+        className,
       )}
       role="status"
       aria-label={`Status: ${children}`}
     >
       {showDot && (
-        <span
-          className={cn("h-1.5 w-1.5 rounded-full", dotStyles[variant])}
-          aria-hidden="true"
-        />
+        <span className={cn("h-1.5 w-1.5 rounded-full", dotStyles[variant])} aria-hidden="true" />
       )}
       {children}
     </span>

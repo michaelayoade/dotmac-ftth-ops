@@ -2,18 +2,18 @@
  * Role-based route protection hook for ISP platform
  */
 
-import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
-import { usePermissions } from './usePermissions';
-import { useUniversalAuth } from './useUniversalAuth';
+import { usePermissions } from "./usePermissions";
+import { useUniversalAuth } from "./useUniversalAuth";
 
 interface RouteConfig {
   path: string;
   requiredRoles?: string[];
   requiredPermissions?: string[];
   requiredFeatures?: string[];
-  allowedPortals?: Array<'admin' | 'customer' | 'reseller'>;
+  allowedPortals?: Array<"admin" | "customer" | "reseller">;
   redirectTo?: string;
   exact?: boolean;
 }
@@ -22,170 +22,170 @@ interface RouteConfig {
 const ROUTE_CONFIGS: RouteConfig[] = [
   // Admin Portal Routes
   {
-    path: '/admin',
-    allowedPortals: ['admin'],
+    path: "/admin",
+    allowedPortals: ["admin"],
     requiredRoles: [
-      'super-admin',
-      'tenant-admin',
-      'network-engineer',
-      'billing-manager',
-      'support-manager',
+      "super-admin",
+      "tenant-admin",
+      "network-engineer",
+      "billing-manager",
+      "support-manager",
     ],
-    redirectTo: '/unauthorized',
+    redirectTo: "/unauthorized",
   },
   {
-    path: '/admin/customers',
-    allowedPortals: ['admin'],
-    requiredPermissions: ['customers:read'],
-    requiredRoles: ['tenant-admin', 'billing-manager', 'support-agent', 'customer-service'],
+    path: "/admin/customers",
+    allowedPortals: ["admin"],
+    requiredPermissions: ["customers:read"],
+    requiredRoles: ["tenant-admin", "billing-manager", "support-agent", "customer-service"],
   },
   {
-    path: '/admin/customers/create',
-    allowedPortals: ['admin'],
-    requiredPermissions: ['customers:create'],
-    requiredRoles: ['tenant-admin', 'billing-manager'],
+    path: "/admin/customers/create",
+    allowedPortals: ["admin"],
+    requiredPermissions: ["customers:create"],
+    requiredRoles: ["tenant-admin", "billing-manager"],
   },
   {
-    path: '/admin/network',
-    allowedPortals: ['admin'],
-    requiredPermissions: ['network:read'],
-    requiredRoles: ['tenant-admin', 'network-engineer'],
+    path: "/admin/network",
+    allowedPortals: ["admin"],
+    requiredPermissions: ["network:read"],
+    requiredRoles: ["tenant-admin", "network-engineer"],
   },
   {
-    path: '/admin/network/devices',
-    allowedPortals: ['admin'],
-    requiredPermissions: ['network:write', 'devices:write'],
-    requiredRoles: ['tenant-admin', 'network-engineer'],
+    path: "/admin/network/devices",
+    allowedPortals: ["admin"],
+    requiredPermissions: ["network:write", "devices:write"],
+    requiredRoles: ["tenant-admin", "network-engineer"],
   },
   {
-    path: '/admin/billing',
-    allowedPortals: ['admin'],
-    requiredPermissions: ['billing:read'],
-    requiredRoles: ['tenant-admin', 'billing-manager'],
+    path: "/admin/billing",
+    allowedPortals: ["admin"],
+    requiredPermissions: ["billing:read"],
+    requiredRoles: ["tenant-admin", "billing-manager"],
   },
   {
-    path: '/admin/billing/invoices',
-    allowedPortals: ['admin'],
-    requiredPermissions: ['billing:write', 'invoices:write'],
-    requiredRoles: ['tenant-admin', 'billing-manager'],
+    path: "/admin/billing/invoices",
+    allowedPortals: ["admin"],
+    requiredPermissions: ["billing:write", "invoices:write"],
+    requiredRoles: ["tenant-admin", "billing-manager"],
   },
   {
-    path: '/admin/support',
-    allowedPortals: ['admin'],
-    requiredPermissions: ['support:read'],
-    requiredRoles: ['tenant-admin', 'support-manager', 'support-agent'],
+    path: "/admin/support",
+    allowedPortals: ["admin"],
+    requiredPermissions: ["support:read"],
+    requiredRoles: ["tenant-admin", "support-manager", "support-agent"],
   },
   {
-    path: '/admin/analytics',
-    allowedPortals: ['admin'],
-    requiredPermissions: ['analytics:read'],
-    requiredRoles: ['tenant-admin', 'network-engineer', 'billing-manager', 'support-manager'],
+    path: "/admin/analytics",
+    allowedPortals: ["admin"],
+    requiredPermissions: ["analytics:read"],
+    requiredRoles: ["tenant-admin", "network-engineer", "billing-manager", "support-manager"],
   },
   {
-    path: '/admin/workflows',
-    allowedPortals: ['admin'],
-    requiredPermissions: ['workflows:read'],
-    requiredRoles: ['tenant-admin'],
+    path: "/admin/workflows",
+    allowedPortals: ["admin"],
+    requiredPermissions: ["workflows:read"],
+    requiredRoles: ["tenant-admin"],
   },
   {
-    path: '/admin/audit',
-    allowedPortals: ['admin'],
-    requiredPermissions: ['audit:read'],
-    requiredRoles: ['tenant-admin', 'super-admin'],
+    path: "/admin/audit",
+    allowedPortals: ["admin"],
+    requiredPermissions: ["audit:read"],
+    requiredRoles: ["tenant-admin", "super-admin"],
   },
   {
-    path: '/admin/security',
-    allowedPortals: ['admin'],
-    requiredPermissions: ['security:read'],
-    requiredRoles: ['tenant-admin', 'super-admin'],
+    path: "/admin/security",
+    allowedPortals: ["admin"],
+    requiredPermissions: ["security:read"],
+    requiredRoles: ["tenant-admin", "super-admin"],
   },
   {
-    path: '/admin/settings',
-    allowedPortals: ['admin'],
-    requiredPermissions: ['settings:read'],
-    requiredRoles: ['tenant-admin', 'super-admin'],
+    path: "/admin/settings",
+    allowedPortals: ["admin"],
+    requiredPermissions: ["settings:read"],
+    requiredRoles: ["tenant-admin", "super-admin"],
   },
 
   // Customer Portal Routes
   {
-    path: '/services',
-    allowedPortals: ['customer'],
-    requiredRoles: ['customer'],
-    requiredPermissions: ['services:read'],
+    path: "/services",
+    allowedPortals: ["customer"],
+    requiredRoles: ["customer"],
+    requiredPermissions: ["services:read"],
   },
   {
-    path: '/usage',
-    allowedPortals: ['customer'],
-    requiredRoles: ['customer'],
-    requiredPermissions: ['usage:read'],
+    path: "/usage",
+    allowedPortals: ["customer"],
+    requiredRoles: ["customer"],
+    requiredPermissions: ["usage:read"],
   },
   {
-    path: '/billing',
-    allowedPortals: ['customer'],
-    requiredRoles: ['customer'],
-    requiredPermissions: ['billing:read'],
+    path: "/billing",
+    allowedPortals: ["customer"],
+    requiredRoles: ["customer"],
+    requiredPermissions: ["billing:read"],
   },
   {
-    path: '/support',
-    allowedPortals: ['customer'],
-    requiredRoles: ['customer'],
-    requiredPermissions: ['support:create', 'support:read'],
+    path: "/support",
+    allowedPortals: ["customer"],
+    requiredRoles: ["customer"],
+    requiredPermissions: ["support:create", "support:read"],
   },
   {
-    path: '/documents',
-    allowedPortals: ['customer'],
-    requiredRoles: ['customer'],
-    requiredPermissions: ['documents:read'],
+    path: "/documents",
+    allowedPortals: ["customer"],
+    requiredRoles: ["customer"],
+    requiredPermissions: ["documents:read"],
   },
 
   // Reseller Portal Routes
   {
-    path: '/customers',
-    allowedPortals: ['reseller'],
-    requiredRoles: ['reseller-admin', 'reseller-agent'],
-    requiredPermissions: ['customers:read'],
+    path: "/customers",
+    allowedPortals: ["reseller"],
+    requiredRoles: ["reseller-admin", "reseller-agent"],
+    requiredPermissions: ["customers:read"],
   },
   {
-    path: '/onboarding',
-    allowedPortals: ['reseller'],
-    requiredRoles: ['reseller-admin', 'reseller-agent'],
-    requiredPermissions: ['customers:create'],
+    path: "/onboarding",
+    allowedPortals: ["reseller"],
+    requiredRoles: ["reseller-admin", "reseller-agent"],
+    requiredPermissions: ["customers:create"],
   },
   {
-    path: '/commissions',
-    allowedPortals: ['reseller'],
-    requiredRoles: ['reseller-admin', 'reseller-agent'],
-    requiredPermissions: ['commissions:read'],
+    path: "/commissions",
+    allowedPortals: ["reseller"],
+    requiredRoles: ["reseller-admin", "reseller-agent"],
+    requiredPermissions: ["commissions:read"],
   },
   {
-    path: '/analytics',
-    allowedPortals: ['reseller'],
-    requiredRoles: ['reseller-admin'],
-    requiredPermissions: ['analytics:read'],
+    path: "/analytics",
+    allowedPortals: ["reseller"],
+    requiredRoles: ["reseller-admin"],
+    requiredPermissions: ["analytics:read"],
   },
   {
-    path: '/goals',
-    allowedPortals: ['reseller'],
-    requiredRoles: ['reseller-admin', 'reseller-agent'],
-    requiredPermissions: ['goals:read'],
+    path: "/goals",
+    allowedPortals: ["reseller"],
+    requiredRoles: ["reseller-admin", "reseller-agent"],
+    requiredPermissions: ["goals:read"],
   },
   {
-    path: '/territory',
-    allowedPortals: ['reseller'],
-    requiredRoles: ['reseller-admin'],
-    requiredPermissions: ['territory:read'],
+    path: "/territory",
+    allowedPortals: ["reseller"],
+    requiredRoles: ["reseller-admin"],
+    requiredPermissions: ["territory:read"],
   },
   {
-    path: '/resources',
-    allowedPortals: ['reseller'],
-    requiredRoles: ['reseller-admin', 'reseller-agent'],
-    requiredPermissions: ['resources:read'],
+    path: "/resources",
+    allowedPortals: ["reseller"],
+    requiredRoles: ["reseller-admin", "reseller-agent"],
+    requiredPermissions: ["resources:read"],
   },
   {
-    path: '/partner',
-    allowedPortals: ['reseller'],
-    requiredRoles: ['reseller-admin', 'reseller-agent'],
-    requiredPermissions: ['partner:read'],
+    path: "/partner",
+    allowedPortals: ["reseller"],
+    requiredRoles: ["reseller-admin", "reseller-agent"],
+    requiredPermissions: ["partner:read"],
   },
 ];
 
@@ -194,11 +194,11 @@ export interface RouteProtectionResult {
   isLoading: boolean;
   redirectPath?: string;
   reason?:
-    | 'portal_mismatch'
-    | 'insufficient_role'
-    | 'insufficient_permissions'
-    | 'missing_features'
-    | 'unauthenticated';
+    | "portal_mismatch"
+    | "insufficient_role"
+    | "insufficient_permissions"
+    | "missing_features"
+    | "unauthenticated";
 }
 
 // Composition helpers for route protection
@@ -226,8 +226,8 @@ const AccessValidators = {
       return {
         isAllowed: false,
         isLoading: false,
-        redirectPath: '/',
-        reason: 'unauthenticated',
+        redirectPath: "/",
+        reason: "unauthenticated",
       };
     }
     return null;
@@ -235,7 +235,7 @@ const AccessValidators = {
 
   checkPortalAccess: (
     config: RouteConfig,
-    currentPortal: { type: 'admin' | 'customer' | 'reseller' } | null
+    currentPortal: { type: "admin" | "customer" | "reseller" } | null,
   ): RouteProtectionResult | null => {
     if (config.allowedPortals && currentPortal) {
       if (!config.allowedPortals.includes(currentPortal.type)) {
@@ -243,7 +243,7 @@ const AccessValidators = {
           isAllowed: false,
           isLoading: false,
           redirectPath: RouteHelpers.getPortalDefaultRoute(currentPortal.type),
-          reason: 'portal_mismatch',
+          reason: "portal_mismatch",
         };
       }
     }
@@ -253,7 +253,7 @@ const AccessValidators = {
   checkRoleAccess: (
     config: RouteConfig,
     checkAnyRole: (roles: string[]) => boolean,
-    currentPortal: { type: 'admin' | 'customer' | 'reseller' } | null
+    currentPortal: { type: "admin" | "customer" | "reseller" } | null,
   ): RouteProtectionResult | null => {
     if (config.requiredRoles && config.requiredRoles.length > 0) {
       if (!checkAnyRole(config.requiredRoles)) {
@@ -262,7 +262,7 @@ const AccessValidators = {
           isLoading: false,
           redirectPath:
             config.redirectTo || RouteHelpers.getPortalDefaultRoute(currentPortal?.type),
-          reason: 'insufficient_role',
+          reason: "insufficient_role",
         };
       }
     }
@@ -272,7 +272,7 @@ const AccessValidators = {
   checkPermissionAccess: (
     config: RouteConfig,
     hasAnyPermission: (permissions: string[]) => boolean,
-    currentPortal: { type: 'admin' | 'customer' | 'reseller' } | null
+    currentPortal: { type: "admin" | "customer" | "reseller" } | null,
   ): RouteProtectionResult | null => {
     if (config.requiredPermissions && config.requiredPermissions.length > 0) {
       if (!hasAnyPermission(config.requiredPermissions)) {
@@ -281,7 +281,7 @@ const AccessValidators = {
           isLoading: false,
           redirectPath:
             config.redirectTo || RouteHelpers.getPortalDefaultRoute(currentPortal?.type),
-          reason: 'insufficient_permissions',
+          reason: "insufficient_permissions",
         };
       }
     }
@@ -291,7 +291,7 @@ const AccessValidators = {
   checkFeatureAccess: (
     config: RouteConfig,
     hasFeature: (feature: string) => boolean,
-    currentPortal: { type: 'admin' | 'customer' | 'reseller' } | null
+    currentPortal: { type: "admin" | "customer" | "reseller" } | null,
   ): RouteProtectionResult | null => {
     if (config.requiredFeatures && config.requiredFeatures.length > 0) {
       const hasRequiredFeatures = config.requiredFeatures.every((feature) => hasFeature(feature));
@@ -301,7 +301,7 @@ const AccessValidators = {
           isLoading: false,
           redirectPath:
             config.redirectTo || RouteHelpers.getPortalDefaultRoute(currentPortal?.type),
-          reason: 'missing_features',
+          reason: "missing_features",
         };
       }
     }
@@ -310,14 +310,14 @@ const AccessValidators = {
 };
 
 const RouteHelpers = {
-  getPortalDefaultRoute: (portalType?: 'admin' | 'customer' | 'reseller'): string => {
+  getPortalDefaultRoute: (portalType?: "admin" | "customer" | "reseller"): string => {
     switch (portalType) {
-      case 'admin':
-      case 'customer':
-      case 'reseller':
-        return '/';
+      case "admin":
+      case "customer":
+      case "reseller":
+        return "/";
       default:
-        return '/unauthorized';
+        return "/unauthorized";
     }
   },
 };
@@ -339,31 +339,31 @@ export function useRouteProtection(): RouteProtectionResult {
   // Helper functions using composition
   const checkAuthentication = useCallback(
     (): RouteProtectionResult | null => AccessValidators.checkAuthentication(user),
-    [user]
+    [user],
   );
 
   const checkPortalAccess = useCallback(
     (config: RouteConfig): RouteProtectionResult | null =>
       AccessValidators.checkPortalAccess(config, currentPortal),
-    [currentPortal]
+    [currentPortal],
   );
 
   const checkRoleAccess = useCallback(
     (config: RouteConfig): RouteProtectionResult | null =>
       AccessValidators.checkRoleAccess(config, checkAnyRole, currentPortal),
-    [checkAnyRole, currentPortal]
+    [checkAnyRole, currentPortal],
   );
 
   const checkPermissionAccess = useCallback(
     (config: RouteConfig): RouteProtectionResult | null =>
       AccessValidators.checkPermissionAccess(config, hasAnyPermission, currentPortal),
-    [hasAnyPermission, currentPortal]
+    [hasAnyPermission, currentPortal],
   );
 
   const checkFeatureAccess = useCallback(
     (config: RouteConfig): RouteProtectionResult | null =>
       AccessValidators.checkFeatureAccess(config, _hasFeature, currentPortal),
-    [_hasFeature, currentPortal]
+    [_hasFeature, currentPortal],
   );
 
   // Check if user has access to route
@@ -410,7 +410,7 @@ export function useRouteProtection(): RouteProtectionResult {
       checkRoleAccess,
       checkPermissionAccess,
       checkFeatureAccess,
-    ]
+    ],
   );
 
   // Check route protection whenever pathname, user, or portal changes
@@ -441,7 +441,7 @@ export function useRouteProtection(): RouteProtectionResult {
 }
 
 // Hook for protecting specific routes with custom configuration
-export function useCustomRouteProtection(config: Omit<RouteConfig, 'path'>): RouteProtectionResult {
+export function useCustomRouteProtection(config: Omit<RouteConfig, "path">): RouteProtectionResult {
   const pathname = usePathname();
   const { user, currentPortal, isLoading: authLoading } = usePortalAuth();
   const { checkAnyRole, hasAnyPermission, _hasFeature } = usePermissions();
@@ -474,7 +474,7 @@ export function useCustomRouteProtection(config: Omit<RouteConfig, 'path'>): Rou
     const permissionResult = AccessValidators.checkPermissionAccess(
       routeConfig,
       hasAnyPermission,
-      currentPortal
+      currentPortal,
     );
     if (permissionResult) {
       return permissionResult;
@@ -483,7 +483,7 @@ export function useCustomRouteProtection(config: Omit<RouteConfig, 'path'>): Rou
     const featureResult = AccessValidators.checkFeatureAccess(
       routeConfig,
       _hasFeature,
-      currentPortal
+      currentPortal,
     );
     if (featureResult) {
       return featureResult;
@@ -508,30 +508,30 @@ export function useCustomRouteProtection(config: Omit<RouteConfig, 'path'>): Rou
 // Higher-order component for route protection
 export function withRouteProtection<P extends object>(
   Component: React.ComponentType<P>,
-  config?: Omit<RouteConfig, 'path'>
+  config?: Omit<RouteConfig, "path">,
 ) {
   return function ProtectedComponent(props: P) {
     const protection = config ? useCustomRouteProtection(config) : useRouteProtection();
 
     if (protection.isLoading) {
       return (
-        <div className='flex min-h-screen items-center justify-center'>
-          <div className='h-8 w-8 animate-spin rounded-full border-blue-600 border-b-2' />
-          <span className='ml-2 text-gray-600'>Checking permissions...</span>
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-blue-600 border-b-2" />
+          <span className="ml-2 text-gray-600">Checking permissions...</span>
         </div>
       );
     }
 
     if (!protection.isAllowed) {
       return (
-        <div className='flex min-h-screen flex-col items-center justify-center'>
-          <div className='text-center'>
-            <h1 className='mb-4 font-bold text-2xl text-gray-900'>Access Denied</h1>
-            <p className='mb-6 text-gray-600'>{getAccessDeniedMessage(protection.reason)}</p>
+        <div className="flex min-h-screen flex-col items-center justify-center">
+          <div className="text-center">
+            <h1 className="mb-4 font-bold text-2xl text-gray-900">Access Denied</h1>
+            <p className="mb-6 text-gray-600">{getAccessDeniedMessage(protection.reason)}</p>
             <button
-              type='button'
+              type="button"
               onClick={() => window.history.back()}
-              className='rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700'
+              className="rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
             >
               Go Back
             </button>
@@ -547,17 +547,17 @@ export function withRouteProtection<P extends object>(
 // Get user-friendly access denied message
 function getAccessDeniedMessage(reason?: string): string {
   switch (reason) {
-    case 'unauthenticated':
-      return 'Please sign in to access this page.';
-    case 'portal_mismatch':
-      return 'This page is not available in your current portal.';
-    case 'insufficient_role':
-      return 'Your role does not have access to this page.';
-    case 'insufficient_permissions':
-      return 'You do not have the required permissions to access this page.';
-    case 'missing_features':
-      return 'This feature is not available in your current plan.';
+    case "unauthenticated":
+      return "Please sign in to access this page.";
+    case "portal_mismatch":
+      return "This page is not available in your current portal.";
+    case "insufficient_role":
+      return "Your role does not have access to this page.";
+    case "insufficient_permissions":
+      return "You do not have the required permissions to access this page.";
+    case "missing_features":
+      return "This feature is not available in your current plan.";
     default:
-      return 'You do not have permission to access this page.';
+      return "You do not have permission to access this page.";
   }
 }

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 /**
@@ -15,12 +15,12 @@ export const dynamicParams = true;
  * - Associated peers
  */
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Server,
   Edit,
@@ -39,19 +39,15 @@ import {
   CheckCircle,
   Copy,
   ExternalLink,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   useWireGuardServer,
   useServerHealth,
   useWireGuardPeers,
   useDeleteWireGuardServer,
-} from '@/hooks/useWireGuard';
-import type { WireGuardPeer } from '@/types/wireguard';
-import {
-  SERVER_STATUS_COLORS,
-  formatBytes,
-  getTimeAgo,
-} from '@/types/wireguard';
+} from "@/hooks/useWireGuard";
+import type { WireGuardPeer } from "@/types/wireguard";
+import { SERVER_STATUS_COLORS, formatBytes, getTimeAgo } from "@/types/wireguard";
 
 interface ServerDetailsPageProps {
   params: {
@@ -64,19 +60,13 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
   const router = useRouter();
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  const {
-    data: server,
-    isLoading,
-    error,
-    refetch: refetchServer,
-  } = useWireGuardServer(id);
+  const { data: server, isLoading, error, refetch: refetchServer } = useWireGuardServer(id);
   const { data: health, refetch: refetchHealth } = useServerHealth(id);
   const { data: peers = [] } = useWireGuardPeers({
     server_id: id,
     limit: 10,
   });
-  const { mutate: deleteServer, isPending: isDeleting } =
-    useDeleteWireGuardServer();
+  const { mutate: deleteServer, isPending: isDeleting } = useDeleteWireGuardServer();
 
   const handleRefresh = () => {
     refetchServer();
@@ -87,14 +77,14 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
     if (!server) return;
     if (
       !confirm(
-        `Are you sure you want to delete server "${server.name}"? This will also remove all associated peers.`
+        `Are you sure you want to delete server "${server.name}"? This will also remove all associated peers.`,
       )
     ) {
       return;
     }
     deleteServer(id, {
       onSuccess: () => {
-        router.push('/dashboard/network/wireguard/servers');
+        router.push("/dashboard/network/wireguard/servers");
       },
     });
   };
@@ -120,7 +110,7 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
       <div className="space-y-6 p-6">
         <Card className="p-6">
           <p className="text-red-500">
-            Error loading server: {String(error) || 'Server not found'}
+            Error loading server: {String(error) || "Server not found"}
           </p>
           <Button className="mt-4" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -164,11 +154,7 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
               Edit
             </Button>
           </Link>
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
+          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>
@@ -205,17 +191,15 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Utilization</p>
-              <p className="text-3xl font-bold">
-                {server.utilization_percent.toFixed(1)}%
-              </p>
+              <p className="text-3xl font-bold">{server.utilization_percent.toFixed(1)}%</p>
             </div>
             <TrendingUp
               className={`h-10 w-10 ${
                 server.utilization_percent >= 90
-                  ? 'text-red-500'
+                  ? "text-red-500"
                   : server.utilization_percent >= 75
-                    ? 'text-yellow-500'
-                    : 'text-green-500'
+                    ? "text-yellow-500"
+                    : "text-green-500"
               }`}
             />
           </div>
@@ -244,28 +228,24 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {health.status === 'healthy' ? (
+                {health.status === "healthy" ? (
                   <CheckCircle className="h-5 w-5 text-green-500" />
                 ) : (
                   <AlertCircle
                     className={`h-5 w-5 ${
-                      health.status === 'degraded'
-                        ? 'text-yellow-500'
-                        : 'text-red-500'
+                      health.status === "degraded" ? "text-yellow-500" : "text-red-500"
                     }`}
                   />
                 )}
-                <span className="font-semibold">
-                  {health.status.toUpperCase()}
-                </span>
+                <span className="font-semibold">{health.status.toUpperCase()}</span>
               </div>
               <Badge
                 className={
-                  health.status === 'healthy'
-                    ? 'bg-green-500'
-                    : health.status === 'degraded'
-                      ? 'bg-yellow-500'
-                      : 'bg-red-500'
+                  health.status === "healthy"
+                    ? "bg-green-500"
+                    : health.status === "degraded"
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
                 }
               >
                 {health.status}
@@ -274,9 +254,7 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
 
             <div className="grid gap-4 md:grid-cols-3">
               <div className="p-4 bg-gray-50 rounded">
-                <p className="text-sm text-muted-foreground">
-                  Interface Status
-                </p>
+                <p className="text-sm text-muted-foreground">Interface Status</p>
                 <p className="font-semibold">{health.interface_status}</p>
               </div>
               <div className="p-4 bg-gray-50 rounded">
@@ -284,12 +262,8 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
                 <p className="font-semibold">{health.active_peers}</p>
               </div>
               <div className="p-4 bg-gray-50 rounded">
-                <p className="text-sm text-muted-foreground">
-                  Capacity Utilization
-                </p>
-                <p className="font-semibold">
-                  {health.capacity_utilization.toFixed(1)}%
-                </p>
+                <p className="text-sm text-muted-foreground">Capacity Utilization</p>
+                <p className="font-semibold">{health.capacity_utilization.toFixed(1)}%</p>
               </div>
             </div>
 
@@ -334,17 +308,13 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
                 Public Endpoint
               </p>
               <div className="flex items-center gap-2">
-                <code className="text-sm font-mono flex-1">
-                  {server.public_endpoint}
-                </code>
+                <code className="text-sm font-mono flex-1">{server.public_endpoint}</code>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() =>
-                    copyToClipboard(server.public_endpoint, 'endpoint')
-                  }
+                  onClick={() => copyToClipboard(server.public_endpoint, "endpoint")}
                 >
-                  {copiedField === 'endpoint' ? (
+                  {copiedField === "endpoint" ? (
                     <CheckCircle className="h-4 w-4 text-green-500" />
                   ) : (
                     <Copy className="h-4 w-4" />
@@ -359,17 +329,13 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
             </div>
 
             <div className="p-4 bg-gray-50 rounded">
-              <p className="text-sm text-muted-foreground mb-2">
-                Server IPv4
-              </p>
+              <p className="text-sm text-muted-foreground mb-2">Server IPv4</p>
               <code className="text-sm font-mono">{server.server_ipv4}</code>
             </div>
 
             {server.server_ipv6 && (
               <div className="p-4 bg-gray-50 rounded">
-                <p className="text-sm text-muted-foreground mb-2">
-                  Server IPv6
-                </p>
+                <p className="text-sm text-muted-foreground mb-2">Server IPv6</p>
                 <code className="text-sm font-mono">{server.server_ipv6}</code>
               </div>
             )}
@@ -380,17 +346,13 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
                 Public Key
               </p>
               <div className="flex items-center gap-2">
-                <code className="text-sm font-mono flex-1 break-all">
-                  {server.public_key}
-                </code>
+                <code className="text-sm font-mono flex-1 break-all">{server.public_key}</code>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() =>
-                    copyToClipboard(server.public_key, 'public_key')
-                  }
+                  onClick={() => copyToClipboard(server.public_key, "public_key")}
                 >
-                  {copiedField === 'public_key' ? (
+                  {copiedField === "public_key" ? (
                     <CheckCircle className="h-4 w-4 text-green-500" />
                   ) : (
                     <Copy className="h-4 w-4" />
@@ -432,9 +394,7 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
           </div>
 
           <div className="p-4 bg-gray-50 rounded">
-            <p className="text-sm text-muted-foreground">
-              Persistent Keepalive
-            </p>
+            <p className="text-sm text-muted-foreground">Persistent Keepalive</p>
             <p className="font-semibold">{server.persistent_keepalive} seconds</p>
           </div>
         </div>
@@ -449,9 +409,7 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
         <div className="grid gap-4 md:grid-cols-3">
           <div className="p-6 bg-green-50 border border-green-200 rounded">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-green-900 font-medium">
-                Total Received
-              </p>
+              <p className="text-sm text-green-900 font-medium">Total Received</p>
               <TrendingDown className="h-5 w-5 text-green-600" />
             </div>
             <p className="text-3xl font-bold text-green-900">
@@ -461,21 +419,15 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
 
           <div className="p-6 bg-blue-50 border border-blue-200 rounded">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-blue-900 font-medium">
-                Total Transmitted
-              </p>
+              <p className="text-sm text-blue-900 font-medium">Total Transmitted</p>
               <TrendingUp className="h-5 w-5 text-blue-600" />
             </div>
-            <p className="text-3xl font-bold text-blue-900">
-              {formatBytes(server.total_tx_bytes)}
-            </p>
+            <p className="text-3xl font-bold text-blue-900">{formatBytes(server.total_tx_bytes)}</p>
           </div>
 
           <div className="p-6 bg-purple-50 border border-purple-200 rounded">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-purple-900 font-medium">
-                Total Traffic
-              </p>
+              <p className="text-sm text-purple-900 font-medium">Total Traffic</p>
               <Activity className="h-5 w-5 text-purple-600" />
             </div>
             <p className="text-3xl font-bold text-purple-900">
@@ -518,12 +470,8 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
         {peers.length === 0 ? (
           <div className="text-center py-8">
             <Users className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-            <p className="text-muted-foreground">
-              No peers configured on this server yet.
-            </p>
-            <Link
-              href={`/dashboard/network/wireguard/peers/new?server_id=${id}`}
-            >
+            <p className="text-muted-foreground">No peers configured on this server yet.</p>
+            <Link href={`/dashboard/network/wireguard/peers/new?server_id=${id}`}>
               <Button className="mt-4" size="sm">
                 <Users className="mr-2 h-4 w-4" />
                 Add First Peer
@@ -570,26 +518,18 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
         <div className="grid gap-4 md:grid-cols-3">
           <div>
             <p className="text-sm text-muted-foreground">Created</p>
-            <p className="font-semibold">
-              {new Date(server.created_at).toLocaleString()}
-            </p>
+            <p className="font-semibold">{new Date(server.created_at).toLocaleString()}</p>
           </div>
           {server.updated_at && (
             <div>
               <p className="text-sm text-muted-foreground">Last Updated</p>
-              <p className="font-semibold">
-                {new Date(server.updated_at).toLocaleString()}
-              </p>
+              <p className="font-semibold">{new Date(server.updated_at).toLocaleString()}</p>
             </div>
           )}
           {server.last_stats_update && (
             <div>
-              <p className="text-sm text-muted-foreground">
-                Last Stats Update
-              </p>
-              <p className="font-semibold">
-                {new Date(server.last_stats_update).toLocaleString()}
-              </p>
+              <p className="text-sm text-muted-foreground">Last Stats Update</p>
+              <p className="font-semibold">{new Date(server.last_stats_update).toLocaleString()}</p>
             </div>
           )}
         </div>
@@ -605,16 +545,16 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
 function PeerListItem({ peer }: { peer: WireGuardPeer }) {
   const getPeerStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return 'bg-green-500';
-      case 'inactive':
-        return 'bg-gray-500';
-      case 'disabled':
-        return 'bg-red-500';
-      case 'expired':
-        return 'bg-orange-500';
+      case "active":
+        return "bg-green-500";
+      case "inactive":
+        return "bg-gray-500";
+      case "disabled":
+        return "bg-red-500";
+      case "expired":
+        return "bg-orange-500";
       default:
-        return 'bg-gray-500';
+        return "bg-gray-500";
     }
   };
 
@@ -625,9 +565,7 @@ function PeerListItem({ peer }: { peer: WireGuardPeer }) {
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <h4 className="font-semibold">{peer.name}</h4>
-              <Badge className={getPeerStatusColor(peer.status)}>
-                {peer.status}
-              </Badge>
+              <Badge className={getPeerStatusColor(peer.status)}>{peer.status}</Badge>
               {peer.is_online && (
                 <Badge variant="outline" className="bg-green-50">
                   Online
@@ -649,9 +587,7 @@ function PeerListItem({ peer }: { peer: WireGuardPeer }) {
           </div>
           <div className="text-right">
             <p className="text-sm text-muted-foreground">Traffic</p>
-            <p className="font-semibold text-sm">
-              {formatBytes(peer.total_bytes)}
-            </p>
+            <p className="font-semibold text-sm">{formatBytes(peer.total_bytes)}</p>
           </div>
         </div>
       </div>

@@ -14,6 +14,7 @@ from unittest.mock import AsyncMock
 from urllib.parse import quote_plus
 from uuid import uuid4
 
+import structlog
 from sqlalchemy import Boolean, DateTime, String, create_engine
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.engine import make_url
@@ -26,6 +27,8 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sess
 from sqlalchemy.pool import StaticPool
 
 from dotmac.platform.settings import settings
+
+logger = structlog.get_logger(__name__)
 
 # ==========================================
 # Database URLs from settings
@@ -271,6 +274,7 @@ AsyncSessionLocal = async_sessionmaker(
 
 # Global variable to hold the session maker (can be overridden for testing)
 _async_session_maker = AsyncSessionLocal
+async_session_maker = _async_session_maker
 
 
 # ==========================================
@@ -296,6 +300,20 @@ def get_db() -> Iterator[Session]:
 async def get_async_db() -> AsyncIterator[AsyncSession]:
     """Get an asynchronous database session."""
     async with AsyncSessionLocal() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+
+@asynccontextmanager
+async def get_async_session_context() -> AsyncIterator[AsyncSession]:
+    """Context manager alias for acquiring an async session (legacy helper)."""
+    async with _async_session_maker() as session:
         try:
             yield session
             await session.commit()
@@ -368,14 +386,16 @@ get_session = get_async_db
 
 def create_all_tables() -> None:
     """Create all tables in the database."""
-    Base.metadata.create_all(bind=get_sync_engine())
+    Base.metadata.create_all(bind=get_sync_engine(), checkfirst=True)
 
 
 async def create_all_tables_async() -> None:
     """Create all tables in the database asynchronously."""
     engine = get_async_engine()
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(
+            lambda sync_conn: Base.metadata.create_all(bind=sync_conn, checkfirst=True)
+        )
 
 
 def drop_all_tables() -> None:
@@ -388,6 +408,47 @@ async def drop_all_tables_async() -> None:
     engine = get_async_engine()
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+
+
+def _ensure_billing_products_constraints() -> None:
+    """Ensure legacy billing_products tables have required unique constraints."""
+    engine = get_sync_engine()
+
+    # SQLite doesn't support adding named constraints in this manner.
+    if engine.dialect.name.startswith("sqlite"):
+        return
+
+    try:
+        from sqlalchemy import inspect as sa_inspect, text as sa_text
+    except ImportError:
+        return
+
+    inspector = sa_inspect(engine)
+    if "billing_products" not in inspector.get_table_names():
+        return
+
+    existing_uniques = {
+        constraint["name"] for constraint in inspector.get_unique_constraints("billing_products")
+    }
+
+    statements: list[str] = []
+    if "uq_billing_products_product_id" not in existing_uniques:
+        statements.append(
+            "ALTER TABLE billing_products "
+            "ADD CONSTRAINT uq_billing_products_product_id UNIQUE (product_id)"
+        )
+    if "uq_billing_products_tenant_product" not in existing_uniques:
+        statements.append(
+            "ALTER TABLE billing_products "
+            "ADD CONSTRAINT uq_billing_products_tenant_product UNIQUE (tenant_id, product_id)"
+        )
+
+    if not statements:
+        return
+
+    with engine.begin() as connection:
+        for statement in statements:
+            connection.execute(sa_text(statement))
 
 
 # ==========================================
@@ -409,7 +470,30 @@ async def check_database_health() -> bool:
 
 def init_db() -> None:
     """Initialize the database (create tables if needed)."""
-    create_all_tables()
+    engine = get_sync_engine()
+
+    if engine.dialect.name == "sqlite":
+        create_all_tables()
+        return
+
+    try:
+        from sqlalchemy import inspect as sa_inspect
+    except ImportError:
+        logger.warning(
+            "database.migrations.required",
+            message="SQLAlchemy inspector unavailable; ensure migrations have been applied.",
+        )
+        return
+
+    inspector = sa_inspect(engine)
+    if not inspector.get_table_names():
+        logger.warning(
+            "database.migrations.required",
+            message="No tables found; run Alembic migrations before starting the service.",
+        )
+        return
+
+    _ensure_billing_products_constraints()
 
 
 # ==========================================
@@ -428,6 +512,7 @@ __all__ = [
     # Session management
     "get_db",
     "get_async_db",
+    "get_async_session_context",
     "get_async_session",  # FastAPI dependency
     "get_database_session",  # Legacy alias
     "get_db_session",  # Legacy alias
@@ -439,6 +524,7 @@ __all__ = [
     # Session factories
     "SyncSessionLocal",
     "AsyncSessionLocal",
+    "async_session_maker",
     # Database operations
     "create_all_tables",
     "create_all_tables_async",

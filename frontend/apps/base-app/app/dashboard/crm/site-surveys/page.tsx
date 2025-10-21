@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState, useEffect } from "react";
@@ -26,7 +26,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,19 +72,23 @@ export default function SiteSurveysPage() {
 
   // Calculate statistics
   const stats = {
-    scheduled: surveys.filter(s => s.status === "scheduled").length,
-    in_progress: surveys.filter(s => s.status === "in_progress").length,
-    completed: surveys.filter(s => s.status === "completed").length,
-    canceled: surveys.filter(s => s.status === "canceled").length,
-    completion_rate: surveys.length > 0
-      ? ((surveys.filter(s => s.status === "completed").length / surveys.length) * 100).toFixed(1)
-      : "0.0",
+    scheduled: surveys.filter((s) => s.status === "scheduled").length,
+    in_progress: surveys.filter((s) => s.status === "in_progress").length,
+    completed: surveys.filter((s) => s.status === "completed").length,
+    canceled: surveys.filter((s) => s.status === "canceled").length,
+    completion_rate:
+      surveys.length > 0
+        ? ((surveys.filter((s) => s.status === "completed").length / surveys.length) * 100).toFixed(
+            1,
+          )
+        : "0.0",
   };
 
   // Filter surveys
-  const filteredSurveys = surveys.filter(survey => {
+  const filteredSurveys = surveys.filter((survey) => {
     const matchesStatus = statusFilter === "all" || survey.status === statusFilter;
-    const matchesSearch = !searchQuery ||
+    const matchesSearch =
+      !searchQuery ||
       survey.survey_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
       survey.lead_id.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
@@ -109,19 +120,27 @@ export default function SiteSurveysPage() {
     if (!serviceability) return <span className="text-muted-foreground text-sm">N/A</span>;
 
     const styles: Record<Serviceability, { color: string; label: string }> = {
-      serviceable: { color: "bg-green-100 text-green-800", label: "Serviceable" },
-      not_serviceable: { color: "bg-red-100 text-red-800", label: "Not Serviceable" },
-      pending_expansion: { color: "bg-yellow-100 text-yellow-800", label: "Pending Expansion" },
-      requires_construction: { color: "bg-orange-100 text-orange-800", label: "Requires Construction" },
+      serviceable: {
+        color: "bg-green-100 text-green-800",
+        label: "Serviceable",
+      },
+      not_serviceable: {
+        color: "bg-red-100 text-red-800",
+        label: "Not Serviceable",
+      },
+      pending_expansion: {
+        color: "bg-yellow-100 text-yellow-800",
+        label: "Pending Expansion",
+      },
+      requires_construction: {
+        color: "bg-orange-100 text-orange-800",
+        label: "Requires Construction",
+      },
     };
 
     const style = styles[serviceability];
 
-    return (
-      <Badge className={style.color}>
-        {style.label}
-      </Badge>
-    );
+    return <Badge className={style.color}>{style.label}</Badge>;
   };
 
   const handleStartSurvey = async (survey: SiteSurvey) => {
@@ -161,9 +180,7 @@ export default function SiteSurveysPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Site Surveys</h1>
-          <p className="text-muted-foreground">
-            Schedule and manage technical site assessments
-          </p>
+          <p className="text-muted-foreground">Schedule and manage technical site assessments</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => refetch()}>
@@ -186,9 +203,7 @@ export default function SiteSurveysPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.scheduled}</div>
-            <p className="text-xs text-muted-foreground">
-              Upcoming surveys
-            </p>
+            <p className="text-xs text-muted-foreground">Upcoming surveys</p>
           </CardContent>
         </Card>
 
@@ -199,9 +214,7 @@ export default function SiteSurveysPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.in_progress}</div>
-            <p className="text-xs text-muted-foreground">
-              Currently on-site
-            </p>
+            <p className="text-xs text-muted-foreground">Currently on-site</p>
           </CardContent>
         </Card>
 
@@ -212,9 +225,7 @@ export default function SiteSurveysPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.completed}</div>
-            <p className="text-xs text-muted-foreground">
-              Finished surveys
-            </p>
+            <p className="text-xs text-muted-foreground">Finished surveys</p>
           </CardContent>
         </Card>
 
@@ -225,9 +236,7 @@ export default function SiteSurveysPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.canceled}</div>
-            <p className="text-xs text-muted-foreground">
-              Canceled surveys
-            </p>
+            <p className="text-xs text-muted-foreground">Canceled surveys</p>
           </CardContent>
         </Card>
 
@@ -238,9 +247,7 @@ export default function SiteSurveysPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.completion_rate}%</div>
-            <p className="text-xs text-muted-foreground">
-              Success rate
-            </p>
+            <p className="text-xs text-muted-foreground">Success rate</p>
           </CardContent>
         </Card>
       </div>
@@ -249,9 +256,7 @@ export default function SiteSurveysPage() {
       <Card>
         <CardHeader>
           <CardTitle>All Surveys</CardTitle>
-          <CardDescription>
-            View and manage all scheduled site surveys
-          </CardDescription>
+          <CardDescription>View and manage all scheduled site surveys</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-4">
@@ -318,9 +323,7 @@ export default function SiteSurveysPage() {
                   <TableRow key={survey.id}>
                     <TableCell className="font-medium">{survey.survey_number}</TableCell>
                     <TableCell>{survey.lead_id}</TableCell>
-                    <TableCell>
-                      {new Date(survey.scheduled_date).toLocaleString()}
-                    </TableCell>
+                    <TableCell>{new Date(survey.scheduled_date).toLocaleString()}</TableCell>
                     <TableCell>
                       {survey.technician_id ? (
                         <div className="flex items-center gap-2">

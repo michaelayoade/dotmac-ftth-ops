@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Live RADIUS Sessions Monitoring Page
@@ -6,7 +6,7 @@
  * Real-time monitoring of active authentication sessions with WebSocket updates.
  */
 
-import { LiveRadiusSessions } from '@/components/realtime/LiveRadiusSessions';
+import { LiveRadiusSessions } from "@/components/realtime/LiveRadiusSessions";
 
 export default function LiveSessionsPage() {
   return (

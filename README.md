@@ -185,6 +185,11 @@ This will start:
 ```bash
 cd backend
 poetry install --with dev
+
+# Configure database connection (sync + async URLs for SQLAlchemy/Alembic)
+export DOTMAC_DATABASE_URL="postgresql://user:pass@localhost:5432/dotmac"
+export DOTMAC_DATABASE_URL_ASYNC="postgresql+asyncpg://user:pass@localhost:5432/dotmac"
+
 poetry run alembic upgrade head
 poetry run uvicorn dotmac.platform.api.main:app --reload
 ```
@@ -207,7 +212,13 @@ Once deployed, access these services:
 
 ### ISP Management
 - **Backend API**: http://localhost:8000/docs (FastAPI Swagger)
-- **Frontend**: http://localhost:3000 (Next.js admin portal)
+- **Frontend**: http://localhost:3000 (Next.js - 6 portals)
+  - Main Dashboard: http://localhost:3000/dashboard
+  - Platform Admin: http://localhost:3000/dashboard/platform-admin
+  - Tenant Portal: http://localhost:3000/tenant
+  - Customer Portal: http://localhost:3000/customer-portal
+  - Partner Referral: http://localhost:3000/portal
+  - Partner Reseller: http://localhost:3000/partner
 
 ### Network Services
 - **NetBox**: http://localhost:8080 (admin / admin)
@@ -230,6 +241,8 @@ Complete documentation is available in the `docs/` folder:
 ### Core Documentation
 - **[README_ISP_PLATFORM.md](docs/README_ISP_PLATFORM.md)** - Platform overview and navigation
 - **[ISP_PLATFORM_ARCHITECTURE.md](docs/ISP_PLATFORM_ARCHITECTURE.md)** - Complete system architecture
+- **[PORTAL_ARCHITECTURE.md](docs/architecture/PORTAL_ARCHITECTURE.md)** - 6 portal architecture with user journeys
+- **[FRONTEND_SITEMAP.md](docs/architecture/FRONTEND_SITEMAP.md)** - Complete route hierarchy and navigation
 - **[INFRASTRUCTURE_SETUP.md](docs/INFRASTRUCTURE_SETUP.md)** - Detailed deployment guide
 - **[INFRASTRUCTURE_QUICKSTART.md](INFRASTRUCTURE_QUICKSTART.md)** - 5-minute quick start
 
@@ -256,6 +269,17 @@ Complete documentation is available in the `docs/` folder:
 - **Tailwind CSS** for styling
 - **Leaflet** for maps
 - **ReactFlow** for topology diagrams
+
+#### Portal Architecture
+The platform features **6 specialized portals** in a single Next.js monolith:
+- **Main Dashboard** (`/dashboard/*`) - ISP operations & management
+- **Platform Admin** (`/dashboard/platform-admin/*`) - Multi-tenant platform management
+- **Tenant Self-Service** (`/tenant/*`) - ISP subscription & billing management
+- **Customer Portal** (`/customer-portal/*`) - End-subscriber self-service
+- **Partner Referral** (`/portal/*`) - Sales partner commission tracking
+- **Partner Reseller** (`/partner/*`) - MSP multi-tenant management
+
+See [docs/architecture/PORTAL_ARCHITECTURE.md](docs/architecture/PORTAL_ARCHITECTURE.md) for detailed portal documentation.
 
 ### Infrastructure
 - **Docker** & **Docker Compose**

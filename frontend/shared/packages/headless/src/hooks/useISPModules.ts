@@ -3,10 +3,10 @@
  * Provides access to all 13 ISP Framework modules through React hooks
  */
 
-import { useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getISPApiClient } from '../api/isp-client';
-import type { QueryParams } from '../types';
+import { useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getISPApiClient } from "../api/isp-client";
+import type { QueryParams } from "../types";
 
 export function useISPModules() {
   const queryClient = useQueryClient();
@@ -18,14 +18,14 @@ export function useISPModules() {
 
   const useUsers = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['identity', 'users', params],
+      queryKey: ["identity", "users", params],
       queryFn: () => ispClient.getUsers(params),
     });
   };
 
   const useUser = (id: string) => {
     return useQuery({
-      queryKey: ['identity', 'users', id],
+      queryKey: ["identity", "users", id],
       queryFn: () => ispClient.getUser(id),
       enabled: !!id,
     });
@@ -33,14 +33,14 @@ export function useISPModules() {
 
   const useCustomers = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['identity', 'customers', params],
+      queryKey: ["identity", "customers", params],
       queryFn: () => ispClient.getCustomers(params),
     });
   };
 
   const useCustomer = (id: string) => {
     return useQuery({
-      queryKey: ['identity', 'customers', id],
+      queryKey: ["identity", "customers", id],
       queryFn: () => ispClient.getCustomer(id),
       enabled: !!id,
     });
@@ -50,7 +50,7 @@ export function useISPModules() {
     return useMutation({
       mutationFn: (customerData: any) => ispClient.createCustomer(customerData),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['identity', 'customers'] });
+        queryClient.invalidateQueries({ queryKey: ["identity", "customers"] });
       },
     });
   };
@@ -61,14 +61,14 @@ export function useISPModules() {
 
   const useInvoices = (customerId?: string, params?: QueryParams) => {
     return useQuery({
-      queryKey: ['billing', 'invoices', customerId, params],
+      queryKey: ["billing", "invoices", customerId, params],
       queryFn: () => ispClient.getInvoices(customerId, params),
     });
   };
 
   const useInvoice = (id: string) => {
     return useQuery({
-      queryKey: ['billing', 'invoices', id],
+      queryKey: ["billing", "invoices", id],
       queryFn: () => ispClient.getInvoice(id),
       enabled: !!id,
     });
@@ -76,7 +76,7 @@ export function useISPModules() {
 
   const usePayments = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['billing', 'payments', params],
+      queryKey: ["billing", "payments", params],
       queryFn: () => ispClient.getPayments(params),
     });
   };
@@ -85,15 +85,15 @@ export function useISPModules() {
     return useMutation({
       mutationFn: (paymentData: any) => ispClient.processPayment(paymentData),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['billing', 'payments'] });
-        queryClient.invalidateQueries({ queryKey: ['billing', 'invoices'] });
+        queryClient.invalidateQueries({ queryKey: ["billing", "payments"] });
+        queryClient.invalidateQueries({ queryKey: ["billing", "invoices"] });
       },
     });
   };
 
   const useSubscriptions = (customerId?: string) => {
     return useQuery({
-      queryKey: ['billing', 'subscriptions', customerId],
+      queryKey: ["billing", "subscriptions", customerId],
       queryFn: () => ispClient.getSubscriptions(customerId),
     });
   };
@@ -104,7 +104,7 @@ export function useISPModules() {
 
   const useServiceCatalog = () => {
     return useQuery({
-      queryKey: ['services', 'catalog'],
+      queryKey: ["services", "catalog"],
       queryFn: () => ispClient.getServiceCatalog(),
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
@@ -112,7 +112,7 @@ export function useISPModules() {
 
   const useServiceInstances = (customerId?: string) => {
     return useQuery({
-      queryKey: ['services', 'instances', customerId],
+      queryKey: ["services", "instances", customerId],
       queryFn: () => ispClient.getServiceInstances(customerId),
     });
   };
@@ -121,14 +121,14 @@ export function useISPModules() {
     return useMutation({
       mutationFn: (serviceData: any) => ispClient.provisionService(serviceData),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['services', 'instances'] });
+        queryClient.invalidateQueries({ queryKey: ["services", "instances"] });
       },
     });
   };
 
   const useUsageTracking = (serviceId: string, period?: string) => {
     return useQuery({
-      queryKey: ['services', 'usage', serviceId, period],
+      queryKey: ["services", "usage", serviceId, period],
       queryFn: () => ispClient.getUsageTracking(serviceId, period),
       enabled: !!serviceId,
     });
@@ -140,7 +140,7 @@ export function useISPModules() {
 
   const useNetworkDevices = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['networking', 'devices', params],
+      queryKey: ["networking", "devices", params],
       queryFn: () => ispClient.getNetworkDevices(params),
       refetchInterval: 30000, // Refresh every 30 seconds for real-time monitoring
     });
@@ -148,7 +148,7 @@ export function useISPModules() {
 
   const useNetworkDevice = (id: string) => {
     return useQuery({
-      queryKey: ['networking', 'devices', id],
+      queryKey: ["networking", "devices", id],
       queryFn: () => ispClient.getNetworkDevice(id),
       enabled: !!id,
       refetchInterval: 10000, // Refresh every 10 seconds for device monitoring
@@ -157,7 +157,7 @@ export function useISPModules() {
 
   const useIPAM = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['networking', 'ipam', params],
+      queryKey: ["networking", "ipam", params],
       queryFn: () => ispClient.getIPAMData(params),
     });
   };
@@ -166,14 +166,14 @@ export function useISPModules() {
     return useMutation({
       mutationFn: (request: any) => ispClient.allocateIP(request),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['networking', 'ipam'] });
+        queryClient.invalidateQueries({ queryKey: ["networking", "ipam"] });
       },
     });
   };
 
   const useNetworkTopology = () => {
     return useQuery({
-      queryKey: ['networking', 'topology'],
+      queryKey: ["networking", "topology"],
       queryFn: () => ispClient.getNetworkTopology(),
       staleTime: 2 * 60 * 1000, // 2 minutes
     });
@@ -181,7 +181,7 @@ export function useISPModules() {
 
   const useNetworkMonitoring = () => {
     return useQuery({
-      queryKey: ['networking', 'monitoring'],
+      queryKey: ["networking", "monitoring"],
       queryFn: () => ispClient.getNetworkMonitoring(),
       refetchInterval: 15000, // Refresh every 15 seconds
     });
@@ -193,7 +193,7 @@ export function useISPModules() {
 
   const useLeads = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['sales', 'leads', params],
+      queryKey: ["sales", "leads", params],
       queryFn: () => ispClient.getLeads(params),
     });
   };
@@ -202,14 +202,14 @@ export function useISPModules() {
     return useMutation({
       mutationFn: (leadData: any) => ispClient.createLead(leadData),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['sales', 'leads'] });
+        queryClient.invalidateQueries({ queryKey: ["sales", "leads"] });
       },
     });
   };
 
   const useCRMData = (customerId: string) => {
     return useQuery({
-      queryKey: ['sales', 'crm', customerId],
+      queryKey: ["sales", "crm", customerId],
       queryFn: () => ispClient.getCRMData(customerId),
       enabled: !!customerId,
     });
@@ -217,14 +217,14 @@ export function useISPModules() {
 
   const useCampaigns = () => {
     return useQuery({
-      queryKey: ['sales', 'campaigns'],
+      queryKey: ["sales", "campaigns"],
       queryFn: () => ispClient.getCampaigns(),
     });
   };
 
   const useSalesAnalytics = (period?: string) => {
     return useQuery({
-      queryKey: ['sales', 'analytics', period],
+      queryKey: ["sales", "analytics", period],
       queryFn: () => ispClient.getSalesAnalytics(period),
     });
   };
@@ -235,14 +235,14 @@ export function useISPModules() {
 
   const useSupportTickets = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['support', 'tickets', params],
+      queryKey: ["support", "tickets", params],
       queryFn: () => ispClient.getSupportTickets(params),
     });
   };
 
   const useSupportTicket = (id: string) => {
     return useQuery({
-      queryKey: ['support', 'tickets', id],
+      queryKey: ["support", "tickets", id],
       queryFn: () => ispClient.getSupportTicket(id),
       enabled: !!id,
     });
@@ -252,7 +252,7 @@ export function useISPModules() {
     return useMutation({
       mutationFn: (ticketData: any) => ispClient.createSupportTicket(ticketData),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['support', 'tickets'] });
+        queryClient.invalidateQueries({ queryKey: ["support", "tickets"] });
       },
     });
   };
@@ -262,15 +262,15 @@ export function useISPModules() {
       mutationFn: ({ id, updates }: { id: string; updates: any }) =>
         ispClient.updateSupportTicket(id, updates),
       onSuccess: (_, { id }) => {
-        queryClient.invalidateQueries({ queryKey: ['support', 'tickets'] });
-        queryClient.invalidateQueries({ queryKey: ['support', 'tickets', id] });
+        queryClient.invalidateQueries({ queryKey: ["support", "tickets"] });
+        queryClient.invalidateQueries({ queryKey: ["support", "tickets", id] });
       },
     });
   };
 
   const useKnowledgeBase = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['support', 'knowledge-base', params],
+      queryKey: ["support", "knowledge-base", params],
       queryFn: () => ispClient.getKnowledgeBase(params),
       staleTime: 10 * 60 * 1000, // 10 minutes
     });
@@ -278,7 +278,7 @@ export function useISPModules() {
 
   const useSLAMetrics = () => {
     return useQuery({
-      queryKey: ['support', 'sla', 'metrics'],
+      queryKey: ["support", "sla", "metrics"],
       queryFn: () => ispClient.getSLAMetrics(),
       refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
     });
@@ -290,14 +290,14 @@ export function useISPModules() {
 
   const useResellers = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['resellers', params],
+      queryKey: ["resellers", params],
       queryFn: () => ispClient.getResellers(params),
     });
   };
 
   const useReseller = (id: string) => {
     return useQuery({
-      queryKey: ['resellers', id],
+      queryKey: ["resellers", id],
       queryFn: () => ispClient.getReseller(id),
       enabled: !!id,
     });
@@ -305,7 +305,7 @@ export function useISPModules() {
 
   const useResellerCommissions = (resellerId: string, period?: string) => {
     return useQuery({
-      queryKey: ['resellers', resellerId, 'commissions', period],
+      queryKey: ["resellers", resellerId, "commissions", period],
       queryFn: () => ispClient.getResellerCommissions(resellerId, period),
       enabled: !!resellerId,
     });
@@ -313,7 +313,7 @@ export function useISPModules() {
 
   const useResellerPerformance = (resellerId: string) => {
     return useQuery({
-      queryKey: ['resellers', resellerId, 'performance'],
+      queryKey: ["resellers", resellerId, "performance"],
       queryFn: () => ispClient.getResellerPerformance(resellerId),
       enabled: !!resellerId,
     });
@@ -325,14 +325,14 @@ export function useISPModules() {
 
   const useBusinessIntelligence = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['analytics', 'business-intelligence', params],
+      queryKey: ["analytics", "business-intelligence", params],
       queryFn: () => ispClient.getBusinessIntelligence(params),
     });
   };
 
   const useDataVisualization = (type: string, params?: any) => {
     return useQuery({
-      queryKey: ['analytics', 'visualization', type, params],
+      queryKey: ["analytics", "visualization", type, params],
       queryFn: () => ispClient.getDataVisualization(type, params),
       enabled: !!type,
     });
@@ -340,7 +340,7 @@ export function useISPModules() {
 
   const useCustomReports = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['analytics', 'reports', params],
+      queryKey: ["analytics", "reports", params],
       queryFn: () => ispClient.getCustomReports(params),
     });
   };
@@ -349,7 +349,7 @@ export function useISPModules() {
     return useMutation({
       mutationFn: (reportConfig: any) => ispClient.generateReport(reportConfig),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['analytics', 'reports'] });
+        queryClient.invalidateQueries({ queryKey: ["analytics", "reports"] });
       },
     });
   };
@@ -360,21 +360,21 @@ export function useISPModules() {
 
   const useInventoryItems = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['inventory', 'items', params],
+      queryKey: ["inventory", "items", params],
       queryFn: () => ispClient.getInventoryItems(params),
     });
   };
 
   const useWarehouseManagement = () => {
     return useQuery({
-      queryKey: ['inventory', 'warehouses'],
+      queryKey: ["inventory", "warehouses"],
       queryFn: () => ispClient.getWarehouseManagement(),
     });
   };
 
   const useProcurementOrders = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['inventory', 'procurement', params],
+      queryKey: ["inventory", "procurement", params],
       queryFn: () => ispClient.getProcurementOrders(params),
     });
   };
@@ -385,14 +385,14 @@ export function useISPModules() {
 
   const useWorkOrders = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['field-ops', 'work-orders', params],
+      queryKey: ["field-ops", "work-orders", params],
       queryFn: () => ispClient.getWorkOrders(params),
     });
   };
 
   const useWorkOrder = (id: string) => {
     return useQuery({
-      queryKey: ['field-ops', 'work-orders', id],
+      queryKey: ["field-ops", "work-orders", id],
       queryFn: () => ispClient.getWorkOrder(id),
       enabled: !!id,
     });
@@ -402,21 +402,23 @@ export function useISPModules() {
     return useMutation({
       mutationFn: (workOrderData: any) => ispClient.createWorkOrder(workOrderData),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['field-ops', 'work-orders'] });
+        queryClient.invalidateQueries({
+          queryKey: ["field-ops", "work-orders"],
+        });
       },
     });
   };
 
   const useTechnicians = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['field-ops', 'technicians', params],
+      queryKey: ["field-ops", "technicians", params],
       queryFn: () => ispClient.getTechnicians(params),
     });
   };
 
   const useTechnicianLocation = (technicianId: string) => {
     return useQuery({
-      queryKey: ['field-ops', 'technicians', technicianId, 'location'],
+      queryKey: ["field-ops", "technicians", technicianId, "location"],
       queryFn: () => ispClient.getTechnicianLocation(technicianId),
       enabled: !!technicianId,
       refetchInterval: 30000, // Refresh every 30 seconds for location tracking
@@ -434,7 +436,7 @@ export function useISPModules() {
       }) => ispClient.updateTechnicianLocation(technicianId, location),
       onSuccess: (_, { technicianId }) => {
         queryClient.invalidateQueries({
-          queryKey: ['field-ops', 'technicians', technicianId, 'location'],
+          queryKey: ["field-ops", "technicians", technicianId, "location"],
         });
       },
     });
@@ -446,21 +448,21 @@ export function useISPModules() {
 
   const useComplianceReports = () => {
     return useQuery({
-      queryKey: ['compliance', 'reports'],
+      queryKey: ["compliance", "reports"],
       queryFn: () => ispClient.getComplianceReports(),
     });
   };
 
   const useAuditTrail = (params?: QueryParams) => {
     return useQuery({
-      queryKey: ['compliance', 'audit-trail', params],
+      queryKey: ["compliance", "audit-trail", params],
       queryFn: () => ispClient.getAuditTrail(params),
     });
   };
 
   const useDataProtectionStatus = () => {
     return useQuery({
-      queryKey: ['compliance', 'data-protection'],
+      queryKey: ["compliance", "data-protection"],
       queryFn: () => ispClient.getDataProtectionStatus(),
     });
   };
@@ -471,7 +473,7 @@ export function useISPModules() {
 
   const useNotificationTemplates = () => {
     return useQuery({
-      queryKey: ['notifications', 'templates'],
+      queryKey: ["notifications", "templates"],
       queryFn: () => ispClient.getNotificationTemplates(),
       staleTime: 10 * 60 * 1000, // 10 minutes
     });
@@ -491,7 +493,7 @@ export function useISPModules() {
 
   const useAutomationRules = () => {
     return useQuery({
-      queryKey: ['notifications', 'automation', 'rules'],
+      queryKey: ["notifications", "automation", "rules"],
       queryFn: () => ispClient.getAutomationRules(),
     });
   };
@@ -502,7 +504,7 @@ export function useISPModules() {
 
   const useLicenseInfo = () => {
     return useQuery({
-      queryKey: ['licensing', 'info'],
+      queryKey: ["licensing", "info"],
       queryFn: () => ispClient.getLicenseInfo(),
       staleTime: 15 * 60 * 1000, // 15 minutes
     });
@@ -510,7 +512,7 @@ export function useISPModules() {
 
   const useFeatureEntitlements = () => {
     return useQuery({
-      queryKey: ['licensing', 'features'],
+      queryKey: ["licensing", "features"],
       queryFn: () => ispClient.getFeatureEntitlements(),
       staleTime: 10 * 60 * 1000, // 10 minutes
     });
@@ -521,7 +523,7 @@ export function useISPModules() {
       async (feature: string) => {
         return await ispClient.validateLicense(feature);
       },
-      [ispClient]
+      [ispClient],
     );
   };
 
@@ -531,7 +533,7 @@ export function useISPModules() {
 
   const useAdminDashboard = () => {
     return useQuery({
-      queryKey: ['dashboard', 'admin'],
+      queryKey: ["dashboard", "admin"],
       queryFn: () => ispClient.getAdminDashboard(),
       refetchInterval: 60000, // Refresh every minute
     });
@@ -539,7 +541,7 @@ export function useISPModules() {
 
   const useCustomerDashboard = () => {
     return useQuery({
-      queryKey: ['dashboard', 'customer'],
+      queryKey: ["dashboard", "customer"],
       queryFn: () => ispClient.getCustomerDashboard(),
       refetchInterval: 60000, // Refresh every minute
     });
@@ -547,7 +549,7 @@ export function useISPModules() {
 
   const useResellerDashboard = () => {
     return useQuery({
-      queryKey: ['dashboard', 'reseller'],
+      queryKey: ["dashboard", "reseller"],
       queryFn: () => ispClient.getResellerDashboard(),
       refetchInterval: 60000, // Refresh every minute
     });
@@ -555,7 +557,7 @@ export function useISPModules() {
 
   const useTechnicianDashboard = () => {
     return useQuery({
-      queryKey: ['dashboard', 'technician'],
+      queryKey: ["dashboard", "technician"],
       queryFn: () => ispClient.getTechnicianDashboard(),
       refetchInterval: 60000, // Refresh every minute
     });

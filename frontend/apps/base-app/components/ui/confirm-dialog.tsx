@@ -112,10 +112,7 @@ export function ConfirmDialog({
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={isLoading}
-            className={cn(
-              buttonVariants[variant],
-              isLoading && "opacity-50 cursor-not-allowed"
-            )}
+            className={cn(buttonVariants[variant], isLoading && "opacity-50 cursor-not-allowed")}
           >
             {isLoading ? "Processing..." : confirmText}
           </AlertDialogAction>

@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { register as registerUser } from '@/lib/auth';
-import { registerSchema, type RegisterFormData } from '@/lib/validations/auth';
-import { useBranding } from '@/hooks/useBranding';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { register as registerUser } from "@/lib/auth";
+import { registerSchema, type RegisterFormData } from "@/lib/validations/auth";
+import { useBranding } from "@/hooks/useBranding";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { branding } = useBranding();
 
@@ -24,7 +24,7 @@ export default function RegisterPage() {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
@@ -33,13 +33,13 @@ export default function RegisterPage() {
         username: data.username,
         email: data.email,
         password: data.password,
-        full_name: data.name,  // Map 'name' to 'full_name' for backend
+        full_name: data.name, // Map 'name' to 'full_name' for backend
       });
 
       // Server sets HttpOnly cookies; navigate once ready
-      router.push('/dashboard');
+      router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -59,7 +59,10 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-card/50 backdrop-blur border border-border rounded-lg p-8 space-y-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="bg-card/50 backdrop-blur border border-border rounded-lg p-8 space-y-6"
+        >
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm">
               {error}
@@ -67,16 +70,19 @@ export default function RegisterPage() {
           )}
 
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-muted-foreground mb-2">
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-muted-foreground mb-2"
+            >
               Username
             </label>
             <input
               id="username"
               type="text"
               autoComplete="username"
-              {...register('username')}
+              {...register("username")}
               className={`w-full px-3 py-2 bg-accent border ${
-                errors.username ? 'border-red-500' : 'border-border'
+                errors.username ? "border-red-500" : "border-border"
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
               placeholder="johndoe"
               data-testid="username-input"
@@ -96,16 +102,14 @@ export default function RegisterPage() {
             <input
               id="name"
               type="text"
-              {...register('name')}
+              {...register("name")}
               className={`w-full px-3 py-2 bg-accent border ${
-                errors.name ? 'border-red-500' : 'border-border'
+                errors.name ? "border-red-500" : "border-border"
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
               placeholder="John Doe"
               data-testid="name-input"
             />
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-400">{errors.name.message}</p>
-            )}
+            {errors.name && <p className="mt-1 text-sm text-red-400">{errors.name.message}</p>}
           </div>
 
           <div>
@@ -116,30 +120,31 @@ export default function RegisterPage() {
               id="email"
               type="email"
               autoComplete="email"
-              {...register('email')}
+              {...register("email")}
               required
               className={`w-full px-3 py-2 bg-accent border ${
-                errors.email ? 'border-red-500' : 'border-border'
+                errors.email ? "border-red-500" : "border-border"
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
               placeholder="you@example.com"
               data-testid="email-input"
             />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
-            )}
+            {errors.email && <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>}
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-muted-foreground mb-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-muted-foreground mb-2"
+            >
               Password
             </label>
             <input
               id="password"
               type="password"
               autoComplete="new-password"
-              {...register('password')}
+              {...register("password")}
               className={`w-full px-3 py-2 bg-accent border ${
-                errors.password ? 'border-red-500' : 'border-border'
+                errors.password ? "border-red-500" : "border-border"
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
               placeholder="••••••••"
               data-testid="password-input"
@@ -153,16 +158,19 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-muted-foreground mb-2">
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-muted-foreground mb-2"
+            >
               Confirm Password
             </label>
             <input
               id="confirmPassword"
               type="password"
               autoComplete="new-password"
-              {...register('confirmPassword')}
+              {...register("confirmPassword")}
               className={`w-full px-3 py-2 bg-accent border ${
-                errors.confirmPassword ? 'border-red-500' : 'border-border'
+                errors.confirmPassword ? "border-red-500" : "border-border"
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
               placeholder="••••••••"
               data-testid="confirm-password-input"
@@ -178,11 +186,11 @@ export default function RegisterPage() {
             className="w-full py-3 px-4 disabled:bg-muted disabled:cursor-not-allowed font-medium rounded-lg transition-colors btn-brand"
             data-testid="submit-button"
           >
-            {loading ? 'Creating account...' : 'Sign up'}
+            {loading ? "Creating account..." : "Sign up"}
           </button>
 
           <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <Link href="/login" className="text-brand hover:text-[var(--brand-primary-hover)]">
               Sign in
             </Link>

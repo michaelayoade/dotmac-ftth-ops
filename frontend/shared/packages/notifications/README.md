@@ -29,11 +29,11 @@ pnpm add react react-dom framer-motion sonner
 ### Basic Setup
 
 ```tsx
-import { NotificationProvider } from '@dotmac/notifications';
+import { NotificationProvider } from "@dotmac/notifications";
 
 function App() {
   return (
-    <NotificationProvider portalVariant='admin' userId='user-123' tenantId='tenant-456'>
+    <NotificationProvider portalVariant="admin" userId="user-123" tenantId="tenant-456">
       <YourAppContent />
     </NotificationProvider>
   );
@@ -43,7 +43,7 @@ function App() {
 ### Using Notifications
 
 ```tsx
-import { useNotifications } from '@dotmac/notifications';
+import { useNotifications } from "@dotmac/notifications";
 
 function SomeComponent() {
   const { showToast, notifications, markAsRead } = useNotifications();
@@ -53,25 +53,25 @@ function SomeComponent() {
     try {
       await saveCustomer(customerData);
 
-      showToast('Customer Saved', 'Customer information has been successfully updated', 'success', {
+      showToast("Customer Saved", "Customer information has been successfully updated", "success", {
         actions: [
           {
-            label: 'View Profile',
+            label: "View Profile",
             action: () => navigate(`/customers/${customer.id}`),
-            variant: 'primary',
+            variant: "primary",
           },
           {
-            label: 'Send Welcome Email',
+            label: "Send Welcome Email",
             action: () => sendWelcomeEmail(customer.id),
-            variant: 'secondary',
+            variant: "secondary",
           },
         ],
         duration: 7000,
-        category: 'customer',
-        priority: 'medium',
+        category: "customer",
+        priority: "medium",
       });
     } catch (error) {
-      showToast('Save Failed', 'Unable to save customer information. Please try again.', 'error', {
+      showToast("Save Failed", "Unable to save customer information. Please try again.", "error", {
         persistent: true,
       });
     }
@@ -104,21 +104,23 @@ Temporary notifications for immediate feedback:
 const { showToast } = useNotifications();
 
 // Success toast
-showToast('Operation Successful', 'Your changes have been saved', 'success');
+showToast("Operation Successful", "Your changes have been saved", "success");
 
 // Error toast with persistence
-showToast('Error Occurred', 'Please try again later', 'error', {
+showToast("Error Occurred", "Please try again later", "error", {
   persistent: true,
   actions: [
-    { label: 'Retry', action: () => retryOperation() },
-    { label: 'Report Issue', action: () => openSupportTicket() },
+    { label: "Retry", action: () => retryOperation() },
+    { label: "Report Issue", action: () => openSupportTicket() },
   ],
 });
 
 // Loading toast that can be updated
-const toastId = showToast('Processing', 'Please wait...', 'loading');
+const toastId = showToast("Processing", "Please wait...", "loading");
 // Later update the same toast
-showToast('Complete', 'Process finished successfully', 'success', { id: toastId });
+showToast("Complete", "Process finished successfully", "success", {
+  id: toastId,
+});
 ```
 
 ### 2. System Alerts
@@ -126,7 +128,7 @@ showToast('Complete', 'Process finished successfully', 'success', { id: toastId 
 Important system-wide announcements:
 
 ```tsx
-import { useNotifications } from '@dotmac/notifications';
+import { useNotifications } from "@dotmac/notifications";
 
 function SystemAlerts() {
   const { alerts, acknowledgeAlert } = useNotifications();
@@ -142,7 +144,7 @@ function SystemAlerts() {
             <button onClick={() => acknowledgeAlert(alert.id)}>Acknowledge</button>
           )}
 
-          {alert.actionUrl && <a href={alert.actionUrl}>{alert.actionLabel || 'Learn More'}</a>}
+          {alert.actionUrl && <a href={alert.actionUrl}>{alert.actionLabel || "Learn More"}</a>}
         </div>
       ))}
     </div>
@@ -155,7 +157,7 @@ function SystemAlerts() {
 Persistent notifications with rich content:
 
 ```tsx
-import { NotificationCenter } from '@dotmac/notifications';
+import { NotificationCenter } from "@dotmac/notifications";
 
 function Header() {
   const { stats } = useNotifications();
@@ -164,9 +166,9 @@ function Header() {
     <header>
       <NotificationCenter
         trigger={
-          <button className='notification-button'>
+          <button className="notification-button">
             <BellIcon />
-            {stats.unread > 0 && <span className='badge'>{stats.unread}</span>}
+            {stats.unread > 0 && <span className="badge">{stats.unread}</span>}
           </button>
         }
       />
@@ -180,22 +182,22 @@ function Header() {
 Live updates via WebSocket:
 
 ```tsx
-import { useNotifications } from '@dotmac/notifications';
+import { useNotifications } from "@dotmac/notifications";
 
 function OrderTracking() {
   const { subscribeToTopic, isConnected } = useNotifications();
 
   useEffect(() => {
-    const unsubscribe = subscribeToTopic('work-orders', (update) => {
-      console.log('Work order update:', update);
+    const unsubscribe = subscribeToTopic("work-orders", (update) => {
+      console.log("Work order update:", update);
 
       // Handle different types of updates
       switch (update.event) {
-        case 'status_changed':
+        case "status_changed":
           showToast(`Order ${update.data.orderId}`, `Status: ${update.data.newStatus}`);
           break;
-        case 'assigned':
-          showToast('New Assignment', `Order ${update.data.orderId} assigned to you`);
+        case "assigned":
+          showToast("New Assignment", `Order ${update.data.orderId} assigned to you`);
           break;
       }
     });
@@ -205,8 +207,8 @@ function OrderTracking() {
 
   return (
     <div>
-      <div className={`connection-status ${isConnected ? 'connected' : 'disconnected'}`}>
-        {isConnected ? 'Live' : 'Offline'}
+      <div className={`connection-status ${isConnected ? "connected" : "disconnected"}`}>
+        {isConnected ? "Live" : "Offline"}
       </div>
       {/* Your component content */}
     </div>
@@ -235,21 +237,21 @@ Organize notifications by category:
 
 ```tsx
 const categories = [
-  'system', // System updates, maintenance
-  'billing', // Payment, invoicing
-  'customer', // Customer-related activities
-  'service', // Service changes, outages
-  'security', // Security alerts, breaches
-  'maintenance', // Scheduled maintenance
-  'workflow', // Workflow, approvals
-  'user', // User actions, profile
-  'api', // API events, integrations
+  "system", // System updates, maintenance
+  "billing", // Payment, invoicing
+  "customer", // Customer-related activities
+  "service", // Service changes, outages
+  "security", // Security alerts, breaches
+  "maintenance", // Scheduled maintenance
+  "workflow", // Workflow, approvals
+  "user", // User actions, profile
+  "api", // API events, integrations
 ];
 
 // Show categorized notification
-showToast('Payment Received', 'Invoice #1234 has been paid', 'success', {
-  category: 'billing',
-  priority: 'medium',
+showToast("Payment Received", "Invoice #1234 has been paid", "success", {
+  category: "billing",
+  priority: "medium",
 });
 ```
 
@@ -258,7 +260,7 @@ showToast('Payment Received', 'Invoice #1234 has been paid', 'success', {
 Granular notification preferences:
 
 ```tsx
-import { useNotifications } from '@dotmac/notifications';
+import { useNotifications } from "@dotmac/notifications";
 
 function NotificationSettings() {
   const { preferences, updatePreferences } = useNotifications();
@@ -271,15 +273,15 @@ function NotificationSettings() {
         billing: {
           ...preferences.categories.billing,
           enabled: true,
-          channels: ['inApp', 'email'],
-          priority: 'high',
+          channels: ["inApp", "email"],
+          priority: "high",
         },
       },
       quietHours: {
         enabled: true,
-        start: '22:00',
-        end: '08:00',
-        timezone: 'America/New_York',
+        start: "22:00",
+        end: "08:00",
+        timezone: "America/New_York",
       },
     });
   };
@@ -292,7 +294,7 @@ function NotificationSettings() {
       <div>
         <label>
           <input
-            type='checkbox'
+            type="checkbox"
             checked={preferences?.channels.inApp}
             onChange={(e) =>
               handleUpdatePreferences({
@@ -310,7 +312,7 @@ function NotificationSettings() {
           <h3>{category}</h3>
           <label>
             <input
-              type='checkbox'
+              type="checkbox"
               checked={settings.enabled}
               onChange={(e) =>
                 handleUpdatePreferences({
@@ -335,24 +337,24 @@ function NotificationSettings() {
 Track notification metrics:
 
 ```tsx
-import { useNotificationStats } from '@dotmac/notifications';
+import { useNotificationStats } from "@dotmac/notifications";
 
 function NotificationAnalytics() {
-  const { stats } = useNotificationStats('user-123', 'admin', 30); // Last 30 days
+  const { stats } = useNotificationStats("user-123", "admin", 30); // Last 30 days
 
   return (
-    <div className='stats-dashboard'>
-      <div className='stat-card'>
+    <div className="stats-dashboard">
+      <div className="stat-card">
         <h3>Total Notifications</h3>
         <p>{stats.total}</p>
       </div>
 
-      <div className='stat-card'>
+      <div className="stat-card">
         <h3>Unread</h3>
         <p>{stats.unread}</p>
       </div>
 
-      <div className='category-breakdown'>
+      <div className="category-breakdown">
         <h3>By Category</h3>
         {Object.entries(stats.byCategory).map(([category, count]) => (
           <div key={category}>
@@ -361,7 +363,7 @@ function NotificationAnalytics() {
         ))}
       </div>
 
-      <div className='recent-activity'>
+      <div className="recent-activity">
         <h3>Recent Activity</h3>
         {stats.recentActivity.map(({ date, count }) => (
           <div key={date}>
@@ -379,10 +381,10 @@ function NotificationAnalytics() {
 ### Custom Portal Configuration
 
 ```tsx
-import { getPortalNotificationConfig } from '@dotmac/notifications';
+import { getPortalNotificationConfig } from "@dotmac/notifications";
 
 // Get portal-specific configuration
-const portalConfig = getPortalNotificationConfig('technician');
+const portalConfig = getPortalNotificationConfig("technician");
 
 console.log(portalConfig.theme.colors.primary); // '#0891B2'
 console.log(portalConfig.limits.maxToasts); // 3 (mobile-optimized)
@@ -392,43 +394,43 @@ console.log(portalConfig.realtime.topics); // ['work-orders', 'inventory']
 ### Custom Notification API
 
 ```tsx
-import { createNotificationAPI } from '@dotmac/notifications';
+import { createNotificationAPI } from "@dotmac/notifications";
 
 const api = createNotificationAPI({
-  baseUrl: 'https://api.dotmac.app',
+  baseUrl: "https://api.dotmac.app",
   timeout: 5000,
   retryAttempts: 3,
-  authToken: 'your-auth-token',
+  authToken: "your-auth-token",
 });
 
 // Send custom notification
 await api.sendNotification({
-  userId: 'user-123',
-  tenantId: 'tenant-456',
-  title: 'Custom Notification',
-  message: 'This is a custom notification',
-  type: 'info',
-  category: 'system',
-  priority: 'medium',
-  portalVariant: 'admin',
+  userId: "user-123",
+  tenantId: "tenant-456",
+  title: "Custom Notification",
+  message: "This is a custom notification",
+  type: "info",
+  category: "system",
+  priority: "medium",
+  portalVariant: "admin",
 });
 ```
 
 ### Real-Time Connection Management
 
 ```tsx
-import { useRealtimeConnection } from '@dotmac/notifications';
+import { useRealtimeConnection } from "@dotmac/notifications";
 
 function RealtimeStatus() {
   const { isConnected, connectionState, reconnectAttempts } = useRealtimeConnection(
-    'user-123',
-    'admin'
+    "user-123",
+    "admin",
   );
 
   return (
-    <div className={`realtime-indicator ${isConnected ? 'connected' : 'disconnected'}`}>
-      <span className='status-dot' />
-      {isConnected ? 'Live' : `Connecting... (${reconnectAttempts}/3)`}
+    <div className={`realtime-indicator ${isConnected ? "connected" : "disconnected"}`}>
+      <span className="status-dot" />
+      {isConnected ? "Live" : `Connecting... (${reconnectAttempts}/3)`}
     </div>
   );
 }
@@ -440,7 +442,7 @@ function RealtimeStatus() {
 
 ```tsx
 // Automatically optimized for technician portal (mobile)
-<NotificationProvider portalVariant='technician' userId='tech-123'>
+<NotificationProvider portalVariant="technician" userId="tech-123">
   {/*
     - Larger touch targets (44px minimum)
     - Bottom positioning for easier thumb access
@@ -458,7 +460,7 @@ const { isConnected, pendingNotifications } = useNotifications();
 
 // Notifications are queued when offline and sent when reconnected
 if (!isConnected && pendingNotifications.length > 0) {
-  showToast('Offline Mode', `${pendingNotifications.length} notifications pending sync`);
+  showToast("Offline Mode", `${pendingNotifications.length} notifications pending sync`);
 }
 ```
 
@@ -467,26 +469,26 @@ if (!isConnected && pendingNotifications.length > 0) {
 ### Component Testing
 
 ```tsx
-import { render, screen } from '@testing-library/react';
-import { NotificationProvider, useNotifications } from '@dotmac/notifications';
+import { render, screen } from "@testing-library/react";
+import { NotificationProvider, useNotifications } from "@dotmac/notifications";
 
 function TestComponent() {
   const { showToast } = useNotifications();
-  return <button onClick={() => showToast('Test', 'Test message')}>Show Toast</button>;
+  return <button onClick={() => showToast("Test", "Test message")}>Show Toast</button>;
 }
 
-test('shows toast notification', async () => {
+test("shows toast notification", async () => {
   render(
-    <NotificationProvider portalVariant='admin' userId='test-user'>
+    <NotificationProvider portalVariant="admin" userId="test-user">
       <TestComponent />
-    </NotificationProvider>
+    </NotificationProvider>,
   );
 
-  fireEvent.click(screen.getByText('Show Toast'));
+  fireEvent.click(screen.getByText("Show Toast"));
 
   await waitFor(() => {
-    expect(screen.getByText('Test')).toBeInTheDocument();
-    expect(screen.getByText('Test message')).toBeInTheDocument();
+    expect(screen.getByText("Test")).toBeInTheDocument();
+    expect(screen.getByText("Test message")).toBeInTheDocument();
   });
 });
 ```
@@ -494,27 +496,27 @@ test('shows toast notification', async () => {
 ### Mock API for Testing
 
 ```tsx
-import { createNotificationAPI } from '@dotmac/notifications';
+import { createNotificationAPI } from "@dotmac/notifications";
 
 // Mock API for testing
 const mockAPI = createNotificationAPI({
-  baseUrl: 'http://localhost:3000',
+  baseUrl: "http://localhost:3000",
   mock: true, // Enable mock mode
 });
 
-test('notification API calls', async () => {
+test("notification API calls", async () => {
   const notification = await mockAPI.sendNotification({
-    userId: 'test-user',
-    title: 'Test Notification',
-    message: 'Test message',
-    type: 'info',
-    category: 'system',
-    priority: 'medium',
-    portalVariant: 'admin',
+    userId: "test-user",
+    title: "Test Notification",
+    message: "Test message",
+    type: "info",
+    category: "system",
+    priority: "medium",
+    portalVariant: "admin",
   });
 
   expect(notification.id).toBeDefined();
-  expect(notification.title).toBe('Test Notification');
+  expect(notification.title).toBe("Test Notification");
 });
 ```
 
@@ -525,11 +527,11 @@ test('notification API calls', async () => {
 ```tsx
 // Notifications respect user permissions
 const notification = {
-  title: 'Admin Action Required',
-  message: 'Review pending approvals',
-  targetRoles: ['admin', 'manager'], // Only visible to these roles
-  targetPortals: ['admin', 'management-admin'], // Only in admin portals
-  permissions: ['approvals.view'], // Requires specific permission
+  title: "Admin Action Required",
+  message: "Review pending approvals",
+  targetRoles: ["admin", "manager"], // Only visible to these roles
+  targetPortals: ["admin", "management-admin"], // Only in admin portals
+  permissions: ["approvals.view"], // Requires specific permission
 };
 ```
 
@@ -537,9 +539,9 @@ const notification = {
 
 ```tsx
 // Automatic secure connections with authentication
-const { isConnected } = useRealtimeConnection('user-123', 'admin', {
+const { isConnected } = useRealtimeConnection("user-123", "admin", {
   secure: true, // Force WSS in production
-  authToken: 'jwt-token',
+  authToken: "jwt-token",
   heartbeatInterval: 30000, // Keep connection alive
   maxReconnectAttempts: 5,
 });

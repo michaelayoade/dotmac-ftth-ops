@@ -23,7 +23,7 @@ import {
   DeviceTypeEnum,
   DeviceStatusEnum,
   AlertSeverityEnum,
-} from '@/lib/graphql/generated';
+} from "@/lib/graphql/generated";
 
 // ============================================================================
 // Network Overview Hook
@@ -40,7 +40,7 @@ export function useNetworkOverviewGraphQL(options: UseNetworkOverviewOptions = {
   const { data, loading, error, refetch } = useNetworkOverviewQuery({
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const overview = data?.networkOverview;
@@ -98,7 +98,7 @@ export function useNetworkDeviceListGraphQL(options: UseNetworkDeviceListOptions
     },
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const devices = data?.networkDevices?.devices ?? [];
@@ -140,7 +140,7 @@ export function useDeviceDetailGraphQL(options: UseDeviceDetailOptions) {
     },
     skip: !enabled || !deviceId,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const deviceHealth = data?.deviceHealth ?? null;
@@ -184,7 +184,7 @@ export function useDeviceTrafficGraphQL(options: UseDeviceTrafficOptions) {
     },
     skip: !enabled || !deviceId,
     pollInterval,
-    fetchPolicy: 'network-only', // Always fetch fresh traffic data
+    fetchPolicy: "network-only", // Always fetch fresh traffic data
   });
 
   const traffic = data?.deviceTraffic ?? null;
@@ -236,7 +236,7 @@ export function useNetworkAlertListGraphQL(options: UseNetworkAlertListOptions =
     },
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const alerts = data?.networkAlerts?.alerts ?? [];
@@ -272,7 +272,7 @@ export function useNetworkAlertDetailGraphQL(options: UseNetworkAlertDetailOptio
   const { data, loading, error, refetch } = useNetworkAlertDetailQuery({
     variables: { alertId },
     skip: !enabled || !alertId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const alert = data?.networkAlert ?? null;
@@ -326,7 +326,7 @@ export function useNetworkDashboardGraphQL(options: UseNetworkDashboardOptions =
     },
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const overview = data?.networkOverview;

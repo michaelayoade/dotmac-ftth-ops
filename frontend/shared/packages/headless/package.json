@@ -20,6 +20,11 @@
       "types": "./dist/utils/production-data-guard.d.ts",
       "import": "./dist/utils/production-data-guard.mjs",
       "require": "./dist/utils/production-data-guard.js"
+    },
+    "./utils/telemetry": {
+      "types": "./dist/utils/telemetry.d.ts",
+      "import": "./dist/utils/telemetry.mjs",
+      "require": "./dist/utils/telemetry.js"
     }
   },
   "scripts": {

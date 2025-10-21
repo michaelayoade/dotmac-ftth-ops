@@ -17,13 +17,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -72,10 +66,14 @@ export function VOLTHADashboard() {
 
       setHealth(healthRes.data);
       setOLTs(oltsRes.data.logical_devices);
-      setONUs(onusRes.data.devices.filter(d => !d.root));
+      setONUs(onusRes.data.devices.filter((d) => !d.root));
       setAlarms(alarmsRes.data.alarms || []);
 
-      if (oltsRes.data.logical_devices.length > 0 && !selectedOLT && oltsRes.data.logical_devices[0]) {
+      if (
+        oltsRes.data.logical_devices.length > 0 &&
+        !selectedOLT &&
+        oltsRes.data.logical_devices[0]
+      ) {
         setSelectedOLT(oltsRes.data.logical_devices[0].id);
       }
     } catch (err: any) {
@@ -118,7 +116,10 @@ export function VOLTHADashboard() {
     });
   };
 
-  const handleDeviceOperation = async (deviceId: string, operation: "enable" | "disable" | "reboot" | "delete") => {
+  const handleDeviceOperation = async (
+    deviceId: string,
+    operation: "enable" | "disable" | "reboot" | "delete",
+  ) => {
     try {
       await apiClient.post(`/api/v1/voltha/devices/${deviceId}/${operation}`);
       toast({
@@ -137,12 +138,31 @@ export function VOLTHADashboard() {
 
   const getStatusBadge = (status: string) => {
     const statusLower = status?.toLowerCase() || "";
-    if (statusLower.includes("active") || statusLower.includes("enabled") || statusLower.includes("reachable")) {
-      return <Badge className="bg-green-500"><CheckCircle2 className="w-3 h-3 mr-1" />Active</Badge>;
+    if (
+      statusLower.includes("active") ||
+      statusLower.includes("enabled") ||
+      statusLower.includes("reachable")
+    ) {
+      return (
+        <Badge className="bg-green-500">
+          <CheckCircle2 className="w-3 h-3 mr-1" />
+          Active
+        </Badge>
+      );
     } else if (statusLower.includes("activating") || statusLower.includes("discovering")) {
-      return <Badge variant="secondary"><Activity className="w-3 h-3 mr-1 animate-spin" />Activating</Badge>;
+      return (
+        <Badge variant="secondary">
+          <Activity className="w-3 h-3 mr-1 animate-spin" />
+          Activating
+        </Badge>
+      );
     } else if (statusLower.includes("failed") || statusLower.includes("unreachable")) {
-      return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Failed</Badge>;
+      return (
+        <Badge variant="destructive">
+          <XCircle className="w-3 h-3 mr-1" />
+          Failed
+        </Badge>
+      );
     } else {
       return <Badge variant="outline">{status}</Badge>;
     }
@@ -156,14 +176,17 @@ export function VOLTHADashboard() {
     return { label: "Poor", color: "text-red-600", icon: TrendingDown };
   };
 
-  const filteredONUs = onus.filter(onu =>
-    searchQuery === "" ||
-    onu.serial_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    onu.id.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredONUs = onus.filter(
+    (onu) =>
+      searchQuery === "" ||
+      onu.serial_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      onu.id.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const onlineONUs = onus.filter(onu => onu.oper_status === "ACTIVE" || onu.connect_status === "REACHABLE");
-  const criticalAlarms = alarms.filter(a => a.severity === "CRITICAL" && a.state === "RAISED");
+  const onlineONUs = onus.filter(
+    (onu) => onu.oper_status === "ACTIVE" || onu.connect_status === "REACHABLE",
+  );
+  const criticalAlarms = alarms.filter((a) => a.severity === "CRITICAL" && a.state === "RAISED");
 
   if (loading) {
     return (
@@ -179,9 +202,7 @@ export function VOLTHADashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">VOLTHA PON Management</h2>
-          <p className="text-sm text-muted-foreground">
-            OLT/ONU monitoring and provisioning
-          </p>
+          <p className="text-sm text-muted-foreground">OLT/ONU monitoring and provisioning</p>
         </div>
         <Button onClick={handleRefresh} disabled={refreshing} variant="outline">
           <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
@@ -214,23 +235,19 @@ export function VOLTHADashboard() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              OLTs
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">OLTs</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{olts.length}</div>
             <p className="text-xs text-muted-foreground">
-              {olts.filter(o => o.root_device_id).length} active
+              {olts.filter((o) => o.root_device_id).length} active
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              ONUs
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">ONUs</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{onus.length}</div>
@@ -248,9 +265,7 @@ export function VOLTHADashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-red-600">{criticalAlarms.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {alarms.length} total alarms
-            </p>
+            <p className="text-xs text-muted-foreground">{alarms.length} total alarms</p>
           </CardContent>
         </Card>
       </div>
@@ -268,7 +283,7 @@ export function VOLTHADashboard() {
                 <SelectValue placeholder="Select OLT" />
               </SelectTrigger>
               <SelectContent>
-                {olts.map(olt => (
+                {olts.map((olt) => (
                   <SelectItem key={olt.id} value={olt.id}>
                     {olt.id} ({olt.desc?.serial_num || "N/A"})
                   </SelectItem>
@@ -296,8 +311,11 @@ export function VOLTHADashboard() {
 
             <div className="space-y-2">
               <h4 className="font-medium">PON Ports ({oltOverview.pon_ports.length})</h4>
-              {oltOverview.pon_ports.map(port => (
-                <div key={port.port_no} className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-card/40">
+              {oltOverview.pon_ports.map((port) => (
+                <div
+                  key={port.port_no}
+                  className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-card/40"
+                >
                   <div className="flex items-center gap-3">
                     <Radio className="w-5 h-5" />
                     <div>
@@ -352,8 +370,11 @@ export function VOLTHADashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {filteredONUs.slice(0, 20).map(onu => (
-              <div key={onu.id} className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-card/40 hover:bg-card/60 transition-colors">
+            {filteredONUs.slice(0, 20).map((onu) => (
+              <div
+                key={onu.id}
+                className="flex items-center justify-between p-3 rounded-lg border border-border/60 bg-card/40 hover:bg-card/60 transition-colors"
+              >
                 <div className="flex items-center gap-3">
                   <Server className="w-5 h-5" />
                   <div>
@@ -365,7 +386,9 @@ export function VOLTHADashboard() {
                 </div>
                 <div className="flex items-center gap-3">
                   {getStatusBadge(onu.oper_status || "UNKNOWN")}
-                  <Button variant="ghost" size="sm">Details</Button>
+                  <Button variant="ghost" size="sm">
+                    Details
+                  </Button>
                 </div>
               </div>
             ))}
@@ -384,8 +407,11 @@ export function VOLTHADashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {criticalAlarms.slice(0, 5).map(alarm => (
-                <div key={alarm.id} className="flex items-center justify-between p-3 rounded-lg border border-red-200 bg-red-50">
+              {criticalAlarms.slice(0, 5).map((alarm) => (
+                <div
+                  key={alarm.id}
+                  className="flex items-center justify-between p-3 rounded-lg border border-red-200 bg-red-50"
+                >
                   <div>
                     <div className="font-medium">{alarm.type}</div>
                     <div className="text-xs text-muted-foreground">

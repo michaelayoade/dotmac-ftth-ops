@@ -4,38 +4,38 @@
  * Enhanced input component with comprehensive TypeScript support,
  * accessibility features, and security validation
  */
-'use client';
+"use client";
 
-import { cva, type VariantProps } from 'class-variance-authority';
-import { clsx } from 'clsx';
-import { forwardRef, useState, useCallback, useId } from 'react';
-import { Eye, EyeOff, AlertCircle, Check } from 'lucide-react';
+import { cva, type VariantProps } from "class-variance-authority";
+import { clsx } from "clsx";
+import { forwardRef, useState, useCallback, useId } from "react";
+import { Eye, EyeOff, AlertCircle, Check } from "lucide-react";
 
 const inputVariants = cva(
-  'flex w-full rounded-md border bg-background px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50 transition-colors',
+  "flex w-full rounded-md border bg-background px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 disabled:cursor-not-allowed disabled:opacity-50 transition-colors",
   {
     variants: {
       variant: {
-        default: 'border-input focus-visible:ring-ring',
-        error: 'border-destructive text-destructive focus-visible:ring-destructive',
-        success: 'border-success text-success focus-visible:ring-success',
-        warning: 'border-warning text-warning focus-visible:ring-warning',
+        default: "border-input focus-visible:ring-ring",
+        error: "border-destructive text-destructive focus-visible:ring-destructive",
+        success: "border-success text-success focus-visible:ring-success",
+        warning: "border-warning text-warning focus-visible:ring-warning",
       },
       size: {
-        sm: 'h-8 px-2 text-xs',
-        default: 'h-9 px-3',
-        lg: 'h-10 px-4',
+        sm: "h-8 px-2 text-xs",
+        default: "h-9 px-3",
+        lg: "h-10 px-4",
       },
     },
     defaultVariants: {
-      variant: 'default',
-      size: 'default',
+      variant: "default",
+      size: "default",
     },
-  }
+  },
 );
 
 export interface InputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>,
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">,
     VariantProps<typeof inputVariants> {
   /** Label for the input */
   label?: string;
@@ -75,7 +75,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       className,
       variant,
       size,
-      type = 'text',
+      type = "text",
       label,
       helperText,
       error,
@@ -96,10 +96,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       onChange,
       onBlur,
       id,
-      'aria-describedby': ariaDescribedBy,
+      "aria-describedby": ariaDescribedBy,
       ...props
     },
-    ref
+    ref,
   ) => {
     const [showPassword, setShowPassword] = useState(false);
     const [validationError, setValidationError] = useState<string | null>(null);
@@ -113,16 +113,16 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     // Determine current state
     const currentError = error || validationError;
     const currentVariant = currentError
-      ? 'error'
+      ? "error"
       : success
-        ? 'success'
+        ? "success"
         : warning
-          ? 'warning'
+          ? "warning"
           : variant;
 
     // Input type handling
-    const inputType = type === 'password' && showPassword ? 'text' : type;
-    const shouldShowPasswordToggle = type === 'password' && showPasswordToggle;
+    const inputType = type === "password" && showPassword ? "text" : type;
+    const shouldShowPasswordToggle = type === "password" && showPasswordToggle;
 
     // Sanitize input value
     const sanitizeValue = useCallback(
@@ -131,11 +131,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         // Basic XSS prevention
         return val
-          .replace(/[<>]/g, '') // Remove angle brackets
-          .replace(/javascript:/gi, '') // Remove javascript protocol
-          .replace(/on\w+=/gi, ''); // Remove event handlers
+          .replace(/[<>]/g, "") // Remove angle brackets
+          .replace(/javascript:/gi, "") // Remove javascript protocol
+          .replace(/on\w+=/gi, ""); // Remove event handlers
       },
-      [sanitize]
+      [sanitize],
     );
 
     // Validation handler
@@ -146,10 +146,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         try {
           return validate(val);
         } catch (err) {
-          return 'Validation error occurred';
+          return "Validation error occurred";
         }
       },
-      [validate]
+      [validate],
     );
 
     // Change handler
@@ -183,7 +183,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         onChange?.(syntheticEvent as React.ChangeEvent<HTMLInputElement>);
       },
-      [sanitizeValue, validateOnChange, performValidation, validationError, onChange]
+      [sanitizeValue, validateOnChange, performValidation, validationError, onChange],
     );
 
     // Blur handler
@@ -196,7 +196,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         onBlur?.(e);
       },
-      [validateOnBlur, performValidation, onBlur]
+      [validateOnBlur, performValidation, onBlur],
     );
 
     // Password toggle handler
@@ -208,23 +208,23 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const describedBy =
       [ariaDescribedBy, helperText ? helperTextId : null, currentError ? errorId : null]
         .filter(Boolean)
-        .join(' ') || undefined;
+        .join(" ") || undefined;
 
     // Character count display
     const showCharCountDisplay = showCharCount && maxLength;
     const isCharLimitExceeded = maxLength && charCount > maxLength;
 
     return (
-      <div className='space-y-1'>
+      <div className="space-y-1">
         {/* Label */}
         {label && (
           <label
             htmlFor={actualId}
-            className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           >
             {label}
             {props.required && (
-              <span className='ml-1 text-destructive' aria-label='required'>
+              <span className="ml-1 text-destructive" aria-label="required">
                 *
               </span>
             )}
@@ -232,10 +232,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
 
         {/* Input Container */}
-        <div className='relative'>
+        <div className="relative">
           {/* Left Icon */}
           {leftIcon && (
-            <div className='absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none'>
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
               {leftIcon}
             </div>
           )}
@@ -246,51 +246,51 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={actualId}
             type={inputType}
             className={clsx(inputVariants({ variant: currentVariant, size, className }), {
-              'pl-10': leftIcon,
-              'pr-10': rightIcon || shouldShowPasswordToggle,
-              'pr-20': rightIcon && shouldShowPasswordToggle,
+              "pl-10": leftIcon,
+              "pr-10": rightIcon || shouldShowPasswordToggle,
+              "pr-20": rightIcon && shouldShowPasswordToggle,
             })}
             disabled={disabled || isLoading}
             value={value}
             onChange={handleChange}
             onBlur={handleBlur}
             maxLength={maxLength}
-            aria-invalid={currentError ? 'true' : 'false'}
+            aria-invalid={currentError ? "true" : "false"}
             aria-describedby={describedBy}
             {...props}
           />
 
           {/* Right Icons */}
-          <div className='absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2'>
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
             {/* Validation Status Icon */}
             {currentError && (
-              <AlertCircle className='h-4 w-4 text-destructive' aria-hidden='true' />
+              <AlertCircle className="h-4 w-4 text-destructive" aria-hidden="true" />
             )}
             {success && !currentError && (
-              <Check className='h-4 w-4 text-success' aria-hidden='true' />
+              <Check className="h-4 w-4 text-success" aria-hidden="true" />
             )}
 
             {/* Custom Right Icon */}
-            {rightIcon && <div className='text-muted-foreground'>{rightIcon}</div>}
+            {rightIcon && <div className="text-muted-foreground">{rightIcon}</div>}
 
             {/* Password Toggle */}
             {shouldShowPasswordToggle && (
               <button
-                type='button'
+                type="button"
                 onClick={togglePasswordVisibility}
-                className='text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring'
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                aria-label={showPassword ? "Hide password" : "Show password"}
                 tabIndex={disabled ? -1 : 0}
               >
-                {showPassword ? <EyeOff className='h-4 w-4' /> : <Eye className='h-4 w-4' />}
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             )}
           </div>
 
           {/* Loading Overlay */}
           {isLoading && (
-            <div className='absolute inset-0 bg-background/50 flex items-center justify-center rounded-md'>
-              <div className='animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full' />
+            <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-md">
+              <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
             </div>
           )}
         </div>
@@ -299,8 +299,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {showCharCountDisplay && (
           <div
             className={clsx(
-              'text-xs text-right',
-              isCharLimitExceeded ? 'text-destructive' : 'text-muted-foreground'
+              "text-xs text-right",
+              isCharLimitExceeded ? "text-destructive" : "text-muted-foreground",
             )}
           >
             {charCount}/{maxLength}
@@ -309,28 +309,28 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         {/* Helper Text */}
         {helperText && !currentError && (
-          <p id={helperTextId} className='text-xs text-muted-foreground'>
+          <p id={helperTextId} className="text-xs text-muted-foreground">
             {helperText}
           </p>
         )}
 
         {/* Error Message */}
         {currentError && (
-          <p id={errorId} className='text-xs text-destructive' role='alert'>
+          <p id={errorId} className="text-xs text-destructive" role="alert">
             {currentError}
           </p>
         )}
 
         {/* Success Message */}
-        {success && !currentError && <p className='text-xs text-success'>{success}</p>}
+        {success && !currentError && <p className="text-xs text-success">{success}</p>}
 
         {/* Warning Message */}
-        {warning && !currentError && !success && <p className='text-xs text-warning'>{warning}</p>}
+        {warning && !currentError && !success && <p className="text-xs text-warning">{warning}</p>}
       </div>
     );
-  }
+  },
 );
 
-Input.displayName = 'Input';
+Input.displayName = "Input";
 
 export { inputVariants };

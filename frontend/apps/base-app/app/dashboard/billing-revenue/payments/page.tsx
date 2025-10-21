@@ -1,14 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -16,16 +10,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -33,10 +27,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 import {
   CreditCard,
   DollarSign,
@@ -52,19 +46,19 @@ import {
   ArrowDownRight,
   Receipt,
   Send,
-} from 'lucide-react';
-import { format } from 'date-fns';
-import { usePayments, usePaymentMetrics, type PaymentStatus } from '@/hooks/usePaymentsGraphQL';
+} from "lucide-react";
+import { format } from "date-fns";
+import { usePayments, usePaymentMetrics, type PaymentStatus } from "@/hooks/usePaymentsGraphQL";
 
 interface Payment {
   id: string;
   amount: number;
   currency: string;
-  status: 'succeeded' | 'pending' | 'failed' | 'refunded' | 'cancelled';
+  status: "succeeded" | "pending" | "failed" | "refunded" | "cancelled";
   customer_name: string;
   customer_email: string;
   payment_method: string;
-  payment_method_type: 'card' | 'bank' | 'wallet' | 'other';
+  payment_method_type: "card" | "bank" | "wallet" | "other";
   description: string;
   invoice_id?: string;
   subscription_id?: string;
@@ -79,27 +73,27 @@ interface Payment {
 
 export default function PaymentsPage() {
   const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | undefined>(undefined);
-  const [dateRange, setDateRange] = useState<string>('last_30_days');
+  const [dateRange, setDateRange] = useState<string>("last_30_days");
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showRefundDialog, setShowRefundDialog] = useState(false);
-  const [refundAmount, setRefundAmount] = useState('');
-  const [refundReason, setRefundReason] = useState('');
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundReason, setRefundReason] = useState("");
 
   // Calculate date filters
   const getDateFilters = () => {
     const now = new Date();
-    if (dateRange === 'last_7_days') {
+    if (dateRange === "last_7_days") {
       return {
         dateFrom: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       };
-    } else if (dateRange === 'last_30_days') {
+    } else if (dateRange === "last_30_days") {
       return {
         dateFrom: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
       };
-    } else if (dateRange === 'last_90_days') {
+    } else if (dateRange === "last_90_days") {
       return {
         dateFrom: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString(),
       };
@@ -124,23 +118,18 @@ export default function PaymentsPage() {
       includeInvoice: false,
       ...dateFilters,
     },
-    true
+    true,
   );
 
   // Fetch payment metrics
-  const {
-    data: metricsData,
-    isLoading: metricsLoading,
-  } = usePaymentMetrics(
-    {
-      ...dateFilters,
-      enabled: true,
-    }
-  );
+  const { data: metricsData, isLoading: metricsLoading } = usePaymentMetrics({
+    ...dateFilters,
+    enabled: true,
+  });
 
   // Transform payments data with search filter
   const payments = (paymentsData?.payments || [])
-    .filter(payment => {
+    .filter((payment) => {
       if (!searchQuery) return true;
       const searchLower = searchQuery.toLowerCase();
       return (
@@ -150,15 +139,15 @@ export default function PaymentsPage() {
         payment.description?.toLowerCase().includes(searchLower)
       );
     })
-    .map(p => ({
+    .map((p) => ({
       id: p.id,
       amount: p.amount,
       currency: p.currency,
-      status: p.status as Payment['status'],
-      customer_name: p.customer?.name || 'Unknown Customer',
-      customer_email: p.customer?.email || '',
+      status: p.status as Payment["status"],
+      customer_name: p.customer?.name || "Unknown Customer",
+      customer_email: p.customer?.email || "",
       payment_method: p.provider,
-      payment_method_type: p.paymentMethodType as Payment['payment_method_type'],
+      payment_method_type: p.paymentMethodType as Payment["payment_method_type"],
       description: p.description || `Payment via ${p.provider}`,
       invoice_id: p.invoiceId || undefined,
       subscription_id: p.subscriptionId || undefined,
@@ -181,13 +170,12 @@ export default function PaymentsPage() {
     failedAmount: metricsData?.failedAmount || 0,
   };
 
-
   const handleRefund = useCallback(async () => {
     if (!selectedPayment || !refundAmount) {
       toast({
-        title: 'Error',
-        description: 'Please enter a refund amount',
-        variant: 'destructive',
+        title: "Error",
+        description: "Please enter a refund amount",
+        variant: "destructive",
       });
       return;
     }
@@ -195,46 +183,65 @@ export default function PaymentsPage() {
     try {
       // API call would go here
       toast({
-        title: 'Success',
+        title: "Success",
         description: `Refund of $${refundAmount} initiated for payment ${selectedPayment.id}`,
       });
       setShowRefundDialog(false);
-      setRefundAmount('');
-      setRefundReason('');
+      setRefundAmount("");
+      setRefundReason("");
       refetchPayments();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to process refund',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to process refund",
+        variant: "destructive",
       });
     }
   }, [selectedPayment, refundAmount, toast, refetchPayments]);
 
-  const handleRetryPayment = useCallback(async (payment: Payment) => {
-    try {
-      // API call would go here
-      toast({
-        title: 'Processing',
-        description: `Retrying payment ${payment.id}...`,
-      });
-      refetchPayments();
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to retry payment',
-        variant: 'destructive',
-      });
-    }
-  }, [toast, refetchPayments]);
+  const handleRetryPayment = useCallback(
+    async (payment: Payment) => {
+      try {
+        // API call would go here
+        toast({
+          title: "Processing",
+          description: `Retrying payment ${payment.id}...`,
+        });
+        refetchPayments();
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to retry payment",
+          variant: "destructive",
+        });
+      }
+    },
+    [toast, refetchPayments],
+  );
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      succeeded: { label: 'Succeeded', variant: 'default' as const, icon: CheckCircle },
-      pending: { label: 'Pending', variant: 'outline' as const, icon: Clock },
-      failed: { label: 'Failed', variant: 'destructive' as const, icon: XCircle },
-      refunded: { label: 'Refunded', variant: 'secondary' as const, icon: ArrowDownRight },
-      cancelled: { label: 'Cancelled', variant: 'secondary' as const, icon: XCircle },
+      succeeded: {
+        label: "Succeeded",
+        variant: "default" as const,
+        icon: CheckCircle,
+      },
+      pending: { label: "Pending", variant: "outline" as const, icon: Clock },
+      failed: {
+        label: "Failed",
+        variant: "destructive" as const,
+        icon: XCircle,
+      },
+      refunded: {
+        label: "Refunded",
+        variant: "secondary" as const,
+        icon: ArrowDownRight,
+      },
+      cancelled: {
+        label: "Cancelled",
+        variant: "secondary" as const,
+        icon: XCircle,
+      },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
@@ -250,11 +257,11 @@ export default function PaymentsPage() {
 
   const getPaymentMethodIcon = (type: string) => {
     switch (type) {
-      case 'card':
+      case "card":
         return <CreditCard className="h-4 w-4 text-muted-foreground" />;
-      case 'bank':
+      case "bank":
         return <DollarSign className="h-4 w-4 text-muted-foreground" />;
-      case 'wallet':
+      case "wallet":
         return <CreditCard className="h-4 w-4 text-muted-foreground" />;
       default:
         return <DollarSign className="h-4 w-4 text-muted-foreground" />;
@@ -262,8 +269,8 @@ export default function PaymentsPage() {
   };
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency: currency,
     }).format(amount);
   };
@@ -295,9 +302,7 @@ export default function PaymentsPage() {
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(metrics.totalRevenue, 'USD')}
-            </div>
+            <div className="text-2xl font-bold">{formatCurrency(metrics.totalRevenue, "USD")}</div>
             <p className="text-xs text-muted-foreground flex items-center mt-1">
               <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
               From successful payments
@@ -330,7 +335,7 @@ export default function PaymentsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(metrics.avgPaymentSize, 'USD')}
+              {formatCurrency(metrics.avgPaymentSize, "USD")}
             </div>
             <p className="text-xs text-muted-foreground">Per transaction</p>
           </CardContent>
@@ -341,7 +346,7 @@ export default function PaymentsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {formatCurrency(metrics.pendingAmount, 'USD')}
+              {formatCurrency(metrics.pendingAmount, "USD")}
             </div>
             <p className="text-xs text-muted-foreground">Awaiting processing</p>
           </CardContent>
@@ -352,7 +357,7 @@ export default function PaymentsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {formatCurrency(metrics.failedAmount, 'USD')}
+              {formatCurrency(metrics.failedAmount, "USD")}
             </div>
             <p className="text-xs text-muted-foreground">Requires attention</p>
           </CardContent>
@@ -375,8 +380,12 @@ export default function PaymentsPage() {
                 />
               </div>
               <select
-                value={statusFilter || 'all'}
-                onChange={(e) => setStatusFilter(e.target.value === 'all' ? undefined : e.target.value as PaymentStatus)}
+                value={statusFilter || "all"}
+                onChange={(e) =>
+                  setStatusFilter(
+                    e.target.value === "all" ? undefined : (e.target.value as PaymentStatus),
+                  )
+                }
                 className="h-10 w-[150px] rounded-md border border-border bg-accent px-3 text-sm text-white"
               >
                 <option value="all">All Status</option>
@@ -442,7 +451,9 @@ export default function PaymentsPage() {
                     <TableCell>
                       <div>
                         <div className="font-medium">{payment.customer_name}</div>
-                        <div className="text-sm text-muted-foreground">{payment.customer_email}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {payment.customer_email}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -469,10 +480,10 @@ export default function PaymentsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {format(new Date(payment.created_at), 'MMM d, yyyy')}
+                        {format(new Date(payment.created_at), "MMM d, yyyy")}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {format(new Date(payment.created_at), 'h:mm a')}
+                        {format(new Date(payment.created_at), "h:mm a")}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -487,7 +498,7 @@ export default function PaymentsPage() {
                         >
                           View
                         </Button>
-                        {payment.status === 'succeeded' && !payment.refund_amount && (
+                        {payment.status === "succeeded" && !payment.refund_amount && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -499,7 +510,7 @@ export default function PaymentsPage() {
                             Refund
                           </Button>
                         )}
-                        {payment.status === 'failed' && (
+                        {payment.status === "failed" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -509,11 +520,7 @@ export default function PaymentsPage() {
                           </Button>
                         )}
                         {payment.invoice_id && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            title="View Invoice"
-                          >
+                          <Button size="sm" variant="outline" title="View Invoice">
                             <Receipt className="h-4 w-4" />
                           </Button>
                         )}
@@ -534,7 +541,8 @@ export default function PaymentsPage() {
             <DialogHeader>
               <DialogTitle>Payment Details</DialogTitle>
               <DialogDescription>
-                {selectedPayment.id} • {format(new Date(selectedPayment.created_at), 'MMM d, yyyy h:mm a')}
+                {selectedPayment.id} •{" "}
+                {format(new Date(selectedPayment.created_at), "MMM d, yyyy h:mm a")}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -553,7 +561,9 @@ export default function PaymentsPage() {
                   <Label>Customer</Label>
                   <div className="mt-1">
                     <div>{selectedPayment.customer_name}</div>
-                    <div className="text-sm text-muted-foreground">{selectedPayment.customer_email}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {selectedPayment.customer_email}
+                    </div>
                   </div>
                 </div>
                 <div>
@@ -570,7 +580,9 @@ export default function PaymentsPage() {
                 {selectedPayment.failure_reason && (
                   <div className="col-span-2">
                     <Label>Failure Reason</Label>
-                    <div className="mt-1 text-sm text-red-600">{selectedPayment.failure_reason}</div>
+                    <div className="mt-1 text-sm text-red-600">
+                      {selectedPayment.failure_reason}
+                    </div>
                   </div>
                 )}
                 {selectedPayment.fee_amount !== undefined && (
@@ -623,9 +635,7 @@ export default function PaymentsPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Process Refund</DialogTitle>
-              <DialogDescription>
-                Refund payment {selectedPayment.id}
-              </DialogDescription>
+              <DialogDescription>Refund payment {selectedPayment.id}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -656,11 +666,14 @@ export default function PaymentsPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => {
-                setShowRefundDialog(false);
-                setRefundAmount('');
-                setRefundReason('');
-              }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowRefundDialog(false);
+                  setRefundAmount("");
+                  setRefundReason("");
+                }}
+              >
                 Cancel
               </Button>
               <Button onClick={handleRefund} variant="destructive">

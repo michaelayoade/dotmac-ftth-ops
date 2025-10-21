@@ -97,7 +97,7 @@ class LogStats(BaseModel):  # BaseModel resolves to Any in isolation
 # Router
 # ============================================================
 
-logs_router = APIRouter(prefix="/monitoring", )
+logs_router = APIRouter(prefix="/monitoring", tags=["Logs"])
 
 
 # ============================================================
@@ -126,7 +126,7 @@ class LogsService:
 
     async def get_logs(
         self,
-        current_user: UserInfo,
+        current_user: UserInfo | None = None,
         level: LogLevel | None = None,
         service: str | None = None,
         search: str | None = None,
@@ -150,6 +150,8 @@ class LogsService:
             LogsResponse with filtered logs from database
         """
         if self._use_database():
+            if current_user is None:
+                raise ValueError("current_user is required when querying logs from the database")
             return await self._get_logs_from_database(
                 current_user=current_user,
                 level=level,
@@ -173,12 +175,16 @@ class LogsService:
 
     async def get_log_stats(
         self,
-        current_user: UserInfo,
+        current_user: UserInfo | None = None,
         start_time: datetime | None = None,
         end_time: datetime | None = None,
     ) -> LogStats:
         """Get log statistics from audit activities."""
         if self._use_database():
+            if current_user is None:
+                raise ValueError(
+                    "current_user is required when retrieving log statistics from the database"
+                )
             return await self._get_log_stats_from_database(
                 current_user=current_user,
                 start_time=start_time,
@@ -190,9 +196,13 @@ class LogsService:
             end_time=end_time,
         )
 
-    async def get_available_services(self, current_user: UserInfo) -> list[str]:
+    async def get_available_services(self, current_user: UserInfo | None = None) -> list[str]:
         """Return list of available service names."""
         if self._use_database():
+            if current_user is None:
+                raise ValueError(
+                    "current_user is required when retrieving log services from the database"
+                )
             return await self._get_available_services_from_database(current_user=current_user)
 
         services = {log.service for log in self._sample_logs}

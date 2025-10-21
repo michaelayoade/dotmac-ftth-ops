@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
@@ -52,7 +52,10 @@ export default function OSSConfigurationPage() {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as OSSService | "overview")}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as OSSService | "overview")}
+      >
         <TabsList className="grid w-full grid-cols-5 lg:w-[800px]">
           <TabsTrigger value="overview" className="gap-2">
             <Settings className="h-4 w-4" />
@@ -68,10 +71,7 @@ export default function OSSConfigurationPage() {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          <OSSStatusOverview
-            configurations={configurations || []}
-            statistics={statistics}
-          />
+          <OSSStatusOverview configurations={configurations || []} statistics={statistics} />
         </TabsContent>
 
         {/* Individual Service Tabs */}

@@ -80,12 +80,12 @@ export function InvoiceDetailModal({
   useEffect(() => {
     const fetchCompanyInfo = async () => {
       try {
-        const response = await apiClient.get('/settings/company');
+        const response = await apiClient.get("/settings/company");
         if (response.data) {
           setCompanyInfo(response.data);
         }
       } catch (error) {
-        console.error('Failed to fetch company info:', error);
+        console.error("Failed to fetch company info:", error);
         // Use fallback data if API fails
         setCompanyInfo({
           name: "Your ISP Company",
@@ -116,7 +116,7 @@ export function InvoiceDetailModal({
           setCustomerInfo(response.data);
         }
       } catch (error) {
-        console.error('Failed to fetch customer info:', error);
+        console.error("Failed to fetch customer info:", error);
         // Fallback to just customer ID
         setCustomerInfo({ name: `Customer ${invoice.customer_id}` });
       }
@@ -135,8 +135,7 @@ export function InvoiceDetailModal({
     new Date(invoice.due_date) < new Date();
 
   const daysUntilDue = Math.ceil(
-    (new Date(invoice.due_date).getTime() - new Date().getTime()) /
-      (1000 * 60 * 60 * 24)
+    (new Date(invoice.due_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
   );
 
   const handleSendEmail = async () => {
@@ -149,7 +148,7 @@ export function InvoiceDetailModal({
 
   const handleVoid = async () => {
     const reason = prompt(
-      `Are you sure you want to void invoice ${invoice.invoice_number}?\n\nThis action cannot be undone. Please provide a reason:`
+      `Are you sure you want to void invoice ${invoice.invoice_number}?\n\nThis action cannot be undone. Please provide a reason:`,
     );
     if (!reason) return;
 
@@ -189,10 +188,11 @@ export function InvoiceDetailModal({
       };
 
       // Use fetched customer info or fallback
-      const customerName = customerInfo?.name ||
-                          customerInfo?.full_name ||
-                          customerInfo?.company_name ||
-                          `Customer ${invoice.customer_id}`;
+      const customerName =
+        customerInfo?.name ||
+        customerInfo?.full_name ||
+        customerInfo?.company_name ||
+        `Customer ${invoice.customer_id}`;
 
       await generator.downloadInvoicePDF({
         company,
@@ -295,17 +295,16 @@ export function InvoiceDetailModal({
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2 border-b pb-4">
-            {invoice.status !== InvoiceStatuses.PAID &&
-              invoice.status !== InvoiceStatuses.VOID && (
-                <Button
-                  size="sm"
-                  onClick={() => setShowPaymentModal(true)}
-                  disabled={isProcessing || isActionLoading}
-                >
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Record Payment
-                </Button>
-              )}
+            {invoice.status !== InvoiceStatuses.PAID && invoice.status !== InvoiceStatuses.VOID && (
+              <Button
+                size="sm"
+                onClick={() => setShowPaymentModal(true)}
+                disabled={isProcessing || isActionLoading}
+              >
+                <DollarSign className="h-4 w-4 mr-2" />
+                Record Payment
+              </Button>
+            )}
             {invoice.status === InvoiceStatuses.FINALIZED && (
               <Button
                 size="sm"
@@ -330,21 +329,11 @@ export function InvoiceDetailModal({
                   Send Reminder
                 </Button>
               )}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleDownloadPDF}
-              disabled={isProcessing}
-            >
+            <Button size="sm" variant="outline" onClick={handleDownloadPDF} disabled={isProcessing}>
               <Download className="h-4 w-4 mr-2" />
               Download PDF
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handlePrint}
-              disabled={isProcessing}
-            >
+            <Button size="sm" variant="outline" onClick={handlePrint} disabled={isProcessing}>
               <Printer className="h-4 w-4 mr-2" />
               Print
             </Button>
@@ -359,19 +348,18 @@ export function InvoiceDetailModal({
                 Credit Note
               </Button>
             )}
-            {invoice.status !== InvoiceStatuses.PAID &&
-              invoice.status !== InvoiceStatuses.VOID && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleVoid}
-                  disabled={isProcessing || isActionLoading}
-                  className="text-red-400 hover:text-red-300"
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Void Invoice
-                </Button>
-              )}
+            {invoice.status !== InvoiceStatuses.PAID && invoice.status !== InvoiceStatuses.VOID && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleVoid}
+                disabled={isProcessing || isActionLoading}
+                className="text-red-400 hover:text-red-300"
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Void Invoice
+              </Button>
+            )}
           </div>
 
           {/* Invoice Content */}
@@ -446,9 +434,7 @@ export function InvoiceDetailModal({
                           {formatCurrency(item.unit_price)}
                         </TableCell>
                         <TableCell className="text-right font-medium">
-                          {formatCurrency(
-                            item.total_price || item.quantity * item.unit_price
-                          )}
+                          {formatCurrency(item.total_price || item.quantity * item.unit_price)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -484,9 +470,7 @@ export function InvoiceDetailModal({
                 )}
                 <div className="flex justify-between pt-2 border-t">
                   <span className="font-medium">Total Amount:</span>
-                  <span className="text-xl font-bold">
-                    {formatCurrency(invoice.total_amount)}
-                  </span>
+                  <span className="text-xl font-bold">{formatCurrency(invoice.total_amount)}</span>
                 </div>
                 {invoice.amount_paid > 0 && (
                   <>
@@ -522,9 +506,7 @@ export function InvoiceDetailModal({
                   )}
                   {invoice.notes && (
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">
-                        Notes:
-                      </p>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">Notes:</p>
                       <p className="text-sm whitespace-pre-wrap">{invoice.notes}</p>
                     </div>
                   )}
@@ -550,9 +532,7 @@ export function InvoiceDetailModal({
                 <div className="border rounded-lg p-4 bg-emerald-500/10">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-emerald-400">
-                        Payment Received
-                      </p>
+                      <p className="text-sm font-medium text-emerald-400">Payment Received</p>
                       {invoice.paid_date && (
                         <p className="text-xs text-muted-foreground mt-1">
                           {new Date(invoice.paid_date).toLocaleDateString()} at{" "}

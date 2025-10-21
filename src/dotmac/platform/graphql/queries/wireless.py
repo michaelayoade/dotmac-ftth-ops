@@ -292,13 +292,16 @@ class WirelessQueries:
         ).order_by(desc(WirelessClientModel.last_seen))
 
         if access_point_id:
-            device_filters = [WirelessClientModel.device_id == str(access_point_id)]
             try:
                 ap_uuid = uuid.UUID(str(access_point_id))
-                device_filters.append(WirelessClientModel.device_id == ap_uuid)
             except ValueError:
-                pass
-            query = query.where(or_(*device_filters))
+                # Invalid UUID -> no results
+                return WirelessClientConnection(
+                    clients=[],
+                    total_count=0,
+                    has_next_page=False,
+                )
+            query = query.where(WirelessClientModel.device_id == ap_uuid)
 
         if frequency_band:
             db_freq = (
@@ -376,7 +379,7 @@ class WirelessQueries:
         try:
             client_id = uuid.UUID(str(id))
         except ValueError:
-            client_id = str(id)
+            return None
 
         query = select(WirelessClientModel).where(
             and_(
@@ -410,17 +413,15 @@ class WirelessQueries:
         db: AsyncSession = info.context["db"]
         tenant_id = info.context["tenant_id"]
 
-        device_filters = [WirelessClientModel.device_id == str(access_point_id)]
         try:
             ap_uuid = uuid.UUID(str(access_point_id))
-            device_filters.append(WirelessClientModel.device_id == ap_uuid)
         except ValueError:
-            pass
+            return []
 
         query = select(WirelessClientModel).where(
             and_(
                 WirelessClientModel.tenant_id == tenant_id,
-                or_(*device_filters),
+                WirelessClientModel.device_id == ap_uuid,
             )
         ).order_by(desc(WirelessClientModel.last_seen))
 
@@ -550,9 +551,14 @@ class WirelessQueries:
         db: AsyncSession = info.context["db"]
         tenant_id = info.context["tenant_id"]
 
+        try:
+            zone_id = uuid.UUID(str(id))
+        except ValueError:
+            return None
+
         query = select(CoverageZoneModel).where(
             and_(
-                CoverageZoneModel.id == id,
+                CoverageZoneModel.id == zone_id,
                 CoverageZoneModel.tenant_id == tenant_id,
             )
         )
@@ -582,18 +588,28 @@ class WirelessQueries:
         db: AsyncSession = info.context["db"]
         tenant_id = info.context["tenant_id"]
 
-        # Join with device to filter by site
-        query = select(CoverageZoneModel).join(WirelessDevice).where(
-            and_(
-                CoverageZoneModel.tenant_id == tenant_id,
-                WirelessDevice.site_name == site_id,
-            )
-        ).order_by(CoverageZoneModel.zone_name)
+        query = (
+            select(CoverageZoneModel)
+            .where(CoverageZoneModel.tenant_id == tenant_id)
+            .order_by(CoverageZoneModel.zone_name)
+        )
 
         result = await db.execute(query)
-        zones = result.scalars().all()
+        zone_models = result.scalars().all()
 
-        return [map_coverage_zone_model_to_graphql(zone) for zone in zones]
+        filtered_zones: list[CoverageZoneModel] = []
+        for zone in zone_models:
+            metadata = zone.extra_metadata or {}
+            site_meta = metadata.get("site") or {}
+            site_match = site_meta.get("id") == site_id or site_meta.get("name") == site_id
+
+            device = getattr(zone, "device", None)
+            device_match = device.site_name == site_id if device else False
+
+            if site_match or device_match:
+                filtered_zones.append(zone)
+
+        return [map_coverage_zone_model_to_graphql(zone) for zone in filtered_zones]
 
     # ========================================================================
     # RF Analytics Queries
@@ -866,25 +882,45 @@ class WirelessQueries:
         # Calculate health score based on AP uptime
         health_score = (online_aps / total_aps * 100) if total_aps > 0 else 0
 
+        capacity = total_aps * 100  # Assume 100 clients per AP for now
+        utilization = (total_clients / capacity * 100) if capacity else 0.0
+
+        site_display_name = site_id
+        metadata_query = (
+            select(WirelessDevice.extra_metadata)
+            .where(
+                and_(
+                    WirelessDevice.tenant_id == tenant_id,
+                    WirelessDevice.site_name == site_id,
+                    WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                )
+            )
+            .limit(1)
+        )
+        metadata_row = await db.execute(metadata_query)
+        metadata_value = metadata_row.scalar_one_or_none() or {}
+        site_meta = metadata_value.get("site") if isinstance(metadata_value, dict) else {}
+        site_display_name = site_meta.get("name", site_display_name)
+
         return WirelessSiteMetrics(
             site_id=site_id,
-            site_name=site_id,
-            total_access_points=total_aps,
+            site_name=site_display_name,
+            total_aps=total_aps,
             online_aps=online_aps,
             offline_aps=offline_aps,
             degraded_aps=0,  # Would need to track degraded state separately
             total_clients=total_clients,
-            clients_by_band_2_4ghz=clients_2_4,
-            clients_by_band_5ghz=clients_5,
-            clients_by_band_6ghz=0,  # Would need to add 6GHz tracking
-            average_signal_strength_dbm=0.0,  # Would need signal measurements
-            average_throughput_mbps=0.0,  # Would need throughput metrics
+            clients_2_4ghz=clients_2_4,
+            clients_5ghz=clients_5,
+            clients_6ghz=0,  # TODO: derive 6 GHz metrics when available
+            average_signal_strength_dbm=0.0,  # TODO: derive from signal measurements
+            average_snr=0.0,
             total_throughput_mbps=0.0,
-            coverage_percent=100.0,  # Would need coverage zone analysis
-            capacity_utilization_percent=0.0,  # Would need capacity calculations
-            health_score=health_score,
-            issues_count=offline_aps,  # Count offline APs as issues
-            generated_at=datetime.utcnow(),
+            total_capacity=capacity,
+            capacity_utilization_percent=utilization,
+            overall_health_score=health_score,
+            rf_health_score=health_score,
+            client_experience_score=health_score,
         )
 
     @strawberry.field

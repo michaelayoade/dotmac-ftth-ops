@@ -12,7 +12,12 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
-  "keywords": ["react", "analytics", "metrics", "dotmac"],
+  "keywords": [
+    "react",
+    "analytics",
+    "metrics",
+    "dotmac"
+  ],
   "author": "DotMac Team",
   "license": "MIT",
   "devDependencies": {

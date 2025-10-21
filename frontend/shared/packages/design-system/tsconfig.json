@@ -5,5 +5,11 @@
     "rootDir": "src"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.*", "**/*.spec.*", "src/responsive/breakpoint-manager.ts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "src/responsive/breakpoint-manager.ts"
+  ]
 }

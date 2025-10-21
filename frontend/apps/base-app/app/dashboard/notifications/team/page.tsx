@@ -4,50 +4,50 @@
  * Send notifications to teams via role-based filtering or explicit user lists
  */
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Send, Users, AlertCircle, CheckCircle2, Loader2, Bell } from 'lucide-react';
+import { useState } from "react";
+import { Send, Users, AlertCircle, CheckCircle2, Loader2, Bell } from "lucide-react";
 import {
   useTeamNotifications,
   AVAILABLE_ROLES,
   type TeamNotificationRequest,
-} from '@/hooks/useTeamNotifications';
-import type { NotificationPriority, NotificationType } from '@/hooks/useNotifications';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/hooks/useTeamNotifications";
+import type { NotificationPriority, NotificationType } from "@/hooks/useNotifications";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useRBAC } from '@/contexts/RBACContext';
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useRBAC } from "@/contexts/RBACContext";
 
-type TargetMode = 'role' | 'users';
+type TargetMode = "role" | "users";
 
 export default function TeamNotificationPage() {
   const { hasPermission } = useRBAC();
-  const canWrite = hasPermission('notifications.write') || hasPermission('admin');
+  const canWrite = hasPermission("notifications.write") || hasPermission("admin");
 
   const { sendTeamNotification, isLoading, error } = useTeamNotifications();
 
   // Form state
-  const [targetMode, setTargetMode] = useState<TargetMode>('role');
-  const [selectedRole, setSelectedRole] = useState<string>('');
-  const [userIds, setUserIds] = useState<string>('');
-  const [notificationType, setNotificationType] = useState<NotificationType>('system_announcement');
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
-  const [priority, setPriority] = useState<NotificationPriority>('medium');
-  const [actionUrl, setActionUrl] = useState('');
-  const [actionLabel, setActionLabel] = useState('');
+  const [targetMode, setTargetMode] = useState<TargetMode>("role");
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [userIds, setUserIds] = useState<string>("");
+  const [notificationType, setNotificationType] = useState<NotificationType>("system_announcement");
+  const [title, setTitle] = useState("");
+  const [message, setMessage] = useState("");
+  const [priority, setPriority] = useState<NotificationPriority>("medium");
+  const [actionUrl, setActionUrl] = useState("");
+  const [actionLabel, setActionLabel] = useState("");
 
   // Success state
   const [successResponse, setSuccessResponse] = useState<any>(null);
@@ -72,12 +72,12 @@ export default function TeamNotificationPage() {
         auto_send: true,
       };
 
-      if (targetMode === 'role') {
+      if (targetMode === "role") {
         request.role_filter = selectedRole;
       } else {
         // Parse comma-separated user IDs
         const userIdList = userIds
-          .split(',')
+          .split(",")
           .map((id) => id.trim())
           .filter((id) => id.length > 0);
         request.team_members = userIdList;
@@ -87,21 +87,21 @@ export default function TeamNotificationPage() {
       setSuccessResponse(response);
 
       // Reset form
-      setTitle('');
-      setMessage('');
-      setActionUrl('');
-      setActionLabel('');
-      setUserIds('');
+      setTitle("");
+      setMessage("");
+      setActionUrl("");
+      setActionLabel("");
+      setUserIds("");
     } catch (err) {
       // Error is handled by the hook
-      console.error('Failed to send team notification:', err);
+      console.error("Failed to send team notification:", err);
     }
   };
 
   const isFormValid = () => {
     if (!title.trim() || !message.trim()) return false;
-    if (targetMode === 'role' && !selectedRole) return false;
-    if (targetMode === 'users' && !userIds.trim()) return false;
+    if (targetMode === "role" && !selectedRole) return false;
+    if (targetMode === "users" && !userIds.trim()) return false;
     return true;
   };
 
@@ -140,7 +140,7 @@ export default function TeamNotificationPage() {
             Notification Sent Successfully
           </AlertTitle>
           <AlertDescription className="text-green-600 dark:text-green-400">
-            {successResponse.notifications_created} notification(s) created for{' '}
+            {successResponse.notifications_created} notification(s) created for{" "}
             {successResponse.target_count} user(s)
             {successResponse.role_filter && ` with role "${successResponse.role_filter}"`}
           </AlertDescription>
@@ -160,16 +160,17 @@ export default function TeamNotificationPage() {
       <Card>
         <CardHeader>
           <CardTitle>Send Team Notification</CardTitle>
-          <CardDescription>
-            Select notification target and compose your message
-          </CardDescription>
+          <CardDescription>Select notification target and compose your message</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Target Mode Selection */}
             <div className="space-y-3">
               <Label>Target Mode</Label>
-              <RadioGroup value={targetMode} onValueChange={(v: string) => setTargetMode(v as TargetMode)}>
+              <RadioGroup
+                value={targetMode}
+                onValueChange={(v: string) => setTargetMode(v as TargetMode)}
+              >
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="role" id="role" />
                   <Label htmlFor="role" className="font-normal cursor-pointer">
@@ -186,7 +187,7 @@ export default function TeamNotificationPage() {
             </div>
 
             {/* Role Selection */}
-            {targetMode === 'role' && (
+            {targetMode === "role" && (
               <div className="space-y-2">
                 <Label htmlFor="role-select">Select Role *</Label>
                 <Select value={selectedRole} onValueChange={setSelectedRole}>
@@ -208,7 +209,7 @@ export default function TeamNotificationPage() {
             )}
 
             {/* User IDs */}
-            {targetMode === 'users' && (
+            {targetMode === "users" && (
               <div className="space-y-2">
                 <Label htmlFor="user-ids">User IDs *</Label>
                 <Textarea
@@ -248,7 +249,10 @@ export default function TeamNotificationPage() {
             {/* Priority */}
             <div className="space-y-2">
               <Label htmlFor="priority">Priority *</Label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as NotificationPriority)}>
+              <Select
+                value={priority}
+                onValueChange={(v) => setPriority(v as NotificationPriority)}
+              >
                 <SelectTrigger id="priority">
                   <SelectValue />
                 </SelectTrigger>
@@ -345,10 +349,21 @@ export default function TeamNotificationPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="text-blue-800 dark:text-blue-200 space-y-2">
-          <p><strong>Role-Based:</strong> Notifications are sent to all active users with the selected role.</p>
-          <p><strong>User-Based:</strong> Notifications are sent to specific users by their UUIDs.</p>
-          <p><strong>Channels:</strong> Notifications are delivered via in-app, email, and other configured channels based on user preferences.</p>
-          <p><strong>Error Handling:</strong> If one user fails, notifications will still be sent to remaining users.</p>
+          <p>
+            <strong>Role-Based:</strong> Notifications are sent to all active users with the
+            selected role.
+          </p>
+          <p>
+            <strong>User-Based:</strong> Notifications are sent to specific users by their UUIDs.
+          </p>
+          <p>
+            <strong>Channels:</strong> Notifications are delivered via in-app, email, and other
+            configured channels based on user preferences.
+          </p>
+          <p>
+            <strong>Error Handling:</strong> If one user fails, notifications will still be sent to
+            remaining users.
+          </p>
         </CardContent>
       </Card>
     </div>

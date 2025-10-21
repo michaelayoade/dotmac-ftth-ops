@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Plus,
   Key,
@@ -14,17 +14,17 @@ import {
   Calendar,
   Shield,
   AlertTriangle,
-} from 'lucide-react';
-import { useApiKeys, APIKey } from '@/hooks/useApiKeys';
-import { CreateApiKeyModal } from '@/components/api-keys/CreateApiKeyModal';
-import { ApiKeyDetailModal } from '@/components/api-keys/ApiKeyDetailModal';
-import { RevokeConfirmModal } from '@/components/api-keys/RevokeConfirmModal';
+} from "lucide-react";
+import { useApiKeys, APIKey } from "@/hooks/useApiKeys";
+import { CreateApiKeyModal } from "@/components/api-keys/CreateApiKeyModal";
+import { ApiKeyDetailModal } from "@/components/api-keys/ApiKeyDetailModal";
+import { RevokeConfirmModal } from "@/components/api-keys/RevokeConfirmModal";
 
 export default function ApiKeysPage() {
   const { apiKeys, loading, error, revokeApiKey } = useApiKeys();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [scopeFilter, setScopeFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [scopeFilter, setScopeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedApiKey, setSelectedApiKey] = useState<APIKey | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -62,7 +62,7 @@ export default function ApiKeysPage() {
         setShowRevokeModal(false);
         setApiKeyToRevoke(null);
       } catch (error) {
-        console.error('Failed to revoke API key:', error);
+        console.error("Failed to revoke API key:", error);
       }
     }
   };
@@ -73,67 +73,68 @@ export default function ApiKeysPage() {
   };
 
   // Filter API keys based on search and filters
-  const filteredApiKeys = apiKeys.filter(apiKey => {
-    const matchesSearch = searchQuery === '' ||
+  const filteredApiKeys = apiKeys.filter((apiKey) => {
+    const matchesSearch =
+      searchQuery === "" ||
       apiKey.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       apiKey.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesScope = scopeFilter === 'all' ||
-      apiKey.scopes.includes(scopeFilter);
+    const matchesScope = scopeFilter === "all" || apiKey.scopes.includes(scopeFilter);
 
-    const matchesStatus = statusFilter === 'all' ||
-      (statusFilter === 'active' && apiKey.is_active) ||
-      (statusFilter === 'inactive' && !apiKey.is_active);
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" && apiKey.is_active) ||
+      (statusFilter === "inactive" && !apiKey.is_active);
 
     return matchesSearch && matchesScope && matchesStatus;
   });
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getStatusColor = (apiKey: APIKey) => {
-    if (!apiKey.is_active) return 'text-red-400 bg-red-500/20 border-red-500/30';
+    if (!apiKey.is_active) return "text-red-400 bg-red-500/20 border-red-500/30";
 
     const now = new Date();
     const expiresAt = apiKey.expires_at ? new Date(apiKey.expires_at) : null;
 
     if (expiresAt && expiresAt < now) {
-      return 'text-red-400 bg-red-500/20 border-red-500/30';
+      return "text-red-400 bg-red-500/20 border-red-500/30";
     }
 
     if (expiresAt && expiresAt.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000) {
-      return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30';
+      return "text-yellow-400 bg-yellow-500/20 border-yellow-500/30";
     }
 
-    return 'text-green-400 bg-green-500/20 border-green-500/30';
+    return "text-green-400 bg-green-500/20 border-green-500/30";
   };
 
   const getStatusText = (apiKey: APIKey) => {
-    if (!apiKey.is_active) return 'Inactive';
+    if (!apiKey.is_active) return "Inactive";
 
     const now = new Date();
     const expiresAt = apiKey.expires_at ? new Date(apiKey.expires_at) : null;
 
     if (expiresAt && expiresAt < now) {
-      return 'Expired';
+      return "Expired";
     }
 
     if (expiresAt && expiresAt.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000) {
-      return 'Expiring Soon';
+      return "Expiring Soon";
     }
 
-    return 'Active';
+    return "Active";
   };
 
   // Get unique scopes for filter dropdown
-  const availableScopes = [...new Set(apiKeys.flatMap(key => key.scopes))];
+  const availableScopes = [...new Set(apiKeys.flatMap((key) => key.scopes))];
 
   if (error) {
     return (
@@ -195,7 +196,9 @@ export default function ApiKeysPage() {
               >
                 <option value="all">All Scopes</option>
                 {availableScopes.map((scope) => (
-                  <option key={scope} value={scope}>{scope}</option>
+                  <option key={scope} value={scope}>
+                    {scope}
+                  </option>
                 ))}
               </select>
             </div>
@@ -223,13 +226,12 @@ export default function ApiKeysPage() {
             <div className="p-8 text-center">
               <Key className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">
-                {apiKeys.length === 0 ? 'No API keys yet' : 'No matching API keys'}
+                {apiKeys.length === 0 ? "No API keys yet" : "No matching API keys"}
               </h3>
               <p className="text-muted-foreground mb-4">
                 {apiKeys.length === 0
-                  ? 'Create your first API key to start integrating with external services.'
-                  : 'Try adjusting your search criteria or filters.'
-                }
+                  ? "Create your first API key to start integrating with external services."
+                  : "Try adjusting your search criteria or filters."}
               </p>
               {apiKeys.length === 0 && (
                 <button
@@ -244,17 +246,14 @@ export default function ApiKeysPage() {
           ) : (
             <div className="divide-y divide-border">
               {filteredApiKeys.map((apiKey) => (
-                <div
-                  key={apiKey.id}
-                  className="p-6 hover:bg-accent/50 transition-colors"
-                >
+                <div key={apiKey.id} className="p-6 hover:bg-accent/50 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-medium text-foreground">
-                          {apiKey.name}
-                        </h3>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(apiKey)}`}>
+                        <h3 className="text-lg font-medium text-foreground">{apiKey.name}</h3>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(apiKey)}`}
+                        >
                           {getStatusText(apiKey)}
                         </span>
                       </div>

@@ -1,30 +1,30 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Send } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
 import {
   useCreateTicket,
   type TicketPriority,
   type TicketType,
   type TicketActorType,
-} from '@/hooks/useTicketing';
+} from "@/hooks/useTicketing";
 
 export default function NewTicketPage() {
   const router = useRouter();
@@ -32,12 +32,12 @@ export default function NewTicketPage() {
   const { createTicket, loading } = useCreateTicket();
 
   const [formData, setFormData] = useState({
-    subject: '',
-    message: '',
-    priority: 'normal' as TicketPriority,
-    ticketType: '' as TicketType | '',
-    targetType: 'tenant' as TicketActorType,
-    serviceAddress: '',
+    subject: "",
+    message: "",
+    priority: "normal" as TicketPriority,
+    ticketType: "" as TicketType | "",
+    targetType: "tenant" as TicketActorType,
+    serviceAddress: "",
     affectedServices: [] as string[],
   });
 
@@ -46,9 +46,9 @@ export default function NewTicketPage() {
 
     if (!formData.subject.trim() || !formData.message.trim()) {
       toast({
-        title: 'Validation Error',
-        description: 'Subject and message are required',
-        variant: 'destructive',
+        title: "Validation Error",
+        description: "Subject and message are required",
+        variant: "destructive",
       });
       return;
     }
@@ -60,12 +60,13 @@ export default function NewTicketPage() {
       priority: formData.priority,
       ticket_type: formData.ticketType || undefined,
       service_address: formData.serviceAddress || undefined,
-      affected_services: formData.affectedServices.length > 0 ? formData.affectedServices : undefined,
+      affected_services:
+        formData.affectedServices.length > 0 ? formData.affectedServices : undefined,
     });
 
     if (result) {
       toast({
-        title: 'Ticket Created',
+        title: "Ticket Created",
         description: `Ticket ${result.ticket_number} has been created successfully`,
       });
       router.push(`/dashboard/support/${result.id}`);
@@ -73,10 +74,10 @@ export default function NewTicketPage() {
   };
 
   const handleServiceToggle = (service: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       affectedServices: prev.affectedServices.includes(service)
-        ? prev.affectedServices.filter(s => s !== service)
+        ? prev.affectedServices.filter((s) => s !== service)
         : [...prev.affectedServices, service],
     }));
   };
@@ -85,19 +86,13 @@ export default function NewTicketPage() {
     <div className="space-y-6 max-w-3xl pb-8">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.push('/dashboard/support')}
-        >
+        <Button variant="ghost" size="sm" onClick={() => router.push("/dashboard/support")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
         <div>
           <h1 className="text-3xl font-bold text-foreground">Create New Ticket</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Submit a new support request
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">Submit a new support request</p>
         </div>
       </div>
 
@@ -106,9 +101,7 @@ export default function NewTicketPage() {
         <Card>
           <CardHeader>
             <CardTitle>Ticket Details</CardTitle>
-            <CardDescription>
-              Provide details about your support request
-            </CardDescription>
+            <CardDescription>Provide details about your support request</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Subject */}
@@ -199,15 +192,15 @@ export default function NewTicketPage() {
             <div className="space-y-2">
               <Label>Affected Services (Optional)</Label>
               <div className="flex flex-wrap gap-2">
-                {['internet', 'voip', 'tv', 'phone'].map((service) => (
+                {["internet", "voip", "tv", "phone"].map((service) => (
                   <button
                     key={service}
                     type="button"
                     onClick={() => handleServiceToggle(service)}
                     className={`px-3 py-1.5 text-sm rounded-md border transition-colors ${
                       formData.affectedServices.includes(service)
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background hover:bg-accent border-input'
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background hover:bg-accent border-input"
                     }`}
                   >
                     {service.charAt(0).toUpperCase() + service.slice(1)}
@@ -239,14 +232,14 @@ export default function NewTicketPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push('/dashboard/support')}
+                onClick={() => router.push("/dashboard/support")}
                 disabled={loading}
               >
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>
                 <Send className="h-4 w-4 mr-2" />
-                {loading ? 'Creating...' : 'Create Ticket'}
+                {loading ? "Creating..." : "Create Ticket"}
               </Button>
             </div>
           </CardContent>

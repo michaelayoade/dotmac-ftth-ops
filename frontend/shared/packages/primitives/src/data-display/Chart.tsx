@@ -2,10 +2,10 @@
  * Unstyled, composable Chart primitives using Recharts
  */
 
-import { cva, type VariantProps } from 'class-variance-authority';
-import { clsx } from 'clsx';
-import type React from 'react';
-import { forwardRef } from 'react';
+import { cva, type VariantProps } from "class-variance-authority";
+import { clsx } from "clsx";
+import type React from "react";
+import { forwardRef } from "react";
 import {
   Area,
   Bar,
@@ -22,26 +22,26 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts';
+} from "recharts";
 
 // Chart container variants
-const chartVariants = cva('', {
+const chartVariants = cva("", {
   variants: {
     size: {
-      sm: '',
-      md: '',
-      lg: '',
-      xl: '',
+      sm: "",
+      md: "",
+      lg: "",
+      xl: "",
     },
     variant: {
-      default: '',
-      minimal: '',
-      detailed: '',
+      default: "",
+      minimal: "",
+      detailed: "",
     },
   },
   defaultVariants: {
-    size: 'md',
-    variant: 'default',
+    size: "md",
+    variant: "default",
   },
 });
 
@@ -83,12 +83,12 @@ function ChartHeader({
   }
 
   return (
-    <div className='chart-header'>
-      <div className='chart-header-content'>
-        {title ? <h3 className='chart-title'>{title}</h3> : null}
-        {description ? <p className='chart-description'>{description}</p> : null}
+    <div className="chart-header">
+      <div className="chart-header-content">
+        {title ? <h3 className="chart-title">{title}</h3> : null}
+        {description ? <p className="chart-description">{description}</p> : null}
       </div>
-      {actions ? <div className='chart-actions'>{actions}</div> : null}
+      {actions ? <div className="chart-actions">{actions}</div> : null}
     </div>
   );
 }
@@ -106,8 +106,8 @@ function ChartContent({
 }) {
   if (loading) {
     return (
-      <div className='chart-loading'>
-        <div className='loading-spinner' />
+      <div className="chart-loading">
+        <div className="loading-spinner" />
         <span>Loading chart data...</span>
       </div>
     );
@@ -115,8 +115,8 @@ function ChartContent({
 
   if (error) {
     return (
-      <div className='chart-error'>
-        <span className='error-icon'>⚠</span>
+      <div className="chart-error">
+        <span className="error-icon">⚠</span>
         <span>Error loading chart: {error}</span>
       </div>
     );
@@ -124,8 +124,8 @@ function ChartContent({
 
   if (!children) {
     return (
-      <div className='chart-empty'>
-        <span className='empty-icon'>📊</span>
+      <div className="chart-empty">
+        <span className="empty-icon">📊</span>
         <span>{emptyText}</span>
       </div>
     );
@@ -140,26 +140,26 @@ const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(
       className,
       loading,
       error,
-      emptyText = 'No data available',
+      emptyText = "No data available",
       title,
       description,
       actions,
       children,
       ...props
     },
-    ref
+    ref,
   ) => {
     return (
-      <div ref={ref} className={clsx('chart-container', className)} {...props}>
+      <div ref={ref} className={clsx("chart-container", className)} {...props}>
         <ChartHeader title={title} description={description} actions={actions} />
-        <div className='chart-content'>
+        <div className="chart-content">
           <ChartContent loading={loading} error={error} emptyText={emptyText}>
             {children}
           </ChartContent>
         </div>
       </div>
     );
-  }
+  },
 );
 
 // Line Chart
@@ -176,18 +176,18 @@ export interface LineChartProps extends BaseChartProps {
   showTooltip?: boolean;
   showLegend?: boolean;
   xAxisKey?: string;
-  yAxisDomain?: [number, number] | ['auto', 'auto'];
+  yAxisDomain?: [number, number] | ["auto", "auto"];
 }
 
 export function LineChart({
   data,
   lines = [],
-  width = '100%',
+  width = "100%",
   height = 300,
   showGrid = true,
   showTooltip = true,
   showLegend = true,
-  xAxisKey = 'name',
+  xAxisKey = "name",
   yAxisDomain,
   size,
   variant,
@@ -219,7 +219,7 @@ export function LineChart({
     >
       <ResponsiveContainer width={width} height={height}>
         <RechartsLineChart data={data}>
-          {showGrid ? <CartesianGrid strokeDasharray='3 3' /> : null}
+          {showGrid ? <CartesianGrid strokeDasharray="3 3" /> : null}
           <XAxis dataKey={xAxisKey} />
           <YAxis domain={yAxisDomain} />
           {showTooltip ? <Tooltip /> : null}
@@ -229,7 +229,7 @@ export function LineChart({
             ({ key, stroke, strokeWidth = 2, strokeDasharray, dot = true, activeDot = true }) => (
               <Line
                 key={key}
-                type='monotone'
+                type="monotone"
                 dataKey={key}
                 stroke={stroke}
                 strokeWidth={strokeWidth}
@@ -237,7 +237,7 @@ export function LineChart({
                 dot={dot}
                 activeDot={activeDot}
               />
-            )
+            ),
           )}
         </RechartsLineChart>
       </ResponsiveContainer>
@@ -256,21 +256,21 @@ export interface BarChartProps extends BaseChartProps {
   showTooltip?: boolean;
   showLegend?: boolean;
   xAxisKey?: string;
-  yAxisDomain?: [number, number] | ['auto', 'auto'];
-  layout?: 'horizontal' | 'vertical';
+  yAxisDomain?: [number, number] | ["auto", "auto"];
+  layout?: "horizontal" | "vertical";
 }
 
 export function BarChart({
   data,
   bars = [],
-  width = '100%',
+  width = "100%",
   height = 300,
   showGrid = true,
   showTooltip = true,
   showLegend = true,
-  xAxisKey = 'name',
+  xAxisKey = "name",
   yAxisDomain,
-  layout = 'vertical',
+  layout = "vertical",
   size,
   variant,
   className,
@@ -301,7 +301,7 @@ export function BarChart({
     >
       <ResponsiveContainer width={width} height={height}>
         <RechartsBarChart data={data} layout={layout}>
-          {showGrid ? <CartesianGrid strokeDasharray='3 3' /> : null}
+          {showGrid ? <CartesianGrid strokeDasharray="3 3" /> : null}
           <XAxis dataKey={xAxisKey} />
           <YAxis domain={yAxisDomain} />
           {showTooltip ? <Tooltip /> : null}
@@ -328,18 +328,18 @@ export interface AreaChartProps extends BaseChartProps {
   showTooltip?: boolean;
   showLegend?: boolean;
   xAxisKey?: string;
-  yAxisDomain?: [number, number] | ['auto', 'auto'];
+  yAxisDomain?: [number, number] | ["auto", "auto"];
 }
 
 export function AreaChart({
   data,
   areas = [],
-  width = '100%',
+  width = "100%",
   height = 300,
   showGrid = true,
   showTooltip = true,
   showLegend = true,
-  xAxisKey = 'name',
+  xAxisKey = "name",
   yAxisDomain,
   size,
   variant,
@@ -371,7 +371,7 @@ export function AreaChart({
     >
       <ResponsiveContainer width={width} height={height}>
         <RechartsAreaChart data={data}>
-          {showGrid ? <CartesianGrid strokeDasharray='3 3' /> : null}
+          {showGrid ? <CartesianGrid strokeDasharray="3 3" /> : null}
           <XAxis dataKey={xAxisKey} />
           <YAxis domain={yAxisDomain} />
           {showTooltip ? <Tooltip /> : null}
@@ -380,7 +380,7 @@ export function AreaChart({
           {areas.map(({ key, stroke, fill, stackId }) => (
             <Area
               key={key}
-              type='monotone'
+              type="monotone"
               dataKey={key}
               stroke={stroke}
               fill={fill}
@@ -408,11 +408,11 @@ export interface PieChartProps extends BaseChartProps {
 export function PieChart({
   data,
   dataKey,
-  nameKey = 'name',
+  nameKey = "name",
   colors = [],
   innerRadius = 0,
   outerRadius = 80,
-  width = '100%',
+  width = "100%",
   height = 300,
   showTooltip = true,
   showLegend = true,
@@ -440,16 +440,16 @@ export function PieChart({
   }
 
   const defaultColors = [
-    '#8884d8',
-    '#82ca9d',
-    '#ffc658',
-    '#ff7300',
-    '#00ff00',
-    '#0088fe',
-    '#8dd1e1',
-    '#d084d0',
-    '#ffb347',
-    '#87ceeb',
+    "#8884d8",
+    "#82ca9d",
+    "#ffc658",
+    "#ff7300",
+    "#00ff00",
+    "#0088fe",
+    "#8dd1e1",
+    "#d084d0",
+    "#ffb347",
+    "#87ceeb",
   ];
 
   const pieColors = colors.length > 0 ? colors : defaultColors;
@@ -466,11 +466,11 @@ export function PieChart({
             data={data}
             dataKey={dataKey}
             nameKey={nameKey}
-            cx='50%'
-            cy='50%'
+            cx="50%"
+            cy="50%"
             innerRadius={innerRadius}
             outerRadius={outerRadius}
-            fill='#8884d8'
+            fill="#8884d8"
             label={showLabels}
           >
             {data.map((_entry, index) => (
@@ -492,38 +492,38 @@ export interface MetricCardProps extends React.HTMLAttributes<HTMLDivElement> {
   subtitle?: string;
   trend?: {
     value: number;
-    direction: 'up' | 'down' | 'neutral';
+    direction: "up" | "down" | "neutral";
   };
   icon?: React.ReactNode;
   loading?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
 }
 
 export const MetricCard = forwardRef<HTMLDivElement, MetricCardProps>(
-  ({ className, title, value, subtitle, trend, icon, loading, size = 'md', ...props }, ref) => {
+  ({ className, title, value, subtitle, trend, icon, loading, size = "md", ...props }, ref) => {
     return (
-      <div ref={ref} className={clsx('metric-card', `size-${size}`, className)} {...props}>
-        <div className='metric-header'>
-          <span className='metric-title'>{title}</span>
-          {icon ? <span className='metric-icon'>{icon}</span> : null}
+      <div ref={ref} className={clsx("metric-card", `size-${size}`, className)} {...props}>
+        <div className="metric-header">
+          <span className="metric-title">{title}</span>
+          {icon ? <span className="metric-icon">{icon}</span> : null}
         </div>
 
-        <div className='metric-content'>
+        <div className="metric-content">
           {loading ? (
-            <div className='metric-loading'>
-              <div className='loading-skeleton' />
+            <div className="metric-loading">
+              <div className="loading-skeleton" />
             </div>
           ) : (
             <>
-              <span className='metric-value'>{value}</span>
+              <span className="metric-value">{value}</span>
               {trend ? (
-                <div className={clsx('metric-trend', `trend-${trend.direction}`)}>
-                  <span className='trend-indicator'>
-                    {trend.direction === 'up' && '↗'}
-                    {trend.direction === 'down' && '↘'}
-                    {trend.direction === 'neutral' && '→'}
+                <div className={clsx("metric-trend", `trend-${trend.direction}`)}>
+                  <span className="trend-indicator">
+                    {trend.direction === "up" && "↗"}
+                    {trend.direction === "down" && "↘"}
+                    {trend.direction === "neutral" && "→"}
                   </span>
-                  <span className='trend-value'>{Math.abs(trend.value)}%</span>
+                  <span className="trend-value">{Math.abs(trend.value)}%</span>
                 </div>
               ) : null}
             </>
@@ -531,37 +531,37 @@ export const MetricCard = forwardRef<HTMLDivElement, MetricCardProps>(
         </div>
 
         {subtitle ? (
-          <div className='metric-footer'>
-            <span className='metric-subtitle'>{subtitle}</span>
+          <div className="metric-footer">
+            <span className="metric-subtitle">{subtitle}</span>
           </div>
         ) : null}
       </div>
     );
-  }
+  },
 );
 
 // Chart utilities
 export const chartUtils = {
   formatNumber: (value: number, options?: Intl.NumberFormatOptions) => {
-    return new Intl.NumberFormat('en-US', {
-      notation: 'compact',
+    return new Intl.NumberFormat("en-US", {
+      notation: "compact",
       maximumFractionDigits: 1,
       ...options,
     }).format(value);
   },
 
-  formatCurrency: (value: number, currency = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+  formatCurrency: (value: number, currency = "USD") => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency,
-      notation: 'compact',
+      notation: "compact",
       maximumFractionDigits: 1,
     }).format(value);
   },
 
   formatPercentage: (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
+    return new Intl.NumberFormat("en-US", {
+      style: "percent",
       maximumFractionDigits: 1,
     }).format(value / 100);
   },
@@ -574,7 +574,7 @@ export const chartUtils = {
   },
 };
 
-ChartContainer.displayName = 'ChartContainer';
-MetricCard.displayName = 'MetricCard';
+ChartContainer.displayName = "ChartContainer";
+MetricCard.displayName = "MetricCard";
 
 export { ChartContainer };

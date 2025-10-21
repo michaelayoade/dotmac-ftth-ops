@@ -47,12 +47,36 @@ export function PayoutsTab() {
 
   const getStatusBadge = (status: PayoutStatus) => {
     const config = {
-      pending: { variant: "secondary" as const, icon: Clock, color: "text-yellow-600" },
-      ready: { variant: "default" as const, icon: CheckCircle2, color: "text-blue-600" },
-      processing: { variant: "default" as const, icon: AlertCircle, color: "text-purple-600" },
-      completed: { variant: "default" as const, icon: CheckCircle2, color: "text-green-600" },
-      failed: { variant: "destructive" as const, icon: XCircle, color: "text-red-600" },
-      cancelled: { variant: "outline" as const, icon: XCircle, color: "text-gray-600" },
+      pending: {
+        variant: "secondary" as const,
+        icon: Clock,
+        color: "text-yellow-600",
+      },
+      ready: {
+        variant: "default" as const,
+        icon: CheckCircle2,
+        color: "text-blue-600",
+      },
+      processing: {
+        variant: "default" as const,
+        icon: AlertCircle,
+        color: "text-purple-600",
+      },
+      completed: {
+        variant: "default" as const,
+        icon: CheckCircle2,
+        color: "text-green-600",
+      },
+      failed: {
+        variant: "destructive" as const,
+        icon: XCircle,
+        color: "text-red-600",
+      },
+      cancelled: {
+        variant: "outline" as const,
+        icon: XCircle,
+        color: "text-gray-600",
+      },
     };
 
     const { variant, icon: Icon, color } = config[status];
@@ -84,17 +108,15 @@ export function PayoutsTab() {
   // Calculate totals
   const totalAmount = payouts?.reduce((sum, p) => sum + p.total_amount, 0) || 0;
   const completedAmount =
-    payouts
-      ?.filter((p) => p.status === "completed")
-      .reduce((sum, p) => sum + p.total_amount, 0) || 0;
+    payouts?.filter((p) => p.status === "completed").reduce((sum, p) => sum + p.total_amount, 0) ||
+    0;
   const pendingAmount =
     payouts
       ?.filter((p) => p.status === "pending" || p.status === "ready")
       .reduce((sum, p) => sum + p.total_amount, 0) || 0;
   const processingAmount =
-    payouts
-      ?.filter((p) => p.status === "processing")
-      .reduce((sum, p) => sum + p.total_amount, 0) || 0;
+    payouts?.filter((p) => p.status === "processing").reduce((sum, p) => sum + p.total_amount, 0) ||
+    0;
 
   const completedCount = payouts?.filter((p) => p.status === "completed").length || 0;
   const failedCount = payouts?.filter((p) => p.status === "failed").length || 0;
@@ -112,70 +134,48 @@ export function PayoutsTab() {
           <CardContent>
             <div className="flex items-center gap-2">
               <Wallet className="h-4 w-4 text-purple-500" />
-              <span className="text-2xl font-bold">
-                {formatCurrency(totalAmount)}
-              </span>
+              <span className="text-2xl font-bold">{formatCurrency(totalAmount)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {payouts?.length || 0} payouts
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">{payouts?.length || 0} payouts</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Completed
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-green-500" />
-              <span className="text-2xl font-bold">
-                {formatCurrency(completedAmount)}
-              </span>
+              <span className="text-2xl font-bold">{formatCurrency(completedAmount)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {completedCount} payouts
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">{completedCount} payouts</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pending
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-yellow-500" />
-              <span className="text-2xl font-bold">
-                {formatCurrency(pendingAmount)}
-              </span>
+              <span className="text-2xl font-bold">{formatCurrency(pendingAmount)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Awaiting processing
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">Awaiting processing</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Processing
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Processing</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-blue-500" />
-              <span className="text-2xl font-bold">
-                {formatCurrency(processingAmount)}
-              </span>
+              <span className="text-2xl font-bold">{formatCurrency(processingAmount)}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              In progress
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">In progress</p>
           </CardContent>
         </Card>
       </div>
@@ -231,9 +231,7 @@ export function PayoutsTab() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Payout History</CardTitle>
-            <CardDescription>
-              All payouts processed for your partnership
-            </CardDescription>
+            <CardDescription>All payouts processed for your partnership</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="rounded-md border">
@@ -290,9 +288,7 @@ export function PayoutsTab() {
                       <TableCell>{getStatusBadge(payout.status)}</TableCell>
                       <TableCell>
                         {payout.payment_reference ? (
-                          <span className="text-sm font-mono">
-                            {payout.payment_reference}
-                          </span>
+                          <span className="text-sm font-mono">{payout.payment_reference}</span>
                         ) : (
                           <span className="text-sm text-muted-foreground">-</span>
                         )}
@@ -328,15 +324,11 @@ export function PayoutsTab() {
       {payouts && payouts.length >= pageSize && (
         <div className="flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
-            Showing {(page - 1) * pageSize + 1} to{" "}
-            {Math.min(page * pageSize, payouts.length)} payouts
+            Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, payouts.length)}{" "}
+            payouts
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setPage(page - 1)}
-              disabled={page === 1}
-            >
+            <Button variant="outline" onClick={() => setPage(page - 1)} disabled={page === 1}>
               Previous
             </Button>
             <Button

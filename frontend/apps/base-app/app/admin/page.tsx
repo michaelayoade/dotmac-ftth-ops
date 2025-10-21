@@ -1,11 +1,18 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { AlertOctagon, Users, ShieldCheck, Activity } from "lucide-react";
 
 const RECENT_ACTIVITY = [
@@ -44,8 +51,8 @@ export default function AdminOverviewPage() {
         </Badge>
         <h1 className="text-3xl font-semibold text-foreground">Operational control center</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Review compliance posture, recent privileged activity, and service health before diving into detailed user or
-          configuration changes.
+          Review compliance posture, recent privileged activity, and service health before diving
+          into detailed user or configuration changes.
         </p>
       </header>
 
@@ -57,18 +64,24 @@ export default function AdminOverviewPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold text-foreground">12</div>
-            <p className="text-xs text-muted-foreground">MFA enforced for 100% of administrator accounts</p>
+            <p className="text-xs text-muted-foreground">
+              MFA enforced for 100% of administrator accounts
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-foreground">Pending access requests</CardTitle>
+            <CardTitle className="text-sm font-medium text-foreground">
+              Pending access requests
+            </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold text-foreground">4</div>
-            <p className="text-xs text-muted-foreground">Requests awaiting review in the last 24 hours</p>
+            <p className="text-xs text-muted-foreground">
+              Requests awaiting review in the last 24 hours
+            </p>
           </CardContent>
         </Card>
 
@@ -79,7 +92,9 @@ export default function AdminOverviewPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-semibold text-foreground">1</div>
-            <p className="text-xs text-muted-foreground">Degraded response times detected on billing webhooks</p>
+            <p className="text-xs text-muted-foreground">
+              Degraded response times detected on billing webhooks
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -90,7 +105,9 @@ export default function AdminOverviewPage() {
             <Activity className="h-5 w-5 text-muted-foreground" />
             Recent privileged activity
           </CardTitle>
-          <CardDescription>Monitor the most recent changes made by administrators across the platform.</CardDescription>
+          <CardDescription>
+            Monitor the most recent changes made by administrators across the platform.
+          </CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <Table>
@@ -122,7 +139,9 @@ export default function AdminOverviewPage() {
                   <TableCell className="font-mono text-sm text-foreground">{activity.id}</TableCell>
                   <TableCell className="text-sm text-foreground">{activity.actor}</TableCell>
                   <TableCell className="text-sm text-foreground">{activity.action}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{activity.context}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {activity.context}
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{activity.time}</TableCell>
                   <TableCell>
                     <Badge
@@ -130,8 +149,8 @@ export default function AdminOverviewPage() {
                         activity.status === "warning"
                           ? "destructive"
                           : activity.status === "success"
-                          ? "outline"
-                          : "secondary"
+                            ? "outline"
+                            : "secondary"
                       }
                     >
                       {activity.status === "warning" ? "needs attention" : "completed"}

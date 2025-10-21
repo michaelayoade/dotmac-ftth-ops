@@ -3,7 +3,7 @@
  * Handles caching of API responses with TTL and invalidation
  */
 
-import type { CacheEntry } from './types';
+import type { CacheEntry } from "./types";
 
 export class ApiCache {
   private cache = new Map<string, CacheEntry>();
@@ -18,8 +18,8 @@ export class ApiCache {
   }
 
   // Generate cache key
-  private generateKey(url: string, method: string = 'GET', params?: any): string {
-    const paramsStr = params ? JSON.stringify(params) : '';
+  private generateKey(url: string, method: string = "GET", params?: any): string {
+    const paramsStr = params ? JSON.stringify(params) : "";
     return `${method}:${url}:${btoa(paramsStr).slice(0, 16)}`;
   }
 
@@ -91,7 +91,7 @@ export class ApiCache {
   // Invalidate all entries matching pattern
   invalidatePattern(pattern: string | RegExp): number {
     let deleted = 0;
-    const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
+    const regex = typeof pattern === "string" ? new RegExp(pattern) : pattern;
 
     for (const [key, entry] of this.cache.entries()) {
       if (regex.test(entry.key)) {
@@ -106,7 +106,7 @@ export class ApiCache {
   // Invalidate all entries for a specific endpoint
   invalidateEndpoint(endpoint: string): number {
     return this.invalidatePattern(
-      new RegExp(`GET:${endpoint.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`)
+      new RegExp(`GET:${endpoint.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
     );
   }
 
@@ -183,7 +183,7 @@ export class ApiCache {
       return Array.from(this.cache.keys());
     }
 
-    const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
+    const regex = typeof pattern === "string" ? new RegExp(pattern) : pattern;
     return Array.from(this.cache.entries())
       .filter(([, entry]) => regex.test(entry.key))
       .map(([key]) => key);
@@ -197,7 +197,7 @@ export class ApiCache {
       params?: any;
       data: T;
       ttl?: number;
-    }>
+    }>,
   ): void {
     entries.forEach(({ url, method, params, data, ttl }) => {
       this.set(url, data, method, params, ttl);

@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useRBAC } from '@/contexts/RBACContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useRBAC } from "@/contexts/RBACContext";
 import {
   useRfAnalyticsGraphQL,
   useChannelUtilizationGraphQL,
   getFrequencyBandLabel,
-} from '@/hooks/useWirelessGraphQL';
-import { platformConfig } from '@/lib/config';
-import { Activity, BarChart3, Radio, RefreshCw, Signal, TrendingUp, Zap } from 'lucide-react';
-import Link from 'next/link';
+} from "@/hooks/useWirelessGraphQL";
+import { platformConfig } from "@/lib/config";
+import { Activity, BarChart3, Radio, RefreshCw, Signal, TrendingUp, Zap } from "lucide-react";
+import Link from "next/link";
 
 export default function RFAnalyticsPage() {
   const { hasPermission } = useRBAC();
-  const hasWirelessAccess = platformConfig.features.enableNetwork && hasPermission('isp.ipam.read');
+  const hasWirelessAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
 
   // Fetch RF analytics
   const {
@@ -28,7 +28,7 @@ export default function RFAnalyticsPage() {
     error: analyticsError,
     refetch: refetchAnalytics,
   } = useRfAnalyticsGraphQL({
-    siteId: '',
+    siteId: "",
     pollInterval: 60000, // Refresh every minute
   });
 
@@ -39,7 +39,7 @@ export default function RFAnalyticsPage() {
     error: utilizationError,
     refetch: refetchUtilization,
   } = useChannelUtilizationGraphQL({
-    siteId: '',
+    siteId: "",
     pollInterval: 60000,
   });
 
@@ -87,18 +87,28 @@ export default function RFAnalyticsPage() {
   }
 
   const getUtilizationColor = (utilization: number) => {
-    if (utilization >= 80) return 'text-red-600';
-    if (utilization >= 60) return 'text-amber-600';
-    if (utilization >= 40) return 'text-yellow-600';
-    return 'text-green-600';
+    if (utilization >= 80) return "text-red-600";
+    if (utilization >= 60) return "text-amber-600";
+    if (utilization >= 40) return "text-yellow-600";
+    return "text-green-600";
   };
 
   const getInterferenceLevel = (score: number) => {
-    if (score >= 80) return { label: 'Excellent', color: 'text-green-600', variant: 'default' };
-    if (score >= 60) return { label: 'Good', color: 'text-green-500', variant: 'default' };
-    if (score >= 40) return { label: 'Fair', color: 'text-amber-600', variant: 'secondary' };
-    if (score >= 20) return { label: 'Poor', color: 'text-orange-600', variant: 'destructive' };
-    return { label: 'Critical', color: 'text-red-600', variant: 'destructive' };
+    if (score >= 80)
+      return {
+        label: "Excellent",
+        color: "text-green-600",
+        variant: "default",
+      };
+    if (score >= 60) return { label: "Good", color: "text-green-500", variant: "default" };
+    if (score >= 40) return { label: "Fair", color: "text-amber-600", variant: "secondary" };
+    if (score >= 20)
+      return {
+        label: "Poor",
+        color: "text-orange-600",
+        variant: "destructive",
+      };
+    return { label: "Critical", color: "text-red-600", variant: "destructive" };
   };
 
   return (
@@ -157,9 +167,7 @@ export default function RFAnalyticsPage() {
                 <div className="text-2xl font-bold text-muted-foreground">Loading...</div>
               ) : (
                 <>
-                  <div className="text-2xl font-bold">
-                    -85 dBm
-                  </div>
+                  <div className="text-2xl font-bold">-85 dBm</div>
                   <p className="text-xs text-muted-foreground">Background noise level</p>
                 </>
               )}
@@ -195,12 +203,8 @@ export default function RFAnalyticsPage() {
                 <div className="text-2xl font-bold text-muted-foreground">Loading...</div>
               ) : (
                 <>
-                  <div className="text-2xl font-bold">
-                    {85?.toFixed(0) || 0}%
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {getInterferenceLevel(85).label}
-                  </p>
+                  <div className="text-2xl font-bold">{(85)?.toFixed(0) || 0}%</div>
+                  <p className="text-xs text-muted-foreground">{getInterferenceLevel(85).label}</p>
                 </>
               )}
             </CardContent>
@@ -239,18 +243,14 @@ export default function RFAnalyticsPage() {
                           {getInterferenceLevel(85).label}
                         </Badge>
                         <span className={`text-2xl font-bold ${getInterferenceLevel(85).color}`}>
-                          {85?.toFixed(0) || 0}%
+                          {(85)?.toFixed(0) || 0}%
                         </span>
                       </div>
                     </div>
                     <div className="w-full bg-secondary rounded-full h-3">
                       <div
                         className={`h-3 rounded-full transition-all ${
-                          (85) >= 60
-                            ? 'bg-green-600'
-                            : (85) >= 40
-                              ? 'bg-amber-600'
-                              : 'bg-red-600'
+                          85 >= 60 ? "bg-green-600" : 85 >= 40 ? "bg-amber-600" : "bg-red-600"
                         }`}
                         style={{ width: `${85}%` }}
                       />
@@ -267,9 +267,7 @@ export default function RFAnalyticsPage() {
                     </div>
                     <div className="p-4 rounded-lg border">
                       <div className="text-sm text-muted-foreground mb-1">Noise Floor</div>
-                      <div className="text-xl font-bold">
-                        -85 dBm
-                      </div>
+                      <div className="text-xl font-bold">-85 dBm</div>
                     </div>
                     <div className="p-4 rounded-lg border">
                       <div className="text-sm text-muted-foreground mb-1">SNR</div>
@@ -280,15 +278,14 @@ export default function RFAnalyticsPage() {
                   </div>
 
                   {/* Interference Metrics */}
-                  {(80 !== undefined ||
-                    15 !== undefined) && (
+                  {(80 !== undefined || 15 !== undefined) && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="p-4 rounded-lg border">
                         <div className="text-sm text-muted-foreground mb-1">
                           Co-Channel Interference
                         </div>
                         <div className="text-xl font-bold text-amber-600">
-                          {80?.toFixed(1) || 0}%
+                          {(80)?.toFixed(1) || 0}%
                         </div>
                       </div>
                       <div className="p-4 rounded-lg border">
@@ -296,7 +293,7 @@ export default function RFAnalyticsPage() {
                           Adjacent Channel Interference
                         </div>
                         <div className="text-xl font-bold text-amber-600">
-                          {15?.toFixed(1) || 0}%
+                          {(15)?.toFixed(1) || 0}%
                         </div>
                       </div>
                     </div>
@@ -359,7 +356,9 @@ export default function RFAnalyticsPage() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className={`text-lg font-bold ${getUtilizationColor(util.utilizationPercent || 0)}`}>
+                          <div
+                            className={`text-lg font-bold ${getUtilizationColor(util.utilizationPercent || 0)}`}
+                          >
                             {util.utilizationPercent?.toFixed(1) || 0}%
                           </div>
                           <div className="text-xs text-muted-foreground">utilization</div>
@@ -369,12 +368,12 @@ export default function RFAnalyticsPage() {
                         <div
                           className={`h-2 rounded-full transition-all ${
                             (util.utilizationPercent || 0) >= 80
-                              ? 'bg-red-600'
+                              ? "bg-red-600"
                               : (util.utilizationPercent || 0) >= 60
-                                ? 'bg-amber-600'
+                                ? "bg-amber-600"
                                 : (util.utilizationPercent || 0) >= 40
-                                  ? 'bg-yellow-600'
-                                  : 'bg-green-600'
+                                  ? "bg-yellow-600"
+                                  : "bg-green-600"
                           }`}
                           style={{ width: `${util.utilizationPercent || 0}%` }}
                         />
@@ -383,7 +382,9 @@ export default function RFAnalyticsPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No channel utilization data available</p>
+                <p className="text-sm text-muted-foreground">
+                  No channel utilization data available
+                </p>
               )}
             </CardContent>
           </Card>
@@ -406,7 +407,7 @@ export default function RFAnalyticsPage() {
                     <div className="p-6 rounded-lg border">
                       <h3 className="text-sm font-medium mb-4">Co-Channel Interference</h3>
                       <div className="text-3xl font-bold text-amber-600 mb-2">
-                        {80?.toFixed(1) || 0}%
+                        {(80)?.toFixed(1) || 0}%
                       </div>
                       <p className="text-sm text-muted-foreground">
                         Interference from devices on the same channel
@@ -417,7 +418,7 @@ export default function RFAnalyticsPage() {
                     <div className="p-6 rounded-lg border">
                       <h3 className="text-sm font-medium mb-4">Adjacent Channel Interference</h3>
                       <div className="text-3xl font-bold text-amber-600 mb-2">
-                        {15?.toFixed(1) || 0}%
+                        {(15)?.toFixed(1) || 0}%
                       </div>
                       <p className="text-sm text-muted-foreground">
                         Interference from adjacent frequency channels
@@ -429,14 +430,21 @@ export default function RFAnalyticsPage() {
                   <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-950/20">
                     <h3 className="text-sm font-medium mb-2">Recommendations</h3>
                     <ul className="text-sm space-y-1 text-muted-foreground">
-                      {(80) > 30 && (
-                        <li>• Consider adjusting channel assignments to reduce co-channel interference</li>
+                      {80 > 30 && (
+                        <li>
+                          • Consider adjusting channel assignments to reduce co-channel interference
+                        </li>
                       )}
-                      {(15) > 20 && (
-                        <li>• Increase channel spacing to minimize adjacent channel interference</li>
+                      {15 > 20 && (
+                        <li>
+                          • Increase channel spacing to minimize adjacent channel interference
+                        </li>
                       )}
-                      {(85) < 40 && (
-                        <li>• RF environment quality is poor, consider site survey and access point repositioning</li>
+                      {85 < 40 && (
+                        <li>
+                          • RF environment quality is poor, consider site survey and access point
+                          repositioning
+                        </li>
                       )}
                     </ul>
                   </div>

@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
@@ -24,14 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import { useDomainStatus, useDomainVerification } from "@/hooks/useDomainVerification";
 import { DomainVerificationWizard } from "./DomainVerificationWizard";
-import {
-  Globe,
-  CheckCircle2,
-  AlertCircle,
-  Trash2,
-  Plus,
-  Shield,
-} from "lucide-react";
+import { Globe, CheckCircle2, AlertCircle, Trash2, Plus, Shield } from "lucide-react";
 
 interface DomainVerificationCardProps {
   tenantId: string;
@@ -128,11 +115,7 @@ export function DomainVerificationCard({ tenantId }: DomainVerificationCardProps
               </div>
 
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsWizardOpen(true)}
-                  className="flex-1"
-                >
+                <Button variant="outline" onClick={() => setIsWizardOpen(true)} className="flex-1">
                   <Plus className="h-4 w-4 mr-2" />
                   Change Domain
                 </Button>
@@ -149,8 +132,8 @@ export function DomainVerificationCard({ tenantId }: DomainVerificationCardProps
 
               <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-3 rounded-lg">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
-                  <strong>Benefits:</strong> Your custom domain enables branded login pages,
-                  email templates, and customer-facing portals.
+                  <strong>Benefits:</strong> Your custom domain enables branded login pages, email
+                  templates, and customer-facing portals.
                 </p>
               </div>
             </>

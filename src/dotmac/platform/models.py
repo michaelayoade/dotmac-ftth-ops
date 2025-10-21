@@ -51,11 +51,8 @@ from dotmac.platform.billing.core.models import (  # noqa: F401
 
 # Auth models
 from dotmac.platform.auth.models import (  # noqa: F401
-    APIKey,
     Permission,
     Role,
-    RolePermission,
-    UserRole,
 )
 
 # Audit and analytics

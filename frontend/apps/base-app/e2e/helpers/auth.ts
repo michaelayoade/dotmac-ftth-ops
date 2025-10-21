@@ -1,7 +1,7 @@
 /**
  * Authentication helper for E2E tests
  */
-import { Page } from '@playwright/test';
+import { Page } from "@playwright/test";
 
 export interface LoginCredentials {
   username: string;
@@ -20,8 +20,8 @@ export async function login(page: Page, credentials: LoginCredentials) {
   });
 
   // Navigate to dashboard - middleware bypass allows access
-  await page.goto('/dashboard');
+  await page.goto("/dashboard");
 
   // Wait for dashboard to load
-  await page.waitForLoadState('domcontentloaded');
+  await page.waitForLoadState("domcontentloaded");
 }

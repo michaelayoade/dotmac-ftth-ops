@@ -17,13 +17,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -33,12 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { VOLTHAAlarm, VOLTHAAlarmListResponse, AlarmSeverity } from "@/types/voltha";
 
@@ -82,7 +71,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
   const handleAcknowledgeAlarm = async (alarmId: string) => {
     try {
       await apiClient.post(`/api/v1/voltha/alarms/${alarmId}/acknowledge`);
-      setAcknowledgedAlarms(prev => new Set(prev).add(alarmId));
+      setAcknowledgedAlarms((prev) => new Set(prev).add(alarmId));
       toast({
         title: "Alarm Acknowledged",
         description: "Alarm has been acknowledged",
@@ -170,51 +159,37 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{alarmStats.total}</div>
-            <p className="text-xs text-muted-foreground">
-              {alarmStats.active} active
-            </p>
+            <p className="text-xs text-muted-foreground">{alarmStats.active} active</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Critical
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Critical</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-red-600">{alarmStats.critical}</div>
-            <p className="text-xs text-muted-foreground">
-              Requires immediate attention
-            </p>
+            <p className="text-xs text-muted-foreground">Requires immediate attention</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Major
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Major</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-orange-600">{alarmStats.major}</div>
-            <p className="text-xs text-muted-foreground">
-              Service affecting
-            </p>
+            <p className="text-xs text-muted-foreground">Service affecting</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Minor
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Minor</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-yellow-600">{alarmStats.minor}</div>
-            <p className="text-xs text-muted-foreground">
-              Non-service affecting
-            </p>
+            <p className="text-xs text-muted-foreground">Non-service affecting</p>
           </CardContent>
         </Card>
       </div>
@@ -225,9 +200,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Active Alarms</CardTitle>
-              <CardDescription>
-                Real-time alarm monitoring and management
-              </CardDescription>
+              <CardDescription>Real-time alarm monitoring and management</CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Select value={severityFilter} onValueChange={setSeverityFilter}>
@@ -270,9 +243,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <CheckCircle2 className="w-12 h-12 text-green-500 mb-3" />
               <div className="text-lg font-medium">No Active Alarms</div>
-              <p className="text-sm text-muted-foreground">
-                All systems are operating normally
-              </p>
+              <p className="text-sm text-muted-foreground">All systems are operating normally</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -368,9 +339,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
       <Card>
         <CardHeader>
           <CardTitle>Performance Metrics</CardTitle>
-          <CardDescription>
-            Network health and performance indicators
-          </CardDescription>
+          <CardDescription>Network health and performance indicators</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="overview">
@@ -438,9 +407,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
             </TabsContent>
 
             <TabsContent value="traffic" className="space-y-4 mt-4">
-              <div className="text-sm text-muted-foreground">
-                Aggregate traffic statistics
-              </div>
+              <div className="text-sm text-muted-foreground">Aggregate traffic statistics</div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="p-4 rounded-lg border bg-card">
                   <div className="flex items-center justify-between mb-2">

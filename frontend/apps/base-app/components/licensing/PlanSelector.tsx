@@ -4,9 +4,9 @@
  * Displays available service plans with pricing and allows selection
  */
 
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -14,22 +14,14 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import {
-  Check,
-  X,
-  Sparkles,
-  TrendingUp,
-  Building2,
-  Clock,
-  Percent,
-} from 'lucide-react';
-import { ServicePlan, BillingCycle, ModuleCategory } from '../../types/licensing';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Check, X, Sparkles, TrendingUp, Building2, Clock, Percent } from "lucide-react";
+import { ServicePlan, BillingCycle, ModuleCategory } from "../../types/licensing";
+import { cn } from "@/lib/utils";
 
 interface PlanSelectorProps {
   plans: ServicePlan[];
@@ -39,16 +31,16 @@ interface PlanSelectorProps {
 }
 
 const categoryIcons: Record<ModuleCategory, string> = {
-  [ModuleCategory.NETWORK]: '🌐',
-  [ModuleCategory.OSS_INTEGRATION]: '🔗',
-  [ModuleCategory.BILLING]: '💰',
-  [ModuleCategory.ANALYTICS]: '📊',
-  [ModuleCategory.AUTOMATION]: '🤖',
-  [ModuleCategory.COMMUNICATIONS]: '📧',
-  [ModuleCategory.SECURITY]: '🔒',
-  [ModuleCategory.REPORTING]: '📈',
-  [ModuleCategory.API_MANAGEMENT]: '⚙️',
-  [ModuleCategory.OTHER]: '📦',
+  [ModuleCategory.NETWORK]: "🌐",
+  [ModuleCategory.OSS_INTEGRATION]: "🔗",
+  [ModuleCategory.BILLING]: "💰",
+  [ModuleCategory.ANALYTICS]: "📊",
+  [ModuleCategory.AUTOMATION]: "🤖",
+  [ModuleCategory.COMMUNICATIONS]: "📧",
+  [ModuleCategory.SECURITY]: "🔒",
+  [ModuleCategory.REPORTING]: "📈",
+  [ModuleCategory.API_MANAGEMENT]: "⚙️",
+  [ModuleCategory.OTHER]: "📦",
 };
 
 export function PlanSelector({
@@ -59,7 +51,7 @@ export function PlanSelector({
 }: PlanSelectorProps) {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>(BillingCycle.MONTHLY);
 
-  const publicPlans = plans.filter(p => p.is_public && p.is_active);
+  const publicPlans = plans.filter((p) => p.is_public && p.is_active);
   const sortedPlans = publicPlans.sort((a, b) => a.base_price_monthly - b.base_price_monthly);
 
   const calculatePrice = (plan: ServicePlan) => {
@@ -109,10 +101,10 @@ export function PlanSelector({
         />
         <Label htmlFor="billing-cycle" className="text-sm font-medium flex items-center gap-2">
           Annual
-          {sortedPlans.some(p => p.annual_discount_percent > 0) && (
+          {sortedPlans.some((p) => p.annual_discount_percent > 0) && (
             <Badge variant="secondary" className="ml-1">
               <Percent className="h-3 w-3 mr-1" />
-              Save up to {Math.max(...sortedPlans.map(p => p.annual_discount_percent))}%
+              Save up to {Math.max(...sortedPlans.map((p) => p.annual_discount_percent))}%
             </Badge>
           )}
         </Label>
@@ -129,16 +121,14 @@ export function PlanSelector({
             <Card
               key={plan.id}
               className={cn(
-                'relative transition-all hover:shadow-lg',
-                isCurrent && 'border-primary border-2',
-                recommended && 'border-orange-500 border-2 shadow-lg'
+                "relative transition-all hover:shadow-lg",
+                isCurrent && "border-primary border-2",
+                recommended && "border-orange-500 border-2 shadow-lg",
               )}
             >
               {recommended && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-orange-500 hover:bg-orange-600">
-                    Recommended
-                  </Badge>
+                  <Badge className="bg-orange-500 hover:bg-orange-600">Recommended</Badge>
                 </div>
               )}
 
@@ -153,24 +143,19 @@ export function PlanSelector({
                   {getPlanIcon(index)}
                 </div>
                 <CardTitle className="text-2xl">{plan.plan_name}</CardTitle>
-                <CardDescription className="min-h-[2.5rem]">
-                  {plan.description}
-                </CardDescription>
+                <CardDescription className="min-h-[2.5rem]">{plan.description}</CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-6">
                 {/* Pricing */}
                 <div className="text-center">
                   <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold">
-                      ${pricing.price.toFixed(0)}
-                    </span>
+                    <span className="text-4xl font-bold">${pricing.price.toFixed(0)}</span>
                     <span className="text-muted-foreground">/month</span>
                   </div>
                   {billingCycle === BillingCycle.ANNUAL && pricing.savings > 0 && (
                     <p className="text-sm text-muted-foreground mt-1">
-                      <span className="line-through">${pricing.originalPrice.toFixed(0)}</span>
-                      {' '}
+                      <span className="line-through">${pricing.originalPrice.toFixed(0)}</span>{" "}
                       <span className="text-green-600 font-medium">
                         Save ${pricing.savings.toFixed(0)}/mo
                       </span>
@@ -196,20 +181,21 @@ export function PlanSelector({
                   <p className="text-sm font-medium">Included Features:</p>
                   <ul className="space-y-2">
                     {plan.modules
-                      ?.filter(m => m.included_by_default)
+                      ?.filter((m) => m.included_by_default)
                       .slice(0, 5)
                       .map((planModule) => (
                         <li key={planModule.id} className="flex items-start gap-2 text-sm">
                           <Check className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
                           <span>
-                            {categoryIcons[planModule.module?.category as ModuleCategory]}{' '}
+                            {categoryIcons[planModule.module?.category as ModuleCategory]}{" "}
                             {planModule.module?.module_name}
                           </span>
                         </li>
                       ))}
-                    {(plan.modules?.filter(m => m.included_by_default).length || 0) > 5 && (
+                    {(plan.modules?.filter((m) => m.included_by_default).length || 0) > 5 && (
                       <li className="text-sm text-muted-foreground pl-6">
-                        +{(plan.modules?.filter(m => m.included_by_default).length || 0) - 5} more features
+                        +{(plan.modules?.filter((m) => m.included_by_default).length || 0) - 5} more
+                        features
                       </li>
                     )}
                   </ul>
@@ -224,8 +210,7 @@ export function PlanSelector({
                         <li key={quota.id} className="flex items-start gap-2 text-sm">
                           <Check className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
                           <span>
-                            {quota.included_quantity.toLocaleString()}{' '}
-                            {quota.quota?.quota_name}
+                            {quota.included_quantity.toLocaleString()} {quota.quota?.quota_name}
                           </span>
                         </li>
                       ))}
@@ -237,11 +222,11 @@ export function PlanSelector({
               <CardFooter>
                 <Button
                   className="w-full"
-                  variant={isCurrent ? 'outline' : recommended ? 'default' : 'outline'}
+                  variant={isCurrent ? "outline" : recommended ? "default" : "outline"}
                   onClick={() => onSelectPlan(plan, billingCycle)}
                   disabled={loading || isCurrent}
                 >
-                  {isCurrent ? 'Current Plan' : 'Select Plan'}
+                  {isCurrent ? "Current Plan" : "Select Plan"}
                 </Button>
               </CardFooter>
             </Card>

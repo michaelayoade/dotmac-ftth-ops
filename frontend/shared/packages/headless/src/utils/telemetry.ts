@@ -2,13 +2,17 @@
  * OpenTelemetry initialization for Next.js applications
  */
 
-import { NodeSDK } from '@opentelemetry/sdk-node';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { Resource } from '@opentelemetry/resources';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { OTLPMetricExporter } from '@opentelemetry/exporter-metrics-otlp-http';
-import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
+import { Resource as OtelResource } from "@opentelemetry/resources";
+import {
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+  ATTR_DEPLOYMENT_ENVIRONMENT,
+} from "@opentelemetry/semantic-conventions";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
+import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
 
 let isInitialized = false;
 
@@ -18,25 +22,25 @@ let isInitialized = false;
 export function initializeOTEL(serviceName: string) {
   // Prevent multiple initializations
   if (isInitialized) {
-    console.warn('OpenTelemetry already initialized');
+    console.warn("OpenTelemetry already initialized");
     return;
   }
 
   const otelEndpoint = process.env.NEXT_PUBLIC_OTEL_ENDPOINT;
 
   if (!otelEndpoint) {
-    console.log('OpenTelemetry endpoint not configured, skipping initialization');
+    console.log("OpenTelemetry endpoint not configured, skipping initialization");
     return;
   }
 
   try {
     // Configure resource
-    const resource = Resource.default().merge(
-      new Resource({
-        [SemanticResourceAttributes.SERVICE_NAME]: serviceName,
-        [SemanticResourceAttributes.SERVICE_VERSION]: process.env.npm_package_version || '1.0.0',
-        [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: process.env.NODE_ENV || 'development',
-      })
+    const resource = OtelResource.default().merge(
+      new OtelResource({
+        [ATTR_SERVICE_NAME]: serviceName,
+        [ATTR_SERVICE_VERSION]: process.env.npm_package_version || "1.0.0",
+        [ATTR_DEPLOYMENT_ENVIRONMENT]: process.env.NODE_ENV || "development",
+      }),
     );
 
     // Configure trace exporter
@@ -61,7 +65,7 @@ export function initializeOTEL(serviceName: string) {
       }),
       instrumentations: [
         getNodeAutoInstrumentations({
-          '@opentelemetry/instrumentation-fs': {
+          "@opentelemetry/instrumentation-fs": {
             enabled: false, // Disable fs instrumentation to reduce noise
           },
         }),
@@ -80,15 +84,15 @@ export function initializeOTEL(serviceName: string) {
     const gracefulShutdown = () => {
       sdk
         .shutdown()
-        .then(() => console.log('OpenTelemetry terminated'))
-        .catch((error) => console.error('Error terminating OpenTelemetry', error))
+        .then(() => console.log("OpenTelemetry terminated"))
+        .catch((error) => console.error("Error terminating OpenTelemetry", error))
         .finally(() => process.exit(0));
     };
 
-    process.on('SIGTERM', gracefulShutdown);
-    process.on('SIGINT', gracefulShutdown);
+    process.on("SIGTERM", gracefulShutdown);
+    process.on("SIGINT", gracefulShutdown);
   } catch (error) {
-    console.error('Failed to initialize OpenTelemetry:', error);
+    console.error("Failed to initialize OpenTelemetry:", error);
   }
 }
 
@@ -109,7 +113,7 @@ export function createSpan(name: string, attributes?: Record<string, any>) {
  */
 export function recordMetric(name: string, value: number, attributes?: Record<string, any>) {
   // This would be implemented with actual OTEL metrics API
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     console.log(`Metric: ${name} = ${value}`, attributes);
   }
 }
@@ -139,12 +143,12 @@ export const performance = {
    * Track page load performance
    */
   trackPageLoad: (pathname: string) => {
-    if (typeof window !== 'undefined' && window.performance) {
+    if (typeof window !== "undefined" && window.performance) {
       const navigation = window.performance.getEntriesByType(
-        'navigation'
+        "navigation",
       )[0] as PerformanceNavigationTiming;
       if (navigation) {
-        recordMetric('page.load.time', navigation.loadEventEnd - navigation.fetchStart, {
+        recordMetric("page.load.time", navigation.loadEventEnd - navigation.fetchStart, {
           pathname,
           domContentLoaded: navigation.domContentLoadedEventEnd - navigation.fetchStart,
           domInteractive: navigation.domInteractive - navigation.fetchStart,
@@ -157,7 +161,7 @@ export const performance = {
    * Track API call performance
    */
   trackAPICall: (endpoint: string, method: string, duration: number, status: number) => {
-    recordMetric('api.call.duration', duration, {
+    recordMetric("api.call.duration", duration, {
       endpoint,
       method,
       status,

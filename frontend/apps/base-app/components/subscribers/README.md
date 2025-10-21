@@ -5,9 +5,11 @@ This directory contains all React components for the Subscriber Management syste
 ## Components
 
 ### SubscriberList.tsx
+
 Data table component for displaying subscribers with filtering, sorting, and actions.
 
 **Usage:**
+
 ```typescript
 import { SubscriberList } from '@/components/subscribers/SubscriberList';
 
@@ -22,6 +24,7 @@ import { SubscriberList } from '@/components/subscribers/SubscriberList';
 ```
 
 **Features:**
+
 - EnhancedDataTable integration
 - Status badges
 - Connection type icons
@@ -30,9 +33,11 @@ import { SubscriberList } from '@/components/subscribers/SubscriberList';
 - Sorting and filtering
 
 ### SubscriberDetailModal.tsx
+
 Modal dialog for viewing and managing subscriber details with tabbed interface.
 
 **Usage:**
+
 ```typescript
 import { SubscriberDetailModal } from '@/components/subscribers/SubscriberDetailModal';
 
@@ -47,15 +52,18 @@ import { SubscriberDetailModal } from '@/components/subscribers/SubscriberDetail
 ```
 
 **Tabs:**
+
 - Details - Contact, address, installation
 - Services - Active services
 - Network - ONT, IP, signal quality
 - Billing - Subscription, payment
 
 ### AddSubscriberModal.tsx
+
 Form modal for creating new subscriber accounts with validation.
 
 **Usage:**
+
 ```typescript
 import { AddSubscriberModal } from '@/components/subscribers/AddSubscriberModal';
 
@@ -70,6 +78,7 @@ import { AddSubscriberModal } from '@/components/subscribers/AddSubscriberModal'
 ```
 
 **Sections:**
+
 - Personal Information
 - Service Address
 - Service Configuration
@@ -101,12 +110,13 @@ import type {
   ConnectionType,
   CreateSubscriberRequest,
   UpdateSubscriberRequest,
-} from '@/hooks/useSubscribers';
+} from "@/hooks/useSubscribers";
 ```
 
 ## Styling
 
 Components use:
+
 - Tailwind CSS for styling
 - shadcn/ui design system
 - Responsive breakpoints
@@ -115,6 +125,7 @@ Components use:
 ## Accessibility
 
 All components include:
+
 - ARIA labels
 - Keyboard navigation
 - Focus management
@@ -125,6 +136,7 @@ All components include:
 Test files location: `__tests__/subscribers/`
 
 Run tests:
+
 ```bash
 pnpm test subscribers
 ```
@@ -132,6 +144,7 @@ pnpm test subscribers
 ## Contributing
 
 When adding new components:
+
 1. Follow existing patterns
 2. Add TypeScript types
 3. Include JSDoc comments

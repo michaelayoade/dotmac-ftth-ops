@@ -3,14 +3,14 @@
  * Provides utilities and examples for migrating from basic to enhanced error handling
  */
 
-import { ISPError } from './errorUtils';
+import { ISPError } from "./errorUtils";
 import {
   EnhancedISPError,
   EnhancedErrorFactory,
   ErrorCode,
   type ErrorContext,
-} from './enhancedErrorHandling';
-import { errorLogger } from '../services/ErrorLoggingService';
+} from "./enhancedErrorHandling";
+import { errorLogger } from "../services/ErrorLoggingService";
 
 // Migration utilities to help transition existing error handling
 export class ErrorMigrationHelper {
@@ -19,18 +19,18 @@ export class ErrorMigrationHelper {
    */
   static upgradeError(
     legacyError: ISPError,
-    businessContext: Partial<ErrorContext> = {}
+    businessContext: Partial<ErrorContext> = {},
   ): EnhancedISPError {
     // Map legacy categories to error codes
     const errorCode = this.mapCategoryToCode(legacyError.category, legacyError.status);
 
     const context: ErrorContext = {
-      operation: businessContext.operation || 'legacy_operation',
+      operation: businessContext.operation || "legacy_operation",
       correlationId: legacyError.correlationId,
       userId: businessContext.userId,
       tenantId: businessContext.tenantId,
-      service: 'isp-frontend',
-      component: 'migration-helper',
+      service: "isp-frontend",
+      component: "migration-helper",
       ...businessContext,
     };
 
@@ -52,27 +52,27 @@ export class ErrorMigrationHelper {
    */
   private static mapCategoryToCode(category: string, status?: number): ErrorCode {
     switch (category) {
-      case 'network':
+      case "network":
         if (status === 429) return ErrorCode.NETWORK_RATE_LIMITED;
         if (status === 0) return ErrorCode.NETWORK_OFFLINE;
         return ErrorCode.NETWORK_CONNECTION_FAILED;
 
-      case 'authentication':
+      case "authentication":
         if (status === 401) return ErrorCode.AUTH_TOKEN_EXPIRED;
         return ErrorCode.AUTH_LOGIN_FAILED;
 
-      case 'authorization':
+      case "authorization":
         return ErrorCode.AUTHZ_INSUFFICIENT_PERMISSIONS;
 
-      case 'validation':
+      case "validation":
         if (status === 409) return ErrorCode.VALIDATION_DUPLICATE_VALUE;
         if (status === 422) return ErrorCode.VALIDATION_BUSINESS_RULE;
         return ErrorCode.VALIDATION_REQUIRED_FIELD;
 
-      case 'business':
+      case "business":
         return ErrorCode.UNKNOWN_ERROR; // Need specific business context
 
-      case 'system':
+      case "system":
         if (status === 503) return ErrorCode.SYSTEM_MAINTENANCE;
         return ErrorCode.SYSTEM_DATABASE_ERROR;
 
@@ -86,7 +86,7 @@ export class ErrorMigrationHelper {
    */
   static upgradeBatch(
     errors: ISPError[],
-    contextProvider: (error: ISPError) => Partial<ErrorContext> = () => ({})
+    contextProvider: (error: ISPError) => Partial<ErrorContext> = () => ({}),
   ): EnhancedISPError[] {
     return errors.map((error) => this.upgradeError(error, contextProvider(error)));
   }
@@ -100,11 +100,11 @@ export const MigrationExamples = {
   basicErrorHandling: () => {
     try {
       // Some operation that might fail
-      throw new Error('API call failed');
+      throw new Error("API call failed");
     } catch (error) {
       // Basic handling - loses context
-      console.error('Error:', error);
-      return { error: 'Something went wrong' };
+      console.error("Error:", error);
+      return { error: "Something went wrong" };
     }
   },
 
@@ -114,20 +114,20 @@ export const MigrationExamples = {
   enhancedErrorHandling: () => {
     try {
       // Some operation that might fail
-      throw new Error('API call failed');
+      throw new Error("API call failed");
     } catch (error) {
       // Enhanced handling with business context
       const enhancedError = EnhancedErrorFactory.network(
         error instanceof Error ? error.message : String(error),
-        'customer_data_fetch'
+        "customer_data_fetch",
       );
 
       // Log with full context
       errorLogger.logError(enhancedError, {
-        operation: 'fetch_customer_data',
-        resource: 'customer',
-        businessProcess: 'customer_management',
-        customerImpact: 'medium',
+        operation: "fetch_customer_data",
+        resource: "customer",
+        businessProcess: "customer_management",
+        customerImpact: "medium",
       });
 
       return { enhancedError };
@@ -141,9 +141,9 @@ export const MigrationExamples = {
     // BEFORE: Generic not found
     before: (customerId: string) => {
       throw new ISPError({
-        message: 'Not found',
-        category: 'business',
-        severity: 'medium',
+        message: "Not found",
+        category: "business",
+        severity: "medium",
         status: 404,
       });
     },
@@ -151,9 +151,9 @@ export const MigrationExamples = {
     // AFTER: Specific customer context
     after: (customerId: string) => {
       return EnhancedErrorFactory.customerNotFound(customerId, {
-        operation: 'fetch_customer_details',
-        businessProcess: 'customer_lookup',
-        workflowStep: 'data_retrieval',
+        operation: "fetch_customer_details",
+        businessProcess: "customer_lookup",
+        workflowStep: "data_retrieval",
       });
     },
   },
@@ -165,9 +165,9 @@ export const MigrationExamples = {
     // BEFORE: Generic payment error
     before: () => {
       throw new ISPError({
-        message: 'Payment failed',
-        category: 'business',
-        severity: 'high',
+        message: "Payment failed",
+        category: "business",
+        severity: "high",
         status: 402,
       });
     },
@@ -175,11 +175,11 @@ export const MigrationExamples = {
     // AFTER: Specific payment context with recovery actions
     after: (amount: number, paymentMethod: string, reason: string) => {
       return EnhancedErrorFactory.paymentFailed(amount, paymentMethod, reason, {
-        operation: 'process_payment',
-        businessProcess: 'billing',
-        workflowStep: 'payment_processing',
-        userId: 'user123', // from context
-        tenantId: 'tenant456', // from context
+        operation: "process_payment",
+        businessProcess: "billing",
+        workflowStep: "payment_processing",
+        userId: "user123", // from context
+        tenantId: "tenant456", // from context
       });
     },
   },
@@ -191,9 +191,9 @@ export const MigrationExamples = {
     // BEFORE: Generic device error
     before: () => {
       throw new ISPError({
-        message: 'Device unreachable',
-        category: 'network',
-        severity: 'high',
+        message: "Device unreachable",
+        category: "network",
+        severity: "high",
         retryable: true,
       });
     },
@@ -201,12 +201,12 @@ export const MigrationExamples = {
     // AFTER: Specific device context with escalation
     after: (deviceId: string, deviceType: string) => {
       return EnhancedErrorFactory.deviceUnreachable(deviceId, deviceType, {
-        operation: 'configure_device',
-        businessProcess: 'network_management',
-        workflowStep: 'device_configuration',
+        operation: "configure_device",
+        businessProcess: "network_management",
+        workflowStep: "device_configuration",
         metadata: {
-          deviceLocation: 'Building A, Floor 2',
-          lastSeen: '2023-12-01T10:30:00Z',
+          deviceLocation: "Building A, Floor 2",
+          lastSeen: "2023-12-01T10:30:00Z",
         },
       });
     },
@@ -442,16 +442,16 @@ export const CodeTransformations = {
 
 // Migration checklist
 export const MigrationChecklist = [
-  '✅ Identify all error throwing locations in codebase',
-  '✅ Categorize errors by business domain and impact',
-  '✅ Replace generic Error/ISPError with EnhancedISPError',
-  '✅ Add business context (operation, resource, process)',
-  '✅ Update error handlers to use useEnhancedErrorHandler',
-  '✅ Replace basic error UI with EnhancedErrorDisplay components',
-  '✅ Configure error logging and metrics collection',
-  '✅ Add error recovery and retry mechanisms',
-  '✅ Test error scenarios with enhanced error handling',
-  '✅ Monitor error metrics and customer impact',
+  "✅ Identify all error throwing locations in codebase",
+  "✅ Categorize errors by business domain and impact",
+  "✅ Replace generic Error/ISPError with EnhancedISPError",
+  "✅ Add business context (operation, resource, process)",
+  "✅ Update error handlers to use useEnhancedErrorHandler",
+  "✅ Replace basic error UI with EnhancedErrorDisplay components",
+  "✅ Configure error logging and metrics collection",
+  "✅ Add error recovery and retry mechanisms",
+  "✅ Test error scenarios with enhanced error handling",
+  "✅ Monitor error metrics and customer impact",
 ];
 
 export default {

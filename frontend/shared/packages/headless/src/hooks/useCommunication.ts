@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNotifications } from './useNotifications';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNotifications } from "./useNotifications";
 
 export interface CommunicationChannel {
   id: string;
   name: string;
-  type: 'email' | 'sms' | 'push' | 'websocket' | 'webhook';
-  status: 'active' | 'inactive' | 'error';
+  type: "email" | "sms" | "push" | "websocket" | "webhook";
+  status: "active" | "inactive" | "error";
   config: Record<string, any>;
   metadata?: Record<string, any>;
 }
@@ -17,7 +17,7 @@ export interface CommunicationTemplate {
   subject?: string;
   body: string;
   variables: string[];
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: "low" | "medium" | "high" | "critical";
   category: string;
 }
 
@@ -28,8 +28,8 @@ export interface CommunicationMessage {
   recipient: string;
   subject?: string;
   body: string;
-  priority: 'low' | 'medium' | 'high' | 'critical';
-  status: 'pending' | 'sent' | 'delivered' | 'failed' | 'bounced';
+  priority: "low" | "medium" | "high" | "critical";
+  status: "pending" | "sent" | "delivered" | "failed" | "bounced";
   scheduledAt?: Date;
   sentAt?: Date;
   deliveredAt?: Date;
@@ -98,7 +98,7 @@ const initialState: CommunicationState = {
 
 export function useCommunication(options: UseCommunicationOptions = {}) {
   const {
-    apiEndpoint = '/api/communication',
+    apiEndpoint = "/api/communication",
     websocketEndpoint,
     apiKey,
     tenantId,
@@ -117,16 +117,16 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
   const apiCall = useCallback(
     async (endpoint: string, options: RequestInit = {}) => {
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...(options.headers as Record<string, string>),
       };
 
       if (apiKey) {
-        headers['Authorization'] = `Bearer ${apiKey}`;
+        headers["Authorization"] = `Bearer ${apiKey}`;
       }
 
       if (tenantId) {
-        headers['X-Tenant-ID'] = tenantId;
+        headers["X-Tenant-ID"] = tenantId;
       }
 
       const response = await fetch(`${apiEndpoint}${endpoint}`, {
@@ -141,7 +141,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
 
       return response.json();
     },
-    [apiEndpoint, apiKey, tenantId]
+    [apiEndpoint, apiKey, tenantId],
   );
 
   // WebSocket Connection
@@ -152,8 +152,8 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
       if (websocketRef.current?.readyState === WebSocket.OPEN) return;
 
       const wsUrl = new URL(websocketEndpoint);
-      if (apiKey) wsUrl.searchParams.set('apiKey', apiKey);
-      if (tenantId) wsUrl.searchParams.set('tenantId', tenantId);
+      if (apiKey) wsUrl.searchParams.set("apiKey", apiKey);
+      if (tenantId) wsUrl.searchParams.set("tenantId", tenantId);
 
       const ws = new WebSocket(wsUrl.toString());
       websocketRef.current = ws;
@@ -163,11 +163,11 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         retryCountRef.current = 0;
 
         addNotification({
-          type: 'system',
-          priority: 'low',
-          title: 'Communication System',
-          message: 'Real-time communication connected',
-          channel: ['browser'],
+          type: "system",
+          priority: "low",
+          title: "Communication System",
+          message: "Real-time communication connected",
+          channel: ["browser"],
           persistent: false,
         });
       };
@@ -177,7 +177,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
           const data = JSON.parse(event.data);
 
           switch (data.type) {
-            case 'message_status_update':
+            case "message_status_update":
               setState((prev) => ({
                 ...prev,
                 messages: prev.messages.map((msg) =>
@@ -187,28 +187,28 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
                         status: data.status,
                         deliveredAt: data.deliveredAt ? new Date(data.deliveredAt) : undefined,
                       }
-                    : msg
+                    : msg,
                 ),
               }));
               break;
 
-            case 'new_message':
+            case "new_message":
               setState((prev) => ({
                 ...prev,
                 messages: [data.message, ...prev.messages],
               }));
               break;
 
-            case 'channel_status_update':
+            case "channel_status_update":
               setState((prev) => ({
                 ...prev,
                 channels: prev.channels.map((channel) =>
-                  channel.id === data.channelId ? { ...channel, status: data.status } : channel
+                  channel.id === data.channelId ? { ...channel, status: data.status } : channel,
                 ),
               }));
               break;
 
-            case 'stats_update':
+            case "stats_update":
               setState((prev) => ({
                 ...prev,
                 stats: data.stats,
@@ -216,7 +216,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
               break;
           }
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
+          console.error("Failed to parse WebSocket message:", error);
         }
       };
 
@@ -234,19 +234,19 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error("WebSocket error:", error);
         setState((prev) => ({
           ...prev,
           isConnected: false,
-          error: 'WebSocket connection failed',
+          error: "WebSocket connection failed",
         }));
       };
     } catch (error) {
-      console.error('Failed to establish WebSocket connection:', error);
+      console.error("Failed to establish WebSocket connection:", error);
       setState((prev) => ({
         ...prev,
         isConnected: false,
-        error: error instanceof Error ? error.message : 'Connection failed',
+        error: error instanceof Error ? error.message : "Connection failed",
       }));
     }
   }, [websocketEndpoint, enableRealtime, apiKey, tenantId, maxRetries, addNotification]);
@@ -255,7 +255,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
   const loadChannels = useCallback(async () => {
     try {
       setState((prev) => ({ ...prev, isLoading: true, error: null }));
-      const data = await apiCall('/channels');
+      const data = await apiCall("/channels");
       setState((prev) => ({
         ...prev,
         channels: data.channels || [],
@@ -264,7 +264,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
     } catch (error) {
       setState((prev) => ({
         ...prev,
-        error: error instanceof Error ? error.message : 'Failed to load channels',
+        error: error instanceof Error ? error.message : "Failed to load channels",
         isLoading: false,
       }));
     }
@@ -273,7 +273,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
   // Load Templates
   const loadTemplates = useCallback(async () => {
     try {
-      const data = await apiCall('/templates');
+      const data = await apiCall("/templates");
       setState((prev) => ({
         ...prev,
         templates: data.templates || [],
@@ -281,7 +281,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
     } catch (error) {
       setState((prev) => ({
         ...prev,
-        error: error instanceof Error ? error.message : 'Failed to load templates',
+        error: error instanceof Error ? error.message : "Failed to load templates",
       }));
     }
   }, [apiCall]);
@@ -297,7 +297,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         priority?: string;
         dateFrom?: Date;
         dateTo?: Date;
-      } = {}
+      } = {},
     ) => {
       try {
         setState((prev) => ({ ...prev, isLoading: true }));
@@ -318,17 +318,17 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
       } catch (error) {
         setState((prev) => ({
           ...prev,
-          error: error instanceof Error ? error.message : 'Failed to load messages',
+          error: error instanceof Error ? error.message : "Failed to load messages",
           isLoading: false,
         }));
       }
     },
-    [apiCall]
+    [apiCall],
   );
 
   // Load Statistics
   const loadStats = useCallback(
-    async (timeRange: '24h' | '7d' | '30d' | '90d' = '24h') => {
+    async (timeRange: "24h" | "7d" | "30d" | "90d" = "24h") => {
       try {
         const data = await apiCall(`/stats?range=${timeRange}`);
         setState((prev) => ({
@@ -338,11 +338,11 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
       } catch (error) {
         setState((prev) => ({
           ...prev,
-          error: error instanceof Error ? error.message : 'Failed to load statistics',
+          error: error instanceof Error ? error.message : "Failed to load statistics",
         }));
       }
     },
-    [apiCall]
+    [apiCall],
   );
 
   // Send Message
@@ -354,13 +354,13 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
       subject?: string;
       body?: string;
       variables?: Record<string, any>;
-      priority?: 'low' | 'medium' | 'high' | 'critical';
+      priority?: "low" | "medium" | "high" | "critical";
       scheduledAt?: Date;
       metadata?: Record<string, any>;
     }) => {
       try {
-        const data = await apiCall('/messages', {
-          method: 'POST',
+        const data = await apiCall("/messages", {
+          method: "POST",
           body: JSON.stringify({
             ...messageData,
             scheduledAt: messageData.scheduledAt?.toISOString(),
@@ -374,31 +374,31 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         }));
 
         addNotification({
-          type: 'success',
-          priority: 'medium',
-          title: 'Message Sent',
+          type: "success",
+          priority: "medium",
+          title: "Message Sent",
           message: `Message sent to ${messageData.recipient} via ${messageData.channel}`,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         return newMessage;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to send message';
+        const errorMessage = error instanceof Error ? error.message : "Failed to send message";
 
         addNotification({
-          type: 'error',
-          priority: 'high',
-          title: 'Message Failed',
+          type: "error",
+          priority: "high",
+          title: "Message Failed",
           message: `Failed to send message: ${errorMessage}`,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Bulk Send Messages
@@ -411,16 +411,16 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         subject?: string;
         body?: string;
         variables?: Record<string, any>;
-        priority?: 'low' | 'medium' | 'high' | 'critical';
+        priority?: "low" | "medium" | "high" | "critical";
         scheduledAt?: Date;
         metadata?: Record<string, any>;
-      }>
+      }>,
     ) => {
       try {
         setState((prev) => ({ ...prev, isLoading: true }));
 
-        const data = await apiCall('/messages/bulk', {
-          method: 'POST',
+        const data = await apiCall("/messages/bulk", {
+          method: "POST",
           body: JSON.stringify({
             messages: messages.map((msg) => ({
               ...msg,
@@ -437,11 +437,11 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         }));
 
         addNotification({
-          type: 'success',
-          priority: 'medium',
-          title: 'Bulk Messages Sent',
+          type: "success",
+          priority: "medium",
+          title: "Bulk Messages Sent",
           message: `${newMessages.length} messages queued for delivery`,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
@@ -450,29 +450,29 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         setState((prev) => ({ ...prev, isLoading: false }));
 
         const errorMessage =
-          error instanceof Error ? error.message : 'Failed to send bulk messages';
+          error instanceof Error ? error.message : "Failed to send bulk messages";
 
         addNotification({
-          type: 'error',
-          priority: 'high',
-          title: 'Bulk Send Failed',
+          type: "error",
+          priority: "high",
+          title: "Bulk Send Failed",
           message: `Failed to send bulk messages: ${errorMessage}`,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Create Template
   const createTemplate = useCallback(
-    async (templateData: Omit<CommunicationTemplate, 'id'>) => {
+    async (templateData: Omit<CommunicationTemplate, "id">) => {
       try {
-        const data = await apiCall('/templates', {
-          method: 'POST',
+        const data = await apiCall("/templates", {
+          method: "POST",
           body: JSON.stringify(templateData),
         });
 
@@ -484,7 +484,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
 
         return newTemplate;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to create template';
+        const errorMessage = error instanceof Error ? error.message : "Failed to create template";
         setState((prev) => ({
           ...prev,
           error: errorMessage,
@@ -492,7 +492,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         throw error;
       }
     },
-    [apiCall]
+    [apiCall],
   );
 
   // Update Template
@@ -500,7 +500,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
     async (id: string, templateData: Partial<CommunicationTemplate>) => {
       try {
         const data = await apiCall(`/templates/${id}`, {
-          method: 'PUT',
+          method: "PUT",
           body: JSON.stringify(templateData),
         });
 
@@ -508,13 +508,13 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         setState((prev) => ({
           ...prev,
           templates: prev.templates.map((template) =>
-            template.id === id ? updatedTemplate : template
+            template.id === id ? updatedTemplate : template,
           ),
         }));
 
         return updatedTemplate;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to update template';
+        const errorMessage = error instanceof Error ? error.message : "Failed to update template";
         setState((prev) => ({
           ...prev,
           error: errorMessage,
@@ -522,7 +522,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         throw error;
       }
     },
-    [apiCall]
+    [apiCall],
   );
 
   // Delete Template
@@ -530,7 +530,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
     async (id: string) => {
       try {
         await apiCall(`/templates/${id}`, {
-          method: 'DELETE',
+          method: "DELETE",
         });
 
         setState((prev) => ({
@@ -538,7 +538,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
           templates: prev.templates.filter((template) => template.id !== id),
         }));
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to delete template';
+        const errorMessage = error instanceof Error ? error.message : "Failed to delete template";
         setState((prev) => ({
           ...prev,
           error: errorMessage,
@@ -546,7 +546,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         throw error;
       }
     },
-    [apiCall]
+    [apiCall],
   );
 
   // Test Channel
@@ -554,37 +554,37 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
     async (channelId: string, testData: Record<string, any>) => {
       try {
         const data = await apiCall(`/channels/${channelId}/test`, {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify(testData),
         });
 
         addNotification({
-          type: data.success ? 'success' : 'error',
-          priority: 'medium',
-          title: 'Channel Test',
+          type: data.success ? "success" : "error",
+          priority: "medium",
+          title: "Channel Test",
           message:
-            data.message || `Channel ${channelId} test ${data.success ? 'passed' : 'failed'}`,
-          channel: ['browser'],
+            data.message || `Channel ${channelId} test ${data.success ? "passed" : "failed"}`,
+          channel: ["browser"],
           persistent: false,
         });
 
         return data;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Channel test failed';
+        const errorMessage = error instanceof Error ? error.message : "Channel test failed";
 
         addNotification({
-          type: 'error',
-          priority: 'high',
-          title: 'Channel Test Failed',
+          type: "error",
+          priority: "high",
+          title: "Channel Test Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Cancel Message
@@ -592,42 +592,42 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
     async (messageId: string) => {
       try {
         await apiCall(`/messages/${messageId}/cancel`, {
-          method: 'POST',
+          method: "POST",
         });
 
         setState((prev) => ({
           ...prev,
           messages: prev.messages.map((msg) =>
             msg.id === messageId
-              ? { ...msg, status: 'failed', failureReason: 'Cancelled by user' }
-              : msg
+              ? { ...msg, status: "failed", failureReason: "Cancelled by user" }
+              : msg,
           ),
         }));
 
         addNotification({
-          type: 'info',
-          priority: 'low',
-          title: 'Message Cancelled',
-          message: 'Message has been cancelled successfully',
-          channel: ['browser'],
+          type: "info",
+          priority: "low",
+          title: "Message Cancelled",
+          message: "Message has been cancelled successfully",
+          channel: ["browser"],
           persistent: false,
         });
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to cancel message';
+        const errorMessage = error instanceof Error ? error.message : "Failed to cancel message";
 
         addNotification({
-          type: 'error',
-          priority: 'medium',
-          title: 'Cancel Failed',
+          type: "error",
+          priority: "medium",
+          title: "Cancel Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Retry Failed Message
@@ -635,7 +635,7 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
     async (messageId: string) => {
       try {
         const data = await apiCall(`/messages/${messageId}/retry`, {
-          method: 'POST',
+          method: "POST",
         });
 
         const retriedMessage = data.message;
@@ -645,31 +645,31 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
         }));
 
         addNotification({
-          type: 'info',
-          priority: 'low',
-          title: 'Message Retried',
-          message: 'Message has been queued for retry',
-          channel: ['browser'],
+          type: "info",
+          priority: "low",
+          title: "Message Retried",
+          message: "Message has been queued for retry",
+          channel: ["browser"],
           persistent: false,
         });
 
         return retriedMessage;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to retry message';
+        const errorMessage = error instanceof Error ? error.message : "Failed to retry message";
 
         addNotification({
-          type: 'error',
-          priority: 'medium',
-          title: 'Retry Failed',
+          type: "error",
+          priority: "medium",
+          title: "Retry Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Initialize
@@ -755,9 +755,9 @@ export function useCommunication(options: UseCommunicationOptions = {}) {
     }, []),
 
     // Computed values
-    activeChannels: state.channels.filter((ch) => ch.status === 'active'),
-    failedMessages: state.messages.filter((msg) => msg.status === 'failed'),
-    pendingMessages: state.messages.filter((msg) => msg.status === 'pending'),
+    activeChannels: state.channels.filter((ch) => ch.status === "active"),
+    failedMessages: state.messages.filter((msg) => msg.status === "failed"),
+    pendingMessages: state.messages.filter((msg) => msg.status === "pending"),
     recentMessages: state.messages.slice(0, 10),
   };
 }

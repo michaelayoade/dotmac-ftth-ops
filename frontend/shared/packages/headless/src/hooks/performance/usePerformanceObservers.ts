@@ -3,17 +3,17 @@
  * Handles setup and management of performance observers
  */
 
-import { useEffect, useRef } from 'react';
-import type { PerformanceMetrics, PerformanceObserverConfig } from './types';
+import { useEffect, useRef } from "react";
+import type { PerformanceMetrics, PerformanceObserverConfig } from "./types";
 
 export function usePerformanceObservers(
   metrics: React.MutableRefObject<PerformanceMetrics>,
-  config: PerformanceObserverConfig
+  config: PerformanceObserverConfig,
 ) {
   const observersRef = useRef<PerformanceObserver[]>([]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !('PerformanceObserver' in window)) {
+    if (typeof window === "undefined" || !("PerformanceObserver" in window)) {
       return;
     }
 
@@ -26,7 +26,7 @@ export function usePerformanceObservers(
         observers.push(coreWebVitalsObserver);
       } catch (error) {
         if (config.enableConsoleLogging) {
-          console.warn('Failed to create Core Web Vitals observer:', error);
+          console.warn("Failed to create Core Web Vitals observer:", error);
         }
       }
     }
@@ -38,7 +38,7 @@ export function usePerformanceObservers(
         observers.push(resourceObserver);
       } catch (error) {
         if (config.enableConsoleLogging) {
-          console.warn('Failed to create Resource Timing observer:', error);
+          console.warn("Failed to create Resource Timing observer:", error);
         }
       }
     }
@@ -50,7 +50,7 @@ export function usePerformanceObservers(
         observers.push(navigationObserver);
       } catch (error) {
         if (config.enableConsoleLogging) {
-          console.warn('Failed to create Navigation Timing observer:', error);
+          console.warn("Failed to create Navigation Timing observer:", error);
         }
       }
     }
@@ -74,11 +74,11 @@ function createCoreWebVitalsObserver(metrics: PerformanceMetrics): PerformanceOb
   });
 
   const entryTypes = [
-    'paint',
-    'largest-contentful-paint',
-    'first-input',
-    'layout-shift',
-    'navigation',
+    "paint",
+    "largest-contentful-paint",
+    "first-input",
+    "layout-shift",
+    "navigation",
   ];
   entryTypes.forEach((type) => {
     try {
@@ -100,7 +100,7 @@ function createResourceObserver(metrics: PerformanceMetrics): PerformanceObserve
     metrics.totalResourceSize = (metrics.totalResourceSize || 0) + totalSize;
   });
 
-  observer.observe({ entryTypes: ['resource'] });
+  observer.observe({ entryTypes: ["resource"] });
   return observer;
 }
 
@@ -114,29 +114,29 @@ function createNavigationObserver(metrics: PerformanceMetrics): PerformanceObser
     }
   });
 
-  observer.observe({ entryTypes: ['navigation'] });
+  observer.observe({ entryTypes: ["navigation"] });
   return observer;
 }
 
 function processPerformanceEntry(entry: PerformanceEntry, metrics: PerformanceMetrics): void {
   switch (entry.entryType) {
-    case 'paint':
-      if (entry.name === 'first-contentful-paint') {
+    case "paint":
+      if (entry.name === "first-contentful-paint") {
         metrics.fcp = entry.startTime;
       }
       break;
-    case 'largest-contentful-paint':
+    case "largest-contentful-paint":
       metrics.lcp = entry.startTime;
       break;
-    case 'first-input':
+    case "first-input":
       metrics.fid = (entry as any).processingStart - entry.startTime;
       break;
-    case 'layout-shift':
+    case "layout-shift":
       if (!(entry as any).hadRecentInput) {
         metrics.cls = (metrics.cls || 0) + (entry as any).value;
       }
       break;
-    case 'navigation': {
+    case "navigation": {
       const navEntry = entry as PerformanceNavigationTiming;
       metrics.ttfb = navEntry.responseStart - navEntry.requestStart;
       break;

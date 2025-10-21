@@ -13,8 +13,8 @@
  * - Route planning
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Types
 export interface Territory {
@@ -25,7 +25,7 @@ export interface Territory {
   color: string;
   resellerId: string;
   isActive: boolean;
-  priority: 'high' | 'medium' | 'low';
+  priority: "high" | "medium" | "low";
   serviceTypes: string[];
   customerCount: number;
   revenue: number;
@@ -44,7 +44,7 @@ export interface Customer {
   coordinates: [number, number];
   services: string[];
   revenue: number;
-  status: 'active' | 'inactive' | 'prospect';
+  status: "active" | "inactive" | "prospect";
   territoryId?: string;
   assignedTo?: string;
   lastActivity: string;
@@ -62,7 +62,7 @@ export interface Lead {
   coordinates: [number, number];
   score: number;
   source: string;
-  status: 'new' | 'contacted' | 'qualified' | 'converted' | 'lost';
+  status: "new" | "contacted" | "qualified" | "converted" | "lost";
   assignedTo?: string;
   territoryId?: string;
   estimatedValue: number;
@@ -77,7 +77,7 @@ export interface ServiceCoverage {
   id: string;
   serviceType: string;
   coverageArea: number[][];
-  quality: 'excellent' | 'good' | 'fair' | 'poor';
+  quality: "excellent" | "good" | "fair" | "poor";
   availability: number;
   maxSpeed?: number;
   reliability: number;
@@ -124,25 +124,25 @@ export interface UseTerritoryOptions {
 // API functions
 const fetchTerritories = async (
   resellerId: string,
-  filters?: TerritoryFilters
+  filters?: TerritoryFilters,
 ): Promise<Territory[]> => {
   const params = new URLSearchParams({ resellerId });
 
   if (filters) {
     if (filters.isActive !== undefined) {
-      params.append('isActive', filters.isActive.toString());
+      params.append("isActive", filters.isActive.toString());
     }
     if (filters.priority?.length) {
-      params.append('priority', filters.priority.join(','));
+      params.append("priority", filters.priority.join(","));
     }
     if (filters.serviceTypes?.length) {
-      params.append('serviceTypes', filters.serviceTypes.join(','));
+      params.append("serviceTypes", filters.serviceTypes.join(","));
     }
     if (filters.minRevenue) {
-      params.append('minRevenue', filters.minRevenue.toString());
+      params.append("minRevenue", filters.minRevenue.toString());
     }
     if (filters.maxRevenue) {
-      params.append('maxRevenue', filters.maxRevenue.toString());
+      params.append("maxRevenue", filters.maxRevenue.toString());
     }
   }
 
@@ -179,7 +179,7 @@ const fetchServiceCoverage = async (resellerId: string): Promise<ServiceCoverage
 
 const fetchTerritoryAnalytics = async (
   territoryId: string,
-  period: string = '30d'
+  period: string = "30d",
 ): Promise<TerritoryAnalytics> => {
   const response = await fetch(`/api/territories/${territoryId}/analytics?period=${period}`);
   if (!response.ok) {
@@ -189,11 +189,11 @@ const fetchTerritoryAnalytics = async (
 };
 
 const createTerritory = async (
-  territory: Omit<Territory, 'id' | 'createdAt' | 'updatedAt'>
+  territory: Omit<Territory, "id" | "createdAt" | "updatedAt">,
 ): Promise<Territory> => {
-  const response = await fetch('/api/territories', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const response = await fetch("/api/territories", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(territory),
   });
 
@@ -205,11 +205,11 @@ const createTerritory = async (
 
 const updateTerritory = async (
   territoryId: string,
-  updates: Partial<Territory>
+  updates: Partial<Territory>,
 ): Promise<Territory> => {
   const response = await fetch(`/api/territories/${territoryId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(updates),
   });
 
@@ -221,7 +221,7 @@ const updateTerritory = async (
 
 const deleteTerritory = async (territoryId: string): Promise<void> => {
   const response = await fetch(`/api/territories/${territoryId}`, {
-    method: 'DELETE',
+    method: "DELETE",
   });
 
   if (!response.ok) {
@@ -231,11 +231,11 @@ const deleteTerritory = async (territoryId: string): Promise<void> => {
 
 const assignCustomerToTerritory = async (
   customerId: string,
-  territoryId: string
+  territoryId: string,
 ): Promise<Customer> => {
   const response = await fetch(`/api/customers/${customerId}/assign-territory`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ territoryId }),
   });
 
@@ -252,11 +252,11 @@ const optimizeTerritory = async (
     balanceRevenue?: boolean;
     minimizeTravel?: boolean;
     respectServiceAreas?: boolean;
-  }
+  },
 ): Promise<{ optimizedBoundaries: number[][]; recommendations: string[] }> => {
   const response = await fetch(`/api/territories/${territoryId}/optimize`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(criteria),
   });
 
@@ -330,36 +330,36 @@ export const useTerritory = (options: UseTerritoryOptions) => {
 
   // Fetch territories
   const territoriesQuery = useQuery({
-    queryKey: ['territories', resellerId, filters],
+    queryKey: ["territories", resellerId, filters],
     queryFn: () => fetchTerritories(resellerId, filters),
     ...queryConfig,
   });
 
   // Fetch service coverage
   const coverageQuery = useQuery({
-    queryKey: ['service-coverage', resellerId],
+    queryKey: ["service-coverage", resellerId],
     queryFn: () => fetchServiceCoverage(resellerId),
     ...queryConfig,
   });
 
   // Fetch customers and leads for selected territory
   const customersQuery = useQuery({
-    queryKey: ['territory-customers', selectedTerritoryId],
+    queryKey: ["territory-customers", selectedTerritoryId],
     queryFn: () => fetchTerritoryCustomers(selectedTerritoryId!),
     enabled: !!selectedTerritoryId,
     ...queryConfig,
   });
 
   const leadsQuery = useQuery({
-    queryKey: ['territory-leads', selectedTerritoryId],
+    queryKey: ["territory-leads", selectedTerritoryId],
     queryFn: () => fetchTerritoryLeads(selectedTerritoryId!),
     enabled: !!selectedTerritoryId,
     ...queryConfig,
   });
 
   const analyticsQuery = useQuery({
-    queryKey: ['territory-analytics', selectedTerritoryId],
-    queryFn: () => fetchTerritoryAnalytics(selectedTerritoryId!, '30d'),
+    queryKey: ["territory-analytics", selectedTerritoryId],
+    queryFn: () => fetchTerritoryAnalytics(selectedTerritoryId!, "30d"),
     enabled: !!selectedTerritoryId,
     ...queryConfig,
   });
@@ -368,7 +368,7 @@ export const useTerritory = (options: UseTerritoryOptions) => {
   const createTerritoryMutation = useMutation({
     mutationFn: createTerritory,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['territories'] });
+      queryClient.invalidateQueries({ queryKey: ["territories"] });
     },
   });
 
@@ -376,14 +376,14 @@ export const useTerritory = (options: UseTerritoryOptions) => {
     mutationFn: ({ territoryId, updates }: { territoryId: string; updates: Partial<Territory> }) =>
       updateTerritory(territoryId, updates),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['territories'] });
+      queryClient.invalidateQueries({ queryKey: ["territories"] });
     },
   });
 
   const deleteTerritoryMutation = useMutation({
     mutationFn: deleteTerritory,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['territories'] });
+      queryClient.invalidateQueries({ queryKey: ["territories"] });
       setSelectedTerritoryId(null);
     },
   });
@@ -392,8 +392,8 @@ export const useTerritory = (options: UseTerritoryOptions) => {
     mutationFn: ({ customerId, territoryId }: { customerId: string; territoryId: string }) =>
       assignCustomerToTerritory(customerId, territoryId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['territory-customers'] });
-      queryClient.invalidateQueries({ queryKey: ['territories'] });
+      queryClient.invalidateQueries({ queryKey: ["territory-customers"] });
+      queryClient.invalidateQueries({ queryKey: ["territories"] });
     },
   });
 
@@ -430,7 +430,7 @@ export const useTerritory = (options: UseTerritoryOptions) => {
         acc[t.priority] = (acc[t.priority] || 0) + 1;
         return acc;
       },
-      {} as Record<string, number>
+      {} as Record<string, number>,
     );
 
     return {
@@ -451,7 +451,7 @@ export const useTerritory = (options: UseTerritoryOptions) => {
 
       for (const customer of customerList) {
         const territory = territories.find((t) =>
-          isPointInTerritory(customer.coordinates, t.boundaries)
+          isPointInTerritory(customer.coordinates, t.boundaries),
         );
 
         if (territory && customer.territoryId !== territory.id) {
@@ -459,14 +459,14 @@ export const useTerritory = (options: UseTerritoryOptions) => {
             assignCustomerMutation.mutateAsync({
               customerId: customer.id,
               territoryId: territory.id,
-            })
+            }),
           );
         }
       }
 
       await Promise.all(assignments);
     },
-    [territories, assignCustomerMutation]
+    [territories, assignCustomerMutation],
   );
 
   // Territory optimization
@@ -479,19 +479,19 @@ export const useTerritory = (options: UseTerritoryOptions) => {
         criteria,
       });
     },
-    [selectedTerritoryId, optimizeTerritoryMutation]
+    [selectedTerritoryId, optimizeTerritoryMutation],
   );
 
   // Export territory data
   const exportTerritoryData = useCallback(
-    async (format: 'csv' | 'excel' | 'kml', territoryIds?: string[]) => {
+    async (format: "csv" | "excel" | "kml", territoryIds?: string[]) => {
       const params = new URLSearchParams({
         resellerId,
         format,
       });
 
       if (territoryIds?.length) {
-        params.append('territories', territoryIds.join(','));
+        params.append("territories", territoryIds.join(","));
       }
 
       const response = await fetch(`/api/territories/export?${params}`);
@@ -501,24 +501,24 @@ export const useTerritory = (options: UseTerritoryOptions) => {
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
-      a.download = `territories-${resellerId}-${new Date().toISOString().split('T')[0]}.${format}`;
+      a.download = `territories-${resellerId}-${new Date().toISOString().split("T")[0]}.${format}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     },
-    [resellerId]
+    [resellerId],
   );
 
   // Refresh data
   const refreshData = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['territories'] });
-    queryClient.invalidateQueries({ queryKey: ['service-coverage'] });
-    queryClient.invalidateQueries({ queryKey: ['territory-customers'] });
-    queryClient.invalidateQueries({ queryKey: ['territory-leads'] });
-    queryClient.invalidateQueries({ queryKey: ['territory-analytics'] });
+    queryClient.invalidateQueries({ queryKey: ["territories"] });
+    queryClient.invalidateQueries({ queryKey: ["service-coverage"] });
+    queryClient.invalidateQueries({ queryKey: ["territory-customers"] });
+    queryClient.invalidateQueries({ queryKey: ["territory-leads"] });
+    queryClient.invalidateQueries({ queryKey: ["territory-analytics"] });
   }, [queryClient]);
 
   return {

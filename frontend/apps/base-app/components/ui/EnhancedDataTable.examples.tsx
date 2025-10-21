@@ -10,16 +10,7 @@ import { EnhancedDataTable, BulkAction } from "./EnhancedDataTable";
 import { createSortableHeader } from "./data-table";
 import { Badge } from "./badge";
 import { Button } from "./button";
-import {
-  Send,
-  X,
-  CheckCircle,
-  AlertTriangle,
-  Clock,
-  Download,
-  Edit,
-  Trash2,
-} from "lucide-react";
+import { Send, X, CheckCircle, AlertTriangle, Clock, Download, Edit, Trash2 } from "lucide-react";
 
 // ============================================================================
 // Example 1: Invoice List with Bulk Actions
@@ -39,9 +30,7 @@ const invoiceColumns: ColumnDef<Invoice>[] = [
   {
     accessorKey: "invoice_number",
     header: createSortableHeader("Invoice #"),
-    cell: ({ row }) => (
-      <div className="font-medium">{row.getValue("invoice_number")}</div>
-    ),
+    cell: ({ row }) => <div className="font-medium">{row.getValue("invoice_number")}</div>,
   },
   {
     accessorKey: "customer_name",
@@ -67,11 +56,7 @@ const invoiceColumns: ColumnDef<Invoice>[] = [
         void: "bg-red-500",
         overdue: "bg-orange-500",
       };
-      return (
-        <Badge className={statusColors[status as keyof typeof statusColors]}>
-          {status}
-        </Badge>
-      );
+      return <Badge className={statusColors[status as keyof typeof statusColors]}>{status}</Badge>;
     },
   },
   {
@@ -196,9 +181,7 @@ const alarmColumns: ColumnDef<Alarm>[] = [
   {
     accessorKey: "description",
     header: "Description",
-    cell: ({ row }) => (
-      <div className="max-w-md truncate">{row.getValue("description")}</div>
-    ),
+    cell: ({ row }) => <div className="max-w-md truncate">{row.getValue("description")}</div>,
   },
   {
     accessorKey: "timestamp",
@@ -215,11 +198,7 @@ const alarmColumns: ColumnDef<Alarm>[] = [
         acknowledged: "bg-yellow-500",
         cleared: "bg-green-500",
       };
-      return (
-        <Badge className={statusColors[status as keyof typeof statusColors]}>
-          {status}
-        </Badge>
-      );
+      return <Badge className={statusColors[status as keyof typeof statusColors]}>{status}</Badge>;
     },
   },
 ];
@@ -331,11 +310,7 @@ const customerColumns: ColumnDef<Customer>[] = [
         suspended: "bg-yellow-500",
         inactive: "bg-gray-500",
       };
-      return (
-        <Badge className={statusColors[status as keyof typeof statusColors]}>
-          {status}
-        </Badge>
-      );
+      return <Badge className={statusColors[status as keyof typeof statusColors]}>{status}</Badge>;
     },
   },
   {
@@ -485,11 +460,7 @@ const deviceColumns: ColumnDef<Device>[] = [
         offline: "bg-gray-500",
         fault: "bg-red-500",
       };
-      return (
-        <Badge className={statusColors[status as keyof typeof statusColors]}>
-          {status}
-        </Badge>
-      );
+      return <Badge className={statusColors[status as keyof typeof statusColors]}>{status}</Badge>;
     },
   },
   {

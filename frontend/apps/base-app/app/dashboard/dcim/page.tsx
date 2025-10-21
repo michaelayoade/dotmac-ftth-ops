@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -14,14 +14,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   useSites,
   useDevices,
@@ -30,7 +30,7 @@ import {
   useCreateDevice,
   useCreateInterface,
   useNetBoxHealth,
-} from '@/hooks/useNetBox';
+} from "@/hooks/useNetBox";
 import type {
   Site,
   Device,
@@ -38,7 +38,7 @@ import type {
   CreateSiteRequest,
   CreateDeviceRequest,
   CreateInterfaceRequest,
-} from '@/types/netbox';
+} from "@/types/netbox";
 import {
   MapPin,
   Server,
@@ -50,20 +50,22 @@ import {
   AlertCircle,
   Wifi,
   HardDrive,
-} from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function DCIMPage() {
   const { toast } = useToast();
 
   // Search and filters
-  const [siteSearch, setSiteSearch] = useState('');
-  const [deviceSearch, setDeviceSearch] = useState('');
-  const [interfaceSearch, setInterfaceSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [deviceTypeFilter, setDeviceTypeFilter] = useState<string>('all');
+  const [siteSearch, setSiteSearch] = useState("");
+  const [deviceSearch, setDeviceSearch] = useState("");
+  const [interfaceSearch, setInterfaceSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [deviceTypeFilter, setDeviceTypeFilter] = useState<string>("all");
   const [selectedSiteForDevices, setSelectedSiteForDevices] = useState<number | undefined>();
-  const [selectedDeviceForInterfaces, setSelectedDeviceForInterfaces] = useState<number | undefined>();
+  const [selectedDeviceForInterfaces, setSelectedDeviceForInterfaces] = useState<
+    number | undefined
+  >();
 
   // Dialog states
   const [showCreateSite, setShowCreateSite] = useState(false);
@@ -72,30 +74,30 @@ export default function DCIMPage() {
 
   // Form states
   const [newSite, setNewSite] = useState<CreateSiteRequest>({
-    name: '',
-    slug: '',
-    status: 'active',
-    description: '',
-    physical_address: '',
+    name: "",
+    slug: "",
+    status: "active",
+    description: "",
+    physical_address: "",
     latitude: undefined,
     longitude: undefined,
   });
 
   const [newDevice, setNewDevice] = useState<CreateDeviceRequest>({
-    name: '',
+    name: "",
     device_type: 0,
     device_role: 0,
     site: 0,
-    status: 'active',
-    serial: '',
+    status: "active",
+    serial: "",
   });
 
   const [newInterface, setNewInterface] = useState<CreateInterfaceRequest>({
     device: 0,
-    name: '',
-    type: '1000base-t',
+    name: "",
+    type: "1000base-t",
     enabled: true,
-    description: '',
+    description: "",
   });
 
   // Data fetching
@@ -119,8 +121,7 @@ export default function DCIMPage() {
       site.name.toLowerCase().includes(siteSearch.toLowerCase()) ||
       site.slug.toLowerCase().includes(siteSearch.toLowerCase()) ||
       site.physical_address?.toLowerCase().includes(siteSearch.toLowerCase());
-    const matchesStatus =
-      statusFilter === 'all' || site.status.value === statusFilter;
+    const matchesStatus = statusFilter === "all" || site.status.value === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -129,8 +130,7 @@ export default function DCIMPage() {
     const matchesSearch =
       device.name.toLowerCase().includes(deviceSearch.toLowerCase()) ||
       device.serial?.toLowerCase().includes(deviceSearch.toLowerCase());
-    const matchesStatus =
-      statusFilter === 'all' || device.status.value === statusFilter;
+    const matchesStatus = statusFilter === "all" || device.status.value === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -144,9 +144,9 @@ export default function DCIMPage() {
 
   // Calculate statistics
   const totalSites = sites.length;
-  const activeSites = sites.filter((s) => s.status.value === 'active').length;
+  const activeSites = sites.filter((s) => s.status.value === "active").length;
   const totalDevices = devices.length;
-  const onlineDevices = devices.filter((d) => d.status.value === 'active').length;
+  const onlineDevices = devices.filter((d) => d.status.value === "active").length;
   const totalInterfaces = interfaces.length;
   const enabledInterfaces = interfaces.filter((i) => i.enabled).length;
 
@@ -154,9 +154,9 @@ export default function DCIMPage() {
   const handleCreateSite = async () => {
     if (!newSite.name || !newSite.slug) {
       toast({
-        title: 'Validation Error',
-        description: 'Name and slug are required',
-        variant: 'destructive',
+        title: "Validation Error",
+        description: "Name and slug are required",
+        variant: "destructive",
       });
       return;
     }
@@ -164,22 +164,22 @@ export default function DCIMPage() {
     try {
       await createSite.mutateAsync(newSite);
       toast({
-        title: 'Success',
+        title: "Success",
         description: `Site "${newSite.name}" created successfully`,
       });
       setShowCreateSite(false);
       setNewSite({
-        name: '',
-        slug: '',
-        status: 'active',
-        description: '',
-        physical_address: '',
+        name: "",
+        slug: "",
+        status: "active",
+        description: "",
+        physical_address: "",
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to create site',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to create site",
+        variant: "destructive",
       });
     }
   };
@@ -188,9 +188,9 @@ export default function DCIMPage() {
   const handleCreateDevice = async () => {
     if (!newDevice.name || !newDevice.device_type || !newDevice.device_role || !newDevice.site) {
       toast({
-        title: 'Validation Error',
-        description: 'Name, device type, role, and site are required',
-        variant: 'destructive',
+        title: "Validation Error",
+        description: "Name, device type, role, and site are required",
+        variant: "destructive",
       });
       return;
     }
@@ -198,23 +198,23 @@ export default function DCIMPage() {
     try {
       await createDevice.mutateAsync(newDevice);
       toast({
-        title: 'Success',
+        title: "Success",
         description: `Device "${newDevice.name}" created successfully`,
       });
       setShowCreateDevice(false);
       setNewDevice({
-        name: '',
+        name: "",
         device_type: 0,
         device_role: 0,
         site: 0,
-        status: 'active',
-        serial: '',
+        status: "active",
+        serial: "",
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to create device',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to create device",
+        variant: "destructive",
       });
     }
   };
@@ -223,9 +223,9 @@ export default function DCIMPage() {
   const handleCreateInterface = async () => {
     if (!newInterface.device || !newInterface.name || !newInterface.type) {
       toast({
-        title: 'Validation Error',
-        description: 'Device, name, and type are required',
-        variant: 'destructive',
+        title: "Validation Error",
+        description: "Device, name, and type are required",
+        variant: "destructive",
       });
       return;
     }
@@ -233,22 +233,22 @@ export default function DCIMPage() {
     try {
       await createInterface.mutateAsync(newInterface);
       toast({
-        title: 'Success',
+        title: "Success",
         description: `Interface "${newInterface.name}" created successfully`,
       });
       setShowCreateInterface(false);
       setNewInterface({
         device: 0,
-        name: '',
-        type: '1000base-t',
+        name: "",
+        type: "1000base-t",
         enabled: true,
-        description: '',
+        description: "",
       });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to create interface',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to create interface",
+        variant: "destructive",
       });
     }
   };
@@ -258,23 +258,26 @@ export default function DCIMPage() {
     setNewSite((prev) => ({
       ...prev,
       name,
-      slug: name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+      slug: name
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, ""),
     }));
   };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      active: 'default',
-      planned: 'secondary',
-      offline: 'destructive',
-      maintenance: 'outline',
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      active: "default",
+      planned: "secondary",
+      offline: "destructive",
+      maintenance: "outline",
     };
-    return <Badge variant={variants[status] || 'secondary'}>{status}</Badge>;
+    return <Badge variant={variants[status] || "secondary"}>{status}</Badge>;
   };
 
   const getStatusIcon = (status: string) => {
-    if (status === 'active') return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-    if (status === 'offline') return <XCircle className="h-4 w-4 text-red-500" />;
+    if (status === "active") return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+    if (status === "offline") return <XCircle className="h-4 w-4 text-red-500" />;
     return <AlertCircle className="h-4 w-4 text-yellow-500" />;
   };
 
@@ -312,9 +315,7 @@ export default function DCIMPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalSites}</div>
-            <p className="text-xs text-muted-foreground">
-              {activeSites} active
-            </p>
+            <p className="text-xs text-muted-foreground">{activeSites} active</p>
           </CardContent>
         </Card>
 
@@ -325,9 +326,7 @@ export default function DCIMPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalDevices}</div>
-            <p className="text-xs text-muted-foreground">
-              {onlineDevices} online
-            </p>
+            <p className="text-xs text-muted-foreground">{onlineDevices} online</p>
           </CardContent>
         </Card>
 
@@ -338,9 +337,7 @@ export default function DCIMPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalInterfaces}</div>
-            <p className="text-xs text-muted-foreground">
-              {enabledInterfaces} enabled
-            </p>
+            <p className="text-xs text-muted-foreground">{enabledInterfaces} enabled</p>
           </CardContent>
         </Card>
       </div>
@@ -412,9 +409,7 @@ export default function DCIMPage() {
                           </div>
                           {getStatusBadge(site.status.value)}
                         </div>
-                        <CardDescription className="font-mono text-xs">
-                          {site.slug}
-                        </CardDescription>
+                        <CardDescription className="font-mono text-xs">{site.slug}</CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-2">
                         {site.physical_address && (
@@ -425,7 +420,7 @@ export default function DCIMPage() {
                             </span>
                           </div>
                         )}
-                        {(site.latitude && site.longitude) && (
+                        {site.latitude && site.longitude && (
                           <div className="text-xs text-muted-foreground font-mono">
                             {site.latitude.toFixed(6)}, {site.longitude.toFixed(6)}
                           </div>
@@ -480,9 +475,9 @@ export default function DCIMPage() {
                   />
                 </div>
                 <Select
-                  value={selectedSiteForDevices?.toString() || 'all'}
+                  value={selectedSiteForDevices?.toString() || "all"}
                   onValueChange={(value) =>
-                    setSelectedSiteForDevices(value === 'all' ? undefined : parseInt(value))
+                    setSelectedSiteForDevices(value === "all" ? undefined : parseInt(value))
                   }
                 >
                   <SelectTrigger className="w-[180px]">
@@ -617,9 +612,9 @@ export default function DCIMPage() {
                   />
                 </div>
                 <Select
-                  value={selectedDeviceForInterfaces?.toString() || 'all'}
+                  value={selectedDeviceForInterfaces?.toString() || "all"}
                   onValueChange={(value) =>
-                    setSelectedDeviceForInterfaces(value === 'all' ? undefined : parseInt(value))
+                    setSelectedDeviceForInterfaces(value === "all" ? undefined : parseInt(value))
                   }
                 >
                   <SelectTrigger className="w-[200px]">
@@ -674,9 +669,7 @@ export default function DCIMPage() {
                               {iface.name}
                             </code>
                           </td>
-                          <td className="p-3 text-sm text-muted-foreground">
-                            {iface.type.label}
-                          </td>
+                          <td className="p-3 text-sm text-muted-foreground">{iface.type.label}</td>
                           <td className="p-3 text-sm">
                             {iface.mtu || <span className="text-muted-foreground">-</span>}
                           </td>
@@ -703,7 +696,7 @@ export default function DCIMPage() {
                             )}
                           </td>
                           <td className="p-3 text-sm text-muted-foreground">
-                            {iface.description || '-'}
+                            {iface.description || "-"}
                           </td>
                         </tr>
                       ))}
@@ -777,9 +770,12 @@ export default function DCIMPage() {
                   type="number"
                   step="0.000001"
                   placeholder="40.712776"
-                  value={newSite.latitude || ''}
+                  value={newSite.latitude || ""}
                   onChange={(e) =>
-                    setNewSite({ ...newSite, latitude: parseFloat(e.target.value) || undefined })
+                    setNewSite({
+                      ...newSite,
+                      latitude: parseFloat(e.target.value) || undefined,
+                    })
                   }
                 />
               </div>
@@ -790,9 +786,12 @@ export default function DCIMPage() {
                   type="number"
                   step="0.000001"
                   placeholder="-74.005974"
-                  value={newSite.longitude || ''}
+                  value={newSite.longitude || ""}
                   onChange={(e) =>
-                    setNewSite({ ...newSite, longitude: parseFloat(e.target.value) || undefined })
+                    setNewSite({
+                      ...newSite,
+                      longitude: parseFloat(e.target.value) || undefined,
+                    })
                   }
                 />
               </div>
@@ -812,7 +811,7 @@ export default function DCIMPage() {
               Cancel
             </Button>
             <Button onClick={handleCreateSite} disabled={createSite.isPending}>
-              {createSite.isPending ? 'Creating...' : 'Create Site'}
+              {createSite.isPending ? "Creating..." : "Create Site"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -842,9 +841,12 @@ export default function DCIMPage() {
                   id="device-type"
                   type="number"
                   placeholder="1"
-                  value={newDevice.device_type || ''}
+                  value={newDevice.device_type || ""}
                   onChange={(e) =>
-                    setNewDevice({ ...newDevice, device_type: parseInt(e.target.value) || 0 })
+                    setNewDevice({
+                      ...newDevice,
+                      device_type: parseInt(e.target.value) || 0,
+                    })
                   }
                 />
                 <p className="text-xs text-muted-foreground">
@@ -857,9 +859,12 @@ export default function DCIMPage() {
                   id="device-role"
                   type="number"
                   placeholder="1"
-                  value={newDevice.device_role || ''}
+                  value={newDevice.device_role || ""}
                   onChange={(e) =>
-                    setNewDevice({ ...newDevice, device_role: parseInt(e.target.value) || 0 })
+                    setNewDevice({
+                      ...newDevice,
+                      device_role: parseInt(e.target.value) || 0,
+                    })
                   }
                 />
                 <p className="text-xs text-muted-foreground">
@@ -872,9 +877,7 @@ export default function DCIMPage() {
                 <Label htmlFor="device-site">Site *</Label>
                 <Select
                   value={newDevice.site.toString()}
-                  onValueChange={(value) =>
-                    setNewDevice({ ...newDevice, site: parseInt(value) })
-                  }
+                  onValueChange={(value) => setNewDevice({ ...newDevice, site: parseInt(value) })}
                 >
                   <SelectTrigger id="device-site">
                     <SelectValue placeholder="Select site" />
@@ -921,7 +924,7 @@ export default function DCIMPage() {
               Cancel
             </Button>
             <Button onClick={handleCreateDevice} disabled={createDevice.isPending}>
-              {createDevice.isPending ? 'Creating...' : 'Create Device'}
+              {createDevice.isPending ? "Creating..." : "Create Device"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -992,7 +995,12 @@ export default function DCIMPage() {
                 id="interface-desc"
                 placeholder="Uplink to core router"
                 value={newInterface.description}
-                onChange={(e) => setNewInterface({ ...newInterface, description: e.target.value })}
+                onChange={(e) =>
+                  setNewInterface({
+                    ...newInterface,
+                    description: e.target.value,
+                  })
+                }
               />
             </div>
             <div className="flex items-center space-x-2">
@@ -1000,7 +1008,12 @@ export default function DCIMPage() {
                 type="checkbox"
                 id="interface-enabled"
                 checked={newInterface.enabled}
-                onChange={(e) => setNewInterface({ ...newInterface, enabled: e.target.checked })}
+                onChange={(e) =>
+                  setNewInterface({
+                    ...newInterface,
+                    enabled: e.target.checked,
+                  })
+                }
                 className="rounded border-gray-300"
               />
               <Label htmlFor="interface-enabled" className="cursor-pointer">
@@ -1013,7 +1026,7 @@ export default function DCIMPage() {
               Cancel
             </Button>
             <Button onClick={handleCreateInterface} disabled={createInterface.isPending}>
-              {createInterface.isPending ? 'Creating...' : 'Create Interface'}
+              {createInterface.isPending ? "Creating..." : "Create Interface"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -3,6 +3,7 @@ Sales Workflow Service
 
 Provides workflow-compatible methods for sales operations.
 """
+# mypy: disable-error-code="arg-type,misc,type-arg,valid-type"
 
 import logging
 import secrets

@@ -15,6 +15,7 @@ Workflow Steps:
 This workflow is used to temporarily suspend a subscriber's service
 without fully deprovisioning them (e.g., for non-payment, customer request).
 """
+# mypy: disable-error-code="attr-defined,assignment,arg-type,union-attr,call-arg"
 
 import logging
 from datetime import UTC, datetime

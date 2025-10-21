@@ -9,6 +9,7 @@ Provides business logic for tenant operations including:
 """
 
 import secrets
+import structlog
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -34,6 +35,8 @@ from .schemas import (
     TenantUpdate,
     TenantUsageCreate,
 )
+
+logger = structlog.get_logger(__name__)
 
 
 class TenantNotFoundError(Exception):
@@ -256,8 +259,18 @@ class TenantService:
             tenants = list(result.scalars().all())
 
             return tenants, total
-        except Exception:
-            # Return empty list on error
+        except Exception as exc:
+            logger.exception(
+                "tenant.list.failed",
+                error=str(exc),
+                page=page,
+                page_size=page_size,
+                status=str(status) if status else None,
+                plan_type=str(plan_type) if plan_type else None,
+                search=search,
+                include_deleted=include_deleted,
+            )
+            await self.db.rollback()
             return [], 0
 
     async def update_tenant(

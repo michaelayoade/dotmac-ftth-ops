@@ -3,10 +3,10 @@
  * Use only useStandardErrorHandler for all error handling
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState } from "react";
 
 // NO LEGACY COMPATIBILITY - Import useStandardErrorHandler directly
-export { useStandardErrorHandler as useErrorHandler } from './useStandardErrorHandler';
+export { useStandardErrorHandler as useErrorHandler } from "./useStandardErrorHandler";
 
 // Breaking change: Legacy useErrorHandler interfaces removed
 // Migration: Replace with useStandardErrorHandler

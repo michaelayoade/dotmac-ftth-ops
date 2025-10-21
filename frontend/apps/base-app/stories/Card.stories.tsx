@@ -1,14 +1,21 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/card';
-import { Button } from '../components/ui/button';
+import type { Meta, StoryObj } from "@storybook/react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
 
 const meta = {
-  title: 'Components/Card',
+  title: "Components/Card",
   component: Card,
   parameters: {
-    layout: 'centered',
+    layout: "centered",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 } satisfies Meta<typeof Card>;
 
 export default meta;

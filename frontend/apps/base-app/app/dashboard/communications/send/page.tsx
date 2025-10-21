@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 /**
@@ -10,43 +10,33 @@ export const dynamicParams = true;
  * Form to compose and send emails with template support.
  */
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   useSendEmail,
   useQueueEmail,
   useTemplates,
   useTemplate,
   useRenderTemplate,
-} from '@/hooks/useCommunications';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/hooks/useCommunications";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  ArrowLeft,
-  Send,
-  Loader2,
-  AlertCircle,
-  Eye,
-  FileText,
-  Plus,
-  X,
-  Clock,
-} from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Send, Loader2, AlertCircle, Eye, FileText, Plus, X, Clock } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import {
   parseEmails,
   isValidEmail,
@@ -55,7 +45,7 @@ import {
   type SendEmailRequest,
   type QueueEmailRequest,
   CommunicationChannel,
-} from '@/types/communications';
+} from "@/types/communications";
 
 interface EmailForm {
   to: string; // comma-separated
@@ -76,19 +66,22 @@ export default function SendEmailPage() {
   const { toast } = useToast();
   const sendEmail = useSendEmail();
   const queueEmail = useQueueEmail();
-  const { data: templatesData } = useTemplates({ channel: CommunicationChannel.EMAIL, is_active: true });
+  const { data: templatesData } = useTemplates({
+    channel: CommunicationChannel.EMAIL,
+    is_active: true,
+  });
   const renderTemplate = useRenderTemplate();
 
   const [formData, setFormData] = useState<EmailForm>({
-    to: '',
-    subject: '',
-    body_text: '',
+    to: "",
+    subject: "",
+    body_text: "",
     priority: 5,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [sendMode, setSendMode] = useState<'immediate' | 'queue'>('immediate');
+  const [sendMode, setSendMode] = useState<"immediate" | "queue">("immediate");
   const [showPreview, setShowPreview] = useState(false);
-  const [previewHtml, setPreviewHtml] = useState<string>('');
+  const [previewHtml, setPreviewHtml] = useState<string>("");
   const [enableTemplate, setEnableTemplate] = useState(false);
   const [templateVariables, setTemplateVariables] = useState<string[]>([]);
 
@@ -97,19 +90,19 @@ export default function SendEmailPage() {
   // Extract variables when template or manual content changes
   useEffect(() => {
     if (enableTemplate && selectedTemplate.data) {
-      const htmlVars = extractTemplateVariables(selectedTemplate.data.body_html || '');
-      const textVars = extractTemplateVariables(selectedTemplate.data.body_text || '');
-      const subjectVars = extractTemplateVariables(selectedTemplate.data.subject || '');
+      const htmlVars = extractTemplateVariables(selectedTemplate.data.body_html || "");
+      const textVars = extractTemplateVariables(selectedTemplate.data.body_text || "");
+      const subjectVars = extractTemplateVariables(selectedTemplate.data.subject || "");
       const allVars = [...new Set([...htmlVars, ...textVars, ...subjectVars])];
       setTemplateVariables(allVars);
 
       // Initialize variables object
       const vars: Record<string, string> = {};
-      allVars.forEach(v => vars[v] = '');
-      setFormData(prev => ({ ...prev, variables: vars }));
+      allVars.forEach((v) => (vars[v] = ""));
+      setFormData((prev) => ({ ...prev, variables: vars }));
     } else if (!enableTemplate) {
-      const textVars = extractTemplateVariables(formData.body_text || '');
-      const htmlVars = extractTemplateVariables(formData.body_html || '');
+      const textVars = extractTemplateVariables(formData.body_text || "");
+      const htmlVars = extractTemplateVariables(formData.body_html || "");
       const allVars = [...new Set([...textVars, ...htmlVars])];
       setTemplateVariables(allVars);
     }
@@ -121,46 +114,46 @@ export default function SendEmailPage() {
     // Validate recipients
     const toEmails = parseEmails(formData.to);
     if (toEmails.length === 0) {
-      newErrors.to = 'At least one valid recipient email is required';
+      newErrors.to = "At least one valid recipient email is required";
     }
 
     if (formData.cc) {
       const ccEmails = parseEmails(formData.cc);
       if (formData.cc.trim() && ccEmails.length === 0) {
-        newErrors.cc = 'Invalid CC email addresses';
+        newErrors.cc = "Invalid CC email addresses";
       }
     }
 
     if (formData.bcc) {
       const bccEmails = parseEmails(formData.bcc);
       if (formData.bcc.trim() && bccEmails.length === 0) {
-        newErrors.bcc = 'Invalid BCC email addresses';
+        newErrors.bcc = "Invalid BCC email addresses";
       }
     }
 
     if (formData.reply_to && !isValidEmail(formData.reply_to)) {
-      newErrors.reply_to = 'Invalid reply-to email address';
+      newErrors.reply_to = "Invalid reply-to email address";
     }
 
     // Validate subject
     if (!formData.subject || formData.subject.trim().length === 0) {
-      newErrors.subject = 'Subject is required';
+      newErrors.subject = "Subject is required";
     }
 
     // Validate body
     if (enableTemplate && !formData.template_id) {
-      newErrors.template_id = 'Please select a template';
+      newErrors.template_id = "Please select a template";
     } else if (!enableTemplate && !formData.body_text && !formData.body_html) {
-      newErrors.body_text = 'Email body is required';
+      newErrors.body_text = "Email body is required";
     }
 
     // Validate template variables
     if (enableTemplate && templateVariables.length > 0) {
       const missingVars = templateVariables.filter(
-        v => !formData.variables?.[v] || formData.variables[v].trim() === ''
+        (v) => !formData.variables?.[v] || formData.variables[v].trim() === "",
       );
       if (missingVars.length > 0) {
-        newErrors.variables = `Missing required variables: ${missingVars.join(', ')}`;
+        newErrors.variables = `Missing required variables: ${missingVars.join(", ")}`;
       }
     }
 
@@ -177,17 +170,17 @@ export default function SendEmailPage() {
           id: formData.template_id,
           variables: formData.variables,
         });
-        setPreviewHtml(result.rendered_body_html || result.rendered_body_text || '');
+        setPreviewHtml(result.rendered_body_html || result.rendered_body_text || "");
         setShowPreview(true);
       } catch (error: any) {
         toast({
-          title: 'Preview Failed',
-          description: error.response?.data?.detail || 'Failed to render template',
-          variant: 'destructive',
+          title: "Preview Failed",
+          description: error.response?.data?.detail || "Failed to render template",
+          variant: "destructive",
         });
       }
     } else {
-      setPreviewHtml(formData.body_html || formData.body_text || '');
+      setPreviewHtml(formData.body_html || formData.body_text || "");
       setShowPreview(true);
     }
   };
@@ -197,9 +190,9 @@ export default function SendEmailPage() {
 
     if (!validate()) {
       toast({
-        title: 'Validation Error',
-        description: 'Please fix the errors in the form',
-        variant: 'destructive',
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
+        variant: "destructive",
       });
       return;
     }
@@ -224,20 +217,20 @@ export default function SendEmailPage() {
       emailData.body_html = formData.body_html;
     }
 
-    if (sendMode === 'immediate') {
+    if (sendMode === "immediate") {
       sendEmail.mutate(emailData, {
         onSuccess: (data) => {
           toast({
-            title: 'Email Sent',
+            title: "Email Sent",
             description: `Successfully sent to ${data.accepted.length} recipient(s)`,
           });
-          router.push('/dashboard/communications');
+          router.push("/dashboard/communications");
         },
         onError: (error: any) => {
           toast({
-            title: 'Send Failed',
-            description: error.response?.data?.detail || 'Failed to send email',
-            variant: 'destructive',
+            title: "Send Failed",
+            description: error.response?.data?.detail || "Failed to send email",
+            variant: "destructive",
           });
         },
       });
@@ -251,16 +244,16 @@ export default function SendEmailPage() {
       queueEmail.mutate(queueData, {
         onSuccess: (data) => {
           toast({
-            title: 'Email Queued',
+            title: "Email Queued",
             description: `Email queued successfully. Task ID: ${data.task_id}`,
           });
-          router.push('/dashboard/communications');
+          router.push("/dashboard/communications");
         },
         onError: (error: any) => {
           toast({
-            title: 'Queue Failed',
-            description: error.response?.data?.detail || 'Failed to queue email',
-            variant: 'destructive',
+            title: "Queue Failed",
+            description: error.response?.data?.detail || "Failed to queue email",
+            variant: "destructive",
           });
         },
       });
@@ -268,9 +261,9 @@ export default function SendEmailPage() {
   };
 
   const handleChange = (field: keyof EmailForm, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => {
+      setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[field];
         return newErrors;
@@ -279,7 +272,7 @@ export default function SendEmailPage() {
   };
 
   const handleVariableChange = (varName: string, value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       variables: { ...prev.variables, [varName]: value },
     }));
@@ -355,7 +348,7 @@ export default function SendEmailPage() {
                     </Label>
                     <Select
                       value={formData.template_id}
-                      onValueChange={(value) => handleChange('template_id', value)}
+                      onValueChange={(value) => handleChange("template_id", value)}
                     >
                       <SelectTrigger id="template_id">
                         <SelectValue placeholder="Select a template" />
@@ -387,12 +380,10 @@ export default function SendEmailPage() {
                   <Input
                     id="to"
                     value={formData.to}
-                    onChange={(e) => handleChange('to', e.target.value)}
+                    onChange={(e) => handleChange("to", e.target.value)}
                     placeholder="email@example.com, another@example.com"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Comma-separated email addresses
-                  </p>
+                  <p className="text-sm text-muted-foreground">Comma-separated email addresses</p>
                   {errors.to && <p className="text-sm text-red-500">{errors.to}</p>}
                 </div>
 
@@ -402,8 +393,8 @@ export default function SendEmailPage() {
                     <Label htmlFor="cc">CC</Label>
                     <Input
                       id="cc"
-                      value={formData.cc || ''}
-                      onChange={(e) => handleChange('cc', e.target.value)}
+                      value={formData.cc || ""}
+                      onChange={(e) => handleChange("cc", e.target.value)}
                       placeholder="cc@example.com"
                     />
                     {errors.cc && <p className="text-sm text-red-500">{errors.cc}</p>}
@@ -412,8 +403,8 @@ export default function SendEmailPage() {
                     <Label htmlFor="bcc">BCC</Label>
                     <Input
                       id="bcc"
-                      value={formData.bcc || ''}
-                      onChange={(e) => handleChange('bcc', e.target.value)}
+                      value={formData.bcc || ""}
+                      onChange={(e) => handleChange("bcc", e.target.value)}
                       placeholder="bcc@example.com"
                     />
                     {errors.bcc && <p className="text-sm text-red-500">{errors.bcc}</p>}
@@ -428,7 +419,7 @@ export default function SendEmailPage() {
                   <Input
                     id="subject"
                     value={formData.subject}
-                    onChange={(e) => handleChange('subject', e.target.value)}
+                    onChange={(e) => handleChange("subject", e.target.value)}
                     placeholder="Email subject"
                   />
                   {errors.subject && <p className="text-sm text-red-500">{errors.subject}</p>}
@@ -445,15 +436,13 @@ export default function SendEmailPage() {
                         </Label>
                         <Input
                           id={`var_${varName}`}
-                          value={formData.variables?.[varName] || ''}
+                          value={formData.variables?.[varName] || ""}
                           onChange={(e) => handleVariableChange(varName, e.target.value)}
                           placeholder={`Enter ${varName}`}
                         />
                       </div>
                     ))}
-                    {errors.variables && (
-                      <p className="text-sm text-red-500">{errors.variables}</p>
-                    )}
+                    {errors.variables && <p className="text-sm text-red-500">{errors.variables}</p>}
                   </div>
                 )}
 
@@ -470,8 +459,8 @@ export default function SendEmailPage() {
                       </Label>
                       <Textarea
                         id="body_text"
-                        value={formData.body_text || ''}
-                        onChange={(e) => handleChange('body_text', e.target.value)}
+                        value={formData.body_text || ""}
+                        onChange={(e) => handleChange("body_text", e.target.value)}
                         placeholder="Email body text..."
                         rows={12}
                       />
@@ -483,8 +472,8 @@ export default function SendEmailPage() {
                       <Label htmlFor="body_html">HTML Body</Label>
                       <Textarea
                         id="body_html"
-                        value={formData.body_html || ''}
-                        onChange={(e) => handleChange('body_html', e.target.value)}
+                        value={formData.body_html || ""}
+                        onChange={(e) => handleChange("body_html", e.target.value)}
                         placeholder="<html>...</html>"
                         rows={12}
                         className="font-mono text-sm"
@@ -498,8 +487,8 @@ export default function SendEmailPage() {
                   <Label htmlFor="reply_to">Reply To (optional)</Label>
                   <Input
                     id="reply_to"
-                    value={formData.reply_to || ''}
-                    onChange={(e) => handleChange('reply_to', e.target.value)}
+                    value={formData.reply_to || ""}
+                    onChange={(e) => handleChange("reply_to", e.target.value)}
                     placeholder="reply@example.com"
                   />
                   {errors.reply_to && <p className="text-sm text-red-500">{errors.reply_to}</p>}
@@ -513,8 +502,8 @@ export default function SendEmailPage() {
                       <input
                         type="radio"
                         value="immediate"
-                        checked={sendMode === 'immediate'}
-                        onChange={(e) => setSendMode('immediate')}
+                        checked={sendMode === "immediate"}
+                        onChange={(e) => setSendMode("immediate")}
                         className="h-4 w-4"
                       />
                       <span className="text-sm">Send Immediately</span>
@@ -523,15 +512,15 @@ export default function SendEmailPage() {
                       <input
                         type="radio"
                         value="queue"
-                        checked={sendMode === 'queue'}
-                        onChange={(e) => setSendMode('queue')}
+                        checked={sendMode === "queue"}
+                        onChange={(e) => setSendMode("queue")}
                         className="h-4 w-4"
                       />
                       <span className="text-sm">Queue for Later</span>
                     </label>
                   </div>
 
-                  {sendMode === 'queue' && (
+                  {sendMode === "queue" && (
                     <div className="space-y-3 mt-3">
                       <div className="space-y-2">
                         <Label htmlFor="priority">Priority (1-10)</Label>
@@ -541,7 +530,7 @@ export default function SendEmailPage() {
                           min={1}
                           max={10}
                           value={formData.priority}
-                          onChange={(e) => handleChange('priority', parseInt(e.target.value, 10))}
+                          onChange={(e) => handleChange("priority", parseInt(e.target.value, 10))}
                         />
                       </div>
                       <div className="space-y-2">
@@ -549,8 +538,8 @@ export default function SendEmailPage() {
                         <Input
                           id="scheduled_at"
                           type="datetime-local"
-                          value={formData.scheduled_at || ''}
-                          onChange={(e) => handleChange('scheduled_at', e.target.value)}
+                          value={formData.scheduled_at || ""}
+                          onChange={(e) => handleChange("scheduled_at", e.target.value)}
                         />
                       </div>
                     </div>
@@ -563,12 +552,12 @@ export default function SendEmailPage() {
                     {isPending ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {sendMode === 'immediate' ? 'Sending...' : 'Queueing...'}
+                        {sendMode === "immediate" ? "Sending..." : "Queueing..."}
                       </>
                     ) : (
                       <>
                         <Send className="h-4 w-4 mr-2" />
-                        {sendMode === 'immediate' ? 'Send Now' : 'Queue Email'}
+                        {sendMode === "immediate" ? "Send Now" : "Queue Email"}
                       </>
                     )}
                   </Button>

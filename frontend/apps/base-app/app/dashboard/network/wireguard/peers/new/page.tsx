@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 /**
@@ -11,30 +11,27 @@ export const dynamicParams = true;
  * Auto-generates keys and IP allocation on the backend.
  */
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import {
-  useCreateWireGuardPeer,
-  useWireGuardServers,
-} from '@/hooks/useWireGuard';
-import type { CreateWireGuardPeerRequest } from '@/types/wireguard';
-import { WireGuardServerStatus } from '@/types/wireguard';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useCreateWireGuardPeer, useWireGuardServers } from "@/hooks/useWireGuard";
+import type { CreateWireGuardPeerRequest } from "@/types/wireguard";
+import { WireGuardServerStatus } from "@/types/wireguard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Loader2, Save, AlertCircle } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+} from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ArrowLeft, Loader2, Save, AlertCircle } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function CreatePeerPage() {
   const router = useRouter();
@@ -45,13 +42,13 @@ export default function CreatePeerPage() {
   });
 
   const [formData, setFormData] = useState<CreateWireGuardPeerRequest>({
-    server_id: '',
-    name: '',
-    peer_name: '',
-    customer_id: '',
-    allowed_ips: '0.0.0.0/0, ::/0',
+    server_id: "",
+    name: "",
+    peer_name: "",
+    customer_id: "",
+    allowed_ips: "0.0.0.0/0, ::/0",
     persistent_keepalive: 25,
-    notes: '',
+    notes: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -62,24 +59,25 @@ export default function CreatePeerPage() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.server_id) {
-      newErrors.server_id = 'Server is required';
+      newErrors.server_id = "Server is required";
     }
 
     if (!formData.peer_name || formData.peer_name.trim().length === 0) {
-      newErrors.peer_name = 'Peer name is required';
+      newErrors.peer_name = "Peer name is required";
     } else if (formData.peer_name.length > 100) {
-      newErrors.peer_name = 'Peer name must be 100 characters or less';
+      newErrors.peer_name = "Peer name must be 100 characters or less";
     }
 
     if (hasCustomerInfo && !formData.customer_id) {
-      newErrors.customer_id = 'Customer ID is required when customer info is enabled';
+      newErrors.customer_id = "Customer ID is required when customer info is enabled";
     }
 
     if (formData.allowed_ips) {
       // Basic validation for IP ranges
-      const ips = typeof formData.allowed_ips === 'string'
-        ? formData.allowed_ips.split(',').map((ip: string) => ip.trim())
-        : formData.allowed_ips;
+      const ips =
+        typeof formData.allowed_ips === "string"
+          ? formData.allowed_ips.split(",").map((ip: string) => ip.trim())
+          : formData.allowed_ips;
       for (const ip of ips) {
         if (!ip) continue;
         // Check if it's a valid CIDR notation (basic check)
@@ -92,7 +90,7 @@ export default function CreatePeerPage() {
 
     if (formData.persistent_keepalive !== undefined && formData.persistent_keepalive !== null) {
       if (formData.persistent_keepalive < 0 || formData.persistent_keepalive > 3600) {
-        newErrors.persistent_keepalive = 'Persistent keepalive must be between 0 and 3600 seconds';
+        newErrors.persistent_keepalive = "Persistent keepalive must be between 0 and 3600 seconds";
       }
     }
 
@@ -100,7 +98,7 @@ export default function CreatePeerPage() {
       const expirationDate = new Date(formData.expiration_date);
       const now = new Date();
       if (expirationDate < now) {
-        newErrors.expiration_date = 'Expiration date must be in the future';
+        newErrors.expiration_date = "Expiration date must be in the future";
       }
     }
 
@@ -113,9 +111,9 @@ export default function CreatePeerPage() {
 
     if (!validate()) {
       toast({
-        title: 'Validation Error',
-        description: 'Please fix the errors in the form',
-        variant: 'destructive',
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
+        variant: "destructive",
       });
       return;
     }
@@ -123,9 +121,9 @@ export default function CreatePeerPage() {
     // Prepare request data
     const requestData: CreateWireGuardPeerRequest = {
       server_id: formData.server_id,
-      name: formData.peer_name || '',
+      name: formData.peer_name || "",
       peer_name: formData.peer_name,
-      allowed_ips: formData.allowed_ips || '0.0.0.0/0, ::/0',
+      allowed_ips: formData.allowed_ips || "0.0.0.0/0, ::/0",
       persistent_keepalive: formData.persistent_keepalive || 25,
     };
 
@@ -144,16 +142,16 @@ export default function CreatePeerPage() {
     createPeer.mutate(requestData, {
       onSuccess: (data) => {
         toast({
-          title: 'Peer Created',
+          title: "Peer Created",
           description: `Peer "${data.peer_name}" has been created successfully`,
         });
         router.push(`/dashboard/network/wireguard/peers/${data.id}`);
       },
       onError: (error: any) => {
         toast({
-          title: 'Error Creating Peer',
-          description: error.response?.data?.detail || 'Failed to create peer',
-          variant: 'destructive',
+          title: "Error Creating Peer",
+          description: error.response?.data?.detail || "Failed to create peer",
+          variant: "destructive",
         });
       },
     });
@@ -193,9 +191,7 @@ export default function CreatePeerPage() {
             </Link>
           </div>
           <h1 className="text-3xl font-bold">Create WireGuard Peer</h1>
-          <p className="text-muted-foreground mt-1">
-            Add a new VPN peer to a WireGuard server
-          </p>
+          <p className="text-muted-foreground mt-1">Add a new VPN peer to a WireGuard server</p>
         </div>
       </div>
 
@@ -204,13 +200,10 @@ export default function CreatePeerPage() {
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            No active WireGuard servers available. Please{' '}
-            <Link
-              href="/dashboard/network/wireguard/servers/new"
-              className="underline font-medium"
-            >
+            No active WireGuard servers available. Please{" "}
+            <Link href="/dashboard/network/wireguard/servers/new" className="underline font-medium">
               create a server
-            </Link>{' '}
+            </Link>{" "}
             first.
           </AlertDescription>
         </Alert>
@@ -233,7 +226,7 @@ export default function CreatePeerPage() {
               </Label>
               <Select
                 value={formData.server_id}
-                onValueChange={(value) => handleChange('server_id', value)}
+                onValueChange={(value) => handleChange("server_id", value)}
               >
                 <SelectTrigger id="server_id">
                   <SelectValue placeholder="Select a server" />
@@ -246,9 +239,7 @@ export default function CreatePeerPage() {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.server_id && (
-                <p className="text-sm text-red-500">{errors.server_id}</p>
-              )}
+              {errors.server_id && <p className="text-sm text-red-500">{errors.server_id}</p>}
             </div>
 
             {/* Peer Name */}
@@ -259,16 +250,12 @@ export default function CreatePeerPage() {
               <Input
                 id="peer_name"
                 value={formData.peer_name}
-                onChange={(e) => handleChange('peer_name', e.target.value)}
+                onChange={(e) => handleChange("peer_name", e.target.value)}
                 placeholder="e.g., john-laptop, office-router"
                 maxLength={100}
               />
-              <p className="text-sm text-muted-foreground">
-                Friendly name to identify this peer
-              </p>
-              {errors.peer_name && (
-                <p className="text-sm text-red-500">{errors.peer_name}</p>
-              )}
+              <p className="text-sm text-muted-foreground">Friendly name to identify this peer</p>
+              {errors.peer_name && <p className="text-sm text-red-500">{errors.peer_name}</p>}
             </div>
 
             {/* Customer Information Toggle */}
@@ -293,16 +280,14 @@ export default function CreatePeerPage() {
                 </Label>
                 <Input
                   id="customer_id"
-                  value={formData.customer_id || ''}
-                  onChange={(e) => handleChange('customer_id', e.target.value)}
+                  value={formData.customer_id || ""}
+                  onChange={(e) => handleChange("customer_id", e.target.value)}
                   placeholder="Enter customer ID"
                 />
                 <p className="text-sm text-muted-foreground">
                   Link this peer to a customer account
                 </p>
-                {errors.customer_id && (
-                  <p className="text-sm text-red-500">{errors.customer_id}</p>
-                )}
+                {errors.customer_id && <p className="text-sm text-red-500">{errors.customer_id}</p>}
               </div>
             )}
 
@@ -312,15 +297,13 @@ export default function CreatePeerPage() {
               <Input
                 id="allowed_ips"
                 value={formData.allowed_ips}
-                onChange={(e) => handleChange('allowed_ips', e.target.value)}
+                onChange={(e) => handleChange("allowed_ips", e.target.value)}
                 placeholder="0.0.0.0/0, ::/0"
               />
               <p className="text-sm text-muted-foreground">
                 Comma-separated list of IP ranges this peer can route (default: all traffic)
               </p>
-              {errors.allowed_ips && (
-                <p className="text-sm text-red-500">{errors.allowed_ips}</p>
-              )}
+              {errors.allowed_ips && <p className="text-sm text-red-500">{errors.allowed_ips}</p>}
             </div>
 
             {/* Persistent Keepalive */}
@@ -332,9 +315,7 @@ export default function CreatePeerPage() {
                 min={0}
                 max={3600}
                 value={formData.persistent_keepalive || 25}
-                onChange={(e) =>
-                  handleChange('persistent_keepalive', parseInt(e.target.value, 10))
-                }
+                onChange={(e) => handleChange("persistent_keepalive", parseInt(e.target.value, 10))}
               />
               <p className="text-sm text-muted-foreground">
                 How often to send keepalive packets (0 = disabled, recommended: 25)
@@ -350,8 +331,8 @@ export default function CreatePeerPage() {
               <Input
                 id="expiration_date"
                 type="datetime-local"
-                value={formData.expiration_date || ''}
-                onChange={(e) => handleChange('expiration_date', e.target.value)}
+                value={formData.expiration_date || ""}
+                onChange={(e) => handleChange("expiration_date", e.target.value)}
               />
               <p className="text-sm text-muted-foreground">
                 When this peer&apos;s access should expire (leave blank for no expiration)
@@ -366,22 +347,17 @@ export default function CreatePeerPage() {
               <Label htmlFor="notes">Notes</Label>
               <Textarea
                 id="notes"
-                value={formData.notes || ''}
-                onChange={(e) => handleChange('notes', e.target.value)}
+                value={formData.notes || ""}
+                onChange={(e) => handleChange("notes", e.target.value)}
                 placeholder="Additional information about this peer..."
                 rows={4}
               />
-              <p className="text-sm text-muted-foreground">
-                Internal notes for reference
-              </p>
+              <p className="text-sm text-muted-foreground">Internal notes for reference</p>
             </div>
 
             {/* Form Actions */}
             <div className="flex gap-4 pt-4">
-              <Button
-                type="submit"
-                disabled={createPeer.isPending || (servers?.length === 0)}
-              >
+              <Button type="submit" disabled={createPeer.isPending || servers?.length === 0}>
                 {createPeer.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -418,8 +394,8 @@ export default function CreatePeerPage() {
             <li>Make the configuration available for download</li>
           </ul>
           <p className="mt-4 font-medium">
-            After creation, you can download the configuration file and import it into the
-            WireGuard client.
+            After creation, you can download the configuration file and import it into the WireGuard
+            client.
           </p>
         </CardContent>
       </Card>

@@ -20,7 +20,7 @@ import {
   useSubscriptionDashboardQuery,
   SubscriptionStatusEnum,
   BillingCycleEnum,
-} from '@/lib/graphql/generated';
+} from "@/lib/graphql/generated";
 
 // ============================================================================
 // Subscription List Hook
@@ -66,7 +66,7 @@ export function useSubscriptionListGraphQL(options: UseSubscriptionListOptions =
     },
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   // Transform to match component expectations
@@ -103,7 +103,7 @@ export function useSubscriptionDetailGraphQL(options: UseSubscriptionDetailOptio
   const { data, loading, error, refetch } = useSubscriptionDetailQuery({
     variables: { id: subscriptionId },
     skip: !enabled || !subscriptionId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const subscription = data?.subscription ?? null;
@@ -134,7 +134,7 @@ export function useSubscriptionMetricsGraphQL(options: UseSubscriptionMetricsOpt
   const { data, loading, error, refetch } = useSubscriptionMetricsQuery({
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const metrics = data?.subscriptionMetrics;
@@ -179,13 +179,7 @@ export interface UsePlanListOptions {
 }
 
 export function usePlanListGraphQL(options: UsePlanListOptions = {}) {
-  const {
-    page = 1,
-    pageSize = 20,
-    isActive,
-    billingCycle,
-    enabled = true,
-  } = options;
+  const { page = 1, pageSize = 20, isActive, billingCycle, enabled = true } = options;
 
   const { data, loading, error, refetch } = usePlanListQuery({
     variables: {
@@ -195,7 +189,7 @@ export function usePlanListGraphQL(options: UsePlanListOptions = {}) {
       billingCycle,
     },
     skip: !enabled,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const plans = data?.plans?.plans ?? [];
@@ -225,13 +219,7 @@ export interface UseProductListOptions {
 }
 
 export function useProductListGraphQL(options: UseProductListOptions = {}) {
-  const {
-    page = 1,
-    pageSize = 20,
-    isActive,
-    category,
-    enabled = true,
-  } = options;
+  const { page = 1, pageSize = 20, isActive, category, enabled = true } = options;
 
   const { data, loading, error, refetch } = useProductListQuery({
     variables: {
@@ -241,7 +229,7 @@ export function useProductListGraphQL(options: UseProductListOptions = {}) {
       category,
     },
     skip: !enabled,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const products = data?.products?.products ?? [];
@@ -272,14 +260,7 @@ export interface UseSubscriptionDashboardOptions {
 }
 
 export function useSubscriptionDashboardGraphQL(options: UseSubscriptionDashboardOptions = {}) {
-  const {
-    page = 1,
-    pageSize = 10,
-    status,
-    search,
-    enabled = true,
-    pollInterval = 30000,
-  } = options;
+  const { page = 1, pageSize = 10, status, search, enabled = true, pollInterval = 30000 } = options;
 
   const { data, loading, error, refetch } = useSubscriptionDashboardQuery({
     variables: {
@@ -290,7 +271,7 @@ export function useSubscriptionDashboardGraphQL(options: UseSubscriptionDashboar
     },
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const subscriptions = data?.subscriptions?.subscriptions ?? [];

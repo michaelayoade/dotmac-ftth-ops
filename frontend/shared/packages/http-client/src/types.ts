@@ -3,11 +3,11 @@ export interface HttpClientConfig {
   timeout?: number;
   retries?: number;
   retryDelay?: number;
-  tenantIdSource?: 'header' | 'subdomain' | 'query' | 'cookie';
-  authTokenSource?: 'cookie' | 'localStorage' | 'sessionStorage';
+  tenantIdSource?: "header" | "subdomain" | "query" | "cookie";
+  authTokenSource?: "cookie" | "localStorage" | "sessionStorage";
 }
 
-export interface RequestConfig extends Omit<import('axios').AxiosRequestConfig, 'url'> {
+export interface RequestConfig extends Omit<import("axios").AxiosRequestConfig, "url"> {
   skipAuth?: boolean;
   skipTenantId?: boolean;
   skipRetry?: boolean;
@@ -27,7 +27,7 @@ export interface ApiError {
   details?: any;
 }
 
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 export interface RetryConfig {
   retries: number;
@@ -37,5 +37,5 @@ export interface RetryConfig {
 
 export interface TenantConfig {
   tenantId: string;
-  source: 'header' | 'subdomain' | 'query' | 'cookie';
+  source: "header" | "subdomain" | "query" | "cookie";
 }

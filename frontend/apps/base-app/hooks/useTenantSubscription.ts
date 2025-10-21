@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
-import { apiClient } from '@/lib/api/client';
-import { logger } from '@/lib/logger';
+import { useState, useCallback, useEffect } from "react";
+import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // Types
@@ -11,13 +11,13 @@ export interface TenantSubscription {
   tenant_id: string;
   plan_id: string;
   plan_name: string;
-  status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'unpaid';
+  status: "active" | "trialing" | "past_due" | "canceled" | "unpaid";
   current_period_start: string;
   current_period_end: string;
   trial_end?: string;
   cancel_at_period_end: boolean;
   canceled_at?: string;
-  billing_cycle: 'monthly' | 'quarterly' | 'annual';
+  billing_cycle: "monthly" | "quarterly" | "annual";
   price_amount: number;
   currency: string;
   usage?: {
@@ -35,7 +35,7 @@ export interface AvailablePlan {
   name: string;
   display_name: string;
   description: string;
-  billing_cycle: 'monthly' | 'quarterly' | 'annual';
+  billing_cycle: "monthly" | "quarterly" | "annual";
   price_amount: number;
   currency: string;
   trial_days: number;
@@ -72,7 +72,7 @@ export interface ProrationPreview {
 export interface PlanChangeRequest {
   new_plan_id: string;
   billing_cycle?: string;
-  proration_behavior?: 'prorate' | 'none' | 'always_invoice';
+  proration_behavior?: "prorate" | "none" | "always_invoice";
   reason?: string;
 }
 
@@ -101,14 +101,16 @@ export const useTenantSubscription = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/billing/tenant/subscription/current');
+      const response = await apiClient.get("/billing/tenant/subscription/current");
       setSubscription(response.data);
-      logger.info('Fetched tenant subscription', { subscription_id: response.data?.subscription_id });
+      logger.info("Fetched tenant subscription", {
+        subscription_id: response.data?.subscription_id,
+      });
       return response.data;
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || 'Failed to fetch subscription';
+      const errorMsg = err.response?.data?.detail || "Failed to fetch subscription";
       setError(errorMsg);
-      logger.error('Error fetching subscription', { error: errorMsg });
+      logger.error("Error fetching subscription", { error: errorMsg });
       throw err;
     } finally {
       setLoading(false);
@@ -123,14 +125,14 @@ export const useTenantSubscription = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/billing/tenant/subscription/available-plans');
+      const response = await apiClient.get("/billing/tenant/subscription/available-plans");
       setAvailablePlans(response.data);
-      logger.info('Fetched available plans', { count: response.data.length });
+      logger.info("Fetched available plans", { count: response.data.length });
       return response.data;
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || 'Failed to fetch available plans';
+      const errorMsg = err.response?.data?.detail || "Failed to fetch available plans";
       setError(errorMsg);
-      logger.error('Error fetching available plans', { error: errorMsg });
+      logger.error("Error fetching available plans", { error: errorMsg });
       throw err;
     } finally {
       setLoading(false);
@@ -145,17 +147,16 @@ export const useTenantSubscription = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.post(
-        '/billing/tenant/subscription/preview-change',
-        request
-      );
+      const response = await apiClient.post("/billing/tenant/subscription/preview-change", request);
       setProrationPreview(response.data);
-      logger.info('Previewed plan change', { new_plan_id: request.new_plan_id });
+      logger.info("Previewed plan change", {
+        new_plan_id: request.new_plan_id,
+      });
       return response.data;
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || 'Failed to preview plan change';
+      const errorMsg = err.response?.data?.detail || "Failed to preview plan change";
       setError(errorMsg);
-      logger.error('Error previewing plan change', { error: errorMsg });
+      logger.error("Error previewing plan change", { error: errorMsg });
       throw err;
     } finally {
       setLoading(false);
@@ -170,17 +171,16 @@ export const useTenantSubscription = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.post(
-        '/billing/tenant/subscription/change-plan',
-        request
-      );
+      const response = await apiClient.post("/billing/tenant/subscription/change-plan", request);
       setSubscription(response.data);
-      logger.info('Changed subscription plan', { new_plan_id: request.new_plan_id });
+      logger.info("Changed subscription plan", {
+        new_plan_id: request.new_plan_id,
+      });
       return response.data;
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || 'Failed to change plan';
+      const errorMsg = err.response?.data?.detail || "Failed to change plan";
       setError(errorMsg);
-      logger.error('Error changing plan', { error: errorMsg });
+      logger.error("Error changing plan", { error: errorMsg });
       throw err;
     } finally {
       setLoading(false);
@@ -195,17 +195,16 @@ export const useTenantSubscription = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.post(
-        '/billing/tenant/subscription/cancel',
-        request
-      );
+      const response = await apiClient.post("/billing/tenant/subscription/cancel", request);
       setSubscription(response.data);
-      logger.info('Canceled subscription', { cancel_at_period_end: request.cancel_at_period_end });
+      logger.info("Canceled subscription", {
+        cancel_at_period_end: request.cancel_at_period_end,
+      });
       return response.data;
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || 'Failed to cancel subscription';
+      const errorMsg = err.response?.data?.detail || "Failed to cancel subscription";
       setError(errorMsg);
-      logger.error('Error canceling subscription', { error: errorMsg });
+      logger.error("Error canceling subscription", { error: errorMsg });
       throw err;
     } finally {
       setLoading(false);
@@ -220,14 +219,14 @@ export const useTenantSubscription = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.post('/billing/tenant/subscription/reactivate');
+      const response = await apiClient.post("/billing/tenant/subscription/reactivate");
       setSubscription(response.data);
-      logger.info('Reactivated subscription');
+      logger.info("Reactivated subscription");
       return response.data;
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || 'Failed to reactivate subscription';
+      const errorMsg = err.response?.data?.detail || "Failed to reactivate subscription";
       setError(errorMsg);
-      logger.error('Error reactivating subscription', { error: errorMsg });
+      logger.error("Error reactivating subscription", { error: errorMsg });
       throw err;
     } finally {
       setLoading(false);

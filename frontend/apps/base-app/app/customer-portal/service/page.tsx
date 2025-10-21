@@ -1,20 +1,12 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Wifi,
-  Zap,
-  TrendingUp,
-  CheckCircle,
-  Info,
-  ArrowRight,
-  Loader2,
-} from "lucide-react";
+import { Wifi, Zap, TrendingUp, CheckCircle, Info, ArrowRight, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useCustomerService } from "@/hooks/useCustomerPortal";
 import { useToast } from "@/components/ui/use-toast";
@@ -40,12 +32,7 @@ export default function CustomerServicePage() {
         speed_down: service.speed_down,
         speed_up: service.speed_up,
         price: service.monthly_price,
-        features: [
-          "Unlimited Data",
-          "No Contracts",
-          "Free Installation",
-          "24/7 Support",
-        ],
+        features: ["Unlimited Data", "No Contracts", "Free Installation", "24/7 Support"],
       }
     : null;
 
@@ -54,7 +41,8 @@ export default function CustomerServicePage() {
       await upgradePlan(planId);
       toast({
         title: "Plan Upgrade Requested",
-        description: "Your plan upgrade has been requested. We'll contact you to complete the process.",
+        description:
+          "Your plan upgrade has been requested. We'll contact you to complete the process.",
       });
     } catch (error) {
       toast({
@@ -74,12 +62,7 @@ export default function CustomerServicePage() {
       price: 49.99,
       recommended: false,
       current: currentPlan?.name === "Fiber 50 Mbps",
-      features: [
-        "Unlimited Data",
-        "Perfect for 1-2 users",
-        "Streaming HD video",
-        "24/7 Support",
-      ],
+      features: ["Unlimited Data", "Perfect for 1-2 users", "Streaming HD video", "24/7 Support"],
     },
     {
       id: "fiber-100",
@@ -89,12 +72,7 @@ export default function CustomerServicePage() {
       price: 79.99,
       recommended: true,
       current: currentPlan?.name === "Fiber 100 Mbps",
-      features: [
-        "Unlimited Data",
-        "Perfect for 3-4 users",
-        "Streaming 4K video",
-        "Online gaming",
-      ],
+      features: ["Unlimited Data", "Perfect for 3-4 users", "Streaming 4K video", "Online gaming"],
     },
     {
       id: "fiber-500",
@@ -133,9 +111,7 @@ export default function CustomerServicePage() {
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">My Service</h1>
-        <p className="text-muted-foreground">
-          Manage your internet plan
-        </p>
+        <p className="text-muted-foreground">Manage your internet plan</p>
       </div>
 
       {/* Current Plan */}
@@ -147,9 +123,7 @@ export default function CustomerServicePage() {
                 <Wifi className="h-5 w-5" />
                 Current Plan
               </CardTitle>
-              <CardDescription>
-                Your active internet service
-              </CardDescription>
+              <CardDescription>Your active internet service</CardDescription>
             </div>
             <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
               <CheckCircle className="h-3 w-3 mr-1" />
@@ -183,10 +157,10 @@ export default function CustomerServicePage() {
                 <p className="text-sm font-medium mb-2">Features:</p>
                 <div className="grid grid-cols-2 gap-2">
                   {currentPlan.features.map((feature) => (
-                  <div key={feature} className="flex items-center gap-2 text-sm">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>{feature}</span>
-                  </div>
+                    <div key={feature} className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span>{feature}</span>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -205,19 +179,13 @@ export default function CustomerServicePage() {
           <Zap className="h-6 w-6" />
           Available Plans
         </h2>
-        <p className="text-muted-foreground mb-6">
-          Upgrade or downgrade your service at any time
-        </p>
+        <p className="text-muted-foreground mb-6">Upgrade or downgrade your service at any time</p>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {availablePlans.map((plan) => (
             <Card
               key={plan.id}
-              className={`relative ${
-                plan.recommended
-                  ? "border-primary shadow-lg"
-                  : ""
-              }`}
+              className={`relative ${plan.recommended ? "border-primary shadow-lg" : ""}`}
             >
               {plan.recommended && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
@@ -233,9 +201,7 @@ export default function CustomerServicePage() {
               <CardHeader>
                 <CardTitle className="text-lg">{plan.name}</CardTitle>
                 <div className="pt-2">
-                  <p className="text-3xl font-bold">
-                    {formatCurrency(plan.price)}
-                  </p>
+                  <p className="text-3xl font-bold">{formatCurrency(plan.price)}</p>
                   <p className="text-sm text-muted-foreground">/month</p>
                 </div>
               </CardHeader>
@@ -243,15 +209,11 @@ export default function CustomerServicePage() {
                 <div className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Download:</span>
-                    <span className="font-medium text-blue-500">
-                      {plan.speed_down}
-                    </span>
+                    <span className="font-medium text-blue-500">{plan.speed_down}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Upload:</span>
-                    <span className="font-medium text-green-500">
-                      {plan.speed_up}
-                    </span>
+                    <span className="font-medium text-green-500">{plan.speed_up}</span>
                   </div>
                 </div>
 
@@ -274,7 +236,9 @@ export default function CustomerServicePage() {
                     "Current Plan"
                   ) : (
                     <>
-                      {currentPlan && Number(plan.price) > Number(currentPlan.price) ? "Upgrade" : "Downgrade"}
+                      {currentPlan && Number(plan.price) > Number(currentPlan.price)
+                        ? "Upgrade"
+                        : "Downgrade"}
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </>
                   )}
@@ -295,7 +259,8 @@ export default function CustomerServicePage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Not sure which plan is right for you? Our team can help you find the perfect fit based on your usage patterns and needs.
+            Not sure which plan is right for you? Our team can help you find the perfect fit based
+            on your usage patterns and needs.
           </p>
           <div className="flex gap-2">
             <Button variant="outline">Contact Support</Button>

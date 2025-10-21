@@ -54,7 +54,7 @@ export function ScheduleSurveyModal({
 
   // Get qualified leads for dropdown
   const qualifiedLeads = leads.filter(
-    (lead) => lead.status === "qualified" || lead.status === "contacted"
+    (lead) => lead.status === "qualified" || lead.status === "contacted",
   );
 
   // Find selected lead for display
@@ -86,7 +86,7 @@ export function ScheduleSurveyModal({
     try {
       // Combine date and time into ISO string
       const scheduledDateTime = new Date(
-        `${formData.scheduled_date}T${formData.scheduled_time}`
+        `${formData.scheduled_date}T${formData.scheduled_time}`,
       ).toISOString();
 
       const surveyData = {
@@ -147,16 +147,12 @@ export function ScheduleSurveyModal({
                 <p className="font-medium">
                   {selectedLead?.first_name} {selectedLead?.last_name}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {selectedLead?.email}
-                </p>
+                <p className="text-sm text-muted-foreground">{selectedLead?.email}</p>
               </div>
             ) : (
               <Select
                 value={formData.lead_id}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, lead_id: value })
-                }
+                onValueChange={(value) => setFormData({ ...formData, lead_id: value })}
               >
                 <SelectTrigger id="lead_id">
                   <SelectValue placeholder="Select a lead" />
@@ -207,9 +203,7 @@ export function ScheduleSurveyModal({
                 id="scheduled_date"
                 type="date"
                 value={formData.scheduled_date}
-                onChange={(e) =>
-                  setFormData({ ...formData, scheduled_date: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, scheduled_date: e.target.value })}
                 min={new Date().toISOString().split("T")[0]}
                 required
               />
@@ -223,9 +217,7 @@ export function ScheduleSurveyModal({
                 id="scheduled_time"
                 type="time"
                 value={formData.scheduled_time}
-                onChange={(e) =>
-                  setFormData({ ...formData, scheduled_time: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, scheduled_time: e.target.value })}
                 required
               />
             </div>
@@ -236,9 +228,7 @@ export function ScheduleSurveyModal({
             <Label htmlFor="technician_id">Assign Technician</Label>
             <Select
               value={formData.technician_id}
-              onValueChange={(value) =>
-                setFormData({ ...formData, technician_id: value })
-              }
+              onValueChange={(value) => setFormData({ ...formData, technician_id: value })}
             >
               <SelectTrigger id="technician_id">
                 <SelectValue placeholder="Select a technician (optional)" />
@@ -261,9 +251,7 @@ export function ScheduleSurveyModal({
             <Textarea
               id="notes"
               value={formData.notes}
-              onChange={(e) =>
-                setFormData({ ...formData, notes: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               placeholder="Add any special instructions, access codes, contact information, or equipment requirements..."
               rows={4}
             />

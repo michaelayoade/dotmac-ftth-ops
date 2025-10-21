@@ -4,27 +4,24 @@
  * Modal for editing existing notification templates.
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { X, Trash2 } from 'lucide-react';
-import type {
-  CommunicationTemplate,
-  TemplateUpdateRequest,
-} from '@/hooks/useNotifications';
+import { useState, useEffect } from "react";
+import { X, Trash2 } from "lucide-react";
+import type { CommunicationTemplate, TemplateUpdateRequest } from "@/hooks/useNotifications";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 
 interface EditTemplateModalProps {
   isOpen: boolean;
@@ -51,7 +48,7 @@ export function EditTemplateModal({
     is_active: template.is_active,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newVariable, setNewVariable] = useState('');
+  const [newVariable, setNewVariable] = useState("");
 
   // Update form data when template changes
   useEffect(() => {
@@ -73,7 +70,7 @@ export function EditTemplateModal({
     try {
       await onSave(formData);
     } catch (err) {
-      console.error('Failed to update template:', err);
+      console.error("Failed to update template:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -85,7 +82,7 @@ export function EditTemplateModal({
         ...formData,
         required_variables: [...(formData.required_variables || []), newVariable],
       });
-      setNewVariable('');
+      setNewVariable("");
     }
   };
 
@@ -101,9 +98,7 @@ export function EditTemplateModal({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Template: {template.name}</DialogTitle>
-          <DialogDescription>
-            Update template content and settings
-          </DialogDescription>
+          <DialogDescription>Update template content and settings</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -114,7 +109,7 @@ export function EditTemplateModal({
             </Label>
             <Input
               id="name"
-              value={formData.name || ''}
+              value={formData.name || ""}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="e.g., invoice_overdue_reminder"
               required
@@ -126,7 +121,7 @@ export function EditTemplateModal({
             <Label htmlFor="description">Description</Label>
             <Input
               id="description"
-              value={formData.description || ''}
+              value={formData.description || ""}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="e.g., Reminder sent when invoice is overdue"
             />
@@ -144,12 +139,12 @@ export function EditTemplateModal({
           </div>
 
           {/* Subject (Email only) */}
-          {template.type === 'email' && (
+          {template.type === "email" && (
             <div className="space-y-2">
               <Label htmlFor="subject">Email Subject</Label>
               <Input
                 id="subject"
-                value={formData.subject_template || ''}
+                value={formData.subject_template || ""}
                 onChange={(e) => setFormData({ ...formData, subject_template: e.target.value })}
                 placeholder="e.g., Invoice {{invoice_number}} is Overdue"
               />
@@ -162,29 +157,29 @@ export function EditTemplateModal({
           {/* Text Body */}
           <div className="space-y-2">
             <Label htmlFor="text_template">
-              {template.type === 'sms' ? 'SMS Message' : 'Plain Text Body'}
+              {template.type === "sms" ? "SMS Message" : "Plain Text Body"}
             </Label>
             <Textarea
               id="text_template"
-              value={formData.text_template || ''}
+              value={formData.text_template || ""}
               onChange={(e) => setFormData({ ...formData, text_template: e.target.value })}
               placeholder="Plain text version of your message..."
               rows={6}
             />
-            {template.type === 'sms' && (
+            {template.type === "sms" && (
               <p className="text-xs text-muted-foreground">
-                Current length: {(formData.text_template || '').length} characters
+                Current length: {(formData.text_template || "").length} characters
               </p>
             )}
           </div>
 
           {/* HTML Body (Email only) */}
-          {template.type === 'email' && (
+          {template.type === "email" && (
             <div className="space-y-2">
               <Label htmlFor="html_template">HTML Body</Label>
               <Textarea
                 id="html_template"
-                value={formData.html_template || ''}
+                value={formData.html_template || ""}
                 onChange={(e) => setFormData({ ...formData, html_template: e.target.value })}
                 placeholder="<h1>Hello {{customer_name}}</h1><p>Your invoice...</p>"
                 rows={8}
@@ -202,7 +197,7 @@ export function EditTemplateModal({
                 onChange={(e) => setNewVariable(e.target.value)}
                 placeholder="e.g., customer_name"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     e.preventDefault();
                     handleAddVariable();
                   }
@@ -234,8 +229,8 @@ export function EditTemplateModal({
               <Label htmlFor="is_active">Active Status</Label>
               <p className="text-sm text-muted-foreground">
                 {formData.is_active
-                  ? 'Template is active and can be used'
-                  : 'Template is inactive and cannot be used'}
+                  ? "Template is active and can be used"
+                  : "Template is inactive and cannot be used"}
               </p>
             </div>
             <Switch
@@ -261,12 +256,7 @@ export function EditTemplateModal({
 
           {/* Actions */}
           <div className="flex justify-between pt-4">
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={onDelete}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="destructive" onClick={onDelete} disabled={isSubmitting}>
               <Trash2 className="mr-2 h-4 w-4" />
               Delete Template
             </Button>
@@ -275,7 +265,7 @@ export function EditTemplateModal({
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Saving...' : 'Save Changes'}
+                {isSubmitting ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </div>

@@ -4,10 +4,10 @@
  * Composes module-specific clients into unified interface
  */
 
-import { IdentityApiClient } from './clients/IdentityApiClient';
-import { NetworkingApiClient } from './clients/NetworkingApiClient';
-import { BillingApiClient } from './clients/BillingApiClient';
-import type { PaginatedResponse, QueryParams } from './types/api';
+import { IdentityApiClient } from "./clients/IdentityApiClient";
+import { NetworkingApiClient } from "./clients/NetworkingApiClient";
+import { BillingApiClient } from "./clients/BillingApiClient";
+import type { PaginatedResponse, QueryParams } from "./types/api";
 
 export interface ISPApiClientConfig {
   baseURL: string;
@@ -35,16 +35,16 @@ export class ISPApiClient {
 
     // Build default headers
     this.defaultHeaders = {
-      'X-API-Version': '1.0',
+      "X-API-Version": "1.0",
       ...config.defaultHeaders,
     };
 
     if (config.apiKey) {
-      this.defaultHeaders['Authorization'] = `Bearer ${config.apiKey}`;
+      this.defaultHeaders["Authorization"] = `Bearer ${config.apiKey}`;
     }
 
     if (config.tenantId) {
-      this.defaultHeaders['X-Tenant-ID'] = config.tenantId;
+      this.defaultHeaders["X-Tenant-ID"] = config.tenantId;
     }
 
     // Initialize module clients
@@ -93,11 +93,11 @@ export class ISPApiClient {
 
     // Update headers if needed
     if (updates.apiKey) {
-      this.defaultHeaders['Authorization'] = `Bearer ${updates.apiKey}`;
+      this.defaultHeaders["Authorization"] = `Bearer ${updates.apiKey}`;
     }
 
     if (updates.tenantId) {
-      this.defaultHeaders['X-Tenant-ID'] = updates.tenantId;
+      this.defaultHeaders["X-Tenant-ID"] = updates.tenantId;
     }
   }
 
@@ -119,7 +119,7 @@ export function setGlobalISPApiClient(client: ISPApiClient): void {
 
 export function getISPApiClient(): ISPApiClient {
   if (!globalClient) {
-    throw new Error('ISP API client not initialized. Call setGlobalISPApiClient first.');
+    throw new Error("ISP API client not initialized. Call setGlobalISPApiClient first.");
   }
   return globalClient;
 }

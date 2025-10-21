@@ -5,22 +5,27 @@
  * for email, SMS, and other notification channels.
  */
 
-'use client';
+"use client";
 
-import { useCallback, useMemo, useState } from 'react';
-import { Plus, Edit, Trash2, Eye, Copy, CheckCircle2, XCircle } from 'lucide-react';
-import { useNotificationTemplates } from '@/hooks/useNotifications';
-import type { CommunicationTemplate, TemplateCreateRequest } from '@/hooks/useNotifications';
-import { EnhancedDataTable, type ColumnDef, type BulkAction, type QuickFilter } from '@/components/ui/EnhancedDataTable';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useRBAC } from '@/contexts/RBACContext';
-import { formatDistanceToNow } from 'date-fns';
-import { CreateTemplateModal } from '@/components/notifications/CreateTemplateModal';
-import { EditTemplateModal } from '@/components/notifications/EditTemplateModal';
-import { PreviewTemplateModal } from '@/components/notifications/PreviewTemplateModal';
+import { useCallback, useMemo, useState } from "react";
+import { Plus, Edit, Trash2, Eye, Copy, CheckCircle2, XCircle } from "lucide-react";
+import { useNotificationTemplates } from "@/hooks/useNotifications";
+import type { CommunicationTemplate, TemplateCreateRequest } from "@/hooks/useNotifications";
+import {
+  EnhancedDataTable,
+  type ColumnDef,
+  type BulkAction,
+  type QuickFilter,
+} from "@/components/ui/EnhancedDataTable";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useRBAC } from "@/contexts/RBACContext";
+import { formatDistanceToNow } from "date-fns";
+import { CreateTemplateModal } from "@/components/notifications/CreateTemplateModal";
+import { EditTemplateModal } from "@/components/notifications/EditTemplateModal";
+import { PreviewTemplateModal } from "@/components/notifications/PreviewTemplateModal";
 
 export default function NotificationTemplatesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<CommunicationTemplate | null>(null);
@@ -29,24 +34,17 @@ export default function NotificationTemplatesPage() {
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   const { hasPermission } = useRBAC();
-  const canWrite = hasPermission('notifications.write') || hasPermission('admin');
+  const canWrite = hasPermission("notifications.write") || hasPermission("admin");
 
-  const {
-    templates,
-    isLoading,
-    error,
-    refetch,
-    createTemplate,
-    updateTemplate,
-    deleteTemplate,
-  } = useNotificationTemplates();
+  const { templates, isLoading, error, refetch, createTemplate, updateTemplate, deleteTemplate } =
+    useNotificationTemplates();
 
   // Statistics
   const stats = useMemo(() => {
     const totalTemplates = templates.length;
     const activeTemplates = templates.filter((t) => t.is_active).length;
-    const emailTemplates = templates.filter((t) => t.type === 'email').length;
-    const smsTemplates = templates.filter((t) => t.type === 'sms').length;
+    const emailTemplates = templates.filter((t) => t.type === "email").length;
+    const smsTemplates = templates.filter((t) => t.type === "sms").length;
     const totalUsage = templates.reduce((sum, t) => sum + t.usage_count, 0);
 
     return {
@@ -63,7 +61,7 @@ export default function NotificationTemplatesPage() {
       setSelectedTemplate(template);
       setIsEditModalOpen(true);
     },
-    [setIsEditModalOpen, setSelectedTemplate]
+    [setIsEditModalOpen, setSelectedTemplate],
   );
 
   const handlePreview = useCallback(
@@ -71,7 +69,7 @@ export default function NotificationTemplatesPage() {
       setSelectedTemplate(template);
       setIsPreviewModalOpen(true);
     },
-    [setIsPreviewModalOpen, setSelectedTemplate]
+    [setIsPreviewModalOpen, setSelectedTemplate],
   );
 
   const handleDuplicate = useCallback(
@@ -88,17 +86,17 @@ export default function NotificationTemplatesPage() {
         });
         refetch();
       } catch (err) {
-        console.error('Failed to duplicate template:', err);
-        alert('Failed to duplicate template. Please try again.');
+        console.error("Failed to duplicate template:", err);
+        alert("Failed to duplicate template. Please try again.");
       }
     },
-    [createTemplate, refetch]
+    [createTemplate, refetch],
   );
 
   const handleDelete = useCallback(
     async (template: CommunicationTemplate) => {
       const confirmed = confirm(
-        `Are you sure you want to delete "${template.name}"? This action cannot be undone.`
+        `Are you sure you want to delete "${template.name}"? This action cannot be undone.`,
       );
 
       if (!confirmed) return;
@@ -107,20 +105,20 @@ export default function NotificationTemplatesPage() {
         await deleteTemplate(template.id);
         refetch();
       } catch (err) {
-        console.error('Failed to delete template:', err);
-        alert('Failed to delete template. Please try again.');
+        console.error("Failed to delete template:", err);
+        alert("Failed to delete template. Please try again.");
       }
     },
-    [deleteTemplate, refetch]
+    [deleteTemplate, refetch],
   );
 
   // Columns definition
   const columns: ColumnDef<CommunicationTemplate>[] = useMemo(
     () => [
       {
-        id: 'name',
-        header: 'Template Name',
-        accessorKey: 'name',
+        id: "name",
+        header: "Template Name",
+        accessorKey: "name",
         cell: ({ row }) => (
           <div className="flex flex-col">
             <span className="font-medium">{row.original.name}</span>
@@ -133,15 +131,15 @@ export default function NotificationTemplatesPage() {
         ),
       },
       {
-        id: 'type',
-        header: 'Type',
-        accessorKey: 'type',
+        id: "type",
+        header: "Type",
+        accessorKey: "type",
         cell: ({ row }) => {
           const typeColors = {
-            email: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-            sms: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-            webhook: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-            push: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+            email: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+            sms: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+            webhook: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
+            push: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
           };
 
           return (
@@ -152,8 +150,8 @@ export default function NotificationTemplatesPage() {
         },
       },
       {
-        id: 'variables',
-        header: 'Variables',
+        id: "variables",
+        header: "Variables",
         cell: ({ row }) => (
           <div className="flex flex-wrap gap-1">
             {row.original.variables.slice(0, 3).map((variable) => (
@@ -170,17 +168,17 @@ export default function NotificationTemplatesPage() {
         ),
       },
       {
-        id: 'usage',
-        header: 'Usage',
-        accessorKey: 'usage_count',
+        id: "usage",
+        header: "Usage",
+        accessorKey: "usage_count",
         cell: ({ row }) => (
           <span className="text-sm">{row.original.usage_count.toLocaleString()}</span>
         ),
       },
       {
-        id: 'status',
-        header: 'Status',
-        accessorKey: 'is_active',
+        id: "status",
+        header: "Status",
+        accessorKey: "is_active",
         cell: ({ row }) =>
           row.original.is_active ? (
             <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
@@ -195,18 +193,20 @@ export default function NotificationTemplatesPage() {
           ),
       },
       {
-        id: 'updated',
-        header: 'Last Updated',
-        accessorKey: 'updated_at',
+        id: "updated",
+        header: "Last Updated",
+        accessorKey: "updated_at",
         cell: ({ row }) => (
           <span className="text-sm text-muted-foreground">
-            {formatDistanceToNow(new Date(row.original.updated_at), { addSuffix: true })}
+            {formatDistanceToNow(new Date(row.original.updated_at), {
+              addSuffix: true,
+            })}
           </span>
         ),
       },
       {
-        id: 'actions',
-        header: 'Actions',
+        id: "actions",
+        header: "Actions",
         cell: ({ row }) => (
           <div className="flex items-center gap-1">
             <Button
@@ -241,14 +241,14 @@ export default function NotificationTemplatesPage() {
         ),
       },
     ],
-    [canWrite, handleDuplicate, handleEdit, handlePreview]
+    [canWrite, handleDuplicate, handleEdit, handlePreview],
   );
 
   // Bulk actions
   const bulkActions: BulkAction<CommunicationTemplate>[] = useMemo(
     () => [
       {
-        label: 'Activate Templates',
+        label: "Activate Templates",
         icon: CheckCircle2,
         action: async (selected) => {
           for (const template of selected) {
@@ -258,10 +258,10 @@ export default function NotificationTemplatesPage() {
           }
           refetch();
         },
-        variant: 'default',
+        variant: "default",
       },
       {
-        label: 'Deactivate Templates',
+        label: "Deactivate Templates",
         icon: XCircle,
         action: async (selected) => {
           for (const template of selected) {
@@ -271,15 +271,15 @@ export default function NotificationTemplatesPage() {
           }
           refetch();
         },
-        variant: 'outline',
+        variant: "outline",
       },
       {
-        label: 'Delete Templates',
+        label: "Delete Templates",
         icon: Trash2,
         action: async (selected) => {
           if (
             confirm(
-              `Are you sure you want to delete ${selected.length} template(s)? This action cannot be undone.`
+              `Are you sure you want to delete ${selected.length} template(s)? This action cannot be undone.`,
             )
           ) {
             for (const template of selected) {
@@ -288,37 +288,37 @@ export default function NotificationTemplatesPage() {
             refetch();
           }
         },
-        variant: 'destructive',
+        variant: "destructive",
       },
     ],
-    [updateTemplate, deleteTemplate, refetch]
+    [updateTemplate, deleteTemplate, refetch],
   );
 
   // Quick filters
   const quickFilters: QuickFilter<CommunicationTemplate>[] = useMemo(
     () => [
       {
-        label: 'Active',
+        label: "Active",
         filter: (template: CommunicationTemplate) => template.is_active,
       },
       {
-        label: 'Inactive',
+        label: "Inactive",
         filter: (template: CommunicationTemplate) => !template.is_active,
       },
       {
-        label: 'Email',
-        filter: (template: CommunicationTemplate) => template.type === 'email',
+        label: "Email",
+        filter: (template: CommunicationTemplate) => template.type === "email",
       },
       {
-        label: 'SMS',
-        filter: (template: CommunicationTemplate) => template.type === 'sms',
+        label: "SMS",
+        filter: (template: CommunicationTemplate) => template.type === "sms",
       },
       {
-        label: 'High Usage',
+        label: "High Usage",
         filter: (template: CommunicationTemplate) => template.usage_count > 100,
       },
     ],
-    []
+    [],
   );
 
   // Handlers
@@ -328,13 +328,13 @@ export default function NotificationTemplatesPage() {
       setIsCreateModalOpen(false);
       refetch();
     } catch (err) {
-      console.error('Failed to create template:', err);
-      alert('Failed to create template. Please try again.');
+      console.error("Failed to create template:", err);
+      alert("Failed to create template. Please try again.");
     }
   };
 
   // Permission check
-  if (!hasPermission('notifications.read') && !hasPermission('admin')) {
+  if (!hasPermission("notifications.read") && !hasPermission("admin")) {
     return (
       <div className="flex h-[400px] items-center justify-center">
         <Card className="w-full max-w-md">

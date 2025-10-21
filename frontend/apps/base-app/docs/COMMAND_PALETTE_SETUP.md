@@ -5,6 +5,7 @@
 The Global Command Palette provides keyboard-driven navigation and search across your entire application. Users can quickly access any page or search for entities using a single keyboard shortcut.
 
 **Keyboard Shortcut:**
+
 - Mac: `⌘K` (Command + K)
 - Windows/Linux: `Ctrl+K`
 
@@ -60,7 +61,9 @@ Add the following to your `package.json` if not already present:
 ## Features
 
 ### 1. **Quick Navigation**
+
 Navigate to common pages instantly:
+
 - 📊 Dashboard
 - 🔍 Search Page
 - 👥 Subscribers
@@ -72,6 +75,7 @@ Navigate to common pages instantly:
 - ⚙️ Settings
 
 ### 2. **Global Search Integration**
+
 - Real-time search across all entities
 - Debounced search (300ms delay)
 - Displays: Customers, Invoices, Tickets, Devices, Services, etc.
@@ -79,11 +83,13 @@ Navigate to common pages instantly:
 - Entity type badges
 
 ### 3. **Recent Searches**
+
 - Stores last 5 searches in localStorage
 - Quick access to previous searches
 - Automatically saved when selecting search results
 
 ### 4. **Keyboard Navigation**
+
 - `⌘K` / `Ctrl+K` - Open/Close palette
 - `↑` `↓` - Navigate items
 - `Enter` - Select item
@@ -91,6 +97,7 @@ Navigate to common pages instantly:
 - Type to search/filter
 
 ### 5. **Visual Feedback**
+
 - Loading spinner during search
 - Empty states with helpful messages
 - Entity type icons and colors
@@ -103,6 +110,7 @@ Navigate to common pages instantly:
 ### Opening the Command Palette
 
 **From anywhere in the dashboard:**
+
 - Press `⌘K` (Mac) or `Ctrl+K` (Windows/Linux)
 
 ### Quick Navigation
@@ -190,12 +198,12 @@ Edit `/components/global-command-palette.tsx`:
 const quickActions: QuickAction[] = [
   // ... existing actions
   {
-    id: 'my-custom-page',
-    label: 'My Custom Page',
+    id: "my-custom-page",
+    label: "My Custom Page",
     icon: MyIcon,
-    shortcut: '⌘M',
-    action: () => router.push('/dashboard/my-page'),
-    keywords: ['custom', 'my', 'page'],
+    shortcut: "⌘M",
+    action: () => router.push("/dashboard/my-page"),
+    keywords: ["custom", "my", "page"],
   },
 ];
 ```
@@ -208,7 +216,7 @@ Edit the keyboard listener in `global-command-palette.tsx`:
 useEffect(() => {
   const down = (e: KeyboardEvent) => {
     // Change 'k' to your preferred key
-    if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+    if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       setOpen((open) => !open);
     }
@@ -229,6 +237,7 @@ const { results, isLoading } = useDebouncedSearch(searchQuery, undefined, 500);
 ### Styling
 
 The component uses Tailwind CSS classes. Customize colors in:
+
 - `components/ui/command.tsx` - Base command component styles
 - `components/global-command-palette.tsx` - Palette-specific styles
 
@@ -275,6 +284,7 @@ See `tests/e2e/test_ui_integrations.spec.ts` for comprehensive integration tests
 ### "cmdk not found" Error
 
 **Solution:** Install the package:
+
 ```bash
 pnpm add cmdk
 ```
@@ -282,22 +292,26 @@ pnpm add cmdk
 ### Keyboard Shortcut Not Working
 
 **Possible causes:**
+
 1. Another extension/app is using ⌘K
 2. Check browser console for errors
 3. Verify `GlobalCommandPalette` is rendered in layout
 
 **Solution:**
+
 - Change keyboard shortcut to different key
 - Disable conflicting extensions
 
 ### Search Results Not Appearing
 
 **Possible causes:**
+
 1. Backend API not running
 2. Search service not configured
 3. Network error
 
 **Solution:**
+
 - Check browser Network tab for API calls
 - Verify `/api/v1/search` endpoint is accessible
 - Check backend logs
@@ -305,10 +319,12 @@ pnpm add cmdk
 ### Recent Searches Not Saving
 
 **Possible causes:**
+
 1. localStorage blocked (private browsing)
 2. Browser storage quota exceeded
 
 **Solution:**
+
 - Disable private browsing mode
 - Clear browser storage
 - Check console for localStorage errors
@@ -365,6 +381,7 @@ Potential improvements:
 ## Support
 
 For issues or questions:
+
 1. Check troubleshooting section above
 2. Review browser console for errors
 3. Check backend API logs

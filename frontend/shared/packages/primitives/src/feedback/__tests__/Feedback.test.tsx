@@ -3,100 +3,102 @@
  * Testing feedback states, variants, and user interactions
  */
 
-import { fireEvent, render, screen } from '@testing-library/react';
-import { axe } from 'jest-axe';
-import React from 'react';
+import { fireEvent, render, screen } from "@testing-library/react";
+import { axe } from "jest-axe";
+import React from "react";
 
-import { Feedback, FeedbackActions, FeedbackDescription, FeedbackTitle } from '../Feedback';
+import { Feedback, FeedbackActions, FeedbackDescription, FeedbackTitle } from "../Feedback";
 
-describe('Feedback Components', () => {
-  describe('Feedback', () => {
-    it('renders with default props', () => {
+describe("Feedback Components", () => {
+  describe("Feedback", () => {
+    it("renders with default props", () => {
       render(
-        <Feedback data-testid='feedback'>
+        <Feedback data-testid="feedback">
           <FeedbackTitle>Success</FeedbackTitle>
           <FeedbackDescription>Operation completed successfully</FeedbackDescription>
-        </Feedback>
+        </Feedback>,
       );
 
-      const feedback = screen.getByTestId('feedback');
+      const feedback = screen.getByTestId("feedback");
       expect(feedback).toBeInTheDocument();
-      expect(screen.getByText('Success')).toBeInTheDocument();
-      expect(screen.getByText('Operation completed successfully')).toBeInTheDocument();
+      expect(screen.getByText("Success")).toBeInTheDocument();
+      expect(screen.getByText("Operation completed successfully")).toBeInTheDocument();
     });
 
-    it('applies variant classes correctly', () => {
+    it("applies variant classes correctly", () => {
       const { rerender } = render(
-        <Feedback variant='success' data-testid='feedback'>
+        <Feedback variant="success" data-testid="feedback">
           <FeedbackTitle>Success</FeedbackTitle>
-        </Feedback>
+        </Feedback>,
       );
 
-      let feedback = screen.getByTestId('feedback');
+      let feedback = screen.getByTestId("feedback");
       expect(feedback).toBeInTheDocument();
 
       rerender(
-        <Feedback variant='error' data-testid='feedback'>
+        <Feedback variant="error" data-testid="feedback">
           <FeedbackTitle>Error</FeedbackTitle>
-        </Feedback>
+        </Feedback>,
       );
 
-      feedback = screen.getByTestId('feedback');
+      feedback = screen.getByTestId("feedback");
       expect(feedback).toBeInTheDocument();
 
       rerender(
-        <Feedback variant='warning' data-testid='feedback'>
+        <Feedback variant="warning" data-testid="feedback">
           <FeedbackTitle>Warning</FeedbackTitle>
-        </Feedback>
+        </Feedback>,
       );
 
-      feedback = screen.getByTestId('feedback');
+      feedback = screen.getByTestId("feedback");
       expect(feedback).toBeInTheDocument();
 
       rerender(
-        <Feedback variant='info' data-testid='feedback'>
+        <Feedback variant="info" data-testid="feedback">
           <FeedbackTitle>Info</FeedbackTitle>
-        </Feedback>
+        </Feedback>,
       );
 
-      feedback = screen.getByTestId('feedback');
+      feedback = screen.getByTestId("feedback");
       expect(feedback).toBeInTheDocument();
     });
 
-    it('handles dismissible feedback', () => {
+    it("handles dismissible feedback", () => {
       const onDismiss = jest.fn();
 
       render(
-        <Feedback variant='info' dismissible onDismiss={onDismiss} data-testid='feedback'>
+        <Feedback variant="info" dismissible onDismiss={onDismiss} data-testid="feedback">
           <FeedbackTitle>Dismissible</FeedbackTitle>
           <FeedbackDescription>You can close this</FeedbackDescription>
-        </Feedback>
+        </Feedback>,
       );
 
-      const dismissButton = screen.getByRole('button', { name: /close|dismiss/i });
+      const dismissButton = screen.getByRole("button", {
+        name: /close|dismiss/i,
+      });
       expect(dismissButton).toBeInTheDocument();
 
       fireEvent.click(dismissButton);
       expect(onDismiss).toHaveBeenCalledTimes(1);
     });
 
-    it('auto-dismisses after timeout', () => {
+    it("auto-dismisses after timeout", () => {
       jest.useFakeTimers();
       const onDismiss = jest.fn();
 
       render(
         <Feedback
-          variant='success'
+          variant="success"
           autoHide
           autoHideDelay={3000}
           onDismiss={onDismiss}
-          data-testid='feedback'
+          data-testid="feedback"
         >
           <FeedbackTitle>Auto Hide</FeedbackTitle>
-        </Feedback>
+        </Feedback>,
       );
 
-      expect(screen.getByTestId('feedback')).toBeInTheDocument();
+      expect(screen.getByTestId("feedback")).toBeInTheDocument();
 
       jest.advanceTimersByTime(3000);
       expect(onDismiss).toHaveBeenCalledTimes(1);
@@ -104,91 +106,91 @@ describe('Feedback Components', () => {
       jest.useRealTimers();
     });
 
-    it('accepts custom className', () => {
+    it("accepts custom className", () => {
       render(
-        <Feedback className='custom-feedback' data-testid='feedback'>
+        <Feedback className="custom-feedback" data-testid="feedback">
           <FeedbackTitle>Custom</FeedbackTitle>
-        </Feedback>
+        </Feedback>,
       );
 
-      expect(screen.getByTestId('feedback')).toHaveClass('custom-feedback');
+      expect(screen.getByTestId("feedback")).toHaveClass("custom-feedback");
     });
   });
 
-  describe('FeedbackTitle', () => {
-    it('renders title correctly', () => {
+  describe("FeedbackTitle", () => {
+    it("renders title correctly", () => {
       render(
         <Feedback>
-          <FeedbackTitle data-testid='title'>Important Message</FeedbackTitle>
-        </Feedback>
+          <FeedbackTitle data-testid="title">Important Message</FeedbackTitle>
+        </Feedback>,
       );
 
-      const title = screen.getByTestId('title');
+      const title = screen.getByTestId("title");
       expect(title).toBeInTheDocument();
-      expect(title).toHaveTextContent('Important Message');
+      expect(title).toHaveTextContent("Important Message");
     });
 
-    it('applies correct heading level', () => {
+    it("applies correct heading level", () => {
       render(
         <Feedback>
-          <FeedbackTitle as='h2' data-testid='title'>
+          <FeedbackTitle as="h2" data-testid="title">
             Title
           </FeedbackTitle>
-        </Feedback>
+        </Feedback>,
       );
 
-      const title = screen.getByTestId('title');
-      expect(title.tagName).toBe('H2');
+      const title = screen.getByTestId("title");
+      expect(title.tagName).toBe("H2");
     });
   });
 
-  describe('FeedbackDescription', () => {
-    it('renders description correctly', () => {
+  describe("FeedbackDescription", () => {
+    it("renders description correctly", () => {
       render(
         <Feedback>
-          <FeedbackDescription data-testid='description'>
+          <FeedbackDescription data-testid="description">
             This is a detailed description of the feedback.
           </FeedbackDescription>
-        </Feedback>
+        </Feedback>,
       );
 
-      const description = screen.getByTestId('description');
+      const description = screen.getByTestId("description");
       expect(description).toBeInTheDocument();
-      expect(description).toHaveTextContent('This is a detailed description of the feedback.');
+      expect(description).toHaveTextContent("This is a detailed description of the feedback.");
     });
 
-    it('accepts custom className', () => {
+    it("accepts custom className", () => {
       render(
         <Feedback>
-          <FeedbackDescription className='custom-desc' data-testid='description'>
+          <FeedbackDescription className="custom-desc" data-testid="description">
             Description
           </FeedbackDescription>
-        </Feedback>
+        </Feedback>,
       );
 
-      expect(screen.getByTestId('description')).toHaveClass('custom-desc');
+      expect(screen.getByTestId("description")).toHaveClass("custom-desc");
     });
   });
 
-  describe('FeedbackActions', () => {
-    it('renders actions correctly', () => {
+  describe("FeedbackActions", () => {
+    it("renders actions correctly", () => {
       render(
         <Feedback>
           <FeedbackTitle>Action Required</FeedbackTitle>
-          <FeedbackActions data-testid='actions'>
-            <button type='button'>Confirm</button>
-            <button type='button'>Cancel</button>
+          <FeedbackActions data-testid="actions">
+            <button type="button">Confirm</button>
+            <button type="button">Cancel</button>
           </FeedbackActions>
-        </Feedback>
+        </Feedback>,
       );
 
-      const actions = screen.getByTestId('actions');
+      const actions = screen.getByTestId("actions");
       expect(actions).toBeInTheDocument();
-      expect(screen.getByText('Confirm')).toBeInTheDocument();
-      expect(screen.getByText('Cancel')).toBeInTheDocument();
+      expect(screen.getByText("Confirm")).toBeInTheDocument();
+      expect(screen.getByText("Cancel")).toBeInTheDocument();
     });
 
-    it('handles action clicks', () => {
+    it("handles action clicks", () => {
       const onConfirm = jest.fn();
       const onCancel = jest.fn();
 
@@ -197,139 +199,139 @@ describe('Feedback Components', () => {
           <FeedbackTitle>Confirm Action</FeedbackTitle>
           <FeedbackActions>
             <button
-              type='button'
+              type="button"
               onClick={onConfirm}
-              onKeyDown={(e) => e.key === 'Enter' && onConfirm}
+              onKeyDown={(e) => e.key === "Enter" && onConfirm}
             >
               Confirm
             </button>
             <button
-              type='button'
+              type="button"
               onClick={onCancel}
-              onKeyDown={(e) => e.key === 'Enter' && onCancel}
+              onKeyDown={(e) => e.key === "Enter" && onCancel}
             >
               Cancel
             </button>
           </FeedbackActions>
-        </Feedback>
+        </Feedback>,
       );
 
-      fireEvent.click(screen.getByText('Confirm'));
+      fireEvent.click(screen.getByText("Confirm"));
       expect(onConfirm).toHaveBeenCalledTimes(1);
 
-      fireEvent.click(screen.getByText('Cancel'));
+      fireEvent.click(screen.getByText("Cancel"));
       expect(onCancel).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('Accessibility', () => {
-    it('should be accessible', async () => {
+  describe("Accessibility", () => {
+    it("should be accessible", async () => {
       const { container } = render(
-        <Feedback variant='success'>
+        <Feedback variant="success">
           <FeedbackTitle>Success</FeedbackTitle>
           <FeedbackDescription>Operation completed</FeedbackDescription>
-        </Feedback>
+        </Feedback>,
       );
 
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
 
-    it('has correct ARIA attributes', () => {
+    it("has correct ARIA attributes", () => {
       render(
-        <Feedback variant='error' data-testid='feedback' role='alert'>
+        <Feedback variant="error" data-testid="feedback" role="alert">
           <FeedbackTitle>Error</FeedbackTitle>
           <FeedbackDescription>Something went wrong</FeedbackDescription>
-        </Feedback>
+        </Feedback>,
       );
 
-      const feedback = screen.getByTestId('feedback');
-      expect(feedback).toHaveAttribute('role', 'alert');
+      const feedback = screen.getByTestId("feedback");
+      expect(feedback).toHaveAttribute("role", "alert");
     });
 
-    it('supports screen reader announcements', () => {
+    it("supports screen reader announcements", () => {
       render(
-        <Feedback variant='success' aria-live='polite' data-testid='feedback'>
+        <Feedback variant="success" aria-live="polite" data-testid="feedback">
           <FeedbackTitle>Success</FeedbackTitle>
           <FeedbackDescription>Changes saved</FeedbackDescription>
-        </Feedback>
+        </Feedback>,
       );
 
-      const feedback = screen.getByTestId('feedback');
-      expect(feedback).toHaveAttribute('aria-live', 'polite');
+      const feedback = screen.getByTestId("feedback");
+      expect(feedback).toHaveAttribute("aria-live", "polite");
     });
 
-    it('dismiss button is accessible', () => {
+    it("dismiss button is accessible", () => {
       render(
         <Feedback dismissible onDismiss={jest.fn()}>
           <FeedbackTitle>Dismissible</FeedbackTitle>
-        </Feedback>
+        </Feedback>,
       );
 
-      const dismissButton = screen.getByRole('button');
+      const dismissButton = screen.getByRole("button");
       expect(dismissButton).toHaveAccessibleName();
     });
   });
 
-  describe('Complex usage patterns', () => {
-    it('renders with icons', () => {
-      const SuccessIcon = () => <span data-testid='success-icon'>✓</span>;
+  describe("Complex usage patterns", () => {
+    it("renders with icons", () => {
+      const SuccessIcon = () => <span data-testid="success-icon">✓</span>;
 
       render(
-        <Feedback variant='success'>
+        <Feedback variant="success">
           <SuccessIcon />
           <FeedbackTitle>Success</FeedbackTitle>
           <FeedbackDescription>Task completed</FeedbackDescription>
-        </Feedback>
+        </Feedback>,
       );
 
-      expect(screen.getByTestId('success-icon')).toBeInTheDocument();
+      expect(screen.getByTestId("success-icon")).toBeInTheDocument();
     });
 
-    it('renders loading state', () => {
+    it("renders loading state", () => {
       render(
-        <Feedback variant='info' loading data-testid='feedback'>
+        <Feedback variant="info" loading data-testid="feedback">
           <FeedbackTitle>Processing</FeedbackTitle>
           <FeedbackDescription>Please wait...</FeedbackDescription>
-        </Feedback>
+        </Feedback>,
       );
 
-      const feedback = screen.getByTestId('feedback');
+      const feedback = screen.getByTestId("feedback");
       expect(feedback).toBeInTheDocument();
-      expect(screen.getByRole('progressbar', { hidden: true })).toBeInTheDocument();
+      expect(screen.getByRole("progressbar", { hidden: true })).toBeInTheDocument();
     });
 
-    it('handles multiple actions', () => {
+    it("handles multiple actions", () => {
       render(
-        <Feedback variant='warning'>
+        <Feedback variant="warning">
           <FeedbackTitle>Unsaved Changes</FeedbackTitle>
           <FeedbackDescription>You have unsaved changes</FeedbackDescription>
           <FeedbackActions>
-            <button type='button'>Save</button>
-            <button type='button'>Discard</button>
-            <button type='button'>Cancel</button>
+            <button type="button">Save</button>
+            <button type="button">Discard</button>
+            <button type="button">Cancel</button>
           </FeedbackActions>
-        </Feedback>
+        </Feedback>,
       );
 
-      expect(screen.getByText('Save')).toBeInTheDocument();
-      expect(screen.getByText('Discard')).toBeInTheDocument();
-      expect(screen.getByText('Cancel')).toBeInTheDocument();
+      expect(screen.getByText("Save")).toBeInTheDocument();
+      expect(screen.getByText("Discard")).toBeInTheDocument();
+      expect(screen.getByText("Cancel")).toBeInTheDocument();
     });
   });
 
-  describe('State management', () => {
-    it('handles show/hide state', () => {
+  describe("State management", () => {
+    it("handles show/hide state", () => {
       const FeedbackWithState = () => {
         const [show, setShow] = React.useState(true);
 
         return (
           <>
-            <button type='button' onClick={() => setShow(!show)}>
+            <button type="button" onClick={() => setShow(!show)}>
               Toggle
             </button>
             {show && (
-              <Feedback data-testid='feedback'>
+              <Feedback data-testid="feedback">
                 <FeedbackTitle>Conditional</FeedbackTitle>
               </Feedback>
             )}
@@ -339,25 +341,25 @@ describe('Feedback Components', () => {
 
       render(<FeedbackWithState />);
 
-      expect(screen.getByTestId('feedback')).toBeInTheDocument();
+      expect(screen.getByTestId("feedback")).toBeInTheDocument();
 
-      fireEvent.click(screen.getByText('Toggle'));
-      expect(screen.queryByTestId('feedback')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByText("Toggle"));
+      expect(screen.queryByTestId("feedback")).not.toBeInTheDocument();
 
-      fireEvent.click(screen.getByText('Toggle'));
-      expect(screen.getByTestId('feedback')).toBeInTheDocument();
+      fireEvent.click(screen.getByText("Toggle"));
+      expect(screen.getByTestId("feedback")).toBeInTheDocument();
     });
 
-    it('handles dynamic content updates', () => {
+    it("handles dynamic content updates", () => {
       const DynamicFeedback = () => {
-        const [message, setMessage] = React.useState('Initial message');
+        const [message, setMessage] = React.useState("Initial message");
 
         return (
           <Feedback>
             <FeedbackTitle>Dynamic</FeedbackTitle>
-            <FeedbackDescription data-testid='description'>{message}</FeedbackDescription>
+            <FeedbackDescription data-testid="description">{message}</FeedbackDescription>
             <FeedbackActions>
-              <button type='button' onClick={() => setMessage('Updated message')}>
+              <button type="button" onClick={() => setMessage("Updated message")}>
                 Update
               </button>
             </FeedbackActions>
@@ -367,34 +369,34 @@ describe('Feedback Components', () => {
 
       render(<DynamicFeedback />);
 
-      expect(screen.getByTestId('description')).toHaveTextContent('Initial message');
+      expect(screen.getByTestId("description")).toHaveTextContent("Initial message");
 
-      fireEvent.click(screen.getByText('Update'));
-      expect(screen.getByTestId('description')).toHaveTextContent('Updated message');
+      fireEvent.click(screen.getByText("Update"));
+      expect(screen.getByTestId("description")).toHaveTextContent("Updated message");
     });
   });
 
-  describe('Edge cases', () => {
-    it('handles empty content', () => {
-      render(<Feedback data-testid='feedback' />);
+  describe("Edge cases", () => {
+    it("handles empty content", () => {
+      render(<Feedback data-testid="feedback" />);
 
-      const feedback = screen.getByTestId('feedback');
+      const feedback = screen.getByTestId("feedback");
       expect(feedback).toBeInTheDocument();
     });
 
-    it('handles very long content', () => {
-      const longTitle = 'A'.repeat(100);
-      const longDescription = 'B'.repeat(500);
+    it("handles very long content", () => {
+      const longTitle = "A".repeat(100);
+      const longDescription = "B".repeat(500);
 
       render(
         <Feedback>
-          <FeedbackTitle data-testid='title'>{longTitle}</FeedbackTitle>
-          <FeedbackDescription data-testid='description'>{longDescription}</FeedbackDescription>
-        </Feedback>
+          <FeedbackTitle data-testid="title">{longTitle}</FeedbackTitle>
+          <FeedbackDescription data-testid="description">{longDescription}</FeedbackDescription>
+        </Feedback>,
       );
 
-      expect(screen.getByTestId('title')).toHaveTextContent(longTitle);
-      expect(screen.getByTestId('description')).toHaveTextContent(longDescription);
+      expect(screen.getByTestId("title")).toHaveTextContent(longTitle);
+      expect(screen.getByTestId("description")).toHaveTextContent(longDescription);
     });
   });
 });

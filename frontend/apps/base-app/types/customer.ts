@@ -1,6 +1,15 @@
 // Customer domain types with TypeScript utilities
-import { BaseEntitySnake, WithMetadata, WithCustomFields, WithTags, Address, ContactInfo, DateString, CustomerID } from './common';
-import { PartialBy, RequiredBy } from './utils';
+import {
+  BaseEntitySnake,
+  WithMetadata,
+  WithCustomFields,
+  WithTags,
+  Address,
+  ContactInfo,
+  DateString,
+  CustomerID,
+} from "./common";
+import { PartialBy, RequiredBy } from "./utils";
 
 // Base customer type extending common patterns (using snake_case to match API)
 export interface Customer extends BaseEntitySnake, WithMetadata, WithCustomFields, WithTags {
@@ -56,32 +65,32 @@ export interface Customer extends BaseEntitySnake, WithMetadata, WithCustomField
 
 // Customer enums using const assertions for better type inference
 export const CustomerTypes = {
-  INDIVIDUAL: 'individual',
-  BUSINESS: 'business',
-  ENTERPRISE: 'enterprise',
-  PARTNER: 'partner',
-  VENDOR: 'vendor'
+  INDIVIDUAL: "individual",
+  BUSINESS: "business",
+  ENTERPRISE: "enterprise",
+  PARTNER: "partner",
+  VENDOR: "vendor",
 } as const;
-export type CustomerType = typeof CustomerTypes[keyof typeof CustomerTypes];
+export type CustomerType = (typeof CustomerTypes)[keyof typeof CustomerTypes];
 
 export const CustomerTiers = {
-  FREE: 'free',
-  BASIC: 'basic',
-  STANDARD: 'standard',
-  PREMIUM: 'premium',
-  ENTERPRISE: 'enterprise'
+  FREE: "free",
+  BASIC: "basic",
+  STANDARD: "standard",
+  PREMIUM: "premium",
+  ENTERPRISE: "enterprise",
 } as const;
-export type CustomerTier = typeof CustomerTiers[keyof typeof CustomerTiers];
+export type CustomerTier = (typeof CustomerTiers)[keyof typeof CustomerTiers];
 
 export const CustomerStatuses = {
-  PROSPECT: 'prospect',
-  ACTIVE: 'active',
-  INACTIVE: 'inactive',
-  SUSPENDED: 'suspended',
-  CHURNED: 'churned',
-  ARCHIVED: 'archived'
+  PROSPECT: "prospect",
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+  SUSPENDED: "suspended",
+  CHURNED: "churned",
+  ARCHIVED: "archived",
 } as const;
-export type CustomerStatus = typeof CustomerStatuses[keyof typeof CustomerStatuses];
+export type CustomerStatus = (typeof CustomerStatuses)[keyof typeof CustomerStatuses];
 
 // Customer preferences
 export interface CustomerPreferences {
@@ -90,22 +99,32 @@ export interface CustomerPreferences {
   timezone?: string;
   communicationChannels?: CommunicationChannel[];
   marketingOptIn?: boolean;
-  invoiceDelivery?: 'email' | 'mail' | 'both';
+  invoiceDelivery?: "email" | "mail" | "both";
 }
 
-export type CommunicationChannel = 'email' | 'sms' | 'phone' | 'push' | 'mail';
+export type CommunicationChannel = "email" | "sms" | "phone" | "push" | "mail";
 
 // Using TypeScript utilities for create/update operations
 export type CustomerCreateInput = RequiredBy<
-  PartialBy<Customer,
-    'id' | 'customer_number' | 'created_at' | 'updated_at' | 'lifetime_value' |
-    'total_purchases' | 'average_order_value' | 'status' | 'tier' | 'customer_type'
+  PartialBy<
+    Customer,
+    | "id"
+    | "customer_number"
+    | "created_at"
+    | "updated_at"
+    | "lifetime_value"
+    | "total_purchases"
+    | "average_order_value"
+    | "status"
+    | "tier"
+    | "customer_type"
   >,
-  'first_name' | 'last_name' | 'email'
+  "first_name" | "last_name" | "email"
 >;
 
-export type CustomerUpdateInput = PartialBy<Customer,
-  'id' | 'customer_number' | 'created_at' | 'updated_at'
+export type CustomerUpdateInput = PartialBy<
+  Customer,
+  "id" | "customer_number" | "created_at" | "updated_at"
 >;
 
 // Search and filter types
@@ -125,16 +144,16 @@ export interface CustomerSearchParams {
   page?: number;
   pageSize?: number;
   sortBy?: CustomerSortField;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 export type CustomerSortField =
-  | 'displayName'
-  | 'email'
-  | 'createdAt'
-  | 'lifetimeValue'
-  | 'totalPurchases'
-  | 'lastPurchaseDate';
+  | "displayName"
+  | "email"
+  | "createdAt"
+  | "lifetimeValue"
+  | "totalPurchases"
+  | "lastPurchaseDate";
 
 // Customer metrics for dashboard (using snake_case to match API)
 export interface CustomerMetrics {
@@ -174,19 +193,21 @@ export interface CustomerActivity {
 }
 
 export type ActivityType =
-  | 'purchase'
-  | 'support_ticket'
-  | 'email_sent'
-  | 'email_opened'
-  | 'login'
-  | 'profile_update'
-  | 'subscription_change'
-  | 'note_added';
+  | "purchase"
+  | "support_ticket"
+  | "email_sent"
+  | "email_opened"
+  | "login"
+  | "profile_update"
+  | "subscription_change"
+  | "note_added";
 
 // Type guards
 export function isBusinessCustomer(customer: Customer): boolean {
-  return customer.customer_type === CustomerTypes.BUSINESS ||
-         customer.customer_type === CustomerTypes.ENTERPRISE;
+  return (
+    customer.customer_type === CustomerTypes.BUSINESS ||
+    customer.customer_type === CustomerTypes.ENTERPRISE
+  );
 }
 
 export function isActiveCustomer(customer: Customer): boolean {
@@ -194,6 +215,5 @@ export function isActiveCustomer(customer: Customer): boolean {
 }
 
 export function isPremiumCustomer(customer: Customer): boolean {
-  return customer.tier === CustomerTiers.PREMIUM ||
-         customer.tier === CustomerTiers.ENTERPRISE;
+  return customer.tier === CustomerTiers.PREMIUM || customer.tier === CustomerTiers.ENTERPRISE;
 }

@@ -4,29 +4,29 @@
  * Custom hooks for interacting with the ticketing API
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '@/lib/api/client';
+import { useState, useEffect, useCallback } from "react";
+import { apiClient } from "@/lib/api/client";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type TicketActorType = 'customer' | 'tenant' | 'partner' | 'platform';
-export type TicketStatus = 'open' | 'in_progress' | 'waiting' | 'resolved' | 'closed';
-export type TicketPriority = 'low' | 'normal' | 'high' | 'urgent';
+export type TicketActorType = "customer" | "tenant" | "partner" | "platform";
+export type TicketStatus = "open" | "in_progress" | "waiting" | "resolved" | "closed";
+export type TicketPriority = "low" | "normal" | "high" | "urgent";
 export type TicketType =
-  | 'general_inquiry'
-  | 'billing_issue'
-  | 'technical_support'
-  | 'installation_request'
-  | 'outage_report'
-  | 'service_upgrade'
-  | 'service_downgrade'
-  | 'cancellation_request'
-  | 'equipment_issue'
-  | 'speed_issue'
-  | 'network_issue'
-  | 'connectivity_issue';
+  | "general_inquiry"
+  | "billing_issue"
+  | "technical_support"
+  | "installation_request"
+  | "outage_report"
+  | "service_upgrade"
+  | "service_downgrade"
+  | "cancellation_request"
+  | "equipment_issue"
+  | "speed_issue"
+  | "network_issue"
+  | "connectivity_issue";
 
 export interface TicketMessage {
   id: string;
@@ -134,12 +134,14 @@ export function useTickets(options: UseTicketsOptions = {}) {
       const params: Record<string, any> = {};
       if (status) params.status = status;
 
-      const response = await apiClient.get<TicketSummary[]>('/tickets', { params });
+      const response = await apiClient.get<TicketSummary[]>("/tickets", {
+        params,
+      });
       setTickets(response.data);
       setError(null);
     } catch (err: any) {
-      console.error('Failed to fetch tickets:', err);
-      setError(err.response?.data?.detail || 'Failed to fetch tickets');
+      console.error("Failed to fetch tickets:", err);
+      setError(err.response?.data?.detail || "Failed to fetch tickets");
     } finally {
       setLoading(false);
     }
@@ -189,8 +191,8 @@ export function useTicket(ticketId: string | null, autoRefresh = false) {
       setTicket(response.data);
       setError(null);
     } catch (err: any) {
-      console.error('Failed to fetch ticket:', err);
-      setError(err.response?.data?.detail || 'Failed to fetch ticket');
+      console.error("Failed to fetch ticket:", err);
+      setError(err.response?.data?.detail || "Failed to fetch ticket");
     } finally {
       setLoading(false);
     }
@@ -203,7 +205,7 @@ export function useTicket(ticketId: string | null, autoRefresh = false) {
   // Auto-refresh for open/in_progress tickets
   useEffect(() => {
     if (!autoRefresh || !ticketId) return;
-    if (ticket?.status === 'resolved' || ticket?.status === 'closed') return;
+    if (ticket?.status === "resolved" || ticket?.status === "closed") return;
 
     const interval = setInterval(() => {
       fetchTicket();
@@ -232,11 +234,11 @@ export function useCreateTicket() {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiClient.post<TicketDetail>('/tickets', data);
+      const response = await apiClient.post<TicketDetail>("/tickets", data);
       return response.data;
     } catch (err: any) {
-      console.error('Failed to create ticket:', err);
-      setError(err.response?.data?.detail || 'Failed to create ticket');
+      console.error("Failed to create ticket:", err);
+      setError(err.response?.data?.detail || "Failed to create ticket");
       return null;
     } finally {
       setLoading(false);
@@ -265,8 +267,8 @@ export function useUpdateTicket() {
       const response = await apiClient.patch<TicketDetail>(`/tickets/${ticketId}`, data);
       return response.data;
     } catch (err: any) {
-      console.error('Failed to update ticket:', err);
-      setError(err.response?.data?.detail || 'Failed to update ticket');
+      console.error("Failed to update ticket:", err);
+      setError(err.response?.data?.detail || "Failed to update ticket");
       return null;
     } finally {
       setLoading(false);
@@ -292,14 +294,11 @@ export function useAddMessage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiClient.post<TicketDetail>(
-        `/tickets/${ticketId}/messages`,
-        data
-      );
+      const response = await apiClient.post<TicketDetail>(`/tickets/${ticketId}/messages`, data);
       return response.data;
     } catch (err: any) {
-      console.error('Failed to add message:', err);
-      setError(err.response?.data?.detail || 'Failed to add message');
+      console.error("Failed to add message:", err);
+      setError(err.response?.data?.detail || "Failed to add message");
       return null;
     } finally {
       setLoading(false);
@@ -340,28 +339,28 @@ export function useTicketStats() {
       setLoading(true);
 
       // Since there's no stats endpoint, we'll calculate from tickets
-      const response = await apiClient.get<TicketSummary[]>('/tickets');
+      const response = await apiClient.get<TicketSummary[]>("/tickets");
       const tickets = response.data;
 
       const stats: TicketStats = {
         total: tickets.length,
-        open: tickets.filter(t => t.status === 'open').length,
-        in_progress: tickets.filter(t => t.status === 'in_progress').length,
-        waiting: tickets.filter(t => t.status === 'waiting').length,
-        resolved: tickets.filter(t => t.status === 'resolved').length,
-        closed: tickets.filter(t => t.status === 'closed').length,
+        open: tickets.filter((t) => t.status === "open").length,
+        in_progress: tickets.filter((t) => t.status === "in_progress").length,
+        waiting: tickets.filter((t) => t.status === "waiting").length,
+        resolved: tickets.filter((t) => t.status === "resolved").length,
+        closed: tickets.filter((t) => t.status === "closed").length,
         by_priority: {
-          low: tickets.filter(t => t.priority === 'low').length,
-          normal: tickets.filter(t => t.priority === 'normal').length,
-          high: tickets.filter(t => t.priority === 'high').length,
-          urgent: tickets.filter(t => t.priority === 'urgent').length,
+          low: tickets.filter((t) => t.priority === "low").length,
+          normal: tickets.filter((t) => t.priority === "normal").length,
+          high: tickets.filter((t) => t.priority === "high").length,
+          urgent: tickets.filter((t) => t.priority === "urgent").length,
         },
         by_type: {},
-        sla_breached: tickets.filter(t => t.sla_breached).length,
+        sla_breached: tickets.filter((t) => t.sla_breached).length,
       };
 
       // Count by type
-      tickets.forEach(ticket => {
+      tickets.forEach((ticket) => {
         if (ticket.ticket_type) {
           stats.by_type[ticket.ticket_type] = (stats.by_type[ticket.ticket_type] || 0) + 1;
         }
@@ -370,8 +369,8 @@ export function useTicketStats() {
       setStats(stats);
       setError(null);
     } catch (err: any) {
-      console.error('Failed to fetch ticket stats:', err);
-      setError(err.response?.data?.detail || 'Failed to fetch statistics');
+      console.error("Failed to fetch ticket stats:", err);
+      setError(err.response?.data?.detail || "Failed to fetch statistics");
     } finally {
       setLoading(false);
     }

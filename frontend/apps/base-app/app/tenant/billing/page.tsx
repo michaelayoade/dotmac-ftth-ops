@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useEffect, useState } from "react";
@@ -33,8 +33,15 @@ export default function TenantBillingPage() {
   const [stats, setStats] = useState<TenantStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [invoiceSummary, setInvoiceSummary] = useState<InvoiceSummaryState>({ open: 0, overdue: 0, upcoming: 0 });
-  const [paymentSummary, setPaymentSummary] = useState<PaymentSummaryState>({ pending: 0, failed: 0 });
+  const [invoiceSummary, setInvoiceSummary] = useState<InvoiceSummaryState>({
+    open: 0,
+    overdue: 0,
+    upcoming: 0,
+  });
+  const [paymentSummary, setPaymentSummary] = useState<PaymentSummaryState>({
+    pending: 0,
+    failed: 0,
+  });
   const [recentPayments, setRecentPayments] = useState<Payment[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
@@ -67,7 +74,9 @@ export default function TenantBillingPage() {
         if (invoicesResponse.data?.invoices) {
           const invoices = invoicesResponse.data.invoices;
           const now = Date.now();
-          const open = invoices.filter((invoice) => invoice.amount_due > 0 && invoice.status !== "paid").length;
+          const open = invoices.filter(
+            (invoice) => invoice.amount_due > 0 && invoice.status !== "paid",
+          ).length;
           const overdue = invoices.filter((invoice) => {
             if (invoice.amount_due <= 0) return false;
             const dueDate = new Date(invoice.due_date).getTime();
@@ -83,8 +92,10 @@ export default function TenantBillingPage() {
 
         if (paymentsResponse.data?.payments) {
           const payments = paymentsResponse.data.payments;
-          const pending = payments.filter((payment) => payment.status === 'pending' || payment.status === 'processing').length;
-          const failed = payments.filter((payment) => payment.status === 'failed').length;
+          const pending = payments.filter(
+            (payment) => payment.status === "pending" || payment.status === "processing",
+          ).length;
+          const failed = payments.filter((payment) => payment.status === "failed").length;
           setPaymentSummary({ pending, failed });
           setRecentPayments(payments.slice(0, 10));
         }
@@ -102,13 +113,16 @@ export default function TenantBillingPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-bold text-foreground">Billing & Plans</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Keep your subscription current, monitor invoices, and manage payment methods from a single place.
+          Keep your subscription current, monitor invoices, and manage payment methods from a single
+          place.
         </p>
       </header>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {loading ? (
-          Array.from({ length: 4 }).map((_, idx) => <Skeleton key={idx} className="h-32 rounded-lg" />)
+          Array.from({ length: 4 }).map((_, idx) => (
+            <Skeleton key={idx} className="h-32 rounded-lg" />
+          ))
         ) : (
           <>
             <BillingCard
@@ -129,13 +143,22 @@ export default function TenantBillingPage() {
               value={`${invoiceSummary.open} open`}
               body={
                 <div className="flex flex-col gap-1 text-sm">
-                  <Link href="/dashboard/billing-revenue/invoices" className="text-primary underline-offset-2 hover:underline">
+                  <Link
+                    href="/dashboard/billing-revenue/invoices"
+                    className="text-primary underline-offset-2 hover:underline"
+                  >
                     Review invoices
                   </Link>
                   {invoiceSummary.overdue > 0 ? (
-                    <span className="text-destructive">{invoiceSummary.overdue} overdue invoice{invoiceSummary.overdue === 1 ? "" : "s"}</span>
+                    <span className="text-destructive">
+                      {invoiceSummary.overdue} overdue invoice
+                      {invoiceSummary.overdue === 1 ? "" : "s"}
+                    </span>
                   ) : invoiceSummary.upcoming > 0 ? (
-                    <span className="text-muted-foreground">{invoiceSummary.upcoming} invoice{invoiceSummary.upcoming === 1 ? "" : "s"} due soon</span>
+                    <span className="text-muted-foreground">
+                      {invoiceSummary.upcoming} invoice
+                      {invoiceSummary.upcoming === 1 ? "" : "s"} due soon
+                    </span>
                   ) : (
                     <span className="text-muted-foreground">All invoices current</span>
                   )}
@@ -209,7 +232,7 @@ export default function TenantBillingPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <InvoiceList
-              tenantId={currentTenant?.id ?? 'default-tenant'}
+              tenantId={currentTenant?.id ?? "default-tenant"}
               onInvoiceSelect={setSelectedInvoice}
             />
           </CardContent>
@@ -220,13 +243,17 @@ export default function TenantBillingPage() {
             <CardHeader>
               <CardTitle>Selected invoice</CardTitle>
               <CardDescription>
-                {selectedInvoice.invoice_number} • Due {new Date(selectedInvoice.due_date).toLocaleDateString()}
+                {selectedInvoice.invoice_number} • Due{" "}
+                {new Date(selectedInvoice.due_date).toLocaleDateString()}
               </CardDescription>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
               <div>Customer: {selectedInvoice.billing_email ?? selectedInvoice.customer_id}</div>
-              <div>Amount due: {formatCurrency(selectedInvoice.amount_due, selectedInvoice.currency ?? 'USD')}</div>
-              {selectedInvoice.status !== 'paid' && (
+              <div>
+                Amount due:{" "}
+                {formatCurrency(selectedInvoice.amount_due, selectedInvoice.currency ?? "USD")}
+              </div>
+              {selectedInvoice.status !== "paid" && (
                 <div className="text-destructive mt-2">Status: {selectedInvoice.status}</div>
               )}
             </CardContent>

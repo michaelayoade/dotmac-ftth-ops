@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
@@ -124,12 +124,7 @@ export default function CustomerLoginPage() {
               </div>
 
               {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full"
-                size="lg"
-                disabled={loading}
-              >
+              <Button type="submit" className="w-full" size="lg" disabled={loading}>
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -23,16 +23,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { useRBAC } from '@/contexts/RBACContext';
-import {
-  useAccessPointListGraphQL,
-  getSignalQualityLabel,
-} from '@/hooks/useWirelessGraphQL';
-import { AccessPointStatus, type FrequencyBand } from '@/lib/graphql/generated';
-import { platformConfig } from '@/lib/config';
-import { Wifi, Search, Filter, ChevronLeft, ChevronRight, RefreshCw, Activity } from 'lucide-react';
-import Link from 'next/link';
+} from "@/components/ui/table";
+import { useRBAC } from "@/contexts/RBACContext";
+import { useAccessPointListGraphQL, getSignalQualityLabel } from "@/hooks/useWirelessGraphQL";
+import { AccessPointStatus, type FrequencyBand } from "@/lib/graphql/generated";
+import { platformConfig } from "@/lib/config";
+import { Wifi, Search, Filter, ChevronLeft, ChevronRight, RefreshCw, Activity } from "lucide-react";
+import Link from "next/link";
 
 const ACCESS_POINT_STATUSES: AccessPointStatus[] = [
   AccessPointStatus.Online,
@@ -43,10 +40,10 @@ const ACCESS_POINT_STATUSES: AccessPointStatus[] = [
 
 export default function AccessPointsPage() {
   const { hasPermission } = useRBAC();
-  const hasWirelessAccess = platformConfig.features.enableNetwork && hasPermission('isp.ipam.read');
+  const hasWirelessAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
 
   // Filter state
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [status, setStatus] = useState<AccessPointStatus | undefined>(undefined);
   const [siteId, setSiteId] = useState<string | undefined>(undefined);
   const [limit] = useState(50);
@@ -97,50 +94,53 @@ export default function AccessPointsPage() {
   };
 
   const handleClearFilters = () => {
-    setSearch('');
+    setSearch("");
     setStatus(undefined);
     setSiteId(undefined);
     setOffset(0);
   };
 
   const formatStatus = (status: string) => {
-    return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+    return status
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   const getStatusBadgeVariant = (status: AccessPointStatus) => {
     switch (status) {
-      case 'ONLINE':
-        return 'default';
-      case 'OFFLINE':
-        return 'destructive';
-      case 'DEGRADED':
-        return 'secondary';
-      case 'MAINTENANCE':
-        return 'secondary';
+      case "ONLINE":
+        return "default";
+      case "OFFLINE":
+        return "destructive";
+      case "DEGRADED":
+        return "secondary";
+      case "MAINTENANCE":
+        return "secondary";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
   const getStatusColor = (status: AccessPointStatus) => {
     switch (status) {
-      case 'ONLINE':
-        return 'bg-green-500';
-      case 'OFFLINE':
-        return 'bg-red-500';
-      case 'DEGRADED':
-        return 'bg-yellow-500';
-      case 'MAINTENANCE':
-        return 'bg-blue-500';
+      case "ONLINE":
+        return "bg-green-500";
+      case "OFFLINE":
+        return "bg-red-500";
+      case "DEGRADED":
+        return "bg-yellow-500";
+      case "MAINTENANCE":
+        return "bg-blue-500";
       default:
-        return 'bg-gray-500';
+        return "bg-gray-500";
     }
   };
 
   const getClientLoadColor = (count: number) => {
-    if (count > 50) return 'text-red-600 font-semibold';
-    if (count > 30) return 'text-amber-600';
-    return 'text-green-600';
+    if (count > 50) return "text-red-600 font-semibold";
+    if (count > 30) return "text-amber-600";
+    return "text-green-600";
   };
 
   return (
@@ -187,7 +187,7 @@ export default function AccessPointsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {accessPoints.filter((ap) => ap.status === 'ONLINE').length}
+                {accessPoints.filter((ap) => ap.status === "ONLINE").length}
               </div>
             </CardContent>
           </Card>
@@ -199,7 +199,7 @@ export default function AccessPointsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">
-                {accessPoints.filter((ap) => ap.status === 'OFFLINE').length}
+                {accessPoints.filter((ap) => ap.status === "OFFLINE").length}
               </div>
             </CardContent>
           </Card>
@@ -255,9 +255,9 @@ export default function AccessPointsPage() {
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select
-                value={status || 'all'}
+                value={status || "all"}
                 onValueChange={(value) => {
-                  setStatus(value === 'all' ? undefined : (value as AccessPointStatus));
+                  setStatus(value === "all" ? undefined : (value as AccessPointStatus));
                   setOffset(0);
                 }}
               >
@@ -278,7 +278,10 @@ export default function AccessPointsPage() {
             {/* Site Filter (placeholder) */}
             <div className="space-y-2">
               <Label htmlFor="site">Site</Label>
-              <Select value="all" onValueChange={(value) => setSiteId(value === 'all' ? undefined : value)}>
+              <Select
+                value="all"
+                onValueChange={(value) => setSiteId(value === "all" ? undefined : value)}
+              >
                 <SelectTrigger id="site">
                   <SelectValue placeholder="All sites" />
                 </SelectTrigger>
@@ -296,7 +299,7 @@ export default function AccessPointsPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>
-              Access Points{' '}
+              Access Points{" "}
               {totalCount > 0 && <span className="text-muted-foreground">({totalCount})</span>}
             </CardTitle>
             {loading && <Badge variant="outline">Loading...</Badge>}
@@ -310,8 +313,8 @@ export default function AccessPointsPage() {
               <h3 className="text-lg font-medium mb-2">No access points found</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 {search || status
-                  ? 'Try adjusting your filters'
-                  : 'No access points have been added to the system yet'}
+                  ? "Try adjusting your filters"
+                  : "No access points have been added to the system yet"}
               </p>
               <Button variant="outline" onClick={() => refetch()}>
                 Refresh
@@ -346,19 +349,27 @@ export default function AccessPointsPage() {
                           </div>
                         </TableCell>
                         <TableCell className="font-medium">{ap.name}</TableCell>
-                        <TableCell className="text-sm">{ap.siteName || '-'}</TableCell>
-                        <TableCell className="font-mono text-xs">{ap.ipAddress || '-'}</TableCell>
-                        <TableCell className="font-mono text-xs">{ap.macAddress || '-'}</TableCell>
+                        <TableCell className="text-sm">{ap.siteName || "-"}</TableCell>
+                        <TableCell className="font-mono text-xs">{ap.ipAddress || "-"}</TableCell>
+                        <TableCell className="font-mono text-xs">{ap.macAddress || "-"}</TableCell>
                         <TableCell className="text-right">{2}</TableCell>
                         <TableCell className="text-right">
-                          <span className={getClientLoadColor(ap.performance?.connectedClients || 0)}>
+                          <span
+                            className={getClientLoadColor(ap.performance?.connectedClients || 0)}
+                          >
                             {ap.performance?.connectedClients || 0}
                           </span>
                         </TableCell>
                         <TableCell className="text-right text-sm">
-                          {(ap.lastRebootAt ? Math.floor((Date.now() - new Date(ap.lastRebootAt).getTime()) / 1000) : 0)
+                          {(
+                            ap.lastRebootAt
+                              ? Math.floor(
+                                  (Date.now() - new Date(ap.lastRebootAt).getTime()) / 1000,
+                                )
+                              : 0
+                          )
                             ? `${Math.floor((ap.lastRebootAt ? Math.floor((Date.now() - new Date(ap.lastRebootAt).getTime()) / 1000) : 0) / 3600)}h`
-                            : '-'}
+                            : "-"}
                         </TableCell>
                         <TableCell>
                           <Link href={`/dashboard/wireless/access-points/${ap.id}`}>
@@ -377,7 +388,7 @@ export default function AccessPointsPage() {
               {totalCount > limit && (
                 <div className="flex items-center justify-between pt-4 border-t">
                   <p className="text-sm text-muted-foreground">
-                    Showing {offset + 1} to {Math.min(offset + limit, totalCount)} of {totalCount}{' '}
+                    Showing {offset + 1} to {Math.min(offset + limit, totalCount)} of {totalCount}{" "}
                     access points
                   </p>
                   <div className="flex gap-2">

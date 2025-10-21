@@ -6,7 +6,7 @@
  * Check if code is running in browser environment
  */
 export const isBrowser = (): boolean => {
-  return typeof window !== 'undefined' && typeof document !== 'undefined';
+  return typeof window !== "undefined" && typeof document !== "undefined";
 };
 
 /**
@@ -73,7 +73,7 @@ export const browserOnly = <T>(fn: () => T, fallback?: T): T | undefined => {
     try {
       return fn();
     } catch (error) {
-      console.error('Browser-only function error:', error);
+      console.error("Browser-only function error:", error);
       return fallback;
     }
   }
@@ -88,7 +88,7 @@ export const serverOnly = <T>(fn: () => T, fallback?: T): T | undefined => {
     try {
       return fn();
     } catch (error) {
-      console.error('Server-only function error:', error);
+      console.error("Server-only function error:", error);
       return fallback;
     }
   }
@@ -131,7 +131,10 @@ export const safeClearTimeout = (id: NodeJS.Timeout | number): void => {
 /**
  * Get viewport dimensions safely
  */
-export const getViewportDimensions = (): { width: number; height: number } | null => {
+export const getViewportDimensions = (): {
+  width: number;
+  height: number;
+} | null => {
   if (isBrowser()) {
     return {
       width: window.innerWidth || document.documentElement.clientWidth,
@@ -157,7 +160,7 @@ export const matchesMediaQuery = (query: string): boolean => {
 export const safeAddEventListener = <K extends keyof WindowEventMap>(
   type: K,
   listener: (this: Window, ev: WindowEventMap[K]) => any,
-  options?: boolean | AddEventListenerOptions
+  options?: boolean | AddEventListenerOptions,
 ): (() => void) | null => {
   if (isBrowser()) {
     window.addEventListener(type, listener, options);
@@ -176,7 +179,7 @@ export const getCookie = (name: string): string | null => {
   const parts = value.split(`; ${name}=`);
 
   if (parts.length === 2) {
-    return parts.pop()?.split(';').shift() || null;
+    return parts.pop()?.split(";").shift() || null;
   }
 
   return null;
@@ -194,8 +197,8 @@ export const setCookie = (
     path?: string;
     domain?: string;
     secure?: boolean;
-    sameSite?: 'strict' | 'lax' | 'none';
-  } = {}
+    sameSite?: "strict" | "lax" | "none";
+  } = {},
 ): void => {
   if (!isBrowser()) return;
 
@@ -218,7 +221,7 @@ export const setCookie = (
   }
 
   if (options.secure) {
-    cookieString += '; secure';
+    cookieString += "; secure";
   }
 
   if (options.sameSite) {
@@ -231,7 +234,7 @@ export const setCookie = (
 /**
  * Delete cookie safely
  */
-export const deleteCookie = (name: string, path = '/'): void => {
+export const deleteCookie = (name: string, path = "/"): void => {
   if (!isBrowser()) return;
 
   document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}`;
@@ -241,19 +244,19 @@ export const deleteCookie = (name: string, path = '/'): void => {
  * Check if running in development mode
  */
 export const isDevelopment = (): boolean => {
-  return process.env.NODE_ENV === 'development';
+  return process.env.NODE_ENV === "development";
 };
 
 /**
  * Check if running in production mode
  */
 export const isProduction = (): boolean => {
-  return process.env.NODE_ENV === 'production';
+  return process.env.NODE_ENV === "production";
 };
 
 /**
  * Check if running in test mode
  */
 export const isTest = (): boolean => {
-  return process.env.NODE_ENV === 'test';
+  return process.env.NODE_ENV === "test";
 };

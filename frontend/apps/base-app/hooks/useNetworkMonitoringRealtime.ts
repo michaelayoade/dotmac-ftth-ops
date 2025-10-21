@@ -11,23 +11,23 @@
  * - Event-driven (only updates when data changes)
  */
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useApolloClient, gql, useSubscription } from '@apollo/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useApolloClient, gql, useSubscription } from "@apollo/client";
+import { useToast } from "@/components/ui/use-toast";
 import {
   useNetworkOverviewGraphQL,
   useNetworkDeviceListGraphQL,
   useDeviceDetailGraphQL,
   useNetworkAlertListGraphQL,
-} from '@/hooks/useNetworkGraphQL';
+} from "@/hooks/useNetworkGraphQL";
 import {
   DeviceTypeEnum,
+  DeviceStatusEnum,
+  AlertSeverityEnum,
   type DeviceHealth,
   type NetworkAlert,
-  type DeviceStatusEnum,
-  type AlertSeverityEnum,
-} from '@/lib/graphql/generated';
+} from "@/lib/graphql/generated";
 
 // ============================================================================
 // GraphQL Subscription Documents
@@ -113,17 +113,19 @@ export function useNetworkOverviewRealtime() {
   });
 
   return {
-    data: overview ? {
-      totalDevices: overview.totalDevices,
-      onlineDevices: overview.onlineDevices,
-      offlineDevices: overview.offlineDevices,
-      activeAlerts: overview.activeAlerts,
-      criticalAlerts: overview.criticalAlerts,
-      totalBandwidthGbps: overview.totalBandwidthGbps,
-      uptimePercentage: overview.uptimePercentage,
-      deviceTypeSummary: overview.deviceTypeSummary,
-      recentAlerts: overview.recentAlerts,
-    } : null,
+    data: overview
+      ? {
+          totalDevices: overview.totalDevices,
+          onlineDevices: overview.onlineDevices,
+          offlineDevices: overview.offlineDevices,
+          activeAlerts: overview.activeAlerts,
+          criticalAlerts: overview.criticalAlerts,
+          totalBandwidthGbps: overview.totalBandwidthGbps,
+          uptimePercentage: overview.uptimePercentage,
+          deviceTypeSummary: overview.deviceTypeSummary,
+          recentAlerts: overview.recentAlerts,
+        }
+      : null,
     isLoading,
     error,
     refetch,
@@ -144,13 +146,7 @@ export function useNetworkDevicesRealtime(params: UseDevicesRealtimeParams = {})
   const [realtimeDevices, setRealtimeDevices] = useState<Map<string, DeviceHealth>>(new Map());
 
   // Initial load via GraphQL query
-  const {
-    devices,
-    total,
-    isLoading,
-    error,
-    refetch,
-  } = useNetworkDeviceListGraphQL({
+  const { devices, total, isLoading, error, refetch } = useNetworkDeviceListGraphQL({
     page: 1,
     pageSize: 100,
     deviceType: params.deviceType,
@@ -164,12 +160,12 @@ export function useNetworkDevicesRealtime(params: UseDevicesRealtimeParams = {})
       const deviceMap = new Map<string, DeviceHealth>();
       devices.forEach((device: any) => {
         deviceMap.set(device.deviceId, {
-          __typename: 'DeviceHealth',
+          __typename: "DeviceHealth",
           deviceId: device.deviceId,
           deviceName: device.deviceName,
           deviceType: device.deviceType,
           status: device.status,
-          ipAddress: device.ipAddress || '',
+          ipAddress: device.ipAddress || "",
           firmwareVersion: device.firmwareVersion,
           cpuUsagePercent: device.cpuUsagePercent,
           memoryUsagePercent: device.memoryUsagePercent,
@@ -207,12 +203,12 @@ export function useNetworkDevicesRealtime(params: UseDevicesRealtimeParams = {})
         setRealtimeDevices((prev) => {
           const newMap = new Map(prev);
           newMap.set(update.deviceId, {
-            __typename: 'DeviceHealth',
+            __typename: "DeviceHealth",
             deviceId: update.deviceId,
             deviceName: update.deviceName,
             deviceType: update.deviceType,
             status: update.status,
-            ipAddress: update.ipAddress || '',
+            ipAddress: update.ipAddress || "",
             firmwareVersion: update.firmwareVersion,
             cpuUsagePercent: update.cpuUsagePercent,
             memoryUsagePercent: update.memoryUsagePercent,
@@ -237,14 +233,16 @@ export function useNetworkDevicesRealtime(params: UseDevicesRealtimeParams = {})
 
         if (hasStatusChanged) {
           const isHealthChange =
-            (previousStatus === 'online' && update.status === 'offline') ||
-            (previousStatus === 'offline' && update.status === 'online');
+            (previousStatus === DeviceStatusEnum.Online &&
+              update.status === DeviceStatusEnum.Offline) ||
+            (previousStatus === DeviceStatusEnum.Offline &&
+              update.status === DeviceStatusEnum.Online);
 
           if (isHealthChange) {
             toast({
-              title: update.status === 'online' ? 'Device Online' : 'Device Offline',
+              title: update.status === DeviceStatusEnum.Online ? "Device Online" : "Device Offline",
               description: `${update.deviceName} is now ${update.status}`,
-              variant: update.status === 'online' ? 'default' : 'destructive',
+              variant: update.status === DeviceStatusEnum.Online ? "default" : "destructive",
             });
           }
         }
@@ -254,7 +252,7 @@ export function useNetworkDevicesRealtime(params: UseDevicesRealtimeParams = {})
       }
     },
     onError: (error) => {
-      console.error('Device subscription error:', error);
+      console.error("Device subscription error:", error);
       // Don't show toast for subscription errors to avoid spam
       // Fallback polling will continue to work
     },
@@ -276,14 +274,8 @@ export function useNetworkDevicesRealtime(params: UseDevicesRealtimeParams = {})
 export function useDeviceHealthRealtime(deviceId: string | undefined, deviceType?: DeviceTypeEnum) {
   const { toast } = useToast();
 
-  const {
-    device,
-    traffic,
-    isLoading,
-    error,
-    refetch,
-  } = useDeviceDetailGraphQL({
-    deviceId: deviceId || '',
+  const { device, traffic, isLoading, error, refetch } = useDeviceDetailGraphQL({
+    deviceId: deviceId || "",
     deviceType: deviceType || DeviceTypeEnum.Olt,
     enabled: !!deviceId,
     pollInterval: 10000, // Fast polling for device details
@@ -298,15 +290,17 @@ export function useDeviceHealthRealtime(deviceId: string | undefined, deviceType
 
   return {
     data: device,
-    traffic: traffic ? {
-      deviceId: traffic.deviceId,
-      totalIngressMbps: traffic.currentRateInMbps,
-      totalEgressMbps: traffic.currentRateOutMbps,
-      averageLatencyMs: 0,
-      packetLossPercent: 0,
-      errorRate: 0,
-      timestamp: new Date(traffic.timestamp),
-    } : null,
+    traffic: traffic
+      ? {
+          deviceId: traffic.deviceId,
+          totalIngressMbps: traffic.currentRateInMbps,
+          totalEgressMbps: traffic.currentRateOutMbps,
+          averageLatencyMs: 0,
+          packetLossPercent: 0,
+          errorRate: 0,
+          timestamp: new Date(traffic.timestamp),
+        }
+      : null,
     isLoading,
     error,
     refetch,
@@ -326,13 +320,7 @@ export function useNetworkAlertsRealtime(params: UseAlertsRealtimeParams = {}) {
   const { toast } = useToast();
   const [realtimeAlerts, setRealtimeAlerts] = useState<Map<string, NetworkAlert>>(new Map());
 
-  const {
-    alerts,
-    total,
-    isLoading,
-    error,
-    refetch,
-  } = useNetworkAlertListGraphQL({
+  const { alerts, total, isLoading, error, refetch } = useNetworkAlertListGraphQL({
     page: 1,
     pageSize: 100,
     severity: params.severity,
@@ -365,9 +353,9 @@ export function useNetworkAlertsRealtime(params: UseAlertsRealtimeParams = {}) {
         setRealtimeAlerts((prev) => {
           const newMap = new Map(prev);
 
-          if (action === 'created' || action === 'updated') {
+          if (action === "created" || action === "updated") {
             newMap.set(alert.alertId, alert);
-          } else if (action === 'deleted' || action === 'resolved') {
+          } else if (action === "deleted" || action === "resolved") {
             // For resolved alerts, update if activeOnly is false, otherwise remove
             if (params.activeOnly === false) {
               newMap.set(alert.alertId, alert);
@@ -380,27 +368,27 @@ export function useNetworkAlertsRealtime(params: UseAlertsRealtimeParams = {}) {
         });
 
         // Show toast notification for new critical alerts
-        if (action === 'created' && alert.severity === 'critical') {
+        if (action === "created" && alert.severity === "critical") {
           toast({
-            title: 'Critical Alert',
+            title: "Critical Alert",
             description: `${alert.deviceName}: ${alert.title}`,
-            variant: 'destructive',
+            variant: "destructive",
           });
-        } else if (action === 'created' && alert.severity === 'warning') {
+        } else if (action === "created" && alert.severity === "warning") {
           toast({
-            title: 'Warning Alert',
+            title: "Warning Alert",
             description: `${alert.deviceName}: ${alert.title}`,
           });
-        } else if (action === 'resolved') {
+        } else if (action === "resolved") {
           toast({
-            title: 'Alert Resolved',
+            title: "Alert Resolved",
             description: `${alert.deviceName}: ${alert.title}`,
           });
         }
       }
     },
     onError: (error) => {
-      console.error('Alert subscription error:', error);
+      console.error("Alert subscription error:", error);
       // Don't show toast for subscription errors to avoid spam
       // Fallback polling will continue to work
     },
@@ -464,30 +452,30 @@ export function useWebSocketStatus() {
       try {
         // Try a simple introspection query to check connectivity
         await client.query({
-          query: client.cache.extract() ? undefined as any : undefined as any,
-          fetchPolicy: 'network-only',
+          query: client.cache.extract() ? (undefined as any) : (undefined as any),
+          fetchPolicy: "network-only",
         });
 
         setIsConnected(true);
         setReconnectAttempts(0);
         attempts = 0;
       } catch (error) {
-        console.error('GraphQL connection check failed:', error);
+        console.error("GraphQL connection check failed:", error);
         setIsConnected(false);
         attempts++;
         setReconnectAttempts(attempts);
 
         if (attempts <= maxAttempts) {
           toast({
-            title: 'Connection Lost',
+            title: "Connection Lost",
             description: `Attempting to reconnect... (${attempts}/${maxAttempts})`,
-            variant: 'destructive',
+            variant: "destructive",
           });
         } else {
           toast({
-            title: 'Connection Failed',
-            description: 'Maximum reconnection attempts reached. Please refresh the page.',
-            variant: 'destructive',
+            title: "Connection Failed",
+            description: "Maximum reconnection attempts reached. Please refresh the page.",
+            variant: "destructive",
           });
         }
       }
@@ -505,30 +493,30 @@ export function useWebSocketStatus() {
       setReconnectAttempts(0);
       attempts = 0;
       toast({
-        title: 'Connection Restored',
-        description: 'Network connection is back online',
+        title: "Connection Restored",
+        description: "Network connection is back online",
       });
     };
 
     const handleOffline = () => {
       setIsConnected(false);
       toast({
-        title: 'Connection Lost',
-        description: 'Network connection is offline',
-        variant: 'destructive',
+        title: "Connection Lost",
+        description: "Network connection is offline",
+        variant: "destructive",
       });
     };
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('online', handleOnline);
-      window.addEventListener('offline', handleOffline);
+    if (typeof window !== "undefined") {
+      window.addEventListener("online", handleOnline);
+      window.addEventListener("offline", handleOffline);
     }
 
     return () => {
       clearInterval(interval);
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('online', handleOnline);
-        window.removeEventListener('offline', handleOffline);
+      if (typeof window !== "undefined") {
+        window.removeEventListener("online", handleOnline);
+        window.removeEventListener("offline", handleOffline);
       }
     };
   }, [client, toast]);

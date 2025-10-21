@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon, CheckIcon } from '@heroicons/react/24/outline';
+import React, { useState, useCallback } from "react";
+import { ChevronLeftIcon, ChevronRightIcon, CheckIcon } from "@heroicons/react/24/outline";
 
 interface WorkflowStep {
   id: string;
@@ -29,7 +29,7 @@ export const WorkflowTemplate: React.FC<WorkflowTemplateProps> = ({
   title,
   subtitle,
   showProgress = true,
-  className = '',
+  className = "",
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [stepData, setStepData] = useState<Record<string, any>>({});
@@ -71,7 +71,7 @@ export const WorkflowTemplate: React.FC<WorkflowTemplateProps> = ({
         setCurrentStep(stepIndex);
       }
     },
-    [currentStep, completedSteps]
+    [currentStep, completedSteps],
   );
 
   const currentStepData = steps[currentStep];
@@ -80,24 +80,24 @@ export const WorkflowTemplate: React.FC<WorkflowTemplateProps> = ({
 
   return (
     <div className={`workflow-template ${className}`}>
-      <div className='workflow-header bg-white border-b border-gray-200 px-6 py-4'>
-        <div className='flex items-center justify-between'>
+      <div className="workflow-header bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className='text-2xl font-bold text-gray-900'>{title}</h1>
-            {subtitle && <p className='text-gray-600 mt-1'>{subtitle}</p>}
+            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+            {subtitle && <p className="text-gray-600 mt-1">{subtitle}</p>}
           </div>
           {onCancel && (
-            <button onClick={onCancel} className='text-gray-500 hover:text-gray-700 px-4 py-2'>
+            <button onClick={onCancel} className="text-gray-500 hover:text-gray-700 px-4 py-2">
               Cancel
             </button>
           )}
         </div>
 
         {showProgress && (
-          <div className='mt-6'>
-            <div className='flex items-center'>
+          <div className="mt-6">
+            <div className="flex items-center">
               {steps.map((step, index) => (
-                <div key={step.id} className='flex items-center'>
+                <div key={step.id} className="flex items-center">
                   <button
                     onClick={() => handleStepClick(index)}
                     className={`
@@ -105,17 +105,17 @@ export const WorkflowTemplate: React.FC<WorkflowTemplateProps> = ({
                       transition-all duration-200
                       ${
                         completedSteps.has(index)
-                          ? 'bg-green-500 text-white hover:bg-green-600'
+                          ? "bg-green-500 text-white hover:bg-green-600"
                           : index === currentStep
-                            ? 'bg-blue-500 text-white'
+                            ? "bg-blue-500 text-white"
                             : index < currentStep
-                              ? 'bg-gray-300 text-gray-700 hover:bg-gray-400'
-                              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                              ? "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                              : "bg-gray-100 text-gray-400 cursor-not-allowed"
                       }
                     `}
                     disabled={index > currentStep && !completedSteps.has(index)}
                   >
-                    {completedSteps.has(index) ? <CheckIcon className='w-5 h-5' /> : index + 1}
+                    {completedSteps.has(index) ? <CheckIcon className="w-5 h-5" /> : index + 1}
                   </button>
                   {index < steps.length - 1 && (
                     <div
@@ -123,8 +123,8 @@ export const WorkflowTemplate: React.FC<WorkflowTemplateProps> = ({
                         w-12 h-0.5 mx-2
                         ${
                           completedSteps.has(index) || index < currentStep
-                            ? 'bg-green-300'
-                            : 'bg-gray-200'
+                            ? "bg-green-300"
+                            : "bg-gray-200"
                         }
                       `}
                     />
@@ -132,13 +132,13 @@ export const WorkflowTemplate: React.FC<WorkflowTemplateProps> = ({
                 </div>
               ))}
             </div>
-            <div className='mt-3 flex justify-between text-xs text-gray-500'>
+            <div className="mt-3 flex justify-between text-xs text-gray-500">
               {steps.map((step, index) => (
                 <div
                   key={step.id}
                   className={`
                     flex-1 text-center
-                    ${index === currentStep ? 'font-medium text-blue-600' : ''}
+                    ${index === currentStep ? "font-medium text-blue-600" : ""}
                   `}
                 >
                   {step.title}
@@ -149,17 +149,17 @@ export const WorkflowTemplate: React.FC<WorkflowTemplateProps> = ({
         )}
       </div>
 
-      <div className='workflow-content flex-1 bg-gray-50'>
-        <div className='max-w-4xl mx-auto p-6'>
-          <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-6'>
-            <div className='mb-6'>
-              <h2 className='text-xl font-semibold text-gray-900'>{currentStepData.title}</h2>
+      <div className="workflow-content flex-1 bg-gray-50">
+        <div className="max-w-4xl mx-auto p-6">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-gray-900">{currentStepData.title}</h2>
               {currentStepData.description && (
-                <p className='text-gray-600 mt-2'>{currentStepData.description}</p>
+                <p className="text-gray-600 mt-2">{currentStepData.description}</p>
               )}
             </div>
 
-            <div className='step-component'>
+            <div className="step-component">
               <StepComponent
                 data={stepData[currentStepData.id] || {}}
                 onChange={(data: any) => updateStepData(currentStepData.id, data)}
@@ -173,36 +173,36 @@ export const WorkflowTemplate: React.FC<WorkflowTemplateProps> = ({
         </div>
       </div>
 
-      <div className='workflow-footer bg-white border-t border-gray-200 px-6 py-4'>
-        <div className='flex items-center justify-between'>
+      <div className="workflow-footer bg-white border-t border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
           <button
             onClick={handlePrevious}
             disabled={currentStep === 0}
-            className='
+            className="
               flex items-center px-4 py-2 text-sm font-medium text-gray-700
               bg-white border border-gray-300 rounded-md shadow-sm
               hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500
               disabled:opacity-50 disabled:cursor-not-allowed
-            '
+            "
           >
-            <ChevronLeftIcon className='w-4 h-4 mr-2' />
+            <ChevronLeftIcon className="w-4 h-4 mr-2" />
             Previous
           </button>
 
-          <div className='flex items-center space-x-3'>
-            <span className='text-sm text-gray-500'>
+          <div className="flex items-center space-x-3">
+            <span className="text-sm text-gray-500">
               Step {currentStep + 1} of {steps.length}
             </span>
             <button
               onClick={handleNext}
-              className='
+              className="
                 flex items-center px-6 py-2 text-sm font-medium text-white
                 bg-blue-600 border border-transparent rounded-md shadow-sm
                 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500
-              '
+              "
             >
-              {isLastStep ? 'Complete' : 'Next'}
-              {!isLastStep && <ChevronRightIcon className='w-4 h-4 ml-2' />}
+              {isLastStep ? "Complete" : "Next"}
+              {!isLastStep && <ChevronRightIcon className="w-4 h-4 ml-2" />}
             </button>
           </div>
         </div>

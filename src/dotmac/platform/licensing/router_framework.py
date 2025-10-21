@@ -1,3 +1,4 @@
+from typing import Any
 """
 API router for composable licensing framework.
 
@@ -89,7 +90,7 @@ router = APIRouter(prefix="/licensing", tags=["Licensing Framework"])
 async def create_feature_module(
     module_data: FeatureModuleCreate,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """
     Create a new feature module (building block).
 
@@ -147,7 +148,7 @@ async def list_feature_modules(
     category: str | None = Query(None),
     is_active: bool = Query(True),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """List all available feature modules."""
     query = select(FeatureModule).options(selectinload(FeatureModule.capabilities))
 
@@ -171,7 +172,7 @@ async def list_feature_modules(
 async def get_feature_module(
     module_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Get feature module by ID."""
     result = await db.execute(
         select(FeatureModule)
@@ -195,7 +196,7 @@ async def update_feature_module(
     module_id: UUID,
     update_data: FeatureModuleUpdate,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Update feature module."""
     result = await db.execute(
         select(FeatureModule).where(FeatureModule.id == module_id)
@@ -233,7 +234,7 @@ async def add_module_capability(
     module_id: UUID,
     capability_data: ModuleCapabilityCreate,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Add a capability to a feature module."""
     service = LicensingFrameworkService(db)
 
@@ -265,7 +266,7 @@ async def add_module_capability(
 async def create_quota_definition(
     quota_data: QuotaDefinitionCreate,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Create a new quota definition (building block)."""
     service = LicensingFrameworkService(db)
 
@@ -292,7 +293,7 @@ async def list_quota_definitions(
     is_metered: bool | None = Query(None),
     is_active: bool = Query(True),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """List all available quota definitions."""
     query = select(QuotaDefinition)
 
@@ -316,7 +317,7 @@ async def list_quota_definitions(
 async def get_quota_definition(
     quota_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Get quota definition by ID."""
     result = await db.execute(
         select(QuotaDefinition).where(QuotaDefinition.id == quota_id)
@@ -338,7 +339,7 @@ async def update_quota_definition(
     quota_id: UUID,
     update_data: QuotaDefinitionUpdate,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Update quota definition."""
     result = await db.execute(
         select(QuotaDefinition).where(QuotaDefinition.id == quota_id)
@@ -372,7 +373,7 @@ async def update_quota_definition(
 async def create_service_plan(
     plan_data: ServicePlanCreate,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """
     Create a new service plan by composing modules and quotas.
 
@@ -425,7 +426,7 @@ async def list_service_plans(
     is_public: bool | None = Query(None),
     is_active: bool = Query(True),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """List all service plans."""
     query = select(ServicePlan).options(
         selectinload(ServicePlan.modules).selectinload(PlanModule.module),
@@ -454,7 +455,7 @@ async def list_service_plans(
 async def get_service_plan(
     plan_id: UUID,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Get service plan by ID."""
     result = await db.execute(
         select(ServicePlan)
@@ -481,7 +482,7 @@ async def update_service_plan(
     plan_id: UUID,
     update_data: ServicePlanUpdate,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Update service plan."""
     result = await db.execute(
         select(ServicePlan).where(ServicePlan.id == plan_id)
@@ -521,7 +522,7 @@ async def duplicate_service_plan(
     plan_id: UUID,
     duplicate_data: ServicePlanDuplicate,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Duplicate an existing plan as a reusable template."""
     service = LicensingFrameworkService(db)
 
@@ -558,7 +559,7 @@ async def calculate_plan_pricing(
     billing_cycle: str = Query("MONTHLY"),
     addon_modules: str | None = Query(None, description="Comma-separated addon module IDs"),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Calculate total pricing for a plan including add-ons."""
     from dotmac.platform.licensing.framework import BillingCycle
 
@@ -597,7 +598,7 @@ async def calculate_plan_pricing(
 async def create_subscription(
     subscription_data: SubscriptionCreate,
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Create a new subscription for a tenant."""
     service = LicensingFrameworkService(db)
 
@@ -640,7 +641,7 @@ async def create_subscription(
 async def get_current_subscription(
     tenant: Tenant = Depends(get_current_tenant),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Get current tenant's active subscription."""
     from dotmac.platform.licensing.framework import SubscriptionStatus
 
@@ -682,7 +683,7 @@ async def add_addon_to_current_subscription(
     tenant: Tenant = Depends(get_current_tenant),
     current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Add an add-on module to current subscription."""
     from dotmac.platform.licensing.framework import SubscriptionStatus
 
@@ -743,7 +744,7 @@ async def remove_addon_from_current_subscription(
     tenant: Tenant = Depends(get_current_tenant),
     current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Remove an add-on module from current subscription."""
     from dotmac.platform.licensing.framework import SubscriptionStatus
 
@@ -807,7 +808,7 @@ async def check_feature_entitlement(
     check_request: FeatureEntitlementCheck,
     tenant: Tenant = Depends(get_current_tenant),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Check if tenant has access to a feature module/capability."""
     service = LicensingFrameworkService(db)
 
@@ -833,7 +834,7 @@ async def check_feature_entitlement(
 async def get_entitled_capabilities(
     tenant: Tenant = Depends(get_current_tenant),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Get all capabilities tenant has access to."""
     service = LicensingFrameworkService(db)
 
@@ -855,7 +856,7 @@ async def check_quota(
     check_request: QuotaCheckRequest,
     tenant: Tenant = Depends(get_current_tenant),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Check if tenant has quota available."""
     service = LicensingFrameworkService(db)
 
@@ -889,7 +890,7 @@ async def consume_quota(
     consume_request: QuotaConsumeRequest,
     tenant: Tenant = Depends(get_current_tenant),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> Any:
     """Consume quota and track usage."""
     service = LicensingFrameworkService(db)
 
@@ -917,13 +918,13 @@ async def consume_quota(
 
 @router.post(
     "/quotas/release",
-    status_code=status.HTTP_204_NO_CONTENT,
+    status_code=status.HTTP_200_OK,
 )
 async def release_quota(
     release_request: QuotaReleaseRequest,
     tenant: Tenant = Depends(get_current_tenant),
     db: AsyncSession = Depends(get_async_session),
-):
+) -> dict[str, Any]:
     """Release quota (e.g., when user is deleted)."""
     service = LicensingFrameworkService(db)
 
@@ -932,3 +933,5 @@ async def release_quota(
         quota_code=release_request.quota_code,
         quantity=release_request.quantity,
     )
+
+    return {"status": "released"}

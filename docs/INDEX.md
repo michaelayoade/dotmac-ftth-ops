@@ -2,7 +2,7 @@
 
 **Last Updated:** October 19, 2025
 
-This repository now ships a lean documentation set. Everything you are likely to reference lives in one of the sections below; deeper historical reports have been moved under `docs/archived/`.
+This repository now ships a lean documentation set. Everything you are likely to reference lives in one of the sections below.
 
 ---
 
@@ -52,17 +52,18 @@ This repository now ships a lean documentation set. Everything you are likely to
 
 ---
 
+## Architecture Documentation
+
+- [PORTAL_ARCHITECTURE.md](architecture/PORTAL_ARCHITECTURE.md) — comprehensive portal architecture with 6 portals, authentication flows, user journeys, and deployment modes.
+- [FRONTEND_SITEMAP.md](architecture/FRONTEND_SITEMAP.md) — complete route hierarchy and navigation structure for all portals.
+
+---
+
 ## Directories of Note
 
-- `architecture/` — system diagrams, domain models, and DDD notes.
+- `architecture/` — system diagrams, domain models, DDD notes, and portal architecture.
 - `api/` — per-service API references.
 - `guides/` — developer setup, testing, and deployment guides.
 - `plugins/` — plugin contract documentation.
 - `sessions/` — detailed historical dev session logs (still available for audit).
 - `webhooks/` — webhook payloads, retry logic, and onboarding.
-- `archived/` — legacy reports, status updates, and bulk documentation moved out of the main index.
-
----
-
-### Looking for Older Reports?
-All phased status updates, session summaries, and historical validation reports now live in `docs/archived/`. Nothing was deleted—just moved out of the primary view.

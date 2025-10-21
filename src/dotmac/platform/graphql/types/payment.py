@@ -8,8 +8,16 @@ customer and invoice data via DataLoaders to prevent N+1 query problems.
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+from typing import TYPE_CHECKING, Any
 
 import strawberry
+
+if TYPE_CHECKING:
+    from typing import TypeAlias
+
+    JSONScalar: TypeAlias = Any
+else:
+    from strawberry.scalars import JSON as JSONScalar
 
 
 @strawberry.enum
@@ -120,10 +128,10 @@ class Payment:
 
     # Metadata (optional, for extensibility)
     description: str | None
-    metadata: strawberry.scalars.JSON | None
+    metadata: JSONScalar | None
 
     @classmethod
-    def from_model(cls, payment: any) -> "Payment":
+    def from_model(cls, payment: Any) -> "Payment":
         """Convert SQLAlchemy PaymentEntity model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(payment.payment_id)),

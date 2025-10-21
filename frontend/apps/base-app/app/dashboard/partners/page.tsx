@@ -1,1 +1,1 @@
-export { PartnerManagementView as default } from '@/components/partners/PartnerManagementView';
+export { PartnerManagementView as default } from "@/components/partners/PartnerManagementView";

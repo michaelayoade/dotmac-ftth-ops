@@ -20,13 +20,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -36,12 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import {
   MassConfigJob,
@@ -88,10 +77,7 @@ export function BulkOperationsDashboard() {
       setFirmwareSchedules(firmwareRes.data.schedules);
 
       // Calculate stats
-      const allOperations = [
-        ...configRes.data.jobs,
-        ...firmwareRes.data.schedules,
-      ];
+      const allOperations = [...configRes.data.jobs, ...firmwareRes.data.schedules];
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -118,20 +104,18 @@ export function BulkOperationsDashboard() {
 
       const totalCompleted = allOperations.reduce(
         (sum, op) => sum + (op.completed_devices || 0),
-        0
+        0,
       );
-      const totalFailed = allOperations.reduce(
-        (sum, op) => sum + (op.failed_devices || 0),
-        0
-      );
-      const successRate = totalCompleted + totalFailed > 0
-        ? (totalCompleted / (totalCompleted + totalFailed)) * 100
-        : 0;
+      const totalFailed = allOperations.reduce((sum, op) => sum + (op.failed_devices || 0), 0);
+      const successRate =
+        totalCompleted + totalFailed > 0
+          ? (totalCompleted / (totalCompleted + totalFailed)) * 100
+          : 0;
 
       setStats({
         total_operations: allOperations.length,
         active_operations: allOperations.filter(
-          (op) => op.status === "running" || op.status === "pending"
+          (op) => op.status === "running" || op.status === "pending",
         ).length,
         completed_today: completedToday,
         failed_today: failedToday,
@@ -155,9 +139,10 @@ export function BulkOperationsDashboard() {
 
   const handleCancelJob = async (jobId: string, type: "config" | "firmware") => {
     try {
-      const endpoint = type === "config"
-        ? `/api/v1/genieacs/mass-config/${jobId}/cancel`
-        : `/api/v1/genieacs/firmware-schedules/${jobId}/cancel`;
+      const endpoint =
+        type === "config"
+          ? `/api/v1/genieacs/mass-config/${jobId}/cancel`
+          : `/api/v1/genieacs/firmware-schedules/${jobId}/cancel`;
 
       await apiClient.post(endpoint);
       toast({
@@ -178,14 +163,17 @@ export function BulkOperationsDashboard() {
     const styles: Record<string, { variant: any; icon: any; color: string }> = {
       pending: { variant: "secondary", icon: Clock, color: "text-blue-600" },
       running: { variant: "default", icon: Play, color: "text-green-600" },
-      completed: { variant: "outline", icon: CheckCircle2, color: "text-green-600" },
+      completed: {
+        variant: "outline",
+        icon: CheckCircle2,
+        color: "text-green-600",
+      },
       failed: { variant: "destructive", icon: XCircle, color: "text-red-600" },
       cancelled: { variant: "outline", icon: Pause, color: "text-gray-600" },
     };
 
     const normalizedStatus = status as keyof typeof styles;
-    const styleRecord =
-      (styles[normalizedStatus] ?? styles.pending)!;
+    const styleRecord = (styles[normalizedStatus] ?? styles.pending)!;
     const Icon = styleRecord.icon;
 
     return (
@@ -203,13 +191,13 @@ export function BulkOperationsDashboard() {
     return (completed / total) * 100;
   };
 
-  const filteredConfigJobs = statusFilter === "all"
-    ? configJobs
-    : configJobs.filter((job) => job.status === statusFilter);
+  const filteredConfigJobs =
+    statusFilter === "all" ? configJobs : configJobs.filter((job) => job.status === statusFilter);
 
-  const filteredFirmwareSchedules = statusFilter === "all"
-    ? firmwareSchedules
-    : firmwareSchedules.filter((schedule) => schedule.status === statusFilter);
+  const filteredFirmwareSchedules =
+    statusFilter === "all"
+      ? firmwareSchedules
+      : firmwareSchedules.filter((schedule) => schedule.status === statusFilter);
 
   if (loading) {
     return (
@@ -256,9 +244,7 @@ export function BulkOperationsDashboard() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Active
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-blue-600">{stats.active_operations}</div>
@@ -319,9 +305,7 @@ export function BulkOperationsDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Recent Operations</CardTitle>
-              <CardDescription>
-                Mass configuration jobs and firmware upgrades
-              </CardDescription>
+              <CardDescription>Mass configuration jobs and firmware upgrades</CardDescription>
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-40">
@@ -375,9 +359,7 @@ export function BulkOperationsDashboard() {
                           )}
                         </div>
                         {job.description && (
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {job.description}
-                          </p>
+                          <p className="text-sm text-muted-foreground mb-2">{job.description}</p>
                         )}
                         <div className="grid grid-cols-3 gap-4 text-sm">
                           <div>
@@ -392,9 +374,7 @@ export function BulkOperationsDashboard() {
                           </div>
                           <div>
                             <span className="text-muted-foreground">Failed:</span>{" "}
-                            <span className="font-medium text-red-600">
-                              {job.failed_devices}
-                            </span>
+                            <span className="font-medium text-red-600">{job.failed_devices}</span>
                           </div>
                         </div>
                       </div>

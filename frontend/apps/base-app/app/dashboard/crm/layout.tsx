@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type PropsWithChildren, useMemo } from "react";
-import { Handshake, LayoutDashboard, Users, FileText, Compass, type LucideIcon } from "lucide-react";
+import {
+  Handshake,
+  LayoutDashboard,
+  Users,
+  FileText,
+  Compass,
+  type LucideIcon,
+} from "lucide-react";
 
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,7 +68,7 @@ function CRMLayoutContent({ children }: PropsWithChildren) {
     }
 
     const match = NAV_ITEMS.find(
-      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
+      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
     );
 
     return match?.href ?? "/dashboard/crm";
@@ -76,7 +83,8 @@ function CRMLayoutContent({ children }: PropsWithChildren) {
             <span>Customer Relationship Management</span>
           </div>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Guide prospects through the FTTH sales pipeline — manage leads, generate quotes, and verify serviceability to convert opportunities into paying subscribers.
+            Guide prospects through the FTTH sales pipeline — manage leads, generate quotes, and
+            verify serviceability to convert opportunities into paying subscribers.
           </p>
         </div>
         <Badge variant="outline" className="self-start">
@@ -102,7 +110,7 @@ function CRMLayoutContent({ children }: PropsWithChildren) {
                     "flex flex-1 flex-col gap-2 p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                     isActive
                       ? "bg-primary/10 text-primary"
-                      : "hover:bg-accent hover:text-foreground"
+                      : "hover:bg-accent hover:text-foreground",
                   )}
                   aria-current={isActive ? "page" : undefined}
                 >

@@ -97,9 +97,7 @@ export function LiveSessionMonitor() {
         },
       ];
 
-      const initialSessions = new Map(
-        mockSessions.map((s) => [s.session_id, s])
-      );
+      const initialSessions = new Map(mockSessions.map((s) => [s.session_id, s]));
       setActiveSessions(initialSessions);
 
       // Simulate random updates
@@ -131,7 +129,7 @@ export function LiveSessionMonitor() {
   }, [isConnected]);
 
   const sessionsArray = Array.from(activeSessions.values()).sort(
-    (a, b) => b.session_time_seconds - a.session_time_seconds
+    (a, b) => b.session_time_seconds - a.session_time_seconds,
   );
 
   const totalUpload = sessionsArray.reduce((sum, s) => sum + s.upload_bytes, 0);
@@ -179,9 +177,7 @@ export function LiveSessionMonitor() {
                 </span>
               )}
             </CardTitle>
-            <CardDescription>
-              Real-time monitoring of active user sessions
-            </CardDescription>
+            <CardDescription>Real-time monitoring of active user sessions</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Badge
@@ -202,21 +198,15 @@ export function LiveSessionMonitor() {
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Active Users</p>
-            <p className="text-2xl font-bold">
-              {activeSessions.size}
-            </p>
+            <p className="text-2xl font-bold">{activeSessions.size}</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Total Upload</p>
-            <p className="text-2xl font-bold text-green-500">
-              {formatBytes(totalUpload)}
-            </p>
+            <p className="text-2xl font-bold text-green-500">{formatBytes(totalUpload)}</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Total Download</p>
-            <p className="text-2xl font-bold text-blue-500">
-              {formatBytes(totalDownload)}
-            </p>
+            <p className="text-2xl font-bold text-blue-500">{formatBytes(totalDownload)}</p>
           </div>
         </div>
 
@@ -243,12 +233,8 @@ export function LiveSessionMonitor() {
               ) : (
                 sessionsArray.map((session) => (
                   <TableRow key={session.session_id}>
-                    <TableCell className="font-medium">
-                      {session.username}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {session.ip_address}
-                    </TableCell>
+                    <TableCell className="font-medium">{session.username}</TableCell>
+                    <TableCell className="font-mono text-xs">{session.ip_address}</TableCell>
                     <TableCell className="text-right text-green-600">
                       {formatBytes(session.upload_bytes)}
                     </TableCell>

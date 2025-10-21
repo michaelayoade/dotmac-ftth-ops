@@ -1,4 +1,4 @@
-import type { PaginatedResponse } from './api';
+import type { PaginatedResponse } from "./api";
 
 /**
  * ISP-focused domain models consumed by the frontend.
@@ -52,17 +52,17 @@ export interface ServiceStatistics {
 }
 
 export type ServiceStatusValue =
-  | 'pending'
-  | 'provisioning'
-  | 'provisioning_failed'
-  | 'active'
-  | 'suspended'
-  | 'suspended_fraud'
-  | 'degraded'
-  | 'maintenance'
-  | 'terminating'
-  | 'terminated'
-  | 'failed';
+  | "pending"
+  | "provisioning"
+  | "provisioning_failed"
+  | "active"
+  | "suspended"
+  | "suspended_fraud"
+  | "degraded"
+  | "maintenance"
+  | "terminating"
+  | "terminated"
+  | "failed";
 
 export interface ServiceInstanceSummary {
   id: string;

@@ -20,8 +20,8 @@ logger = structlog.get_logger(__name__)
 
 # Create separate routers for logs and metrics
 # Note: prefix is set during router registration in routers.py
-logs_router = APIRouter(prefix="/logs", )
-metrics_router = APIRouter(prefix="/metrics", )
+logs_router = APIRouter(prefix="/logs", tags=["Logs"])
+metrics_router = APIRouter(prefix="/metrics", tags=["Metrics"])
 
 
 # ========================================

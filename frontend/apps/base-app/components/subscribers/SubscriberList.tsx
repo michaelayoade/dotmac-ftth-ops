@@ -4,13 +4,13 @@
  * Data table component for displaying and managing subscribers
  */
 
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import type { ColumnDef } from '@tanstack/react-table';
-import { EnhancedDataTable, BulkAction } from '@/components/ui/EnhancedDataTable';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useMemo } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { EnhancedDataTable, BulkAction } from "@/components/ui/EnhancedDataTable";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,10 +18,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Wifi, WifiOff, Eye, Edit, Trash2, Ban, Play } from 'lucide-react';
-import type { Subscriber, SubscriberStatus, ConnectionType } from '@/hooks/useSubscribers';
-import { formatDistanceToNow } from 'date-fns';
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal, Wifi, WifiOff, Eye, Edit, Trash2, Ban, Play } from "lucide-react";
+import type { Subscriber, SubscriberStatus, ConnectionType } from "@/hooks/useSubscribers";
+import { formatDistanceToNow } from "date-fns";
 
 // ============================================================================
 // Types
@@ -44,32 +44,34 @@ interface SubscriberListProps {
 // Utility Functions
 // ============================================================================
 
-const getStatusBadgeVariant = (status: SubscriberStatus): 'default' | 'secondary' | 'destructive' | 'outline' => {
+const getStatusBadgeVariant = (
+  status: SubscriberStatus,
+): "default" | "secondary" | "destructive" | "outline" => {
   switch (status) {
-    case 'active':
-      return 'default';
-    case 'suspended':
-      return 'destructive';
-    case 'pending':
-      return 'secondary';
-    case 'inactive':
-      return 'outline';
-    case 'terminated':
-      return 'outline';
+    case "active":
+      return "default";
+    case "suspended":
+      return "destructive";
+    case "pending":
+      return "secondary";
+    case "inactive":
+      return "outline";
+    case "terminated":
+      return "outline";
     default:
-      return 'outline';
+      return "outline";
   }
 };
 
 const getConnectionTypeIcon = (type: ConnectionType) => {
   switch (type) {
-    case 'ftth':
+    case "ftth":
       return <Wifi className="h-4 w-4 text-green-500" />;
-    case 'fttb':
+    case "fttb":
       return <Wifi className="h-4 w-4 text-blue-500" />;
-    case 'wireless':
+    case "wireless":
       return <Wifi className="h-4 w-4 text-purple-500" />;
-    case 'hybrid':
+    case "hybrid":
       return <Wifi className="h-4 w-4 text-orange-500" />;
     default:
       return <WifiOff className="h-4 w-4 text-gray-400" />;
@@ -78,14 +80,14 @@ const getConnectionTypeIcon = (type: ConnectionType) => {
 
 const getConnectionTypeLabel = (type: ConnectionType): string => {
   switch (type) {
-    case 'ftth':
-      return 'FTTH';
-    case 'fttb':
-      return 'FTTB';
-    case 'wireless':
-      return 'Wireless';
-    case 'hybrid':
-      return 'Hybrid';
+    case "ftth":
+      return "FTTH";
+    case "fttb":
+      return "FTTB";
+    case "wireless":
+      return "Wireless";
+    case "hybrid":
+      return "Hybrid";
     default:
       return (type as string).toUpperCase();
   }
@@ -110,15 +112,13 @@ export function SubscriberList({
   const columns = useMemo<ColumnDef<Subscriber>[]>(
     () => [
       {
-        accessorKey: 'subscriber_id',
-        header: 'Subscriber ID',
-        cell: ({ row }) => (
-          <div className="font-mono text-sm">{row.original.subscriber_id}</div>
-        ),
+        accessorKey: "subscriber_id",
+        header: "Subscriber ID",
+        cell: ({ row }) => <div className="font-mono text-sm">{row.original.subscriber_id}</div>,
       },
       {
-        accessorKey: 'name',
-        header: 'Name',
+        accessorKey: "name",
+        header: "Name",
         cell: ({ row }) => (
           <div>
             <div className="font-medium">
@@ -129,27 +129,26 @@ export function SubscriberList({
         ),
       },
       {
-        accessorKey: 'phone',
-        header: 'Phone',
-        cell: ({ row }) => (
-          <div className="text-sm">{row.original.phone}</div>
-        ),
+        accessorKey: "phone",
+        header: "Phone",
+        cell: ({ row }) => <div className="text-sm">{row.original.phone}</div>,
       },
       {
-        accessorKey: 'service_address',
-        header: 'Service Address',
+        accessorKey: "service_address",
+        header: "Service Address",
         cell: ({ row }) => (
           <div>
             <div className="text-sm">{row.original.service_address}</div>
             <div className="text-xs text-muted-foreground">
-              {row.original.service_city}, {row.original.service_state} {row.original.service_postal_code}
+              {row.original.service_city}, {row.original.service_state}{" "}
+              {row.original.service_postal_code}
             </div>
           </div>
         ),
       },
       {
-        accessorKey: 'connection_type',
-        header: 'Connection',
+        accessorKey: "connection_type",
+        header: "Connection",
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             {getConnectionTypeIcon(row.original.connection_type)}
@@ -158,22 +157,24 @@ export function SubscriberList({
         ),
       },
       {
-        accessorKey: 'service_plan',
-        header: 'Plan',
+        accessorKey: "service_plan",
+        header: "Plan",
         cell: ({ row }) => (
           <div>
             {row.original.service_plan && (
               <div className="text-sm">{row.original.service_plan}</div>
             )}
             {row.original.bandwidth_mbps && (
-              <div className="text-xs text-muted-foreground">{row.original.bandwidth_mbps} Mbps</div>
+              <div className="text-xs text-muted-foreground">
+                {row.original.bandwidth_mbps} Mbps
+              </div>
             )}
           </div>
         ),
       },
       {
-        accessorKey: 'status',
-        header: 'Status',
+        accessorKey: "status",
+        header: "Status",
         cell: ({ row }) => (
           <Badge variant={getStatusBadgeVariant(row.original.status)}>
             {row.original.status.toUpperCase()}
@@ -181,34 +182,36 @@ export function SubscriberList({
         ),
       },
       {
-        accessorKey: 'last_online',
-        header: 'Last Online',
+        accessorKey: "last_online",
+        header: "Last Online",
         cell: ({ row }) => (
           <div className="text-sm text-muted-foreground">
             {row.original.last_online
-              ? formatDistanceToNow(new Date(row.original.last_online), { addSuffix: true })
-              : 'Never'}
+              ? formatDistanceToNow(new Date(row.original.last_online), {
+                  addSuffix: true,
+                })
+              : "Never"}
           </div>
         ),
       },
       {
-        accessorKey: 'uptime_percentage',
-        header: 'Uptime',
+        accessorKey: "uptime_percentage",
+        header: "Uptime",
         cell: ({ row }) => (
           <div className="text-sm">
             {row.original.uptime_percentage !== undefined
               ? `${row.original.uptime_percentage.toFixed(1)}%`
-              : '-'}
+              : "-"}
           </div>
         ),
       },
       {
-        id: 'actions',
-        header: 'Actions',
+        id: "actions",
+        header: "Actions",
         cell: ({ row }) => {
           const subscriber = row.original;
-          const canSuspend = subscriber.status === 'active';
-          const canActivate = subscriber.status === 'suspended' || subscriber.status === 'pending';
+          const canSuspend = subscriber.status === "active";
+          const canActivate = subscriber.status === "suspended" || subscriber.status === "pending";
 
           return (
             <DropdownMenu>
@@ -262,7 +265,7 @@ export function SubscriberList({
         },
       },
     ],
-    [onView, onEdit, onDelete, onSuspend, onActivate]
+    [onView, onEdit, onDelete, onSuspend, onActivate],
   );
 
   return (

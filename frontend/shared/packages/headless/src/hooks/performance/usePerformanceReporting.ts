@@ -3,13 +3,13 @@
  * Handles metric reporting and data transmission
  */
 
-import { useCallback, useEffect, useRef } from 'react';
-import type { PerformanceMetrics, PerformanceObserverConfig } from './types';
-import { reportMetrics } from './reportingUtils';
+import { useCallback, useEffect, useRef } from "react";
+import type { PerformanceMetrics, PerformanceObserverConfig } from "./types";
+import { reportMetrics } from "./reportingUtils";
 
 export function usePerformanceReporting(
   metrics: React.MutableRefObject<PerformanceMetrics>,
-  config: PerformanceObserverConfig
+  config: PerformanceObserverConfig,
 ) {
   const reportingTimerRef = useRef<NodeJS.Timeout>();
 

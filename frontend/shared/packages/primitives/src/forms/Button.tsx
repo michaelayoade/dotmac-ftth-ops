@@ -5,54 +5,54 @@
  * accessibility features, loading states, and security considerations
  */
 
-import { Slot } from '@radix-ui/react-slot';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { clsx } from 'clsx';
-import * as React from 'react';
-import { Loader2 } from 'lucide-react';
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { clsx } from "clsx";
+import * as React from "react";
+import { Loader2 } from "lucide-react";
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         // Base variants
-        default: 'bg-primary text-primary-foreground shadow hover:bg-primary/90',
-        destructive: 'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90',
+        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         outline:
-          'border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground',
-        secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
+          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
 
         // Portal-specific variants
         admin:
-          'bg-blue-600 text-white shadow hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+          "bg-blue-600 text-white shadow hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
         customer:
-          'bg-green-600 text-white shadow hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2',
+          "bg-green-600 text-white shadow hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2",
         reseller:
-          'bg-purple-600 text-white shadow hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2',
+          "bg-purple-600 text-white shadow hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2",
         technician:
-          'bg-orange-600 text-white shadow hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2',
+          "bg-orange-600 text-white shadow hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2",
         management:
-          'bg-slate-800 text-white shadow hover:bg-slate-900 focus:ring-2 focus:ring-slate-600 focus:ring-offset-2',
+          "bg-slate-800 text-white shadow hover:bg-slate-900 focus:ring-2 focus:ring-slate-600 focus:ring-offset-2",
       },
       size: {
-        default: 'h-9 px-4 py-2',
-        sm: 'h-8 rounded-md px-3 text-xs',
-        lg: 'h-10 rounded-md px-8',
-        xl: 'h-12 rounded-md px-10 text-base',
-        icon: 'h-9 w-9',
+        default: "h-9 px-4 py-2",
+        sm: "h-8 rounded-md px-3 text-xs",
+        lg: "h-10 rounded-md px-8",
+        xl: "h-12 rounded-md px-10 text-base",
+        icon: "h-9 w-9",
       },
       loading: {
-        true: 'cursor-not-allowed opacity-70',
+        true: "cursor-not-allowed opacity-70",
       },
     },
     defaultVariants: {
-      variant: 'default',
-      size: 'default',
+      variant: "default",
+      size: "default",
     },
-  }
+  },
 );
 
 export interface ButtonProps
@@ -72,7 +72,7 @@ export interface ButtonProps
   /** Icon to display (uses leftIcon by default, rightIcon if iconPosition is 'right') */
   icon?: React.ReactNode;
   /** Position of the icon */
-  iconPosition?: 'left' | 'right';
+  iconPosition?: "left" | "right";
   /** Whether to prevent form submission */
   preventFormSubmission?: boolean;
   /** Custom click handler with security considerations */
@@ -95,27 +95,27 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       leftIcon,
       rightIcon,
       icon,
-      iconPosition = 'left',
+      iconPosition = "left",
       preventFormSubmission = false,
       onSecureClick,
       showAsyncLoading = true,
       disabled,
       onClick,
-      type = 'button',
+      type = "button",
       children,
       ...props
     },
-    ref
+    ref,
   ) => {
     const [isAsyncLoading, setIsAsyncLoading] = React.useState(false);
-    const Comp = asChild ? Slot : 'button';
+    const Comp = asChild ? Slot : "button";
 
     // Use only isLoading - no backward compatibility
     const actuallyLoading = isLoading;
 
     // Handle icon props (icon prop can override leftIcon/rightIcon based on position)
-    const resolvedLeftIcon = icon && iconPosition === 'left' ? icon : leftIcon;
-    const resolvedRightIcon = icon && iconPosition === 'right' ? icon : rightIcon;
+    const resolvedLeftIcon = icon && iconPosition === "left" ? icon : leftIcon;
+    const resolvedRightIcon = icon && iconPosition === "right" ? icon : rightIcon;
 
     // Determine if button should be disabled
     const isButtonDisabled = disabled || actuallyLoading || isAsyncLoading;
@@ -137,7 +137,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           try {
             await onSecureClick(event);
           } catch (error) {
-            console.error('Secure click handler error:', error);
+            console.error("Secure click handler error:", error);
           } finally {
             if (showAsyncLoading) {
               setIsAsyncLoading(false);
@@ -153,11 +153,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             try {
               const result = onClick(event);
               // Handle potential promise
-              if (result && typeof result.then === 'function') {
+              if (result && typeof result.then === "function") {
                 await result;
               }
             } catch (error) {
-              console.error('Click handler error:', error);
+              console.error("Click handler error:", error);
             } finally {
               setIsAsyncLoading(false);
             }
@@ -166,7 +166,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           }
         }
       },
-      [onClick, onSecureClick, preventFormSubmission, showAsyncLoading]
+      [onClick, onSecureClick, preventFormSubmission, showAsyncLoading],
     );
 
     // Determine what to show inside button
@@ -175,24 +175,24 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     // Custom loading spinner matching UI package behavior
     const LoadingIcon = loadingComponent || (
       <svg
-        className='animate-spin h-4 w-4'
-        xmlns='http://www.w3.org/2000/svg'
-        fill='none'
-        viewBox='0 0 24 24'
-        aria-hidden='true'
+        className="animate-spin h-4 w-4"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        aria-hidden="true"
       >
         <circle
-          className='opacity-25'
-          cx='12'
-          cy='12'
-          r='10'
-          stroke='currentColor'
-          strokeWidth='4'
+          className="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="4"
         />
         <path
-          className='opacity-75'
-          fill='currentColor'
-          d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+          className="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
         />
       </svg>
     );
@@ -206,7 +206,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           disabled={disabled} // Don't modify disabled when asChild
           type={type}
           onClick={onClick} // Use original onClick when asChild
-          aria-disabled={disabled ? 'true' : undefined}
+          aria-disabled={disabled ? "true" : undefined}
           {...props}
         >
           {children}
@@ -253,14 +253,14 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={isButtonDisabled}
         type={type}
         onClick={handleClick}
-        aria-disabled={isButtonDisabled ? 'true' : undefined}
+        aria-disabled={isButtonDisabled ? "true" : undefined}
         {...props}
       >
         {renderContent()}
       </Comp>
     );
-  }
+  },
 );
-Button.displayName = 'Button';
+Button.displayName = "Button";
 
 export { Button, buttonVariants };

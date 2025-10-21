@@ -26,30 +26,15 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   FileResponse,
   FirmwareUpgradeSchedule,
@@ -64,7 +49,9 @@ export function FirmwareManagement() {
   const [firmwareFiles, setFirmwareFiles] = useState<FileResponse[]>([]);
   const [schedules, setSchedules] = useState<FirmwareUpgradeSchedule[]>([]);
   const [selectedSchedule, setSelectedSchedule] = useState<FirmwareUpgradeSchedule | null>(null);
-  const [scheduleDetails, setScheduleDetails] = useState<FirmwareUpgradeScheduleResponse | null>(null);
+  const [scheduleDetails, setScheduleDetails] = useState<FirmwareUpgradeScheduleResponse | null>(
+    null,
+  );
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -116,7 +103,7 @@ export function FirmwareManagement() {
   const loadScheduleDetails = async (scheduleId: string) => {
     try {
       const response = await apiClient.get<FirmwareUpgradeScheduleResponse>(
-        `/api/v1/genieacs/firmware-upgrades/schedules/${scheduleId}`
+        `/api/v1/genieacs/firmware-upgrades/schedules/${scheduleId}`,
       );
       setScheduleDetails(response.data);
     } catch (err: any) {
@@ -160,7 +147,7 @@ export function FirmwareManagement() {
 
       const response = await apiClient.post<FirmwareUpgradeScheduleResponse>(
         "/api/v1/genieacs/firmware-upgrades/schedule",
-        payload
+        payload,
       );
 
       toast({
@@ -196,7 +183,7 @@ export function FirmwareManagement() {
   const handleExecuteSchedule = async (scheduleId: string) => {
     try {
       await apiClient.post<FirmwareUpgradeScheduleResponse>(
-        `/api/v1/genieacs/firmware-upgrades/schedules/${scheduleId}/execute`
+        `/api/v1/genieacs/firmware-upgrades/schedules/${scheduleId}/execute`,
       );
 
       toast({
@@ -219,9 +206,7 @@ export function FirmwareManagement() {
 
   const handleCancelSchedule = async (scheduleId: string) => {
     try {
-      await apiClient.delete(
-        `/api/v1/genieacs/firmware-upgrades/schedules/${scheduleId}`
-      );
+      await apiClient.delete(`/api/v1/genieacs/firmware-upgrades/schedules/${scheduleId}`);
 
       toast({
         title: "Schedule Cancelled",
@@ -255,14 +240,17 @@ export function FirmwareManagement() {
     const styles: Record<string, { variant: any; icon: any; color: string }> = {
       pending: { variant: "secondary", icon: Clock, color: "text-blue-600" },
       running: { variant: "default", icon: Play, color: "text-green-600" },
-      completed: { variant: "outline", icon: CheckCircle2, color: "text-green-600" },
+      completed: {
+        variant: "outline",
+        icon: CheckCircle2,
+        color: "text-green-600",
+      },
       failed: { variant: "destructive", icon: XCircle, color: "text-red-600" },
       cancelled: { variant: "outline", icon: Pause, color: "text-gray-600" },
     };
 
     const normalizedStatus = status as keyof typeof styles;
-    const styleRecord =
-      (styles[normalizedStatus] ?? styles.pending)!;
+    const styleRecord = (styles[normalizedStatus] ?? styles.pending)!;
     const Icon = styleRecord.icon;
 
     return (
@@ -276,7 +264,8 @@ export function FirmwareManagement() {
   const getProgressPercentage = (schedule: FirmwareUpgradeSchedule): number => {
     const total = scheduleDetails?.total_devices || schedule.total_devices || 0;
     if (total === 0) return 0;
-    const completed = (scheduleDetails?.completed_devices || 0) + (scheduleDetails?.failed_devices || 0);
+    const completed =
+      (scheduleDetails?.completed_devices || 0) + (scheduleDetails?.failed_devices || 0);
     return (completed / total) * 100;
   };
 
@@ -289,8 +278,7 @@ export function FirmwareManagement() {
     };
 
     const normalizedStatus = status as keyof typeof styles;
-    const styleRecord =
-      (styles[normalizedStatus] ?? styles.pending)!;
+    const styleRecord = (styles[normalizedStatus] ?? styles.pending)!;
     const Icon = styleRecord.icon;
 
     return (
@@ -307,9 +295,7 @@ export function FirmwareManagement() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Firmware Management</h2>
-          <p className="text-muted-foreground">
-            Schedule and manage CPE firmware upgrades
-          </p>
+          <p className="text-muted-foreground">Schedule and manage CPE firmware upgrades</p>
         </div>
         <Button onClick={() => setShowCreateModal(true)}>
           <Calendar className="w-4 h-4 mr-2" />
@@ -337,7 +323,7 @@ export function FirmwareManagement() {
               <div>
                 <p className="text-sm text-muted-foreground">Running</p>
                 <p className="text-2xl font-bold">
-                  {schedules.filter(s => s.status === "running").length}
+                  {schedules.filter((s) => s.status === "running").length}
                 </p>
               </div>
               <Play className="w-8 h-8 text-green-600" />
@@ -351,7 +337,7 @@ export function FirmwareManagement() {
               <div>
                 <p className="text-sm text-muted-foreground">Pending</p>
                 <p className="text-2xl font-bold">
-                  {schedules.filter(s => s.status === "pending").length}
+                  {schedules.filter((s) => s.status === "pending").length}
                 </p>
               </div>
               <Clock className="w-8 h-8 text-blue-600" />
@@ -376,9 +362,7 @@ export function FirmwareManagement() {
       <Card>
         <CardHeader>
           <CardTitle>Firmware Upgrade Schedules</CardTitle>
-          <CardDescription>
-            View and manage scheduled firmware upgrades
-          </CardDescription>
+          <CardDescription>View and manage scheduled firmware upgrades</CardDescription>
         </CardHeader>
         <CardContent>
           {loading && schedules.length === 0 ? (
@@ -390,7 +374,8 @@ export function FirmwareManagement() {
               <Info className="h-4 w-4" />
               <AlertTitle>No Schedules</AlertTitle>
               <AlertDescription>
-                No firmware upgrade schedules have been created yet. Click &quot;Schedule Upgrade&quot; to create one.
+                No firmware upgrade schedules have been created yet. Click &quot;Schedule
+                Upgrade&quot; to create one.
               </AlertDescription>
             </Alert>
           ) : (
@@ -406,9 +391,7 @@ export function FirmwareManagement() {
                         </div>
 
                         {schedule.description && (
-                          <p className="text-sm text-muted-foreground">
-                            {schedule.description}
-                          </p>
+                          <p className="text-sm text-muted-foreground">{schedule.description}</p>
                         )}
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
@@ -429,7 +412,9 @@ export function FirmwareManagement() {
                           <div>
                             <span className="text-muted-foreground">Created:</span>
                             <p className="font-medium">
-                              {schedule.created_at ? new Date(schedule.created_at).toLocaleDateString() : "N/A"}
+                              {schedule.created_at
+                                ? new Date(schedule.created_at).toLocaleDateString()
+                                : "N/A"}
                             </p>
                           </div>
                         </div>
@@ -438,7 +423,9 @@ export function FirmwareManagement() {
                           <div className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-muted-foreground">Progress</span>
-                              <span className="font-medium">{Math.round(getProgressPercentage(schedule))}%</span>
+                              <span className="font-medium">
+                                {Math.round(getProgressPercentage(schedule))}%
+                              </span>
                             </div>
                             <Progress value={getProgressPercentage(schedule)} className="h-2" />
                           </div>
@@ -459,7 +446,9 @@ export function FirmwareManagement() {
                           <Button
                             variant="default"
                             size="sm"
-                            onClick={() => schedule.schedule_id && handleExecuteSchedule(schedule.schedule_id)}
+                            onClick={() =>
+                              schedule.schedule_id && handleExecuteSchedule(schedule.schedule_id)
+                            }
                           >
                             <Play className="w-4 h-4 mr-1" />
                             Execute
@@ -470,7 +459,9 @@ export function FirmwareManagement() {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => schedule.schedule_id && handleCancelSchedule(schedule.schedule_id)}
+                            onClick={() =>
+                              schedule.schedule_id && handleCancelSchedule(schedule.schedule_id)
+                            }
                           >
                             <XCircle className="w-4 h-4 mr-1" />
                             Cancel
@@ -531,18 +522,25 @@ export function FirmwareManagement() {
                 id="firmware_file"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={createForm.firmware_file}
-                onChange={(e) => setCreateForm({ ...createForm, firmware_file: e.target.value })}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    firmware_file: e.target.value,
+                  })
+                }
               >
                 <option value="">Select firmware file</option>
                 {firmwareFiles.map((file) => (
                   <option key={file.file_id} value={file.file_id}>
-                    {file.file_id} ({file.length ? `${(file.length / 1024 / 1024).toFixed(2)} MB` : "Unknown size"})
+                    {file.file_id} (
+                    {file.length ? `${(file.length / 1024 / 1024).toFixed(2)} MB` : "Unknown size"})
                   </option>
                 ))}
               </select>
               <p className="text-xs text-muted-foreground">
-                {firmwareFiles.length === 0 ? "No firmware files available. Upload files to GenieACS first." :
-                 `${firmwareFiles.length} firmware file(s) available`}
+                {firmwareFiles.length === 0
+                  ? "No firmware files available. Upload files to GenieACS first."
+                  : `${firmwareFiles.length} firmware file(s) available`}
               </p>
             </div>
 
@@ -569,7 +567,12 @@ export function FirmwareManagement() {
                 id="scheduled_at"
                 type="datetime-local"
                 value={createForm.scheduled_at.slice(0, 16)}
-                onChange={(e) => setCreateForm({ ...createForm, scheduled_at: new Date(e.target.value).toISOString() })}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    scheduled_at: new Date(e.target.value).toISOString(),
+                  })
+                }
               />
             </div>
 
@@ -582,7 +585,12 @@ export function FirmwareManagement() {
                 min="1"
                 max="50"
                 value={createForm.max_concurrent}
-                onChange={(e) => setCreateForm({ ...createForm, max_concurrent: parseInt(e.target.value) || 5 })}
+                onChange={(e) =>
+                  setCreateForm({
+                    ...createForm,
+                    max_concurrent: parseInt(e.target.value) || 5,
+                  })
+                }
               />
               <p className="text-xs text-muted-foreground">
                 Maximum number of devices to upgrade simultaneously (1-50)
@@ -625,9 +633,7 @@ export function FirmwareManagement() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedSchedule?.name}</DialogTitle>
-            <DialogDescription>
-              Firmware upgrade schedule details and progress
-            </DialogDescription>
+            <DialogDescription>Firmware upgrade schedule details and progress</DialogDescription>
           </DialogHeader>
 
           {selectedSchedule && (

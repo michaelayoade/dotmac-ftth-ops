@@ -1,6 +1,6 @@
-import * as React from 'react';
-import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
+import * as React from "react";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
 interface BreadcrumbItem {
   label: string;
@@ -24,7 +24,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
                 <ChevronRight className="h-4 w-4 text-foreground0 mx-2" aria-hidden="true" />
               )}
               {isLast || !item.href ? (
-                <span className="text-muted-foreground" aria-current={isLast ? 'page' : undefined}>
+                <span className="text-muted-foreground" aria-current={isLast ? "page" : undefined}>
                   {item.label}
                 </span>
               ) : (

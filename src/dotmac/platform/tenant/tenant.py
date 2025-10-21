@@ -45,7 +45,9 @@ class TenantIdentityResolver:
 
         # Check for platform admin tenant impersonation first
         target_tenant = request.headers.get("X-Target-Tenant-ID")
-        if target_tenant:
+        if isinstance(target_tenant, str):
+            target_tenant = target_tenant.strip()
+        if isinstance(target_tenant, str) and target_tenant:
             # Platform admin is targeting a specific tenant
             # Authorization check happens in the dependency layer
             return target_tenant
@@ -53,7 +55,9 @@ class TenantIdentityResolver:
         # Header
         try:
             tenant_id = request.headers.get(self.header_name)
-            if tenant_id:
+            if isinstance(tenant_id, str):
+                tenant_id = tenant_id.strip()
+            if isinstance(tenant_id, str) and tenant_id:
                 return tenant_id
         except Exception:
             pass
@@ -61,7 +65,9 @@ class TenantIdentityResolver:
         # Query param
         try:
             tenant_id = request.query_params.get(self.query_param)
-            if tenant_id:
+            if isinstance(tenant_id, str):
+                tenant_id = tenant_id.strip()
+            if isinstance(tenant_id, str) and tenant_id:
                 return tenant_id
         except Exception:
             pass
@@ -70,7 +76,10 @@ class TenantIdentityResolver:
         try:
             state = request.state
             state_dict = getattr(state, "__dict__", {})
-            return state_dict.get("tenant_id") if isinstance(state_dict, dict) else None
+            if isinstance(state_dict, dict):
+                state_tenant = state_dict.get("tenant_id")
+                return state_tenant if isinstance(state_tenant, str) else None
+            return None
         except Exception:
             return None
 
@@ -106,6 +115,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
             "/api/v1/auth/rbac/my-permissions",  # Allow authenticated users to fetch their permissions
             "/api/v1/secrets/health",  # Vault health check is public
             "/api/v1/health",  # Health check endpoint (also available at /health)
+            "/api/v1/platform/config",
+            "/api/v1/platform/health",
             "/api/v1/monitoring/alerts/webhook",  # Alertmanager webhook doesn't provide tenant context
         }
         # Paths where tenant is optional (middleware runs but doesn't require tenant)
@@ -122,8 +133,23 @@ class TenantMiddleware(BaseHTTPMiddleware):
         self, request: Request, call_next: Callable[[Request], Awaitable[Any]]
     ) -> Any:
         """Process request and set tenant context."""
+        path = request.url.path
+        register_path = "/api/v1/auth/register"
+
         # Skip tenant validation for exempt paths
-        if request.url.path in self.exempt_paths:
+        skip_tenant_validation = False
+        if path in self.exempt_paths:
+            # Registration requires explicit tenant context when header enforcement is enabled
+            if (
+                path == register_path
+                and self.require_tenant
+                and not self.config.is_single_tenant
+            ):
+                skip_tenant_validation = False
+            else:
+                skip_tenant_validation = True
+
+        if skip_tenant_validation:
             # In single-tenant mode, still set default tenant for consistency
             if self.config.is_single_tenant:
                 request.state.tenant_id = self.config.default_tenant_id
@@ -139,10 +165,11 @@ class TenantMiddleware(BaseHTTPMiddleware):
         tenant_id = self.config.get_tenant_id_for_request(resolved_id)
 
         # Check if this is a platform admin request (they can operate without tenant)
-        is_platform_admin_request = request.headers.get("X-Target-Tenant-ID") is not None
+        override_header = request.headers.get("X-Target-Tenant-ID")
+        is_platform_admin_request = isinstance(override_header, str) and override_header.strip() != ""
 
         # Check if this path allows optional tenant
-        is_optional_tenant_path = request.url.path in self.optional_tenant_paths
+        is_optional_tenant_path = path in self.optional_tenant_paths
 
         if tenant_id:
             # Set tenant ID on request state and context var

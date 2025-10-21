@@ -292,10 +292,13 @@ class TestSettingsProductionValidation:
             os.environ,
             {
                 "ENVIRONMENT": "production",
-                "SECRET_KEY": "production-secret-key-12345",
+                "SECRET_KEY": "production-secret-key-1234567890",
                 "JWT__SECRET_KEY": "jwt-secret-key-production-123456789012",  # 32+ chars
                 "TRUSTED_HOSTS": '["example.com", "api.example.com"]',  # JSON format
                 "REDIS__HOST": "redis.production.example.com",
+                "VAULT__ENABLED": "true",
+                "DATABASE__PASSWORD": "super-secure-db-password",
+                "STORAGE__SECRET_KEY": "super-secure-storage-key",
             },
         ):
             # Create settings and validate
@@ -316,10 +319,13 @@ class TestSettingsProductionValidation:
             os.environ,
             {
                 "ENVIRONMENT": "production",
-                "SECRET_KEY": "production-secret-key-12345",
+                "SECRET_KEY": "production-secret-key-1234567890",
                 "JWT__SECRET_KEY": "jwt-secret-key-production-123456789012",  # 32+ chars
                 "TRUSTED_HOSTS": '["example.com", "api.example.com"]',  # JSON format
                 "REDIS__HOST": "localhost",  # INVALID for production
+                "VAULT__ENABLED": "true",
+                "DATABASE__PASSWORD": "super-secure-db-password",
+                "STORAGE__SECRET_KEY": "super-secure-storage-key",
             },
         ):
             settings = Settings()  # type: ignore[call-arg]

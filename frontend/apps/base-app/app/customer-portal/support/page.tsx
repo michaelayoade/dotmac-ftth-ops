@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
@@ -69,13 +69,14 @@ export default function CustomerSupportPage() {
     );
   }
 
-  const filteredTickets = tickets?.filter((ticket) => {
-    const matchesSearch =
-      ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ticket.ticket_number.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === "all" || ticket.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  }) || [];
+  const filteredTickets =
+    tickets?.filter((ticket) => {
+      const matchesSearch =
+        ticket.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        ticket.ticket_number.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = filterStatus === "all" || ticket.status === filterStatus;
+      return matchesSearch && matchesStatus;
+    }) || [];
 
   const handleCreateTicket = async () => {
     if (!newTicket.subject || !newTicket.description || !newTicket.category) {
@@ -173,9 +174,7 @@ export default function CustomerSupportPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Support</h1>
-          <p className="text-muted-foreground">
-            Get help with your service
-          </p>
+          <p className="text-muted-foreground">Get help with your service</p>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -230,7 +229,12 @@ export default function CustomerSupportPage() {
                   <Label htmlFor="priority">Priority</Label>
                   <Select
                     value={newTicket.priority}
-                    onValueChange={(v) => setNewTicket({ ...newTicket, priority: v as TicketPriority })}
+                    onValueChange={(v) =>
+                      setNewTicket({
+                        ...newTicket,
+                        priority: v as TicketPriority,
+                      })
+                    }
                   >
                     <SelectTrigger id="priority">
                       <SelectValue />
@@ -296,9 +300,7 @@ export default function CustomerSupportPage() {
               Speak with a support representative
             </p>
             <p className="text-lg font-bold">1-800-123-4567</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Available 24/7
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Available 24/7</p>
           </CardContent>
         </Card>
 
@@ -310,9 +312,7 @@ export default function CustomerSupportPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Chat with our support team
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">Chat with our support team</p>
             <Button variant="outline" className="w-full">
               Start Chat
             </Button>
@@ -327,9 +327,7 @@ export default function CustomerSupportPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Browse FAQs and guides
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">Browse FAQs and guides</p>
             <Button variant="outline" className="w-full">
               Browse Articles
             </Button>
@@ -344,9 +342,7 @@ export default function CustomerSupportPage() {
             <Headphones className="h-5 w-5" />
             My Support Tickets
           </CardTitle>
-          <CardDescription>
-            Track your support requests
-          </CardDescription>
+          <CardDescription>Track your support requests</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Filters */}
@@ -380,11 +376,7 @@ export default function CustomerSupportPage() {
                 <Headphones className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p>No tickets found</p>
                 {searchQuery && (
-                  <Button
-                    variant="link"
-                    onClick={() => setSearchQuery("")}
-                    className="mt-2"
-                  >
+                  <Button variant="link" onClick={() => setSearchQuery("")} className="mt-2">
                     Clear search
                   </Button>
                 )}
@@ -410,11 +402,17 @@ export default function CustomerSupportPage() {
                         <span>Category: {ticket.category}</span>
                         <span>•</span>
                         <span>
-                          Created {formatDistanceToNow(new Date(ticket.created_at), { addSuffix: true })}
+                          Created{" "}
+                          {formatDistanceToNow(new Date(ticket.created_at), {
+                            addSuffix: true,
+                          })}
                         </span>
                         <span>•</span>
                         <span>
-                          Updated {formatDistanceToNow(new Date(ticket.updated_at), { addSuffix: true })}
+                          Updated{" "}
+                          {formatDistanceToNow(new Date(ticket.updated_at), {
+                            addSuffix: true,
+                          })}
                         </span>
                       </div>
                     </div>

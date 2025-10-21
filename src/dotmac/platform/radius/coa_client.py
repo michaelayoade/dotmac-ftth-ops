@@ -184,7 +184,7 @@ class CoAClient:
 
         # Fallback to settings
         if settings.radius.shared_secret:
-            if settings.environment.value == "production":
+            if settings.is_production:
                 logger.error(
                     "SECURITY WARNING: Using RADIUS secret from settings in production! "
                     "Secrets MUST be stored in Vault for production deployments."
@@ -195,7 +195,7 @@ class CoAClient:
             return str(settings.radius.shared_secret)
 
         # Development fallback for local testing when no secret is configured anywhere
-        if settings.environment.value != "production":
+        if not settings.is_production:
             fallback_secret = "changeme_radius_shared_secret"
             logger.warning(
                 "Using fallback RADIUS secret for development. "

@@ -2,40 +2,40 @@
  * Refactored FileUpload component using composition pattern
  * Separated concerns for better testability and maintainability
  */
-'use client';
+"use client";
 
-import { cva, type VariantProps } from 'class-variance-authority';
-import { clsx } from 'clsx';
-import type React from 'react';
-import { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
+import { cva, type VariantProps } from "class-variance-authority";
+import { clsx } from "clsx";
+import type React from "react";
+import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 
 // Basic file upload variants
-const uploadVariants = cva('file-upload', {
+const uploadVariants = cva("file-upload", {
   variants: {
     variant: {
-      default: 'upload-default',
-      outlined: 'upload-outlined',
-      filled: 'upload-filled',
-      minimal: 'upload-minimal',
+      default: "upload-default",
+      outlined: "upload-outlined",
+      filled: "upload-filled",
+      minimal: "upload-minimal",
     },
     size: {
-      sm: 'upload-sm',
-      md: 'upload-md',
-      lg: 'upload-lg',
+      sm: "upload-sm",
+      md: "upload-md",
+      lg: "upload-lg",
     },
     state: {
-      idle: 'state-idle',
-      dragover: 'state-dragover',
-      uploading: 'state-uploading',
-      success: 'state-success',
-      error: 'state-error',
-      disabled: 'state-disabled',
+      idle: "state-idle",
+      dragover: "state-dragover",
+      uploading: "state-uploading",
+      success: "state-success",
+      error: "state-error",
+      disabled: "state-disabled",
     },
   },
   defaultVariants: {
-    variant: 'default',
-    size: 'md',
-    state: 'idle',
+    variant: "default",
+    size: "md",
+    state: "idle",
   },
 });
 
@@ -52,14 +52,14 @@ export interface FileValidation {
 export interface SimpleFile {
   id: string;
   file: File;
-  status: 'pending' | 'uploading' | 'success' | 'error';
+  status: "pending" | "uploading" | "success" | "error";
   progress?: number;
   error?: string;
 }
 
 // Base FileUpload props (simplified)
 export interface BaseFileUploadProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'>,
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange">,
     VariantProps<typeof uploadVariants> {
   multiple?: boolean;
   disabled?: boolean;
@@ -88,14 +88,14 @@ export const FileValidationUtils = {
     // Type validation
     if (validation.acceptedTypes && validation.acceptedTypes.length > 0) {
       const isAccepted = validation.acceptedTypes.some((type) => {
-        if (type.startsWith('.')) {
+        if (type.startsWith(".")) {
           return file.name.toLowerCase().endsWith(type.toLowerCase());
         }
         return file.type.includes(type) || file.type === type;
       });
 
       if (!isAccepted) {
-        return `File type ${file.type} is not allowed. Accepted types: ${validation.acceptedTypes.join(', ')}`;
+        return `File type ${file.type} is not allowed. Accepted types: ${validation.acceptedTypes.join(", ")}`;
       }
     }
 
@@ -112,7 +112,7 @@ export const FileValidationUtils = {
     }
 
     if (validation.required && files.length === 0) {
-      return 'At least one file is required';
+      return "At least one file is required";
     }
 
     return null;
@@ -120,44 +120,44 @@ export const FileValidationUtils = {
 
   formatSize: (bytes: number): string => {
     if (bytes === 0) {
-      return '0 Bytes';
+      return "0 Bytes";
     }
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
   },
 
   isImageFile: (file: File): boolean => {
-    return file.type.startsWith('image/');
+    return file.type.startsWith("image/");
   },
 
   getFileIcon: (file: File): string => {
-    if (file.type.startsWith('image/')) {
-      return '🖼️';
+    if (file.type.startsWith("image/")) {
+      return "🖼️";
     }
-    if (file.type.startsWith('video/')) {
-      return '🎥';
+    if (file.type.startsWith("video/")) {
+      return "🎥";
     }
-    if (file.type.startsWith('audio/')) {
-      return '🎵';
+    if (file.type.startsWith("audio/")) {
+      return "🎵";
     }
-    if (file.type.includes('pdf')) {
-      return '📄';
+    if (file.type.includes("pdf")) {
+      return "📄";
     }
-    if (file.type.includes('document') || file.type.includes('word')) {
-      return '📝';
+    if (file.type.includes("document") || file.type.includes("word")) {
+      return "📝";
     }
-    if (file.type.includes('spreadsheet') || file.type.includes('excel')) {
-      return '📊';
+    if (file.type.includes("spreadsheet") || file.type.includes("excel")) {
+      return "📊";
     }
-    if (file.type.includes('presentation') || file.type.includes('powerpoint')) {
-      return '📋';
+    if (file.type.includes("presentation") || file.type.includes("powerpoint")) {
+      return "📋";
     }
-    if (file.type.includes('zip') || file.type.includes('rar')) {
-      return '🗜️';
+    if (file.type.includes("zip") || file.type.includes("rar")) {
+      return "🗜️";
     }
-    return '📁';
+    return "📁";
   },
 };
 
@@ -172,7 +172,7 @@ export const useDragAndDrop = (onFileDrop: (files: File[]) => void, disabled?: b
         setIsDragOver(true);
       }
     },
-    [disabled]
+    [disabled],
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -186,7 +186,7 @@ export const useDragAndDrop = (onFileDrop: (files: File[]) => void, disabled?: b
         setIsDragOver(false);
       }
     },
-    [disabled]
+    [disabled],
   );
 
   const handleDrop = useCallback(
@@ -198,7 +198,7 @@ export const useDragAndDrop = (onFileDrop: (files: File[]) => void, disabled?: b
         onFileDrop(files);
       }
     },
-    [disabled, onFileDrop]
+    [disabled, onFileDrop],
   );
 
   return {
@@ -216,7 +216,7 @@ export const useDragAndDrop = (onFileDrop: (files: File[]) => void, disabled?: b
 export const useFileInput = (
   onFileSelect: (files: File[]) => void,
   multiple?: boolean,
-  accept?: string
+  accept?: string,
 ) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -228,10 +228,10 @@ export const useFileInput = (
       }
       // Reset input value to allow selecting the same file again
       if (inputRef.current) {
-        inputRef.current.value = '';
+        inputRef.current.value = "";
       }
     },
-    [onFileSelect]
+    [onFileSelect],
   );
 
   const openFileDialog = useCallback(() => {
@@ -242,12 +242,12 @@ export const useFileInput = (
     inputRef,
     inputProps: {
       ref: inputRef,
-      type: 'file' as const,
+      type: "file" as const,
       multiple,
       accept,
       onChange: handleFileChange,
-      style: { display: 'none' },
-      'aria-hidden': true,
+      style: { display: "none" },
+      "aria-hidden": true,
     },
     openFileDialog,
   };
@@ -268,24 +268,24 @@ export const UploadArea = forwardRef<HTMLDivElement, UploadAreaProps>(
       <div
         ref={ref}
         className={clsx(
-          'upload-area',
+          "upload-area",
           {
-            'upload-area--dragover': isDragOver,
-            'upload-area--disabled': disabled,
+            "upload-area--dragover": isDragOver,
+            "upload-area--disabled": disabled,
           },
-          className
+          className,
         )}
         onClick={disabled ? undefined : onClick}
-        onKeyDown={(e) => (e.key === 'Enter' && disabled ? undefined : onClick)}
-        role='button'
+        onKeyDown={(e) => (e.key === "Enter" && disabled ? undefined : onClick)}
+        role="button"
         tabIndex={disabled ? -1 : 0}
-        aria-label='File upload area'
+        aria-label="File upload area"
         {...props}
       >
         {children}
       </div>
     );
-  }
+  },
 );
 
 // Upload content component (composable)
@@ -297,17 +297,17 @@ export interface UploadContentProps {
 }
 
 export const UploadContent: React.FC<UploadContentProps> = ({
-  icon = <span className='upload-icon'>📁</span>,
-  primaryText = 'Drop files here or click to upload',
+  icon = <span className="upload-icon">📁</span>,
+  primaryText = "Drop files here or click to upload",
   secondaryText,
   className,
 }) => {
   return (
-    <div className={clsx('upload-content', className)}>
+    <div className={clsx("upload-content", className)}>
       {icon}
-      <div className='upload-text'>
-        <div className='upload-primary'>{primaryText}</div>
-        {secondaryText && <div className='upload-secondary'>{secondaryText}</div>}
+      <div className="upload-text">
+        <div className="upload-primary">{primaryText}</div>
+        {secondaryText && <div className="upload-secondary">{secondaryText}</div>}
       </div>
     </div>
   );
@@ -332,23 +332,23 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, onRemove, classN
   }, [file]);
 
   return (
-    <div className={clsx('file-preview', className)}>
+    <div className={clsx("file-preview", className)}>
       {previewUrl ? (
-        <img src={previewUrl} alt='Preview' className='preview-image' />
+        <img src={previewUrl} alt="Preview" className="preview-image" />
       ) : (
-        <div className='file-icon'>{FileValidationUtils.getFileIcon(file)}</div>
+        <div className="file-icon">{FileValidationUtils.getFileIcon(file)}</div>
       )}
-      <div className='file-info'>
-        <div className='file-name'>{file.name}</div>
-        <div className='file-size'>{FileValidationUtils.formatSize(file.size)}</div>
-        <div className='file-type'>{file.type}</div>
+      <div className="file-info">
+        <div className="file-name">{file.name}</div>
+        <div className="file-size">{FileValidationUtils.formatSize(file.size)}</div>
+        <div className="file-type">{file.type}</div>
       </div>
       {onRemove && (
         <button
-          type='button'
-          className='remove-file'
+          type="button"
+          className="remove-file"
           onClick={onRemove}
-          onKeyDown={(e) => e.key === 'Enter' && onRemove}
+          onKeyDown={(e) => e.key === "Enter" && onRemove}
           aria-label={`Remove ${file.name}`}
         >
           ×
@@ -374,7 +374,7 @@ export const FileUpload = forwardRef<HTMLDivElement, BaseFileUploadProps>(
       children,
       ...props
     },
-    ref
+    ref,
   ) => {
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -406,13 +406,13 @@ export const FileUpload = forwardRef<HTMLDivElement, BaseFileUploadProps>(
         setSelectedFiles(multiple ? [...selectedFiles, ...validFiles] : validFiles);
         onFileSelect?.(validFiles);
       },
-      [validation, multiple, selectedFiles, onFileSelect, onError]
+      [validation, multiple, selectedFiles, onFileSelect, onError],
     );
 
     const { isDragOver, dragHandlers } = useDragAndDrop(handleFileSelection, disabled);
     const { inputProps, openFileDialog } = useFileInput(handleFileSelection, multiple, accept);
 
-    const state = disabled ? 'disabled' : isDragOver ? 'dragover' : error ? 'error' : 'idle';
+    const state = disabled ? "disabled" : isDragOver ? "dragover" : error ? "error" : "idle";
 
     return (
       <div
@@ -427,14 +427,14 @@ export const FileUpload = forwardRef<HTMLDivElement, BaseFileUploadProps>(
           isDragOver={isDragOver}
           disabled={disabled}
           onClick={openFileDialog}
-          onKeyDown={(e) => e.key === 'Enter' && openFileDialog}
+          onKeyDown={(e) => e.key === "Enter" && openFileDialog}
         >
           {children || (
             <UploadContent
-              primaryText='Drop files here or click to upload'
+              primaryText="Drop files here or click to upload"
               secondaryText={
                 validation?.acceptedTypes
-                  ? `Accepted types: ${validation.acceptedTypes.join(', ')}`
+                  ? `Accepted types: ${validation.acceptedTypes.join(", ")}`
                   : undefined
               }
             />
@@ -442,13 +442,13 @@ export const FileUpload = forwardRef<HTMLDivElement, BaseFileUploadProps>(
         </UploadArea>
 
         {error && (
-          <div className='upload-error' role='alert'>
+          <div className="upload-error" role="alert">
             {error}
           </div>
         )}
 
         {selectedFiles.length > 0 && (
-          <div className='file-list'>
+          <div className="file-list">
             {selectedFiles.map((file, index) => (
               <FilePreview
                 key={`${file.name}-${index}`}
@@ -463,10 +463,10 @@ export const FileUpload = forwardRef<HTMLDivElement, BaseFileUploadProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
-FileUpload.displayName = 'FileUpload';
-UploadArea.displayName = 'UploadArea';
-UploadContent.displayName = 'UploadContent';
-FilePreview.displayName = 'FilePreview';
+FileUpload.displayName = "FileUpload";
+UploadArea.displayName = "UploadArea";
+UploadContent.displayName = "UploadContent";
+FilePreview.displayName = "FilePreview";

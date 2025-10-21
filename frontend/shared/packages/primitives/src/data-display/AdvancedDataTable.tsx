@@ -2,19 +2,19 @@
  * Advanced data table with filtering, sorting, grouping, and virtual scrolling
  */
 
-import { clsx } from 'clsx';
-import type React from 'react';
-import { forwardRef, useCallback, useMemo, useState } from 'react';
+import { clsx } from "clsx";
+import type React from "react";
+import { forwardRef, useCallback, useMemo, useState } from "react";
 
-import { cva } from '../lib/cva';
+import { cva } from "../lib/cva";
 
-import { type Column, DataTable } from './Table';
+import { type Column, DataTable } from "./Table";
 
 // Enhanced column definition
 export interface AdvancedColumn<T = Record<string, unknown>> extends Column<T> {
   // Filtering
   filterable?: boolean;
-  filterType?: 'text' | 'select' | 'date' | 'number' | 'boolean' | 'custom';
+  filterType?: "text" | "select" | "date" | "number" | "boolean" | "custom";
   filterOptions?: Array<{ label: string; value: T[keyof T] }>;
   filterComponent?: React.ComponentType<{
     value: T[keyof T];
@@ -52,8 +52,8 @@ export interface FilterState {
 // Sort state
 export interface SortState {
   field?: string;
-  order?: 'asc' | 'desc';
-  multiSort?: Array<{ field: string; order: 'asc' | 'desc' }>;
+  order?: "asc" | "desc";
+  multiSort?: Array<{ field: string; order: "asc" | "desc" }>;
 }
 
 // Group state
@@ -124,26 +124,26 @@ export interface AdvancedDataTableProps<T = Record<string, unknown>> {
 
   // Export functionality
   exportable?: boolean;
-  onExport?: (format: 'csv' | 'excel' | 'pdf') => void;
+  onExport?: (format: "csv" | "excel" | "pdf") => void;
 }
 
 // Table variants
-const advancedTableVariants = cva('advanced-data-table', {
+const advancedTableVariants = cva("advanced-data-table", {
   variants: {
     density: {
-      compact: 'density-compact',
-      comfortable: 'density-comfortable',
-      spacious: 'density-spacious',
+      compact: "density-compact",
+      comfortable: "density-comfortable",
+      spacious: "density-spacious",
     },
     variant: {
-      default: 'variant-default',
-      bordered: 'variant-bordered',
-      striped: 'variant-striped',
+      default: "variant-default",
+      bordered: "variant-bordered",
+      striped: "variant-striped",
     },
   },
   defaultVariants: {
-    density: 'comfortable',
-    variant: 'default',
+    density: "comfortable",
+    variant: "default",
   },
 });
 
@@ -161,11 +161,11 @@ const TextFilter = <T,>({ value, onChange }: FilterComponentProps<T>) => {
 
   return (
     <input
-      type='text'
-      value={String(value || '')}
+      type="text"
+      value={String(value || "")}
       onChange={handleChange}
-      placeholder='Filter...'
-      className='filter-input'
+      placeholder="Filter..."
+      className="filter-input"
     />
   );
 };
@@ -176,8 +176,8 @@ const SelectFilter = <T,>({ value, onChange, column }: FilterComponentProps<T>) 
   };
 
   return (
-    <select value={String(value || '')} onChange={handleChange} className='filter-select'>
-      <option value=''>All</option>
+    <select value={String(value || "")} onChange={handleChange} className="filter-select">
+      <option value="">All</option>
       {column?.filterOptions?.map((option) => (
         <option key={String(option.value)} value={String(option.value)}>
           {option.label}
@@ -189,20 +189,20 @@ const SelectFilter = <T,>({ value, onChange, column }: FilterComponentProps<T>) 
 
 const NumberFilter = ({ value, onChange }: unknown) => (
   <input
-    type='number'
-    value={value || ''}
+    type="number"
+    value={value || ""}
     onChange={(e) => onChange(Number(e.target.value) || undefined)}
-    placeholder='Filter...'
-    className='filter-input'
+    placeholder="Filter..."
+    className="filter-input"
   />
 );
 
 const DateFilter = ({ value, onChange }: unknown) => (
   <input
-    type='date'
-    value={value || ''}
+    type="date"
+    value={value || ""}
     onChange={(e) => onChange(e.target.value)}
-    className='filter-input'
+    className="filter-input"
   />
 );
 
@@ -211,7 +211,7 @@ function useVirtualScrolling<T>(
   data: T[],
   rowHeight: number,
   containerHeight: number,
-  enabled: boolean = true
+  enabled: boolean = true,
 ) {
   const [scrollTop, setScrollTop] = useState(0);
 
@@ -269,14 +269,14 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
       onCellEdit: _onCellEdit,
       loading = false,
       error,
-      emptyText = 'No data available',
+      emptyText = "No data available",
       className,
       rowClassName: _rowClassName,
       exportable = false,
       onExport,
       ...props
     },
-    ref
+    ref,
   ) => {
     // Internal state
     const [internalState, setInternalState] = useState<TableState>({
@@ -295,7 +295,7 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
 
     const state = useMemo(
       () => (controlled ? { ...internalState, ...controlledState } : internalState),
-      [controlled, internalState, controlledState]
+      [controlled, internalState, controlledState],
     );
 
     const updateState = useCallback(
@@ -306,7 +306,7 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
         }
         onStateChange?.(newState);
       },
-      [state, controlled, onStateChange]
+      [state, controlled, onStateChange],
     );
 
     // Data processing
@@ -329,19 +329,19 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
             const recordValue = column.dataIndex ? record[column.dataIndex] : record;
 
             switch (column.filterType) {
-              case 'text':
+              case "text":
                 return String(recordValue)
                   .toLowerCase()
                   .includes(String(filterValue).toLowerCase());
-              case 'select':
+              case "select":
                 return recordValue === filterValue;
-              case 'number':
+              case "number":
                 return Number(recordValue) === Number(filterValue);
-              case 'date':
+              case "date":
                 return (
                   new Date(recordValue).toDateString() === new Date(filterValue).toDateString()
                 );
-              case 'boolean':
+              case "boolean":
                 return Boolean(recordValue) === Boolean(filterValue);
               default:
                 return String(recordValue)
@@ -365,10 +365,10 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
             const bValue = column.dataIndex ? b[column.dataIndex] : b;
 
             if (aValue < bValue) {
-              return state.sorting.order === 'asc' ? -1 : 1;
+              return state.sorting.order === "asc" ? -1 : 1;
             }
             if (aValue > bValue) {
-              return state.sorting.order === 'asc' ? 1 : -1;
+              return state.sorting.order === "asc" ? 1 : -1;
             }
             return 0;
           });
@@ -409,7 +409,7 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
       paginatedData,
       rowHeight,
       containerHeight,
-      virtualScrolling
+      virtualScrolling,
     );
 
     // Event handlers
@@ -420,19 +420,19 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
           pagination: { ...state.pagination, page: 1 }, // Reset to first page
         });
       },
-      [state, updateState]
+      [state, updateState],
     );
 
     const handleSort = useCallback(
       (field: string) => {
         const currentOrder = state.sorting.field === field ? state.sorting.order : undefined;
-        const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+        const newOrder = currentOrder === "asc" ? "desc" : "asc";
 
         updateState({
           sorting: { field, order: newOrder },
         });
       },
-      [state.sorting, updateState]
+      [state.sorting, updateState],
     );
 
     const handlePageChange = useCallback(
@@ -444,7 +444,7 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
           },
         });
       },
-      [state.pagination, updateState]
+      [state.pagination, updateState],
     );
 
     const handleSelection = useCallback(
@@ -456,7 +456,7 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
         const selectedRecords = data.filter((record) => selectedKeys.has(keyExtractor(record)));
         onSelectionChange?.(Array.from(selectedKeys), selectedRecords);
       },
-      [data, keyExtractor, onSelectionChange, updateState]
+      [data, keyExtractor, onSelectionChange, updateState],
     );
 
     // Render filter component
@@ -474,17 +474,17 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
         }
 
         switch (column.filterType) {
-          case 'select':
+          case "select":
             return <SelectFilter value={value} onChange={onChange} column={column} />;
-          case 'number':
+          case "number":
             return <NumberFilter value={value} onChange={onChange} />;
-          case 'date':
+          case "date":
             return <DateFilter value={value} onChange={onChange} />;
           default:
             return <TextFilter value={value} onChange={onChange} />;
         }
       },
-      [state.filters, handleFilter]
+      [state.filters, handleFilter],
     );
 
     // Header components
@@ -493,12 +493,15 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
         return null;
       }
       return (
-        <div className='table-filters'>
+        <div className="table-filters">
           {columns
             .filter((col) => col.filterable)
             .map((column) => (
-              <div key={column.key} className='filter-item'>
-                <label htmlFor={`input-${Math.random().toString(36).substr(2, 9)}`} className='filter-label'>
+              <div key={column.key} className="filter-item">
+                <label
+                  htmlFor={`input-${Math.random().toString(36).substr(2, 9)}`}
+                  className="filter-label"
+                >
                   {column.title}
                 </label>
                 {renderFilter(column)}
@@ -513,20 +516,20 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
         return null;
       }
       return (
-        <div className='table-actions'>
+        <div className="table-actions">
           <button
-            type='button'
-            onClick={() => onExport?.('csv')}
-            className='export-button'
-            type='button'
+            type="button"
+            onClick={() => onExport?.("csv")}
+            className="export-button"
+            type="button"
           >
             Export CSV
           </button>
           <button
-            type='button'
-            onClick={() => onExport?.('excel')}
-            className='export-button'
-            type='button'
+            type="button"
+            onClick={() => onExport?.("excel")}
+            className="export-button"
+            type="button"
           >
             Export Excel
           </button>
@@ -569,16 +572,16 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
 
     if (loading) {
       return (
-        <div className={clsx(advancedTableVariants(_props), 'loading', className)}>
-          <div className='table-loading'>Loading...</div>
+        <div className={clsx(advancedTableVariants(_props), "loading", className)}>
+          <div className="table-loading">Loading...</div>
         </div>
       );
     }
 
     if (error) {
       return (
-        <div className={clsx(advancedTableVariants(_props), 'error', className)}>
-          <div className='table-error'>Error: {error}</div>
+        <div className={clsx(advancedTableVariants(_props), "error", className)}>
+          <div className="table-error">Error: {error}</div>
         </div>
       );
     }
@@ -586,7 +589,7 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
     return (
       <div ref={ref} className={clsx(advancedTableVariants(_props), className)} {...props}>
         {/* Table header with filters and actions */}
-        <div className='table-header'>
+        <div className="table-header">
           {TableFilters}
           {TableActions}
         </div>
@@ -594,15 +597,15 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
         {/* Virtual scrolling container */}
         {virtualScrolling ? (
           <div
-            className='virtual-scroll-container'
-            style={{ height: containerHeight, overflow: 'auto' }}
+            className="virtual-scroll-container"
+            style={{ height: containerHeight, overflow: "auto" }}
             onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
           >
-            <div style={{ height: totalHeight, position: 'relative' }}>
+            <div style={{ height: totalHeight, position: "relative" }}>
               <div
                 style={{
                   transform: `translateY(${visibleRange.start * rowHeight}px)`,
-                  position: 'absolute',
+                  position: "absolute",
                   top: 0,
                   left: 0,
                   right: 0,
@@ -617,15 +620,15 @@ export const AdvancedDataTable = forwardRef<HTMLDivElement, AdvancedDataTablePro
         )}
 
         {/* Table footer with summary */}
-        <div className='table-footer'>
-          <div className='table-summary'>
+        <div className="table-footer">
+          <div className="table-summary">
             Showing {paginatedData.length} of {processedData.length} items
             {data.length !== processedData.length && ` (filtered from ${data.length})`}
           </div>
         </div>
       </div>
     );
-  }
+  },
 );
 
-AdvancedDataTable.displayName = 'AdvancedDataTable';
+AdvancedDataTable.displayName = "AdvancedDataTable";

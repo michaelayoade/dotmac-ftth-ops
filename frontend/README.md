@@ -57,12 +57,14 @@ pnpm start              # Production server
 ### All Core Features Working ✅
 
 **Network Operations (NEW)**
+
 - ✅ ISP network dashboard surfacing subscribers, provisioning backlog, RADIUS sessions, and NetBox health
 - ✅ Subscriber workspace with live RADIUS session drilldowns + enable/disable actions
 - ✅ Network inventory workspace with NetBox site list and topology map
 - ✅ Automation workspace tracking provisioning workflows, scheduled jobs, and job chains (run-now controls)
 
 **Business Operations**
+
 - ✅ Customer & billing management remains available for BSS teams
 - ✅ Analytics and payment flows untouched for shared BSS/OSS usage
 
@@ -81,6 +83,7 @@ pnpm start              # Production server
 ## 📊 Production Metrics
 
 ### API Integration: 100% Complete ✅
+
 ```
 ✅ 11 out of 11 hooks using real APIs
 ✅ Zero mock data anywhere
@@ -91,6 +94,7 @@ pnpm start              # Production server
 ```
 
 ### Page Coverage: 100% (13/13) ✅
+
 ```
 ✅ Infrastructure: Health, Feature Flags, Logs, Observability
 ✅ Security: Roles, Permissions, Users, Secrets
@@ -101,6 +105,7 @@ ALL PAGES CONNECTED! 🎉
 ```
 
 ### Production Readiness: 98/100 ⭐
+
 ```
 Build System       10/10 ✅ Perfect
 Authentication     10/10 ✅ Perfect
@@ -122,10 +127,11 @@ Total              98/100 ⭐ ENTERPRISE READY
 ## 🏗️ Architecture Patterns
 
 ### Gold Standard: RBACContext (React Query)
+
 ```typescript
 // contexts/RBACContext.tsx - Best-in-class
 const { data, isLoading } = useQuery({
-  queryKey: ['rbac', 'roles'],
+  queryKey: ["rbac", "roles"],
   queryFn: rbacApi.fetchRoles,
   staleTime: 10 * 60 * 1000,
 });
@@ -133,13 +139,14 @@ const { data, isLoading } = useQuery({
 const mutation = useMutation({
   mutationFn: rbacApi.createRole,
   onSuccess: () => {
-    queryClient.invalidateQueries(['rbac', 'roles']);
-    toast.success('Role created');
+    queryClient.invalidateQueries(["rbac", "roles"]);
+    toast.success("Role created");
   },
 });
 ```
 
 ### Custom Hooks Pattern
+
 ```typescript
 // hooks/useHealth.ts, useFeatureFlags.ts, useBillingPlans.ts
 export const useResource = () => {
@@ -148,7 +155,7 @@ export const useResource = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
-    const response = await apiClient.get<Type[]>('/api/endpoint');
+    const response = await apiClient.get<Type[]>("/api/endpoint");
     if (response.success) setData(response.data);
   }, []);
 
@@ -157,9 +164,10 @@ export const useResource = () => {
 ```
 
 ### Centralized API Client
+
 ```typescript
 // All API calls standardized
-const response = await apiClient.get<User[]>('/api/v1/users');
+const response = await apiClient.get<User[]>("/api/v1/users");
 if (response.success && response.data) {
   setUsers(response.data);
 } else if (response.error) {
@@ -171,25 +179,27 @@ if (response.success && response.data) {
 
 ## 📦 Complete Hook Inventory (11/11 - 100%)
 
-| # | Hook | Endpoint | Status | Quality |
-|---|------|----------|--------|---------|
-| 1 | useHealth | `/health/ready` | ✅ | ⭐⭐⭐⭐⭐ |
-| 2 | useFeatureFlags | `/api/v1/feature-flags/*` | ✅ | ⭐⭐⭐⭐⭐ |
-| 3 | **useLogs** 🆕 | `/api/v1/monitoring/logs` | ✅ | ⭐⭐⭐⭐⭐ |
-| 4 | **useObservability** 🆕 | `/api/v1/observability/*` | ✅ | ⭐⭐⭐⭐⭐ |
-| 5 | RBACContext (Roles) | `/api/v1/auth/rbac/roles` | ✅ | ⭐⭐⭐⭐⭐ Gold |
-| 6 | RBACContext (Permissions) | `/api/v1/auth/rbac/permissions` | ✅ | ⭐⭐⭐⭐⭐ Gold |
-| 7 | Users | `/api/v1/users` | ✅ | ⭐⭐⭐⭐ |
-| 8 | Secrets | `/api/v1/secrets` | ✅ | ⭐⭐⭐⭐ |
-| 9 | Customers | `/api/v1/customers` | ✅ | ⭐⭐⭐⭐ |
-| 10 | Analytics | `/api/v1/analytics/*` | ✅ | ⭐⭐⭐⭐ |
-| 11 | useBillingPlans | `/api/v1/billing/subscriptions/plans` | ✅ | ⭐⭐⭐⭐⭐ |
+| #   | Hook                      | Endpoint                              | Status | Quality         |
+| --- | ------------------------- | ------------------------------------- | ------ | --------------- |
+| 1   | useHealth                 | `/health/ready`                       | ✅     | ⭐⭐⭐⭐⭐      |
+| 2   | useFeatureFlags           | `/api/v1/feature-flags/*`             | ✅     | ⭐⭐⭐⭐⭐      |
+| 3   | **useLogs** 🆕            | `/api/v1/monitoring/logs`             | ✅     | ⭐⭐⭐⭐⭐      |
+| 4   | **useObservability** 🆕   | `/api/v1/observability/*`             | ✅     | ⭐⭐⭐⭐⭐      |
+| 5   | RBACContext (Roles)       | `/api/v1/auth/rbac/roles`             | ✅     | ⭐⭐⭐⭐⭐ Gold |
+| 6   | RBACContext (Permissions) | `/api/v1/auth/rbac/permissions`       | ✅     | ⭐⭐⭐⭐⭐ Gold |
+| 7   | Users                     | `/api/v1/users`                       | ✅     | ⭐⭐⭐⭐        |
+| 8   | Secrets                   | `/api/v1/secrets`                     | ✅     | ⭐⭐⭐⭐        |
+| 9   | Customers                 | `/api/v1/customers`                   | ✅     | ⭐⭐⭐⭐        |
+| 10  | Analytics                 | `/api/v1/analytics/*`                 | ✅     | ⭐⭐⭐⭐        |
+| 11  | useBillingPlans           | `/api/v1/billing/subscriptions/plans` | ✅     | ⭐⭐⭐⭐⭐      |
 
 **Plus Service Layers**:
+
 - Payments → `/api/v1/billing/bank_accounts/payments/*`
 - Subscriptions → `/api/v1/billing/subscriptions/*`
 
 **Plus Form Validation**:
+
 - Auth schemas → Login, Register, Password Reset
 - Customer schemas → Create, Update, Validation
 - Webhook schemas → URL, Headers, Events
@@ -200,6 +210,7 @@ if (response.success && response.data) {
 ## 🎯 Deployment Options
 
 ### Option 1: Vercel (Recommended)
+
 ```bash
 npm i -g vercel
 cd frontend/apps/base-app
@@ -207,6 +218,7 @@ vercel --prod
 ```
 
 ### Option 2: Docker
+
 ```bash
 cd frontend/apps/base-app
 docker build -t dotmac-frontend .
@@ -216,6 +228,7 @@ docker run -p 3000:3000 \
 ```
 
 ### Option 3: PM2
+
 ```bash
 cd frontend/apps/base-app
 pnpm build
@@ -232,6 +245,7 @@ pm2 start npm --name "dotmac-frontend" -- start
 ### From Broken to Enterprise Ready
 
 **Day 1** (Starting Point)
+
 ```
 ❌ Build failing with instrumentation errors
 ❌ Authentication middleware disabled
@@ -243,6 +257,7 @@ Production Score: 30/100
 ```
 
 **Day 3** (Final State) 🎊
+
 ```
 ✅ Build stable with zero errors
 ✅ Authentication secured (HttpOnly cookies)
@@ -262,17 +277,20 @@ Production Score: 98/100 ⭐⭐⭐
 ## 📞 Need Help?
 
 ### Implementation Questions
+
 1. Read **[QUICK_START.md](./QUICK_START.md)** - 60-second overview
 2. Check **[BILLING_INTEGRATION_GUIDE.md](./BILLING_INTEGRATION_GUIDE.md)** - Detailed examples
 3. Reference `contexts/RBACContext.tsx` - Gold standard pattern
 4. Check `hooks/useHealth.ts` - Simple hook example
 
 ### Deployment Questions
+
 1. Read **[DEPLOY.md](./DEPLOY.md)** - Complete guide
 2. Check **[PRODUCTION_READY.md](./PRODUCTION_READY.md)** - Readiness checklist
 3. Review environment variable examples
 
 ### Troubleshooting
+
 1. Check browser Network tab (F12)
 2. Verify backend is running: `curl http://localhost:8000/health/ready`
 3. Check environment variables are set
@@ -283,19 +301,23 @@ Production Score: 98/100 ⭐⭐⭐
 ## 🚀 What's Next?
 
 ### ✅ Immediate - Production Launch
+
 **Ready to deploy now!**
+
 - All critical features working
 - Security fully implemented
 - Documentation complete
 - 90/100 production score
 
 ### Week 1 - Post-Launch Monitoring
+
 - Set up error tracking (Sentry, LogRocket)
 - Monitor API performance (New Relic, Datadog)
 - Track user analytics (Mixpanel, Amplitude)
 - Gather user feedback
 
 ### Week 2-3 - Optional Enhancements
+
 - ~~Add form validation with zod schemas~~ ✅ COMPLETE
 - ~~Add Logs page~~ ✅ COMPLETE
 - ~~Add Observability dashboard~~ ✅ COMPLETE
@@ -304,6 +326,7 @@ Production Score: 98/100 ⭐⭐⭐
 - Performance optimizations
 
 ### Long-term - Future Features
+
 - Advanced analytics features
 - Additional billing features (invoicing, receipts)
 - Customer portal
@@ -371,6 +394,7 @@ Only minor improvements remain (type safety, expanded tests) which can be done p
 **Next Review**: After 1 week in production
 
 ### 🏆 What's Been Achieved:
+
 - ✅ 13/13 pages with real APIs (100%)
 - ✅ 11/11 hooks using backend (100%)
 - ✅ Form validation with Zod (50+ rules)
@@ -384,4 +408,4 @@ Only minor improvements remain (type safety, expanded tests) which can be done p
 
 ## Original Workspace Documentation
 
-*For details on the shared packages workspace structure, see [README_OLD.md](./README_OLD.md)*
+_For details on the shared packages workspace structure, see [README_OLD.md](./README_OLD.md)_

@@ -4,8 +4,8 @@
  * Features: State management, error handling, optimistic updates, caching
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { ManagementApiClient, ManagementApiClientConfig } from '../ManagementApiClient';
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { ManagementApiClient, ManagementApiClientConfig } from "../ManagementApiClient";
 import {
   BaseEntity,
   EntityFilters,
@@ -23,7 +23,7 @@ import {
   ReportParams,
   EntityType,
   EntityStatus,
-} from '../types';
+} from "../types";
 
 // ===== HOOK CONFIGURATION =====
 
@@ -84,23 +84,23 @@ export interface UseManagementOperationsReturn {
   // Entity Operations
   listEntities: <T extends BaseEntity>(
     entityType: string,
-    filters?: EntityFilters
+    filters?: EntityFilters,
   ) => Promise<EntityListResponse<T>>;
   getEntity: <T extends BaseEntity>(entityType: string, entityId: string) => Promise<T>;
   createEntity: <T extends BaseEntity>(
-    request: CreateEntityRequest
+    request: CreateEntityRequest,
   ) => Promise<EntityOperationResult<T>>;
   updateEntity: <T extends BaseEntity>(
     entityType: string,
     entityId: string,
-    request: UpdateEntityRequest
+    request: UpdateEntityRequest,
   ) => Promise<EntityOperationResult<T>>;
   deleteEntity: (entityType: string, entityId: string) => Promise<EntityOperationResult<void>>;
 
   // Billing Operations
   getBillingData: (
     entityId: string,
-    period: { start_date: string; end_date: string }
+    period: { start_date: string; end_date: string },
   ) => Promise<BillingData>;
   processPayment: (entityId: string, amount: number, paymentData: any) => Promise<PaymentResult>;
   generateInvoice: (entityId: string, services: any[], options?: any) => Promise<Invoice>;
@@ -115,7 +115,7 @@ export interface UseManagementOperationsReturn {
 
   // Batch Operations
   batchOperation: <T>(
-    operations: Array<{ method: string; endpoint: string; data?: any }>
+    operations: Array<{ method: string; endpoint: string; data?: any }>,
   ) => Promise<EntityOperationResult<T>[]>;
 
   // State Management
@@ -137,7 +137,7 @@ export interface UseManagementOperationsReturn {
 // ===== MAIN HOOK =====
 
 export function useManagementOperations(
-  config: UseManagementOperationsConfig
+  config: UseManagementOperationsConfig,
 ): UseManagementOperationsReturn {
   const [state, setState] = useState<ManagementOperationsState>({
     entities: {},
@@ -202,10 +202,10 @@ export function useManagementOperations(
 
   function updateOperationState<T>(
     path: string,
-    updater: (prev: OperationState<T>) => Partial<OperationState<T>>
+    updater: (prev: OperationState<T>) => Partial<OperationState<T>>,
   ): void {
     setState((prev) => {
-      const pathParts = path.split('.');
+      const pathParts = path.split(".");
       const newState = { ...prev };
 
       let current = newState as any;
@@ -226,7 +226,7 @@ export function useManagementOperations(
   }
 
   function setGlobalState(
-    updates: Partial<Pick<ManagementOperationsState, 'globalLoading' | 'globalError'>>
+    updates: Partial<Pick<ManagementOperationsState, "globalLoading" | "globalError">>,
   ): void {
     setState((prev) => ({ ...prev, ...updates }));
   }
@@ -234,7 +234,7 @@ export function useManagementOperations(
   async function executeWithStateManagement<T>(
     operation: () => Promise<T>,
     statePath: string,
-    enableOptimistic: boolean = false
+    enableOptimistic: boolean = false,
   ): Promise<T> {
     try {
       // Set loading state
@@ -259,7 +259,7 @@ export function useManagementOperations(
       // Set error state
       updateOperationState(statePath, () => ({
         loading: false,
-        error: error.message || 'Unknown error occurred',
+        error: error.message || "Unknown error occurred",
       }));
 
       // Add to retry queue if enabled
@@ -273,7 +273,7 @@ export function useManagementOperations(
 
   async function refreshStaleData(): Promise<void> {
     // Implementation for refreshing stale data
-    console.debug('Refreshing stale data...');
+    console.debug("Refreshing stale data...");
   }
 
   // ===== ENTITY OPERATIONS =====
@@ -281,39 +281,39 @@ export function useManagementOperations(
   const listEntities = useCallback(
     async <T extends BaseEntity>(
       entityType: string,
-      filters: EntityFilters = {}
+      filters: EntityFilters = {},
     ): Promise<EntityListResponse<T>> => {
-      if (!apiClientRef.current) throw new Error('API client not initialized');
+      if (!apiClientRef.current) throw new Error("API client not initialized");
 
       const statePath = `entities.${entityType}.entities`;
 
       return executeWithStateManagement(
         () => apiClientRef.current!.listEntities<T>(entityType, filters),
-        statePath
+        statePath,
       );
     },
-    []
+    [],
   );
 
   const getEntity = useCallback(
     async <T extends BaseEntity>(entityType: string, entityId: string): Promise<T> => {
-      if (!apiClientRef.current) throw new Error('API client not initialized');
+      if (!apiClientRef.current) throw new Error("API client not initialized");
 
       const statePath = `entities.${entityType}.selectedEntity`;
 
       return executeWithStateManagement(
         () => apiClientRef.current!.getEntity<T>(entityType, entityId),
-        statePath
+        statePath,
       );
     },
-    []
+    [],
   );
 
   const createEntity = useCallback(
     async <T extends BaseEntity>(
-      request: CreateEntityRequest
+      request: CreateEntityRequest,
     ): Promise<EntityOperationResult<T>> => {
-      if (!apiClientRef.current) throw new Error('API client not initialized');
+      if (!apiClientRef.current) throw new Error("API client not initialized");
 
       const statePath = `entities.${request.entity_type}.createOperation`;
 
@@ -337,7 +337,7 @@ export function useManagementOperations(
       const result = await executeWithStateManagement(
         () => apiClientRef.current!.createEntity<T>(request),
         statePath,
-        config.enableOptimisticUpdates
+        config.enableOptimisticUpdates,
       );
 
       // Refresh entity list after successful creation
@@ -347,16 +347,16 @@ export function useManagementOperations(
 
       return result;
     },
-    [config.enableOptimisticUpdates, listEntities]
+    [config.enableOptimisticUpdates, listEntities],
   );
 
   const updateEntity = useCallback(
     async <T extends BaseEntity>(
       entityType: string,
       entityId: string,
-      request: UpdateEntityRequest
+      request: UpdateEntityRequest,
     ): Promise<EntityOperationResult<T>> => {
-      if (!apiClientRef.current) throw new Error('API client not initialized');
+      if (!apiClientRef.current) throw new Error("API client not initialized");
 
       const statePath = `entities.${entityType}.updateOperation`;
 
@@ -379,7 +379,7 @@ export function useManagementOperations(
       const result = await executeWithStateManagement(
         () => apiClientRef.current!.updateEntity<T>(entityType, entityId, request),
         statePath,
-        config.enableOptimisticUpdates
+        config.enableOptimisticUpdates,
       );
 
       // Refresh data after successful update
@@ -390,18 +390,18 @@ export function useManagementOperations(
 
       return result;
     },
-    [config.enableOptimisticUpdates, state.entities, listEntities, getEntity]
+    [config.enableOptimisticUpdates, state.entities, listEntities, getEntity],
   );
 
   const deleteEntity = useCallback(
     async (entityType: string, entityId: string): Promise<EntityOperationResult<void>> => {
-      if (!apiClientRef.current) throw new Error('API client not initialized');
+      if (!apiClientRef.current) throw new Error("API client not initialized");
 
       const statePath = `entities.${entityType}.deleteOperation`;
 
       const result = await executeWithStateManagement(
         () => apiClientRef.current!.deleteEntity(entityType, entityId),
-        statePath
+        statePath,
       );
 
       // Refresh entity list after successful deletion
@@ -411,7 +411,7 @@ export function useManagementOperations(
 
       return result;
     },
-    [listEntities]
+    [listEntities],
   );
 
   // ===== BILLING OPERATIONS =====
@@ -419,114 +419,114 @@ export function useManagementOperations(
   const getBillingData = useCallback(
     async (
       entityId: string,
-      period: { start_date: string; end_date: string }
+      period: { start_date: string; end_date: string },
     ): Promise<BillingData> => {
-      if (!apiClientRef.current) throw new Error('API client not initialized');
+      if (!apiClientRef.current) throw new Error("API client not initialized");
 
       const statePath = `billing.${entityId}.billingData`;
 
       return executeWithStateManagement(
         () => apiClientRef.current!.getBillingData(entityId, period),
-        statePath
+        statePath,
       );
     },
-    []
+    [],
   );
 
   const processPayment = useCallback(
     async (entityId: string, amount: number, paymentData: any): Promise<PaymentResult> => {
-      if (!apiClientRef.current) throw new Error('API client not initialized');
+      if (!apiClientRef.current) throw new Error("API client not initialized");
 
       const statePath = `billing.${entityId}.paymentOperation`;
 
       return executeWithStateManagement(
         () => apiClientRef.current!.processPayment(entityId, amount, paymentData),
-        statePath
+        statePath,
       );
     },
-    []
+    [],
   );
 
   const generateInvoice = useCallback(
     async (entityId: string, services: any[], options: any = {}): Promise<Invoice> => {
-      if (!apiClientRef.current) throw new Error('API client not initialized');
+      if (!apiClientRef.current) throw new Error("API client not initialized");
 
       const statePath = `billing.${entityId}.invoiceGeneration`;
 
       return executeWithStateManagement(
         () => apiClientRef.current!.generateInvoice(entityId, services, options),
-        statePath
+        statePath,
       );
     },
-    []
+    [],
   );
 
   const getInvoices = useCallback(
     async (entityId: string, filters: any = {}): Promise<Invoice[]> => {
-      if (!apiClientRef.current) throw new Error('API client not initialized');
+      if (!apiClientRef.current) throw new Error("API client not initialized");
 
       const statePath = `billing.${entityId}.invoices`;
 
       return executeWithStateManagement(
         () => apiClientRef.current!.getInvoices(entityId, filters),
-        statePath
+        statePath,
       );
     },
-    []
+    [],
   );
 
   // ===== ANALYTICS OPERATIONS =====
 
   const getDashboardStats = useCallback(
     async (timeframe: string, entityType?: string): Promise<DashboardStats> => {
-      if (!apiClientRef.current) throw new Error('API client not initialized');
+      if (!apiClientRef.current) throw new Error("API client not initialized");
 
-      const statePath = 'analytics.dashboardStats';
+      const statePath = "analytics.dashboardStats";
 
       return executeWithStateManagement(
         () => apiClientRef.current!.getDashboardStats(timeframe, entityType),
-        statePath
+        statePath,
       );
     },
-    []
+    [],
   );
 
   const getUsageMetrics = useCallback(
     async (entityId: string, period: any): Promise<UsageMetrics> => {
-      if (!apiClientRef.current) throw new Error('API client not initialized');
+      if (!apiClientRef.current) throw new Error("API client not initialized");
 
-      const statePath = 'analytics.usageMetrics';
+      const statePath = "analytics.usageMetrics";
 
       return executeWithStateManagement(
         () => apiClientRef.current!.getUsageMetrics(entityId, period),
-        statePath
+        statePath,
       );
     },
-    []
+    [],
   );
 
   const generateReport = useCallback(
     async (type: ReportType, params: ReportParams): Promise<Report> => {
-      if (!apiClientRef.current) throw new Error('API client not initialized');
+      if (!apiClientRef.current) throw new Error("API client not initialized");
 
-      const statePath = 'analytics.reportGeneration';
+      const statePath = "analytics.reportGeneration";
 
       return executeWithStateManagement(
         () => apiClientRef.current!.generateReport(type, params),
-        statePath
+        statePath,
       );
     },
-    []
+    [],
   );
 
   const getReport = useCallback(async (reportId: string): Promise<Report> => {
-    if (!apiClientRef.current) throw new Error('API client not initialized');
+    if (!apiClientRef.current) throw new Error("API client not initialized");
 
     return apiClientRef.current.getReport(reportId);
   }, []);
 
   const downloadReport = useCallback(async (reportId: string): Promise<Blob> => {
-    if (!apiClientRef.current) throw new Error('API client not initialized');
+    if (!apiClientRef.current) throw new Error("API client not initialized");
 
     return apiClientRef.current.downloadReport(reportId);
   }, []);
@@ -535,9 +535,9 @@ export function useManagementOperations(
 
   const batchOperation = useCallback(
     async <T>(
-      operations: Array<{ method: string; endpoint: string; data?: any }>
+      operations: Array<{ method: string; endpoint: string; data?: any }>,
     ): Promise<EntityOperationResult<T>[]> => {
-      if (!apiClientRef.current) throw new Error('API client not initialized');
+      if (!apiClientRef.current) throw new Error("API client not initialized");
 
       setGlobalState({ globalLoading: true });
 
@@ -550,7 +550,7 @@ export function useManagementOperations(
         throw error;
       }
     },
-    []
+    [],
   );
 
   // ===== STATE MANAGEMENT =====
@@ -568,7 +568,7 @@ export function useManagementOperations(
         await refreshStaleData();
       }
     },
-    [listEntities, getEntity]
+    [listEntities, getEntity],
   );
 
   const clearCache = useCallback((): void => {
@@ -626,7 +626,7 @@ export function useManagementOperations(
       subscriptionsRef.current.set(subscriptionKey, unsubscribe);
       return unsubscribe;
     },
-    []
+    [],
   );
 
   // ===== UTILITIES =====
@@ -638,7 +638,7 @@ export function useManagementOperations(
       }
 
       // Check specific operation loading state
-      const pathParts = operation.split('.');
+      const pathParts = operation.split(".");
       let current = state as any;
       for (const part of pathParts) {
         current = current[part];
@@ -647,7 +647,7 @@ export function useManagementOperations(
 
       return current.loading || false;
     },
-    [state]
+    [state],
   );
 
   const hasError = useCallback(
@@ -657,7 +657,7 @@ export function useManagementOperations(
       }
 
       // Check specific operation error state
-      const pathParts = operation.split('.');
+      const pathParts = operation.split(".");
       let current = state as any;
       for (const part of pathParts) {
         current = current[part];
@@ -666,7 +666,7 @@ export function useManagementOperations(
 
       return !!current.error;
     },
-    [state]
+    [state],
   );
 
   const getError = useCallback(
@@ -676,7 +676,7 @@ export function useManagementOperations(
       }
 
       // Get specific operation error
-      const pathParts = operation.split('.');
+      const pathParts = operation.split(".");
       let current = state as any;
       for (const part of pathParts) {
         current = current[part];
@@ -685,7 +685,7 @@ export function useManagementOperations(
 
       return current.error || null;
     },
-    [state]
+    [state],
   );
 
   const getCacheStats = useCallback(() => {
@@ -749,7 +749,7 @@ export function useManagementOperations(
       hasError,
       getError,
       getCacheStats,
-    ]
+    ],
   );
 }
 
@@ -757,7 +757,7 @@ export function useManagementOperations(
 
 export function useEntityManagement<T extends BaseEntity>(
   entityType: string,
-  config: UseManagementOperationsConfig
+  config: UseManagementOperationsConfig,
 ) {
   const operations = useManagementOperations(config);
 
@@ -774,11 +774,11 @@ export function useEntityManagement<T extends BaseEntity>(
       operations.updateEntity<T>(entityType, entityId, { data }),
     deleteEntity: (entityId: string) => operations.deleteEntity(entityType, entityId),
     isLoading: (operation?: string) =>
-      operations.isLoading(`entities.${entityType}.${operation || 'entities'}`),
+      operations.isLoading(`entities.${entityType}.${operation || "entities"}`),
     hasError: (operation?: string) =>
-      operations.hasError(`entities.${entityType}.${operation || 'entities'}`),
+      operations.hasError(`entities.${entityType}.${operation || "entities"}`),
     getError: (operation?: string) =>
-      operations.getError(`entities.${entityType}.${operation || 'entities'}`),
+      operations.getError(`entities.${entityType}.${operation || "entities"}`),
   };
 }
 
@@ -791,11 +791,11 @@ export function useBillingOperations(config: UseManagementOperationsConfig) {
     processPayment: operations.processPayment,
     generateInvoice: operations.generateInvoice,
     getInvoices: operations.getInvoices,
-    isLoading: (entityId: string, operation = 'billingData') =>
+    isLoading: (entityId: string, operation = "billingData") =>
       operations.isLoading(`billing.${entityId}.${operation}`),
-    hasError: (entityId: string, operation = 'billingData') =>
+    hasError: (entityId: string, operation = "billingData") =>
       operations.hasError(`billing.${entityId}.${operation}`),
-    getError: (entityId: string, operation = 'billingData') =>
+    getError: (entityId: string, operation = "billingData") =>
       operations.getError(`billing.${entityId}.${operation}`),
   };
 }
@@ -810,8 +810,8 @@ export function useAnalyticsOperations(config: UseManagementOperationsConfig) {
     generateReport: operations.generateReport,
     getReport: operations.getReport,
     downloadReport: operations.downloadReport,
-    isLoading: (operation = 'dashboardStats') => operations.isLoading(`analytics.${operation}`),
-    hasError: (operation = 'dashboardStats') => operations.hasError(`analytics.${operation}`),
-    getError: (operation = 'dashboardStats') => operations.getError(`analytics.${operation}`),
+    isLoading: (operation = "dashboardStats") => operations.isLoading(`analytics.${operation}`),
+    hasError: (operation = "dashboardStats") => operations.hasError(`analytics.${operation}`),
+    getError: (operation = "dashboardStats") => operations.getError(`analytics.${operation}`),
   };
 }

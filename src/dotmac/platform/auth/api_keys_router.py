@@ -154,11 +154,18 @@ async def _enhanced_create_api_key(
     # This prevents exposure of live credentials if Redis is compromised
     api_key_hash = _hash_api_key(api_key)
 
+    fallback_allowed = getattr(api_key_service, "_fallback_allowed", True)
+
     if client:
         await client.set(f"api_key_meta:{key_id}", api_key_service._serialize(enhanced_data))
         # Store hash -> key_id mapping instead of plaintext -> key_id
         await client.set(f"api_key_lookup:{api_key_hash}", key_id)
     else:
+        if not fallback_allowed:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="API key service unavailable. Redis connectivity is required.",
+            )
         # Fallback to memory
         memory_meta = getattr(api_key_service, "_memory_meta", None)
         if memory_meta is None:
@@ -180,6 +187,8 @@ async def _list_user_api_keys(user_id: str) -> list[dict[str, Any]]:
     client = await api_key_service._get_redis()
     keys: list[dict[str, Any]] = []
 
+    fallback_allowed = getattr(api_key_service, "_fallback_allowed", True)
+
     if client:
         # Scan for user's API key metadata
         async for key in client.scan_iter(match="api_key_meta:*"):
@@ -189,6 +198,11 @@ async def _list_user_api_keys(user_id: str) -> list[dict[str, Any]]:
                 if data.get("user_id") == user_id:
                     keys.append(data)
     else:
+        if not fallback_allowed:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="API key metadata unavailable. Redis connectivity is required.",
+            )
         # Fallback to memory
         memory_meta = getattr(api_key_service, "_memory_meta", {})
         for data in memory_meta.values():
@@ -206,6 +220,11 @@ async def _get_api_key_by_id(key_id: str) -> dict[str, Any] | None:
         data_str = await client.get(f"api_key_meta:{key_id}")
         return api_key_service._deserialize(data_str) if data_str else None
     else:
+        if not getattr(api_key_service, "_fallback_allowed", True):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="API key metadata unavailable. Redis connectivity is required.",
+            )
         # Fallback to memory
         return getattr(api_key_service, "_memory_meta", {}).get(key_id)
 
@@ -224,6 +243,11 @@ async def _update_api_key_metadata(key_id: str, updates: dict[str, Any]) -> bool
         await client.set(f"api_key_meta:{key_id}", api_key_service._serialize(data))
         return True
     else:
+        if not getattr(api_key_service, "_fallback_allowed", True):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="API key metadata unavailable. Redis connectivity is required.",
+            )
         # Fallback to memory
         memory_meta = getattr(api_key_service, "_memory_meta", {})
         if key_id in memory_meta:
@@ -251,6 +275,11 @@ async def _revoke_api_key_by_id(key_id: str) -> bool:
                 api_key_hash = lookup_key.replace("api_key_lookup:", "")
                 break
     else:
+        if not getattr(api_key_service, "_fallback_allowed", True):
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="API key revocation unavailable. Redis connectivity is required.",
+            )
         # Fallback to memory
         for key_hash, stored_key_id in getattr(api_key_service, "_memory_lookup", {}).items():
             if stored_key_id == key_id:
@@ -336,6 +365,11 @@ async def create_api_key(
             key_preview=_mask_api_key(api_key),
             api_key=api_key,
         )
+    except RuntimeError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

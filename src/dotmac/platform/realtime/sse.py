@@ -18,12 +18,16 @@ from dotmac.platform.redis_client import RedisClientType
 logger = structlog.get_logger(__name__)
 
 
+def _normalize_tenant(tenant_id: str | None) -> str:
+    return tenant_id or "platform"
+
+
 class SSEStream:
     """Base class for SSE event streams."""
 
-    def __init__(self, redis: RedisClientType, tenant_id: str):
+    def __init__(self, redis: RedisClientType, tenant_id: str | None):
         self.redis = redis
-        self.tenant_id = tenant_id
+        self.tenant_id = _normalize_tenant(tenant_id)
         self.pubsub: PubSub | None = None
 
     async def subscribe(self, channel: str) -> AsyncGenerator[dict[str, Any]]:
@@ -149,7 +153,9 @@ class RADIUSSessionStream(SSEStream):
 # =============================================================================
 
 
-async def create_onu_status_stream(redis: RedisClientType, tenant_id: str) -> EventSourceResponse:
+async def create_onu_status_stream(
+    redis: RedisClientType, tenant_id: str | None
+) -> EventSourceResponse:
     """
     Create SSE stream for ONU status updates.
 
@@ -164,7 +170,9 @@ async def create_onu_status_stream(redis: RedisClientType, tenant_id: str) -> Ev
     return EventSourceResponse(stream.stream())
 
 
-async def create_alert_stream(redis: RedisClientType, tenant_id: str) -> EventSourceResponse:
+async def create_alert_stream(
+    redis: RedisClientType, tenant_id: str | None
+) -> EventSourceResponse:
     """
     Create SSE stream for network alerts.
 
@@ -179,7 +187,9 @@ async def create_alert_stream(redis: RedisClientType, tenant_id: str) -> EventSo
     return EventSourceResponse(stream.stream())
 
 
-async def create_ticket_stream(redis: RedisClientType, tenant_id: str) -> EventSourceResponse:
+async def create_ticket_stream(
+    redis: RedisClientType, tenant_id: str | None
+) -> EventSourceResponse:
     """
     Create SSE stream for ticket updates.
 
@@ -194,7 +204,9 @@ async def create_ticket_stream(redis: RedisClientType, tenant_id: str) -> EventS
     return EventSourceResponse(stream.stream())
 
 
-async def create_subscriber_stream(redis: RedisClientType, tenant_id: str) -> EventSourceResponse:
+async def create_subscriber_stream(
+    redis: RedisClientType, tenant_id: str | None
+) -> EventSourceResponse:
     """
     Create SSE stream for subscriber events.
 
@@ -210,7 +222,7 @@ async def create_subscriber_stream(redis: RedisClientType, tenant_id: str) -> Ev
 
 
 async def create_radius_session_stream(
-    redis: RedisClientType, tenant_id: str
+    redis: RedisClientType, tenant_id: str | None
 ) -> EventSourceResponse:
     """
     Create SSE stream for RADIUS session events.

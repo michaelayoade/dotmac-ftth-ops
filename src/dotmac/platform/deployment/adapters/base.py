@@ -29,7 +29,7 @@ class ExecutionStatus(str, Enum):
 class ExecutionContext:
     """Context for deployment execution"""
 
-    tenant_id: int
+    tenant_id: str | None  # Tenant slug/identifier
     instance_id: int
     execution_id: int
     operation: str  # provision, upgrade, suspend, destroy, etc.

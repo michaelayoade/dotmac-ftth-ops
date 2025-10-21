@@ -66,7 +66,7 @@ def get_licensing_service(
     """Dependency for licensing service."""
     return LicensingService(
         session=session,
-        tenant_id=current_user.tenant_id,
+        tenant_id=current_user.tenant_id or "",  # type: ignore[arg-type]
         user_id=current_user.user_id,
     )
 
@@ -83,7 +83,7 @@ async def get_licenses(
     license_type: str | None = None,
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-):
+) -> Any:
     """Get paginated list of licenses."""
     query = select(License).where(License.tenant_id == service.tenant_id)
 
@@ -117,7 +117,7 @@ async def get_licenses(
 async def get_license(
     license_id: str,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Get license by ID."""
     license_obj = await service.get_license(license_id)
     if not license_obj:
@@ -130,7 +130,7 @@ async def get_license(
 async def get_license_by_key(
     license_key: str,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Get license by license key."""
     license_obj = await service.get_license_by_key(license_key)
     if not license_obj:
@@ -143,7 +143,7 @@ async def get_license_by_key(
 async def create_license(
     data: LicenseCreate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Create a new license."""
     try:
         license_obj = await service.create_license(data)
@@ -160,7 +160,7 @@ async def update_license(
     license_id: str,
     data: LicenseUpdate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Update license details."""
     try:
         license_obj = await service.update_license(license_id, data)
@@ -179,7 +179,7 @@ async def renew_license(
     license_id: str,
     data: LicenseRenewal,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Renew a license."""
     try:
         license_obj = await service.renew_license(license_id, data)
@@ -198,7 +198,7 @@ async def suspend_license(
     license_id: str,
     data: dict[str, str],
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Suspend a license."""
     try:
         license_obj = await service.suspend_license(license_id, data.get("reason", "No reason provided"))
@@ -217,7 +217,7 @@ async def revoke_license(
     license_id: str,
     data: dict[str, str],
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Revoke a license permanently."""
     try:
         license_obj = await service.revoke_license(license_id, data.get("reason", "No reason provided"))
@@ -236,7 +236,7 @@ async def transfer_license(
     license_id: str,
     data: LicenseTransfer,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Transfer a license to another customer."""
     try:
         license_obj = await service.transfer_license(license_id, data)
@@ -257,7 +257,7 @@ async def transfer_license(
 async def activate_license(
     data: ActivationCreate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Activate a license on a device."""
     try:
         activation = await service.activate_license(data)
@@ -279,7 +279,7 @@ async def get_activations(
     device_fingerprint: str | None = None,
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-):
+) -> Any:
     """Get paginated list of activations."""
     query = select(Activation).where(Activation.tenant_id == service.tenant_id)
 
@@ -307,7 +307,7 @@ async def get_activations(
 async def get_activation(
     activation_id: str,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Get activation by ID."""
     result = await service.session.execute(
         select(Activation).where(
@@ -327,7 +327,7 @@ async def get_activation(
 async def validate_activation(
     data: ActivationValidation,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Validate an activation token."""
     valid, activation, license_obj = await service.validate_activation(data.activation_token)
 
@@ -345,7 +345,7 @@ async def deactivate_license(
     activation_id: str,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
     data: dict[str, str] | None = None,
-):
+) -> Any:
     """Deactivate a license activation."""
     try:
         reason = data.get("reason") if data else None
@@ -364,7 +364,7 @@ async def deactivate_license(
 async def send_heartbeat(
     data: ActivationHeartbeat,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Send activation heartbeat with usage metrics."""
     try:
         result = await service.update_heartbeat(data.activation_token, data.metrics)
@@ -382,7 +382,7 @@ async def send_heartbeat(
 async def get_offline_activation_request(
     data: OfflineActivationRequest,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Generate offline activation request code."""
     try:
         result = await service.generate_offline_activation_request(data)
@@ -398,7 +398,7 @@ async def get_offline_activation_request(
 async def process_offline_activation(
     data: OfflineActivationProcess,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Process offline activation with response code."""
     try:
         activation = await service.process_offline_activation(data.request_code, data.response_code)
@@ -423,7 +423,7 @@ async def get_templates(
     service: Annotated[LicensingService, Depends(get_licensing_service)],
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-):
+) -> Any:
     """Get paginated list of license templates."""
     query = select(LicenseTemplate).where(LicenseTemplate.tenant_id == service.tenant_id)
     query = query.limit(limit).offset(offset)
@@ -442,7 +442,7 @@ async def get_templates(
 async def get_template(
     template_id: str,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Get license template by ID."""
     result = await service.session.execute(
         select(LicenseTemplate).where(
@@ -462,7 +462,7 @@ async def get_template(
 async def create_template(
     data: LicenseTemplateCreate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Create a new license template."""
     # Convert to dict for JSON storage
     features_dict = [f.model_dump() for f in data.features]
@@ -498,7 +498,7 @@ async def update_template(
     template_id: str,
     data: LicenseTemplateUpdate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Update a license template."""
     result = await service.session.execute(
         select(LicenseTemplate).where(
@@ -539,7 +539,7 @@ async def get_orders(
     service: Annotated[LicensingService, Depends(get_licensing_service)],
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
-):
+) -> Any:
     """Get paginated list of license orders."""
     query = select(LicenseOrder).where(LicenseOrder.tenant_id == service.tenant_id)
     query = query.limit(limit).offset(offset)
@@ -558,7 +558,7 @@ async def get_orders(
 async def get_order(
     order_id: str,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Get license order by ID."""
     result = await service.session.execute(
         select(LicenseOrder).where(
@@ -578,7 +578,7 @@ async def get_order(
 async def create_order(
     data: LicenseOrderCreate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Create a new license order."""
     # Generate order number
     import secrets
@@ -595,7 +595,10 @@ async def create_order(
 
     # Calculate total amount
     pricing = data.pricing_override or template.pricing
-    base_price = pricing.get("base_price", 0)
+    if isinstance(pricing, dict):
+        base_price = pricing.get("base_price", 0)
+    else:
+        base_price = 0  # LicensePricing object
     total_amount = base_price * data.quantity
 
     order = LicenseOrder(
@@ -625,7 +628,7 @@ async def approve_order(
     order_id: str,
     data: OrderApproval,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Approve a license order."""
     result = await service.session.execute(
         select(LicenseOrder).where(
@@ -648,7 +651,7 @@ async def approve_order(
 async def fulfill_order(
     order_id: str,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Fulfill a license order (generate licenses)."""
     # This would be implemented with order fulfillment logic
     # For now, return placeholder
@@ -660,7 +663,7 @@ async def cancel_order(
     order_id: str,
     data: OrderCancellation,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Cancel a license order."""
     result = await service.session.execute(
         select(LicenseOrder).where(
@@ -686,7 +689,7 @@ async def cancel_order(
 async def validate_license_key(
     data: LicenseValidationRequest,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Validate a license key."""
     license_obj = await service.get_license_by_key(data.license_key)
 
@@ -714,7 +717,7 @@ async def validate_license_key(
 async def check_license_integrity(
     data: IntegrityCheckRequest,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Check license integrity and tampering."""
     # Placeholder for cryptographic integrity check
     return {
@@ -729,7 +732,7 @@ async def check_license_integrity(
 async def generate_emergency_code(
     data: EmergencyCodeRequest,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Generate emergency override code."""
     import secrets
     from datetime import UTC, datetime, timedelta
@@ -749,7 +752,7 @@ async def generate_emergency_code(
 async def blacklist_device(
     data: DeviceBlacklist,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Blacklist a device from activating licenses."""
     # Placeholder for device blacklist implementation
     return {"data": {"success": True}}
@@ -759,7 +762,7 @@ async def blacklist_device(
 async def report_suspicious_activity(
     data: SuspiciousActivityReport,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
-):
+) -> Any:
     """Report suspicious licensing activity."""
     from uuid import uuid4
 

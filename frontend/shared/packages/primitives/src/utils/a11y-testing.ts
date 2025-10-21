@@ -5,11 +5,11 @@
 
 // WCAG 2.1 AA compliance checker
 export interface AccessibilityViolation {
-  type: 'error' | 'warning';
+  type: "error" | "warning";
   rule: string;
   description: string;
   element?: HTMLElement;
-  severity: 'critical' | 'serious' | 'moderate' | 'minor';
+  severity: "critical" | "serious" | "moderate" | "minor";
 }
 
 export interface AccessibilityTestResult {
@@ -28,7 +28,7 @@ export interface AccessibilityTestResult {
 // Color contrast ratio calculator
 export const calculateContrastRatio = (foreground: string, background: string): number => {
   const getLuminance = (hex: string): number => {
-    const rgb = hex.replace('#', '').match(/.{2}/g);
+    const rgb = hex.replace("#", "").match(/.{2}/g);
     if (!rgb) return 0;
 
     const [r, g, b] = rgb.map((component) => {
@@ -58,15 +58,15 @@ export const CONTRAST_REQUIREMENTS = {
 // Check if contrast ratio meets WCAG requirements
 export const meetsContrastRequirement = (
   ratio: number,
-  level: 'AA' | 'AAA' = 'AA',
-  textSize: 'normal' | 'large' = 'normal'
+  level: "AA" | "AAA" = "AA",
+  textSize: "normal" | "large" = "normal",
 ): boolean => {
   const requirement =
-    level === 'AA'
-      ? textSize === 'large'
+    level === "AA"
+      ? textSize === "large"
         ? CONTRAST_REQUIREMENTS.AA_LARGE
         : CONTRAST_REQUIREMENTS.AA_NORMAL
-      : textSize === 'large'
+      : textSize === "large"
         ? CONTRAST_REQUIREMENTS.AAA_LARGE
         : CONTRAST_REQUIREMENTS.AAA_NORMAL;
 
@@ -79,7 +79,7 @@ export const testKeyboardNavigation = (container: HTMLElement): AccessibilityVio
 
   // Find all interactive elements
   const interactiveElements = container.querySelectorAll(
-    'button, a, input, select, textarea, [tabindex]:not([tabindex="-1"]), [role="button"], [role="link"]'
+    'button, a, input, select, textarea, [tabindex]:not([tabindex="-1"]), [role="button"], [role="link"]',
   );
 
   // Check for keyboard accessibility
@@ -87,31 +87,31 @@ export const testKeyboardNavigation = (container: HTMLElement): AccessibilityVio
     const htmlElement = element as HTMLElement;
 
     // Check if element is focusable
-    if (htmlElement.tabIndex < 0 && !htmlElement.hasAttribute('disabled')) {
+    if (htmlElement.tabIndex < 0 && !htmlElement.hasAttribute("disabled")) {
       violations.push({
-        type: 'error',
-        rule: 'WCAG 2.1.1',
-        description: 'Interactive element is not keyboard accessible',
+        type: "error",
+        rule: "WCAG 2.1.1",
+        description: "Interactive element is not keyboard accessible",
         element: htmlElement,
-        severity: 'critical',
+        severity: "critical",
       });
     }
 
     // Check for visible focus indicator
     const computedStyles = window.getComputedStyle(htmlElement);
     const hasFocusIndicator =
-      computedStyles.outline !== 'none' ||
-      computedStyles.boxShadow.includes('0 0 0') ||
-      htmlElement.classList.contains('focus:ring') ||
-      htmlElement.classList.contains('focus:outline');
+      computedStyles.outline !== "none" ||
+      computedStyles.boxShadow.includes("0 0 0") ||
+      htmlElement.classList.contains("focus:ring") ||
+      htmlElement.classList.contains("focus:outline");
 
     if (!hasFocusIndicator) {
       violations.push({
-        type: 'warning',
-        rule: 'WCAG 2.4.7',
-        description: 'Interactive element lacks visible focus indicator',
+        type: "warning",
+        rule: "WCAG 2.4.7",
+        description: "Interactive element lacks visible focus indicator",
         element: htmlElement,
-        severity: 'serious',
+        severity: "serious",
       });
     }
   });
@@ -125,45 +125,45 @@ export const testARIAAttributes = (container: HTMLElement): AccessibilityViolati
 
   // Check for required ARIA labels
   const elementsNeedingLabels = container.querySelectorAll(
-    'button:not([aria-label]):not([aria-labelledby]), input:not([aria-label]):not([aria-labelledby]):not([id]), [role="button"]:not([aria-label]):not([aria-labelledby])'
+    'button:not([aria-label]):not([aria-labelledby]), input:not([aria-label]):not([aria-labelledby]):not([id]), [role="button"]:not([aria-label]):not([aria-labelledby])',
   );
 
   elementsNeedingLabels.forEach((element) => {
     const textContent = element.textContent?.trim();
     if (!textContent || textContent.length < 2) {
       violations.push({
-        type: 'error',
-        rule: 'WCAG 4.1.2',
-        description: 'Interactive element lacks accessible name',
+        type: "error",
+        rule: "WCAG 4.1.2",
+        description: "Interactive element lacks accessible name",
         element: element as HTMLElement,
-        severity: 'critical',
+        severity: "critical",
       });
     }
   });
 
   // Check for invalid ARIA attributes
-  const elementsWithAria = container.querySelectorAll('[aria-labelledby], [aria-describedby]');
+  const elementsWithAria = container.querySelectorAll("[aria-labelledby], [aria-describedby]");
   elementsWithAria.forEach((element) => {
-    const labelledby = element.getAttribute('aria-labelledby');
-    const describedby = element.getAttribute('aria-describedby');
+    const labelledby = element.getAttribute("aria-labelledby");
+    const describedby = element.getAttribute("aria-describedby");
 
     if (labelledby && !container.querySelector(`#${labelledby}`)) {
       violations.push({
-        type: 'error',
-        rule: 'WCAG 4.1.2',
+        type: "error",
+        rule: "WCAG 4.1.2",
         description: `aria-labelledby references non-existent element: ${labelledby}`,
         element: element as HTMLElement,
-        severity: 'serious',
+        severity: "serious",
       });
     }
 
     if (describedby && !container.querySelector(`#${describedby}`)) {
       violations.push({
-        type: 'error',
-        rule: 'WCAG 4.1.2',
+        type: "error",
+        rule: "WCAG 4.1.2",
         description: `aria-describedby references non-existent element: ${describedby}`,
         element: element as HTMLElement,
-        severity: 'serious',
+        severity: "serious",
       });
     }
   });
@@ -176,7 +176,7 @@ export const testColorContrast = (container: HTMLElement): AccessibilityViolatio
   const violations: AccessibilityViolation[] = [];
 
   // Get all text elements
-  const textElements = container.querySelectorAll('*');
+  const textElements = container.querySelectorAll("*");
 
   textElements.forEach((element) => {
     const htmlElement = element as HTMLElement;
@@ -188,22 +188,22 @@ export const testColorContrast = (container: HTMLElement): AccessibilityViolatio
       const background = styles.backgroundColor;
 
       // Convert to hex if possible (simplified - would need full color conversion in real implementation)
-      if (foreground.startsWith('rgb') && background.startsWith('rgb')) {
+      if (foreground.startsWith("rgb") && background.startsWith("rgb")) {
         // This is a simplified check - in practice, you'd want a full color conversion library
         const fontSize = parseFloat(styles.fontSize);
-        const isLargeText = fontSize >= 18 || (fontSize >= 14 && styles.fontWeight === 'bold');
+        const isLargeText = fontSize >= 18 || (fontSize >= 14 && styles.fontWeight === "bold");
 
         // Placeholder for actual contrast calculation
         // In a real implementation, you'd extract RGB values and calculate the actual ratio
         const estimatedRatio = 4.5; // This should be calculated from actual colors
 
-        if (!meetsContrastRequirement(estimatedRatio, 'AA', isLargeText ? 'large' : 'normal')) {
+        if (!meetsContrastRequirement(estimatedRatio, "AA", isLargeText ? "large" : "normal")) {
           violations.push({
-            type: 'error',
-            rule: 'WCAG 1.4.3',
+            type: "error",
+            rule: "WCAG 1.4.3",
             description: `Insufficient color contrast ratio (${estimatedRatio.toFixed(2)}:1)`,
             element: htmlElement,
-            severity: 'serious',
+            severity: "serious",
           });
         }
       }
@@ -223,15 +223,15 @@ export const testSemanticStructure = (container: HTMLElement): AccessibilityViol
 
   headings.forEach((heading) => {
     const tagName = heading.tagName.toLowerCase();
-    const currentLevel = tagName.startsWith('h') ? parseInt(tagName.substring(1)) : 1;
+    const currentLevel = tagName.startsWith("h") ? parseInt(tagName.substring(1)) : 1;
 
     if (currentLevel > previousLevel + 1) {
       violations.push({
-        type: 'warning',
-        rule: 'WCAG 1.3.1',
+        type: "warning",
+        rule: "WCAG 1.3.1",
         description: `Heading level skipped: ${tagName} follows h${previousLevel}`,
         element: heading as HTMLElement,
-        severity: 'moderate',
+        severity: "moderate",
       });
     }
 
@@ -240,14 +240,14 @@ export const testSemanticStructure = (container: HTMLElement): AccessibilityViol
 
   // Check for landmarks
   const landmarks = container.querySelectorAll(
-    '[role="main"], [role="navigation"], [role="banner"], [role="contentinfo"], main, nav, header, footer'
+    '[role="main"], [role="navigation"], [role="banner"], [role="contentinfo"], main, nav, header, footer',
   );
   if (landmarks.length === 0) {
     violations.push({
-      type: 'warning',
-      rule: 'WCAG 1.3.1',
-      description: 'Page lacks semantic landmarks for navigation',
-      severity: 'moderate',
+      type: "warning",
+      rule: "WCAG 1.3.1",
+      description: "Page lacks semantic landmarks for navigation",
+      severity: "moderate",
     });
   }
 
@@ -265,10 +265,10 @@ export const runAccessibilityTest = (container: HTMLElement): AccessibilityTestR
 
   const summary = {
     total: violations.length,
-    critical: violations.filter((v) => v.severity === 'critical').length,
-    serious: violations.filter((v) => v.severity === 'serious').length,
-    moderate: violations.filter((v) => v.severity === 'moderate').length,
-    minor: violations.filter((v) => v.severity === 'minor').length,
+    critical: violations.filter((v) => v.severity === "critical").length,
+    serious: violations.filter((v) => v.severity === "serious").length,
+    moderate: violations.filter((v) => v.severity === "moderate").length,
+    minor: violations.filter((v) => v.severity === "minor").length,
   };
 
   // Calculate score (100 - penalty points)
@@ -302,7 +302,7 @@ export const generateAccessibilityReport = (result: AccessibilityTestResult): st
 
   let report = `# Accessibility Test Report\n\n`;
   report += `**Overall Score:** ${score}/100\n`;
-  report += `**Status:** ${passed ? '✅ PASSED' : '❌ FAILED'}\n\n`;
+  report += `**Status:** ${passed ? "✅ PASSED" : "❌ FAILED"}\n\n`;
 
   report += `## Summary\n`;
   report += `- Total Issues: ${summary.total}\n`;
@@ -323,7 +323,7 @@ export const generateAccessibilityReport = (result: AccessibilityTestResult): st
         report += `- **Element:** ${violation.element.tagName.toLowerCase()}`;
         if (violation.element.id) report += `#${violation.element.id}`;
         if (violation.element.className)
-          report += `.${violation.element.className.split(' ').join('.')}`;
+          report += `.${violation.element.className.split(" ").join(".")}`;
         report += `\n`;
       }
       report += `\n`;
@@ -357,14 +357,14 @@ export const runDevelopmentA11yTest = (element?: HTMLElement): void => {
   console.log(report);
 
   if (!result.passed) {
-    console.warn('⚠️ Accessibility issues found. Check violations above.');
+    console.warn("⚠️ Accessibility issues found. Check violations above.");
     result.violations.forEach((violation) => {
-      if (violation.severity === 'critical') {
-        console.error('🚨 Critical:', violation.description, violation.element);
+      if (violation.severity === "critical") {
+        console.error("🚨 Critical:", violation.description, violation.element);
       }
     });
   } else {
-    console.log('✅ All accessibility tests passed!');
+    console.log("✅ All accessibility tests passed!");
   }
 
   console.groupEnd();

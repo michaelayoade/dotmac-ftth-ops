@@ -60,7 +60,7 @@ async def cleanup_session_state():
 def app():
     """Create FastAPI app for testing."""
     app = FastAPI()
-    app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+    app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
     return app
 
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   Ticket,
   Plus,
@@ -7,11 +7,11 @@ import {
   Clock,
   AlertCircle,
   XCircle,
-} from 'lucide-react';
-import { apiClient } from '@/lib/api/client';
-import { useToast } from '@/components/ui/use-toast';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+} from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -19,15 +19,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 
 interface CustomerTicket {
   id: string;
   ticket_number: string;
   title: string;
   description: string;
-  status: 'open' | 'in_progress' | 'resolved' | 'closed';
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: "open" | "in_progress" | "resolved" | "closed";
+  priority: "low" | "medium" | "high" | "critical";
   category: string;
   created_at: string;
   updated_at: string;
@@ -38,30 +38,30 @@ interface CustomerTicketsProps {
   customerId: string;
 }
 
-const getStatusBadge = (status: CustomerTicket['status']) => {
+const getStatusBadge = (status: CustomerTicket["status"]) => {
   switch (status) {
-    case 'open':
+    case "open":
       return (
         <Badge variant="outline">
           <AlertCircle className="w-3 h-3 mr-1" />
           Open
         </Badge>
       );
-    case 'in_progress':
+    case "in_progress":
       return (
         <Badge className="bg-blue-500">
           <Clock className="w-3 h-3 mr-1" />
           In Progress
         </Badge>
       );
-    case 'resolved':
+    case "resolved":
       return (
         <Badge className="bg-green-500">
           <CheckCircle2 className="w-3 h-3 mr-1" />
           Resolved
         </Badge>
       );
-    case 'closed':
+    case "closed":
       return (
         <Badge variant="secondary">
           <XCircle className="w-3 h-3 mr-1" />
@@ -71,26 +71,26 @@ const getStatusBadge = (status: CustomerTicket['status']) => {
   }
 };
 
-const getPriorityBadge = (priority: CustomerTicket['priority']) => {
+const getPriorityBadge = (priority: CustomerTicket["priority"]) => {
   switch (priority) {
-    case 'critical':
+    case "critical":
       return <Badge variant="destructive">Critical</Badge>;
-    case 'high':
+    case "high":
       return <Badge className="bg-orange-500">High</Badge>;
-    case 'medium':
+    case "medium":
       return <Badge className="bg-yellow-500">Medium</Badge>;
-    case 'low':
+    case "low":
       return <Badge variant="outline">Low</Badge>;
   }
 };
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -103,14 +103,14 @@ export function CustomerTickets({ customerId }: CustomerTicketsProps) {
     try {
       setLoading(true);
       const response = await apiClient.get<{ tickets: CustomerTicket[] }>(
-        `/api/v1/customers/${customerId}/tickets`
+        `/api/v1/customers/${customerId}/tickets`,
       );
       setTickets(response.data.tickets);
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to load tickets',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to load tickets",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -122,11 +122,11 @@ export function CustomerTickets({ customerId }: CustomerTicketsProps) {
   }, [fetchTickets]);
 
   const handleCreateTicket = () => {
-    window.open(`/tenant/tickets/new?customer_id=${customerId}`, '_blank');
+    window.open(`/tenant/tickets/new?customer_id=${customerId}`, "_blank");
   };
 
   const handleViewTicket = (ticketId: string) => {
-    window.open(`/tenant/tickets/${ticketId}`, '_blank');
+    window.open(`/tenant/tickets/${ticketId}`, "_blank");
   };
 
   if (loading) {
@@ -137,8 +137,8 @@ export function CustomerTickets({ customerId }: CustomerTicketsProps) {
     );
   }
 
-  const openTickets = tickets.filter((t) => t.status === 'open' || t.status === 'in_progress');
-  const closedTickets = tickets.filter((t) => t.status === 'resolved' || t.status === 'closed');
+  const openTickets = tickets.filter((t) => t.status === "open" || t.status === "in_progress");
+  const closedTickets = tickets.filter((t) => t.status === "resolved" || t.status === "closed");
 
   return (
     <div className="space-y-6">
@@ -202,14 +202,10 @@ export function CustomerTickets({ customerId }: CustomerTicketsProps) {
                     {formatDate(ticket.created_at)}
                   </TableCell>
                   <TableCell className="text-slate-300">
-                    {ticket.assigned_to || 'Unassigned'}
+                    {ticket.assigned_to || "Unassigned"}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewTicket(ticket.id)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => handleViewTicket(ticket.id)}>
                       <ExternalLink className="w-4 h-4" />
                     </Button>
                   </TableCell>

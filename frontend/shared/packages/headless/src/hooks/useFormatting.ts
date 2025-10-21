@@ -3,14 +3,14 @@
  * Configurable formatting utilities for currency, dates, and numbers
  */
 
-import { useCallback } from 'react';
+import { useCallback } from "react";
 
 import {
   useBusinessConfig,
   useConfig,
   useCurrencyConfig,
   useLocaleConfig,
-} from '../config/ConfigProvider';
+} from "../config/ConfigProvider";
 
 export function useFormatting() {
   const { _config } = useConfig();
@@ -28,37 +28,37 @@ export function useFormatting() {
         precision?: number;
       } = {
         // Implementation pending
-      }
+      },
     ) => {
       const currency = options.currency || currencyConfig.primary;
       const locale = options.locale || localeConfig.primary;
       const minimumFractionDigits = options.precision ?? currencyConfig.precision;
 
       return new Intl.NumberFormat(locale, {
-        style: 'currency',
+        style: "currency",
         currency,
         minimumFractionDigits,
         maximumFractionDigits: minimumFractionDigits,
       }).format(amount);
     },
-    [currencyConfig, localeConfig]
+    [currencyConfig, localeConfig],
   );
 
   // Date formatting
   const formatDate = useCallback(
     (
       date: string | Date,
-      format: 'short' | 'medium' | 'long' | 'time' | Intl.DateTimeFormatOptions = 'short',
-      locale?: string
+      format: "short" | "medium" | "long" | "time" | Intl.DateTimeFormatOptions = "short",
+      locale?: string,
     ) => {
       const targetLocale = locale || localeConfig.primary;
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      const dateObj = typeof date === "string" ? new Date(date) : date;
 
-      const formatOptions = typeof format === 'string' ? localeConfig.dateFormat[format] : format;
+      const formatOptions = typeof format === "string" ? localeConfig.dateFormat[format] : format;
 
       return dateObj.toLocaleDateString(targetLocale, formatOptions);
     },
-    [localeConfig]
+    [localeConfig],
   );
 
   // Number formatting
@@ -68,12 +68,12 @@ export function useFormatting() {
       options: Intl.NumberFormatOptions = {
         // Implementation pending
       },
-      locale?: string
+      locale?: string,
     ) => {
       const targetLocale = locale || localeConfig.primary;
       return new Intl.NumberFormat(targetLocale, options).format(number);
     },
-    [localeConfig]
+    [localeConfig],
   );
 
   // Percentage formatting
@@ -81,31 +81,31 @@ export function useFormatting() {
     (value: number, precision: number = 1, locale?: string) => {
       const targetLocale = locale || localeConfig.primary;
       return new Intl.NumberFormat(targetLocale, {
-        style: 'percent',
+        style: "percent",
         minimumFractionDigits: precision,
         maximumFractionDigits: precision,
       }).format(value / 100);
     },
-    [localeConfig]
+    [localeConfig],
   );
 
   // Bandwidth formatting
   const formatBandwidth = useCallback(
-    (value: number, unit?: 'mbps' | 'gbps') => {
+    (value: number, unit?: "mbps" | "gbps") => {
       const targetUnit = unit || businessConfig.units.bandwidth;
 
-      if (targetUnit === 'gbps' && value >= 1000) {
+      if (targetUnit === "gbps" && value >= 1000) {
         return `${(value / 1000).toFixed(1)} Gbps`;
       }
 
       return `${value} ${targetUnit.toUpperCase()}`;
     },
-    [businessConfig]
+    [businessConfig],
   );
 
   // Data size formatting
   const formatDataSize = useCallback((bytes: number, precision: number = 2) => {
-    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const units = ["B", "KB", "MB", "GB", "TB"];
     let size = bytes;
     let unitIndex = 0;
 
@@ -121,12 +121,12 @@ export function useFormatting() {
   const formatRelativeTime = useCallback(
     (date: string | Date, locale?: string) => {
       const targetLocale = locale || localeConfig.primary;
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
+      const dateObj = typeof date === "string" ? new Date(date) : date;
       const now = new Date();
       const diffInSeconds = Math.floor((now.getTime() - dateObj.getTime()) / 1000);
 
       if (diffInSeconds < 60) {
-        return 'Just now';
+        return "Just now";
       }
       if (diffInSeconds < 3600) {
         return `${Math.floor(diffInSeconds / 60)}m ago`;
@@ -140,23 +140,23 @@ export function useFormatting() {
 
       return dateObj.toLocaleDateString(targetLocale, localeConfig.dateFormat.short);
     },
-    [localeConfig]
+    [localeConfig],
   );
 
   // Status formatting
   const formatStatus = useCallback(
-    (status: string, _type: 'customer' | 'service' | 'partner' = 'customer') => {
+    (status: string, _type: "customer" | "service" | "partner" = "customer") => {
       const statusConfig = businessConfig.statusTypes[status];
       if (!statusConfig) {
         return {
           label: status.charAt(0).toUpperCase() + status.slice(1),
-          color: 'default' as const,
-          description: '',
+          color: "default" as const,
+          description: "",
         };
       }
       return statusConfig;
     },
-    [businessConfig]
+    [businessConfig],
   );
 
   // Plan formatting
@@ -165,14 +165,14 @@ export function useFormatting() {
       const planConfig = businessConfig.planTypes[planKey];
       if (!planConfig) {
         return {
-          label: planKey.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-          category: 'residential' as const,
+          label: planKey.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+          category: "residential" as const,
           features: [],
         };
       }
       return planConfig;
     },
-    [businessConfig]
+    [businessConfig],
   );
 
   return {

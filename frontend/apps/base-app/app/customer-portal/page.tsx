@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,7 +39,8 @@ export default function CustomerDashboard() {
   const { invoices, loading: invoicesLoading } = useCustomerInvoices();
   const { tickets, loading: ticketsLoading } = useCustomerTickets();
 
-  const loading = profileLoading || serviceLoading || usageLoading || invoicesLoading || ticketsLoading;
+  const loading =
+    profileLoading || serviceLoading || usageLoading || invoicesLoading || ticketsLoading;
 
   if (loading) {
     return (
@@ -57,13 +58,15 @@ export default function CustomerDashboard() {
   const usagePercentage = usageLimit > 0 ? (totalUsage / usageLimit) * 100 : 0;
 
   // Get current balance from most recent unpaid invoice
-  const currentBalance = invoices
-    ?.filter((inv) => inv.status !== "paid")
-    .reduce((sum, inv) => sum + inv.amount_due, 0) || 0;
+  const currentBalance =
+    invoices
+      ?.filter((inv) => inv.status !== "paid")
+      .reduce((sum, inv) => sum + inv.amount_due, 0) || 0;
 
   const daysUntilBilling = service?.next_billing_date
     ? Math.ceil(
-        (new Date(service.next_billing_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+        (new Date(service.next_billing_date).getTime() - new Date().getTime()) /
+          (1000 * 60 * 60 * 24),
       )
     : 0;
 
@@ -75,9 +78,7 @@ export default function CustomerDashboard() {
       {/* Welcome Section */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Welcome back!</h1>
-        <p className="text-muted-foreground">
-          Here&apos;s an overview of your internet service
-        </p>
+        <p className="text-muted-foreground">Here&apos;s an overview of your internet service</p>
       </div>
 
       {/* Status Cards */}
@@ -90,12 +91,12 @@ export default function CustomerDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <CheckCircle className={`h-5 w-5 ${profile?.status === "active" ? "text-green-500" : "text-yellow-500"}`} />
+              <CheckCircle
+                className={`h-5 w-5 ${profile?.status === "active" ? "text-green-500" : "text-yellow-500"}`}
+              />
               <span className="text-2xl font-bold capitalize">{profile?.status || "Unknown"}</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {service?.plan_name || "No plan"}
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{service?.plan_name || "No plan"}</p>
           </CardContent>
         </Card>
 
@@ -106,9 +107,7 @@ export default function CustomerDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(currentBalance)}
-            </div>
+            <div className="text-2xl font-bold">{formatCurrency(currentBalance)}</div>
             <p className="text-xs text-muted-foreground">
               {daysUntilBilling > 0 ? `Due in ${daysUntilBilling} days` : "No upcoming bill"}
             </p>
@@ -122,12 +121,8 @@ export default function CustomerDashboard() {
             <Download className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-500">
-              {service?.speed_down || "N/A"}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Upload: {service?.speed_up || "N/A"}
-            </p>
+            <div className="text-2xl font-bold text-blue-500">{service?.speed_down || "N/A"}</div>
+            <p className="text-xs text-muted-foreground">Upload: {service?.speed_up || "N/A"}</p>
           </CardContent>
         </Card>
 
@@ -138,9 +133,7 @@ export default function CustomerDashboard() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {totalUsage.toFixed(1)} GB
-            </div>
+            <div className="text-2xl font-bold">{totalUsage.toFixed(1)} GB</div>
             <p className="text-xs text-muted-foreground">
               {usagePercentage.toFixed(1)}% of {usageLimit} GB
             </p>
@@ -165,11 +158,14 @@ export default function CustomerDashboard() {
                   <p className="text-sm font-medium">Plan</p>
                   <p className="text-2xl font-bold">{service?.plan_name || "No plan"}</p>
                 </div>
-                <Badge variant="outline" className={`${
-                  service?.status === "active"
-                    ? "bg-green-500/10 text-green-500 border-green-500/30"
-                    : "bg-yellow-500/10 text-yellow-500 border-yellow-500/30"
-                }`}>
+                <Badge
+                  variant="outline"
+                  className={`${
+                    service?.status === "active"
+                      ? "bg-green-500/10 text-green-500 border-green-500/30"
+                      : "bg-yellow-500/10 text-yellow-500 border-yellow-500/30"
+                  }`}
+                >
                   <CheckCircle className="h-3 w-3 mr-1" />
                   {service?.status || "Unknown"}
                 </Badge>
@@ -253,20 +249,24 @@ export default function CustomerDashboard() {
                 <p className="font-medium">Recent Invoice</p>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount:</span>
-                  <span className={`font-medium ${
-                    invoices[0]?.status === "paid" ? "text-green-500" : "text-yellow-500"
-                  }`}>
+                  <span
+                    className={`font-medium ${
+                      invoices[0]?.status === "paid" ? "text-green-500" : "text-yellow-500"
+                    }`}
+                  >
                     {formatCurrency(invoices[0]?.amount ?? 0)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Status:</span>
-                  <span className="font-medium capitalize">{invoices[0]?.status ?? 'unknown'}</span>
+                  <span className="font-medium capitalize">{invoices[0]?.status ?? "unknown"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date:</span>
                   <span className="font-medium">
-                    {invoices[0]?.created_at ? new Date(invoices[0].created_at).toLocaleDateString() : 'N/A'}
+                    {invoices[0]?.created_at
+                      ? new Date(invoices[0].created_at).toLocaleDateString()
+                      : "N/A"}
                   </span>
                 </div>
               </div>
@@ -280,9 +280,7 @@ export default function CustomerDashboard() {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="flex-1">
-                <Link href="/customer-portal/billing">
-                  View Invoices
-                </Link>
+                <Link href="/customer-portal/billing">View Invoices</Link>
               </Button>
             </div>
           </CardContent>
@@ -296,19 +294,16 @@ export default function CustomerDashboard() {
             <TrendingUp className="h-5 w-5" />
             Data Usage This Month
           </CardTitle>
-          <CardDescription>
-            Your internet usage for the current billing period
-          </CardDescription>
+          <CardDescription>Your internet usage for the current billing period</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="font-medium">
-                {totalUsage.toFixed(1)} GB used{usage && usage.limit_gb ? ` of ${usage.limit_gb} GB` : ""}
+                {totalUsage.toFixed(1)} GB used
+                {usage && usage.limit_gb ? ` of ${usage.limit_gb} GB` : ""}
               </span>
-              <span className="text-muted-foreground">
-                {usagePercentage.toFixed(1)}%
-              </span>
+              <span className="text-muted-foreground">{usagePercentage.toFixed(1)}%</span>
             </div>
             <Progress value={usagePercentage} className="h-2" />
           </div>
@@ -329,17 +324,13 @@ export default function CustomerDashboard() {
                   <Upload className="h-4 w-4 text-green-500" />
                   Upload
                 </p>
-                <p className="text-2xl font-bold text-green-500">
-                  {usage.upload_gb.toFixed(1)} GB
-                </p>
+                <p className="text-2xl font-bold text-green-500">{usage.upload_gb.toFixed(1)} GB</p>
               </div>
             </div>
           )}
 
           <Button asChild variant="outline" className="w-full">
-            <Link href="/customer-portal/usage">
-              View Detailed Usage Report
-            </Link>
+            <Link href="/customer-portal/usage">View Detailed Usage Report</Link>
           </Button>
         </CardContent>
       </Card>
@@ -365,7 +356,8 @@ export default function CustomerDashboard() {
                     <div className="flex flex-col">
                       <span className="font-medium">{ticket.subject}</span>
                       <span className="text-sm text-muted-foreground">
-                        {ticket.ticket_number} • Submitted {new Date(ticket.created_at).toLocaleDateString()}
+                        {ticket.ticket_number} • Submitted{" "}
+                        {new Date(ticket.created_at).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
@@ -375,8 +367,8 @@ export default function CustomerDashboard() {
                       ticket.status === "resolved" || ticket.status === "closed"
                         ? "bg-green-500/10 text-green-500 border-green-500/30"
                         : ticket.status === "in_progress"
-                        ? "bg-blue-500/10 text-blue-500 border-blue-500/30"
-                        : "bg-yellow-500/10 text-yellow-500 border-yellow-500/30"
+                          ? "bg-blue-500/10 text-blue-500 border-blue-500/30"
+                          : "bg-yellow-500/10 text-yellow-500 border-yellow-500/30"
                     }
                   >
                     <CheckCircle className="h-3 w-3 mr-1" />
@@ -387,9 +379,7 @@ export default function CustomerDashboard() {
             </div>
 
             <Button asChild variant="outline" className="w-full mt-4">
-              <Link href="/customer-portal/support">
-                View All Tickets
-              </Link>
+              <Link href="/customer-portal/support">View All Tickets</Link>
             </Button>
           </CardContent>
         </Card>

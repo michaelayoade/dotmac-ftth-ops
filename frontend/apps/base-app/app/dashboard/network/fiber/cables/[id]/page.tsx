@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { use } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { use } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -15,10 +15,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { useRBAC } from '@/contexts/RBACContext';
-import { useFiberCableDetailsAggregated } from '@/hooks/useFiberGraphQL';
-import { platformConfig } from '@/lib/config';
+} from "@/components/ui/table";
+import { useRBAC } from "@/contexts/RBACContext";
+import { useFiberCableDetailsAggregated } from "@/hooks/useFiberGraphQL";
+import { platformConfig } from "@/lib/config";
 import {
   Cable,
   MapPin,
@@ -27,8 +27,8 @@ import {
   Link as LinkIcon,
   ArrowLeft,
   RefreshCw,
-} from 'lucide-react';
-import Link from 'next/link';
+} from "lucide-react";
+import Link from "next/link";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -37,7 +37,7 @@ interface PageProps {
 export default function FiberCableDetailPage({ params }: PageProps) {
   const { id } = use(params);
   const { hasPermission } = useRBAC();
-  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission('isp.ipam.read');
+  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
 
   const { cable, healthMetrics, splicePoints, isLoading, error, refetch } =
     useFiberCableDetailsAggregated(id);
@@ -93,42 +93,45 @@ export default function FiberCableDetailPage({ params }: PageProps) {
   }
 
   const formatFiberType = (type: string) => {
-    return type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+    return type
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'ACTIVE':
-        return 'default';
-      case 'INACTIVE':
-        return 'secondary';
-      case 'UNDER_CONSTRUCTION':
-        return 'outline';
-      case 'MAINTENANCE':
-        return 'secondary';
-      case 'DAMAGED':
-        return 'destructive';
-      case 'DECOMMISSIONED':
-        return 'secondary';
+      case "ACTIVE":
+        return "default";
+      case "INACTIVE":
+        return "secondary";
+      case "UNDER_CONSTRUCTION":
+        return "outline";
+      case "MAINTENANCE":
+        return "secondary";
+      case "DAMAGED":
+        return "destructive";
+      case "DECOMMISSIONED":
+        return "secondary";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
   const getHealthStatusColor = (status: string) => {
     switch (status) {
-      case 'EXCELLENT':
-        return 'text-green-600';
-      case 'GOOD':
-        return 'text-green-500';
-      case 'FAIR':
-        return 'text-amber-500';
-      case 'POOR':
-        return 'text-orange-600';
-      case 'CRITICAL':
-        return 'text-red-600';
+      case "EXCELLENT":
+        return "text-green-600";
+      case "GOOD":
+        return "text-green-500";
+      case "FAIR":
+        return "text-amber-500";
+      case "POOR":
+        return "text-orange-600";
+      case "CRITICAL":
+        return "text-red-600";
       default:
-        return 'text-muted-foreground';
+        return "text-muted-foreground";
     }
   };
 
@@ -179,9 +182,7 @@ export default function FiberCableDetailPage({ params }: PageProps) {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {cable.capacityUtilizationPercent.toFixed(1)}%
-            </div>
+            <div className="text-2xl font-bold">{cable.capacityUtilizationPercent.toFixed(1)}%</div>
             <p className="text-xs text-muted-foreground">
               {cable.usedStrands} / {cable.totalStrands} strands used
             </p>
@@ -278,7 +279,7 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                   <div className="flex items-center justify-between p-3 rounded-lg border">
                     <div>
                       <div className="font-medium">
-                        {cable.startPointName || 'Unknown Location'}
+                        {cable.startPointName || "Unknown Location"}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         ID: {cable.startDistributionPointId}
@@ -298,7 +299,7 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                   <div className="text-sm font-medium">End Point</div>
                   <div className="flex items-center justify-between p-3 rounded-lg border">
                     <div>
-                      <div className="font-medium">{cable.endPointName || 'Unknown Location'}</div>
+                      <div className="font-medium">{cable.endPointName || "Unknown Location"}</div>
                       <div className="text-xs text-muted-foreground">
                         ID: {cable.endDistributionPointId}
                       </div>
@@ -335,12 +336,12 @@ export default function FiberCableDetailPage({ params }: PageProps) {
 
                 <div>
                   <div className="text-muted-foreground mb-1">Armored</div>
-                  <div className="font-medium">{cable.armored ? 'Yes' : 'No'}</div>
+                  <div className="font-medium">{cable.armored ? "Yes" : "No"}</div>
                 </div>
 
                 <div>
                   <div className="text-muted-foreground mb-1">Fire Rated</div>
-                  <div className="font-medium">{cable.fireRated ? 'Yes' : 'No'}</div>
+                  <div className="font-medium">{cable.fireRated ? "Yes" : "No"}</div>
                 </div>
 
                 {cable.conduitId && (
@@ -382,15 +383,16 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                     <div className="flex items-center gap-2">
                       <Badge
                         variant={
-                          metric.healthStatus === 'CRITICAL' ||
-                          metric.healthStatus === 'POOR'
-                            ? 'destructive'
-                            : 'outline'
+                          metric.healthStatus === "CRITICAL" || metric.healthStatus === "POOR"
+                            ? "destructive"
+                            : "outline"
                         }
                       >
                         {formatFiberType(metric.healthStatus)}
                       </Badge>
-                      <div className={`text-2xl font-bold ${getHealthStatusColor(metric.healthStatus)}`}>
+                      <div
+                        className={`text-2xl font-bold ${getHealthStatusColor(metric.healthStatus)}`}
+                      >
                         {metric.healthScore.toFixed(0)}%
                       </div>
                     </div>
@@ -407,7 +409,9 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                       </div>
                       <div>
                         <div className="text-muted-foreground mb-1">Avg Loss/km</div>
-                        <div className="font-medium">{metric.averageLossPerKmDb.toFixed(2)} dB/km</div>
+                        <div className="font-medium">
+                          {metric.averageLossPerKmDb.toFixed(2)} dB/km
+                        </div>
                       </div>
                       <div>
                         <div className="text-muted-foreground mb-1">Max Loss/km</div>
@@ -446,7 +450,9 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                   </div>
 
                   {/* Issues */}
-                  {(metric.activeAlarms > 0 || metric.warningCount > 0 || metric.requiresMaintenance) && (
+                  {(metric.activeAlarms > 0 ||
+                    metric.warningCount > 0 ||
+                    metric.requiresMaintenance) && (
                     <div className="p-4 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20">
                       <div className="flex items-start gap-3">
                         <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5" />
@@ -456,13 +462,9 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                             {metric.activeAlarms > 0 && (
                               <div>Active Alarms: {metric.activeAlarms}</div>
                             )}
-                            {metric.warningCount > 0 && (
-                              <div>Warnings: {metric.warningCount}</div>
-                            )}
+                            {metric.warningCount > 0 && <div>Warnings: {metric.warningCount}</div>}
                             {metric.requiresMaintenance && (
-                              <div className="text-amber-600 font-medium">
-                                Maintenance Required
-                              </div>
+                              <div className="text-amber-600 font-medium">Maintenance Required</div>
                             )}
                           </div>
                         </div>
@@ -501,9 +503,7 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                       <TableRow key={strand.strandId}>
                         <TableCell className="font-medium">{strand.strandId}</TableCell>
                         <TableCell>
-                          {strand.colorCode && (
-                            <Badge variant="outline">{strand.colorCode}</Badge>
-                          )}
+                          {strand.colorCode && <Badge variant="outline">{strand.colorCode}</Badge>}
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
@@ -519,19 +519,15 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm">
-                          {strand.customerName || '—'}
-                        </TableCell>
+                        <TableCell className="text-sm">{strand.customerName || "—"}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {strand.serviceId || '—'}
+                          {strand.serviceId || "—"}
                         </TableCell>
                         <TableCell className="text-right text-sm">
-                          {strand.attenuationDb
-                            ? `${strand.attenuationDb.toFixed(2)} dB`
-                            : '—'}
+                          {strand.attenuationDb ? `${strand.attenuationDb.toFixed(2)} dB` : "—"}
                         </TableCell>
                         <TableCell className="text-right text-sm">
-                          {strand.lossDb ? `${strand.lossDb.toFixed(2)} dB` : '—'}
+                          {strand.lossDb ? `${strand.lossDb.toFixed(2)} dB` : "—"}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -547,7 +543,9 @@ export default function FiberCableDetailPage({ params }: PageProps) {
           <Card>
             <CardHeader>
               <CardTitle>Splice Points ({splicePoints.length})</CardTitle>
-              <CardDescription>Splice closures and connection points along the cable</CardDescription>
+              <CardDescription>
+                Splice closures and connection points along the cable
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {splicePoints.length === 0 ? (
@@ -568,7 +566,7 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                           <div className="text-xs text-muted-foreground">ID: {splice.spliceId}</div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant={splice.status === 'ACTIVE' ? 'default' : 'secondary'}>
+                          <Badge variant={splice.status === "ACTIVE" ? "default" : "secondary"}>
                             {formatFiberType(splice.status)}
                           </Badge>
                           <Link href={`/dashboard/network/fiber/splices/${splice.id}`}>
@@ -592,7 +590,7 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                           <div className="font-medium">
                             {splice.averageSpliceLossDb
                               ? `${splice.averageSpliceLossDb.toFixed(2)} dB`
-                              : '—'}
+                              : "—"}
                           </div>
                         </div>
                         <div>
@@ -647,9 +645,7 @@ export default function FiberCableDetailPage({ params }: PageProps) {
               <div className="h-96 rounded-lg border bg-muted flex items-center justify-center">
                 <div className="text-center space-y-2">
                   <MapPin className="h-8 w-8 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    Map view will be displayed here
-                  </p>
+                  <p className="text-sm text-muted-foreground">Map view will be displayed here</p>
                 </div>
               </div>
             </CardContent>

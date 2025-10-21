@@ -13,11 +13,7 @@ import {
 export function useTenantOnboarding() {
   const queryClient = useQueryClient();
 
-  const onboardMutation = useMutation<
-    TenantOnboardingResponse,
-    Error,
-    TenantOnboardingRequest
-  >({
+  const onboardMutation = useMutation<TenantOnboardingResponse, Error, TenantOnboardingRequest>({
     mutationFn: (request) => tenantOnboardingService.onboardTenant(request),
     onSuccess: () => {
       // Invalidate tenant list to refresh after onboarding

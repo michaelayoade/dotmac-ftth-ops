@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Shield,
   TrendingUp,
@@ -20,15 +20,26 @@ import {
   Clock,
   BarChart3,
   RefreshCw,
-} from 'lucide-react';
-import { useActivitySummary } from '@/hooks/useAudit';
-import { ActivitySeverity, SEVERITY_COLORS, formatActivityType, getActivityIcon } from '@/types/audit';
-import Link from 'next/link';
+} from "lucide-react";
+import { useActivitySummary } from "@/hooks/useAudit";
+import {
+  ActivitySeverity,
+  SEVERITY_COLORS,
+  formatActivityType,
+  getActivityIcon,
+} from "@/types/audit";
+import Link from "next/link";
 
 export function AuditSummaryDashboard() {
   const [timeRange, setTimeRange] = useState<number>(7);
 
-  const { data: summary, isLoading, error, refetch, isRefetching } = useActivitySummary(timeRange, true);
+  const {
+    data: summary,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+  } = useActivitySummary(timeRange, true);
 
   if (error) {
     return (
@@ -38,7 +49,7 @@ export function AuditSummaryDashboard() {
             <AlertTriangle className="h-12 w-12 mx-auto mb-2" />
             <p>Failed to load audit summary</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {error instanceof Error ? error.message : 'Unknown error'}
+              {error instanceof Error ? error.message : "Unknown error"}
             </p>
           </div>
         </CardContent>
@@ -104,7 +115,7 @@ export function AuditSummaryDashboard() {
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isRefetching}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefetching ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefetching ? "animate-spin" : ""}`} />
             Refresh
           </Button>
         </div>
@@ -124,7 +135,7 @@ export function AuditSummaryDashboard() {
               <div>
                 <div className="text-3xl font-bold">{totalActivities.toLocaleString()}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Last {timeRange} {timeRange === 1 ? 'day' : 'days'}
+                  Last {timeRange} {timeRange === 1 ? "day" : "days"}
                 </p>
               </div>
               <Activity className="h-8 w-8 text-blue-500" />
@@ -143,9 +154,7 @@ export function AuditSummaryDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-3xl font-bold text-red-600">{criticalCount}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Requires immediate attention
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Requires immediate attention</p>
               </div>
               <AlertTriangle className="h-8 w-8 text-red-500" />
             </div>
@@ -163,9 +172,7 @@ export function AuditSummaryDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-3xl font-bold text-orange-600">{highCount}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Review recommended
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Review recommended</p>
               </div>
               <TrendingUp className="h-8 w-8 text-orange-500" />
             </div>
@@ -183,9 +190,7 @@ export function AuditSummaryDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-3xl font-bold">{topUsers.length}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Users with activity
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Users with activity</p>
               </div>
               <Users className="h-8 w-8 text-green-500" />
             </div>
@@ -202,18 +207,14 @@ export function AuditSummaryDashboard() {
               <BarChart3 className="h-5 w-5" />
               Activity Severity Distribution
             </CardTitle>
-            <CardDescription>
-              Breakdown of activities by severity level
-            </CardDescription>
+            <CardDescription>Breakdown of activities by severity level</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {/* Critical */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Badge className={SEVERITY_COLORS[ActivitySeverity.CRITICAL]}>
-                    CRITICAL
-                  </Badge>
+                  <Badge className={SEVERITY_COLORS[ActivitySeverity.CRITICAL]}>CRITICAL</Badge>
                   <span className="font-semibold">{criticalCount}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -229,9 +230,7 @@ export function AuditSummaryDashboard() {
               {/* High */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Badge className={SEVERITY_COLORS[ActivitySeverity.HIGH]}>
-                    HIGH
-                  </Badge>
+                  <Badge className={SEVERITY_COLORS[ActivitySeverity.HIGH]}>HIGH</Badge>
                   <span className="font-semibold">{highCount}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -247,9 +246,7 @@ export function AuditSummaryDashboard() {
               {/* Medium */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Badge className={SEVERITY_COLORS[ActivitySeverity.MEDIUM]}>
-                    MEDIUM
-                  </Badge>
+                  <Badge className={SEVERITY_COLORS[ActivitySeverity.MEDIUM]}>MEDIUM</Badge>
                   <span className="font-semibold">{mediumCount}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -265,9 +262,7 @@ export function AuditSummaryDashboard() {
               {/* Low */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Badge className={SEVERITY_COLORS[ActivitySeverity.LOW]}>
-                    LOW
-                  </Badge>
+                  <Badge className={SEVERITY_COLORS[ActivitySeverity.LOW]}>LOW</Badge>
                   <span className="font-semibold">{lowCount}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -290,9 +285,7 @@ export function AuditSummaryDashboard() {
               <Activity className="h-5 w-5" />
               Top Activity Types
             </CardTitle>
-            <CardDescription>
-              Most frequent activity types in this period
-            </CardDescription>
+            <CardDescription>Most frequent activity types in this period</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -330,9 +323,7 @@ export function AuditSummaryDashboard() {
               <Users className="h-5 w-5" />
               Most Active Users
             </CardTitle>
-            <CardDescription>
-              Users with the highest activity count
-            </CardDescription>
+            <CardDescription>Users with the highest activity count</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -350,7 +341,7 @@ export function AuditSummaryDashboard() {
                       <div>
                         <p className="font-medium font-mono text-sm">{user.user_id}</p>
                         <p className="text-xs text-muted-foreground">
-                          {user.count} {user.count === 1 ? 'activity' : 'activities'}
+                          {user.count} {user.count === 1 ? "activity" : "activities"}
                         </p>
                       </div>
                     </div>
@@ -372,9 +363,7 @@ export function AuditSummaryDashboard() {
               <AlertTriangle className="h-5 w-5 text-red-600" />
               Recent Critical Activities
             </CardTitle>
-            <CardDescription>
-              Latest activities requiring immediate attention
-            </CardDescription>
+            <CardDescription>Latest activities requiring immediate attention</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -384,7 +373,9 @@ export function AuditSummaryDashboard() {
                   className="p-3 border rounded-lg hover:bg-accent/50 transition-colors"
                 >
                   <div className="flex items-start gap-2">
-                    <span className="text-xl mt-0.5">{getActivityIcon(activity.activity_type)}</span>
+                    <span className="text-xl mt-0.5">
+                      {getActivityIcon(activity.activity_type)}
+                    </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge className={SEVERITY_COLORS[activity.severity]}>
@@ -426,9 +417,7 @@ export function AuditSummaryDashboard() {
             <TrendingUp className="h-5 w-5" />
             Activity Timeline
           </CardTitle>
-          <CardDescription>
-            Daily activity trends over the selected period
-          </CardDescription>
+          <CardDescription>Daily activity trends over the selected period</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -440,7 +429,10 @@ export function AuditSummaryDashboard() {
               return (
                 <div key={entry.date} className="flex items-center gap-3">
                   <div className="w-24 text-xs text-muted-foreground text-right">
-                    {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </div>
                   <div className="flex-1">
                     <div className="w-full bg-gray-200 rounded-full h-6 relative">
@@ -449,9 +441,7 @@ export function AuditSummaryDashboard() {
                         style={{ width: `${percentage}%` }}
                       >
                         {entry.count > 0 && (
-                          <span className="text-xs font-semibold text-white">
-                            {entry.count}
-                          </span>
+                          <span className="text-xs font-semibold text-white">{entry.count}</span>
                         )}
                       </div>
                     </div>

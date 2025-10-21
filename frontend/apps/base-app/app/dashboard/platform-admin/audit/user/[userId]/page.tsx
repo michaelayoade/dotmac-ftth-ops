@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
 import {
   Shield,
   Clock,
@@ -13,22 +13,22 @@ import {
   Activity,
   TrendingUp,
   AlertTriangle,
-} from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
+} from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { platformAdminService } from '@/lib/services/platform-admin-service';
-import { useToast } from '@/components/ui/use-toast';
-import Link from 'next/link';
+} from "@/components/ui/select";
+import { platformAdminService } from "@/lib/services/platform-admin-service";
+import { useToast } from "@/components/ui/use-toast";
+import Link from "next/link";
 
 interface AuditAction {
   id: string;
@@ -37,7 +37,7 @@ interface AuditAction {
   timestamp: string;
   userId: string;
   tenantId?: string;
-  status: 'success' | 'failure';
+  status: "success" | "failure";
   details?: Record<string, unknown>;
 }
 
@@ -61,12 +61,12 @@ export default function UserActivityLogPage() {
   const [allActions, setAllActions] = useState<AuditAction[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [actionFilter, setActionFilter] = useState<string>('all');
-  const [resourceFilter, setResourceFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [dateFrom, setDateFrom] = useState<string>('');
-  const [dateTo, setDateTo] = useState<string>('');
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [actionFilter, setActionFilter] = useState<string>("all");
+  const [resourceFilter, setResourceFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   const loadUserAuditLog = useCallback(async () => {
     setLoading(true);
@@ -86,8 +86,12 @@ export default function UserActivityLogPage() {
         }));
       setAllActions(mappedActions);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to fetch user audit log';
-      toast({ title: 'Unable to load user activity', description: message, variant: 'destructive' });
+      const message = error instanceof Error ? error.message : "Failed to fetch user audit log";
+      toast({
+        title: "Unable to load user activity",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -99,26 +103,29 @@ export default function UserActivityLogPage() {
 
   // Calculate activity stats
   const activityStats: ActivityStats = useMemo(() => {
-    const successfulActions = allActions.filter((a) => a.status === 'success').length;
-    const failedActions = allActions.filter((a) => a.status === 'failure').length;
+    const successfulActions = allActions.filter((a) => a.status === "success").length;
+    const failedActions = allActions.filter((a) => a.status === "failure").length;
     const uniqueResourceTypes = new Set(allActions.map((a) => a.resourceType)).size;
 
     // Find most common action
-    const actionCounts = allActions.reduce((acc, action) => {
-      acc[action.action] = (acc[action.action] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const actionCounts = allActions.reduce(
+      (acc, action) => {
+        acc[action.action] = (acc[action.action] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
     const mostCommonAction =
       Object.keys(actionCounts).length > 0
-        ? (Object.entries(actionCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'N/A')
-        : 'N/A';
+        ? (Object.entries(actionCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "N/A")
+        : "N/A";
 
     const lastActivityDate =
       allActions.length > 0
         ? new Date(
-            Math.max(...allActions.map((a) => new Date(a.timestamp).getTime()))
+            Math.max(...allActions.map((a) => new Date(a.timestamp).getTime())),
           ).toLocaleString()
-        : 'N/A';
+        : "N/A";
 
     return {
       totalActions: allActions.length,
@@ -134,13 +141,13 @@ export default function UserActivityLogPage() {
   const filteredActions = useMemo(() => {
     let filtered = [...allActions];
 
-    if (actionFilter !== 'all') {
+    if (actionFilter !== "all") {
       filtered = filtered.filter((a) => a.action === actionFilter);
     }
-    if (resourceFilter !== 'all') {
+    if (resourceFilter !== "all") {
       filtered = filtered.filter((a) => a.resourceType === resourceFilter);
     }
-    if (statusFilter !== 'all') {
+    if (statusFilter !== "all") {
       filtered = filtered.filter((a) => a.status === statusFilter);
     }
     if (dateFrom) {
@@ -157,7 +164,7 @@ export default function UserActivityLogPage() {
         (a) =>
           a.action.toLowerCase().includes(searchLower) ||
           a.resourceType.toLowerCase().includes(searchLower) ||
-          JSON.stringify(a.details).toLowerCase().includes(searchLower)
+          JSON.stringify(a.details).toLowerCase().includes(searchLower),
       );
     }
 
@@ -177,45 +184,45 @@ export default function UserActivityLogPage() {
 
   const uniqueActions = useMemo(
     () => Array.from(new Set(allActions.map((a) => a.action))),
-    [allActions]
+    [allActions],
   );
   const uniqueResourceTypes = useMemo(
     () => Array.from(new Set(allActions.map((a) => a.resourceType))),
-    [allActions]
+    [allActions],
   );
 
   const handleExport = useCallback(
-    (format: 'csv' | 'json') => {
+    (format: "csv" | "json") => {
       const dataToExport = filteredActions;
 
-      if (format === 'json') {
+      if (format === "json") {
         const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
-          type: 'application/json',
+          type: "application/json",
         });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = `user-activity-${userId}-${new Date().toISOString()}.json`;
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        const headers = ['Timestamp', 'Action', 'Resource Type', 'Status', 'Tenant ID', 'Details'];
+        const headers = ["Timestamp", "Action", "Resource Type", "Status", "Tenant ID", "Details"];
         const rows = dataToExport.map((action) => [
           action.timestamp,
           action.action,
           action.resourceType,
           action.status,
-          action.tenantId || '',
+          action.tenantId || "",
           JSON.stringify(action.details || {}),
         ]);
         const csvContent = [
-          headers.join(','),
-          ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-        ].join('\n');
+          headers.join(","),
+          ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+        ].join("\n");
 
-        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const blob = new Blob([csvContent], { type: "text/csv" });
         const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = `user-activity-${userId}-${new Date().toISOString()}.csv`;
         a.click();
@@ -223,11 +230,11 @@ export default function UserActivityLogPage() {
       }
 
       toast({
-        title: 'Export Successful',
+        title: "Export Successful",
         description: `Exported ${dataToExport.length} activity log entries as ${format.toUpperCase()}`,
       });
     },
-    [filteredActions, userId, toast]
+    [filteredActions, userId, toast],
   );
 
   return (
@@ -250,11 +257,11 @@ export default function UserActivityLogPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => handleExport('csv')}>
+          <Button variant="outline" size="sm" onClick={() => handleExport("csv")}>
             <Download className="h-4 w-4 mr-2" />
             Export CSV
           </Button>
-          <Button variant="outline" size="sm" onClick={() => handleExport('json')}>
+          <Button variant="outline" size="sm" onClick={() => handleExport("json")}>
             <Download className="h-4 w-4 mr-2" />
             Export JSON
           </Button>
@@ -306,9 +313,7 @@ export default function UserActivityLogPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400">Resource Types</p>
-                <p className="text-2xl font-bold text-white">
-                  {activityStats.uniqueResourceTypes}
-                </p>
+                <p className="text-2xl font-bold text-white">{activityStats.uniqueResourceTypes}</p>
               </div>
               <Shield className="h-8 w-8 text-purple-400" />
             </div>
@@ -401,9 +406,9 @@ export default function UserActivityLogPage() {
             />
           </div>
 
-          {(actionFilter !== 'all' ||
-            resourceFilter !== 'all' ||
-            statusFilter !== 'all' ||
+          {(actionFilter !== "all" ||
+            resourceFilter !== "all" ||
+            statusFilter !== "all" ||
             dateFrom ||
             dateTo ||
             searchTerm) && (
@@ -411,12 +416,12 @@ export default function UserActivityLogPage() {
               variant="ghost"
               size="sm"
               onClick={() => {
-                setActionFilter('all');
-                setResourceFilter('all');
-                setStatusFilter('all');
-                setDateFrom('');
-                setDateTo('');
-                setSearchTerm('');
+                setActionFilter("all");
+                setResourceFilter("all");
+                setStatusFilter("all");
+                setDateFrom("");
+                setDateTo("");
+                setSearchTerm("");
               }}
             >
               Clear Filters
@@ -447,8 +452,8 @@ export default function UserActivityLogPage() {
                 <p>No activities found</p>
                 <p className="text-sm mt-1">
                   {filteredActions.length === 0 && allActions.length > 0
-                    ? 'Try adjusting your filters'
-                    : 'This user has no recorded activities'}
+                    ? "Try adjusting your filters"
+                    : "This user has no recorded activities"}
                 </p>
               </div>
             ) : (
@@ -463,7 +468,7 @@ export default function UserActivityLogPage() {
                         <div className="flex items-center gap-2 mb-1">
                           <Badge variant="outline">{action.action}</Badge>
                           <Badge
-                            variant={action.status === 'success' ? 'default' : 'destructive'}
+                            variant={action.status === "success" ? "default" : "destructive"}
                             className="text-xs uppercase"
                           >
                             {action.status}
@@ -503,8 +508,8 @@ export default function UserActivityLogPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-4 border-t border-slate-700 mt-4">
               <p className="text-sm text-slate-400">
-                Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{' '}
-                {Math.min(currentPage * ITEMS_PER_PAGE, filteredActions.length)} of{' '}
+                Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{" "}
+                {Math.min(currentPage * ITEMS_PER_PAGE, filteredActions.length)} of{" "}
                 {filteredActions.length} entries
               </p>
               <div className="flex items-center gap-2">

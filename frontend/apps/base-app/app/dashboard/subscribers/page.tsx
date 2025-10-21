@@ -4,21 +4,21 @@
  * Main page for viewing and managing ISP subscribers
  */
 
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { useState, useMemo } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { useRBAC } from '@/contexts/RBACContext';
+} from "@/components/ui/select";
+import { useRBAC } from "@/contexts/RBACContext";
 import {
   useSubscribers,
   useSubscriberStatistics,
@@ -26,11 +26,11 @@ import {
   type Subscriber,
   type SubscriberStatus,
   type ConnectionType,
-} from '@/hooks/useSubscribers';
-import { SubscriberList } from '@/components/subscribers/SubscriberList';
-import type { BulkAction } from '@/components/ui/EnhancedDataTable';
-import { SubscriberDetailModal } from '@/components/subscribers/SubscriberDetailModal';
-import { AddSubscriberModal } from '@/components/subscribers/AddSubscriberModal';
+} from "@/hooks/useSubscribers";
+import { SubscriberList } from "@/components/subscribers/SubscriberList";
+import type { BulkAction } from "@/components/ui/EnhancedDataTable";
+import { SubscriberDetailModal } from "@/components/subscribers/SubscriberDetailModal";
+import { AddSubscriberModal } from "@/components/subscribers/AddSubscriberModal";
 import {
   Users,
   UserCheck,
@@ -44,9 +44,9 @@ import {
   X,
   Ban,
   Trash2,
-} from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { logger } from '@/lib/logger';
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // Main Component
@@ -57,15 +57,15 @@ export default function SubscribersPage() {
   const { toast } = useToast();
 
   // Permissions
-  const canView = hasPermission('customers.read');
-  const canCreate = hasPermission('customers.create');
-  const canUpdate = hasPermission('customers.update');
-  const canDelete = hasPermission('customers.delete');
+  const canView = hasPermission("customers.read");
+  const canCreate = hasPermission("customers.create");
+  const canUpdate = hasPermission("customers.update");
+  const canDelete = hasPermission("customers.delete");
 
   // State
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<SubscriberStatus | 'all'>('all');
-  const [connectionTypeFilter, setConnectionTypeFilter] = useState<ConnectionType | 'all'>('all');
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<SubscriberStatus | "all">("all");
+  const [connectionTypeFilter, setConnectionTypeFilter] = useState<ConnectionType | "all">("all");
   const [selectedSubscriber, setSelectedSubscriber] = useState<Subscriber | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -74,11 +74,11 @@ export default function SubscribersPage() {
   const queryParams = useMemo(() => {
     const params: any = {
       search: search || undefined,
-      status: statusFilter !== 'all' ? [statusFilter] : undefined,
-      connection_type: connectionTypeFilter !== 'all' ? [connectionTypeFilter] : undefined,
+      status: statusFilter !== "all" ? [statusFilter] : undefined,
+      connection_type: connectionTypeFilter !== "all" ? [connectionTypeFilter] : undefined,
       limit: 100,
-      sort_by: 'created_at',
-      sort_order: 'desc' as const,
+      sort_by: "created_at",
+      sort_order: "desc" as const,
     };
     return params;
   }, [search, statusFilter, connectionTypeFilter]);
@@ -107,10 +107,10 @@ export default function SubscribersPage() {
 
   const handleSuspend = async (subscriber: Subscriber) => {
     try {
-      const success = await suspendSubscriber(subscriber.id, 'Suspended by operator');
+      const success = await suspendSubscriber(subscriber.id, "Suspended by operator");
       if (success) {
         toast({
-          title: 'Subscriber Suspended',
+          title: "Subscriber Suspended",
           description: `${subscriber.first_name} ${subscriber.last_name} has been suspended.`,
         });
         refetch();
@@ -120,11 +120,14 @@ export default function SubscribersPage() {
         }
       }
     } catch (error) {
-      logger.error('Failed to suspend subscriber', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Failed to suspend subscriber",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast({
-        title: 'Suspension Failed',
-        description: 'Unable to suspend subscriber. Please try again.',
-        variant: 'destructive',
+        title: "Suspension Failed",
+        description: "Unable to suspend subscriber. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -134,7 +137,7 @@ export default function SubscribersPage() {
       const success = await activateSubscriber(subscriber.id);
       if (success) {
         toast({
-          title: 'Subscriber Activated',
+          title: "Subscriber Activated",
           description: `${subscriber.first_name} ${subscriber.last_name} has been activated.`,
         });
         refetch();
@@ -144,21 +147,24 @@ export default function SubscribersPage() {
         }
       }
     } catch (error) {
-      logger.error('Failed to activate subscriber', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Failed to activate subscriber",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast({
-        title: 'Activation Failed',
-        description: 'Unable to activate subscriber. Please try again.',
-        variant: 'destructive',
+        title: "Activation Failed",
+        description: "Unable to activate subscriber. Please try again.",
+        variant: "destructive",
       });
     }
   };
 
   const handleTerminate = async (subscriber: Subscriber) => {
     try {
-      const success = await terminateSubscriber(subscriber.id, 'Terminated by operator');
+      const success = await terminateSubscriber(subscriber.id, "Terminated by operator");
       if (success) {
         toast({
-          title: 'Subscriber Terminated',
+          title: "Subscriber Terminated",
           description: `${subscriber.first_name} ${subscriber.last_name} has been terminated.`,
         });
         refetch();
@@ -168,17 +174,24 @@ export default function SubscribersPage() {
         }
       }
     } catch (error) {
-      logger.error('Failed to terminate subscriber', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Failed to terminate subscriber",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast({
-        title: 'Termination Failed',
-        description: 'Unable to terminate subscriber. Please try again.',
-        variant: 'destructive',
+        title: "Termination Failed",
+        description: "Unable to terminate subscriber. Please try again.",
+        variant: "destructive",
       });
     }
   };
 
   const handleDelete = async (subscriber: Subscriber) => {
-    if (!confirm(`Are you sure you want to delete ${subscriber.first_name} ${subscriber.last_name}? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete ${subscriber.first_name} ${subscriber.last_name}? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
 
@@ -186,7 +199,7 @@ export default function SubscribersPage() {
       const success = await deleteSubscriber(subscriber.id);
       if (success) {
         toast({
-          title: 'Subscriber Deleted',
+          title: "Subscriber Deleted",
           description: `${subscriber.first_name} ${subscriber.last_name} has been deleted.`,
         });
         refetch();
@@ -196,11 +209,14 @@ export default function SubscribersPage() {
         }
       }
     } catch (error) {
-      logger.error('Failed to delete subscriber', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Failed to delete subscriber",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast({
-        title: 'Deletion Failed',
-        description: 'Unable to delete subscriber. Please try again.',
-        variant: 'destructive',
+        title: "Deletion Failed",
+        description: "Unable to delete subscriber. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -208,9 +224,9 @@ export default function SubscribersPage() {
   const handleExport = () => {
     try {
       const dataStr = JSON.stringify(subscribers, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const dataBlob = new Blob([dataStr], { type: "application/json" });
       const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = `subscribers-${new Date().toISOString()}.json`;
       document.body.appendChild(link);
@@ -219,52 +235,58 @@ export default function SubscribersPage() {
       URL.revokeObjectURL(url);
 
       toast({
-        title: 'Export Complete',
+        title: "Export Complete",
         description: `Exported ${subscribers.length} subscribers.`,
       });
     } catch (error) {
-      logger.error('Failed to export subscribers', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Failed to export subscribers",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast({
-        title: 'Export Failed',
-        description: 'Unable to export subscribers.',
-        variant: 'destructive',
+        title: "Export Failed",
+        description: "Unable to export subscribers.",
+        variant: "destructive",
       });
     }
   };
 
   const clearFilters = () => {
-    setSearch('');
-    setStatusFilter('all');
-    setConnectionTypeFilter('all');
+    setSearch("");
+    setStatusFilter("all");
+    setConnectionTypeFilter("all");
   };
 
-  const hasActiveFilters = search || statusFilter !== 'all' || connectionTypeFilter !== 'all';
+  const hasActiveFilters = search || statusFilter !== "all" || connectionTypeFilter !== "all";
 
   // Bulk action handlers
   const handleBulkSuspend = async (selectedSubscribers: Subscriber[]) => {
     try {
       const results = await Promise.allSettled(
-        selectedSubscribers.map(subscriber =>
-          suspendSubscriber(subscriber.id, 'Bulk suspension by operator')
-        )
+        selectedSubscribers.map((subscriber) =>
+          suspendSubscriber(subscriber.id, "Bulk suspension by operator"),
+        ),
       );
 
-      const succeeded = results.filter(r => r.status === 'fulfilled').length;
-      const failed = results.filter(r => r.status === 'rejected').length;
+      const succeeded = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.filter((r) => r.status === "rejected").length;
 
       toast({
-        title: 'Bulk Suspend Complete',
-        description: `Suspended ${succeeded} subscribers. ${failed > 0 ? `${failed} failed.` : ''}`,
-        variant: failed > 0 ? 'destructive' : 'default',
+        title: "Bulk Suspend Complete",
+        description: `Suspended ${succeeded} subscribers. ${failed > 0 ? `${failed} failed.` : ""}`,
+        variant: failed > 0 ? "destructive" : "default",
       });
 
       refetch();
     } catch (error) {
-      logger.error('Bulk suspend operation failed', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Bulk suspend operation failed",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast({
-        title: 'Bulk Suspend Failed',
-        description: 'Unable to suspend subscribers. Please try again.',
-        variant: 'destructive',
+        title: "Bulk Suspend Failed",
+        description: "Unable to suspend subscribers. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -272,27 +294,28 @@ export default function SubscribersPage() {
   const handleBulkActivate = async (selectedSubscribers: Subscriber[]) => {
     try {
       const results = await Promise.allSettled(
-        selectedSubscribers.map(subscriber =>
-          activateSubscriber(subscriber.id)
-        )
+        selectedSubscribers.map((subscriber) => activateSubscriber(subscriber.id)),
       );
 
-      const succeeded = results.filter(r => r.status === 'fulfilled').length;
-      const failed = results.filter(r => r.status === 'rejected').length;
+      const succeeded = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.filter((r) => r.status === "rejected").length;
 
       toast({
-        title: 'Bulk Activate Complete',
-        description: `Activated ${succeeded} subscribers. ${failed > 0 ? `${failed} failed.` : ''}`,
-        variant: failed > 0 ? 'destructive' : 'default',
+        title: "Bulk Activate Complete",
+        description: `Activated ${succeeded} subscribers. ${failed > 0 ? `${failed} failed.` : ""}`,
+        variant: failed > 0 ? "destructive" : "default",
       });
 
       refetch();
     } catch (error) {
-      logger.error('Bulk activate operation failed', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Bulk activate operation failed",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast({
-        title: 'Bulk Activate Failed',
-        description: 'Unable to activate subscribers. Please try again.',
-        variant: 'destructive',
+        title: "Bulk Activate Failed",
+        description: "Unable to activate subscribers. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -300,27 +323,28 @@ export default function SubscribersPage() {
   const handleBulkDelete = async (selectedSubscribers: Subscriber[]) => {
     try {
       const results = await Promise.allSettled(
-        selectedSubscribers.map(subscriber =>
-          deleteSubscriber(subscriber.id)
-        )
+        selectedSubscribers.map((subscriber) => deleteSubscriber(subscriber.id)),
       );
 
-      const succeeded = results.filter(r => r.status === 'fulfilled').length;
-      const failed = results.filter(r => r.status === 'rejected').length;
+      const succeeded = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.filter((r) => r.status === "rejected").length;
 
       toast({
-        title: 'Bulk Delete Complete',
-        description: `Deleted ${succeeded} subscribers. ${failed > 0 ? `${failed} failed.` : ''}`,
-        variant: failed > 0 ? 'destructive' : 'default',
+        title: "Bulk Delete Complete",
+        description: `Deleted ${succeeded} subscribers. ${failed > 0 ? `${failed} failed.` : ""}`,
+        variant: failed > 0 ? "destructive" : "default",
       });
 
       refetch();
     } catch (error) {
-      logger.error('Bulk delete operation failed', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Bulk delete operation failed",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast({
-        title: 'Bulk Delete Failed',
-        description: 'Unable to delete subscribers. Please try again.',
-        variant: 'destructive',
+        title: "Bulk Delete Failed",
+        description: "Unable to delete subscribers. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -331,30 +355,31 @@ export default function SubscribersPage() {
 
     if (canUpdate) {
       actions.push({
-        label: 'Suspend Selected',
+        label: "Suspend Selected",
         icon: Ban,
         action: handleBulkSuspend,
-        variant: 'outline',
-        confirmMessage: 'Are you sure you want to suspend all selected subscribers?',
-        disabled: (rows) => rows.every(r => r.status === 'suspended'),
+        variant: "outline",
+        confirmMessage: "Are you sure you want to suspend all selected subscribers?",
+        disabled: (rows) => rows.every((r) => r.status === "suspended"),
       });
 
       actions.push({
-        label: 'Activate Selected',
+        label: "Activate Selected",
         icon: UserCheck,
         action: handleBulkActivate,
-        variant: 'outline',
-        disabled: (rows) => rows.every(r => r.status === 'active'),
+        variant: "outline",
+        disabled: (rows) => rows.every((r) => r.status === "active"),
       });
     }
 
     if (canDelete) {
       actions.push({
-        label: 'Delete Selected',
+        label: "Delete Selected",
         icon: Trash2,
         action: handleBulkDelete,
-        variant: 'destructive',
-        confirmMessage: 'Are you sure you want to delete all selected subscribers? This action cannot be undone.',
+        variant: "destructive",
+        confirmMessage:
+          "Are you sure you want to delete all selected subscribers? This action cannot be undone.",
       });
     }
 
@@ -369,7 +394,8 @@ export default function SubscribersPage() {
           <CardHeader>
             <CardTitle>Subscribers</CardTitle>
             <CardDescription>
-              You don&apos;t have permission to view subscribers. Contact your administrator for access.
+              You don&apos;t have permission to view subscribers. Contact your administrator for
+              access.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -410,11 +436,9 @@ export default function SubscribersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {statsLoading ? '...' : statistics?.total_subscribers.toLocaleString() || '0'}
+              {statsLoading ? "..." : statistics?.total_subscribers.toLocaleString() || "0"}
             </div>
-            <p className="text-xs text-muted-foreground">
-              All subscriber accounts
-            </p>
+            <p className="text-xs text-muted-foreground">All subscriber accounts</p>
           </CardContent>
         </Card>
 
@@ -425,11 +449,9 @@ export default function SubscribersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {statsLoading ? '...' : statistics?.active_subscribers.toLocaleString() || '0'}
+              {statsLoading ? "..." : statistics?.active_subscribers.toLocaleString() || "0"}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Currently active services
-            </p>
+            <p className="text-xs text-muted-foreground">Currently active services</p>
           </CardContent>
         </Card>
 
@@ -440,11 +462,9 @@ export default function SubscribersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {statsLoading ? '...' : statistics?.suspended_subscribers.toLocaleString() || '0'}
+              {statsLoading ? "..." : statistics?.suspended_subscribers.toLocaleString() || "0"}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Temporarily suspended
-            </p>
+            <p className="text-xs text-muted-foreground">Temporarily suspended</p>
           </CardContent>
         </Card>
 
@@ -455,11 +475,9 @@ export default function SubscribersPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {statsLoading ? '...' : statistics?.new_this_month.toLocaleString() || '0'}
+              {statsLoading ? "..." : statistics?.new_this_month.toLocaleString() || "0"}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Recent sign-ups
-            </p>
+            <p className="text-xs text-muted-foreground">Recent sign-ups</p>
           </CardContent>
         </Card>
       </div>
@@ -476,9 +494,7 @@ export default function SubscribersPage() {
               <div className="text-2xl font-bold">
                 {statistics.pending_subscribers.toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Awaiting service activation
-              </p>
+              <p className="text-xs text-muted-foreground">Awaiting service activation</p>
             </CardContent>
           </Card>
 
@@ -491,9 +507,7 @@ export default function SubscribersPage() {
               <div className="text-2xl font-bold">
                 {statistics.churn_this_month.toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Subscriber cancellations
-              </p>
+              <p className="text-xs text-muted-foreground">Subscriber cancellations</p>
             </CardContent>
           </Card>
 
@@ -503,12 +517,8 @@ export default function SubscribersPage() {
               <UserCheck className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {statistics.average_uptime.toFixed(1)}%
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Network availability
-              </p>
+              <div className="text-2xl font-bold">{statistics.average_uptime.toFixed(1)}%</div>
+              <p className="text-xs text-muted-foreground">Network availability</p>
             </CardContent>
           </Card>
         </div>
@@ -546,7 +556,7 @@ export default function SubscribersPage() {
               <div className="flex gap-2">
                 <Select
                   value={statusFilter}
-                  onValueChange={(value) => setStatusFilter(value as SubscriberStatus | 'all')}
+                  onValueChange={(value) => setStatusFilter(value as SubscriberStatus | "all")}
                 >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="All Statuses" />
@@ -563,7 +573,9 @@ export default function SubscribersPage() {
 
                 <Select
                   value={connectionTypeFilter}
-                  onValueChange={(value) => setConnectionTypeFilter(value as ConnectionType | 'all')}
+                  onValueChange={(value) =>
+                    setConnectionTypeFilter(value as ConnectionType | "all")
+                  }
                 >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="All Types" />
@@ -635,8 +647,8 @@ export default function SubscribersPage() {
           setIsAddModalOpen(false);
           refetch();
           toast({
-            title: 'Subscriber Created',
-            description: 'New subscriber has been added successfully.',
+            title: "Subscriber Created",
+            description: "New subscriber has been added successfully.",
           });
         }}
       />

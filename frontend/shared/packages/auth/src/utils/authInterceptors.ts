@@ -3,7 +3,7 @@
  * Provides request/response interceptors for API clients
  */
 
-import type { AuthContextValue } from '../types';
+import type { AuthContextValue } from "../types";
 
 export interface AuthInterceptorConfig {
   auth: AuthContextValue;
@@ -33,7 +33,7 @@ export function createAuthRequestInterceptor(config: AuthInterceptorConfig) {
       if (config.auth.user.tenantId) {
         requestConfig.headers = {
           ...requestConfig.headers,
-          'X-Tenant-ID': config.auth.user.tenantId,
+          "X-Tenant-ID": config.auth.user.tenantId,
         };
       }
 
@@ -41,7 +41,7 @@ export function createAuthRequestInterceptor(config: AuthInterceptorConfig) {
       const portalType = detectPortalType();
       requestConfig.headers = {
         ...requestConfig.headers,
-        'X-Portal-Type': portalType,
+        "X-Portal-Type": portalType,
       };
     }
 
@@ -83,11 +83,11 @@ export function createAuthResponseInterceptor(config: AuthInterceptorConfig) {
         }
       } else if (status === 403) {
         // Forbidden - user doesn't have permission
-        console.warn('Access forbidden:', error.response?.data?.message);
+        console.warn("Access forbidden:", error.response?.data?.message);
         // Could emit a permission denied event here
       } else if (status === 429) {
         // Rate limited
-        console.warn('Rate limited:', error.response?.data?.message);
+        console.warn("Rate limited:", error.response?.data?.message);
       }
 
       throw error;
@@ -102,7 +102,7 @@ export function createAuthResponseInterceptor(config: AuthInterceptorConfig) {
 function getAuthToken(): string | null {
   // This should ideally come from the TokenManager
   // For now, check localStorage based on portal type
-  const portals = ['admin', 'customer', 'reseller', 'technician', 'management'];
+  const portals = ["admin", "customer", "reseller", "technician", "management"];
 
   for (const portal of portals) {
     const token =
@@ -116,17 +116,17 @@ function getAuthToken(): string | null {
 }
 
 function detectPortalType(): string {
-  if (typeof window === 'undefined') return 'customer';
+  if (typeof window === "undefined") return "customer";
 
   const { hostname, port } = window.location;
 
   // Development port detection
   const devPortMap: Record<string, string> = {
-    '3000': 'admin',
-    '3001': 'management',
-    '3002': 'customer',
-    '3003': 'reseller',
-    '3004': 'technician',
+    "3000": "admin",
+    "3001": "management",
+    "3002": "customer",
+    "3003": "reseller",
+    "3004": "technician",
   };
 
   if (devPortMap[port]) {
@@ -134,31 +134,31 @@ function detectPortalType(): string {
   }
 
   // Production subdomain detection
-  const subdomain = hostname.split('.')[0] || '';
+  const subdomain = hostname.split(".")[0] || "";
   const subdomainMap: Record<string, string> = {
-    admin: 'admin',
-    manage: 'management',
-    management: 'management',
-    my: 'customer',
-    customer: 'customer',
-    partner: 'reseller',
-    reseller: 'reseller',
-    tech: 'technician',
-    technician: 'technician',
+    admin: "admin",
+    manage: "management",
+    management: "management",
+    my: "customer",
+    customer: "customer",
+    partner: "reseller",
+    reseller: "reseller",
+    tech: "technician",
+    technician: "technician",
   };
 
-  return subdomainMap[subdomain] || 'customer';
+  return subdomainMap[subdomain] || "customer";
 }
 
 async function retryRequest(config: any) {
   // This would depend on the actual HTTP client being used
   // For now, return a placeholder
-  throw new Error('Retry not implemented');
+  throw new Error("Retry not implemented");
 }
 
 function redirectToLogin(redirectUrl?: string) {
-  if (typeof window !== 'undefined') {
-    const loginUrl = redirectUrl || '/login';
+  if (typeof window !== "undefined") {
+    const loginUrl = redirectUrl || "/login";
     window.location.href = loginUrl;
   }
 }

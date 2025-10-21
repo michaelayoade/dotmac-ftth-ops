@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   DollarSign,
   CreditCard,
@@ -11,18 +11,18 @@ import {
   ArrowUpRight,
   AlertCircle,
   Package,
-  Receipt
-} from 'lucide-react';
-import { metricsService, BillingMetrics } from '@/lib/services/metrics-service';
-import { AlertBanner } from '@/components/alerts/AlertBanner';
-import { apiClient } from '@/lib/api/client';
-import { RouteGuard } from '@/components/auth/PermissionGuard';
-import { SkeletonMetricCard } from '@/components/ui/skeleton';
-import { Breadcrumb } from '@/components/ui/breadcrumb';
-import { MetricCardEnhanced } from '@/components/ui/metric-card-enhanced';
-import { ErrorState } from '@/components/ui/error-state';
-import { LineChart } from '@/components/charts/LineChart';
-import { useDashboardMetrics } from '@/hooks/useRealTimeMetrics';
+  Receipt,
+} from "lucide-react";
+import { metricsService, BillingMetrics } from "@/lib/services/metrics-service";
+import { AlertBanner } from "@/components/alerts/AlertBanner";
+import { apiClient } from "@/lib/api/client";
+import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { SkeletonMetricCard } from "@/components/ui/skeleton";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
+import { ErrorState } from "@/components/ui/error-state";
+import { LineChart } from "@/components/charts/LineChart";
+import { useDashboardMetrics } from "@/hooks/useRealTimeMetrics";
 
 interface MetricCardProps {
   title: string;
@@ -37,10 +37,22 @@ interface MetricCardProps {
   currency?: boolean;
 }
 
-function MetricCard({ title, value, subtitle, icon: Icon, trend, href, currency }: MetricCardProps) {
-  const formattedValue = currency && typeof value === 'number'
-    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value)
-    : value;
+function MetricCard({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  trend,
+  href,
+  currency,
+}: MetricCardProps) {
+  const formattedValue =
+    currency && typeof value === "number"
+      ? new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+        }).format(value)
+      : value;
 
   const content = (
     <div className="rounded-lg border border-border bg-card p-6 hover:border-border transition-colors">
@@ -48,12 +60,12 @@ function MetricCard({ title, value, subtitle, icon: Icon, trend, href, currency 
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <p className="mt-2 text-3xl font-bold text-foreground">{formattedValue}</p>
-          {subtitle && (
-            <p className="mt-1 text-sm text-foreground0">{subtitle}</p>
-          )}
+          {subtitle && <p className="mt-1 text-sm text-foreground0">{subtitle}</p>}
           {trend && (
-            <div className={`mt-2 flex items-center text-sm ${trend.isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-              <TrendingUp className={`h-4 w-4 mr-1 ${!trend.isPositive ? 'rotate-180' : ''}`} />
+            <div
+              className={`mt-2 flex items-center text-sm ${trend.isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+            >
+              <TrendingUp className={`h-4 w-4 mr-1 ${!trend.isPositive ? "rotate-180" : ""}`} />
               {Math.abs(trend.value)}% from last month
             </div>
           )}
@@ -86,7 +98,7 @@ interface RevenueChartProps {
 }
 
 function RevenueChart({ data }: RevenueChartProps) {
-  const chartData = data.map(d => ({
+  const chartData = data.map((d) => ({
     label: d.month,
     value: d.revenue,
   }));
@@ -102,33 +114,25 @@ function RevenueChart({ data }: RevenueChartProps) {
           </div>
         </div>
       </div>
-      <LineChart
-        data={chartData}
-        height={220}
-        showGrid
-        showLabels
-        showValues
-        animated
-        gradient
-      />
+      <LineChart data={chartData} height={220} showGrid showLabels showValues animated gradient />
     </div>
   );
 }
 
 interface PaymentActivityItem {
   id: string;
-  type: 'payment' | 'invoice' | 'subscription' | 'refund';
+  type: "payment" | "invoice" | "subscription" | "refund";
   description: string;
   amount: number;
   timestamp: string;
-  status: 'success' | 'pending' | 'failed';
+  status: "success" | "pending" | "failed";
 }
 
 function PaymentActivity({ items }: { items: PaymentActivityItem[] }) {
   const statusColors = {
-    success: 'text-green-600 dark:text-green-400',
-    pending: 'text-yellow-600 dark:text-yellow-400',
-    failed: 'text-red-600 dark:text-red-400'
+    success: "text-green-600 dark:text-green-400",
+    pending: "text-yellow-600 dark:text-yellow-400",
+    failed: "text-red-600 dark:text-red-400",
   };
 
   return (
@@ -138,9 +142,7 @@ function PaymentActivity({ items }: { items: PaymentActivityItem[] }) {
       </div>
       <div className="divide-y divide-border">
         {items.length === 0 ? (
-          <div className="p-6 text-center text-foreground0">
-            No recent transactions
-          </div>
+          <div className="p-6 text-center text-foreground0">No recent transactions</div>
         ) : (
           items.map((item) => (
             <div key={item.id} className="p-4 hover:bg-accent/50 transition-colors">
@@ -155,12 +157,8 @@ function PaymentActivity({ items }: { items: PaymentActivityItem[] }) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-medium text-foreground">
-                    ${(item.amount / 100).toFixed(2)}
-                  </p>
-                  <p className={`text-xs ${statusColors[item.status]}`}>
-                    {item.status}
-                  </p>
+                  <p className="font-medium text-foreground">${(item.amount / 100).toFixed(2)}</p>
+                  <p className={`text-xs ${statusColors[item.status]}`}>{item.status}</p>
                 </div>
               </div>
             </div>
@@ -174,7 +172,9 @@ function PaymentActivity({ items }: { items: PaymentActivityItem[] }) {
 function BillingRevenuePageContent() {
   const [metrics, setMetrics] = useState<BillingMetrics | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<PaymentActivityItem[]>([]);
-  const [revenueData, setRevenueData] = useState<Array<{ month: string; revenue: number; subscriptions: number }>>([]);
+  const [revenueData, setRevenueData] = useState<
+    Array<{ month: string; revenue: number; subscriptions: number }>
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -196,41 +196,49 @@ function BillingRevenuePageContent() {
 
       // Fetch recent transactions
       try {
-        const transactionsResponse = await apiClient.get<{payments: Array<Record<string, unknown>>}>('/billing/payments?limit=5');
+        const transactionsResponse = await apiClient.get<{
+          payments: Array<Record<string, unknown>>;
+        }>("/billing/payments?limit=5");
         if (transactionsResponse.data?.payments) {
-          const transactions: PaymentActivityItem[] = transactionsResponse.data.payments.map((t, index: number) => ({
-            id: (t.id as string) || `trans-${index}`,
-            type: (t.type as 'payment' | 'invoice' | 'subscription' | 'refund') || 'payment',
-            description: (t.description as string) || `Payment from ${(t.customer_name as string) || 'Customer'}`,
-            amount: (t.amount as number) || 0,
-            timestamp: t.created_at ? new Date(t.created_at as string).toLocaleString() : 'Recently',
-            status: (t.status as 'success' | 'pending' | 'failed') || 'pending'
-          }));
+          const transactions: PaymentActivityItem[] = transactionsResponse.data.payments.map(
+            (t, index: number) => ({
+              id: (t.id as string) || `trans-${index}`,
+              type: (t.type as "payment" | "invoice" | "subscription" | "refund") || "payment",
+              description:
+                (t.description as string) ||
+                `Payment from ${(t.customer_name as string) || "Customer"}`,
+              amount: (t.amount as number) || 0,
+              timestamp: t.created_at
+                ? new Date(t.created_at as string).toLocaleString()
+                : "Recently",
+              status: (t.status as "success" | "pending" | "failed") || "pending",
+            }),
+          );
           setRecentTransactions(transactions);
         }
       } catch (err) {
-        console.error('Failed to fetch recent transactions:', err);
+        console.error("Failed to fetch recent transactions:", err);
       }
 
       // Generate revenue trend data based on metrics
       if (billingMetrics.revenue.mrr > 0) {
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
         const baseRevenue = billingMetrics.revenue.mrr;
         const growthRate = billingMetrics.revenue.revenueGrowth / 100;
 
         const data = months.map((month, index) => {
-          const multiplier = 1 + (growthRate * (index - 3) / 3);
+          const multiplier = 1 + (growthRate * (index - 3)) / 3;
           return {
             month,
             revenue: Math.round(baseRevenue * multiplier),
-            subscriptions: billingMetrics.subscriptions.active + Math.round((index - 3) * 5)
+            subscriptions: billingMetrics.subscriptions.active + Math.round((index - 3) * 5),
           };
         });
         setRevenueData(data);
       }
     } catch (err) {
-      console.error('Failed to fetch billing metrics:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load billing data');
+      console.error("Failed to fetch billing metrics:", err);
+      setError(err instanceof Error ? err.message : "Failed to load billing data");
     } finally {
       setLoading(false);
     }
@@ -240,10 +248,7 @@ function BillingRevenuePageContent() {
     <div className="space-y-6 md:space-y-8">
       {/* Breadcrumb */}
       <Breadcrumb
-        items={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Billing & Revenue' },
-        ]}
+        items={[{ label: "Dashboard", href: "/dashboard" }, { label: "Billing & Revenue" }]}
       />
 
       {/* Header */}
@@ -268,11 +273,7 @@ function BillingRevenuePageContent() {
           </>
         ) : error ? (
           <div className="col-span-full">
-            <ErrorState
-              message={error}
-              onRetry={fetchBillingData}
-              variant="card"
-            />
+            <ErrorState message={error} onRetry={fetchBillingData} variant="card" />
           </div>
         ) : (
           <>
@@ -283,7 +284,7 @@ function BillingRevenuePageContent() {
               icon={DollarSign}
               trend={{
                 value: metrics?.revenue.revenueGrowth || 0,
-                isPositive: (metrics?.revenue.revenueGrowth || 0) > 0
+                isPositive: (metrics?.revenue.revenueGrowth || 0) > 0,
               }}
               currency
               emptyStateMessage="No revenue data available yet"
@@ -295,7 +296,7 @@ function BillingRevenuePageContent() {
               icon={Package}
               trend={{
                 value: Math.abs(metrics?.subscriptions.churnRate || 0),
-                isPositive: (metrics?.subscriptions.churnRate || 0) < 5
+                isPositive: (metrics?.subscriptions.churnRate || 0) < 5,
               }}
               href="/dashboard/billing-revenue/subscriptions"
               emptyStateMessage="No active subscriptions"
@@ -303,7 +304,7 @@ function BillingRevenuePageContent() {
             <MetricCardEnhanced
               title="Outstanding Invoices"
               value={metrics?.invoices.pending || 0}
-              subtitle={`${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(metrics?.invoices.overdueAmount || 0)} overdue`}
+              subtitle={`${new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(metrics?.invoices.overdueAmount || 0)} overdue`}
               icon={FileText}
               href="/dashboard/billing-revenue/invoices"
               emptyStateMessage="No pending invoices"
@@ -327,8 +328,16 @@ function BillingRevenuePageContent() {
             <div className="flex-1">
               <p className="font-medium text-orange-400">Payment Attention Required</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                {metrics.invoices.overdue} invoices are overdue totaling {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(metrics.invoices.overdueAmount || 0)}.
-                <Link href="/dashboard/billing-revenue/invoices?status=overdue" className="ml-2 text-orange-400 hover:text-orange-300">
+                {metrics.invoices.overdue} invoices are overdue totaling{" "}
+                {new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: "USD",
+                }).format(metrics.invoices.overdueAmount || 0)}
+                .
+                <Link
+                  href="/dashboard/billing-revenue/invoices?status=overdue"
+                  className="ml-2 text-orange-400 hover:text-orange-300"
+                >
                   View overdue invoices →
                 </Link>
               </p>

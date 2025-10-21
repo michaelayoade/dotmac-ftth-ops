@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * IP Address Display Component
@@ -6,9 +6,9 @@
  * Displays IP addresses with formatting and family badges
  */
 
-import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
+import React from "react";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import {
   detectIPFamily,
   IPFamily,
@@ -16,8 +16,8 @@ import {
   isPrivateIPv4,
   isULAIPv6,
   isLinkLocalIPv6,
-} from '@/lib/utils/ip-address';
-import { cn } from '@/lib/utils';
+} from "@/lib/utils/ip-address";
+import { cn } from "@/lib/utils";
 
 export interface IPAddressDisplayProps {
   ipv4?: string | null;
@@ -25,7 +25,7 @@ export interface IPAddressDisplayProps {
   className?: string;
   showBadges?: boolean;
   compress?: boolean;
-  layout?: 'inline' | 'stacked' | 'card';
+  layout?: "inline" | "stacked" | "card";
 }
 
 export function IPAddressDisplay({
@@ -34,22 +34,22 @@ export function IPAddressDisplay({
   className,
   showBadges = true,
   compress = true,
-  layout = 'inline',
+  layout = "inline",
 }: IPAddressDisplayProps) {
-  const hasIPv4 = ipv4 && ipv4.trim() !== '';
-  const hasIPv6 = ipv6 && ipv6.trim() !== '';
+  const hasIPv4 = ipv4 && ipv4.trim() !== "";
+  const hasIPv6 = ipv6 && ipv6.trim() !== "";
 
   if (!hasIPv4 && !hasIPv6) {
     return (
-      <span className={cn('text-muted-foreground italic', className)}>
+      <span className={cn("text-muted-foreground italic", className)}>
         No IP addresses configured
       </span>
     );
   }
 
-  if (layout === 'card') {
+  if (layout === "card") {
     return (
-      <Card className={cn('p-3 space-y-2', className)}>
+      <Card className={cn("p-3 space-y-2", className)}>
         {hasIPv4 && (
           <IPAddressSingle
             ip={ipv4}
@@ -70,9 +70,9 @@ export function IPAddressDisplay({
     );
   }
 
-  if (layout === 'stacked') {
+  if (layout === "stacked") {
     return (
-      <div className={cn('space-y-1', className)}>
+      <div className={cn("space-y-1", className)}>
         {hasIPv4 && (
           <IPAddressSingle
             ip={ipv4}
@@ -95,7 +95,7 @@ export function IPAddressDisplay({
 
   // Inline layout
   return (
-    <div className={cn('flex flex-wrap items-center gap-2', className)}>
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
       {hasIPv4 && (
         <IPAddressSingle
           ip={ipv4}
@@ -124,15 +124,10 @@ interface IPAddressSingleProps {
   compress: boolean;
 }
 
-function IPAddressSingle({
-  ip,
-  family,
-  showBadges,
-  compress,
-}: IPAddressSingleProps) {
+function IPAddressSingle({ ip, family, showBadges, compress }: IPAddressSingleProps) {
   const formatted = formatIPAddress(ip, compress);
 
-  const ipWithoutMask = ip.split('/')[0] ?? '';
+  const ipWithoutMask = ip.split("/")[0] ?? "";
   const isPrivate =
     family === IPFamily.IPv4
       ? isPrivateIPv4(ipWithoutMask)
@@ -143,8 +138,8 @@ function IPAddressSingle({
       <span className="font-mono text-sm">{formatted}</span>
       {showBadges && (
         <>
-          <Badge variant={family === IPFamily.IPv4 ? 'default' : 'secondary'} className="text-xs">
-            {family === IPFamily.IPv4 ? 'IPv4' : 'IPv6'}
+          <Badge variant={family === IPFamily.IPv4 ? "default" : "secondary"} className="text-xs">
+            {family === IPFamily.IPv4 ? "IPv4" : "IPv6"}
           </Badge>
           {isPrivate && (
             <Badge variant="outline" className="text-xs">
@@ -166,13 +161,9 @@ export interface DualStackBadgeProps {
 /**
  * Simple badge showing dual-stack status
  */
-export function DualStackBadge({
-  ipv4,
-  ipv6,
-  className,
-}: DualStackBadgeProps) {
-  const hasIPv4 = ipv4 && ipv4.trim() !== '';
-  const hasIPv6 = ipv6 && ipv6.trim() !== '';
+export function DualStackBadge({ ipv4, ipv6, className }: DualStackBadgeProps) {
+  const hasIPv4 = ipv4 && ipv4.trim() !== "";
+  const hasIPv6 = ipv6 && ipv6.trim() !== "";
 
   if (!hasIPv4 && !hasIPv6) {
     return (

@@ -29,6 +29,7 @@ tests/
 ### Completed ✅
 
 **Phase 1 (97 tests)**:
+
 - **Authentication Tests**: 12 tests
   - Login/logout flows
   - JWT token handling
@@ -69,6 +70,7 @@ tests/
   - Error handling and retries
 
 **Phase 2 (125 tests)**:
+
 - **Email Sending**: 30 tests
   - Email composition and validation
   - Queueing and scheduling
@@ -107,6 +109,7 @@ tests/
   - Connection quality indicators
 
 **Phase 3 (47 tests)**:
+
 - **Global Search UI**: 13 tests
   - Search page functionality
   - Entity type filtering
@@ -205,12 +208,12 @@ See `.github/workflows/integration-tests.yml` for CI configuration.
 Generate test data using factory functions:
 
 ```typescript
-import { generateTestServer, generateTestPeer } from '../../fixtures/test-data';
+import { generateTestServer, generateTestPeer } from "../../fixtures/test-data";
 
-test('should create server', async () => {
+test("should create server", async () => {
   const serverData = generateTestServer({
-    name: 'my-vpn',
-    location: 'US-East-1',
+    name: "my-vpn",
+    location: "US-East-1",
   });
   // Use serverData in test
 });
@@ -221,12 +224,12 @@ test('should create server', async () => {
 Interact with pages using Page Object Model:
 
 ```typescript
-import { ServerCreatePage } from '../../helpers/page-objects';
+import { ServerCreatePage } from "../../helpers/page-objects";
 
-test('should create server via UI', async ({ page }) => {
+test("should create server via UI", async ({ page }) => {
   const createPage = new ServerCreatePage(page);
   await createPage.navigate();
-  await createPage.fillForm({ name: 'test', location: 'US' });
+  await createPage.fillForm({ name: "test", location: "US" });
   await createPage.submit();
 });
 ```
@@ -236,9 +239,9 @@ test('should create server via UI', async ({ page }) => {
 Setup/teardown test data using API helpers:
 
 ```typescript
-import { createServer, deleteServer } from '../../helpers/api-helpers';
+import { createServer, deleteServer } from "../../helpers/api-helpers";
 
-test('should display server', async ({ page }) => {
+test("should display server", async ({ page }) => {
   // Setup
   const server = await createServer(generateTestServer(), authToken);
 
@@ -255,7 +258,7 @@ test('should display server', async ({ page }) => {
 Follow this pattern for consistent tests:
 
 ```typescript
-test.describe('Feature Name', () => {
+test.describe("Feature Name", () => {
   let authToken: string;
 
   test.beforeEach(async ({ page }) => {
@@ -270,7 +273,7 @@ test.describe('Feature Name', () => {
     await cleanupServers(authToken);
   });
 
-  test('should do something', async ({ page }) => {
+  test("should do something", async ({ page }) => {
     // Arrange
     const testData = generateTestData();
 
@@ -278,7 +281,7 @@ test.describe('Feature Name', () => {
     await performAction(testData);
 
     // Assert
-    await expect(page.locator('selector')).toBeVisible();
+    await expect(page.locator("selector")).toBeVisible();
   });
 });
 ```
@@ -305,11 +308,13 @@ Encapsulate page interactions for maintainable tests:
 Programmatic API access for test setup/teardown:
 
 **Authentication:**
+
 - `loginUser(page, email, password)` - Login and get token
 - `createTestUser(userData)` - Create test user
 - `getAuthToken(page)` - Get current auth token
 
 **WireGuard:**
+
 - `createServer(serverData, token)` - Create server
 - `updateServer(id, updates, token)` - Update server
 - `deleteServer(id, token)` - Delete server
@@ -317,15 +322,18 @@ Programmatic API access for test setup/teardown:
 - `provisionVPN(data, token)` - Provision VPN service
 
 **Seeding:**
+
 - `seedServers(servers, token)` - Bulk create servers
 - `seedPeers(serverId, peers, token)` - Bulk create peers
 
 **Cleanup:**
+
 - `cleanupServers(token)` - Delete all test servers
 - `cleanupPeers(token)` - Delete all test peers
 - `cleanupAll(token)` - Clean everything
 
 **Mocking:**
+
 - `mockAPIResponse(page, endpoint, response)` - Mock API success
 - `mockAPIError(page, endpoint, status, error)` - Mock API error
 - `mockAPIDelay(page, endpoint, delayMs)` - Add API delay
@@ -335,20 +343,24 @@ Programmatic API access for test setup/teardown:
 Generate valid test data:
 
 **WireGuard:**
+
 - `generateTestServer(overrides?)` - Generate server data
 - `generateMultipleServers(count)` - Generate multiple servers
 - `generateTestPeer(serverId, overrides?)` - Generate peer data
 - `generateMultiplePeers(serverId, count)` - Generate multiple peers
 
 **Communications:**
+
 - `generateTestTemplate(overrides?)` - Generate template data
 - `generateTestEmail(overrides?)` - Generate email data
 
 **Users:**
+
 - `generateTestUser(overrides?)` - Generate user data
 - `generateMultipleUsers(count, tenantId?)` - Generate multiple users
 
 **Utilities:**
+
 - `randomString(length?)` - Random string
 - `randomEmail()` - Random email
 - `randomIPv4()` - Random IPv4 address
@@ -377,6 +389,7 @@ pnpm test:integration:ui
 ```
 
 Opens Playwright's interactive UI where you can:
+
 - See all tests
 - Run individual tests
 - Watch tests execute
@@ -402,6 +415,7 @@ Runs tests in a visible browser window.
 ### Screenshots and Videos
 
 Failed tests automatically capture:
+
 - Screenshots (`test-results/`)
 - Videos (if enabled in `playwright.config.ts`)
 - Traces (for detailed debugging)
@@ -434,6 +448,7 @@ Failed tests automatically capture:
 ### Playwright Config
 
 Edit `playwright.config.ts` for:
+
 - Browser settings
 - Timeouts
 - Screenshots/videos
@@ -461,6 +476,7 @@ REDIS_URL=redis://localhost:6379/0
 ## 📈 Test Metrics
 
 ### Current Coverage
+
 - **Total Tests**: 97
 - **Test Files**: 5
 - **Page Objects**: 10
@@ -468,6 +484,7 @@ REDIS_URL=redis://localhost:6379/0
 - **Fixtures**: 15+
 
 ### Target Coverage (Phase 1)
+
 - ✅ **50+ tests** - Achieved (97 tests)
 - ✅ **Authentication** - Complete
 - ✅ **WireGuard CRUD** - Complete
@@ -477,12 +494,14 @@ REDIS_URL=redis://localhost:6379/0
 ## 🚀 CI/CD Integration
 
 Tests run automatically in GitHub Actions on:
+
 - Push to `main`, `develop`, `feature/*` branches
 - Pull requests to `main`, `develop`
 
 See: `.github/workflows/integration-tests.yml`
 
 **What CI Does:**
+
 1. Starts PostgreSQL and Redis
 2. Runs database migrations
 3. Starts backend server
@@ -494,11 +513,13 @@ See: `.github/workflows/integration-tests.yml`
 ## 📚 Resources
 
 ### Documentation
+
 - [Playwright Docs](https://playwright.dev)
 - [Testing Library](https://testing-library.com)
 - [Page Object Model](https://playwright.dev/docs/pom)
 
 ### Internal Docs
+
 - `/docs/INTEGRATION_TESTING_PLAN.md` - Detailed test specifications
 - `/docs/TESTING_SUMMARY.md` - Quick reference
 - `/docs/SESSION_COMPLETE_SUMMARY.md` - Feature overview
@@ -508,16 +529,19 @@ See: `.github/workflows/integration-tests.yml`
 ### Speed Up Tests
 
 1. **Run in Parallel**
+
    ```bash
    pnpm exec playwright test --workers=4
    ```
 
 2. **Run Only Changed**
+
    ```bash
    pnpm exec playwright test --only-changed
    ```
 
 3. **Use Headed Mode Selectively**
+
    ```bash
    # Faster (headless)
    pnpm test:integration
@@ -529,15 +553,17 @@ See: `.github/workflows/integration-tests.yml`
 ### Debugging Flaky Tests
 
 1. **Increase Timeout**
+
    ```typescript
-   test('flaky test', async ({ page }) => {
+   test("flaky test", async ({ page }) => {
      test.setTimeout(60000); // 60 seconds
    });
    ```
 
 2. **Add Explicit Waits**
+
    ```typescript
-   await page.waitForLoadState('networkidle');
+   await page.waitForLoadState("networkidle");
    await page.waitForSelector('[data-testid="loaded"]');
    ```
 
@@ -549,6 +575,7 @@ See: `.github/workflows/integration-tests.yml`
 ## 🎉 Success!
 
 You now have:
+
 - ✅ 97 integration tests covering core features
 - ✅ Reusable test infrastructure (fixtures, helpers, page objects)
 - ✅ CI/CD pipeline for automated testing

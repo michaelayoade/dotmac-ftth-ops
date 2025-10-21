@@ -8,10 +8,10 @@
  * - Create credit note
  */
 
-import { useMutation } from '@tanstack/react-query';
-import { useToast } from '@/components/ui/use-toast';
-import { apiClient } from '@/lib/api/client';
-import { logger } from '@/lib/logger';
+import { useMutation } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
+import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // Types
@@ -68,24 +68,21 @@ export function useInvoiceActions() {
   // Send invoice email
   const sendInvoiceEmail = useMutation({
     mutationFn: async ({ invoiceId, email }: SendInvoiceEmailRequest) => {
-      const response = await apiClient.post(
-        `/billing/invoices/${invoiceId}/send`,
-        { email }
-      );
+      const response = await apiClient.post(`/billing/invoices/${invoiceId}/send`, { email });
       return response.data;
     },
     onSuccess: (data, variables) => {
       toast({
-        title: 'Invoice Sent',
-        description: `Invoice has been sent successfully${variables.email ? ` to ${variables.email}` : ''}.`,
+        title: "Invoice Sent",
+        description: `Invoice has been sent successfully${variables.email ? ` to ${variables.email}` : ""}.`,
       });
     },
     onError: (error: any) => {
-      logger.error('Failed to send invoice email', error);
+      logger.error("Failed to send invoice email", error);
       toast({
-        title: 'Failed to Send Invoice',
-        description: error.response?.data?.detail || 'Unable to send invoice. Please try again.',
-        variant: 'destructive',
+        title: "Failed to Send Invoice",
+        description: error.response?.data?.detail || "Unable to send invoice. Please try again.",
+        variant: "destructive",
       });
     },
   });
@@ -93,24 +90,21 @@ export function useInvoiceActions() {
   // Void invoice
   const voidInvoice = useMutation({
     mutationFn: async ({ invoiceId, reason }: VoidInvoiceRequest) => {
-      const response = await apiClient.post(
-        `/billing/invoices/${invoiceId}/void`,
-        { reason }
-      );
+      const response = await apiClient.post(`/billing/invoices/${invoiceId}/void`, { reason });
       return response.data;
     },
     onSuccess: () => {
       toast({
-        title: 'Invoice Voided',
-        description: 'Invoice has been voided successfully.',
+        title: "Invoice Voided",
+        description: "Invoice has been voided successfully.",
       });
     },
     onError: (error: any) => {
-      logger.error('Failed to void invoice', error);
+      logger.error("Failed to void invoice", error);
       toast({
-        title: 'Failed to Void Invoice',
-        description: error.response?.data?.detail || 'Unable to void invoice. Please try again.',
-        variant: 'destructive',
+        title: "Failed to Void Invoice",
+        description: error.response?.data?.detail || "Unable to void invoice. Please try again.",
+        variant: "destructive",
       });
     },
   });
@@ -118,24 +112,22 @@ export function useInvoiceActions() {
   // Send payment reminder
   const sendPaymentReminder = useMutation({
     mutationFn: async ({ invoiceId, message }: SendPaymentReminderRequest) => {
-      const response = await apiClient.post(
-        `/billing/invoices/${invoiceId}/remind`,
-        { message }
-      );
+      const response = await apiClient.post(`/billing/invoices/${invoiceId}/remind`, { message });
       return response.data;
     },
     onSuccess: () => {
       toast({
-        title: 'Reminder Sent',
-        description: 'Payment reminder has been sent successfully.',
+        title: "Reminder Sent",
+        description: "Payment reminder has been sent successfully.",
       });
     },
     onError: (error: any) => {
-      logger.error('Failed to send payment reminder', error);
+      logger.error("Failed to send payment reminder", error);
       toast({
-        title: 'Failed to Send Reminder',
-        description: error.response?.data?.detail || 'Unable to send payment reminder. Please try again.',
-        variant: 'destructive',
+        title: "Failed to Send Reminder",
+        description:
+          error.response?.data?.detail || "Unable to send payment reminder. Please try again.",
+        variant: "destructive",
       });
     },
   });
@@ -143,21 +135,22 @@ export function useInvoiceActions() {
   // Create credit note
   const createCreditNote = useMutation({
     mutationFn: async (data: CreateCreditNoteRequest): Promise<CreditNote> => {
-      const response = await apiClient.post('/billing/credit-notes', data);
+      const response = await apiClient.post("/billing/credit-notes", data);
       return response.data;
     },
     onSuccess: (data) => {
       toast({
-        title: 'Credit Note Created',
+        title: "Credit Note Created",
         description: `Credit note ${data.credit_note_number} has been created successfully.`,
       });
     },
     onError: (error: any) => {
-      logger.error('Failed to create credit note', error);
+      logger.error("Failed to create credit note", error);
       toast({
-        title: 'Failed to Create Credit Note',
-        description: error.response?.data?.detail || 'Unable to create credit note. Please try again.',
-        variant: 'destructive',
+        title: "Failed to Create Credit Note",
+        description:
+          error.response?.data?.detail || "Unable to create credit note. Please try again.",
+        variant: "destructive",
       });
     },
   });

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   Router,
   Wifi,
@@ -10,11 +10,11 @@ import {
   XCircle,
   Settings,
   ExternalLink,
-} from 'lucide-react';
-import { apiClient } from '@/lib/api/client';
-import { useToast } from '@/components/ui/use-toast';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+} from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -22,16 +22,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 
 interface Device {
   id: string;
-  device_type: 'ont' | 'router' | 'cpe' | 'onu' | 'modem';
+  device_type: "ont" | "router" | "cpe" | "onu" | "modem";
   vendor: string;
   model: string;
   serial_number: string;
   mac_address?: string;
-  status: 'online' | 'offline' | 'degraded';
+  status: "online" | "offline" | "degraded";
   firmware_version?: string;
   last_seen?: string;
   uptime_hours?: number;
@@ -43,38 +43,38 @@ interface CustomerDevicesProps {
   customerId: string;
 }
 
-const getDeviceIcon = (type: Device['device_type']) => {
+const getDeviceIcon = (type: Device["device_type"]) => {
   switch (type) {
-    case 'ont':
-    case 'onu':
+    case "ont":
+    case "onu":
       return Server;
-    case 'router':
+    case "router":
       return Router;
-    case 'cpe':
-    case 'modem':
+    case "cpe":
+    case "modem":
       return Wifi;
     default:
       return Server;
   }
 };
 
-const getStatusBadge = (status: Device['status']) => {
+const getStatusBadge = (status: Device["status"]) => {
   switch (status) {
-    case 'online':
+    case "online":
       return (
         <Badge className="bg-green-500">
           <CheckCircle2 className="w-3 h-3 mr-1" />
           Online
         </Badge>
       );
-    case 'offline':
+    case "offline":
       return (
         <Badge variant="destructive">
           <XCircle className="w-3 h-3 mr-1" />
           Offline
         </Badge>
       );
-    case 'degraded':
+    case "degraded":
       return (
         <Badge variant="secondary">
           <AlertCircle className="w-3 h-3 mr-1" />
@@ -91,12 +91,12 @@ const formatUptime = (hours: number) => {
 };
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -110,14 +110,14 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
     try {
       setLoading(true);
       const response = await apiClient.get<{ devices: Device[] }>(
-        `/api/v1/customers/${customerId}/devices`
+        `/api/v1/customers/${customerId}/devices`,
       );
       setDevices(response.data.devices);
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to load devices',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to load devices",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -132,14 +132,14 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
     try {
       await apiClient.post(`/api/v1/devices/${deviceId}/reboot`);
       toast({
-        title: 'Reboot Initiated',
-        description: 'Device reboot command has been sent',
+        title: "Reboot Initiated",
+        description: "Device reboot command has been sent",
       });
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to reboot device',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to reboot device",
+        variant: "destructive",
       });
     }
   };
@@ -151,7 +151,7 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
   };
 
   const handleViewDevice = (deviceId: string) => {
-    window.open(`/tenant/devices/${deviceId}`, '_blank');
+    window.open(`/tenant/devices/${deviceId}`, "_blank");
   };
 
   if (loading) {
@@ -178,7 +178,7 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-semibold text-white">Customer Equipment</h3>
         <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
           Refresh
         </Button>
       </div>
@@ -216,9 +216,7 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-slate-300 capitalize">
-                    {device.device_type}
-                  </TableCell>
+                  <TableCell className="text-slate-300 capitalize">{device.device_type}</TableCell>
                   <TableCell>{getStatusBadge(device.status)}</TableCell>
                   <TableCell className="text-slate-300">
                     {device.vendor}
@@ -228,10 +226,10 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
                     {device.serial_number}
                   </TableCell>
                   <TableCell className="text-slate-300 text-sm">
-                    {device.firmware_version || 'N/A'}
+                    {device.firmware_version || "N/A"}
                   </TableCell>
                   <TableCell className="text-slate-300 text-sm">
-                    {device.last_seen ? formatDate(device.last_seen) : 'Never'}
+                    {device.last_seen ? formatDate(device.last_seen) : "Never"}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
@@ -248,7 +246,7 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
                         size="sm"
                         onClick={() => handleRebootDevice(device.id)}
                         title="Reboot Device"
-                        disabled={device.status === 'offline'}
+                        disabled={device.status === "offline"}
                       >
                         <Power className="w-4 h-4" />
                       </Button>
@@ -328,7 +326,7 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => handleRebootDevice(device.id)}
-                disabled={device.status === 'offline'}
+                disabled={device.status === "offline"}
               >
                 <Power className="w-4 h-4" />
               </Button>

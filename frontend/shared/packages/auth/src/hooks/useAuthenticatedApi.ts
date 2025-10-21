@@ -3,11 +3,11 @@
  * Integrates auth with the existing headless API client
  */
 
-import { useCallback } from 'react';
-import { useAuth } from '../AuthProvider';
+import { useCallback } from "react";
+import { useAuth } from "../AuthProvider";
 
 export interface AuthenticatedApiOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   data?: any;
   requireAuth?: boolean;
   headers?: Record<string, string>;
@@ -22,11 +22,11 @@ export function useAuthenticatedApi() {
 
   const makeRequest = useCallback(
     async <T = any>(url: string, options: AuthenticatedApiOptions = {}): Promise<T> => {
-      const { requireAuth = true, headers = {}, method = 'GET', data } = options;
+      const { requireAuth = true, headers = {}, method = "GET", data } = options;
 
       // Check if authentication is required
       if (requireAuth && !isAuthenticated) {
-        throw new Error('Authentication required');
+        throw new Error("Authentication required");
       }
 
       // Merge headers with auth token
@@ -37,7 +37,7 @@ export function useAuthenticatedApi() {
       const finalOptions: RequestInit = {
         method,
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...authHeaders,
           ...headers,
         },
@@ -68,7 +68,7 @@ export function useAuthenticatedApi() {
             } catch (refreshError) {
               // Refresh failed, logout user
               await logout();
-              throw new Error('Session expired. Please login again.');
+              throw new Error("Session expired. Please login again.");
             }
           }
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -79,37 +79,37 @@ export function useAuthenticatedApi() {
         throw error;
       }
     },
-    [isAuthenticated, refreshToken, logout]
+    [isAuthenticated, refreshToken, logout],
   );
 
   const get = useCallback(
     <T = any>(url: string, options?: AuthenticatedApiOptions) =>
-      makeRequest<T>(url, { ...options, method: 'GET' }),
-    [makeRequest]
+      makeRequest<T>(url, { ...options, method: "GET" }),
+    [makeRequest],
   );
 
   const post = useCallback(
     <T = any>(url: string, data?: any, options?: AuthenticatedApiOptions) =>
-      makeRequest<T>(url, { ...options, method: 'POST', data }),
-    [makeRequest]
+      makeRequest<T>(url, { ...options, method: "POST", data }),
+    [makeRequest],
   );
 
   const put = useCallback(
     <T = any>(url: string, data?: any, options?: AuthenticatedApiOptions) =>
-      makeRequest<T>(url, { ...options, method: 'PUT', data }),
-    [makeRequest]
+      makeRequest<T>(url, { ...options, method: "PUT", data }),
+    [makeRequest],
   );
 
   const patch = useCallback(
     <T = any>(url: string, data?: any, options?: AuthenticatedApiOptions) =>
-      makeRequest<T>(url, { ...options, method: 'PATCH', data }),
-    [makeRequest]
+      makeRequest<T>(url, { ...options, method: "PATCH", data }),
+    [makeRequest],
   );
 
   const del = useCallback(
     <T = any>(url: string, options?: AuthenticatedApiOptions) =>
-      makeRequest<T>(url, { ...options, method: 'DELETE' }),
-    [makeRequest]
+      makeRequest<T>(url, { ...options, method: "DELETE" }),
+    [makeRequest],
   );
 
   return {
@@ -127,7 +127,7 @@ export function useAuthenticatedApi() {
 function getTokenFromStorage(): string | null {
   // This would be better handled by the TokenManager in each provider
   // For now, try different storage locations based on portal type
-  const portals = ['admin', 'customer', 'reseller', 'technician', 'management'];
+  const portals = ["admin", "customer", "reseller", "technician", "management"];
 
   for (const portal of portals) {
     const token =

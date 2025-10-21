@@ -4,25 +4,25 @@
  * Modal for previewing notification templates with sample data.
  */
 
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { Eye, Code, Copy, Check } from 'lucide-react';
-import type { CommunicationTemplate } from '@/hooks/useNotifications';
-import { useNotificationTemplates } from '@/hooks/useNotifications';
+import { useState, useEffect, useCallback } from "react";
+import { Eye, Code, Copy, Check } from "lucide-react";
+import type { CommunicationTemplate } from "@/hooks/useNotifications";
+import { useNotificationTemplates } from "@/hooks/useNotifications";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PreviewTemplateModalProps {
   isOpen: boolean;
@@ -47,20 +47,20 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
     template.variables.forEach((variable) => {
       // Provide some default sample data
       switch (variable) {
-        case 'customer_name':
-          initialData[variable] = 'John Doe';
+        case "customer_name":
+          initialData[variable] = "John Doe";
           break;
-        case 'invoice_number':
-          initialData[variable] = 'INV-12345';
+        case "invoice_number":
+          initialData[variable] = "INV-12345";
           break;
-        case 'amount':
-          initialData[variable] = '$150.00';
+        case "amount":
+          initialData[variable] = "$150.00";
           break;
-        case 'due_date':
-          initialData[variable] = 'January 20, 2025';
+        case "due_date":
+          initialData[variable] = "January 20, 2025";
           break;
-        case 'subscriber_username':
-          initialData[variable] = 'john.doe@example.com';
+        case "subscriber_username":
+          initialData[variable] = "john.doe@example.com";
           break;
         default:
           initialData[variable] = `[${variable}]`;
@@ -69,19 +69,22 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
     setSampleData(initialData);
   }, [template]);
 
-  const handleRender = useCallback(async (data: Record<string, string> = sampleData) => {
-    setIsRendering(true);
-    try {
-      const result = await renderTemplatePreview(template.id, data);
-      if (result) {
-        setRenderedContent(result);
+  const handleRender = useCallback(
+    async (data: Record<string, string> = sampleData) => {
+      setIsRendering(true);
+      try {
+        const result = await renderTemplatePreview(template.id, data);
+        if (result) {
+          setRenderedContent(result);
+        }
+      } catch (err) {
+        console.error("Failed to render template:", err);
+      } finally {
+        setIsRendering(false);
       }
-    } catch (err) {
-      console.error('Failed to render template:', err);
-    } finally {
-      setIsRendering(false);
-    }
-  }, [renderTemplatePreview, sampleData, template.id]);
+    },
+    [renderTemplatePreview, sampleData, template.id],
+  );
 
   // Render template when sample data changes
   useEffect(() => {
@@ -134,9 +137,12 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
                   </Label>
                   <Input
                     id={variable}
-                    value={sampleData[variable] || ''}
+                    value={sampleData[variable] || ""}
                     onChange={(e) =>
-                      setSampleData({ ...sampleData, [variable]: e.target.value })
+                      setSampleData({
+                        ...sampleData,
+                        [variable]: e.target.value,
+                      })
                     }
                     placeholder={`Enter ${variable}`}
                     className="flex-1"
@@ -145,9 +151,7 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
               ))}
             </div>
             {template.variables.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                This template has no variables
-              </p>
+              <p className="text-sm text-muted-foreground">This template has no variables</p>
             )}
           </div>
 
@@ -176,16 +180,16 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
               {!isRendering && renderedContent && (
                 <>
                   {/* Subject (Email only) */}
-                  {template.type === 'email' && renderedContent.subject && (
+                  {template.type === "email" && renderedContent.subject && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label>Subject Line</Label>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleCopy('subject', renderedContent.subject || '')}
+                          onClick={() => handleCopy("subject", renderedContent.subject || "")}
                         >
-                          {copiedField === 'subject' ? (
+                          {copiedField === "subject" ? (
                             <>
                               <Check className="mr-1 h-3 w-3" />
                               Copied
@@ -212,9 +216,9 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleCopy('text', renderedContent.text || '')}
+                          onClick={() => handleCopy("text", renderedContent.text || "")}
                         >
-                          {copiedField === 'text' ? (
+                          {copiedField === "text" ? (
                             <>
                               <Check className="mr-1 h-3 w-3" />
                               Copied
@@ -230,7 +234,7 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
                       <div className="rounded-lg border bg-card p-4">
                         <p className="whitespace-pre-wrap text-sm">{renderedContent.text}</p>
                       </div>
-                      {template.type === 'sms' && (
+                      {template.type === "sms" && (
                         <p className="text-xs text-muted-foreground">
                           Length: {renderedContent.text.length} characters
                           {renderedContent.text.length > 160 &&
@@ -241,16 +245,16 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
                   )}
 
                   {/* HTML Body (Email only) */}
-                  {template.type === 'email' && renderedContent.html && (
+                  {template.type === "email" && renderedContent.html && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label>HTML Body</Label>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleCopy('html', renderedContent.html || '')}
+                          onClick={() => handleCopy("html", renderedContent.html || "")}
                         >
-                          {copiedField === 'html' ? (
+                          {copiedField === "html" ? (
                             <>
                               <Check className="mr-1 h-3 w-3" />
                               Copied
@@ -266,7 +270,9 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
                       <div className="rounded-lg border bg-card p-4">
                         <div
                           className="prose prose-sm max-w-none dark:prose-invert"
-                          dangerouslySetInnerHTML={{ __html: renderedContent.html }}
+                          dangerouslySetInnerHTML={{
+                            __html: renderedContent.html,
+                          }}
                         />
                       </div>
                     </div>
@@ -278,7 +284,7 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
             {/* Raw Template */}
             <TabsContent value="raw" className="space-y-4">
               {/* Subject Template (Email only) */}
-              {template.type === 'email' && template.subject_template && (
+              {template.type === "email" && template.subject_template && (
                 <div className="space-y-2">
                   <Label>Subject Template</Label>
                   <div className="rounded-lg border bg-muted p-4 font-mono text-xs">
@@ -298,7 +304,7 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
               )}
 
               {/* HTML Template (Email only) */}
-              {template.type === 'email' && template.html_template && (
+              {template.type === "email" && template.html_template && (
                 <div className="space-y-2">
                   <Label>HTML Template</Label>
                   <div className="rounded-lg border bg-muted p-4 font-mono text-xs">
@@ -341,7 +347,7 @@ export function PreviewTemplateModal({ isOpen, onClose, template }: PreviewTempl
               Close
             </Button>
             <Button onClick={() => handleRender()} disabled={isRendering}>
-              {isRendering ? 'Rendering...' : 'Refresh Preview'}
+              {isRendering ? "Rendering..." : "Refresh Preview"}
             </Button>
           </div>
         </div>

@@ -2,14 +2,14 @@
  * Utility functions for primitives
  */
 
-import * as React from 'react';
+import * as React from "react";
 
-export * from './accessibility';
-export * from './ssr';
-export * from './validation';
+export * from "./accessibility";
+export * from "./ssr";
+export * from "./validation";
 
 // Add missing exports that styled-components expects
-export const isBrowser = typeof window !== 'undefined';
+export const isBrowser = typeof window !== "undefined";
 export const isServer = !isBrowser;
 
 export function useIsHydrated() {
@@ -61,7 +61,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
         // Silently handle localStorage errors
       }
     },
-    [key, storedValue]
+    [key, storedValue],
   );
 
   return [storedValue, setValue] as const;
@@ -95,7 +95,7 @@ export function useSessionStorage<T>(key: string, initialValue: T) {
         // Silently handle sessionStorage errors
       }
     },
-    [key, storedValue]
+    [key, storedValue],
   );
 
   return [storedValue, setValue] as const;
@@ -117,20 +117,20 @@ export function useMediaQuery(query: string): boolean {
     const mediaQuery = window.matchMedia(query);
     const handler = (event: MediaQueryListEvent) => setMatches(event.matches);
 
-    mediaQuery.addEventListener('change', handler);
-    return () => mediaQuery.removeEventListener('change', handler);
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
   }, [query]);
 
   return matches;
 }
 
 export function usePrefersReducedMotion(): boolean {
-  return useMediaQuery('(prefers-reduced-motion: reduce)');
+  return useMediaQuery("(prefers-reduced-motion: reduce)");
 }
 
 export function useUserPreferences() {
-  const [theme, setTheme] = useLocalStorage('theme', 'light');
-  const [language, setLanguage] = useLocalStorage('language', 'en');
+  const [theme, setTheme] = useLocalStorage("theme", "light");
+  const [language, setLanguage] = useLocalStorage("language", "en");
   const prefersReducedMotion = usePrefersReducedMotion();
 
   return {
@@ -179,7 +179,7 @@ export function useFocusTrap(isActive: boolean = true) {
 
     const container = containerRef.current;
     const focusableElements = container.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
 
     const firstElement = focusableElements[0] as HTMLElement;
@@ -201,26 +201,26 @@ export function useFocusTrap(isActive: boolean = true) {
       }
     };
 
-    container.addEventListener('keydown', handleTabKey);
+    container.addEventListener("keydown", handleTabKey);
     firstElement?.focus();
 
-    return () => container.removeEventListener('keydown', handleTabKey);
+    return () => container.removeEventListener("keydown", handleTabKey);
   }, [isActive]);
 
   return containerRef;
 }
 
 export function useScreenReaderAnnouncement() {
-  const [announcement, setAnnouncement] = React.useState('');
+  const [announcement, setAnnouncement] = React.useState("");
 
   const announce = React.useCallback(
-    (message: string, _priority: 'polite' | 'assertive' = 'polite') => {
+    (message: string, _priority: "polite" | "assertive" = "polite") => {
       setAnnouncement(message);
 
       // Clear announcement after a short delay to allow for re-announcements
-      setTimeout(() => setAnnouncement(''), 1000);
+      setTimeout(() => setAnnouncement(""), 1000);
     },
-    []
+    [],
   );
 
   return { announcement, announce };
@@ -243,7 +243,7 @@ export function useAriaExpanded() {
 
   return {
     isExpanded,
-    'aria-expanded': isExpanded,
+    "aria-expanded": isExpanded,
     toggle,
     collapse,
     expand,
@@ -285,7 +285,7 @@ export function useAriaSelection() {
     (id: string) => {
       return selectedItems.has(id);
     },
-    [selectedItems]
+    [selectedItems],
   );
 
   return {
@@ -307,38 +307,38 @@ export const useId =
   });
 
 export const KEYS = {
-  ENTER: 'Enter',
-  SPACE: ' ',
-  TAB: 'Tab',
-  ESCAPE: 'Escape',
-  ARROW_UP: 'ArrowUp',
-  ARROW_DOWN: 'ArrowDown',
-  ARROW_LEFT: 'ArrowLeft',
-  ARROW_RIGHT: 'ArrowRight',
-  HOME: 'Home',
-  END: 'End',
-  PAGE_UP: 'PageUp',
-  PAGE_DOWN: 'PageDown',
+  ENTER: "Enter",
+  SPACE: " ",
+  TAB: "Tab",
+  ESCAPE: "Escape",
+  ARROW_UP: "ArrowUp",
+  ARROW_DOWN: "ArrowDown",
+  ARROW_LEFT: "ArrowLeft",
+  ARROW_RIGHT: "ArrowRight",
+  HOME: "Home",
+  END: "End",
+  PAGE_UP: "PageUp",
+  PAGE_DOWN: "PageDown",
 } as const;
 
 export const ARIA_ROLES = {
-  BUTTON: 'button',
-  LINK: 'link',
-  MENUITEM: 'menuitem',
-  OPTION: 'option',
-  TAB: 'tab',
-  TABPANEL: 'tabpanel',
-  DIALOG: 'dialog',
-  ALERTDIALOG: 'alertdialog',
-  TOOLTIP: 'tooltip',
-  COMBOBOX: 'combobox',
-  LISTBOX: 'listbox',
-  TREE: 'tree',
-  TREEITEM: 'treeitem',
-  GRID: 'grid',
-  GRIDCELL: 'gridcell',
-  TABLE: 'table',
-  ROW: 'row',
-  COLUMNHEADER: 'columnheader',
-  ROWHEADER: 'rowheader',
+  BUTTON: "button",
+  LINK: "link",
+  MENUITEM: "menuitem",
+  OPTION: "option",
+  TAB: "tab",
+  TABPANEL: "tabpanel",
+  DIALOG: "dialog",
+  ALERTDIALOG: "alertdialog",
+  TOOLTIP: "tooltip",
+  COMBOBOX: "combobox",
+  LISTBOX: "listbox",
+  TREE: "tree",
+  TREEITEM: "treeitem",
+  GRID: "grid",
+  GRIDCELL: "gridcell",
+  TABLE: "table",
+  ROW: "row",
+  COLUMNHEADER: "columnheader",
+  ROWHEADER: "rowheader",
 } as const;

@@ -19,7 +19,7 @@ export const validationPatterns = {
 // Validation functions
 export const validate = {
   required: (value: any) => {
-    if (typeof value === 'string') return value.trim().length > 0;
+    if (typeof value === "string") return value.trim().length > 0;
     if (Array.isArray(value)) return value.length > 0;
     return value != null;
   },
@@ -44,7 +44,7 @@ export const validate = {
 // Validation rule builder
 export function createValidationRules() {
   return {
-    required: (message = 'This field is required') => ({
+    required: (message = "This field is required") => ({
       validate: validate.required,
       message,
     }),
@@ -59,22 +59,22 @@ export function createValidationRules() {
       message,
     }),
 
-    pattern: (pattern: RegExp, message = 'Invalid format') => ({
+    pattern: (pattern: RegExp, message = "Invalid format") => ({
       validate: (value: string) => validate.pattern(value, pattern),
       message,
     }),
 
-    email: (message = 'Invalid email address') => ({
+    email: (message = "Invalid email address") => ({
       validate: validate.email,
       message,
     }),
 
-    phone: (message = 'Invalid phone number') => ({
+    phone: (message = "Invalid phone number") => ({
       validate: validate.phone,
       message,
     }),
 
-    url: (message = 'Invalid URL') => ({
+    url: (message = "Invalid URL") => ({
       validate: validate.url,
       message,
     }),

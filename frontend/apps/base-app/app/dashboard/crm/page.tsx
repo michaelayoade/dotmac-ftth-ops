@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useMemo } from "react";
@@ -14,7 +14,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EnhancedDataTable, type ColumnDef, type Row } from "@/components/ui/EnhancedDataTable";
 import { EmptyState } from "@/components/ui/empty-state";
-import { useLeads, useQuotes, useSiteSurveys, type Lead, type Quote, type SiteSurvey } from "@/hooks/useCRM";
+import {
+  useLeads,
+  useQuotes,
+  useSiteSurveys,
+  type Lead,
+  type Quote,
+  type SiteSurvey,
+} from "@/hooks/useCRM";
 import { useToast } from "@/components/ui/use-toast";
 
 function formatRelativeDate(value?: string | null) {
@@ -54,7 +61,7 @@ export default function CRMOverviewPage() {
     const qualified = leads.filter((lead) => lead.status === "qualified").length;
     const quoteSent = leads.filter((lead) => lead.status === "quote_sent").length;
     const activePipeline = leads.filter(
-      (lead) => !["won", "lost", "disqualified"].includes(lead.status)
+      (lead) => !["won", "lost", "disqualified"].includes(lead.status),
     ).length;
 
     const conversionRate = total > 0 ? Number(((won / total) * 100).toFixed(1)) : 0;
@@ -102,7 +109,7 @@ export default function CRMOverviewPage() {
     const inProgress = surveys.filter((survey) => survey.status === "in_progress").length;
     const completed = surveys.filter((survey) => survey.status === "completed").length;
     const requiresConstruction = surveys.filter(
-      (survey) => survey.serviceability === "requires_construction"
+      (survey) => survey.serviceability === "requires_construction",
     ).length;
 
     return {
@@ -119,7 +126,7 @@ export default function CRMOverviewPage() {
       [...leads]
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5),
-    [leads]
+    [leads],
   );
 
   const recentQuotes = useMemo(
@@ -127,19 +134,16 @@ export default function CRMOverviewPage() {
       [...quotes]
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5),
-    [quotes]
+    [quotes],
   );
 
   const upcomingSurveys = useMemo(
     () =>
       surveys
         .filter((survey) => survey.status === "scheduled")
-        .sort(
-          (a, b) =>
-            new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime()
-        )
+        .sort((a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime())
         .slice(0, 5),
-    [surveys]
+    [surveys],
   );
 
   const leadColumns: ColumnDef<Lead>[] = useMemo(
@@ -169,7 +173,9 @@ export default function CRMOverviewPage() {
       {
         id: "priority",
         header: "Priority",
-        cell: ({ row }: { row: Row<Lead> }) => <LeadPriorityBadge priority={row.original.priority} />,
+        cell: ({ row }: { row: Row<Lead> }) => (
+          <LeadPriorityBadge priority={row.original.priority} />
+        ),
       },
       {
         id: "created",
@@ -181,7 +187,7 @@ export default function CRMOverviewPage() {
         ),
       },
     ],
-    []
+    [],
   );
 
   const quoteColumns: ColumnDef<Quote>[] = useMemo(
@@ -192,9 +198,7 @@ export default function CRMOverviewPage() {
         cell: ({ row }: { row: Row<Quote> }) => (
           <div className="flex flex-col">
             <span className="font-medium">{row.original.quote_number}</span>
-            <span className="text-xs text-muted-foreground">
-              {row.original.service_plan_name}
-            </span>
+            <span className="text-xs text-muted-foreground">{row.original.service_plan_name}</span>
           </div>
         ),
       },
@@ -207,9 +211,7 @@ export default function CRMOverviewPage() {
         id: "mrr",
         header: "Monthly MRR",
         cell: ({ row }) => (
-          <span className="text-sm">
-            ${row.original.monthly_recurring_charge.toLocaleString()}
-          </span>
+          <span className="text-sm">${row.original.monthly_recurring_charge.toLocaleString()}</span>
         ),
       },
       {
@@ -224,7 +226,7 @@ export default function CRMOverviewPage() {
         ),
       },
     ],
-    []
+    [],
   );
 
   const surveyColumns: ColumnDef<SiteSurvey>[] = useMemo(
@@ -262,13 +264,11 @@ export default function CRMOverviewPage() {
         header: "Technician",
         accessorKey: "technician_id",
         cell: ({ row }) => (
-          <span className="text-sm">
-            {row.original.technician_id ?? "Unassigned"}
-          </span>
+          <span className="text-sm">{row.original.technician_id ?? "Unassigned"}</span>
         ),
       },
     ],
-    []
+    [],
   );
 
   const handleRefresh = async () => {
@@ -341,9 +341,7 @@ export default function CRMOverviewPage() {
         <Card>
           <CardHeader>
             <CardTitle>Recently Captured Leads</CardTitle>
-            <CardDescription>
-              Monitor the latest opportunities entering the funnel.
-            </CardDescription>
+            <CardDescription>Monitor the latest opportunities entering the funnel.</CardDescription>
           </CardHeader>
           <CardContent>
             {recentLeads.length === 0 ? (
@@ -434,8 +432,14 @@ export default function CRMOverviewPage() {
 
 function LeadStatusBadge({ status }: { status: Lead["status"] }) {
   const config: Record<Lead["status"], { label: string; className: string }> = {
-    new: { label: "New", className: "bg-sky-500/20 text-sky-400 border-sky-500/30" },
-    contacted: { label: "Contacted", className: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
+    new: {
+      label: "New",
+      className: "bg-sky-500/20 text-sky-400 border-sky-500/30",
+    },
+    contacted: {
+      label: "Contacted",
+      className: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+    },
     qualified: {
       label: "Qualified",
       className: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
@@ -456,8 +460,14 @@ function LeadStatusBadge({ status }: { status: Lead["status"] }) {
       label: "Negotiating",
       className: "bg-purple-500/20 text-purple-300 border-purple-500/30",
     },
-    won: { label: "Won", className: "bg-emerald-600/30 text-emerald-200 border-emerald-500/30" },
-    lost: { label: "Lost", className: "bg-red-500/20 text-red-300 border-red-500/30" },
+    won: {
+      label: "Won",
+      className: "bg-emerald-600/30 text-emerald-200 border-emerald-500/30",
+    },
+    lost: {
+      label: "Lost",
+      className: "bg-red-500/20 text-red-300 border-red-500/30",
+    },
     disqualified: {
       label: "Disqualified",
       className: "bg-slate-500/20 text-slate-300 border-slate-500/30",
@@ -471,30 +481,68 @@ function LeadStatusBadge({ status }: { status: Lead["status"] }) {
 
 function LeadSourceBadge({ source }: { source: Lead["source"] }) {
   const label = source.replace(/_/g, " ");
-  return <Badge variant="outline" className="text-xs uppercase">{label}</Badge>;
+  return (
+    <Badge variant="outline" className="text-xs uppercase">
+      {label}
+    </Badge>
+  );
 }
 
 function LeadPriorityBadge({ priority }: { priority: Lead["priority"] }) {
   const config: Record<number, { label: string; className: string }> = {
-    1: { label: "High", className: "bg-red-500/20 text-red-200 border-red-500/30" },
-    2: { label: "Medium", className: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
-    3: { label: "Low", className: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
+    1: {
+      label: "High",
+      className: "bg-red-500/20 text-red-200 border-red-500/30",
+    },
+    2: {
+      label: "Medium",
+      className: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+    },
+    3: {
+      label: "Low",
+      className: "bg-slate-500/20 text-slate-300 border-slate-500/30",
+    },
   };
 
-  const { label, className } = config[priority] ?? config[3] ?? { label: "Low", className: "bg-slate-500/20 text-slate-300 border-slate-500/30" };
+  const { label, className } = config[priority] ??
+    config[3] ?? {
+      label: "Low",
+      className: "bg-slate-500/20 text-slate-300 border-slate-500/30",
+    };
 
   return <Badge className={className}>{label}</Badge>;
 }
 
 function QuoteStatusBadge({ status }: { status: Quote["status"] }) {
   const config: Record<Quote["status"], { label: string; className: string }> = {
-    draft: { label: "Draft", className: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
-    sent: { label: "Sent", className: "bg-sky-500/20 text-sky-300 border-sky-500/30" },
-    viewed: { label: "Viewed", className: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
-    accepted: { label: "Accepted", className: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
-    rejected: { label: "Rejected", className: "bg-red-500/20 text-red-300 border-red-500/30" },
-    expired: { label: "Expired", className: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
-    revised: { label: "Revised", className: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
+    draft: {
+      label: "Draft",
+      className: "bg-slate-500/20 text-slate-300 border-slate-500/30",
+    },
+    sent: {
+      label: "Sent",
+      className: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+    },
+    viewed: {
+      label: "Viewed",
+      className: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+    },
+    accepted: {
+      label: "Accepted",
+      className: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+    },
+    rejected: {
+      label: "Rejected",
+      className: "bg-red-500/20 text-red-300 border-red-500/30",
+    },
+    expired: {
+      label: "Expired",
+      className: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+    },
+    revised: {
+      label: "Revised",
+      className: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+    },
   };
 
   const { label, className } = config[status] ?? config.draft;
@@ -504,11 +552,26 @@ function QuoteStatusBadge({ status }: { status: Quote["status"] }) {
 
 function SurveyStatusBadge({ status }: { status: SiteSurvey["status"] }) {
   const config: Record<SiteSurvey["status"], { label: string; className: string }> = {
-    scheduled: { label: "Scheduled", className: "bg-sky-500/20 text-sky-300 border-sky-500/30" },
-    in_progress: { label: "In Progress", className: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
-    completed: { label: "Completed", className: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
-    failed: { label: "Failed", className: "bg-red-500/20 text-red-300 border-red-500/30" },
-    canceled: { label: "Canceled", className: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
+    scheduled: {
+      label: "Scheduled",
+      className: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+    },
+    in_progress: {
+      label: "In Progress",
+      className: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+    },
+    completed: {
+      label: "Completed",
+      className: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+    },
+    failed: {
+      label: "Failed",
+      className: "bg-red-500/20 text-red-300 border-red-500/30",
+    },
+    canceled: {
+      label: "Canceled",
+      className: "bg-slate-500/20 text-slate-300 border-slate-500/30",
+    },
   };
 
   const { label, className } = config[status] ?? config.scheduled;

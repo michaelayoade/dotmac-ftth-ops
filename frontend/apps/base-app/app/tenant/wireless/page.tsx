@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState, useMemo, useCallback } from "react";
@@ -22,13 +22,7 @@ import {
   MapPin,
   Search,
 } from "lucide-react";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -166,7 +160,11 @@ export default function WirelessInfrastructurePage() {
   const { accessPoints, isLoading: loadingAPs, refetch: refetchAPs } = useAccessPoints({});
   const { clients, isLoading: loadingClients, refetch: refetchClients } = useWirelessClients({});
   const { coverageZones, isLoading: loadingZones, refetch: refetchZones } = useCoverageZones({});
-  const { stats, isLoading: loadingStats, refetch: refetchStats } = useWirelessInfrastructureStats();
+  const {
+    stats,
+    isLoading: loadingStats,
+    refetch: refetchStats,
+  } = useWirelessInfrastructureStats();
   const { viewState, toggleLayer, selectFeature, clearSelection } = useWirelessMapView();
 
   // Local state
@@ -244,19 +242,22 @@ export default function WirelessInfrastructurePage() {
       return [];
     }
 
-    return clients.slice(0, 100).map((client) => {
-      const ap = accessPoints.find((a) => a.id === client.access_point_id);
-      if (!ap) return null;
+    return clients
+      .slice(0, 100)
+      .map((client) => {
+        const ap = accessPoints.find((a) => a.id === client.access_point_id);
+        if (!ap) return null;
 
-      return {
-        id: client.id,
-        position: ap.coordinates,
-        type: "person",
-        status: client.signal_quality_percent > 70 ? "active" : "warning",
-        title: client.hostname || client.mac_address,
-        subtitle: `RSSI: ${client.rssi_dbm} dBm`,
-      };
-    }).filter(Boolean) as MapMarker[];
+        return {
+          id: client.id,
+          position: ap.coordinates,
+          type: "person",
+          status: client.signal_quality_percent > 70 ? "active" : "warning",
+          title: client.hostname || client.mac_address,
+          subtitle: `RSSI: ${client.rssi_dbm} dBm`,
+        };
+      })
+      .filter(Boolean) as MapMarker[];
   }, [clients, accessPoints, viewState.layers]);
 
   // Combine all markers
@@ -401,7 +402,10 @@ export default function WirelessInfrastructurePage() {
                   {layer.color && (
                     <div
                       className="w-4 h-4 rounded"
-                      style={{ backgroundColor: layer.color, opacity: layer.opacity }}
+                      style={{
+                        backgroundColor: layer.color,
+                        opacity: layer.opacity,
+                      }}
                     />
                   )}
                 </div>
@@ -492,7 +496,7 @@ export default function WirelessInfrastructurePage() {
           <CardContent>
             <div className="h-[600px] rounded-lg overflow-hidden border">
               <UniversalMap
-                {...{
+                {...({
                   center: viewState.center,
                   zoom: viewState.zoom,
                   markers: allMarkers as any,
@@ -501,7 +505,7 @@ export default function WirelessInfrastructurePage() {
                     const ap = accessPoints.find((a) => a.id === marker.id);
                     if (ap) setSelectedAP(ap);
                   },
-                } as any}
+                } as any)}
               />
             </div>
           </CardContent>

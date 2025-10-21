@@ -1,55 +1,74 @@
-'use client';
+"use client";
 
-import { ReactNode, useState } from 'react';
-import { ThemeProvider } from 'next-themes';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { usePathname } from 'next/navigation';
-import { AppConfigProvider } from './AppConfigContext';
-import { MSWProvider } from './MSWProvider';
-import { platformConfig } from '@/lib/config';
-import { TenantProvider } from '@/lib/contexts/tenant-context';
-import { RBACProvider } from '@/contexts/RBACContext';
-import { AuthProvider } from '@/hooks/useAuth';
-import { ToastContainer } from '@/components/ui/toast';
-import { BrandingProvider } from '@/providers/BrandingProvider';
-import { ApolloProvider } from '@/lib/graphql/ApolloProvider';
+import { ReactNode, useState } from "react";
+import { ThemeProvider } from "next-themes";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { usePathname } from "next/navigation";
+import { AppConfigProvider } from "./AppConfigContext";
+import { MSWProvider } from "./MSWProvider";
+import { platformConfig } from "@/lib/config";
+import { TenantProvider } from "@/lib/contexts/tenant-context";
+import { RBACProvider } from "@/contexts/RBACContext";
+import { AuthProvider } from "@/hooks/useAuth";
+import { ToastContainer } from "@/components/ui/toast";
+import { BrandingProvider } from "@/providers/BrandingProvider";
+import { ApolloProvider } from "@/lib/graphql/ApolloProvider";
+import { PortalThemeProvider } from "@/lib/design-system/portal-themes";
+import { PortalSwitcher, PortalThemeDebug } from "@/components/dev/PortalSwitcher";
+import { DesignTokenExporter } from "@/components/dev/DesignTokenExporter";
+import {
+  AccessibilityProvider,
+  LiveRegionAnnouncer,
+  SkipToMainContent,
+  KeyboardShortcuts,
+} from "@/lib/design-system/accessibility";
 
 export function ClientProviders({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [queryClient] = useState(() => new QueryClient());
 
-  const shouldWrapWithRBAC = pathname?.startsWith('/dashboard')
-    || pathname?.startsWith('/tenant')
-    || pathname?.startsWith('/partner');
+  const shouldWrapWithRBAC =
+    pathname?.startsWith("/dashboard") ||
+    pathname?.startsWith("/tenant") ||
+    pathname?.startsWith("/partner");
 
   const appProviders = (
     <AppConfigProvider value={platformConfig}>
       <BrandingProvider>
+        <SkipToMainContent />
         {children}
+        <LiveRegionAnnouncer />
+        <KeyboardShortcuts />
       </BrandingProvider>
       <ToastContainer />
+      {/* Development-only tools */}
+      <PortalSwitcher />
+      <PortalThemeDebug />
+      <DesignTokenExporter />
     </AppConfigProvider>
   );
 
   return (
     <MSWProvider>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <QueryClientProvider client={queryClient}>
-          <ApolloProvider>
-            <TenantProvider>
-              <AuthProvider>
-                {shouldWrapWithRBAC ? (
-                  <RBACProvider>
-                    {appProviders}
-                  </RBACProvider>
-                ) : (
-                  appProviders
-                )}
-              </AuthProvider>
-            </TenantProvider>
-          </ApolloProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
+      <PortalThemeProvider>
+        <AccessibilityProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <QueryClientProvider client={queryClient}>
+              <ApolloProvider>
+                <TenantProvider>
+                  <AuthProvider>
+                    {shouldWrapWithRBAC ? (
+                      <RBACProvider>{appProviders}</RBACProvider>
+                    ) : (
+                      appProviders
+                    )}
+                  </AuthProvider>
+                </TenantProvider>
+              </ApolloProvider>
+            </QueryClientProvider>
+          </ThemeProvider>
+        </AccessibilityProvider>
+      </PortalThemeProvider>
     </MSWProvider>
   );
 }

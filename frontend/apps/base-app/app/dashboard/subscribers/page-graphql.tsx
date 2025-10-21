@@ -12,15 +12,22 @@
  * To enable: Rename this file to page.tsx (backup the original first)
  */
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { useRBAC } from '@/contexts/RBACContext';
-import { platformConfig } from '@/lib/config';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { useRBAC } from "@/contexts/RBACContext";
+import { platformConfig } from "@/lib/config";
 import {
   Dialog,
   DialogContent,
@@ -28,38 +35,36 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
-import { logger } from '@/lib/logger';
-import { useSubscriberDashboardGraphQL, getSubscriberSessions } from '@/hooks/useSubscriberDashboardGraphQL';
-import { ApolloProvider } from '@/lib/graphql/ApolloProvider';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { logger } from "@/lib/logger";
+import {
+  useSubscriberDashboardGraphQL,
+  getSubscriberSessions,
+} from "@/hooks/useSubscriberDashboardGraphQL";
+import { ApolloProvider } from "@/lib/graphql/ApolloProvider";
 
 function SubscribersDashboardContent() {
   const { hasPermission } = useRBAC();
-  const [search, setSearch] = useState('');
-  const radiusEnabled = platformConfig.features.enableRadius && hasPermission('isp.radius.read');
+  const [search, setSearch] = useState("");
+  const radiusEnabled = platformConfig.features.enableRadius && hasPermission("isp.radius.read");
   const [selectedSubscriberId, setSelectedSubscriberId] = useState<number | null>(null);
   const [subscriberDialogOpen, setSubscriberDialogOpen] = useState(false);
 
   const { toast } = useToast();
 
   // Single GraphQL query replaces 3 REST calls!
-  const {
-    subscribers,
-    sessions,
-    metrics,
-    loading,
-    error,
-    refetch,
-  } = useSubscriberDashboardGraphQL({
-    limit: 50,
-    search: search.trim() || undefined,
-    enabled: radiusEnabled,
-  });
+  const { subscribers, sessions, metrics, loading, error, refetch } = useSubscriberDashboardGraphQL(
+    {
+      limit: 50,
+      search: search.trim() || undefined,
+      enabled: radiusEnabled,
+    },
+  );
 
   const filteredSubscribers = subscribers.filter((subscriber) =>
-    subscriber.username.toLowerCase().includes(search.trim().toLowerCase())
+    subscriber.username.toLowerCase().includes(search.trim().toLowerCase()),
   );
 
   const selectedSubscriber = subscribers.find((s) => s.id === selectedSubscriberId) ?? null;
@@ -74,13 +79,14 @@ function SubscribersDashboardContent() {
           <CardHeader>
             <CardTitle>Subscribers</CardTitle>
             <CardDescription>
-              Access to RADIUS subscriber records requires the <code>isp.radius.read</code> permission.
+              Access to RADIUS subscriber records requires the <code>isp.radius.read</code>{" "}
+              permission.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Contact a platform administrator to grant ISP operator privileges, or enable the feature flag{' '}
-              <code>NEXT_PUBLIC_ENABLE_RADIUS</code>.
+              Contact a platform administrator to grant ISP operator privileges, or enable the
+              feature flag <code>NEXT_PUBLIC_ENABLE_RADIUS</code>.
             </p>
           </CardContent>
         </Card>
@@ -94,9 +100,7 @@ function SubscribersDashboardContent() {
         <Card>
           <CardHeader>
             <CardTitle>Error Loading Subscribers</CardTitle>
-            <CardDescription>
-              Failed to load subscriber data from GraphQL API
-            </CardDescription>
+            <CardDescription>Failed to load subscriber data from GraphQL API</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-destructive mb-4">{error}</p>
@@ -123,33 +127,41 @@ function SubscribersDashboardContent() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Tracked subscribers</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Tracked subscribers
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-semibold text-foreground">
-              {loading ? '...' : metrics.totalSubscribers}
+              {loading ? "..." : metrics.totalSubscribers}
             </div>
             <p className="text-xs text-muted-foreground mt-1">In FreeRADIUS for this tenant</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active sessions</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Active sessions
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-semibold text-foreground">
-              {loading ? '...' : metrics.activeSessions}
+              {loading ? "..." : metrics.activeSessions}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">PPP sessions currently authenticated</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              PPP sessions currently authenticated
+            </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active services</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Active services
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-semibold text-foreground">
-              {loading ? '...' : metrics.activeServices}
+              {loading ? "..." : metrics.activeServices}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Service instances in ACTIVE status</p>
           </CardContent>
@@ -159,7 +171,9 @@ function SubscribersDashboardContent() {
       <Card>
         <CardHeader>
           <CardTitle>RADIUS subscribers</CardTitle>
-          <CardDescription>Search and review subscriber credentials and profile settings.</CardDescription>
+          <CardDescription>
+            Search and review subscriber credentials and profile settings.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input
@@ -204,14 +218,16 @@ function SubscribersDashboardContent() {
                       setSubscriberDialogOpen(true);
                     }}
                   >
-                    <TableCell className="font-medium text-foreground">{subscriber.username}</TableCell>
+                    <TableCell className="font-medium text-foreground">
+                      {subscriber.username}
+                    </TableCell>
                     <TableCell>
-                      <Badge variant={subscriber.enabled ? 'outline' : 'secondary'}>
-                        {subscriber.enabled ? 'Enabled' : 'Disabled'}
+                      <Badge variant={subscriber.enabled ? "outline" : "secondary"}>
+                        {subscriber.enabled ? "Enabled" : "Disabled"}
                       </Badge>
                     </TableCell>
-                    <TableCell>{subscriber.framedIpAddress ?? '—'}</TableCell>
-                    <TableCell>{subscriber.bandwidthProfileId ?? '—'}</TableCell>
+                    <TableCell>{subscriber.framedIpAddress ?? "—"}</TableCell>
+                    <TableCell>{subscriber.bandwidthProfileId ?? "—"}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{subscriber.sessions.length}</Badge>
                     </TableCell>
@@ -272,7 +288,7 @@ function SubscribersDashboardContent() {
           <DialogHeader>
             <DialogTitle>Subscriber details</DialogTitle>
             <DialogDescription>
-              Detailed information for <code>{selectedSubscriber?.username ?? '—'}</code>
+              Detailed information for <code>{selectedSubscriber?.username ?? "—"}</code>
             </DialogDescription>
           </DialogHeader>
           {selectedSubscriber ? (
@@ -280,24 +296,26 @@ function SubscribersDashboardContent() {
               <div className="grid gap-2">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Subscriber ID</span>
-                  <span className="font-medium text-foreground">{selectedSubscriber.subscriberId}</span>
+                  <span className="font-medium text-foreground">
+                    {selectedSubscriber.subscriberId}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Status</span>
-                  <Badge variant={selectedSubscriber.enabled ? 'outline' : 'secondary'}>
-                    {selectedSubscriber.enabled ? 'Enabled' : 'Disabled'}
+                  <Badge variant={selectedSubscriber.enabled ? "outline" : "secondary"}>
+                    {selectedSubscriber.enabled ? "Enabled" : "Disabled"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Bandwidth profile</span>
                   <span className="font-medium text-foreground">
-                    {selectedSubscriber.bandwidthProfileId ?? '—'}
+                    {selectedSubscriber.bandwidthProfileId ?? "—"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">Framed IP address</span>
                   <span className="font-medium text-foreground">
-                    {selectedSubscriber.framedIpAddress ?? '—'}
+                    {selectedSubscriber.framedIpAddress ?? "—"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -329,18 +347,26 @@ function SubscribersDashboardContent() {
                         {selectedSessions.map((session) => (
                           <TableRow key={session.radacctid}>
                             <TableCell className="text-xs">{session.nasipaddress}</TableCell>
-                            <TableCell className="text-xs font-mono">{session.acctsessionid}</TableCell>
-                            <TableCell className="text-xs">
-                              {session.acctstarttime ? new Date(session.acctstarttime).toLocaleString() : '—'}
+                            <TableCell className="text-xs font-mono">
+                              {session.acctsessionid}
                             </TableCell>
-                            <TableCell className="text-xs">{session.acctsessiontime ?? 0}</TableCell>
+                            <TableCell className="text-xs">
+                              {session.acctstarttime
+                                ? new Date(session.acctstarttime).toLocaleString()
+                                : "—"}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {session.acctsessiontime ?? 0}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground">No active sessions for this subscriber.</p>
+                  <p className="text-xs text-muted-foreground">
+                    No active sessions for this subscriber.
+                  </p>
                 )}
               </div>
             </div>

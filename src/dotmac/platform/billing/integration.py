@@ -9,9 +9,13 @@ import logging
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from dotmac.platform.customer_management.models import Customer
 
 from .catalog.service import ProductService
 from .core.enums import InvoiceStatus
@@ -57,6 +61,7 @@ class BillingInvoiceRequest(BaseModel):
     subtotal: Decimal = Field(description="Subtotal before discounts")
     total_discount: Decimal = Field(description="Total discount amount")
     total_amount: Decimal = Field(description="Final invoice amount")
+    currency: str = Field("USD", description="Currency code (ISO 4217)")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
 
 
@@ -187,6 +192,7 @@ class BillingIntegrationService:
                 subtotal=total_amount,
                 total_discount=total_discount,
                 total_amount=total_amount - total_discount,
+                currency=plan.currency,
                 metadata={
                     "billing_source": "subscription",
                     "subscription_id": subscription_id,
@@ -279,6 +285,72 @@ class BillingIntegrationService:
         threshold = datetime.now(UTC) - timedelta(days=7)
         return created_at >= threshold
 
+    async def _resolve_customer_billing_details(
+        self, customer_id: str, tenant_id: str
+    ) -> tuple[str, dict[str, str]]:
+        """
+        Resolve billing email and address information for the customer.
+
+        Returns secure defaults when the customer record cannot be found.
+        """
+        fallback_email = f"{customer_id}@example.com"
+        fallback_address: dict[str, str] = {"name": fallback_email}
+
+        try:
+            customer_uuid = UUID(customer_id)
+        except (ValueError, TypeError):
+            customer_uuid = None
+
+        if customer_uuid is None:
+            logger.warning(
+                "Unable to resolve customer UUID for billing details",
+                extra={"customer_id": customer_id, "tenant_id": tenant_id},
+            )
+            return fallback_email, fallback_address
+
+        stmt = (
+            select(Customer)
+            .where(
+                Customer.id == customer_uuid,
+                Customer.tenant_id == tenant_id,
+                Customer.deleted_at.is_(None),
+            )
+            .limit(1)
+        )
+        result = await self.db.execute(stmt)
+        customer = result.scalar_one_or_none()
+
+        if customer is None:
+            logger.warning(
+                "Customer not found when resolving billing details",
+                extra={"customer_id": customer_id, "tenant_id": tenant_id},
+            )
+            return fallback_email, fallback_address
+
+        billing_email = customer.email or fallback_email
+        name = (
+            customer.display_name
+            or customer.company_name
+            or " ".join(filter(None, [customer.first_name, customer.last_name]))
+        ).strip()
+
+        billing_address = {
+            "name": name or billing_email,
+            "line1": customer.address_line1,
+            "line2": customer.address_line2,
+            "city": customer.city,
+            "state": customer.state_province,
+            "postal_code": customer.postal_code,
+            "country": customer.country,
+            "email": customer.email,
+            "phone": customer.phone or customer.mobile,
+        }
+
+        # Remove empty or None values to avoid polluting downstream logic
+        filtered_address = {key: value for key, value in billing_address.items() if value}
+
+        return billing_email, filtered_address
+
     async def _create_invoice(
         self, invoice_request: BillingInvoiceRequest, tenant_id: str
     ) -> str | None:
@@ -300,18 +372,19 @@ class BillingIntegrationService:
                     }
                 )
 
+            billing_email, billing_address = await self._resolve_customer_billing_details(
+                invoice_request.customer_id, tenant_id
+            )
+            resolved_currency = (invoice_request.currency or "USD").upper()
+
             # Create invoice using the actual invoice service
             invoice = await self.invoice_service.create_invoice(
                 tenant_id=tenant_id,
                 customer_id=invoice_request.customer_id,
-                billing_email=f"{invoice_request.customer_id}@example.com",  # Would need actual email
-                billing_address={
-                    "line1": "Billing Address",  # Would need actual address
-                    "city": "City",
-                    "country": "US",
-                },
+                billing_email=billing_email,
+                billing_address=billing_address,
                 line_items=line_items,
-                currency="USD",  # Would need actual currency from subscription
+                currency=resolved_currency,
                 notes=f"Subscription billing for period {invoice_request.billing_period_start.date()} to {invoice_request.billing_period_end.date()}",
                 extra_data=invoice_request.metadata,
             )
@@ -639,6 +712,7 @@ class BillingIntegrationService:
                 subtotal=sum((item.total_amount for item in invoice_items), Decimal("0")),
                 total_discount=sum((item.discount_amount for item in invoice_items), Decimal("0")),
                 total_amount=total_amount,
+                currency=product.currency,
                 metadata={
                     "billing_source": "usage",
                     "product_id": product_id,

@@ -25,7 +25,7 @@ from dotmac.platform.user_management.models import EmailVerificationToken, User
 def verification_app():
     """Create test app with auth router."""
     app = FastAPI()
-    app.include_router(auth_router, prefix="/auth")
+    app.include_router(auth_router)
     return app
 
 

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { logger } from '@/lib/logger';
+import { useState } from "react";
+import { logger } from "@/lib/logger";
 import {
   MessageSquare,
   Plus,
@@ -10,9 +10,9 @@ import {
   Building,
   Loader2,
   Filter,
-  Search
-} from 'lucide-react';
-import { useCustomerNotes, CustomerNote } from '@/hooks/useCustomers';
+  Search,
+} from "lucide-react";
+import { useCustomerNotes, CustomerNote } from "@/hooks/useCustomers";
 
 interface CustomerNotesProps {
   customerId: string;
@@ -35,16 +35,16 @@ function NoteIcon({ note_type }: NoteIconProps) {
   const IconComponent = iconMap[note_type] || MessageSquare;
 
   const colorMap: Record<string, string> = {
-    general: 'text-slate-400',
-    internal: 'text-yellow-400',
-    customer_facing: 'text-green-400',
-    support: 'text-orange-400',
-    sales: 'text-blue-400',
-    billing: 'text-purple-400',
+    general: "text-slate-400",
+    internal: "text-yellow-400",
+    customer_facing: "text-green-400",
+    support: "text-orange-400",
+    sales: "text-blue-400",
+    billing: "text-purple-400",
   };
 
   return (
-    <div className={`p-2 rounded-full bg-slate-800 ${colorMap[note_type] || 'text-slate-400'}`}>
+    <div className={`p-2 rounded-full bg-slate-800 ${colorMap[note_type] || "text-slate-400"}`}>
       <IconComponent className="h-4 w-4" />
     </div>
   );
@@ -52,27 +52,29 @@ function NoteIcon({ note_type }: NoteIconProps) {
 
 interface AddNoteModalProps {
   onClose: () => void;
-  onAdd: (note: Omit<CustomerNote, 'id' | 'customer_id' | 'created_at' | 'updated_at' | 'created_by'>) => Promise<void>;
+  onAdd: (
+    note: Omit<CustomerNote, "id" | "customer_id" | "created_at" | "updated_at" | "created_by">,
+  ) => Promise<void>;
 }
 
 function AddNoteModal({ onClose, onAdd }: AddNoteModalProps) {
   const [formData, setFormData] = useState({
-    note_type: 'general',
-    content: '',
+    note_type: "general",
+    content: "",
     is_internal: false,
     tags: [] as string[],
     metadata: {} as Record<string, any>,
   });
   const [loading, setLoading] = useState(false);
-  const [tagInput, setTagInput] = useState('');
+  const [tagInput, setTagInput] = useState("");
 
   const noteTypes = [
-    { value: 'general', label: 'General Note' },
-    { value: 'internal', label: 'Internal Note' },
-    { value: 'customer_facing', label: 'Customer Facing' },
-    { value: 'support', label: 'Support Note' },
-    { value: 'sales', label: 'Sales Note' },
-    { value: 'billing', label: 'Billing Note' },
+    { value: "general", label: "General Note" },
+    { value: "internal", label: "Internal Note" },
+    { value: "customer_facing", label: "Customer Facing" },
+    { value: "support", label: "Support Note" },
+    { value: "sales", label: "Sales Note" },
+    { value: "billing", label: "Billing Note" },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,7 +86,7 @@ function AddNoteModal({ onClose, onAdd }: AddNoteModalProps) {
       await onAdd(formData as any);
       onClose();
     } catch (error) {
-      logger.error('Failed to add note', error instanceof Error ? error : new Error(String(error)));
+      logger.error("Failed to add note", error instanceof Error ? error : new Error(String(error)));
     } finally {
       setLoading(false);
     }
@@ -92,18 +94,18 @@ function AddNoteModal({ onClose, onAdd }: AddNoteModalProps) {
 
   const addTag = () => {
     if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        tags: [...prev.tags, tagInput.trim()]
+        tags: [...prev.tags, tagInput.trim()],
       }));
-      setTagInput('');
+      setTagInput("");
     }
   };
 
   const removeTag = (tagToRemove: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
+      tags: prev.tags.filter((tag) => tag !== tagToRemove),
     }));
   };
 
@@ -125,12 +127,10 @@ function AddNoteModal({ onClose, onAdd }: AddNoteModalProps) {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Note Type
-            </label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Note Type</label>
             <select
               value={formData.note_type}
-              onChange={(e) => setFormData(prev => ({ ...prev, note_type: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, note_type: e.target.value }))}
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
             >
               {noteTypes.map((type) => (
@@ -142,12 +142,10 @@ function AddNoteModal({ onClose, onAdd }: AddNoteModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Content *
-            </label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Content *</label>
             <textarea
               value={formData.content}
-              onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value }))}
               rows={4}
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
               placeholder="Enter note content"
@@ -160,7 +158,12 @@ function AddNoteModal({ onClose, onAdd }: AddNoteModalProps) {
               type="checkbox"
               id="is_internal"
               checked={formData.is_internal}
-              onChange={(e) => setFormData(prev => ({ ...prev, is_internal: e.target.checked }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  is_internal: e.target.checked,
+                }))
+              }
               className="h-4 w-4 text-sky-600 bg-slate-800 border-slate-600 rounded focus:ring-sky-500"
             />
             <label htmlFor="is_internal" className="text-sm text-slate-300">
@@ -169,15 +172,13 @@ function AddNoteModal({ onClose, onAdd }: AddNoteModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Tags
-            </label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Tags</label>
             <div className="flex gap-2 mb-2">
               <input
                 type="text"
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
                 className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                 placeholder="Add tag and press Enter"
               />
@@ -248,20 +249,20 @@ function formatDate(dateString: string): string {
   const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
   if (diffInMinutes < 1) {
-    return 'Just now';
+    return "Just now";
   } else if (diffInMinutes < 60) {
-    return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+    return `${diffInMinutes} minute${diffInMinutes !== 1 ? "s" : ""} ago`;
   } else if (diffInMinutes < 1440) {
     const hours = Math.floor(diffInMinutes / 60);
-    return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
   } else if (diffInMinutes < 10080) {
     const days = Math.floor(diffInMinutes / 1440);
-    return `${days} day${days !== 1 ? 's' : ''} ago`;
+    return `${days} day${days !== 1 ? "s" : ""} ago`;
   } else {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   }
 }
@@ -269,13 +270,13 @@ function formatDate(dateString: string): string {
 function NoteItem({ note }: { note: CustomerNote }) {
   return (
     <div className="flex gap-3 p-4 bg-slate-800 rounded-lg">
-      <NoteIcon note_type={(note as any).note_type || 'general'} />
+      <NoteIcon note_type={(note as any).note_type || "general"} />
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs text-slate-500 capitalize">
-                {((note as any).note_type || 'general').replace(/_/g, ' ')}
+                {((note as any).note_type || "general").replace(/_/g, " ")}
               </span>
               {note.is_internal && (
                 <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 rounded-full text-xs">
@@ -284,9 +285,7 @@ function NoteItem({ note }: { note: CustomerNote }) {
                 </div>
               )}
             </div>
-            <div className="text-sm text-white whitespace-pre-wrap mb-2">
-              {note.content}
-            </div>
+            <div className="text-sm text-white whitespace-pre-wrap mb-2">{note.content}</div>
             {(note as any).tags && (note as any).tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-2">
                 {(note as any).tags.map((tag: string, index: number) => (
@@ -305,7 +304,7 @@ function NoteItem({ note }: { note: CustomerNote }) {
                 <div className="bg-slate-700 rounded p-2 text-xs text-slate-300">
                   {Object.entries((note as any).metadata).map(([key, value]) => (
                     <div key={key} className="flex justify-between">
-                      <span className="capitalize">{key.replace(/_/g, ' ')}:</span>
+                      <span className="capitalize">{key.replace(/_/g, " ")}:</span>
                       <span>{String(value)}</span>
                     </div>
                   ))}
@@ -344,36 +343,43 @@ function LoadingSkeleton() {
 export function CustomerNotes({ customerId }: CustomerNotesProps) {
   const { notes, loading, error, addNote } = useCustomerNotes(customerId);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'internal' | 'external'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [noteTypeFilter, setNoteTypeFilter] = useState<string>('all');
+  const [filter, setFilter] = useState<"all" | "internal" | "external">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [noteTypeFilter, setNoteTypeFilter] = useState<string>("all");
 
-  const handleAddNote = async (noteData: Omit<CustomerNote, 'id' | 'customer_id' | 'created_at' | 'updated_at' | 'created_by'>) => {
+  const handleAddNote = async (
+    noteData: Omit<CustomerNote, "id" | "customer_id" | "created_at" | "updated_at" | "created_by">,
+  ) => {
     await addNote(noteData);
   };
 
-  const filteredNotes = notes.filter(note => {
-    const matchesVisibility = filter === 'all' ||
-      (filter === 'internal' && note.is_internal) ||
-      (filter === 'external' && !note.is_internal);
+  const filteredNotes = notes.filter((note) => {
+    const matchesVisibility =
+      filter === "all" ||
+      (filter === "internal" && note.is_internal) ||
+      (filter === "external" && !note.is_internal);
 
-    const matchesSearch = !searchQuery ||
+    const matchesSearch =
+      !searchQuery ||
       note.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      ((note as any).tags && (note as any).tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase())));
+      ((note as any).tags &&
+        (note as any).tags.some((tag: string) =>
+          tag.toLowerCase().includes(searchQuery.toLowerCase()),
+        ));
 
-    const matchesType = noteTypeFilter === 'all' || (note as any).note_type === noteTypeFilter;
+    const matchesType = noteTypeFilter === "all" || (note as any).note_type === noteTypeFilter;
 
     return matchesVisibility && matchesSearch && matchesType;
   });
 
   const noteTypes = [
-    { value: 'all', label: 'All Types' },
-    { value: 'general', label: 'General' },
-    { value: 'internal', label: 'Internal' },
-    { value: 'customer_facing', label: 'Customer Facing' },
-    { value: 'support', label: 'Support' },
-    { value: 'sales', label: 'Sales' },
-    { value: 'billing', label: 'Billing' },
+    { value: "all", label: "All Types" },
+    { value: "general", label: "General" },
+    { value: "internal", label: "Internal" },
+    { value: "customer_facing", label: "Customer Facing" },
+    { value: "support", label: "Support" },
+    { value: "sales", label: "Sales" },
+    { value: "billing", label: "Billing" },
   ];
 
   if (loading && notes.length === 0) {
@@ -424,7 +430,7 @@ export function CustomerNotes({ customerId }: CustomerNotesProps) {
           <Filter className="h-4 w-4 text-slate-400" />
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as 'all' | 'internal' | 'external')}
+            onChange={(e) => setFilter(e.target.value as "all" | "internal" | "external")}
             className="px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
           >
             <option value="all">All Notes</option>
@@ -477,9 +483,7 @@ export function CustomerNotes({ customerId }: CustomerNotesProps) {
           ) : (
             <>
               <h3 className="text-lg font-medium text-white mb-2">No matching notes</h3>
-              <p className="text-slate-400">
-                Try adjusting your search criteria or filters.
-              </p>
+              <p className="text-slate-400">Try adjusting your search criteria or filters.</p>
             </>
           )}
         </div>
@@ -498,10 +502,7 @@ export function CustomerNotes({ customerId }: CustomerNotesProps) {
       )}
 
       {showAddModal && (
-        <AddNoteModal
-          onClose={() => setShowAddModal(false)}
-          onAdd={handleAddNote}
-        />
+        <AddNoteModal onClose={() => setShowAddModal(false)} onAdd={handleAddNote} />
       )}
     </div>
   );

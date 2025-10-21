@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,15 +8,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
-import { AddPaymentMethodRequest } from '@/hooks/useTenantPaymentMethods';
-import { CreditCard, Building2, Wallet, AlertCircle } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AddPaymentMethodRequest } from "@/hooks/useTenantPaymentMethods";
+import { CreditCard, Building2, Wallet, AlertCircle } from "lucide-react";
 
 interface AddPaymentMethodModalProps {
   open: boolean;
@@ -33,43 +33,43 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
   isAdding = false,
   error = null,
 }) => {
-  const [methodType, setMethodType] = useState<'card' | 'bank_account' | 'wallet'>('card');
+  const [methodType, setMethodType] = useState<"card" | "bank_account" | "wallet">("card");
   const [setAsDefault, setSetAsDefault] = useState(false);
 
   // Card details (simulated - in production, use Stripe Elements)
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvc, setCvc] = useState('');
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvc, setCvc] = useState("");
 
   // Bank account details
-  const [bankName, setBankName] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [routingNumber, setRoutingNumber] = useState('');
-  const [accountType, setAccountType] = useState<'checking' | 'savings'>('checking');
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [routingNumber, setRoutingNumber] = useState("");
+  const [accountType, setAccountType] = useState<"checking" | "savings">("checking");
 
   // Billing details (shared)
-  const [billingName, setBillingName] = useState('');
-  const [billingEmail, setBillingEmail] = useState('');
-  const [billingAddressLine1, setBillingAddressLine1] = useState('');
-  const [billingCity, setBillingCity] = useState('');
-  const [billingState, setBillingState] = useState('');
-  const [billingPostalCode, setBillingPostalCode] = useState('');
-  const [billingCountry, setBillingCountry] = useState('US');
+  const [billingName, setBillingName] = useState("");
+  const [billingEmail, setBillingEmail] = useState("");
+  const [billingAddressLine1, setBillingAddressLine1] = useState("");
+  const [billingCity, setBillingCity] = useState("");
+  const [billingState, setBillingState] = useState("");
+  const [billingPostalCode, setBillingPostalCode] = useState("");
+  const [billingCountry, setBillingCountry] = useState("US");
 
   const resetForm = () => {
-    setCardNumber('');
-    setCardExpiry('');
-    setCvc('');
-    setBankName('');
-    setAccountNumber('');
-    setRoutingNumber('');
-    setBillingName('');
-    setBillingEmail('');
-    setBillingAddressLine1('');
-    setBillingCity('');
-    setBillingState('');
-    setBillingPostalCode('');
-    setBillingCountry('US');
+    setCardNumber("");
+    setCardExpiry("");
+    setCvc("");
+    setBankName("");
+    setAccountNumber("");
+    setRoutingNumber("");
+    setBillingName("");
+    setBillingEmail("");
+    setBillingAddressLine1("");
+    setBillingCity("");
+    setBillingState("");
+    setBillingPostalCode("");
+    setBillingCountry("US");
     setSetAsDefault(false);
   };
 
@@ -77,7 +77,7 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
     try {
       let request: AddPaymentMethodRequest;
 
-      if (methodType === 'card') {
+      if (methodType === "card") {
         // In production: Use Stripe.js to tokenize card
         // const { token } = await stripe.createToken(cardElement);
 
@@ -85,7 +85,7 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
         const simulatedCardToken = `tok_${Math.random().toString(36).substring(7)}`;
 
         request = {
-          method_type: 'card',
+          method_type: "card",
           card_token: simulatedCardToken,
           billing_name: billingName,
           billing_email: billingEmail,
@@ -96,7 +96,7 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
           billing_country: billingCountry,
           set_as_default: setAsDefault,
         };
-      } else if (methodType === 'bank_account') {
+      } else if (methodType === "bank_account") {
         // In production: Use Stripe.js to tokenize bank account
         // const { token } = await stripe.createToken('bank_account', { ... });
 
@@ -104,7 +104,7 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
         const simulatedBankToken = `btok_${Math.random().toString(36).substring(7)}`;
 
         request = {
-          method_type: 'bank_account',
+          method_type: "bank_account",
           bank_account_token: simulatedBankToken,
           bank_name: bankName,
           bank_account_type: accountType,
@@ -114,25 +114,25 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
         };
       } else {
         // Wallet integration would use Stripe Payment Request Button
-        throw new Error('Wallet payments not yet implemented');
+        throw new Error("Wallet payments not yet implemented");
       }
 
       await onAddPaymentMethod(request);
       resetForm();
       onOpenChange(false);
     } catch (err) {
-      console.error('Failed to add payment method:', err);
+      console.error("Failed to add payment method:", err);
     }
   };
 
   const isFormValid = () => {
     if (!billingName || !billingEmail) return false;
 
-    if (methodType === 'card') {
+    if (methodType === "card") {
       return cardNumber.length >= 13 && cardExpiry.length >= 4 && cardCvc.length >= 3;
     }
 
-    if (methodType === 'bank_account') {
+    if (methodType === "bank_account") {
       return bankName && accountNumber.length >= 4 && routingNumber.length >= 9;
     }
 
@@ -140,13 +140,13 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
   };
 
   const formatCardNumber = (value: string) => {
-    const cleaned = value.replace(/\s/g, '');
-    const formatted = cleaned.match(/.{1,4}/g)?.join(' ') || cleaned;
+    const cleaned = value.replace(/\s/g, "");
+    const formatted = cleaned.match(/.{1,4}/g)?.join(" ") || cleaned;
     return formatted;
   };
 
   const formatExpiry = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
+    const cleaned = value.replace(/\D/g, "");
     if (cleaned.length >= 2) {
       return `${cleaned.substring(0, 2)}/${cleaned.substring(2, 4)}`;
     }
@@ -201,7 +201,7 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
                 id="cardNumber"
                 placeholder="1234 5678 9012 3456"
                 value={formatCardNumber(cardNumber)}
-                onChange={(e) => setCardNumber(e.target.value.replace(/\s/g, '').substring(0, 16))}
+                onChange={(e) => setCardNumber(e.target.value.replace(/\s/g, "").substring(0, 16))}
                 maxLength={19}
               />
             </div>
@@ -213,7 +213,7 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
                   id="cardExpiry"
                   placeholder="12/25"
                   value={formatExpiry(cardExpiry)}
-                  onChange={(e) => setCardExpiry(e.target.value.replace(/\D/g, '').substring(0, 4))}
+                  onChange={(e) => setCardExpiry(e.target.value.replace(/\D/g, "").substring(0, 4))}
                   maxLength={5}
                 />
               </div>
@@ -224,7 +224,7 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
                   type="password"
                   placeholder="123"
                   value={cardCvc}
-                  onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').substring(0, 4))}
+                  onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").substring(0, 4))}
                   maxLength={4}
                 />
               </div>
@@ -235,8 +235,9 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
           <TabsContent value="bank_account" className="space-y-4">
             <div className="rounded-md bg-yellow-500/10 border border-yellow-500/20 p-3">
               <p className="text-sm text-yellow-600 dark:text-yellow-500">
-                <strong>Bank account verification required:</strong> After adding, you&apos;ll receive 2 small deposits
-                within 1-2 business days. Verify these amounts to activate the account.
+                <strong>Bank account verification required:</strong> After adding, you&apos;ll
+                receive 2 small deposits within 1-2 business days. Verify these amounts to activate
+                the account.
               </p>
             </div>
 
@@ -256,7 +257,9 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
                 id="routingNumber"
                 placeholder="021000021"
                 value={routingNumber}
-                onChange={(e) => setRoutingNumber(e.target.value.replace(/\D/g, '').substring(0, 9))}
+                onChange={(e) =>
+                  setRoutingNumber(e.target.value.replace(/\D/g, "").substring(0, 9))
+                }
                 maxLength={9}
               />
             </div>
@@ -268,7 +271,7 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
                 type="password"
                 placeholder="000123456789"
                 value={accountNumber}
-                onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
+                onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ""))}
               />
             </div>
 
@@ -279,8 +282,8 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
                   <input
                     type="radio"
                     name="accountType"
-                    checked={accountType === 'checking'}
-                    onChange={() => setAccountType('checking')}
+                    checked={accountType === "checking"}
+                    onChange={() => setAccountType("checking")}
                   />
                   <span>Checking</span>
                 </label>
@@ -288,8 +291,8 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
                   <input
                     type="radio"
                     name="accountType"
-                    checked={accountType === 'savings'}
-                    onChange={() => setAccountType('savings')}
+                    checked={accountType === "savings"}
+                    onChange={() => setAccountType("savings")}
                   />
                   <span>Savings</span>
                 </label>
@@ -405,7 +408,7 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isAdding || !isFormValid()}>
-            {isAdding ? 'Adding...' : 'Add Payment Method'}
+            {isAdding ? "Adding..." : "Add Payment Method"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -23,15 +23,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { useRBAC } from '@/contexts/RBACContext';
-import {
-  useDistributionPointListGraphQL,
-} from '@/hooks/useFiberGraphQL';
-import { DistributionPointType, FiberCableStatus } from '@/lib/graphql/generated';
-import { platformConfig } from '@/lib/config';
-import { MapPin, Search, Filter, ChevronLeft, ChevronRight, Cable } from 'lucide-react';
-import Link from 'next/link';
+} from "@/components/ui/table";
+import { useRBAC } from "@/contexts/RBACContext";
+import { useDistributionPointListGraphQL } from "@/hooks/useFiberGraphQL";
+import { DistributionPointType, FiberCableStatus } from "@/lib/graphql/generated";
+import { platformConfig } from "@/lib/config";
+import { MapPin, Search, Filter, ChevronLeft, ChevronRight, Cable } from "lucide-react";
+import Link from "next/link";
 
 const DISTRIBUTION_POINT_TYPES: DistributionPointType[] = [
   DistributionPointType.Cabinet,
@@ -54,31 +52,25 @@ const POINT_STATUSES: FiberCableStatus[] = [
 
 export default function DistributionPointsPage() {
   const { hasPermission } = useRBAC();
-  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission('isp.ipam.read');
+  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
 
   // Filter state
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [pointType, setPointType] = useState<DistributionPointType | undefined>(undefined);
   const [status, setStatus] = useState<FiberCableStatus | undefined>(undefined);
   const [limit] = useState(50);
   const [offset, setOffset] = useState(0);
 
   // Fetch distribution points with filters
-  const {
-    distributionPoints,
-    totalCount,
-    hasNextPage,
-    loading,
-    error,
-    refetch,
-  } = useDistributionPointListGraphQL({
-    limit,
-    offset,
-    pointType,
-    status,
-    search,
-    pollInterval: 60000,
-  });
+  const { distributionPoints, totalCount, hasNextPage, loading, error, refetch } =
+    useDistributionPointListGraphQL({
+      limit,
+      offset,
+      pointType,
+      status,
+      search,
+      pollInterval: 60000,
+    });
 
   if (!hasFiberAccess) {
     return (
@@ -110,40 +102,43 @@ export default function DistributionPointsPage() {
   };
 
   const handleClearFilters = () => {
-    setSearch('');
+    setSearch("");
     setPointType(undefined);
     setStatus(undefined);
     setOffset(0);
   };
 
   const formatType = (type: string) => {
-    return type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+    return type
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'ACTIVE':
-        return 'default';
-      case 'INACTIVE':
-        return 'secondary';
-      case 'UNDER_CONSTRUCTION':
-        return 'outline';
-      case 'MAINTENANCE':
-        return 'secondary';
-      case 'DAMAGED':
-        return 'destructive';
-      case 'DECOMMISSIONED':
-        return 'secondary';
+      case "ACTIVE":
+        return "default";
+      case "INACTIVE":
+        return "secondary";
+      case "UNDER_CONSTRUCTION":
+        return "outline";
+      case "MAINTENANCE":
+        return "secondary";
+      case "DAMAGED":
+        return "destructive";
+      case "DECOMMISSIONED":
+        return "secondary";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
   const getCapacityColor = (percent: number) => {
-    if (percent >= 90) return 'text-red-600';
-    if (percent >= 75) return 'text-amber-600';
-    if (percent >= 50) return 'text-yellow-600';
-    return 'text-green-600';
+    if (percent >= 90) return "text-red-600";
+    if (percent >= 75) return "text-amber-600";
+    if (percent >= 50) return "text-yellow-600";
+    return "text-green-600";
   };
 
   return (
@@ -201,9 +196,9 @@ export default function DistributionPointsPage() {
             <div className="space-y-2">
               <Label htmlFor="pointType">Point Type</Label>
               <Select
-                value={pointType || 'all'}
+                value={pointType || "all"}
                 onValueChange={(value) => {
-                  setPointType(value === 'all' ? undefined : (value as DistributionPointType));
+                  setPointType(value === "all" ? undefined : (value as DistributionPointType));
                   setOffset(0);
                 }}
               >
@@ -225,9 +220,9 @@ export default function DistributionPointsPage() {
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select
-                value={status || 'all'}
+                value={status || "all"}
                 onValueChange={(value) => {
-                  setStatus(value === 'all' ? undefined : (value as FiberCableStatus));
+                  setStatus(value === "all" ? undefined : (value as FiberCableStatus));
                   setOffset(0);
                 }}
               >
@@ -253,7 +248,7 @@ export default function DistributionPointsPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>
-              Distribution Points{' '}
+              Distribution Points{" "}
               {totalCount > 0 && <span className="text-muted-foreground">({totalCount})</span>}
             </CardTitle>
             {loading && <Badge variant="outline">Loading...</Badge>}
@@ -267,8 +262,8 @@ export default function DistributionPointsPage() {
               <h3 className="text-lg font-medium mb-2">No distribution points found</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 {search || pointType || status
-                  ? 'Try adjusting your filters'
-                  : 'No distribution points have been added to the system yet'}
+                  ? "Try adjusting your filters"
+                  : "No distribution points have been added to the system yet"}
               </p>
               <Button variant="outline" onClick={() => refetch()}>
                 Refresh
@@ -323,9 +318,7 @@ export default function DistributionPointsPage() {
                           {point.servesCustomerCount}
                         </TableCell>
                         <TableCell>
-                          <Link
-                            href={`/dashboard/network/fiber/distribution-points/${point.id}`}
-                          >
+                          <Link href={`/dashboard/network/fiber/distribution-points/${point.id}`}>
                             <Button variant="ghost" size="sm">
                               View
                             </Button>
@@ -341,8 +334,8 @@ export default function DistributionPointsPage() {
               {totalCount > limit && (
                 <div className="flex items-center justify-between pt-4 border-t">
                   <p className="text-sm text-muted-foreground">
-                    Showing {offset + 1} to {Math.min(offset + limit, totalCount)} of{' '}
-                    {totalCount} points
+                    Showing {offset + 1} to {Math.min(offset + limit, totalCount)} of {totalCount}{" "}
+                    points
                   </p>
                   <div className="flex gap-2">
                     <Button

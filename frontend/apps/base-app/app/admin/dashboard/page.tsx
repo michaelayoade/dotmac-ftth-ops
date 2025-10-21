@@ -1,7 +1,7 @@
 "use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { UnifiedAdminDashboard } from "@/components/admin/UnifiedAdminDashboard";
 

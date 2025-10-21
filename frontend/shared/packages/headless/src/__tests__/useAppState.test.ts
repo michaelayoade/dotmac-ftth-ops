@@ -3,28 +3,28 @@
  * Validates application state management, portal configuration, and feature flags
  */
 
-import { renderHook, act } from '@testing-library/react';
-import { useAppState } from '../hooks/useAppState';
+import { renderHook, act } from "@testing-library/react";
+import { useAppState } from "../hooks/useAppState";
 import {
   createMockUser,
   createMockFeatureFlags,
   createMockPortalConfig,
-} from '../../__tests__/setup';
+} from "../../__tests__/setup";
 
 // Mock the app state store
 const mockAppStateStore = {
   // Portal configuration
-  portal: 'admin',
-  portalConfig: createMockPortalConfig('admin'),
+  portal: "admin",
+  portalConfig: createMockPortalConfig("admin"),
 
   // Feature flags
   features: createMockFeatureFlags(),
 
   // User preferences
   preferences: {
-    theme: 'light',
-    language: 'en',
-    timezone: 'UTC',
+    theme: "light",
+    language: "en",
+    timezone: "UTC",
     notifications: true,
   },
 
@@ -45,25 +45,25 @@ const mockAppStateStore = {
   reset: jest.fn(),
 };
 
-jest.mock('../stores/createAppStore', () => ({
+jest.mock("../stores/createAppStore", () => ({
   useAppStore: jest.fn(() => mockAppStateStore),
 }));
 
-describe('useAppState Hook', () => {
+describe("useAppState Hook", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     Object.keys(mockAppStateStore).forEach((key) => {
-      if (typeof mockAppStateStore[key as keyof typeof mockAppStateStore] === 'function') {
+      if (typeof mockAppStateStore[key as keyof typeof mockAppStateStore] === "function") {
         (mockAppStateStore[key as keyof typeof mockAppStateStore] as jest.Mock).mockClear();
       }
     });
   });
 
-  describe('Initial State', () => {
-    it('should return initial app state', () => {
+  describe("Initial State", () => {
+    it("should return initial app state", () => {
       const { result } = renderHook(() => useAppState());
 
-      expect(result.current.portal).toBe('admin');
+      expect(result.current.portal).toBe("admin");
       expect(result.current.portalConfig).toBeDefined();
       expect(result.current.features).toBeDefined();
       expect(result.current.preferences).toBeDefined();
@@ -72,30 +72,30 @@ describe('useAppState Hook', () => {
       expect(result.current.error).toBeNull();
     });
 
-    it('should provide state management functions', () => {
+    it("should provide state management functions", () => {
       const { result } = renderHook(() => useAppState());
 
-      expect(typeof result.current.setPortal).toBe('function');
-      expect(typeof result.current.updatePortalConfig).toBe('function');
-      expect(typeof result.current.toggleFeature).toBe('function');
-      expect(typeof result.current.updatePreferences).toBe('function');
-      expect(typeof result.current.setSidebarOpen).toBe('function');
-      expect(typeof result.current.setLoading).toBe('function');
-      expect(typeof result.current.setError).toBe('function');
-      expect(typeof result.current.clearError).toBe('function');
-      expect(typeof result.current.reset).toBe('function');
+      expect(typeof result.current.setPortal).toBe("function");
+      expect(typeof result.current.updatePortalConfig).toBe("function");
+      expect(typeof result.current.toggleFeature).toBe("function");
+      expect(typeof result.current.updatePreferences).toBe("function");
+      expect(typeof result.current.setSidebarOpen).toBe("function");
+      expect(typeof result.current.setLoading).toBe("function");
+      expect(typeof result.current.setError).toBe("function");
+      expect(typeof result.current.clearError).toBe("function");
+      expect(typeof result.current.reset).toBe("function");
     });
   });
 
-  describe('Portal Management', () => {
+  describe("Portal Management", () => {
     const portals = [
-      'admin',
-      'customer',
-      'technician',
-      'reseller',
-      'management-admin',
-      'management-reseller',
-      'tenant-portal',
+      "admin",
+      "customer",
+      "technician",
+      "reseller",
+      "management-admin",
+      "management-reseller",
+      "tenant-portal",
     ];
 
     portals.forEach((portal) => {
@@ -110,9 +110,9 @@ describe('useAppState Hook', () => {
       });
     });
 
-    it('should update portal configuration', () => {
-      const newConfig = createMockPortalConfig('customer', {
-        theme: 'blue',
+    it("should update portal configuration", () => {
+      const newConfig = createMockPortalConfig("customer", {
+        theme: "blue",
         features: { analytics: true },
       });
 
@@ -125,19 +125,19 @@ describe('useAppState Hook', () => {
       expect(mockAppStateStore.updatePortalConfig).toHaveBeenCalledWith(newConfig);
     });
 
-    it('should get current portal info', () => {
+    it("should get current portal info", () => {
       const { result } = renderHook(() => useAppState());
 
       expect(result.current.getCurrentPortalInfo()).toEqual({
-        portal: 'admin',
+        portal: "admin",
         config: mockAppStateStore.portalConfig,
         features: mockAppStateStore.features,
       });
     });
   });
 
-  describe('Feature Flag Management', () => {
-    it('should check if feature is enabled', () => {
+  describe("Feature Flag Management", () => {
+    it("should check if feature is enabled", () => {
       mockAppStateStore.features = createMockFeatureFlags({
         notifications: true,
         analytics: false,
@@ -145,22 +145,22 @@ describe('useAppState Hook', () => {
 
       const { result } = renderHook(() => useAppState());
 
-      expect(result.current.isFeatureEnabled('notifications')).toBe(true);
-      expect(result.current.isFeatureEnabled('analytics')).toBe(false);
-      expect(result.current.isFeatureEnabled('nonexistent')).toBe(false);
+      expect(result.current.isFeatureEnabled("notifications")).toBe(true);
+      expect(result.current.isFeatureEnabled("analytics")).toBe(false);
+      expect(result.current.isFeatureEnabled("nonexistent")).toBe(false);
     });
 
-    it('should toggle feature flag', () => {
+    it("should toggle feature flag", () => {
       const { result } = renderHook(() => useAppState());
 
       act(() => {
-        result.current.toggleFeature('analytics');
+        result.current.toggleFeature("analytics");
       });
 
-      expect(mockAppStateStore.toggleFeature).toHaveBeenCalledWith('analytics');
+      expect(mockAppStateStore.toggleFeature).toHaveBeenCalledWith("analytics");
     });
 
-    it('should get all enabled features', () => {
+    it("should get all enabled features", () => {
       mockAppStateStore.features = createMockFeatureFlags({
         notifications: true,
         analytics: false,
@@ -171,18 +171,18 @@ describe('useAppState Hook', () => {
       const { result } = renderHook(() => useAppState());
 
       const enabledFeatures = result.current.getEnabledFeatures();
-      expect(enabledFeatures).toContain('notifications');
-      expect(enabledFeatures).toContain('realtime');
-      expect(enabledFeatures).not.toContain('analytics');
-      expect(enabledFeatures).not.toContain('offline');
+      expect(enabledFeatures).toContain("notifications");
+      expect(enabledFeatures).toContain("realtime");
+      expect(enabledFeatures).not.toContain("analytics");
+      expect(enabledFeatures).not.toContain("offline");
     });
   });
 
-  describe('User Preferences Management', () => {
-    it('should update user preferences', () => {
+  describe("User Preferences Management", () => {
+    it("should update user preferences", () => {
       const newPreferences = {
-        theme: 'dark',
-        language: 'es',
+        theme: "dark",
+        language: "es",
         notifications: false,
       };
 
@@ -195,33 +195,33 @@ describe('useAppState Hook', () => {
       expect(mockAppStateStore.updatePreferences).toHaveBeenCalledWith(newPreferences);
     });
 
-    it('should update individual preference', () => {
+    it("should update individual preference", () => {
       const { result } = renderHook(() => useAppState());
 
       act(() => {
-        result.current.updatePreference('theme', 'dark');
+        result.current.updatePreference("theme", "dark");
       });
 
       expect(mockAppStateStore.updatePreferences).toHaveBeenCalledWith({
-        theme: 'dark',
+        theme: "dark",
       });
     });
 
-    it('should get current theme', () => {
+    it("should get current theme", () => {
       const { result } = renderHook(() => useAppState());
 
-      expect(result.current.getCurrentTheme()).toBe('light');
+      expect(result.current.getCurrentTheme()).toBe("light");
     });
 
-    it('should get current language', () => {
+    it("should get current language", () => {
       const { result } = renderHook(() => useAppState());
 
-      expect(result.current.getCurrentLanguage()).toBe('en');
+      expect(result.current.getCurrentLanguage()).toBe("en");
     });
   });
 
-  describe('UI State Management', () => {
-    it('should toggle sidebar', () => {
+  describe("UI State Management", () => {
+    it("should toggle sidebar", () => {
       const { result } = renderHook(() => useAppState());
 
       act(() => {
@@ -231,7 +231,7 @@ describe('useAppState Hook', () => {
       expect(mockAppStateStore.setSidebarOpen).toHaveBeenCalledWith(false);
     });
 
-    it('should set sidebar state explicitly', () => {
+    it("should set sidebar state explicitly", () => {
       const { result } = renderHook(() => useAppState());
 
       act(() => {
@@ -241,7 +241,7 @@ describe('useAppState Hook', () => {
       expect(mockAppStateStore.setSidebarOpen).toHaveBeenCalledWith(false);
     });
 
-    it('should set loading state', () => {
+    it("should set loading state", () => {
       const { result } = renderHook(() => useAppState());
 
       act(() => {
@@ -251,10 +251,10 @@ describe('useAppState Hook', () => {
       expect(mockAppStateStore.setLoading).toHaveBeenCalledWith(true);
     });
 
-    it('should manage loading state with async operations', async () => {
+    it("should manage loading state with async operations", async () => {
       const { result } = renderHook(() => useAppState());
 
-      const asyncOperation = jest.fn().mockResolvedValue('success');
+      const asyncOperation = jest.fn().mockResolvedValue("success");
 
       await act(async () => {
         await result.current.withLoading(asyncOperation);
@@ -266,9 +266,9 @@ describe('useAppState Hook', () => {
     });
   });
 
-  describe('Error State Management', () => {
-    it('should set error state', () => {
-      const error = new Error('Test error');
+  describe("Error State Management", () => {
+    it("should set error state", () => {
+      const error = new Error("Test error");
 
       const { result } = renderHook(() => useAppState());
 
@@ -279,7 +279,7 @@ describe('useAppState Hook', () => {
       expect(mockAppStateStore.setError).toHaveBeenCalledWith(error);
     });
 
-    it('should clear error state', () => {
+    it("should clear error state", () => {
       const { result } = renderHook(() => useAppState());
 
       act(() => {
@@ -289,10 +289,10 @@ describe('useAppState Hook', () => {
       expect(mockAppStateStore.clearError).toHaveBeenCalled();
     });
 
-    it('should handle async errors', async () => {
+    it("should handle async errors", async () => {
       const { result } = renderHook(() => useAppState());
 
-      const failingOperation = jest.fn().mockRejectedValue(new Error('Async error'));
+      const failingOperation = jest.fn().mockRejectedValue(new Error("Async error"));
 
       await act(async () => {
         try {
@@ -303,15 +303,15 @@ describe('useAppState Hook', () => {
       });
 
       expect(mockAppStateStore.setError).toHaveBeenCalledWith(
-        expect.objectContaining({ message: 'Async error' })
+        expect.objectContaining({ message: "Async error" }),
       );
     });
   });
 
-  describe('Portal-Specific State', () => {
-    it('should provide admin portal specific state', () => {
-      mockAppStateStore.portal = 'admin';
-      mockAppStateStore.portalConfig = createMockPortalConfig('admin');
+  describe("Portal-Specific State", () => {
+    it("should provide admin portal specific state", () => {
+      mockAppStateStore.portal = "admin";
+      mockAppStateStore.portalConfig = createMockPortalConfig("admin");
 
       const { result } = renderHook(() => useAppState());
 
@@ -320,9 +320,9 @@ describe('useAppState Hook', () => {
       expect(result.current.getPortalSpecificConfig()).toBeDefined();
     });
 
-    it('should provide customer portal specific state', () => {
-      mockAppStateStore.portal = 'customer';
-      mockAppStateStore.portalConfig = createMockPortalConfig('customer');
+    it("should provide customer portal specific state", () => {
+      mockAppStateStore.portal = "customer";
+      mockAppStateStore.portalConfig = createMockPortalConfig("customer");
 
       const { result } = renderHook(() => useAppState());
 
@@ -330,9 +330,9 @@ describe('useAppState Hook', () => {
       expect(result.current.isAdminPortal()).toBe(false);
     });
 
-    it('should provide technician portal specific state', () => {
-      mockAppStateStore.portal = 'technician';
-      mockAppStateStore.portalConfig = createMockPortalConfig('technician');
+    it("should provide technician portal specific state", () => {
+      mockAppStateStore.portal = "technician";
+      mockAppStateStore.portalConfig = createMockPortalConfig("technician");
 
       const { result } = renderHook(() => useAppState());
 
@@ -340,9 +340,9 @@ describe('useAppState Hook', () => {
       expect(result.current.isMobileOptimized()).toBe(true);
     });
 
-    it('should provide reseller portal specific state', () => {
-      mockAppStateStore.portal = 'reseller';
-      mockAppStateStore.portalConfig = createMockPortalConfig('reseller');
+    it("should provide reseller portal specific state", () => {
+      mockAppStateStore.portal = "reseller";
+      mockAppStateStore.portalConfig = createMockPortalConfig("reseller");
 
       const { result } = renderHook(() => useAppState());
 
@@ -350,9 +350,9 @@ describe('useAppState Hook', () => {
       expect(result.current.hasCommissionTracking()).toBe(true);
     });
 
-    it('should provide management admin portal specific state', () => {
-      mockAppStateStore.portal = 'management-admin';
-      mockAppStateStore.portalConfig = createMockPortalConfig('management-admin');
+    it("should provide management admin portal specific state", () => {
+      mockAppStateStore.portal = "management-admin";
+      mockAppStateStore.portalConfig = createMockPortalConfig("management-admin");
 
       const { result } = renderHook(() => useAppState());
 
@@ -360,9 +360,9 @@ describe('useAppState Hook', () => {
       expect(result.current.hasAdvancedFeatures()).toBe(true);
     });
 
-    it('should provide management reseller portal specific state', () => {
-      mockAppStateStore.portal = 'management-reseller';
-      mockAppStateStore.portalConfig = createMockPortalConfig('management-reseller');
+    it("should provide management reseller portal specific state", () => {
+      mockAppStateStore.portal = "management-reseller";
+      mockAppStateStore.portalConfig = createMockPortalConfig("management-reseller");
 
       const { result } = renderHook(() => useAppState());
 
@@ -370,9 +370,9 @@ describe('useAppState Hook', () => {
       expect(result.current.hasPartnerManagement()).toBe(true);
     });
 
-    it('should provide tenant portal specific state', () => {
-      mockAppStateStore.portal = 'tenant-portal';
-      mockAppStateStore.portalConfig = createMockPortalConfig('tenant-portal');
+    it("should provide tenant portal specific state", () => {
+      mockAppStateStore.portal = "tenant-portal";
+      mockAppStateStore.portalConfig = createMockPortalConfig("tenant-portal");
 
       const { result } = renderHook(() => useAppState());
 
@@ -381,8 +381,8 @@ describe('useAppState Hook', () => {
     });
   });
 
-  describe('State Persistence', () => {
-    it('should save state to storage', () => {
+  describe("State Persistence", () => {
+    it("should save state to storage", () => {
       const { result } = renderHook(() => useAppState());
 
       act(() => {
@@ -393,10 +393,10 @@ describe('useAppState Hook', () => {
       expect(localStorage.setItem).toHaveBeenCalled();
     });
 
-    it('should load state from storage', () => {
+    it("should load state from storage", () => {
       const savedState = {
-        portal: 'customer',
-        preferences: { theme: 'dark' },
+        portal: "customer",
+        preferences: { theme: "dark" },
         features: { analytics: true },
       };
 
@@ -408,13 +408,15 @@ describe('useAppState Hook', () => {
         result.current.loadStateFromStorage();
       });
 
-      expect(mockAppStateStore.setPortal).toHaveBeenCalledWith('customer');
-      expect(mockAppStateStore.updatePreferences).toHaveBeenCalledWith({ theme: 'dark' });
+      expect(mockAppStateStore.setPortal).toHaveBeenCalledWith("customer");
+      expect(mockAppStateStore.updatePreferences).toHaveBeenCalledWith({
+        theme: "dark",
+      });
     });
   });
 
-  describe('State Reset', () => {
-    it('should reset all state to defaults', () => {
+  describe("State Reset", () => {
+    it("should reset all state to defaults", () => {
       const { result } = renderHook(() => useAppState());
 
       act(() => {
@@ -424,20 +426,20 @@ describe('useAppState Hook', () => {
       expect(mockAppStateStore.reset).toHaveBeenCalled();
     });
 
-    it('should reset specific portal state', () => {
+    it("should reset specific portal state", () => {
       const { result } = renderHook(() => useAppState());
 
       act(() => {
         result.current.resetPortalState();
       });
 
-      expect(mockAppStateStore.setPortal).toHaveBeenCalledWith('admin');
+      expect(mockAppStateStore.setPortal).toHaveBeenCalledWith("admin");
       expect(mockAppStateStore.updatePortalConfig).toHaveBeenCalled();
     });
   });
 
-  describe('State Validation', () => {
-    it('should validate current state', () => {
+  describe("State Validation", () => {
+    it("should validate current state", () => {
       const { result } = renderHook(() => useAppState());
 
       const validation = result.current.validateState();
@@ -446,18 +448,18 @@ describe('useAppState Hook', () => {
       expect(validation.errors).toEqual([]);
     });
 
-    it('should detect invalid portal configuration', () => {
-      mockAppStateStore.portal = 'invalid-portal' as any;
+    it("should detect invalid portal configuration", () => {
+      mockAppStateStore.portal = "invalid-portal" as any;
 
       const { result } = renderHook(() => useAppState());
 
       const validation = result.current.validateState();
 
       expect(validation.isValid).toBe(false);
-      expect(validation.errors).toContain('Invalid portal configuration');
+      expect(validation.errors).toContain("Invalid portal configuration");
     });
 
-    it('should detect missing required features', () => {
+    it("should detect missing required features", () => {
       mockAppStateStore.features = {};
 
       const { result } = renderHook(() => useAppState());
@@ -465,38 +467,38 @@ describe('useAppState Hook', () => {
       const validation = result.current.validateState();
 
       expect(validation.isValid).toBe(false);
-      expect(validation.errors).toContain('Missing required features');
+      expect(validation.errors).toContain("Missing required features");
     });
   });
 
-  describe('State Subscriptions', () => {
-    it('should subscribe to state changes', () => {
+  describe("State Subscriptions", () => {
+    it("should subscribe to state changes", () => {
       const { result } = renderHook(() => useAppState());
 
       const callback = jest.fn();
 
       act(() => {
-        const unsubscribe = result.current.subscribe('portal', callback);
+        const unsubscribe = result.current.subscribe("portal", callback);
 
         // Simulate state change
-        mockAppStateStore.portal = 'customer';
+        mockAppStateStore.portal = "customer";
 
         // In a real implementation, this would trigger the callback
-        callback('customer', 'admin');
+        callback("customer", "admin");
 
-        expect(callback).toHaveBeenCalledWith('customer', 'admin');
+        expect(callback).toHaveBeenCalledWith("customer", "admin");
 
         unsubscribe();
       });
     });
 
-    it('should unsubscribe from state changes', () => {
+    it("should unsubscribe from state changes", () => {
       const { result, unmount } = renderHook(() => useAppState());
 
       const callback = jest.fn();
 
       act(() => {
-        const unsubscribe = result.current.subscribe('features', callback);
+        const unsubscribe = result.current.subscribe("features", callback);
         unsubscribe();
       });
 
@@ -506,8 +508,8 @@ describe('useAppState Hook', () => {
     });
   });
 
-  describe('Performance Optimizations', () => {
-    it('should memoize computed values', () => {
+  describe("Performance Optimizations", () => {
+    it("should memoize computed values", () => {
       const { result, rerender } = renderHook(() => useAppState());
 
       const firstCall = result.current.getEnabledFeatures();
@@ -520,13 +522,13 @@ describe('useAppState Hook', () => {
       expect(firstCall).toBe(secondCall);
     });
 
-    it('should debounce state updates', async () => {
+    it("should debounce state updates", async () => {
       const { result } = renderHook(() => useAppState());
 
       act(() => {
-        result.current.updatePreference('theme', 'dark');
-        result.current.updatePreference('language', 'es');
-        result.current.updatePreference('notifications', false);
+        result.current.updatePreference("theme", "dark");
+        result.current.updatePreference("language", "es");
+        result.current.updatePreference("notifications", false);
       });
 
       // Should batch multiple preference updates
@@ -536,9 +538,9 @@ describe('useAppState Hook', () => {
     });
   });
 
-  describe('Integration with Other Hooks', () => {
-    it('should work with useAuth hook', () => {
-      const mockUser = createMockUser({ role: 'admin' });
+  describe("Integration with Other Hooks", () => {
+    it("should work with useAuth hook", () => {
+      const mockUser = createMockUser({ role: "admin" });
 
       const { result } = renderHook(() => useAppState());
 
@@ -550,21 +552,21 @@ describe('useAppState Hook', () => {
       expect(mockAppStateStore.setPortal).toHaveBeenCalled();
     });
 
-    it('should work with useApiClient hook', () => {
+    it("should work with useApiClient hook", () => {
       const { result } = renderHook(() => useAppState());
 
       const apiConfig = result.current.getApiClientConfig();
 
       expect(apiConfig).toEqual({
-        portal: 'admin',
+        portal: "admin",
         baseURL: expect.any(String),
         features: mockAppStateStore.features,
       });
     });
   });
 
-  describe('Error Recovery', () => {
-    it('should recover from corrupted state', () => {
+  describe("Error Recovery", () => {
+    it("should recover from corrupted state", () => {
       // Simulate corrupted state
       mockAppStateStore.portal = null as any;
       mockAppStateStore.features = null as any;
@@ -578,13 +580,13 @@ describe('useAppState Hook', () => {
       expect(mockAppStateStore.reset).toHaveBeenCalled();
     });
 
-    it('should provide fallback values for missing state', () => {
+    it("should provide fallback values for missing state", () => {
       mockAppStateStore.preferences = null as any;
 
       const { result } = renderHook(() => useAppState());
 
-      expect(result.current.getCurrentTheme()).toBe('light'); // Default theme
-      expect(result.current.getCurrentLanguage()).toBe('en'); // Default language
+      expect(result.current.getCurrentTheme()).toBe("light"); // Default theme
+      expect(result.current.getCurrentLanguage()).toBe("en"); // Default language
     });
   });
 });

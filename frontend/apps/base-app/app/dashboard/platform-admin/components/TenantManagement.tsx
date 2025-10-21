@@ -2,13 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,16 +27,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { platformAdminTenantService } from "@/lib/services/platform-admin-tenant-service";
 import { usePlatformTenants } from "@/hooks/usePlatformTenants";
 import { tenantService, Tenant } from "@/lib/services/tenant-service";
-import {
-  Building2,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Key,
-  Plus,
-  Search,
-  Users,
-} from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, Eye, Key, Plus, Search, Users } from "lucide-react";
 import { TenantOnboardingWizard } from "@/components/tenant/TenantOnboardingWizard";
 
 interface PaginationState {
@@ -75,8 +60,15 @@ const PLAN_FILTERS = [
 ];
 
 export function TenantManagement() {
-  const [pagination, setPagination] = useState<PaginationState>({ page: 1, pageSize: 10 });
-  const [filters, setFilters] = useState<FiltersState>({ search: "", status: "", plan: "" });
+  const [pagination, setPagination] = useState<PaginationState>({
+    page: 1,
+    pageSize: 10,
+  });
+  const [filters, setFilters] = useState<FiltersState>({
+    search: "",
+    status: "",
+    plan: "",
+  });
   const [impersonateTenantId, setImpersonateTenantId] = useState<string | null>(null);
   const [impersonationDuration, setImpersonationDuration] = useState(60);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -92,7 +84,7 @@ export function TenantManagement() {
       status: filters.status || undefined,
       plan: filters.plan || undefined,
     }),
-    [pagination.page, pagination.pageSize, filters.search, filters.status, filters.plan]
+    [pagination.page, pagination.pageSize, filters.search, filters.status, filters.plan],
   );
 
   const { data, isLoading, isFetching } = usePlatformTenants(queryParams);
@@ -116,7 +108,8 @@ export function TenantManagement() {
       setImpersonateTenantId(null);
     },
     onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : "Could not create impersonation token";
+      const message =
+        error instanceof Error ? error.message : "Could not create impersonation token";
       toast({
         title: "Impersonation Failed",
         description: message,
@@ -243,9 +236,7 @@ export function TenantManagement() {
                       Users
                     </div>
                   </TableHead>
-                  <TableHead className="hidden md:table-cell text-right">
-                    Resources
-                  </TableHead>
+                  <TableHead className="hidden md:table-cell text-right">Resources</TableHead>
                   <TableHead className="hidden md:table-cell">Created</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -280,7 +271,7 @@ export function TenantManagement() {
                         {tenant.id}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={tenant.status === 'active' ? "default" : "outline"}>
+                        <Badge variant={tenant.status === "active" ? "default" : "outline"}>
                           {tenant.status ?? "unknown"}
                         </Badge>
                       </TableCell>
@@ -294,17 +285,11 @@ export function TenantManagement() {
                         <Badge variant="secondary">{tenant.usage?.storage_gb ?? 0}</Badge>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {tenant.created_at
-                          ? new Date(tenant.created_at).toLocaleDateString()
-                          : "—"}
+                        {tenant.created_at ? new Date(tenant.created_at).toLocaleDateString() : "—"}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openDetail(tenant.id)}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => openDetail(tenant.id)}>
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button
@@ -329,7 +314,7 @@ export function TenantManagement() {
                 Showing{" "}
                 {`${(pagination.page - 1) * pagination.pageSize + 1}-${Math.min(
                   pagination.page * pagination.pageSize,
-                  total
+                  total,
                 )}`}{" "}
                 of {total}
               </p>
@@ -350,11 +335,7 @@ export function TenantManagement() {
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange("next")}
-                  disabled={
-                    pagination.page >= pageCount ||
-                    tenants.length === 0 ||
-                    isFetching
-                  }
+                  disabled={pagination.page >= pageCount || tenants.length === 0 || isFetching}
                 >
                   Next
                   <ChevronRight className="h-4 w-4" />

@@ -13,13 +13,7 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -70,14 +64,14 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
     try {
       // Simulate progress updates
       const progressInterval = setInterval(() => {
-        setBandwidthTest(prev => ({
+        setBandwidthTest((prev) => ({
           ...prev,
           progress: Math.min(prev.progress + 10, 90),
         }));
       }, 1000);
 
       const response = await apiClient.post(
-        `/api/v1/diagnostics/subscribers/${subscriberId}/bandwidth-test`
+        `/api/v1/diagnostics/subscribers/${subscriberId}/bandwidth-test`,
       );
 
       clearInterval(progressInterval);
@@ -105,14 +99,14 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
     try {
       // Simulate progress updates
       const progressInterval = setInterval(() => {
-        setLatencyTest(prev => ({
+        setLatencyTest((prev) => ({
           ...prev,
           progress: Math.min(prev.progress + 15, 90),
         }));
       }, 500);
 
       const response = await apiClient.post(
-        `/api/v1/diagnostics/subscribers/${subscriberId}/latency-test`
+        `/api/v1/diagnostics/subscribers/${subscriberId}/latency-test`,
       );
 
       clearInterval(progressInterval);
@@ -143,27 +137,43 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
       : 100;
 
     if (downloadPercent >= 90 && uploadPercent >= 90) {
-      return { status: 'excellent', color: 'text-green-600', icon: TrendingUp };
+      return { status: "excellent", color: "text-green-600", icon: TrendingUp };
     } else if (downloadPercent >= 70 && uploadPercent >= 70) {
-      return { status: 'good', color: 'text-blue-600', icon: Activity };
+      return { status: "good", color: "text-blue-600", icon: Activity };
     } else if (downloadPercent >= 50 && uploadPercent >= 50) {
-      return { status: 'fair', color: 'text-yellow-600', icon: TrendingDown };
+      return { status: "fair", color: "text-yellow-600", icon: TrendingDown };
     } else {
-      return { status: 'poor', color: 'text-red-600', icon: TrendingDown };
+      return { status: "poor", color: "text-red-600", icon: TrendingDown };
     }
   };
 
   const getLatencyStatus = (result: LatencyTestResult) => {
     if (result.packet_loss_percent > 5) {
-      return { status: 'poor', color: 'text-red-600', severity: 'High packet loss' };
+      return {
+        status: "poor",
+        color: "text-red-600",
+        severity: "High packet loss",
+      };
     } else if (result.avg_latency_ms > 100) {
-      return { status: 'fair', color: 'text-yellow-600', severity: 'High latency' };
+      return {
+        status: "fair",
+        color: "text-yellow-600",
+        severity: "High latency",
+      };
     } else if (result.jitter_ms > 30) {
-      return { status: 'fair', color: 'text-yellow-600', severity: 'High jitter' };
+      return {
+        status: "fair",
+        color: "text-yellow-600",
+        severity: "High jitter",
+      };
     } else if (result.avg_latency_ms < 50 && result.jitter_ms < 10) {
-      return { status: 'excellent', color: 'text-green-600', severity: 'Excellent' };
+      return {
+        status: "excellent",
+        color: "text-green-600",
+        severity: "Excellent",
+      };
     } else {
-      return { status: 'good', color: 'text-blue-600', severity: 'Good' };
+      return { status: "good", color: "text-blue-600", severity: "Good" };
     }
   };
 
@@ -179,14 +189,15 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
                 <CardTitle>Bandwidth Test</CardTitle>
               </div>
               {bandwidthTest.result && getBandwidthStatus(bandwidthTest.result) && (
-                <Badge variant="outline" className={getBandwidthStatus(bandwidthTest.result)!.color}>
+                <Badge
+                  variant="outline"
+                  className={getBandwidthStatus(bandwidthTest.result)!.color}
+                >
                   {getBandwidthStatus(bandwidthTest.result)!.status.toUpperCase()}
                 </Badge>
               )}
             </div>
-            <CardDescription>
-              Measure download and upload speeds
-            </CardDescription>
+            <CardDescription>Measure download and upload speeds</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {bandwidthTest.running && (
@@ -240,11 +251,7 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
               </div>
             )}
 
-            <Button
-              onClick={runBandwidthTest}
-              disabled={bandwidthTest.running}
-              className="w-full"
-            >
+            <Button onClick={runBandwidthTest} disabled={bandwidthTest.running} className="w-full">
               {bandwidthTest.running ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -269,17 +276,12 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
                 <CardTitle>Latency & Jitter Test</CardTitle>
               </div>
               {latencyTest.result && (
-                <Badge
-                  variant="outline"
-                  className={getLatencyStatus(latencyTest.result).color}
-                >
+                <Badge variant="outline" className={getLatencyStatus(latencyTest.result).color}>
                   {getLatencyStatus(latencyTest.result).severity}
                 </Badge>
               )}
             </div>
-            <CardDescription>
-              Measure latency, jitter, and packet loss
-            </CardDescription>
+            <CardDescription>Measure latency, jitter, and packet loss</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {latencyTest.running && (
@@ -315,12 +317,15 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Min / Max Latency</span>
                     <span className="font-medium">
-                      {latencyTest.result.min_latency_ms.toFixed(1)}ms / {latencyTest.result.max_latency_ms.toFixed(1)}ms
+                      {latencyTest.result.min_latency_ms.toFixed(1)}ms /{" "}
+                      {latencyTest.result.max_latency_ms.toFixed(1)}ms
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Packet Loss</span>
-                    <span className={`font-medium ${latencyTest.result.packet_loss_percent > 1 ? 'text-red-600' : 'text-green-600'}`}>
+                    <span
+                      className={`font-medium ${latencyTest.result.packet_loss_percent > 1 ? "text-red-600" : "text-green-600"}`}
+                    >
                       {latencyTest.result.packet_loss_percent.toFixed(2)}%
                     </span>
                   </div>
@@ -340,11 +345,7 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
               </div>
             )}
 
-            <Button
-              onClick={runLatencyTest}
-              disabled={latencyTest.running}
-              className="w-full"
-            >
+            <Button onClick={runLatencyTest} disabled={latencyTest.running} className="w-full">
               {latencyTest.running ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -374,12 +375,19 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
                 <h4 className="font-medium text-sm">Bandwidth Analysis</h4>
                 {bandwidthTest.result.expected_download_mbps && (
                   <div className="text-sm text-muted-foreground">
-                    {((bandwidthTest.result.download_mbps / bandwidthTest.result.expected_download_mbps) * 100).toFixed(0)}% of expected download speed achieved
+                    {(
+                      (bandwidthTest.result.download_mbps /
+                        bandwidthTest.result.expected_download_mbps) *
+                      100
+                    ).toFixed(0)}
+                    % of expected download speed achieved
                   </div>
                 )}
-                {bandwidthTest.result.download_mbps < (bandwidthTest.result.expected_download_mbps || 0) * 0.7 && (
+                {bandwidthTest.result.download_mbps <
+                  (bandwidthTest.result.expected_download_mbps || 0) * 0.7 && (
                   <div className="text-sm text-yellow-600">
-                    ⚠️ Download speed is below 70% of expected. Check for network congestion or CPE issues.
+                    ⚠️ Download speed is below 70% of expected. Check for network congestion or CPE
+                    issues.
                   </div>
                 )}
               </div>
@@ -390,19 +398,25 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
                 <h4 className="font-medium text-sm">Latency Analysis</h4>
                 {latencyTest.result.packet_loss_percent > 1 && (
                   <div className="text-sm text-red-600">
-                    ⚠️ High packet loss detected ({latencyTest.result.packet_loss_percent.toFixed(2)}%). Check network path and device health.
+                    ⚠️ High packet loss detected (
+                    {latencyTest.result.packet_loss_percent.toFixed(2)}%). Check network path and
+                    device health.
                   </div>
                 )}
                 {latencyTest.result.jitter_ms > 30 && (
                   <div className="text-sm text-yellow-600">
-                    ⚠️ High jitter detected. This may affect real-time applications like VoIP and gaming.
+                    ⚠️ High jitter detected. This may affect real-time applications like VoIP and
+                    gaming.
                   </div>
                 )}
-                {latencyTest.result.avg_latency_ms < 50 && latencyTest.result.jitter_ms < 10 && latencyTest.result.packet_loss_percent < 0.1 && (
-                  <div className="text-sm text-green-600">
-                    ✓ Excellent network quality. Suitable for all applications including real-time services.
-                  </div>
-                )}
+                {latencyTest.result.avg_latency_ms < 50 &&
+                  latencyTest.result.jitter_ms < 10 &&
+                  latencyTest.result.packet_loss_percent < 0.1 && (
+                    <div className="text-sm text-green-600">
+                      ✓ Excellent network quality. Suitable for all applications including real-time
+                      services.
+                    </div>
+                  )}
               </div>
             )}
           </CardContent>

@@ -4,7 +4,7 @@
  */
 
 // Base Map Component
-export { default as UniversalMap } from './UniversalMap';
+export { default as UniversalMap } from "./UniversalMap";
 export type {
   UniversalMapProps,
   MapType,
@@ -14,7 +14,7 @@ export type {
   Route,
   Coordinates,
   Bounds,
-} from './UniversalMap';
+} from "./UniversalMap";
 
 // Pre-configured Map Templates
-export * from './MapLibrary';
+export * from "./MapLibrary";

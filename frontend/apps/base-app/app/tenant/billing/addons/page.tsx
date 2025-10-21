@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import React, { useState, useMemo } from 'react';
-import { useTenantAddons, Addon, CancelAddonRequest } from '@/hooks/useTenantAddons';
-import { AddonCard } from '@/components/tenant/billing/AddonCard';
-import { ActiveAddonCard } from '@/components/tenant/billing/ActiveAddonCard';
-import { AddonsPageSkeleton } from '@/components/tenant/billing/SkeletonLoaders';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import React, { useState, useMemo } from "react";
+import { useTenantAddons, Addon, CancelAddonRequest } from "@/hooks/useTenantAddons";
+import { AddonCard } from "@/components/tenant/billing/AddonCard";
+import { ActiveAddonCard } from "@/components/tenant/billing/ActiveAddonCard";
+import { AddonsPageSkeleton } from "@/components/tenant/billing/SkeletonLoaders";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -24,8 +24,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { AlertCircle, Search, Package, TrendingUp, Zap } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { AlertCircle, Search, Package, TrendingUp, Zap } from "lucide-react";
 
 export default function AddonsPage() {
   const {
@@ -40,9 +40,9 @@ export default function AddonsPage() {
     reactivateAddon,
   } = useTenantAddons();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState<string>('all');
-  const [filterBillingType, setFilterBillingType] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterBillingType, setFilterBillingType] = useState<string>("all");
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
@@ -61,12 +61,12 @@ export default function AddonsPage() {
     let filtered = availableAddons;
 
     // Filter by type
-    if (filterType !== 'all') {
+    if (filterType !== "all") {
       filtered = filtered.filter((addon) => addon.addon_type === filterType);
     }
 
     // Filter by billing type
-    if (filterBillingType !== 'all') {
+    if (filterBillingType !== "all") {
       filtered = filtered.filter((addon) => addon.billing_type === filterBillingType);
     }
 
@@ -76,7 +76,7 @@ export default function AddonsPage() {
       filtered = filtered.filter(
         (addon) =>
           addon.name.toLowerCase().includes(query) ||
-          (addon.description?.toLowerCase() ?? '').includes(query)
+          (addon.description?.toLowerCase() ?? "").includes(query),
       );
     }
 
@@ -88,7 +88,7 @@ export default function AddonsPage() {
     try {
       await purchaseAddon(addonId, { quantity });
     } catch (err: any) {
-      console.error('Failed to purchase add-on:', err);
+      console.error("Failed to purchase add-on:", err);
     } finally {
       setIsPurchasing(false);
     }
@@ -99,7 +99,7 @@ export default function AddonsPage() {
     try {
       await updateAddonQuantity(tenantAddonId, { quantity });
     } catch (err: any) {
-      console.error('Failed to update add-on quantity:', err);
+      console.error("Failed to update add-on quantity:", err);
     } finally {
       setIsUpdating(false);
     }
@@ -124,7 +124,7 @@ export default function AddonsPage() {
       setCancelModalOpen(false);
       setAddonToCancel(null);
     } catch (err: any) {
-      console.error('Failed to cancel add-on:', err);
+      console.error("Failed to cancel add-on:", err);
     } finally {
       setIsUpdating(false);
     }
@@ -135,7 +135,7 @@ export default function AddonsPage() {
     try {
       await reactivateAddon(tenantAddonId);
     } catch (err: any) {
-      console.error('Failed to reactivate add-on:', err);
+      console.error("Failed to reactivate add-on:", err);
     } finally {
       setIsUpdating(false);
     }
@@ -161,7 +161,9 @@ export default function AddonsPage() {
       {/* Header */}
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">Add-ons Marketplace</h1>
-        <p className="text-muted-foreground">Enhance your subscription with additional features and resources.</p>
+        <p className="text-muted-foreground">
+          Enhance your subscription with additional features and resources.
+        </p>
       </div>
 
       {/* Stats Overview */}
@@ -196,7 +198,9 @@ export default function AddonsPage() {
               <Zap className="w-6 h-6 text-purple-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{availableAddons.filter(a => a.is_featured).length}</p>
+              <p className="text-2xl font-bold">
+                {availableAddons.filter((a) => a.is_featured).length}
+              </p>
               <p className="text-sm text-muted-foreground">Featured Add-ons</p>
             </div>
           </CardContent>
@@ -208,7 +212,9 @@ export default function AddonsPage() {
         <div className="space-y-4">
           <div>
             <h2 className="text-2xl font-semibold">Your Active Add-ons</h2>
-            <p className="text-muted-foreground mt-1">Manage your purchased add-ons and subscriptions</p>
+            <p className="text-muted-foreground mt-1">
+              Manage your purchased add-ons and subscriptions
+            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {activeAddons.map((addon) => (
@@ -229,7 +235,9 @@ export default function AddonsPage() {
       <div className="space-y-4">
         <div>
           <h2 className="text-2xl font-semibold">Browse Add-ons</h2>
-          <p className="text-muted-foreground mt-1">Discover add-ons to extend your platform capabilities</p>
+          <p className="text-muted-foreground mt-1">
+            Discover add-ons to extend your platform capabilities
+          </p>
         </div>
 
         {/* Filters and Search */}
@@ -292,9 +300,9 @@ export default function AddonsPage() {
                 variant="outline"
                 className="mt-4"
                 onClick={() => {
-                  setSearchQuery('');
-                  setFilterType('all');
-                  setFilterBillingType('all');
+                  setSearchQuery("");
+                  setFilterType("all");
+                  setFilterBillingType("all");
                 }}
               >
                 Clear Filters
@@ -309,9 +317,7 @@ export default function AddonsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Cancel Add-on</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to cancel this add-on?
-            </DialogDescription>
+            <DialogDescription>Are you sure you want to cancel this add-on?</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -332,7 +338,8 @@ export default function AddonsPage() {
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Immediate cancellation will end your access right away and may result in a prorated refund.
+                  Immediate cancellation will end your access right away and may result in a
+                  prorated refund.
                 </AlertDescription>
               </Alert>
             )}
@@ -350,7 +357,7 @@ export default function AddonsPage() {
               Keep Add-on
             </Button>
             <Button variant="destructive" onClick={handleConfirmCancel} disabled={isUpdating}>
-              {isUpdating ? 'Canceling...' : 'Confirm Cancellation'}
+              {isUpdating ? "Canceling..." : "Confirm Cancellation"}
             </Button>
           </DialogFooter>
         </DialogContent>

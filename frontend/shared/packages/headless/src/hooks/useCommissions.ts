@@ -13,8 +13,8 @@
  * - Performance-based bonuses
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Types
 export interface CommissionTier {
@@ -37,7 +37,7 @@ export interface CommissionRule {
   oneTimeRate?: number;
   penaltyRate?: number;
   minPayoutAmount: number;
-  payoutSchedule: 'weekly' | 'bi-weekly' | 'monthly' | 'quarterly';
+  payoutSchedule: "weekly" | "bi-weekly" | "monthly" | "quarterly";
   effectiveDate: string;
   expiryDate?: string;
   isActive: boolean;
@@ -48,7 +48,7 @@ export interface CommissionTransaction {
   resellerId: string;
   customerId: string;
   serviceId: string;
-  transactionType: 'sale' | 'renewal' | 'upgrade' | 'downgrade' | 'chargeback' | 'refund';
+  transactionType: "sale" | "renewal" | "upgrade" | "downgrade" | "chargeback" | "refund";
   amount: number;
   commissionableAmount: number;
   commissionRate: number;
@@ -57,7 +57,7 @@ export interface CommissionTransaction {
   transactionDate: string;
   payoutDate?: string;
   payoutId?: string;
-  status: 'pending' | 'approved' | 'paid' | 'disputed' | 'cancelled';
+  status: "pending" | "approved" | "paid" | "disputed" | "cancelled";
   metadata: Record<string, any>;
 }
 
@@ -70,7 +70,7 @@ export interface CommissionPayout {
   totalAmount: number;
   transactionCount: number;
   transactions: CommissionTransaction[];
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled';
+  status: "pending" | "processing" | "completed" | "failed" | "cancelled";
   paymentMethod: string;
   taxAmount?: number;
   fees?: number;
@@ -122,23 +122,23 @@ const fetchCommissionRules = async (resellerId: string): Promise<CommissionRule[
 
 const fetchCommissionTransactions = async (
   resellerId: string,
-  filters?: CommissionFilters
+  filters?: CommissionFilters,
 ): Promise<CommissionTransaction[]> => {
   const params = new URLSearchParams({ resellerId });
 
   if (filters) {
     if (filters.dateRange) {
-      params.append('startDate', filters.dateRange.start);
-      params.append('endDate', filters.dateRange.end);
+      params.append("startDate", filters.dateRange.start);
+      params.append("endDate", filters.dateRange.end);
     }
     if (filters.status?.length) {
-      params.append('status', filters.status.join(','));
+      params.append("status", filters.status.join(","));
     }
     if (filters.serviceTypes?.length) {
-      params.append('serviceTypes', filters.serviceTypes.join(','));
+      params.append("serviceTypes", filters.serviceTypes.join(","));
     }
     if (filters.transactionTypes?.length) {
-      params.append('transactionTypes', filters.transactionTypes.join(','));
+      params.append("transactionTypes", filters.transactionTypes.join(","));
     }
   }
 
@@ -159,13 +159,13 @@ const fetchCommissionPayouts = async (resellerId: string): Promise<CommissionPay
 
 const fetchCommissionSummary = async (
   resellerId: string,
-  filters?: CommissionFilters
+  filters?: CommissionFilters,
 ): Promise<CommissionSummary> => {
   const params = new URLSearchParams({ resellerId });
 
   if (filters?.dateRange) {
-    params.append('startDate', filters.dateRange.start);
-    params.append('endDate', filters.dateRange.end);
+    params.append("startDate", filters.dateRange.start);
+    params.append("endDate", filters.dateRange.end);
   }
 
   const response = await fetch(`/api/commissions/summary?${params}`);
@@ -179,11 +179,11 @@ const calculateCommission = async (
   resellerId: string,
   amount: number,
   serviceType: string,
-  transactionType: string
+  transactionType: string,
 ): Promise<{ commissionAmount: number; rate: number; tierId?: string }> => {
-  const response = await fetch('/api/commissions/calculate', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const response = await fetch("/api/commissions/calculate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       resellerId,
       amount,
@@ -200,11 +200,11 @@ const calculateCommission = async (
 
 const requestPayout = async (
   resellerId: string,
-  amount?: number
+  amount?: number,
 ): Promise<{ payoutId: string; status: string }> => {
-  const response = await fetch('/api/commissions/request-payout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const response = await fetch("/api/commissions/request-payout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       resellerId,
       amount,
@@ -221,18 +221,18 @@ const requestPayout = async (
 const calculateCommissionTier = (
   amount: number,
   monthlyRevenue: number,
-  tiers: CommissionTier[]
+  tiers: CommissionTier[],
 ): CommissionTier | undefined => {
   return tiers.find(
     (tier) =>
-      monthlyRevenue >= tier.minRevenue && (!tier.maxRevenue || monthlyRevenue <= tier.maxRevenue)
+      monthlyRevenue >= tier.minRevenue && (!tier.maxRevenue || monthlyRevenue <= tier.maxRevenue),
   );
 };
 
 const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 2,
   }).format(amount);
 };
@@ -264,25 +264,25 @@ export const useCommissions = (options: UseCommissionsOptions) => {
 
   // Fetch commission data
   const rulesQuery = useQuery({
-    queryKey: ['commissions', 'rules', resellerId],
+    queryKey: ["commissions", "rules", resellerId],
     queryFn: () => fetchCommissionRules(resellerId),
     ...queryConfig,
   });
 
   const transactionsQuery = useQuery({
-    queryKey: ['commissions', 'transactions', resellerId, filters],
+    queryKey: ["commissions", "transactions", resellerId, filters],
     queryFn: () => fetchCommissionTransactions(resellerId, filters),
     ...queryConfig,
   });
 
   const payoutsQuery = useQuery({
-    queryKey: ['commissions', 'payouts', resellerId],
+    queryKey: ["commissions", "payouts", resellerId],
     queryFn: () => fetchCommissionPayouts(resellerId),
     ...queryConfig,
   });
 
   const summaryQuery = useQuery({
-    queryKey: ['commissions', 'summary', resellerId, filters],
+    queryKey: ["commissions", "summary", resellerId, filters],
     queryFn: () => fetchCommissionSummary(resellerId, filters),
     ...queryConfig,
   });
@@ -304,8 +304,12 @@ export const useCommissions = (options: UseCommissionsOptions) => {
     mutationFn: ({ amount }: { amount?: number }) => requestPayout(resellerId, amount),
     onSuccess: () => {
       // Refetch payouts and summary after successful payout request
-      queryClient.invalidateQueries({ queryKey: ['commissions', 'payouts', resellerId] });
-      queryClient.invalidateQueries({ queryKey: ['commissions', 'summary', resellerId] });
+      queryClient.invalidateQueries({
+        queryKey: ["commissions", "payouts", resellerId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["commissions", "summary", resellerId],
+      });
     },
   });
 
@@ -338,7 +342,7 @@ export const useCommissions = (options: UseCommissionsOptions) => {
 
     const currentMonthAmount = currentMonthTransactions.reduce(
       (sum, t) => sum + t.commissionAmount,
-      0
+      0,
     );
     const lastMonthAmount = lastMonthTransactions.reduce((sum, t) => sum + t.commissionAmount, 0);
     const growthRate = calculateGrowthRate(currentMonthAmount, lastMonthAmount);
@@ -353,15 +357,15 @@ export const useCommissions = (options: UseCommissionsOptions) => {
         acc[t.serviceId].amount += t.commissionAmount;
         return acc;
       },
-      {} as Record<string, { count: number; amount: number }>
+      {} as Record<string, { count: number; amount: number }>,
     );
 
     const topService = Object.entries(servicePerformance).sort(
-      (a, b) => b[1].amount - a[1].amount
+      (a, b) => b[1].amount - a[1].amount,
     )[0];
 
     // Payout readiness
-    const pendingTransactions = transactions.filter((t) => t.status === 'approved');
+    const pendingTransactions = transactions.filter((t) => t.status === "approved");
     const pendingAmount = pendingTransactions.reduce((sum, t) => sum + t.commissionAmount, 0);
     const minPayoutRule = rulesQuery.data?.[0]?.minPayoutAmount || 100;
     const isPayoutReady = pendingAmount >= minPayoutRule;
@@ -384,7 +388,7 @@ export const useCommissions = (options: UseCommissionsOptions) => {
 
   // Commission calculator
   const calculateCommissionPreview = useCallback(
-    async (amount: number, serviceType: string, transactionType: string = 'sale') => {
+    async (amount: number, serviceType: string, transactionType: string = "sale") => {
       try {
         return await calculateCommissionMutation.mutateAsync({
           amount,
@@ -392,11 +396,11 @@ export const useCommissions = (options: UseCommissionsOptions) => {
           transactionType,
         });
       } catch (error) {
-        console.error('Commission calculation failed:', error);
+        console.error("Commission calculation failed:", error);
         throw error;
       }
     },
-    [calculateCommissionMutation]
+    [calculateCommissionMutation],
   );
 
   // Payout request
@@ -405,16 +409,16 @@ export const useCommissions = (options: UseCommissionsOptions) => {
       try {
         return await requestPayoutMutation.mutateAsync({ amount });
       } catch (error) {
-        console.error('Payout request failed:', error);
+        console.error("Payout request failed:", error);
         throw error;
       }
     },
-    [requestPayoutMutation]
+    [requestPayoutMutation],
   );
 
   // Data export
   const exportCommissionData = useCallback(
-    async (format: 'csv' | 'excel' | 'pdf', dateRange?: { start: string; end: string }) => {
+    async (format: "csv" | "excel" | "pdf", dateRange?: { start: string; end: string }) => {
       try {
         const params = new URLSearchParams({
           resellerId,
@@ -422,8 +426,8 @@ export const useCommissions = (options: UseCommissionsOptions) => {
         });
 
         if (dateRange) {
-          params.append('startDate', dateRange.start);
-          params.append('endDate', dateRange.end);
+          params.append("startDate", dateRange.start);
+          params.append("endDate", dateRange.end);
         }
 
         const response = await fetch(`/api/commissions/export?${params}`);
@@ -433,24 +437,24 @@ export const useCommissions = (options: UseCommissionsOptions) => {
 
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = `commissions-${resellerId}-${new Date().toISOString().split('T')[0]}.${format}`;
+        a.download = `commissions-${resellerId}-${new Date().toISOString().split("T")[0]}.${format}`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } catch (error) {
-        console.error('Commission export failed:', error);
+        console.error("Commission export failed:", error);
         throw error;
       }
     },
-    [resellerId]
+    [resellerId],
   );
 
   // Refresh data
   const refreshData = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['commissions'] });
+    queryClient.invalidateQueries({ queryKey: ["commissions"] });
   }, [queryClient]);
 
   return {
@@ -504,10 +508,10 @@ export const useCommissionCalculator = (resellerId: string) => {
           rule.serviceType === serviceType &&
           rule.isActive &&
           new Date() >= new Date(rule.effectiveDate) &&
-          (!rule.expiryDate || new Date() <= new Date(rule.expiryDate))
+          (!rule.expiryDate || new Date() <= new Date(rule.expiryDate)),
       );
     },
-    [rules]
+    [rules],
   );
 
   const estimateCommission = useCallback(
@@ -526,7 +530,7 @@ export const useCommissionCalculator = (resellerId: string) => {
         rule,
       };
     },
-    [getApplicableRule]
+    [getApplicableRule],
   );
 
   return {
@@ -538,7 +542,9 @@ export const useCommissionCalculator = (resellerId: string) => {
 };
 
 export const usePayoutHistory = (resellerId: string) => {
-  const { payouts, isLoadingPayouts, refreshData } = useCommissions({ resellerId });
+  const { payouts, isLoadingPayouts, refreshData } = useCommissions({
+    resellerId,
+  });
 
   const payoutStats = useMemo(() => {
     if (!payouts.length) return null;
@@ -546,7 +552,7 @@ export const usePayoutHistory = (resellerId: string) => {
     const totalPaid = payouts.reduce((sum, payout) => sum + payout.netAmount, 0);
     const averagePayout = totalPaid / payouts.length;
     const lastPayout = payouts.sort(
-      (a, b) => new Date(b.payoutDate).getTime() - new Date(a.payoutDate).getTime()
+      (a, b) => new Date(b.payoutDate).getTime() - new Date(a.payoutDate).getTime(),
     )[0];
 
     const payoutsByMonth = payouts.reduce(
@@ -556,7 +562,7 @@ export const usePayoutHistory = (resellerId: string) => {
         acc[month] += payout.netAmount;
         return acc;
       },
-      {} as Record<string, number>
+      {} as Record<string, number>,
     );
 
     return {

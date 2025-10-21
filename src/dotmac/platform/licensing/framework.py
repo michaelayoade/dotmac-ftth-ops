@@ -21,6 +21,7 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+    UUID as SQLUUID,
 )
 from sqlalchemy import (
     Enum as SQLEnum,
@@ -593,7 +594,7 @@ class SubscriptionModule(Base):
 
     # Relationships
     subscription_id: Mapped[UUID] = mapped_column(
-        String(36),
+        SQLUUID(as_uuid=True),
         ForeignKey("licensing_tenant_subscriptions.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -648,7 +649,7 @@ class SubscriptionQuotaUsage(Base):
 
     # Relationships
     subscription_id: Mapped[UUID] = mapped_column(
-        String(36),
+        SQLUUID(as_uuid=True),
         ForeignKey("licensing_tenant_subscriptions.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

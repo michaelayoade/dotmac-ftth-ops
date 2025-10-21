@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   Users,
   Plus,
@@ -13,10 +13,10 @@ import {
   Calendar,
   Shield,
   UserCheck,
-  Clock
-} from 'lucide-react';
-import { platformConfig } from '@/lib/config';
-import { RouteGuard } from '@/components/auth/PermissionGuard';
+  Clock,
+} from "lucide-react";
+import { platformConfig } from "@/lib/config";
+import { RouteGuard } from "@/components/auth/PermissionGuard";
 
 interface User {
   user_id: string;
@@ -33,41 +33,45 @@ interface User {
 function UsersPageContent() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newUserData, setNewUserData] = useState({
-    username: '',
-    email: '',
-    full_name: '',
-    password: '',
-    roles: ['user'] as string[]
+    username: "",
+    email: "",
+    full_name: "",
+    password: "",
+    roles: ["user"] as string[],
   });
-  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({
     show: false,
-    message: '',
-    type: 'success'
+    message: "",
+    type: "success",
   });
 
   const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/users`, {
-        credentials: 'include',
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       });
 
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users || data);
       } else if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = "/login";
       } else {
-        console.error('Failed to fetch users:', response.status);
+        console.error("Failed to fetch users:", response.status);
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
     }
@@ -80,73 +84,79 @@ function UsersPageContent() {
   useEffect(() => {
     if (toast.show) {
       const timer = setTimeout(() => {
-        setToast(t => ({ ...t, show: false }));
+        setToast((t) => ({ ...t, show: false }));
       }, 3000);
       return () => clearTimeout(timer);
     }
     return undefined;
   }, [toast.show]);
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (user.full_name && user.full_name.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesRole = roleFilter === 'all' || user.roles.includes(roleFilter);
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (user.full_name && user.full_name.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesRole = roleFilter === "all" || user.roles.includes(roleFilter);
     return matchesSearch && matchesRole;
   });
 
   const getRoleColor = (roles: string[]) => {
-    if (roles.includes('admin')) return 'bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400';
-    if (roles.includes('moderator')) return 'bg-purple-100 text-purple-800 dark:bg-purple-950/20 dark:text-purple-400';
-    if (roles.includes('user')) return 'bg-blue-100 text-blue-800 dark:bg-blue-950/20 dark:text-blue-400';
-    return 'bg-muted text-muted-foreground';
+    if (roles.includes("admin"))
+      return "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400";
+    if (roles.includes("moderator"))
+      return "bg-purple-100 text-purple-800 dark:bg-purple-950/20 dark:text-purple-400";
+    if (roles.includes("user"))
+      return "bg-blue-100 text-blue-800 dark:bg-blue-950/20 dark:text-blue-400";
+    return "bg-muted text-muted-foreground";
   };
 
   const getStatusColor = (isActive: boolean) => {
-    return isActive ? 'bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400';
+    return isActive
+      ? "bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400"
+      : "bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400";
   };
 
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+  const showToast = (message: string, type: "success" | "error" = "success") => {
     setToast({ show: true, message, type });
   };
 
   const handleCreateUser = async () => {
     try {
       const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/users`, {
-        method: 'POST',
-        credentials: 'include',
+        method: "POST",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           username: newUserData.username,
           email: newUserData.email,
           full_name: newUserData.full_name,
           password: newUserData.password,
-          roles: newUserData.roles
-        })
+          roles: newUserData.roles,
+        }),
       });
 
       if (response.ok) {
-        showToast('User created successfully!', 'success');
+        showToast("User created successfully!", "success");
         setShowCreateModal(false);
         setNewUserData({
-          username: '',
-          email: '',
-          full_name: '',
-          password: '',
-          roles: ['user']
+          username: "",
+          email: "",
+          full_name: "",
+          password: "",
+          roles: ["user"],
         });
         await fetchUsers();
       } else if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = "/login";
       } else {
         const error = await response.json();
-        showToast(error.detail || 'Failed to create user', 'error');
+        showToast(error.detail || "Failed to create user", "error");
       }
     } catch (error) {
-      console.error('Error creating user:', error);
-      showToast('Error creating user', 'error');
+      console.error("Error creating user:", error);
+      showToast("Error creating user", "error");
     }
   };
 
@@ -192,7 +202,7 @@ function UsersPageContent() {
             <div className="ml-4">
               <p className="text-sm font-medium text-muted-foreground">Active Users</p>
               <p className="text-2xl font-bold text-foreground">
-                {users.filter(u => u.is_active).length}
+                {users.filter((u) => u.is_active).length}
               </p>
             </div>
           </div>
@@ -203,7 +213,7 @@ function UsersPageContent() {
             <div className="ml-4">
               <p className="text-sm font-medium text-muted-foreground">Administrators</p>
               <p className="text-2xl font-bold text-foreground">
-                {users.filter(u => u.roles.includes('admin')).length}
+                {users.filter((u) => u.roles.includes("admin")).length}
               </p>
             </div>
           </div>
@@ -214,13 +224,15 @@ function UsersPageContent() {
             <div className="ml-4">
               <p className="text-sm font-medium text-muted-foreground">Recent Logins</p>
               <p className="text-2xl font-bold text-foreground">
-                {users.filter(u => {
-                  if (!u.last_login) return false;
-                  const lastLogin = new Date(u.last_login);
-                  const now = new Date();
-                  const daysDiff = (now.getTime() - lastLogin.getTime()) / (1000 * 3600 * 24);
-                  return daysDiff <= 7;
-                }).length}
+                {
+                  users.filter((u) => {
+                    if (!u.last_login) return false;
+                    const lastLogin = new Date(u.last_login);
+                    const now = new Date();
+                    const daysDiff = (now.getTime() - lastLogin.getTime()) / (1000 * 3600 * 24);
+                    return daysDiff <= 7;
+                  }).length
+                }
               </p>
             </div>
           </div>
@@ -299,16 +311,16 @@ function UsersPageContent() {
                           {user.email}
                         </div>
                         {user.full_name && (
-                          <div className="text-sm text-muted-foreground">
-                            @{user.username}
-                          </div>
+                          <div className="text-sm text-muted-foreground">@{user.username}</div>
                         )}
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.is_active)}`}>
-                      {user.is_active ? 'Active' : 'Inactive'}
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.is_active)}`}
+                    >
+                      {user.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -362,12 +374,11 @@ function UsersPageContent() {
               <Users className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-2 text-sm font-medium text-foreground">No users found</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                {searchQuery || roleFilter !== 'all'
-                  ? 'Try adjusting your search or filter criteria'
-                  : 'Get started by adding your first user'
-                }
+                {searchQuery || roleFilter !== "all"
+                  ? "Try adjusting your search or filter criteria"
+                  : "Get started by adding your first user"}
               </p>
-              {!searchQuery && roleFilter === 'all' && (
+              {!searchQuery && roleFilter === "all" && (
                 <div className="mt-6">
                   <button
                     className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
@@ -394,11 +405,11 @@ function UsersPageContent() {
                   onClick={() => {
                     setShowCreateModal(false);
                     setNewUserData({
-                      username: '',
-                      email: '',
-                      full_name: '',
-                      password: '',
-                      roles: ['user']
+                      username: "",
+                      email: "",
+                      full_name: "",
+                      password: "",
+                      roles: ["user"],
                     });
                   }}
                   className="text-muted-foreground hover:text-muted-foreground"
@@ -416,7 +427,12 @@ function UsersPageContent() {
                     type="text"
                     placeholder="johndoe"
                     value={newUserData.username}
-                    onChange={(e) => setNewUserData({ ...newUserData, username: e.target.value })}
+                    onChange={(e) =>
+                      setNewUserData({
+                        ...newUserData,
+                        username: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-border rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -442,7 +458,12 @@ function UsersPageContent() {
                     type="text"
                     placeholder="John Doe"
                     value={newUserData.full_name}
-                    onChange={(e) => setNewUserData({ ...newUserData, full_name: e.target.value })}
+                    onChange={(e) =>
+                      setNewUserData({
+                        ...newUserData,
+                        full_name: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-border rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -455,17 +476,20 @@ function UsersPageContent() {
                     type="password"
                     placeholder="••••••••"
                     value={newUserData.password}
-                    onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+                    onChange={(e) =>
+                      setNewUserData({
+                        ...newUserData,
+                        password: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-border rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
-                    Roles
-                  </label>
+                  <label className="block text-sm font-medium text-foreground mb-1">Roles</label>
                   <div className="space-y-2">
-                    {['user', 'moderator', 'admin'].map((role) => (
+                    {["user", "moderator", "admin"].map((role) => (
                       <label key={role} className="flex items-center">
                         <input
                           type="checkbox"
@@ -474,12 +498,12 @@ function UsersPageContent() {
                             if (e.target.checked) {
                               setNewUserData({
                                 ...newUserData,
-                                roles: [...newUserData.roles, role]
+                                roles: [...newUserData.roles, role],
                               });
                             } else {
                               setNewUserData({
                                 ...newUserData,
-                                roles: newUserData.roles.filter(r => r !== role)
+                                roles: newUserData.roles.filter((r) => r !== role),
                               });
                             }
                           }}
@@ -497,11 +521,11 @@ function UsersPageContent() {
                   onClick={() => {
                     setShowCreateModal(false);
                     setNewUserData({
-                      username: '',
-                      email: '',
-                      full_name: '',
-                      password: '',
-                      roles: ['user']
+                      username: "",
+                      email: "",
+                      full_name: "",
+                      password: "",
+                      roles: ["user"],
                     });
                   }}
                   className="px-4 py-2 text-sm font-medium text-foreground bg-muted rounded-md hover:bg-accent"
@@ -510,7 +534,12 @@ function UsersPageContent() {
                 </button>
                 <button
                   onClick={handleCreateUser}
-                  disabled={!newUserData.username || !newUserData.email || !newUserData.password || newUserData.roles.length === 0}
+                  disabled={
+                    !newUserData.username ||
+                    !newUserData.email ||
+                    !newUserData.password ||
+                    newUserData.roles.length === 0
+                  }
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed"
                 >
                   Create User
@@ -524,26 +553,40 @@ function UsersPageContent() {
       {/* Toast Notification */}
       {toast.show && (
         <div className="fixed bottom-4 right-4 z-50">
-          <div className={`flex items-center p-4 rounded-md shadow-lg ${
-            toast.type === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-          } border`}>
-            <div className={`flex-shrink-0 ${
-              toast.type === 'success' ? 'text-green-400' : 'text-red-400'
-            }`}>
-              {toast.type === 'success' ? (
+          <div
+            className={`flex items-center p-4 rounded-md shadow-lg ${
+              toast.type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+            } border`}
+          >
+            <div
+              className={`flex-shrink-0 ${
+                toast.type === "success" ? "text-green-400" : "text-red-400"
+              }`}
+            >
+              {toast.type === "success" ? (
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               ) : (
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               )}
             </div>
             <div className="ml-3">
-              <p className={`text-sm font-medium ${
-                toast.type === 'success' ? 'text-green-800' : 'text-red-800'
-              }`}>
+              <p
+                className={`text-sm font-medium ${
+                  toast.type === "success" ? "text-green-800" : "text-red-800"
+                }`}
+              >
                 {toast.message}
               </p>
             </div>

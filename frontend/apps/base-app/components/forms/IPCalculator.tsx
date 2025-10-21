@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * IP Calculator Component
@@ -6,12 +6,12 @@
  * Interactive calculator for IP subnet calculations
  */
 
-import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import React, { useState, useMemo } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   parseCIDR,
   getIPv4Network,
@@ -23,12 +23,12 @@ import {
   isValidIPv4CIDR,
   isPrivateIPv4,
   extractIPFromCIDR,
-} from '@/lib/utils/ip-address';
-import { cn } from '@/lib/utils';
+} from "@/lib/utils/ip-address";
+import { cn } from "@/lib/utils";
 
 export function IPCalculator() {
-  const [cidr, setCidr] = useState('192.168.1.0/24');
-  const [subnetMask, setSubnetMask] = useState('255.255.255.0');
+  const [cidr, setCidr] = useState("192.168.1.0/24");
+  const [subnetMask, setSubnetMask] = useState("255.255.255.0");
 
   const parsed = useMemo(() => parseCIDR(cidr), [cidr]);
   const isValidCIDR = isValidIPv4CIDR(cidr);
@@ -44,29 +44,33 @@ export function IPCalculator() {
     const isPrivate = isPrivateIPv4(ip);
 
     const firstUsable = network
-      ? network.split('.').slice(0, 3).join('.') + '.' + (parseInt(network.split('.')[3] ?? '0') + 1)
+      ? network.split(".").slice(0, 3).join(".") +
+        "." +
+        (parseInt(network.split(".")[3] ?? "0") + 1)
       : null;
 
     const lastUsable = broadcast
-      ? broadcast.split('.').slice(0, 3).join('.') + '.' + (parseInt(broadcast.split('.')[3] ?? '255') - 1)
+      ? broadcast.split(".").slice(0, 3).join(".") +
+        "." +
+        (parseInt(broadcast.split(".")[3] ?? "255") - 1)
       : null;
 
     // Calculate wildcard mask
     const wildcard = mask
-      ?.split('.')
+      ?.split(".")
       .map((octet) => 255 - parseInt(octet))
-      .join('.');
+      .join(".");
 
     // Binary representation
     const binaryIP = ip
-      .split('.')
-      .map((octet) => parseInt(octet).toString(2).padStart(8, '0'))
-      .join('.');
+      .split(".")
+      .map((octet) => parseInt(octet).toString(2).padStart(8, "0"))
+      .join(".");
 
     const binaryMask = mask
-      ?.split('.')
-      .map((octet) => parseInt(octet).toString(2).padStart(8, '0'))
-      .join('.');
+      ?.split(".")
+      .map((octet) => parseInt(octet).toString(2).padStart(8, "0"))
+      .join(".");
 
     return {
       network,
@@ -111,8 +115,8 @@ export function IPCalculator() {
               <div className="flex items-center justify-between">
                 <Label htmlFor="cidr">CIDR Notation</Label>
                 {isValidCIDR && calculations?.isPrivate !== undefined && (
-                  <Badge variant={calculations.isPrivate ? 'secondary' : 'default'}>
-                    {calculations.isPrivate ? 'Private' : 'Public'}
+                  <Badge variant={calculations.isPrivate ? "secondary" : "default"}>
+                    {calculations.isPrivate ? "Private" : "Public"}
                   </Badge>
                 )}
               </div>
@@ -122,7 +126,7 @@ export function IPCalculator() {
                 value={cidr}
                 onChange={(e) => setCidr(e.target.value)}
                 placeholder="192.168.1.0/24"
-                className={cn(!isValidCIDR && cidr && 'border-red-500')}
+                className={cn(!isValidCIDR && cidr && "border-red-500")}
               />
               {!isValidCIDR && cidr && (
                 <p className="text-sm text-red-500">Invalid CIDR notation</p>
@@ -176,9 +180,7 @@ export function IPCalculator() {
                 placeholder="255.255.255.0"
               />
               {parsed && (
-                <p className="text-sm text-muted-foreground">
-                  CIDR Prefix: /{parsed.cidr}
-                </p>
+                <p className="text-sm text-muted-foreground">CIDR Prefix: /{parsed.cidr}</p>
               )}
             </div>
           </TabsContent>
@@ -197,7 +199,7 @@ function InfoField({ label, value }: InfoFieldProps) {
   return (
     <div className="space-y-1">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="font-mono text-sm font-medium">{value || 'N/A'}</p>
+      <p className="font-mono text-sm font-medium">{value || "N/A"}</p>
     </div>
   );
 }

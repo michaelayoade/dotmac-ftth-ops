@@ -23,7 +23,7 @@ import {
   useUserPermissionsQuery,
   useUserTeamsQuery,
   PermissionCategoryEnum,
-} from '@/lib/graphql/generated';
+} from "@/lib/graphql/generated";
 
 // ============================================================================
 // User List Hook
@@ -78,7 +78,7 @@ export function useUserListGraphQL(options: UseUserListOptions = {}) {
     },
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const users = data?.users?.users ?? [];
@@ -114,7 +114,7 @@ export function useUserDetailGraphQL(options: UseUserDetailOptions) {
   const { data, loading, error, refetch } = useUserDetailQuery({
     variables: { id: userId },
     skip: !enabled || !userId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const user = data?.user ?? null;
@@ -146,7 +146,7 @@ export function useUserMetricsGraphQL(options: UseUserMetricsOptions = {}) {
   const { data, loading, error, refetch } = useUserMetricsQuery({
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const metrics = data?.userMetrics;
@@ -189,14 +189,7 @@ export interface UseRoleListOptions {
 }
 
 export function useRoleListGraphQL(options: UseRoleListOptions = {}) {
-  const {
-    page = 1,
-    pageSize = 20,
-    isActive,
-    isSystem,
-    search,
-    enabled = true,
-  } = options;
+  const { page = 1, pageSize = 20, isActive, isSystem, search, enabled = true } = options;
 
   const { data, loading, error, refetch } = useRoleListQuery({
     variables: {
@@ -207,7 +200,7 @@ export function useRoleListGraphQL(options: UseRoleListOptions = {}) {
       search: search || undefined,
     },
     skip: !enabled,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const roles = data?.roles?.roles ?? [];
@@ -241,7 +234,7 @@ export function usePermissionsByCategoryGraphQL(options: UsePermissionsByCategor
       category,
     },
     skip: !enabled,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const permissionsByCategory = data?.permissionsByCategory ?? [];
@@ -286,7 +279,7 @@ export function useUserDashboardGraphQL(options: UseUserDashboardOptions = {}) {
     },
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const users = data?.users?.users ?? [];
@@ -332,7 +325,7 @@ export function useUserRolesGraphQL(options: UseUserRolesOptions) {
   const { data, loading, error, refetch } = useUserRolesQuery({
     variables: { id: userId },
     skip: !enabled || !userId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const user = data?.user ?? null;
@@ -363,7 +356,7 @@ export function useUserPermissionsGraphQL(options: UseUserPermissionsOptions) {
   const { data, loading, error, refetch } = useUserPermissionsQuery({
     variables: { id: userId },
     skip: !enabled || !userId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const user = data?.user ?? null;
@@ -394,7 +387,7 @@ export function useUserTeamsGraphQL(options: UseUserTeamsOptions) {
   const { data, loading, error, refetch } = useUserTeamsQuery({
     variables: { id: userId },
     skip: !enabled || !userId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const user = data?.user ?? null;

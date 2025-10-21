@@ -20,6 +20,7 @@ from dotmac.platform.secrets import (
     SymmetricEncryptionService,
     VaultError,
 )
+from dotmac.platform.settings import Environment, settings
 from dotmac.platform.wireguard.client import WireGuardClient, WireGuardClientError
 from dotmac.platform.wireguard.models import (
     WireGuardPeer,
@@ -148,9 +149,16 @@ class WireGuardService:
                         "Storing WireGuard private key encrypted in database (Vault unavailable)"
                     )
                 else:
-                    # Last resort: store unencrypted (not recommended for production)
+                    environment = getattr(settings, "environment", Environment.DEVELOPMENT)
+                    if environment == Environment.PRODUCTION:
+                        logger.error(
+                            "Unable to securely store WireGuard private key: Vault unavailable and no encryption service configured."
+                        )
+                        raise WireGuardServiceError(
+                            "WireGuard private key could not be stored securely. Vault must be operational or encryption fallback configured."
+                        )
                     logger.warning(
-                        "No Vault or encryption service - storing WireGuard private key UNENCRYPTED"
+                        "Vault unavailable and no encryption service configured; storing WireGuard private key in database (development mode only)."
                     )
                     private_key_encrypted = private_key
 

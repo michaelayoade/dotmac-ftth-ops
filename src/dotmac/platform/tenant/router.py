@@ -16,6 +16,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.tenant.oss_config import OSSService, update_service_config
 
 from ..auth.core import UserInfo, get_current_user
+from ..auth.platform_admin import (
+    has_platform_permission,
+    is_platform_admin,
+    require_platform_permission,
+)
 from ..database import get_async_session
 from .models import TenantInvitationStatus, TenantPlanType, TenantStatus
 from .schemas import (
@@ -44,7 +49,8 @@ from .service import (
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/tenant", tags=["Tenant Management"])
+# Explicit prefix to avoid double-registration warnings during FastAPI startup
+router = APIRouter(prefix="/tenants", tags=["Tenant Management"])
 
 
 # Dependency to get tenant service
@@ -52,12 +58,67 @@ async def get_tenant_service(db: AsyncSession = Depends(get_async_session)) -> T
     """Get tenant service instance."""
     return TenantService(db)
 
+TENANT_READ_PERMISSION = "platform:tenants:read"
+TENANT_WRITE_PERMISSION = "platform:tenants:write"
+
+
+def _ensure_can_read_tenant(user: UserInfo, tenant_id: str) -> None:
+    """Validate that the current user can view the requested tenant."""
+    if tenant_id == user.tenant_id:
+        return
+    user_permissions = set(user.permissions or [])
+    if is_platform_admin(user) or has_platform_permission(user, TENANT_READ_PERMISSION):
+        return
+    # Allow legacy aliases used in older tests/clients
+    if "tenants:read" in user_permissions or "tenants:*" in user_permissions:
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Insufficient permissions to access this tenant.",
+    )
+
+
+def _ensure_can_write_tenant(user: UserInfo, tenant_id: str) -> None:
+    """Validate that the current user can mutate the requested tenant."""
+    if tenant_id == user.tenant_id:
+        return
+    user_permissions = set(user.permissions or [])
+    if is_platform_admin(user) or has_platform_permission(user, TENANT_WRITE_PERMISSION):
+        return
+    # Allow legacy aliases used in older tests/clients
+    if "tenants:write" in user_permissions or "tenants:*" in user_permissions:
+        return
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Insufficient permissions to modify this tenant.",
+    )
+
+
+def require_tenant_permission(permission: str) -> Any:
+    """Wrapper dependency that honours legacy tenant:* permission aliases."""
+
+    platform_checker = require_platform_permission(permission)
+
+    async def checker(current_user: UserInfo = Depends(get_current_user)) -> UserInfo:
+        perms = set(current_user.permissions or [])
+        alias = None
+        if permission == TENANT_READ_PERMISSION:
+            alias = "tenants:read"
+        elif permission == TENANT_WRITE_PERMISSION:
+            alias = "tenants:write"
+
+        if alias and (alias in perms or "tenants:*" in perms):
+            return current_user
+        return await platform_checker(current_user)
+
+    return checker
+
 
 # Tenant CRUD Operations
 @router.post("", response_model=TenantResponse, status_code=status.HTTP_201_CREATED)
 async def create_tenant(
     tenant_data: TenantCreate,
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_tenant_permission(TENANT_WRITE_PERMISSION)),
     service: TenantService = Depends(get_tenant_service),
     session: AsyncSession = Depends(get_async_session),
 ) -> TenantResponse:
@@ -104,7 +165,7 @@ async def list_tenants(
     plan_type: TenantPlanType | None = Query(None, description="Filter by plan type"),
     search: str | None = Query(None, description="Search in name, slug, email"),
     include_deleted: bool = Query(False, description="Include soft-deleted tenants"),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_tenant_permission(TENANT_READ_PERMISSION)),
     service: TenantService = Depends(get_tenant_service),
 ) -> TenantListResponse:
     """
@@ -198,6 +259,7 @@ async def get_tenant(
     Returns detailed tenant information including usage, limits, and configuration.
     """
     try:
+        _ensure_can_read_tenant(current_user, tenant_id)
         tenant = await service.get_tenant(tenant_id)
 
         response = TenantResponse.model_validate(tenant)
@@ -226,6 +288,7 @@ async def get_tenant_by_slug(
     """
     try:
         tenant = await service.get_tenant_by_slug(slug)
+        _ensure_can_read_tenant(current_user, tenant.id)
 
         response = TenantResponse.model_validate(tenant)
         response.is_trial = tenant.is_trial
@@ -253,6 +316,7 @@ async def update_tenant(
     Allows partial updates to tenant configuration, limits, and settings.
     """
     try:
+        _ensure_can_write_tenant(current_user, tenant_id)
         tenant = await service.update_tenant(
             tenant_id, tenant_data, updated_by=current_user.user_id
         )
@@ -283,6 +347,7 @@ async def delete_tenant(
     Supports both soft delete (default) and permanent deletion.
     """
     try:
+        _ensure_can_write_tenant(current_user, tenant_id)
         await service.delete_tenant(tenant_id, permanent=permanent, deleted_by=current_user.user_id)
     except TenantNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -300,6 +365,7 @@ async def restore_tenant(
     Recovers a tenant that was previously soft-deleted.
     """
     try:
+        _ensure_can_write_tenant(current_user, tenant_id)
         tenant = await service.restore_tenant(tenant_id, restored_by=current_user.user_id)
 
         response = TenantResponse.model_validate(tenant)
@@ -327,6 +393,7 @@ async def get_tenant_settings(
 
     Returns all configuration settings for the specified tenant.
     """
+    _ensure_can_read_tenant(current_user, tenant_id)
     settings = await service.get_tenant_settings(tenant_id)
     return [TenantSettingResponse.model_validate(s) for s in settings]
 
@@ -343,6 +410,7 @@ async def get_tenant_setting(
 
     Retrieves a single configuration setting.
     """
+    _ensure_can_read_tenant(current_user, tenant_id)
     setting = await service.get_tenant_setting(tenant_id, key)
     if not setting:
         raise HTTPException(
@@ -364,6 +432,7 @@ async def create_or_update_tenant_setting(
 
     Sets a configuration value for the tenant. Updates if exists, creates if new.
     """
+    _ensure_can_write_tenant(current_user, tenant_id)
     setting = await service.set_tenant_setting(tenant_id, setting_data)
     return TenantSettingResponse.model_validate(setting)
 
@@ -380,6 +449,7 @@ async def delete_tenant_setting(
 
     Removes a configuration setting from the tenant.
     """
+    _ensure_can_write_tenant(current_user, tenant_id)
     await service.delete_tenant_setting(tenant_id, key)
 
 
@@ -398,6 +468,7 @@ async def record_tenant_usage(
 
     Logs usage statistics for a specific time period.
     """
+    _ensure_can_write_tenant(current_user, tenant_id)
     usage = await service.record_usage(tenant_id, usage_data)
     return TenantUsageResponse.model_validate(usage)
 
@@ -415,6 +486,7 @@ async def get_tenant_usage(
 
     Retrieves historical usage data, optionally filtered by date range.
     """
+    _ensure_can_read_tenant(current_user, tenant_id)
     usage_records = await service.get_tenant_usage(tenant_id, start_date, end_date)
     return [TenantUsageResponse.model_validate(u) for u in usage_records]
 
@@ -431,6 +503,7 @@ async def get_tenant_stats(
     Returns comprehensive usage metrics, limits, and percentages.
     """
     try:
+        _ensure_can_read_tenant(current_user, tenant_id)
         return await service.get_tenant_stats(tenant_id)
     except TenantNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -453,6 +526,7 @@ async def create_invitation(
 
     Invites a user to join the tenant organization.
     """
+    _ensure_can_write_tenant(current_user, tenant_id)
     invitation = await service.create_invitation(
         tenant_id, invitation_data, invited_by=current_user.user_id
     )
@@ -476,6 +550,7 @@ async def list_invitations(
 
     Returns all invitations, optionally filtered by status.
     """
+    _ensure_can_read_tenant(current_user, tenant_id)
     invitations = await service.list_tenant_invitations(tenant_id, status=status_filter)
 
     responses = []
@@ -525,6 +600,7 @@ async def revoke_invitation(
     Cancels a pending invitation.
     """
     try:
+        _ensure_can_write_tenant(current_user, tenant_id)
         invitation = await service.revoke_invitation(invitation_id)
 
         response = TenantInvitationResponse.model_validate(invitation)
@@ -550,6 +626,7 @@ async def update_tenant_features(
     Enables or disables features for the tenant.
     """
     try:
+        _ensure_can_write_tenant(current_user, tenant_id)
         tenant = await service.update_tenant_features(
             tenant_id, feature_data.features, updated_by=current_user.user_id
         )
@@ -580,6 +657,7 @@ async def update_tenant_metadata(
     Updates custom metadata fields for the tenant.
     """
     try:
+        _ensure_can_write_tenant(current_user, tenant_id)
         tenant = await service.update_tenant_metadata(
             tenant_id, metadata_data.custom_metadata, updated_by=current_user.user_id
         )
@@ -601,7 +679,7 @@ async def update_tenant_metadata(
 @router.post("/bulk/status", response_model=dict[str, Any])
 async def bulk_update_status(
     update_data: TenantBulkStatusUpdate,
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_tenant_permission(TENANT_WRITE_PERMISSION)),
     service: TenantService = Depends(get_tenant_service),
 ) -> dict[str, Any]:
     """
@@ -619,7 +697,7 @@ async def bulk_update_status(
 @router.post("/bulk/delete", response_model=dict[str, Any])
 async def bulk_delete_tenants(
     delete_data: TenantBulkDeleteRequest,
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_tenant_permission(TENANT_WRITE_PERMISSION)),
     service: TenantService = Depends(get_tenant_service),
 ) -> dict[str, Any]:
     """

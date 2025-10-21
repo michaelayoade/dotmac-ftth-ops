@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 /**
@@ -11,12 +11,12 @@ export const dynamicParams = true;
  * Supports filtering by type, pagination, and provides relevance-scored results.
  */
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Search,
   Filter,
@@ -32,15 +32,10 @@ import {
   Server,
   ShoppingCart,
   Clock,
-} from 'lucide-react';
-import { useSearch } from '@/hooks/useSearch';
-import type { SearchResult } from '@/types/search';
-import {
-  TYPE_COLORS,
-  SEARCH_ENTITY_TYPES,
-  formatEntityType,
-  getEntityRoute,
-} from '@/types/search';
+} from "lucide-react";
+import { useSearch } from "@/hooks/useSearch";
+import type { SearchResult } from "@/types/search";
+import { TYPE_COLORS, SEARCH_ENTITY_TYPES, formatEntityType, getEntityRoute } from "@/types/search";
 
 // Entity type icons
 const TYPE_ICONS: Record<string, any> = {
@@ -59,9 +54,9 @@ export default function GlobalSearchPage() {
   const searchParams = useSearchParams();
 
   // Get query parameters from URL
-  const queryFromUrl = searchParams.get('q') || '';
-  const typeFromUrl = searchParams.get('type') || '';
-  const pageFromUrl = parseInt(searchParams.get('page') || '1', 10);
+  const queryFromUrl = searchParams.get("q") || "";
+  const typeFromUrl = searchParams.get("type") || "";
+  const pageFromUrl = parseInt(searchParams.get("page") || "1", 10);
 
   const [query, setQuery] = useState(queryFromUrl);
   const [selectedType, setSelectedType] = useState<string>(typeFromUrl);
@@ -69,24 +64,30 @@ export default function GlobalSearchPage() {
   const [searchInput, setSearchInput] = useState(queryFromUrl);
 
   // Perform search
-  const { data: searchResults, isLoading, error } = useSearch(
+  const {
+    data: searchResults,
+    isLoading,
+    error,
+  } = useSearch(
     {
       q: query,
       type: selectedType || undefined,
       limit: 20,
       page: currentPage,
     },
-    !!query
+    !!query,
   );
 
   // Update URL when search parameters change
   useEffect(() => {
     const params = new URLSearchParams();
-    if (query) params.set('q', query);
-    if (selectedType) params.set('type', selectedType);
-    if (currentPage > 1) params.set('page', currentPage.toString());
+    if (query) params.set("q", query);
+    if (selectedType) params.set("type", selectedType);
+    if (currentPage > 1) params.set("page", currentPage.toString());
 
-    const newUrl = params.toString() ? `/dashboard/search?${params.toString()}` : '/dashboard/search';
+    const newUrl = params.toString()
+      ? `/dashboard/search?${params.toString()}`
+      : "/dashboard/search";
     router.replace(newUrl);
   }, [query, selectedType, currentPage, router]);
 
@@ -105,15 +106,15 @@ export default function GlobalSearchPage() {
   };
 
   const clearSearch = () => {
-    setSearchInput('');
-    setQuery('');
-    setSelectedType('');
+    setSearchInput("");
+    setQuery("");
+    setSelectedType("");
     setCurrentPage(1);
   };
 
   const handleTypeFilter = (type: string) => {
     if (selectedType === type) {
-      setSelectedType('');
+      setSelectedType("");
     } else {
       setSelectedType(type);
     }
@@ -177,14 +178,18 @@ export default function GlobalSearchPage() {
                 <Button
                   key={value}
                   type="button"
-                  variant={selectedType === value ? 'default' : 'outline'}
+                  variant={selectedType === value ? "default" : "outline"}
                   size="sm"
                   onClick={() => handleTypeFilter(value)}
                   disabled={!query || count === 0}
                 >
                   <Icon className="mr-1 h-3 w-3" />
                   {formatEntityType(value)}
-                  {count > 0 && <Badge className="ml-2" variant="secondary">{count}</Badge>}
+                  {count > 0 && (
+                    <Badge className="ml-2" variant="secondary">
+                      {count}
+                    </Badge>
+                  )}
                 </Button>
               );
             })}
@@ -194,7 +199,7 @@ export default function GlobalSearchPage() {
                 variant="ghost"
                 size="sm"
                 onClick={() => {
-                  setSelectedType('');
+                  setSelectedType("");
                   setCurrentPage(1);
                 }}
               >
@@ -211,7 +216,8 @@ export default function GlobalSearchPage() {
           <Search className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">Start Searching</h3>
           <p className="text-muted-foreground">
-            Enter a search term above to find customers, invoices, tickets, and more across your entire system.
+            Enter a search term above to find customers, invoices, tickets, and more across your
+            entire system.
           </p>
         </Card>
       ) : isLoading ? (
@@ -221,9 +227,7 @@ export default function GlobalSearchPage() {
         </Card>
       ) : error ? (
         <Card className="p-6 bg-red-50 border-red-200">
-          <p className="text-red-800">
-            Error performing search: {error.message}
-          </p>
+          <p className="text-red-800">Error performing search: {error.message}</p>
         </Card>
       ) : searchResults && searchResults.results.length === 0 ? (
         <Card className="p-12 text-center">
@@ -288,7 +292,7 @@ export default function GlobalSearchPage() {
                   return (
                     <Button
                       key={pageNum}
-                      variant={currentPage === pageNum ? 'default' : 'outline'}
+                      variant={currentPage === pageNum ? "default" : "outline"}
                       size="sm"
                       onClick={() => setCurrentPage(pageNum)}
                     >
@@ -348,21 +352,18 @@ function SearchResultCard({ result }: { result: SearchResult }) {
               </div>
             </div>
 
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {result.content}
-            </p>
+            <p className="text-sm text-muted-foreground line-clamp-2">{result.content}</p>
 
             {/* Metadata */}
             {Object.keys(result.metadata).length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
-                {Object.entries(result.metadata).slice(0, 3).map(([key, value]) => (
-                  <span
-                    key={key}
-                    className="text-xs px-2 py-1 bg-gray-100 rounded"
-                  >
-                    <strong>{key}:</strong> {String(value)}
-                  </span>
-                ))}
+                {Object.entries(result.metadata)
+                  .slice(0, 3)
+                  .map(([key, value]) => (
+                    <span key={key} className="text-xs px-2 py-1 bg-gray-100 rounded">
+                      <strong>{key}:</strong> {String(value)}
+                    </span>
+                  ))}
               </div>
             )}
           </div>

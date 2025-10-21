@@ -5,33 +5,33 @@
  * Maps to backend schemas in src/dotmac/platform/network_monitoring/schemas.py
  */
 
-import { DateString } from './common';
+import { DateString } from "./common";
 
 // ============================================================================
 // Enums
 // ============================================================================
 
 export enum DeviceStatus {
-  ONLINE = 'online',
-  OFFLINE = 'offline',
-  DEGRADED = 'degraded',
-  UNKNOWN = 'unknown',
+  ONLINE = "online",
+  OFFLINE = "offline",
+  DEGRADED = "degraded",
+  UNKNOWN = "unknown",
 }
 
 export enum AlertSeverity {
-  CRITICAL = 'critical',
-  WARNING = 'warning',
-  INFO = 'info',
+  CRITICAL = "critical",
+  WARNING = "warning",
+  INFO = "info",
 }
 
 export enum DeviceType {
-  OLT = 'olt', // Optical Line Terminal
-  ONU = 'onu', // Optical Network Unit
-  CPE = 'cpe', // Customer Premises Equipment
-  ROUTER = 'router',
-  SWITCH = 'switch',
-  FIREWALL = 'firewall',
-  OTHER = 'other',
+  OLT = "olt", // Optical Line Terminal
+  ONU = "onu", // Optical Network Unit
+  CPE = "cpe", // Customer Premises Equipment
+  ROUTER = "router",
+  SWITCH = "switch",
+  FIREWALL = "firewall",
+  OTHER = "other",
 }
 
 // ============================================================================

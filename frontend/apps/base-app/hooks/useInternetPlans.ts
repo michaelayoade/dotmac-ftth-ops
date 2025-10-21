@@ -4,8 +4,8 @@
  * Provides hooks for all 17 API endpoints with proper type safety.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
 import type {
   InternetServicePlan,
   InternetServicePlanCreate,
@@ -19,32 +19,31 @@ import type {
   PlanValidationRequest,
   PlanValidationResponse,
   UsageUpdateRequest,
-} from '../types/internet-plans';
+} from "../types/internet-plans";
 
-const API_BASE = '/services/internet-plans';
+const API_BASE = "/services/internet-plans";
 
 // ============================================================================
 // Query Keys
 // ============================================================================
 
 export const internetPlanKeys = {
-  all: ['internet-plans'] as const,
-  lists: () => [...internetPlanKeys.all, 'list'] as const,
+  all: ["internet-plans"] as const,
+  lists: () => [...internetPlanKeys.all, "list"] as const,
   list: (params: ListPlansParams) => [...internetPlanKeys.lists(), params] as const,
-  details: () => [...internetPlanKeys.all, 'detail'] as const,
+  details: () => [...internetPlanKeys.all, "detail"] as const,
   detail: (id: string) => [...internetPlanKeys.details(), id] as const,
-  byCode: (code: string) => [...internetPlanKeys.all, 'code', code] as const,
-  statistics: (id: string) => [...internetPlanKeys.all, 'statistics', id] as const,
+  byCode: (code: string) => [...internetPlanKeys.all, "code", code] as const,
+  statistics: (id: string) => [...internetPlanKeys.all, "statistics", id] as const,
   subscriptions: {
-    all: ['plan-subscriptions'] as const,
-    lists: () => [...internetPlanKeys.subscriptions.all, 'list'] as const,
+    all: ["plan-subscriptions"] as const,
+    lists: () => [...internetPlanKeys.subscriptions.all, "list"] as const,
     list: (params: ListSubscriptionsParams) =>
       [...internetPlanKeys.subscriptions.lists(), params] as const,
-    detail: (id: string) => [...internetPlanKeys.subscriptions.all, 'detail', id] as const,
-    byPlan: (planId: string) =>
-      [...internetPlanKeys.subscriptions.all, 'by-plan', planId] as const,
+    detail: (id: string) => [...internetPlanKeys.subscriptions.all, "detail", id] as const,
+    byPlan: (planId: string) => [...internetPlanKeys.subscriptions.all, "by-plan", planId] as const,
     byCustomer: (customerId: string) =>
-      [...internetPlanKeys.subscriptions.all, 'by-customer', customerId] as const,
+      [...internetPlanKeys.subscriptions.all, "by-customer", customerId] as const,
   },
 };
 
@@ -60,15 +59,15 @@ export function useInternetPlans(params: ListPlansParams = {}) {
     queryKey: internetPlanKeys.list(params),
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.plan_type) searchParams.append('plan_type', params.plan_type);
-      if (params.status) searchParams.append('status', params.status);
+      if (params.plan_type) searchParams.append("plan_type", params.plan_type);
+      if (params.status) searchParams.append("status", params.status);
       if (params.is_public !== undefined)
-        searchParams.append('is_public', String(params.is_public));
+        searchParams.append("is_public", String(params.is_public));
       if (params.is_promotional !== undefined)
-        searchParams.append('is_promotional', String(params.is_promotional));
-      if (params.search) searchParams.append('search', params.search);
-      if (params.limit) searchParams.append('limit', String(params.limit));
-      if (params.offset) searchParams.append('offset', String(params.offset));
+        searchParams.append("is_promotional", String(params.is_promotional));
+      if (params.search) searchParams.append("search", params.search);
+      if (params.limit) searchParams.append("limit", String(params.limit));
+      if (params.offset) searchParams.append("offset", String(params.offset));
 
       const url = `${API_BASE}?${searchParams.toString()}`;
       const response = await apiClient.get<InternetServicePlan[]>(url);
@@ -82,7 +81,6 @@ export function useInternetPlans(params: ListPlansParams = {}) {
  * Get a single internet service plan by ID
  */
 export function useInternetPlan(planId: string | undefined) {
-
   return useQuery({
     queryKey: internetPlanKeys.detail(planId!),
     queryFn: async () => {
@@ -98,13 +96,10 @@ export function useInternetPlan(planId: string | undefined) {
  * Get a plan by unique plan code
  */
 export function useInternetPlanByCode(planCode: string | undefined) {
-
   return useQuery({
     queryKey: internetPlanKeys.byCode(planCode!),
     queryFn: async () => {
-      const response = await apiClient.get<InternetServicePlan>(
-        `${API_BASE}/code/${planCode}`
-      );
+      const response = await apiClient.get<InternetServicePlan>(`${API_BASE}/code/${planCode}`);
       return response.data;
     },
     enabled: !!planCode,
@@ -137,22 +132,15 @@ export function useUpdateInternetPlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      planId,
-      data,
-    }: {
-      planId: string;
-      data: InternetServicePlanUpdate;
-    }) => {
-      const response = await apiClient.patch<InternetServicePlan>(
-        `${API_BASE}/${planId}`,
-        data
-      );
+    mutationFn: async ({ planId, data }: { planId: string; data: InternetServicePlanUpdate }) => {
+      const response = await apiClient.patch<InternetServicePlan>(`${API_BASE}/${planId}`, data);
       return response.data;
     },
     onSuccess: (_, variables) => {
       // Invalidate specific plan and lists
-      queryClient.invalidateQueries({ queryKey: internetPlanKeys.detail(variables.planId) });
+      queryClient.invalidateQueries({
+        queryKey: internetPlanKeys.detail(variables.planId),
+      });
       queryClient.invalidateQueries({ queryKey: internetPlanKeys.lists() });
     },
   });
@@ -180,13 +168,10 @@ export function useDeleteInternetPlan() {
  * Get plan statistics (subscriptions, MRR)
  */
 export function usePlanStatistics(planId: string | undefined) {
-
   return useQuery({
     queryKey: internetPlanKeys.statistics(planId!),
     queryFn: async () => {
-      const response = await apiClient.get<PlanStatistics>(
-        `${API_BASE}/${planId}/statistics`
-      );
+      const response = await apiClient.get<PlanStatistics>(`${API_BASE}/${planId}/statistics`);
       return response.data;
     },
     enabled: !!planId,
@@ -205,22 +190,18 @@ export function useValidatePlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      planId,
-      request,
-    }: {
-      planId: string;
-      request: PlanValidationRequest;
-    }) => {
+    mutationFn: async ({ planId, request }: { planId: string; request: PlanValidationRequest }) => {
       const response = await apiClient.post<PlanValidationResponse>(
         `${API_BASE}/${planId}/validate`,
-        request
+        request,
       );
       return response.data;
     },
     onSuccess: (_, variables) => {
       // Invalidate plan details to refresh validation status
-      queryClient.invalidateQueries({ queryKey: internetPlanKeys.detail(variables.planId) });
+      queryClient.invalidateQueries({
+        queryKey: internetPlanKeys.detail(variables.planId),
+      });
     },
   });
 }
@@ -229,7 +210,6 @@ export function useValidatePlan() {
  * Compare multiple plans side-by-side
  */
 export function useComparePlans() {
-
   return useMutation({
     mutationFn: async (planIds: string[]) => {
       const response = await apiClient.post<PlanComparison>(`${API_BASE}/compare`, planIds);
@@ -249,16 +229,10 @@ export function useSubscribeToPlan() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      planId,
-      data,
-    }: {
-      planId: string;
-      data: PlanSubscriptionCreate;
-    }) => {
+    mutationFn: async ({ planId, data }: { planId: string; data: PlanSubscriptionCreate }) => {
       const response = await apiClient.post<PlanSubscription>(
         `${API_BASE}/${planId}/subscribe`,
-        data
+        data,
       );
       return response.data;
     },
@@ -279,9 +253,8 @@ export function useSubscribeToPlan() {
  */
 export function usePlanSubscriptions(
   planId: string | undefined,
-  params: Omit<ListSubscriptionsParams, 'plan_id'> = {}
+  params: Omit<ListSubscriptionsParams, "plan_id"> = {},
 ) {
-
   const fullParams: ListSubscriptionsParams = {
     ...params,
     plan_id: planId,
@@ -292,9 +265,9 @@ export function usePlanSubscriptions(
     queryFn: async () => {
       const searchParams = new URLSearchParams();
       if (params.is_active !== undefined)
-        searchParams.append('is_active', String(params.is_active));
-      if (params.limit) searchParams.append('limit', String(params.limit));
-      if (params.offset) searchParams.append('offset', String(params.offset));
+        searchParams.append("is_active", String(params.is_active));
+      if (params.limit) searchParams.append("limit", String(params.limit));
+      if (params.offset) searchParams.append("offset", String(params.offset));
 
       const url = `${API_BASE}/${planId}/subscriptions?${searchParams.toString()}`;
       const response = await apiClient.get<PlanSubscription[]>(url);
@@ -309,12 +282,11 @@ export function usePlanSubscriptions(
  * Get a single subscription by ID
  */
 export function usePlanSubscription(subscriptionId: string | undefined) {
-
   return useQuery({
     queryKey: internetPlanKeys.subscriptions.detail(subscriptionId!),
     queryFn: async () => {
       const response = await apiClient.get<PlanSubscription>(
-        `${API_BASE}/subscriptions/${subscriptionId}`
+        `${API_BASE}/subscriptions/${subscriptionId}`,
       );
       return response.data;
     },
@@ -328,9 +300,8 @@ export function usePlanSubscription(subscriptionId: string | undefined) {
  */
 export function useCustomerSubscriptions(
   customerId: string | undefined,
-  params: Omit<ListSubscriptionsParams, 'customer_id'> = {}
+  params: Omit<ListSubscriptionsParams, "customer_id"> = {},
 ) {
-
   const fullParams: ListSubscriptionsParams = {
     ...params,
     customer_id: customerId,
@@ -341,9 +312,9 @@ export function useCustomerSubscriptions(
     queryFn: async () => {
       const searchParams = new URLSearchParams();
       if (params.is_active !== undefined)
-        searchParams.append('is_active', String(params.is_active));
-      if (params.limit) searchParams.append('limit', String(params.limit));
-      if (params.offset) searchParams.append('offset', String(params.offset));
+        searchParams.append("is_active", String(params.is_active));
+      if (params.limit) searchParams.append("limit", String(params.limit));
+      if (params.offset) searchParams.append("offset", String(params.offset));
 
       const url = `${API_BASE}/customers/${customerId}/subscriptions?${searchParams.toString()}`;
       const response = await apiClient.get<PlanSubscription[]>(url);
@@ -370,7 +341,7 @@ export function useUpdateSubscriptionUsage() {
     }) => {
       const response = await apiClient.post<PlanSubscription>(
         `${API_BASE}/subscriptions/${subscriptionId}/usage`,
-        usage
+        usage,
       );
       return response.data;
     },
@@ -398,7 +369,7 @@ export function useResetSubscriptionUsage() {
   return useMutation({
     mutationFn: async (subscriptionId: string) => {
       const response = await apiClient.post<PlanSubscription>(
-        `${API_BASE}/subscriptions/${subscriptionId}/reset-usage`
+        `${API_BASE}/subscriptions/${subscriptionId}/reset-usage`,
       );
       return response.data;
     },

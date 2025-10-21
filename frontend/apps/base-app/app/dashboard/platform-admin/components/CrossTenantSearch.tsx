@@ -1,32 +1,32 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/components/ui/use-toast"
-import { Search, Filter } from "lucide-react"
-import { platformAdminService } from "@/lib/services/platform-admin-service"
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
+import { Search, Filter } from "lucide-react";
+import { platformAdminService } from "@/lib/services/platform-admin-service";
 
 // Type definition for search results
 interface CrossTenantSearchResultItem {
-  id: string
-  type: string
-  tenantId: string
-  resourceId?: string
-  score?: number
-  data: Record<string, unknown>
+  id: string;
+  type: string;
+  tenantId: string;
+  resourceId?: string;
+  score?: number;
+  data: Record<string, unknown>;
 }
 
 export function CrossTenantSearch() {
-  const [query, setQuery] = useState("")
-  const [resourceType, setResourceType] = useState<string>("all")
-  const [results, setResults] = useState<CrossTenantSearchResultItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const [totalResults, setTotalResults] = useState(0)
-  const { toast } = useToast()
+  const [query, setQuery] = useState("");
+  const [resourceType, setResourceType] = useState<string>("all");
+  const [results, setResults] = useState<CrossTenantSearchResultItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [totalResults, setTotalResults] = useState(0);
+  const { toast } = useToast();
 
   const handleSearch = async () => {
     if (!query.trim()) {
@@ -34,17 +34,17 @@ export function CrossTenantSearch() {
         title: "Search Query Required",
         description: "Please enter a search term",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       const data = await platformAdminService.search({
         query,
         resource_type: resourceType === "all" ? null : resourceType,
         limit: 50,
-      })
+      });
       const mappedResults: CrossTenantSearchResultItem[] = (data.results ?? []).map((item) => ({
         id: String(item.id ?? crypto.randomUUID()),
         type: String(item.type ?? item.resource_type ?? "unknown"),
@@ -55,28 +55,27 @@ export function CrossTenantSearch() {
           typeof item.data === "object" && item.data !== null
             ? (item.data as Record<string, unknown>)
             : (item as Record<string, unknown>),
-      }))
-      setResults(mappedResults)
-      setTotalResults(
-        typeof data.total === "number" ? data.total : mappedResults.length
-      )
+      }));
+      setResults(mappedResults);
+      setTotalResults(typeof data.total === "number" ? data.total : mappedResults.length);
 
       if ((data.total ?? 0) === 0) {
         toast({
           title: "No Results",
           description: `No resources found matching "${query}"`,
-        })
+        });
       }
     } catch (error) {
       toast({
         title: "Search Failed",
-        description: error instanceof Error ? error.message : "Failed to perform cross-tenant search",
+        description:
+          error instanceof Error ? error.message : "Failed to perform cross-tenant search",
         variant: "destructive",
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -86,9 +85,7 @@ export function CrossTenantSearch() {
             <Search className="h-5 w-5" />
             Cross-Tenant Search
           </CardTitle>
-          <CardDescription>
-            Search for resources across all tenants in the platform
-          </CardDescription>
+          <CardDescription>Search for resources across all tenants in the platform</CardDescription>
         </CardHeader>
         <CardContent>
           {/* Search Form */}
@@ -190,5 +187,5 @@ export function CrossTenantSearch() {
         </Card>
       )}
     </div>
-  )
+  );
 }

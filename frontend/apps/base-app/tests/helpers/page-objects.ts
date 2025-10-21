@@ -4,7 +4,7 @@
  * Encapsulate page interactions for cleaner, more maintainable tests.
  */
 
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator } from "@playwright/test";
 
 // ==================== Base Page Object ====================
 
@@ -16,7 +16,7 @@ export class BasePage {
   }
 
   async waitForLoad(): Promise<void> {
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState("networkidle");
   }
 
   async getTitle(): Promise<string> {
@@ -45,7 +45,7 @@ export class LoginPage extends BasePage {
   }
 
   async navigate(): Promise<void> {
-    await this.goto('/login');
+    await this.goto("/login");
   }
 
   async login(email: string, password: string): Promise<void> {
@@ -76,15 +76,15 @@ export class WireGuardDashboard extends BasePage {
   }
 
   async navigate(): Promise<void> {
-    await this.goto('/dashboard/network/wireguard');
+    await this.goto("/dashboard/network/wireguard");
   }
 
   async getTotalServers(): Promise<string> {
-    return await this.totalServersCard.textContent() || '0';
+    return (await this.totalServersCard.textContent()) || "0";
   }
 
   async getActivePeers(): Promise<string> {
-    return await this.activePeersCard.textContent() || '0';
+    return (await this.activePeersCard.textContent()) || "0";
   }
 }
 
@@ -103,7 +103,7 @@ export class ServerListPage extends BasePage {
   }
 
   async navigate(): Promise<void> {
-    await this.goto('/dashboard/network/wireguard/servers');
+    await this.goto("/dashboard/network/wireguard/servers");
   }
 
   async search(query: string): Promise<void> {
@@ -149,7 +149,7 @@ export class ServerCreatePage extends BasePage {
   }
 
   async navigate(): Promise<void> {
-    await this.goto('/dashboard/network/wireguard/servers/new');
+    await this.goto("/dashboard/network/wireguard/servers/new");
   }
 
   async fillForm(data: {
@@ -192,7 +192,7 @@ export class ServerDetailsPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.serverName = page.locator('h1');
+    this.serverName = page.locator("h1");
     this.statusBadge = page.locator('[data-testid="status-badge"]');
     this.editButton = page.locator('a:has-text("Edit")');
     this.deleteButton = page.locator('button[data-testid="delete-button"]');
@@ -204,11 +204,11 @@ export class ServerDetailsPage extends BasePage {
   }
 
   async getServerName(): Promise<string> {
-    return await this.serverName.textContent() || '';
+    return (await this.serverName.textContent()) || "";
   }
 
   async getStatus(): Promise<string> {
-    return await this.statusBadge.textContent() || '';
+    return (await this.statusBadge.textContent()) || "";
   }
 
   async edit(): Promise<void> {
@@ -243,7 +243,7 @@ export class PeerListPage extends BasePage {
   }
 
   async navigate(): Promise<void> {
-    await this.goto('/dashboard/network/wireguard/peers');
+    await this.goto("/dashboard/network/wireguard/peers");
   }
 
   async search(query: string): Promise<void> {
@@ -272,7 +272,7 @@ export class PeerCreatePage extends BasePage {
   }
 
   async navigate(): Promise<void> {
-    await this.goto('/dashboard/network/wireguard/peers/new');
+    await this.goto("/dashboard/network/wireguard/peers/new");
   }
 
   async fillForm(data: {
@@ -310,15 +310,15 @@ export class CommunicationsDashboard extends BasePage {
   }
 
   async navigate(): Promise<void> {
-    await this.goto('/dashboard/communications');
+    await this.goto("/dashboard/communications");
   }
 
   async getTotalSent(): Promise<string> {
-    return await this.totalSentCard.textContent() || '0';
+    return (await this.totalSentCard.textContent()) || "0";
   }
 
   async getSMTPStatus(): Promise<string> {
-    return await this.smtpStatus.textContent() || '';
+    return (await this.smtpStatus.textContent()) || "";
   }
 }
 
@@ -343,14 +343,10 @@ export class EmailComposerPage extends BasePage {
   }
 
   async navigate(): Promise<void> {
-    await this.goto('/dashboard/communications/send');
+    await this.goto("/dashboard/communications/send");
   }
 
-  async composeEmail(data: {
-    to: string;
-    subject: string;
-    body: string;
-  }): Promise<void> {
+  async composeEmail(data: { to: string; subject: string; body: string }): Promise<void> {
     await this.toInput.fill(data.to);
     await this.subjectInput.fill(data.subject);
     await this.bodyTextarea.fill(data.body);
@@ -380,7 +376,7 @@ export class TemplateListPage extends BasePage {
   }
 
   async navigate(): Promise<void> {
-    await this.goto('/dashboard/communications/templates');
+    await this.goto("/dashboard/communications/templates");
   }
 
   async search(query: string): Promise<void> {
@@ -408,13 +404,13 @@ export class ConnectionStatusIndicator {
   }
 
   async isConnected(): Promise<boolean> {
-    const status = await this.indicator.getAttribute('data-status');
-    return status === 'connected';
+    const status = await this.indicator.getAttribute("data-status");
+    return status === "connected";
   }
 
   async getConnectionStatus(stream: string): Promise<string> {
     await this.click();
     const statusElement = this.page.locator(`[data-stream="${stream}"] [data-status]`);
-    return await statusElement.getAttribute('data-status') || 'unknown';
+    return (await statusElement.getAttribute("data-status")) || "unknown";
   }
 }

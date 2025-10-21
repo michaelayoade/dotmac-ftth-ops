@@ -57,12 +57,12 @@ export function QuoteDetailModal({
   useEffect(() => {
     const fetchCompanyInfo = async () => {
       try {
-        const response = await apiClient.get('/settings/company');
+        const response = await apiClient.get("/settings/company");
         if (response.data) {
           setCompanyInfo(response.data);
         }
       } catch (error) {
-        console.error('Failed to fetch company info:', error);
+        console.error("Failed to fetch company info:", error);
         // Use fallback data if API fails
         setCompanyInfo({
           name: "Your ISP Company",
@@ -85,11 +85,8 @@ export function QuoteDetailModal({
   if (!quote) return null;
 
   const validUntil = quote.valid_until ? new Date(quote.valid_until) : null;
-  const daysUntilExpiry = validUntil
-    ? differenceInDays(validUntil, new Date())
-    : null;
-  const isExpiringSoon =
-    daysUntilExpiry !== null && daysUntilExpiry <= 7 && daysUntilExpiry >= 0;
+  const daysUntilExpiry = validUntil ? differenceInDays(validUntil, new Date()) : null;
+  const isExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry <= 7 && daysUntilExpiry >= 0;
   const isExpired = daysUntilExpiry !== null && daysUntilExpiry < 0;
 
   const handleSend = async () => {
@@ -115,7 +112,7 @@ export function QuoteDetailModal({
 
   const handleAccept = async () => {
     const confirmed = confirm(
-      `Accept quote ${quote.quote_number}? This will mark it as accepted and ready for conversion.`
+      `Accept quote ${quote.quote_number}? This will mark it as accepted and ready for conversion.`,
     );
     if (!confirmed) return;
 
@@ -168,7 +165,7 @@ export function QuoteDetailModal({
 
   const handleDelete = async () => {
     const confirmed = confirm(
-      `Are you sure you want to delete quote ${quote.quote_number}? This action cannot be undone.`
+      `Are you sure you want to delete quote ${quote.quote_number}? This action cannot be undone.`,
     );
     if (!confirmed) return;
 
@@ -231,7 +228,8 @@ export function QuoteDetailModal({
         contract_term_months: quote.contract_term_months,
         promotional_discount: quote.promo_monthly_discount,
         promotional_months: quote.promo_discount_months,
-        valid_until: quote.valid_until || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        valid_until:
+          quote.valid_until || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         created_at: quote.created_at,
         notes: quote.notes,
         terms: quote.notes,
@@ -264,13 +262,10 @@ export function QuoteDetailModal({
   };
 
   // Calculate totals
-  const upfrontCost =
-    quote.installation_fee + quote.equipment_fee + quote.activation_fee;
+  const upfrontCost = quote.installation_fee + quote.equipment_fee + quote.activation_fee;
 
-  const lineItemsTotal = quote.line_items?.reduce(
-    (sum: number, item: any) => sum + (item.total || 0),
-    0
-  ) || 0;
+  const lineItemsTotal =
+    quote.line_items?.reduce((sum: number, item: any) => sum + (item.total || 0), 0) || 0;
 
   const totalUpfront = upfrontCost + lineItemsTotal;
 
@@ -286,8 +281,7 @@ export function QuoteDetailModal({
     totalUpfront +
     (quote.promo_discount_months && quote.promo_monthly_discount
       ? monthlyWithDiscount * quote.promo_discount_months +
-        quote.monthly_recurring_charge *
-          (12 - quote.promo_discount_months)
+        quote.monthly_recurring_charge * (12 - quote.promo_discount_months)
       : quote.monthly_recurring_charge * 12);
 
   return (
@@ -323,19 +317,11 @@ export function QuoteDetailModal({
         <div className="flex flex-wrap gap-2 border-b pb-4">
           {quote.status === "draft" && (
             <>
-              <Button
-                size="sm"
-                onClick={handleSend}
-                disabled={isProcessing}
-              >
+              <Button size="sm" onClick={handleSend} disabled={isProcessing}>
                 <Send className="h-4 w-4 mr-2" />
                 Send to Lead
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onEdit && onEdit(quote)}
-              >
+              <Button size="sm" variant="outline" onClick={() => onEdit && onEdit(quote)}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Quote
               </Button>
@@ -343,20 +329,11 @@ export function QuoteDetailModal({
           )}
           {(quote.status === "sent" || quote.status === "viewed") && (
             <>
-              <Button
-                size="sm"
-                onClick={handleAccept}
-                disabled={isProcessing}
-              >
+              <Button size="sm" onClick={handleAccept} disabled={isProcessing}>
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Accept (Simulate)
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleReject}
-                disabled={isProcessing}
-              >
+              <Button size="sm" variant="outline" onClick={handleReject} disabled={isProcessing}>
                 <XCircle className="h-4 w-4 mr-2" />
                 Reject
               </Button>
@@ -414,25 +391,20 @@ export function QuoteDetailModal({
               {/* Monthly Charge */}
               <div className="flex items-center justify-between pb-3 border-b">
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    Monthly Recurring Charge
-                  </p>
+                  <p className="text-sm text-muted-foreground">Monthly Recurring Charge</p>
                   {quote.promo_monthly_discount &&
                     quote.promo_discount_months &&
                     quote.promo_monthly_discount > 0 &&
                     quote.promo_discount_months > 0 && (
                       <p className="text-xs text-emerald-400 mt-1">
                         ${monthlyWithDiscount.toFixed(2)}/month for first{" "}
-                        {quote.promo_discount_months} months (
-                        {quote.notes})
+                        {quote.promo_discount_months} months ({quote.notes})
                       </p>
                     )}
                 </div>
                 <p className="text-2xl font-bold">
                   ${quote.monthly_recurring_charge.toFixed(2)}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    /mo
-                  </span>
+                  <span className="text-sm font-normal text-muted-foreground">/mo</span>
                 </p>
               </div>
 
@@ -442,25 +414,19 @@ export function QuoteDetailModal({
                 <div className="space-y-2">
                   {quote.installation_fee > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        Installation Fee
-                      </span>
+                      <span className="text-muted-foreground">Installation Fee</span>
                       <span>${quote.installation_fee.toFixed(2)}</span>
                     </div>
                   )}
                   {quote.equipment_fee > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        Equipment Fee
-                      </span>
+                      <span className="text-muted-foreground">Equipment Fee</span>
                       <span>${quote.equipment_fee.toFixed(2)}</span>
                     </div>
                   )}
                   {quote.activation_fee > 0 && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        Activation Fee
-                      </span>
+                      <span className="text-muted-foreground">Activation Fee</span>
                       <span>${quote.activation_fee.toFixed(2)}</span>
                     </div>
                   )}
@@ -475,8 +441,7 @@ export function QuoteDetailModal({
                     {quote.line_items.map((item: any, index: number) => (
                       <div key={index} className="flex justify-between text-sm">
                         <span className="text-muted-foreground">
-                          {item.description}{" "}
-                          {item.quantity > 1 && `(${item.quantity}x)`}
+                          {item.description} {item.quantity > 1 && `(${item.quantity}x)`}
                         </span>
                         <span>${item.total.toFixed(2)}</span>
                       </div>
@@ -488,9 +453,7 @@ export function QuoteDetailModal({
               {/* Total Upfront */}
               <div className="flex justify-between pt-3 border-t">
                 <span className="font-medium">Total Upfront Cost</span>
-                <span className="text-xl font-bold">
-                  ${totalUpfront.toFixed(2)}
-                </span>
+                <span className="text-xl font-bold">${totalUpfront.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -504,26 +467,18 @@ export function QuoteDetailModal({
             <div className="border rounded-lg p-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Contract Length</span>
-                <span className="font-medium">
-                  {quote.contract_term_months} months
-                </span>
+                <span className="font-medium">{quote.contract_term_months} months</span>
               </div>
               {quote.early_termination_fee && quote.early_termination_fee > 0 && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    Early Termination Fee
-                  </span>
-                  <span className="font-medium">
-                    ${quote.early_termination_fee.toFixed(2)}
-                  </span>
+                  <span className="text-muted-foreground">Early Termination Fee</span>
+                  <span className="font-medium">${quote.early_termination_fee.toFixed(2)}</span>
                 </div>
               )}
               {validUntil && (
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Valid Until</span>
-                  <span className="font-medium">
-                    {validUntil.toLocaleDateString()}
-                  </span>
+                  <span className="font-medium">{validUntil.toLocaleDateString()}</span>
                 </div>
               )}
             </div>
@@ -543,30 +498,23 @@ export function QuoteDetailModal({
                     Includes upfront costs + 12 months service
                   </p>
                 </div>
-                <p className="text-xl font-bold">
-                  ${firstYearCost.toFixed(2)}
-                </p>
+                <p className="text-xl font-bold">${firstYearCost.toFixed(2)}</p>
               </div>
               <div className="flex justify-between pt-3 border-t">
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    Full Contract Total
-                  </p>
+                  <p className="text-sm text-muted-foreground">Full Contract Total</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Includes upfront costs + all {quote.contract_term_months}{" "}
-                    months
+                    Includes upfront costs + all {quote.contract_term_months} months
                   </p>
                 </div>
                 <p className="text-xl font-bold">
                   $
                   {(
                     totalUpfront +
-                    (quote.promo_discount_months &&
-                    quote.promo_monthly_discount
+                    (quote.promo_discount_months && quote.promo_monthly_discount
                       ? monthlyWithDiscount * quote.promo_discount_months +
                         quote.monthly_recurring_charge *
-                          (quote.contract_term_months -
-                            quote.promo_discount_months)
+                          (quote.contract_term_months - quote.promo_discount_months)
                       : quote.monthly_recurring_charge * quote.contract_term_months)
                   ).toFixed(2)}
                 </p>
@@ -597,9 +545,7 @@ export function QuoteDetailModal({
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Signed By</span>
-                      <span className="font-medium">
-                        {quote.signature_data?.name}
-                      </span>
+                      <span className="font-medium">{quote.signature_data?.name}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Date</span>

@@ -51,12 +51,11 @@ export function BankAccountDetailsDialog({
                     <h3 className="font-semibold text-lg">
                       {summary.account.account_nickname || summary.account.account_name}
                     </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {summary.account.bank_name}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{summary.account.bank_name}</p>
                   </div>
                   <Badge>
-                    {summary.account.status.charAt(0).toUpperCase() + summary.account.status.slice(1)}
+                    {summary.account.status.charAt(0).toUpperCase() +
+                      summary.account.status.slice(1)}
                   </Badge>
                 </div>
 
@@ -171,9 +170,7 @@ export function BankAccountDetailsDialog({
             )}
           </div>
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            Account not found
-          </div>
+          <div className="text-center py-8 text-muted-foreground">Account not found</div>
         )}
       </DialogContent>
     </Dialog>

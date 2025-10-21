@@ -4,34 +4,34 @@
  * Modal form for creating new subscribers
  */
 
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogFooter
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { AlertCircle, Loader2 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import type { CreateSubscriberRequest, ConnectionType } from '@/hooks/useSubscribers';
-import { useSubscriberOperations } from '@/hooks/useSubscribers';
+} from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import type { CreateSubscriberRequest, ConnectionType } from "@/hooks/useSubscribers";
+import { useSubscriberOperations } from "@/hooks/useSubscribers";
 
 interface AddSubscriberModalProps {
   open: boolean;
@@ -39,73 +39,69 @@ interface AddSubscriberModalProps {
   onSuccess?: (subscriberId: string) => void;
 }
 
-export function AddSubscriberModal({
-  open,
-  onClose,
-  onSuccess
-}: AddSubscriberModalProps) {
+export function AddSubscriberModal({ open, onClose, onSuccess }: AddSubscriberModalProps) {
   const { createSubscriber, isLoading } = useSubscriberOperations();
   const [error, setError] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<Partial<CreateSubscriberRequest>>({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    secondary_phone: '',
-    service_address: '',
-    service_city: '',
-    service_state: '',
-    service_postal_code: '',
-    service_country: 'USA',
-    connection_type: 'ftth',
-    service_plan: '',
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    secondary_phone: "",
+    service_address: "",
+    service_city: "",
+    service_state: "",
+    service_postal_code: "",
+    service_country: "USA",
+    connection_type: "ftth",
+    service_plan: "",
     bandwidth_mbps: undefined,
-    installation_notes: '',
-    notes: '',
+    installation_notes: "",
+    notes: "",
   });
 
   const handleChange = (field: keyof CreateSubscriberRequest, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     setError(null);
   };
 
   const validateForm = (): boolean => {
     if (!formData.first_name?.trim()) {
-      setError('First name is required');
+      setError("First name is required");
       return false;
     }
     if (!formData.last_name?.trim()) {
-      setError('Last name is required');
+      setError("Last name is required");
       return false;
     }
     if (!formData.email?.trim()) {
-      setError('Email is required');
+      setError("Email is required");
       return false;
     }
     if (!formData.phone?.trim()) {
-      setError('Phone is required');
+      setError("Phone is required");
       return false;
     }
     if (!formData.service_address?.trim()) {
-      setError('Service address is required');
+      setError("Service address is required");
       return false;
     }
     if (!formData.service_city?.trim()) {
-      setError('Service city is required');
+      setError("Service city is required");
       return false;
     }
     if (!formData.service_state?.trim()) {
-      setError('Service state is required');
+      setError("Service state is required");
       return false;
     }
     if (!formData.service_postal_code?.trim()) {
-      setError('Postal code is required');
+      setError("Postal code is required");
       return false;
     }
     if (!formData.connection_type) {
-      setError('Connection type is required');
+      setError("Connection type is required");
       return false;
     }
     return true;
@@ -124,27 +120,27 @@ export function AddSubscriberModal({
       onSuccess?.(subscriber.id);
       handleClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create subscriber');
+      setError(err instanceof Error ? err.message : "Failed to create subscriber");
     }
   };
 
   const handleClose = () => {
     setFormData({
-      first_name: '',
-      last_name: '',
-      email: '',
-      phone: '',
-      secondary_phone: '',
-      service_address: '',
-      service_city: '',
-      service_state: '',
-      service_postal_code: '',
-      service_country: 'USA',
-      connection_type: 'ftth',
-      service_plan: '',
+      first_name: "",
+      last_name: "",
+      email: "",
+      phone: "",
+      secondary_phone: "",
+      service_address: "",
+      service_city: "",
+      service_state: "",
+      service_postal_code: "",
+      service_country: "USA",
+      connection_type: "ftth",
+      service_plan: "",
       bandwidth_mbps: undefined,
-      installation_notes: '',
-      notes: '',
+      installation_notes: "",
+      notes: "",
     });
     setError(null);
     onClose();
@@ -155,9 +151,7 @@ export function AddSubscriberModal({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Add New Subscriber</DialogTitle>
-          <DialogDescription>
-            Enter subscriber details to create a new account
-          </DialogDescription>
+          <DialogDescription>Enter subscriber details to create a new account</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
@@ -180,7 +174,7 @@ export function AddSubscriberModal({
                     <Input
                       id="first_name"
                       value={formData.first_name}
-                      onChange={(e) => handleChange('first_name', e.target.value)}
+                      onChange={(e) => handleChange("first_name", e.target.value)}
                       placeholder="John"
                       required
                     />
@@ -190,7 +184,7 @@ export function AddSubscriberModal({
                     <Input
                       id="last_name"
                       value={formData.last_name}
-                      onChange={(e) => handleChange('last_name', e.target.value)}
+                      onChange={(e) => handleChange("last_name", e.target.value)}
                       placeholder="Doe"
                       required
                     />
@@ -201,7 +195,7 @@ export function AddSubscriberModal({
                       id="email"
                       type="email"
                       value={formData.email}
-                      onChange={(e) => handleChange('email', e.target.value)}
+                      onChange={(e) => handleChange("email", e.target.value)}
                       placeholder="john.doe@example.com"
                       required
                     />
@@ -212,7 +206,7 @@ export function AddSubscriberModal({
                       id="phone"
                       type="tel"
                       value={formData.phone}
-                      onChange={(e) => handleChange('phone', e.target.value)}
+                      onChange={(e) => handleChange("phone", e.target.value)}
                       placeholder="+1 (555) 123-4567"
                       required
                     />
@@ -223,7 +217,7 @@ export function AddSubscriberModal({
                       id="secondary_phone"
                       type="tel"
                       value={formData.secondary_phone}
-                      onChange={(e) => handleChange('secondary_phone', e.target.value)}
+                      onChange={(e) => handleChange("secondary_phone", e.target.value)}
                       placeholder="+1 (555) 987-6543"
                     />
                   </div>
@@ -241,7 +235,7 @@ export function AddSubscriberModal({
                     <Input
                       id="service_address"
                       value={formData.service_address}
-                      onChange={(e) => handleChange('service_address', e.target.value)}
+                      onChange={(e) => handleChange("service_address", e.target.value)}
                       placeholder="123 Main Street, Apt 4B"
                       required
                     />
@@ -252,7 +246,7 @@ export function AddSubscriberModal({
                       <Input
                         id="service_city"
                         value={formData.service_city}
-                        onChange={(e) => handleChange('service_city', e.target.value)}
+                        onChange={(e) => handleChange("service_city", e.target.value)}
                         placeholder="New York"
                         required
                       />
@@ -262,7 +256,7 @@ export function AddSubscriberModal({
                       <Input
                         id="service_state"
                         value={formData.service_state}
-                        onChange={(e) => handleChange('service_state', e.target.value)}
+                        onChange={(e) => handleChange("service_state", e.target.value)}
                         placeholder="NY"
                         required
                       />
@@ -272,7 +266,7 @@ export function AddSubscriberModal({
                       <Input
                         id="service_postal_code"
                         value={formData.service_postal_code}
-                        onChange={(e) => handleChange('service_postal_code', e.target.value)}
+                        onChange={(e) => handleChange("service_postal_code", e.target.value)}
                         placeholder="10001"
                         required
                       />
@@ -282,7 +276,7 @@ export function AddSubscriberModal({
                       <Input
                         id="service_country"
                         value={formData.service_country}
-                        onChange={(e) => handleChange('service_country', e.target.value)}
+                        onChange={(e) => handleChange("service_country", e.target.value)}
                         placeholder="USA"
                       />
                     </div>
@@ -300,7 +294,9 @@ export function AddSubscriberModal({
                     <Label htmlFor="connection_type">Connection Type *</Label>
                     <Select
                       value={formData.connection_type}
-                      onValueChange={(value) => handleChange('connection_type', value as ConnectionType)}
+                      onValueChange={(value) =>
+                        handleChange("connection_type", value as ConnectionType)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select connection type" />
@@ -318,7 +314,7 @@ export function AddSubscriberModal({
                     <Input
                       id="service_plan"
                       value={formData.service_plan}
-                      onChange={(e) => handleChange('service_plan', e.target.value)}
+                      onChange={(e) => handleChange("service_plan", e.target.value)}
                       placeholder="Premium 100 Mbps"
                     />
                   </div>
@@ -327,8 +323,13 @@ export function AddSubscriberModal({
                     <Input
                       id="bandwidth_mbps"
                       type="number"
-                      value={formData.bandwidth_mbps || ''}
-                      onChange={(e) => handleChange('bandwidth_mbps', e.target.value ? parseInt(e.target.value) : undefined)}
+                      value={formData.bandwidth_mbps || ""}
+                      onChange={(e) =>
+                        handleChange(
+                          "bandwidth_mbps",
+                          e.target.value ? parseInt(e.target.value) : undefined,
+                        )
+                      }
                       placeholder="100"
                     />
                   </div>
@@ -345,8 +346,8 @@ export function AddSubscriberModal({
                     <Label htmlFor="ont_serial_number">ONT Serial Number</Label>
                     <Input
                       id="ont_serial_number"
-                      value={formData.ont_serial_number || ''}
-                      onChange={(e) => handleChange('ont_serial_number', e.target.value)}
+                      value={formData.ont_serial_number || ""}
+                      onChange={(e) => handleChange("ont_serial_number", e.target.value)}
                       placeholder="ONT123456789"
                     />
                   </div>
@@ -354,8 +355,8 @@ export function AddSubscriberModal({
                     <Label htmlFor="ont_mac_address">ONT MAC Address</Label>
                     <Input
                       id="ont_mac_address"
-                      value={formData.ont_mac_address || ''}
-                      onChange={(e) => handleChange('ont_mac_address', e.target.value)}
+                      value={formData.ont_mac_address || ""}
+                      onChange={(e) => handleChange("ont_mac_address", e.target.value)}
                       placeholder="00:11:22:33:44:55"
                     />
                   </div>
@@ -364,7 +365,7 @@ export function AddSubscriberModal({
                     <Textarea
                       id="installation_notes"
                       value={formData.installation_notes}
-                      onChange={(e) => handleChange('installation_notes', e.target.value)}
+                      onChange={(e) => handleChange("installation_notes", e.target.value)}
                       placeholder="Special instructions for installation..."
                       rows={3}
                     />
@@ -380,7 +381,7 @@ export function AddSubscriberModal({
                 <Textarea
                   id="notes"
                   value={formData.notes}
-                  onChange={(e) => handleChange('notes', e.target.value)}
+                  onChange={(e) => handleChange("notes", e.target.value)}
                   placeholder="Any additional information about this subscriber..."
                   rows={4}
                 />
@@ -389,12 +390,7 @@ export function AddSubscriberModal({
           </ScrollArea>
 
           <DialogFooter className="mt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isLoading}
-            >
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
@@ -404,7 +400,7 @@ export function AddSubscriberModal({
                   Creating...
                 </>
               ) : (
-                'Create Subscriber'
+                "Create Subscriber"
               )}
             </Button>
           </DialogFooter>

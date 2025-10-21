@@ -2,19 +2,19 @@
  * NonceProvider - Client-side nonce utilities
  */
 
-import Script from 'next/script';
-import type React from 'react';
+import Script from "next/script";
+import type React from "react";
 
 /**
  * Hook to get nonce on client side (for dynamic script injection)
  */
 export function useNonce(): string {
-  if (typeof window === 'undefined') {
-    return '';
+  if (typeof window === "undefined") {
+    return "";
   }
 
   const meta = document.querySelector('meta[name="csp-nonce"]');
-  return meta?.getAttribute('content') || '';
+  return meta?.getAttribute("content") || "";
 }
 
 /**
@@ -28,7 +28,7 @@ export function NonceScript({
   children?: React.ReactNode;
   nonce?: string;
   id?: string;
-  strategy?: 'beforeInteractive' | 'afterInteractive' | 'lazyOnload';
+  strategy?: "beforeInteractive" | "afterInteractive" | "lazyOnload";
   src?: string;
 }) {
   const currentNonce = nonce || useNonce();
@@ -56,7 +56,7 @@ export function NonceScript({
 export function NonceProvider({ children, nonce }: { children: React.ReactNode; nonce?: string }) {
   return (
     <>
-      {nonce && <meta name='csp-nonce' content={nonce} />}
+      {nonce && <meta name="csp-nonce" content={nonce} />}
       {children}
     </>
   );

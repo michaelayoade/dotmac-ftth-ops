@@ -80,7 +80,7 @@ class TestLogsRouter:
             return mock_user
 
         app.dependency_overrides[get_current_user] = mock_get_user
-        app.include_router(logs_router, prefix="/api/v1/monitoring")
+        app.include_router(logs_router, prefix="/api/v1")
 
         return app
 
@@ -249,7 +249,7 @@ class TestTracesRouter:
             return mock_user
 
         app.dependency_overrides[get_current_user] = mock_get_user
-        app.include_router(traces_router, prefix="/api/v1/monitoring")
+        app.include_router(traces_router, prefix="/api/v1")
 
         return app
 
@@ -260,7 +260,7 @@ class TestTracesRouter:
 
     def test_get_traces_endpoint(self, client):
         """Test GET /traces endpoint."""
-        response = client.get("/api/v1/monitoring/traces")
+        response = client.get("/api/v1/observability/traces")
         assert response.status_code == 200
 
         data = response.json()
@@ -273,21 +273,21 @@ class TestTracesRouter:
     def test_get_traces_with_filters(self, client):
         """Test GET /traces with filters."""
         # Filter by service
-        response = client.get("/api/v1/monitoring/traces?service=api-gateway")
+        response = client.get("/api/v1/observability/traces?service=api-gateway")
         assert response.status_code == 200
         data = response.json()
         if data["traces"]:
             assert all(t["service"] == "api-gateway" for t in data["traces"])
 
         # Filter by status
-        response = client.get("/api/v1/monitoring/traces?status=error")
+        response = client.get("/api/v1/observability/traces?status=error")
         assert response.status_code == 200
         data = response.json()
         if data["traces"]:
             assert all(t["status"] == "error" for t in data["traces"])
 
         # Filter by min duration
-        response = client.get("/api/v1/monitoring/traces?min_duration=500")
+        response = client.get("/api/v1/observability/traces?min_duration=500")
         assert response.status_code == 200
         data = response.json()
         if data["traces"]:
@@ -296,7 +296,7 @@ class TestTracesRouter:
     def test_get_trace_details_endpoint(self, client):
         """Test GET /traces/{trace_id} endpoint."""
         trace_id = "test_trace_123"
-        response = client.get(f"/api/v1/monitoring/traces/{trace_id}")
+        response = client.get(f"/api/v1/observability/traces/{trace_id}")
         assert response.status_code == 200
 
         data = response.json()
@@ -310,7 +310,7 @@ class TestTracesRouter:
 
     def test_get_metrics_endpoint(self, client):
         """Test GET /metrics endpoint."""
-        response = client.get("/api/v1/monitoring/metrics")
+        response = client.get("/api/v1/observability/metrics")
         assert response.status_code == 200
 
         data = response.json()
@@ -319,7 +319,7 @@ class TestTracesRouter:
 
     def test_get_metrics_with_names(self, client):
         """Test GET /metrics with metric names."""
-        response = client.get("/api/v1/monitoring/metrics?metrics=request_count,error_count")
+        response = client.get("/api/v1/observability/metrics?metrics=request_count,error_count")
         assert response.status_code == 200
 
         data = response.json()
@@ -328,7 +328,7 @@ class TestTracesRouter:
 
     def test_get_service_map_endpoint(self, client):
         """Test GET /service-map endpoint."""
-        response = client.get("/api/v1/monitoring/service-map")
+        response = client.get("/api/v1/observability/service-map")
         assert response.status_code == 200
 
         data = response.json()
@@ -338,7 +338,7 @@ class TestTracesRouter:
 
     def test_get_performance_metrics_endpoint(self, client):
         """Test GET /performance endpoint."""
-        response = client.get("/api/v1/monitoring/performance")
+        response = client.get("/api/v1/observability/performance")
         assert response.status_code == 200
 
         data = response.json()
@@ -468,8 +468,8 @@ class TestMonitoringMetricsRouter:
         app.dependency_overrides[get_current_user] = mock_get_user
         app.dependency_overrides[get_session_dependency] = mock_get_session
 
-        app.include_router(logs_metrics_router, prefix="/api/v1/logs")
-        app.include_router(metrics_router, prefix="/api/v1/metrics")
+        app.include_router(logs_metrics_router, prefix="/api/v1")
+        app.include_router(metrics_router, prefix="/api/v1")
 
         return app
 

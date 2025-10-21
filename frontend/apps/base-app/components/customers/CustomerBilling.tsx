@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   DollarSign,
   FileText,
@@ -8,11 +8,11 @@ import {
   Clock,
   Download,
   ExternalLink,
-} from 'lucide-react';
-import { apiClient } from '@/lib/api/client';
-import { useToast } from '@/components/ui/use-toast';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+} from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -20,14 +20,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Invoice {
   id: string;
   invoice_number: string;
   amount: number;
-  status: 'paid' | 'pending' | 'overdue' | 'cancelled';
+  status: "paid" | "pending" | "overdue" | "cancelled";
   due_date: string;
   paid_date?: string;
   created_at: string;
@@ -37,7 +37,7 @@ interface Payment {
   id: string;
   payment_method: string;
   amount: number;
-  status: 'succeeded' | 'failed' | 'pending';
+  status: "succeeded" | "failed" | "pending";
   created_at: string;
   invoice_id?: string;
 }
@@ -55,57 +55,57 @@ interface CustomerBillingProps {
   customerId: string;
 }
 
-const getInvoiceStatusBadge = (status: Invoice['status']) => {
+const getInvoiceStatusBadge = (status: Invoice["status"]) => {
   switch (status) {
-    case 'paid':
+    case "paid":
       return (
         <Badge className="bg-green-500">
           <CheckCircle2 className="w-3 h-3 mr-1" />
           Paid
         </Badge>
       );
-    case 'pending':
+    case "pending":
       return (
         <Badge className="bg-blue-500">
           <Clock className="w-3 h-3 mr-1" />
           Pending
         </Badge>
       );
-    case 'overdue':
+    case "overdue":
       return (
         <Badge variant="destructive">
           <AlertCircle className="w-3 h-3 mr-1" />
           Overdue
         </Badge>
       );
-    case 'cancelled':
+    case "cancelled":
       return <Badge variant="secondary">Cancelled</Badge>;
   }
 };
 
-const getPaymentStatusBadge = (status: Payment['status']) => {
+const getPaymentStatusBadge = (status: Payment["status"]) => {
   switch (status) {
-    case 'succeeded':
+    case "succeeded":
       return <Badge className="bg-green-500">Succeeded</Badge>;
-    case 'failed':
+    case "failed":
       return <Badge variant="destructive">Failed</Badge>;
-    case 'pending':
+    case "pending":
       return <Badge className="bg-blue-500">Pending</Badge>;
   }
 };
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
   }).format(amount);
 };
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 };
 
@@ -130,9 +130,9 @@ export function CustomerBilling({ customerId }: CustomerBillingProps) {
       setSummary(summaryRes.data);
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to load billing information',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to load billing information",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -146,26 +146,26 @@ export function CustomerBilling({ customerId }: CustomerBillingProps) {
   const handleDownloadInvoice = async (invoiceId: string) => {
     try {
       const response = await apiClient.get(`/api/v1/invoices/${invoiceId}/download`, {
-        responseType: 'blob',
+        responseType: "blob",
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.setAttribute('download', `invoice-${invoiceId}.pdf`);
+      link.setAttribute("download", `invoice-${invoiceId}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.remove();
     } catch (error: any) {
       toast({
-        title: 'Error',
-        description: 'Failed to download invoice',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to download invoice",
+        variant: "destructive",
       });
     }
   };
 
   const handleViewInvoice = (invoiceId: string) => {
-    window.open(`/tenant/billing/invoices/${invoiceId}`, '_blank');
+    window.open(`/tenant/billing/invoices/${invoiceId}`, "_blank");
   };
 
   if (loading) {
@@ -231,10 +231,12 @@ export function CustomerBilling({ customerId }: CustomerBillingProps) {
                   <p className="text-lg font-bold text-white">
                     {summary.last_payment_amount
                       ? formatCurrency(summary.last_payment_amount)
-                      : 'N/A'}
+                      : "N/A"}
                   </p>
                   {summary.last_payment_date && (
-                    <p className="text-xs text-slate-500">{formatDate(summary.last_payment_date)}</p>
+                    <p className="text-xs text-slate-500">
+                      {formatDate(summary.last_payment_date)}
+                    </p>
                   )}
                 </div>
                 <CreditCard className="w-8 h-8 text-purple-400" />
@@ -276,7 +278,7 @@ export function CustomerBilling({ customerId }: CustomerBillingProps) {
                   <TableCell>{getInvoiceStatusBadge(invoice.status)}</TableCell>
                   <TableCell className="text-slate-300">{formatDate(invoice.due_date)}</TableCell>
                   <TableCell className="text-slate-300">
-                    {invoice.paid_date ? formatDate(invoice.paid_date) : '-'}
+                    {invoice.paid_date ? formatDate(invoice.paid_date) : "-"}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
@@ -327,9 +329,7 @@ export function CustomerBilling({ customerId }: CustomerBillingProps) {
             <TableBody>
               {payments.map((payment) => (
                 <TableRow key={payment.id} className="border-slate-700">
-                  <TableCell className="text-slate-300">
-                    {formatDate(payment.created_at)}
-                  </TableCell>
+                  <TableCell className="text-slate-300">{formatDate(payment.created_at)}</TableCell>
                   <TableCell className="text-white font-semibold">
                     {formatCurrency(payment.amount)}
                   </TableCell>
@@ -347,7 +347,7 @@ export function CustomerBilling({ customerId }: CustomerBillingProps) {
                         View Invoice
                       </Button>
                     ) : (
-                      '-'
+                      "-"
                     )}
                   </TableCell>
                 </TableRow>

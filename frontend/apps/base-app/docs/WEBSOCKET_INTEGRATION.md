@@ -70,13 +70,10 @@ function MyComponent() {
 Subscribe to WebSocket updates with custom callback:
 
 ```typescript
-const { isConnected, sendMessage, connectionStatus } = useWebSocket(
-  "subscriber_update",
-  (data) => {
-    console.log("Subscriber updated:", data);
-    // Handle update
-  }
-);
+const { isConnected, sendMessage, connectionStatus } = useWebSocket("subscriber_update", (data) => {
+  console.log("Subscriber updated:", data);
+  // Handle update
+});
 ```
 
 ### `useWebSocketSubscription<T>(channel)`
@@ -84,9 +81,8 @@ const { isConnected, sendMessage, connectionStatus } = useWebSocket(
 Subscribe with automatic state management:
 
 ```typescript
-const [bandwidthData, setBandwidthData] = useWebSocketSubscription<BandwidthData>(
-  "bandwidth_update"
-);
+const [bandwidthData, setBandwidthData] =
+  useWebSocketSubscription<BandwidthData>("bandwidth_update");
 
 // bandwidthData automatically updates when new messages arrive
 ```
@@ -95,15 +91,15 @@ const [bandwidthData, setBandwidthData] = useWebSocketSubscription<BandwidthData
 
 Standard channels implemented in the platform:
 
-| Channel | Description | Data Type |
-|---------|-------------|-----------|
-| `bandwidth_update` | Real-time bandwidth statistics | `BandwidthData` |
-| `session_update` | Active session changes | `SessionUpdate` |
-| `subscriber_update` | Subscriber status changes | `SubscriberUpdate` |
-| `ticket_update` | Support ticket updates | `TicketUpdate` |
-| `invoice_update` | Invoice status changes | `InvoiceUpdate` |
-| `network_status` | Network health updates | `NetworkStatus` |
-| `*` | All messages (wildcard) | `WebSocketMessage` |
+| Channel             | Description                    | Data Type          |
+| ------------------- | ------------------------------ | ------------------ |
+| `bandwidth_update`  | Real-time bandwidth statistics | `BandwidthData`    |
+| `session_update`    | Active session changes         | `SessionUpdate`    |
+| `subscriber_update` | Subscriber status changes      | `SubscriberUpdate` |
+| `ticket_update`     | Support ticket updates         | `TicketUpdate`     |
+| `invoice_update`    | Invoice status changes         | `InvoiceUpdate`    |
+| `network_status`    | Network health updates         | `NetworkStatus`    |
+| `*`                 | All messages (wildcard)        | `WebSocketMessage` |
 
 ## Example Components
 
@@ -122,6 +118,7 @@ function NetworkDashboard() {
 ```
 
 Features:
+
 - Real-time bandwidth graph
 - Upload/download metrics
 - Latency monitoring
@@ -143,6 +140,7 @@ function SessionsDashboard() {
 ```
 
 Features:
+
 - Active user sessions table
 - Real-time session updates
 - Bandwidth usage per session
@@ -216,6 +214,7 @@ Backend should validate this token and associate the connection with the user.
 ```
 
 Action types:
+
 - `new`: New session started
 - `update`: Session data updated
 - `terminate`: Session ended
@@ -286,6 +285,7 @@ sendMessage("action_type", {
 ```
 
 This sends:
+
 ```json
 {
   "type": "action_type",
@@ -356,10 +356,12 @@ Tokens are sent on connection and stored in `localStorage`:
 ```typescript
 // The provider automatically sends this
 const token = localStorage.getItem("access_token");
-ws.send(JSON.stringify({
-  type: "auth",
-  token,
-}));
+ws.send(
+  JSON.stringify({
+    type: "auth",
+    token,
+  }),
+);
 ```
 
 ### Connection Security
@@ -397,6 +399,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 **Cause**: Backend WebSocket endpoint not available
 **Solutions**:
+
 - Check backend is running
 - Verify WebSocket URL in environment variables
 - Check browser console for error messages
@@ -406,6 +409,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 **Cause**: Trying to send message before connection established
 **Solutions**:
+
 - Check `isConnected` before sending
 - Wait for `connectionStatus === "connected"`
 - Messages sent while disconnected are logged but not sent
@@ -414,6 +418,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 **Cause**: Max reconnect attempts reached
 **Solutions**:
+
 - Increase `maxReconnectAttempts`
 - Check backend logs for rejection reasons
 - Verify authentication token is valid
@@ -422,6 +427,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
 **Cause**: Too much data in component state
 **Solutions**:
+
 - Limit history size (e.g., keep last 50 points)
 - Use pagination for large datasets
 - Implement data cleanup intervals

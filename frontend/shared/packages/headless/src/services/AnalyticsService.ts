@@ -36,7 +36,7 @@ export interface AnalyticsContext {
     city?: string;
   };
   device?: {
-    type: 'mobile' | 'desktop' | 'tablet';
+    type: "mobile" | "desktop" | "tablet";
     os?: string;
     browser?: string;
   };
@@ -82,7 +82,7 @@ export interface AnalyticsConfig {
   privacy: {
     enableCookieConsent: boolean;
     consentCategories: string[];
-    defaultConsent: 'granted' | 'denied';
+    defaultConsent: "granted" | "denied";
   };
 }
 
@@ -105,7 +105,7 @@ class AnalyticsService {
   constructor(config: Partial<AnalyticsConfig> = {}) {
     this.config = {
       enabled: true,
-      debug: process.env.NODE_ENV === 'development',
+      debug: process.env.NODE_ENV === "development",
       anonymizeIp: true,
       respectDoNotTrack: true,
       sampling: {
@@ -116,8 +116,8 @@ class AnalyticsService {
       providers: {},
       privacy: {
         enableCookieConsent: true,
-        consentCategories: ['analytics', 'marketing', 'functional'],
-        defaultConsent: 'denied',
+        consentCategories: ["analytics", "marketing", "functional"],
+        defaultConsent: "denied",
       },
       ...config,
     };
@@ -126,13 +126,13 @@ class AnalyticsService {
   }
 
   async initialize(): Promise<void> {
-    if (this.isInitialized || !this.config.enabled || typeof window === 'undefined') {
+    if (this.isInitialized || !this.config.enabled || typeof window === "undefined") {
       return;
     }
 
     // Check Do Not Track
-    if (this.config.respectDoNotTrack && navigator.doNotTrack === '1') {
-      console.log('Analytics disabled due to Do Not Track');
+    if (this.config.respectDoNotTrack && navigator.doNotTrack === "1") {
+      console.log("Analytics disabled due to Do Not Track");
       return;
     }
 
@@ -169,9 +169,9 @@ class AnalyticsService {
   }
 
   private async initializeGoogleAnalytics(
-    config: NonNullable<AnalyticsConfig['providers']['googleAnalytics']>
+    config: NonNullable<AnalyticsConfig["providers"]["googleAnalytics"]>,
   ): Promise<void> {
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.async = true;
     script.src = `https://www.googletagmanager.com/gtag/js?id=${config.measurementId}`;
     document.head.appendChild(script);
@@ -185,19 +185,19 @@ class AnalyticsService {
       (window as any).dataLayer.push(args);
     });
 
-    gtag('js', new Date());
-    gtag('config', config.measurementId, {
+    gtag("js", new Date());
+    gtag("config", config.measurementId, {
       anonymize_ip: this.config.anonymizeIp,
-      cookie_flags: 'SameSite=Strict;Secure',
+      cookie_flags: "SameSite=Strict;Secure",
       custom_map: config.customDimensions,
     });
   }
 
   private async initializeMixpanel(
-    config: NonNullable<AnalyticsConfig['providers']['mixpanel']>
+    config: NonNullable<AnalyticsConfig["providers"]["mixpanel"]>,
   ): Promise<void> {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js';
+    const script = document.createElement("script");
+    script.src = "https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js";
     document.head.appendChild(script);
 
     await new Promise((resolve) => {
@@ -207,15 +207,15 @@ class AnalyticsService {
     (window as any).mixpanel.init(config.token, {
       debug: this.config.debug,
       track_pageview: false, // We handle pageviews manually
-      persistence: 'localStorage',
+      persistence: "localStorage",
     });
   }
 
   private async initializeAmplitude(
-    config: NonNullable<AnalyticsConfig['providers']['amplitude']>
+    config: NonNullable<AnalyticsConfig["providers"]["amplitude"]>,
   ): Promise<void> {
-    const script = document.createElement('script');
-    script.src = 'https://cdn.amplitude.com/libs/amplitude-8.21.9-min.gz.js';
+    const script = document.createElement("script");
+    script.src = "https://cdn.amplitude.com/libs/amplitude-8.21.9-min.gz.js";
     document.head.appendChild(script);
 
     await new Promise((resolve) => {
@@ -230,7 +230,7 @@ class AnalyticsService {
   }
 
   private async initializeHotjar(
-    config: NonNullable<AnalyticsConfig['providers']['hotjar']>
+    config: NonNullable<AnalyticsConfig["providers"]["hotjar"]>,
   ): Promise<void> {
     (function (h: any, o: any, t: any, j: any, a?: any, r?: any) {
       h.hj =
@@ -239,12 +239,12 @@ class AnalyticsService {
           (h.hj.q = h.hj.q || []).push(args);
         };
       h._hjSettings = { hjid: config.hjid, hjsv: config.hjsv };
-      a = o.getElementsByTagName('head')[0];
-      r = o.createElement('script');
+      a = o.getElementsByTagName("head")[0];
+      r = o.createElement("script");
       r.async = 1;
       r.src = t + h._hjSettings.hjid + j + h._hjSettings.hjsv;
       a.appendChild(r);
-    })(window, document, 'https://static.hotjar.com/c/hotjar-', '.js?sv=');
+    })(window, document, "https://static.hotjar.com/c/hotjar-", ".js?sv=");
   }
 
   identify(user: AnalyticsUser): void {
@@ -256,7 +256,7 @@ class AnalyticsService {
 
     // Google Analytics
     if (providers.googleAnalytics && (window as any).gtag) {
-      (window as any).gtag('config', providers.googleAnalytics.measurementId, {
+      (window as any).gtag("config", providers.googleAnalytics.measurementId, {
         user_id: user.id,
         custom_map: {
           tenant_id: user.tenantId,
@@ -289,11 +289,11 @@ class AnalyticsService {
       });
     }
 
-    this.debugLog('User identified:', user);
+    this.debugLog("User identified:", user);
   }
 
   track(eventName: string, properties: Record<string, any> = {}): void {
-    if (!this.shouldTrack('events')) return;
+    if (!this.shouldTrack("events")) return;
 
     const event: AnalyticsEvent = {
       name: eventName,
@@ -317,7 +317,7 @@ class AnalyticsService {
   }
 
   page(pageData: Partial<AnalyticsPageView> = {}): void {
-    if (!this.shouldTrack('pageViews')) return;
+    if (!this.shouldTrack("pageViews")) return;
 
     const pageView: AnalyticsPageView = {
       path: window.location.pathname,
@@ -331,7 +331,7 @@ class AnalyticsService {
 
     // Google Analytics
     if (providers.googleAnalytics && (window as any).gtag) {
-      (window as any).gtag('config', providers.googleAnalytics.measurementId, {
+      (window as any).gtag("config", providers.googleAnalytics.measurementId, {
         page_path: pageView.path,
         page_title: pageView.title,
       });
@@ -339,7 +339,7 @@ class AnalyticsService {
 
     // Mixpanel
     if (providers.mixpanel && (window as any).mixpanel) {
-      (window as any).mixpanel.track('Page View', {
+      (window as any).mixpanel.track("Page View", {
         path: pageView.path,
         url: pageView.url,
         title: pageView.title,
@@ -350,7 +350,7 @@ class AnalyticsService {
 
     // Amplitude
     if (providers.amplitude && (window as any).amplitude) {
-      (window as any).amplitude.getInstance().logEvent('Page View', {
+      (window as any).amplitude.getInstance().logEvent("Page View", {
         path: pageView.path,
         url: pageView.url,
         title: pageView.title,
@@ -359,34 +359,34 @@ class AnalyticsService {
       });
     }
 
-    this.debugLog('Page view tracked:', pageView);
+    this.debugLog("Page view tracked:", pageView);
   }
 
   // ISP-specific tracking methods
   trackCustomerAction(
     action: string,
     customerId: string,
-    properties: Record<string, any> = {}
+    properties: Record<string, any> = {},
   ): void {
     this.track(`customer_${action}`, {
       customer_id: customerId,
-      category: 'customer',
+      category: "customer",
       ...properties,
     });
   }
 
   trackBillingEvent(event: string, properties: Record<string, any> = {}): void {
     this.track(`billing_${event}`, {
-      category: 'billing',
+      category: "billing",
       value: properties.amount || 0,
-      currency: properties.currency || 'USD',
+      currency: properties.currency || "USD",
       ...properties,
     });
   }
 
-  trackServiceUsage(serviceType: string, usage: number, unit: string = 'GB'): void {
-    this.track('service_usage', {
-      category: 'service',
+  trackServiceUsage(serviceType: string, usage: number, unit: string = "GB"): void {
+    this.track("service_usage", {
+      category: "service",
       service_type: serviceType,
       usage,
       unit,
@@ -397,23 +397,23 @@ class AnalyticsService {
   trackSupportTicket(action: string, ticketId: string, properties: Record<string, any> = {}): void {
     this.track(`support_${action}`, {
       ticket_id: ticketId,
-      category: 'support',
+      category: "support",
       ...properties,
     });
   }
 
   trackNetworkEvent(event: string, deviceId?: string, properties: Record<string, any> = {}): void {
     this.track(`network_${event}`, {
-      category: 'network',
+      category: "network",
       device_id: deviceId,
       ...properties,
     });
   }
 
   // Conversion tracking
-  trackConversion(conversionName: string, value?: number, currency: string = 'USD'): void {
+  trackConversion(conversionName: string, value?: number, currency: string = "USD"): void {
     const conversionData = {
-      category: 'conversion',
+      category: "conversion",
       value,
       currency,
     };
@@ -422,7 +422,7 @@ class AnalyticsService {
 
     // Google Analytics Enhanced Ecommerce
     if (this.config.providers.googleAnalytics && (window as any).gtag) {
-      (window as any).gtag('event', 'conversion', {
+      (window as any).gtag("event", "conversion", {
         send_to: this.config.providers.googleAnalytics.measurementId,
         value,
         currency,
@@ -432,15 +432,15 @@ class AnalyticsService {
 
   // A/B Testing integration
   trackExperiment(experimentId: string, variantId: string): void {
-    this.track('experiment_viewed', {
+    this.track("experiment_viewed", {
       experiment_id: experimentId,
       variant_id: variantId,
-      category: 'experiment',
+      category: "experiment",
     });
 
     // Set custom dimension for Google Analytics
     if (this.config.providers.googleAnalytics && (window as any).gtag) {
-      (window as any).gtag('config', this.config.providers.googleAnalytics.measurementId, {
+      (window as any).gtag("config", this.config.providers.googleAnalytics.measurementId, {
         experiment_id: experimentId,
         experiment_variant: variantId,
       });
@@ -453,14 +453,14 @@ class AnalyticsService {
 
     // Update Google Analytics consent
     if (this.config.providers.googleAnalytics && (window as any).gtag) {
-      (window as any).gtag('consent', 'update', {
-        analytics_storage: this.consentStatus.analytics ? 'granted' : 'denied',
-        ad_storage: this.consentStatus.marketing ? 'granted' : 'denied',
-        functionality_storage: this.consentStatus.functional ? 'granted' : 'denied',
+      (window as any).gtag("consent", "update", {
+        analytics_storage: this.consentStatus.analytics ? "granted" : "denied",
+        ad_storage: this.consentStatus.marketing ? "granted" : "denied",
+        functionality_storage: this.consentStatus.functional ? "granted" : "denied",
       });
     }
 
-    this.debugLog('Consent updated:', { category, granted });
+    this.debugLog("Consent updated:", { category, granted });
   }
 
   private sendEvent(event: AnalyticsEvent): void {
@@ -468,7 +468,7 @@ class AnalyticsService {
 
     // Google Analytics
     if (providers.googleAnalytics && (window as any).gtag) {
-      (window as any).gtag('event', event.name, event.properties);
+      (window as any).gtag("event", event.name, event.properties);
     }
 
     // Mixpanel
@@ -484,20 +484,20 @@ class AnalyticsService {
     // Custom endpoint
     if (providers.custom && this.isOnline) {
       fetch(providers.custom.endpoint, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...providers.custom.headers,
         },
         body: JSON.stringify(event),
       }).catch((error) => {
-        this.debugLog('Failed to send to custom endpoint:', error);
+        this.debugLog("Failed to send to custom endpoint:", error);
         // Store for retry when online
         this.eventQueue.push(event);
       });
     }
 
-    this.debugLog('Event tracked:', event);
+    this.debugLog("Event tracked:", event);
   }
 
   private getContext(): AnalyticsContext {
@@ -523,12 +523,12 @@ class AnalyticsService {
     return context;
   }
 
-  private getDeviceInfo(): AnalyticsContext['device'] {
+  private getDeviceInfo(): AnalyticsContext["device"] {
     const ua = navigator.userAgent;
 
-    let deviceType: 'mobile' | 'desktop' | 'tablet' = 'desktop';
-    if (/Mobi|Android/i.test(ua)) deviceType = 'mobile';
-    if (/Tablet|iPad/i.test(ua)) deviceType = 'tablet';
+    let deviceType: "mobile" | "desktop" | "tablet" = "desktop";
+    if (/Mobi|Android/i.test(ua)) deviceType = "mobile";
+    if (/Tablet|iPad/i.test(ua)) deviceType = "tablet";
 
     return {
       type: deviceType,
@@ -538,23 +538,23 @@ class AnalyticsService {
   }
 
   private extractOS(ua: string): string {
-    if (ua.includes('Windows')) return 'Windows';
-    if (ua.includes('Mac')) return 'macOS';
-    if (ua.includes('X11') || ua.includes('Linux')) return 'Linux';
-    if (ua.includes('Android')) return 'Android';
-    if (ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
-    return 'Unknown';
+    if (ua.includes("Windows")) return "Windows";
+    if (ua.includes("Mac")) return "macOS";
+    if (ua.includes("X11") || ua.includes("Linux")) return "Linux";
+    if (ua.includes("Android")) return "Android";
+    if (ua.includes("iPhone") || ua.includes("iPad")) return "iOS";
+    return "Unknown";
   }
 
   private extractBrowser(ua: string): string {
-    if (ua.includes('Chrome')) return 'Chrome';
-    if (ua.includes('Firefox')) return 'Firefox';
-    if (ua.includes('Safari')) return 'Safari';
-    if (ua.includes('Edge')) return 'Edge';
-    return 'Unknown';
+    if (ua.includes("Chrome")) return "Chrome";
+    if (ua.includes("Firefox")) return "Firefox";
+    if (ua.includes("Safari")) return "Safari";
+    if (ua.includes("Edge")) return "Edge";
+    return "Unknown";
   }
 
-  private shouldTrack(type?: 'events' | 'pageViews' | 'errors'): boolean {
+  private shouldTrack(type?: "events" | "pageViews" | "errors"): boolean {
     if (!this.config.enabled) return false;
 
     if (type && Math.random() > this.config.sampling[type]) {
@@ -587,47 +587,47 @@ class AnalyticsService {
       setTimeout(() => this.page(), 0);
     };
 
-    window.addEventListener('popstate', () => {
+    window.addEventListener("popstate", () => {
       setTimeout(() => this.page(), 0);
     });
   }
 
   private setupErrorTracking(): void {
-    window.addEventListener('error', (event) => {
-      if (this.shouldTrack('errors')) {
-        this.track('javascript_error', {
+    window.addEventListener("error", (event) => {
+      if (this.shouldTrack("errors")) {
+        this.track("javascript_error", {
           message: event.message,
           filename: event.filename,
           line: event.lineno,
           column: event.colno,
           stack: event.error?.stack,
-          category: 'error',
+          category: "error",
         });
       }
     });
 
-    window.addEventListener('unhandledrejection', (event) => {
-      if (this.shouldTrack('errors')) {
-        this.track('unhandled_promise_rejection', {
+    window.addEventListener("unhandledrejection", (event) => {
+      if (this.shouldTrack("errors")) {
+        this.track("unhandled_promise_rejection", {
           message: event.reason?.message || String(event.reason),
           stack: event.reason?.stack,
-          category: 'error',
+          category: "error",
         });
       }
     });
   }
 
   private setupOfflineHandling(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     this.isOnline = navigator.onLine;
 
-    window.addEventListener('online', () => {
+    window.addEventListener("online", () => {
       this.isOnline = true;
       this.flushEventQueue();
     });
 
-    window.addEventListener('offline', () => {
+    window.addEventListener("offline", () => {
       this.isOnline = false;
     });
   }
@@ -645,7 +645,7 @@ class AnalyticsService {
 
   private debugLog(...args: any[]): void {
     if (this.config.debug) {
-      console.log('[Analytics]', ...args);
+      console.log("[Analytics]", ...args);
     }
   }
 

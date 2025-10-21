@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /**
  * Network Device Monitoring Dashboard
@@ -9,29 +9,25 @@ export const dynamic = 'force-dynamic';
  * Comprehensive network monitoring with device health, traffic stats, and alerts
  */
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   useNetworkDashboardGraphQL,
   useNetworkDeviceListGraphQL,
   useNetworkAlertListGraphQL,
-} from '@/hooks/useNetworkGraphQL';
-import {
-  DeviceTypeEnum,
-  DeviceStatusEnum,
-  AlertSeverityEnum,
-} from '@/lib/graphql/generated';
+} from "@/hooks/useNetworkGraphQL";
+import { DeviceTypeEnum, DeviceStatusEnum, AlertSeverityEnum } from "@/lib/graphql/generated";
 import {
   Server,
   Activity,
@@ -46,10 +42,10 @@ import {
   XCircle,
   AlertTriangle,
   Clock,
-} from 'lucide-react';
+} from "lucide-react";
 
 export default function NetworkMonitoringPage() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<DeviceStatusEnum | undefined>(undefined);
   const [typeFilter, setTypeFilter] = useState<DeviceTypeEnum | undefined>(undefined);
   const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
@@ -94,7 +90,7 @@ export default function NetworkMonitoringPage() {
   const isLoading = dashboardLoading || devicesLoading || alertsLoading;
 
   // Transform devices for compatibility
-  const filteredDevices = devices.map(d => ({
+  const filteredDevices = devices.map((d) => ({
     ...d,
     device_name: d.deviceName,
     device_type: d.deviceType,
@@ -104,30 +100,30 @@ export default function NetworkMonitoringPage() {
 
   // Helper functions
   const getStatusColor = (status: DeviceStatusEnum | string) => {
-    const statusStr = typeof status === 'string' ? status : status;
+    const statusStr = typeof status === "string" ? status : status;
     switch (statusStr) {
-      case 'ONLINE':
-        return 'bg-green-500';
-      case 'DEGRADED':
-        return 'bg-yellow-500';
-      case 'OFFLINE':
-        return 'bg-red-500';
+      case "ONLINE":
+        return "bg-green-500";
+      case "DEGRADED":
+        return "bg-yellow-500";
+      case "OFFLINE":
+        return "bg-red-500";
       default:
-        return 'bg-gray-500';
+        return "bg-gray-500";
     }
   };
 
   const getStatusBadgeVariant = (status: DeviceStatusEnum | string) => {
-    const statusStr = typeof status === 'string' ? status : status;
+    const statusStr = typeof status === "string" ? status : status;
     switch (statusStr) {
-      case 'ONLINE':
-        return 'default';
-      case 'DEGRADED':
-        return 'warning';
-      case 'OFFLINE':
-        return 'destructive';
+      case "ONLINE":
+        return "default";
+      case "DEGRADED":
+        return "warning";
+      case "OFFLINE":
+        return "destructive";
       default:
-        return 'secondary';
+        return "secondary";
     }
   };
 
@@ -151,17 +147,17 @@ export default function NetworkMonitoringPage() {
   };
 
   const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 B';
+    if (bytes === 0) return "0 B";
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return `${(bytes / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
   };
 
   const formatBps = (bps: number) => {
-    if (bps === 0) return '0 bps';
+    if (bps === 0) return "0 bps";
     const k = 1000;
-    const sizes = ['bps', 'Kbps', 'Mbps', 'Gbps'];
+    const sizes = ["bps", "Kbps", "Mbps", "Gbps"];
     const i = Math.floor(Math.log(bps) / Math.log(k));
     return `${(bps / Math.pow(k, i)).toFixed(2)} ${sizes[i]}`;
   };
@@ -190,10 +186,10 @@ export default function NetworkMonitoringPage() {
         }
       `;
 
-      const response = await fetch('/api/graphql', {
-        method: 'POST',
+      const response = await fetch("/api/graphql", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           query: mutation,
@@ -208,15 +204,15 @@ export default function NetworkMonitoringPage() {
       const result = await response.json();
 
       if (result.errors) {
-        throw new Error(result.errors[0]?.message || 'GraphQL error');
+        throw new Error(result.errors[0]?.message || "GraphQL error");
       }
 
       // Refetch alerts to show updated state
       await refetchAlerts();
 
-      console.log('Successfully acknowledged alert:', alertId);
+      console.log("Successfully acknowledged alert:", alertId);
     } catch (error: any) {
-      console.error('Error acknowledging alert:', error);
+      console.error("Error acknowledging alert:", error);
       alert(`Failed to acknowledge alert: ${error.message}`);
     }
   };
@@ -242,15 +238,15 @@ export default function NetworkMonitoringPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? '...' : overview?.totalDevices || 0}
+              {isLoading ? "..." : overview?.totalDevices || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600">{overview?.onlineDevices || 0} online</span>
-              {' • '}
+              {" • "}
               <span className="text-red-600">{overview?.offlineDevices || 0} offline</span>
               {0 ? (
                 <>
-                  {' • '}
+                  {" • "}
                   <span className="text-yellow-600">{0} degraded</span>
                 </>
               ) : null}
@@ -265,11 +261,11 @@ export default function NetworkMonitoringPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? '...' : overview?.activeAlerts || 0}
+              {isLoading ? "..." : overview?.activeAlerts || 0}
             </div>
             <p className="text-xs text-muted-foreground">
               <span className="text-red-600">{overview?.criticalAlerts || 0} critical</span>
-              {' • '}
+              {" • "}
               <span className="text-yellow-600">{0 || 0} warning</span>
             </p>
           </CardContent>
@@ -282,12 +278,10 @@ export default function NetworkMonitoringPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? '...' : formatBps(overview?.totalBandwidthGbps || 0)}
+              {isLoading ? "..." : formatBps(overview?.totalBandwidthGbps || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {0
-                ? `Peak: ${formatBps(0)}`
-                : 'Current incoming traffic'}
+              {0 ? `Peak: ${formatBps(0)}` : "Current incoming traffic"}
             </p>
           </CardContent>
         </Card>
@@ -299,12 +293,10 @@ export default function NetworkMonitoringPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? '...' : formatBps(overview?.totalBandwidthGbps || 0)}
+              {isLoading ? "..." : formatBps(overview?.totalBandwidthGbps || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {0
-                ? `Peak: ${formatBps(0)}`
-                : 'Current outgoing traffic'}
+              {0 ? `Peak: ${formatBps(0)}` : "Current outgoing traffic"}
             </p>
           </CardContent>
         </Card>
@@ -346,7 +338,10 @@ export default function NetworkMonitoringPage() {
                     />
                   </div>
                 </div>
-                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as DeviceStatusEnum)}>
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value) => setStatusFilter(value as DeviceStatusEnum)}
+                >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -357,7 +352,10 @@ export default function NetworkMonitoringPage() {
                     <SelectItem value="degraded">Degraded</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={typeFilter} onValueChange={(value) => setTypeFilter(value as DeviceTypeEnum)}>
+                <Select
+                  value={typeFilter}
+                  onValueChange={(value) => setTypeFilter(value as DeviceTypeEnum)}
+                >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
@@ -407,7 +405,9 @@ export default function NetworkMonitoringPage() {
                         <tr key={device.deviceId} className="border-b">
                           <td className="p-4">
                             <div className="flex items-center gap-2">
-                              <div className={`h-2 w-2 rounded-full ${getStatusColor(device.status)}`} />
+                              <div
+                                className={`h-2 w-2 rounded-full ${getStatusColor(device.status)}`}
+                              />
                               <Badge variant={getStatusBadgeVariant(device.status) as any}>
                                 {device.status}
                               </Badge>
@@ -415,30 +415,32 @@ export default function NetworkMonitoringPage() {
                           </td>
                           <td className="p-4 font-medium">{device.device_name}</td>
                           <td className="p-4 uppercase text-xs">{device.device_type}</td>
-                          <td className="p-4 font-mono text-xs">{device.ip_address || '-'}</td>
-                          <td className="p-4">{device.location || '-'}</td>
+                          <td className="p-4 font-mono text-xs">{device.ip_address || "-"}</td>
+                          <td className="p-4">{device.location || "-"}</td>
                           <td className="p-4">
-                            {device.cpuUsagePercent !== undefined && device.cpuUsagePercent !== null ? (
-                              <span className={device.cpuUsagePercent > 80 ? 'text-red-600' : ''}>
+                            {device.cpuUsagePercent !== undefined &&
+                            device.cpuUsagePercent !== null ? (
+                              <span className={device.cpuUsagePercent > 80 ? "text-red-600" : ""}>
                                 {device.cpuUsagePercent.toFixed(1)}%
                               </span>
                             ) : (
-                              '-'
+                              "-"
                             )}
                           </td>
                           <td className="p-4">
-                            {device.memoryUsagePercent !== undefined && device.memoryUsagePercent !== null ? (
+                            {device.memoryUsagePercent !== undefined &&
+                            device.memoryUsagePercent !== null ? (
                               <span
-                                className={device.memoryUsagePercent > 80 ? 'text-red-600' : ''}
+                                className={device.memoryUsagePercent > 80 ? "text-red-600" : ""}
                               >
                                 {device.memoryUsagePercent.toFixed(1)}%
                               </span>
                             ) : (
-                              '-'
+                              "-"
                             )}
                           </td>
                           <td className="p-4">
-                            {device.uptimeSeconds ? formatUptime(device.uptimeSeconds) : '-'}
+                            {device.uptimeSeconds ? formatUptime(device.uptimeSeconds) : "-"}
                           </td>
                           <td className="p-4">
                             <Button
@@ -485,17 +487,21 @@ export default function NetworkMonitoringPage() {
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-2">
                           <h4 className="font-medium">{alert.title}</h4>
-                          <Badge variant={alert.severity === AlertSeverityEnum.Critical ? 'destructive' : 'default'}>
+                          <Badge
+                            variant={
+                              alert.severity === AlertSeverityEnum.Critical
+                                ? "destructive"
+                                : "default"
+                            }
+                          >
                             {alert.severity}
                           </Badge>
-                          {alert.deviceName && (
-                            <Badge variant="outline">{alert.deviceName}</Badge>
-                          )}
+                          {alert.deviceName && <Badge variant="outline">{alert.deviceName}</Badge>}
                         </div>
                         <p className="text-sm text-muted-foreground">{alert.description}</p>
                         {alert.metricName && (
                           <p className="text-xs text-muted-foreground">
-                            {alert.metricName}: {alert.currentValue?.toFixed(2)} (threshold:{' '}
+                            {alert.metricName}: {alert.currentValue?.toFixed(2)} (threshold:{" "}
                             {alert.thresholdValue})
                           </p>
                         )}
@@ -513,9 +519,7 @@ export default function NetworkMonitoringPage() {
                           Acknowledge
                         </Button>
                       )}
-                      {alert.isAcknowledged && (
-                        <Badge variant="secondary">Acknowledged</Badge>
-                      )}
+                      {alert.isAcknowledged && <Badge variant="secondary">Acknowledged</Badge>}
                     </div>
                   ))
                 )}
@@ -543,9 +547,7 @@ export default function NetworkMonitoringPage() {
                       <div className="space-y-1 text-xs">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Online:</span>
-                          <span className="text-green-600 font-medium">
-                            {summary.online_count}
-                          </span>
+                          <span className="text-green-600 font-medium">{summary.online_count}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Offline:</span>

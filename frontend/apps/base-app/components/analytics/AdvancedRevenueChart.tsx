@@ -17,9 +17,23 @@ import {
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Download, TrendingUp, DollarSign } from "lucide-react";
-import { format, subDays, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, eachMonthOfInterval } from "date-fns";
+import {
+  format,
+  subDays,
+  subMonths,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  eachMonthOfInterval,
+} from "date-fns";
 
 type ChartType = "line" | "area" | "bar";
 type TimeRange = "7d" | "30d" | "90d" | "12m";
@@ -67,9 +81,8 @@ export function AdvancedRevenueChart() {
 
   const latestData = data[data.length - 1];
   const previousData = data[data.length - 2];
-  const mrrGrowth = latestData && previousData
-    ? ((latestData.mrr - previousData.mrr) / previousData.mrr) * 100
-    : 0;
+  const mrrGrowth =
+    latestData && previousData ? ((latestData.mrr - previousData.mrr) / previousData.mrr) * 100 : 0;
 
   const handleExport = () => {
     const csvContent = [
@@ -200,9 +213,7 @@ export function AdvancedRevenueChart() {
               <DollarSign className="h-5 w-5" />
               Revenue Analytics
             </CardTitle>
-            <CardDescription>
-              Track MRR, new revenue, and churn over time
-            </CardDescription>
+            <CardDescription>Track MRR, new revenue, and churn over time</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Select value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
@@ -239,7 +250,10 @@ export function AdvancedRevenueChart() {
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Current MRR</p>
             <p className="text-2xl font-bold">
-              ${latestData?.mrr.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              $
+              {latestData?.mrr.toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+              })}
             </p>
             <p
               className={`text-xs flex items-center gap-1 ${
@@ -254,14 +268,20 @@ export function AdvancedRevenueChart() {
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">New Revenue</p>
             <p className="text-2xl font-bold text-green-500">
-              +${latestData?.newRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              +$
+              {latestData?.newRevenue.toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+              })}
             </p>
             <p className="text-xs text-muted-foreground">Current period</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Churn Revenue</p>
             <p className="text-2xl font-bold text-red-500">
-              -${latestData?.churnRevenue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              -$
+              {latestData?.churnRevenue.toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+              })}
             </p>
             <p className="text-xs text-muted-foreground">Current period</p>
           </div>

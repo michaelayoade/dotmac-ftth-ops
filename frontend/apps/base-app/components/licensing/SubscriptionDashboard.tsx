@@ -4,20 +4,14 @@
  * Displays current subscription status, usage, and management options
  */
 
-'use client';
+"use client";
 
-import React from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
+import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import {
   Calendar,
   CreditCard,
@@ -27,9 +21,9 @@ import {
   Plus,
   X,
   RefreshCw,
-} from 'lucide-react';
-import { TenantSubscription, SubscriptionStatus } from '../../types/licensing';
-import { format } from 'date-fns';
+} from "lucide-react";
+import { TenantSubscription, SubscriptionStatus } from "../../types/licensing";
+import { format } from "date-fns";
 
 interface SubscriptionDashboardProps {
   subscription: TenantSubscription;
@@ -39,36 +33,39 @@ interface SubscriptionDashboardProps {
   onManageBilling?: () => void;
 }
 
-const statusConfig: Record<SubscriptionStatus, { color: string; icon: React.ReactNode; label: string }> = {
+const statusConfig: Record<
+  SubscriptionStatus,
+  { color: string; icon: React.ReactNode; label: string }
+> = {
   [SubscriptionStatus.TRIAL]: {
-    color: 'bg-blue-500',
+    color: "bg-blue-500",
     icon: <Clock className="h-4 w-4" />,
-    label: 'Free Trial',
+    label: "Free Trial",
   },
   [SubscriptionStatus.ACTIVE]: {
-    color: 'bg-green-500',
+    color: "bg-green-500",
     icon: <Check className="h-4 w-4" />,
-    label: 'Active',
+    label: "Active",
   },
   [SubscriptionStatus.PAST_DUE]: {
-    color: 'bg-orange-500',
+    color: "bg-orange-500",
     icon: <AlertTriangle className="h-4 w-4" />,
-    label: 'Past Due',
+    label: "Past Due",
   },
   [SubscriptionStatus.CANCELED]: {
-    color: 'bg-gray-500',
+    color: "bg-gray-500",
     icon: <X className="h-4 w-4" />,
-    label: 'Canceled',
+    label: "Canceled",
   },
   [SubscriptionStatus.EXPIRED]: {
-    color: 'bg-red-500',
+    color: "bg-red-500",
     icon: <X className="h-4 w-4" />,
-    label: 'Expired',
+    label: "Expired",
   },
   [SubscriptionStatus.SUSPENDED]: {
-    color: 'bg-yellow-500',
+    color: "bg-yellow-500",
     icon: <AlertTriangle className="h-4 w-4" />,
-    label: 'Suspended',
+    label: "Suspended",
   },
 };
 
@@ -88,22 +85,22 @@ export function SubscriptionDashboard({
   const daysUntilRenewal = subscription.current_period_end
     ? Math.ceil(
         (new Date(subscription.current_period_end).getTime() - new Date().getTime()) /
-          (1000 * 60 * 60 * 24)
+          (1000 * 60 * 60 * 24),
       )
     : 0;
 
   const trialDaysRemaining = subscription.trial_end
     ? Math.ceil(
-        (new Date(subscription.trial_end).getTime() - new Date().getTime()) /
-          (1000 * 60 * 60 * 24)
+        (new Date(subscription.trial_end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
       )
     : 0;
 
   // Calculate total price
   const basePrice = subscription.monthly_price;
-  const addonsPriceTotal = subscription.modules
-    ?.filter(m => m.source === 'ADDON' && m.addon_price)
-    .reduce((sum, m) => sum + (m.addon_price || 0), 0) || 0;
+  const addonsPriceTotal =
+    subscription.modules
+      ?.filter((m) => m.source === "ADDON" && m.addon_price)
+      .reduce((sum, m) => sum + (m.addon_price || 0), 0) || 0;
   const totalPrice = basePrice + addonsPriceTotal;
 
   return (
@@ -115,16 +112,14 @@ export function SubscriptionDashboard({
             <div className="space-y-1">
               <div className="flex items-center gap-3">
                 <CardTitle className="text-2xl">
-                  {subscription.plan?.plan_name || 'Current Plan'}
+                  {subscription.plan?.plan_name || "Current Plan"}
                 </CardTitle>
                 <Badge className={statusInfo.color}>
                   {statusInfo.icon}
                   <span className="ml-1">{statusInfo.label}</span>
                 </Badge>
               </div>
-              <CardDescription>
-                {subscription.plan?.description}
-              </CardDescription>
+              <CardDescription>{subscription.plan?.description}</CardDescription>
             </div>
             {onUpgrade && (
               <Button onClick={onUpgrade} size="sm">
@@ -146,7 +141,7 @@ export function SubscriptionDashboard({
                     {trialDaysRemaining} days remaining in your trial
                   </p>
                   <p className="text-sm text-blue-700 mt-1">
-                    Your trial ends on {format(new Date(subscription.trial_end!), 'PPP')}
+                    Your trial ends on {format(new Date(subscription.trial_end!), "PPP")}
                   </p>
                 </div>
               </div>
@@ -175,10 +170,8 @@ export function SubscriptionDashboard({
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Next billing date</span>
             <span className="font-medium">
-              {format(new Date(subscription.current_period_end), 'PPP')}
-              <span className="text-muted-foreground ml-2">
-                ({daysUntilRenewal} days)
-              </span>
+              {format(new Date(subscription.current_period_end), "PPP")}
+              <span className="text-muted-foreground ml-2">({daysUntilRenewal} days)</span>
             </span>
           </div>
         </CardContent>
@@ -188,29 +181,22 @@ export function SubscriptionDashboard({
       <Card>
         <CardHeader>
           <CardTitle>Included Features</CardTitle>
-          <CardDescription>
-            Modules and capabilities included in your plan
-          </CardDescription>
+          <CardDescription>Modules and capabilities included in your plan</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {subscription.modules?.map((module) => (
-              <div
-                key={module.id}
-                className="flex items-start gap-3 p-3 rounded-lg border"
-              >
+              <div key={module.id} className="flex items-start gap-3 p-3 rounded-lg border">
                 <Check className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="font-medium">{module.module?.module_name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {module.module?.description}
-                  </p>
-                  {module.source === 'ADDON' && (
+                  <p className="text-sm text-muted-foreground">{module.module?.description}</p>
+                  {module.source === "ADDON" && (
                     <Badge variant="secondary" className="mt-1">
                       Add-on • ${module.addon_price}/mo
                     </Badge>
                   )}
-                  {module.source === 'TRIAL' && (
+                  {module.source === "TRIAL" && (
                     <Badge variant="outline" className="mt-1">
                       Trial Only
                     </Badge>
@@ -221,11 +207,7 @@ export function SubscriptionDashboard({
           </div>
 
           {onManageAddons && (
-            <Button
-              variant="outline"
-              className="w-full mt-4"
-              onClick={onManageAddons}
-            >
+            <Button variant="outline" className="w-full mt-4" onClick={onManageAddons}>
               <Plus className="mr-2 h-4 w-4" />
               Add More Features
             </Button>
@@ -239,9 +221,7 @@ export function SubscriptionDashboard({
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Resource Usage</CardTitle>
-              <CardDescription>
-                Current usage of your allocated resources
-              </CardDescription>
+              <CardDescription>Current usage of your allocated resources</CardDescription>
             </div>
             {onViewUsage && (
               <Button variant="outline" size="sm" onClick={onViewUsage}>
@@ -260,16 +240,15 @@ export function SubscriptionDashboard({
               <div key={usage.id} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">{usage.quota?.quota_name}</span>
-                  <span className={isOverLimit ? 'text-red-600 font-medium' : ''}>
-                    {usage.current_usage.toLocaleString()} /{' '}
-                    {usage.allocated_quantity.toLocaleString()}{' '}
-                    {usage.quota?.unit_name}
+                  <span className={isOverLimit ? "text-red-600 font-medium" : ""}>
+                    {usage.current_usage.toLocaleString()} /{" "}
+                    {usage.allocated_quantity.toLocaleString()} {usage.quota?.unit_name}
                     {isOverLimit && ` (+${usage.overage_quantity} overage)`}
                   </span>
                 </div>
                 <Progress
                   value={Math.min(percentage, 100)}
-                  className={isOverLimit ? 'bg-red-100' : isNearLimit ? 'bg-orange-100' : ''}
+                  className={isOverLimit ? "bg-red-100" : isNearLimit ? "bg-orange-100" : ""}
                 />
                 {isOverLimit && usage.overage_charges > 0 && (
                   <p className="text-xs text-muted-foreground">

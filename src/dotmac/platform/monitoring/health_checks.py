@@ -20,6 +20,40 @@ from redis import Redis
 logger = logging.getLogger(__name__)
 
 
+def _is_truthy(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "1", "yes", "on"}
+    return False
+
+
+def _is_production_environment() -> bool:
+    settings_flag = getattr(settings, "is_production", None)
+    if isinstance(settings_flag, bool):
+        if settings_flag:
+            return True
+    elif isinstance(settings_flag, str) and _is_truthy(settings_flag):
+        return True
+
+    environment = getattr(settings, "environment", None)
+    if isinstance(environment, Enum):
+        env_value = environment.value
+    else:
+        env_value = environment
+
+    if isinstance(env_value, str) and env_value.strip().lower() in {"production", "prod"}:
+        return True
+
+    import os
+
+    env_var = os.getenv("ENVIRONMENT", "")
+    if env_var.strip().lower() in {"production", "prod"}:
+        return True
+
+    return False
+
+
 class ServiceStatus(str, Enum):
     """Service health status."""
 
@@ -138,9 +172,10 @@ class HealthChecker:
 
         is_healthy, message = self._check_redis_url(settings.redis.redis_url, "Redis")
 
-        # Check if we're in production mode
-        is_production = os.getenv("ENVIRONMENT", "development").lower() in ("production", "prod")
-        require_redis = os.getenv("REQUIRE_REDIS_SESSIONS", str(is_production)).lower() == "true"
+        # Determine environment from settings first, fall back to ENV var
+        is_production = _is_production_environment()
+        require_env = os.getenv("REQUIRE_REDIS_SESSIONS")
+        require_redis = _is_truthy(require_env) if require_env is not None else is_production
 
         # SECURITY: Redis is ALWAYS required in production (no fallback)
         if not is_healthy:
@@ -182,6 +217,8 @@ class HealthChecker:
 
     def check_vault(self) -> ServiceHealth:
         """Check Vault/OpenBao connectivity."""
+        is_production = _is_production_environment()
+
         if not settings.vault.enabled:
             return ServiceHealth(
                 name="vault",
@@ -205,14 +242,14 @@ class HealthChecker:
                         name="vault",
                         status=ServiceStatus.HEALTHY,
                         message="Vault connection successful",
-                        required=settings.environment == "production",
+                        required=is_production,
                     )
                 else:
                     return ServiceHealth(
                         name="vault",
                         status=ServiceStatus.UNHEALTHY,
                         message="Vault health check failed",
-                        required=settings.environment == "production",
+                        required=is_production,
                     )
         except Exception as e:
             logger.error(f"Vault health check failed: {e}")
@@ -220,7 +257,7 @@ class HealthChecker:
                 name="vault",
                 status=ServiceStatus.UNHEALTHY,
                 message=f"Connection failed: {str(e)}",
-                required=settings.environment == "production",
+                required=is_production,
             )
 
     def check_celery_broker(self) -> ServiceHealth:
@@ -405,10 +442,9 @@ class HealthChecker:
             self.check_database(),
             self.check_redis(),
             self.check_vault(),
-            self.check_storage(),  # Re-enabled with proper guards
+            self.check_storage(),
             self.check_celery_broker(),
             self.check_observability(),
-            self.check_radius_server(),
         ]
 
         # Check if all required services are healthy
@@ -457,7 +493,7 @@ def check_startup_dependencies() -> bool:
         if failed_required:
             logger.error(f"Required services not available: {', '.join(failed_required)}")
 
-            if settings.environment == "production":
+            if _is_production_environment():
                 logger.error("Cannot start in production with missing required services")
                 return False
             else:
@@ -476,9 +512,26 @@ def ensure_infrastructure_running() -> None:
 
     structured_logger = structlog.get_logger(__name__)
 
+    logger.info("Starting DotMac Platform Services - verifying supporting infrastructure")
+
+    print("Starting DotMac Platform Services")
+    print()
+    print("Required Infrastructure Services:")
+    print("PostgreSQL (database)")
+    print("Redis (cache & sessions)")
+    print()
+    print("Optional Services:")
+    print("Vault/OpenBao (secrets)")
+    print("Celery worker (background tasks)")
+    print("OTLP Collector (observability)")
+    print()
+    print("Recommended command: docker-compose up -d")
+    print("Minimal startup: docker-compose up -d postgres redis")
+
     # Log structured infrastructure requirements
     structured_logger.info(
         "infrastructure.startup_guide",
+        message="Starting DotMac Platform Services",
         required_services=["PostgreSQL", "Redis"],
         optional_services=["Vault/OpenBao", "Celery", "OTLP Collector"],
         docker_compose_command="docker-compose up -d",

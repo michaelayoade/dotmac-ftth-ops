@@ -3,21 +3,21 @@
  * Handles equipment tracking, asset lifecycle, and stock management
  */
 
-import { BaseApiClient } from './BaseApiClient';
-import type { PaginatedResponse, QueryParams } from '../types/api';
+import { BaseApiClient } from "./BaseApiClient";
+import type { PaginatedResponse, QueryParams } from "../types/api";
 
 export interface InventoryItem {
   id: string;
   sku: string;
   name: string;
   description: string;
-  category: 'MODEM' | 'ROUTER' | 'ONT' | 'CABLE' | 'ANTENNA' | 'SWITCH' | 'ACCESSORY' | 'OTHER';
+  category: "MODEM" | "ROUTER" | "ONT" | "CABLE" | "ANTENNA" | "SWITCH" | "ACCESSORY" | "OTHER";
   manufacturer: string;
   model: string;
   serial_number?: string;
   mac_address?: string;
-  status: 'IN_STOCK' | 'DEPLOYED' | 'RESERVED' | 'MAINTENANCE' | 'DEFECTIVE' | 'RETIRED';
-  condition: 'NEW' | 'REFURBISHED' | 'USED' | 'DAMAGED';
+  status: "IN_STOCK" | "DEPLOYED" | "RESERVED" | "MAINTENANCE" | "DEFECTIVE" | "RETIRED";
+  condition: "NEW" | "REFURBISHED" | "USED" | "DAMAGED";
   location: InventoryLocation;
   purchase_info?: PurchaseInfo;
   warranty_info?: WarrantyInfo;
@@ -31,7 +31,7 @@ export interface InventoryItem {
 }
 
 export interface InventoryLocation {
-  type: 'WAREHOUSE' | 'TRUCK' | 'CUSTOMER' | 'TECHNICIAN' | 'REPAIR_CENTER';
+  type: "WAREHOUSE" | "TRUCK" | "CUSTOMER" | "TECHNICIAN" | "REPAIR_CENTER";
   location_id: string;
   location_name: string;
   address?: string;
@@ -59,7 +59,7 @@ export interface WarrantyInfo {
 export interface StockMovement {
   id: string;
   item_id: string;
-  movement_type: 'RECEIVE' | 'ISSUE' | 'TRANSFER' | 'RETURN' | 'ADJUSTMENT' | 'WRITE_OFF';
+  movement_type: "RECEIVE" | "ISSUE" | "TRANSFER" | "RETURN" | "ADJUSTMENT" | "WRITE_OFF";
   quantity: number;
   from_location?: InventoryLocation;
   to_location?: InventoryLocation;
@@ -86,14 +86,14 @@ export interface StockLevel {
 export interface WorkOrder {
   id: string;
   work_order_number: string;
-  type: 'INSTALLATION' | 'MAINTENANCE' | 'REPAIR' | 'UPGRADE' | 'REMOVAL';
+  type: "INSTALLATION" | "MAINTENANCE" | "REPAIR" | "UPGRADE" | "REMOVAL";
   customer_id: string;
   customer_name: string;
   address: string;
   scheduled_date: string;
   technician_id?: string;
   technician_name?: string;
-  status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   required_equipment: EquipmentRequirement[];
   assigned_equipment: AssignedEquipment[];
   notes?: string;
@@ -113,7 +113,7 @@ export interface AssignedEquipment {
   sku: string;
   serial_number?: string;
   quantity: number;
-  status: 'ASSIGNED' | 'DEPLOYED' | 'RETURNED';
+  status: "ASSIGNED" | "DEPLOYED" | "RETURNED";
 }
 
 export interface Vendor {
@@ -137,7 +137,7 @@ export class InventoryApiClient extends BaseApiClient {
 
   // Inventory Items
   async getInventoryItems(params?: QueryParams): Promise<PaginatedResponse<InventoryItem>> {
-    return this.get('/api/inventory/items', { params });
+    return this.get("/api/inventory/items", { params });
   }
 
   async getInventoryItem(itemId: string): Promise<{ data: InventoryItem }> {
@@ -145,14 +145,14 @@ export class InventoryApiClient extends BaseApiClient {
   }
 
   async createInventoryItem(
-    data: Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>
+    data: Omit<InventoryItem, "id" | "created_at" | "updated_at">,
   ): Promise<{ data: InventoryItem }> {
-    return this.post('/api/inventory/items', data);
+    return this.post("/api/inventory/items", data);
   }
 
   async updateInventoryItem(
     itemId: string,
-    data: Partial<InventoryItem>
+    data: Partial<InventoryItem>,
   ): Promise<{ data: InventoryItem }> {
     return this.put(`/api/inventory/items/${itemId}`, data);
   }
@@ -166,7 +166,9 @@ export class InventoryApiClient extends BaseApiClient {
   }
 
   async searchInventoryBySerial(serialNumber: string): Promise<{ data: InventoryItem[] }> {
-    return this.get(`/api/inventory/items/search`, { params: { serial_number: serialNumber } });
+    return this.get(`/api/inventory/items/search`, {
+      params: { serial_number: serialNumber },
+    });
   }
 
   // Stock Management
@@ -175,23 +177,23 @@ export class InventoryApiClient extends BaseApiClient {
     sku?: string;
     low_stock?: boolean;
   }): Promise<PaginatedResponse<StockLevel>> {
-    return this.get('/api/inventory/stock-levels', { params });
+    return this.get("/api/inventory/stock-levels", { params });
   }
 
   async getStockMovements(
     itemId?: string,
-    params?: QueryParams
+    params?: QueryParams,
   ): Promise<PaginatedResponse<StockMovement>> {
     const endpoint = itemId
       ? `/api/inventory/items/${itemId}/movements`
-      : '/api/inventory/movements';
+      : "/api/inventory/movements";
     return this.get(endpoint, { params });
   }
 
   async recordStockMovement(
-    data: Omit<StockMovement, 'id' | 'created_at'>
+    data: Omit<StockMovement, "id" | "created_at">,
   ): Promise<{ data: StockMovement }> {
-    return this.post('/api/inventory/movements', data);
+    return this.post("/api/inventory/movements", data);
   }
 
   async receiveStock(data: {
@@ -205,7 +207,7 @@ export class InventoryApiClient extends BaseApiClient {
     reference_number?: string;
     notes?: string;
   }): Promise<{ data: StockMovement[] }> {
-    return this.post('/api/inventory/receive', data);
+    return this.post("/api/inventory/receive", data);
   }
 
   async issueStock(data: {
@@ -220,7 +222,7 @@ export class InventoryApiClient extends BaseApiClient {
     purpose: string;
     notes?: string;
   }): Promise<{ data: StockMovement[] }> {
-    return this.post('/api/inventory/issue', data);
+    return this.post("/api/inventory/issue", data);
   }
 
   async transferStock(data: {
@@ -233,12 +235,12 @@ export class InventoryApiClient extends BaseApiClient {
     reason: string;
     notes?: string;
   }): Promise<{ data: StockMovement[] }> {
-    return this.post('/api/inventory/transfer', data);
+    return this.post("/api/inventory/transfer", data);
   }
 
   // Work Orders
   async getWorkOrders(params?: QueryParams): Promise<PaginatedResponse<WorkOrder>> {
-    return this.get('/api/inventory/work-orders', { params });
+    return this.get("/api/inventory/work-orders", { params });
   }
 
   async getWorkOrder(workOrderId: string): Promise<{ data: WorkOrder }> {
@@ -246,21 +248,21 @@ export class InventoryApiClient extends BaseApiClient {
   }
 
   async createWorkOrder(
-    data: Omit<WorkOrder, 'id' | 'work_order_number' | 'created_at' | 'updated_at'>
+    data: Omit<WorkOrder, "id" | "work_order_number" | "created_at" | "updated_at">,
   ): Promise<{ data: WorkOrder }> {
-    return this.post('/api/inventory/work-orders', data);
+    return this.post("/api/inventory/work-orders", data);
   }
 
   async updateWorkOrder(
     workOrderId: string,
-    data: Partial<WorkOrder>
+    data: Partial<WorkOrder>,
   ): Promise<{ data: WorkOrder }> {
     return this.put(`/api/inventory/work-orders/${workOrderId}`, data);
   }
 
   async assignEquipmentToWorkOrder(
     workOrderId: string,
-    equipment: AssignedEquipment[]
+    equipment: AssignedEquipment[],
   ): Promise<{ data: WorkOrder }> {
     return this.post(`/api/inventory/work-orders/${workOrderId}/assign-equipment`, { equipment });
   }
@@ -271,7 +273,7 @@ export class InventoryApiClient extends BaseApiClient {
       equipment_used: AssignedEquipment[];
       equipment_returned?: AssignedEquipment[];
       notes?: string;
-    }
+    },
   ): Promise<{ data: WorkOrder }> {
     return this.post(`/api/inventory/work-orders/${workOrderId}/complete`, data);
   }
@@ -285,7 +287,7 @@ export class InventoryApiClient extends BaseApiClient {
       technician_id: string;
       work_order_id?: string;
       notes?: string;
-    }
+    },
   ): Promise<{ data: InventoryItem }> {
     return this.post(`/api/inventory/items/${itemId}/deploy`, data);
   }
@@ -294,10 +296,10 @@ export class InventoryApiClient extends BaseApiClient {
     itemId: string,
     data: {
       reason: string;
-      condition: InventoryItem['condition'];
+      condition: InventoryItem["condition"];
       return_location_id: string;
       notes?: string;
-    }
+    },
   ): Promise<{ data: InventoryItem }> {
     return this.post(`/api/inventory/items/${itemId}/return`, data);
   }
@@ -306,9 +308,9 @@ export class InventoryApiClient extends BaseApiClient {
     itemId: string,
     data: {
       issue_description: string;
-      maintenance_type: 'PREVENTIVE' | 'CORRECTIVE' | 'EMERGENCY';
+      maintenance_type: "PREVENTIVE" | "CORRECTIVE" | "EMERGENCY";
       estimated_repair_date?: string;
-    }
+    },
   ): Promise<{ data: InventoryItem }> {
     return this.post(`/api/inventory/items/${itemId}/maintenance`, data);
   }
@@ -319,7 +321,7 @@ export class InventoryApiClient extends BaseApiClient {
 
   // Vendors & Procurement
   async getVendors(params?: QueryParams): Promise<PaginatedResponse<Vendor>> {
-    return this.get('/api/inventory/vendors', { params });
+    return this.get("/api/inventory/vendors", { params });
   }
 
   async createPurchaseOrder(data: {
@@ -332,20 +334,22 @@ export class InventoryApiClient extends BaseApiClient {
     delivery_date?: string;
     notes?: string;
   }): Promise<{ data: { purchase_order_id: string; po_number: string } }> {
-    return this.post('/api/inventory/purchase-orders', data);
+    return this.post("/api/inventory/purchase-orders", data);
   }
 
   // Reports & Analytics
   async getInventoryReport(
-    reportType: 'STOCK_LEVELS' | 'MOVEMENTS' | 'AGING' | 'VALUATION',
+    reportType: "STOCK_LEVELS" | "MOVEMENTS" | "AGING" | "VALUATION",
     params?: {
       start_date?: string;
       end_date?: string;
       location_id?: string;
       category?: string;
-    }
+    },
   ): Promise<{ data: any }> {
-    return this.get(`/api/inventory/reports/${reportType.toLowerCase()}`, { params });
+    return this.get(`/api/inventory/reports/${reportType.toLowerCase()}`, {
+      params,
+    });
   }
 
   async getAssetUtilization(params?: {
@@ -353,24 +357,33 @@ export class InventoryApiClient extends BaseApiClient {
     end_date?: string;
     asset_category?: string;
   }): Promise<{ data: any }> {
-    return this.get('/api/inventory/analytics/utilization', { params });
+    return this.get("/api/inventory/analytics/utilization", { params });
   }
 
   async getLowStockAlerts(): Promise<{
-    data: Array<{ sku: string; current_stock: number; reorder_level: number; location: string }>;
+    data: Array<{
+      sku: string;
+      current_stock: number;
+      reorder_level: number;
+      location: string;
+    }>;
   }> {
-    return this.get('/api/inventory/alerts/low-stock');
+    return this.get("/api/inventory/alerts/low-stock");
   }
 
-  async getWarrantyExpirations(params?: {
-    days_ahead?: number;
-  }): Promise<{ data: Array<{ item_id: string; warranty_end: string; days_remaining: number }> }> {
-    return this.get('/api/inventory/alerts/warranty-expiring', { params });
+  async getWarrantyExpirations(params?: { days_ahead?: number }): Promise<{
+    data: Array<{
+      item_id: string;
+      warranty_end: string;
+      days_remaining: number;
+    }>;
+  }> {
+    return this.get("/api/inventory/alerts/warranty-expiring", { params });
   }
 
   // Barcode & RFID
   async generateBarcode(
-    itemId: string
+    itemId: string,
   ): Promise<{ data: { barcode: string; barcode_image_url: string } }> {
     return this.post(`/api/inventory/items/${itemId}/barcode`, {});
   }
@@ -383,8 +396,8 @@ export class InventoryApiClient extends BaseApiClient {
     updates: Array<{
       barcode: string;
       updates: Partial<InventoryItem>;
-    }>
+    }>,
   ): Promise<{ data: { updated: number; errors: any[] } }> {
-    return this.post('/api/inventory/bulk-update', { updates });
+    return this.post("/api/inventory/bulk-update", { updates });
   }
 }

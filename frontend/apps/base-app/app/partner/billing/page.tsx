@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useEffect, useState, type ElementType, type ReactNode } from "react";
@@ -33,7 +33,10 @@ import { TablePagination, usePagination } from "@/components/ui/table-pagination
 
 const STATEMENT_STATUS: Record<
   PartnerPayoutStatus,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
 > = {
   pending: { label: "Pending", variant: "secondary" },
   ready: { label: "Ready to payout", variant: "outline" },
@@ -45,7 +48,10 @@ const STATEMENT_STATUS: Record<
 
 const PAYOUT_STATUS: Record<
   PartnerPayoutStatus,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
 > = {
   pending: { label: "Pending", variant: "secondary" },
   ready: { label: "Queued", variant: "outline" },
@@ -57,7 +63,10 @@ const PAYOUT_STATUS: Record<
 
 const CREDIT_NOTE_STATUS: Record<
   string,
-  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
 > = {
   draft: { label: "Draft", variant: "secondary" },
   issued: { label: "Issued", variant: "default" },
@@ -78,11 +87,7 @@ const formatMinorCurrency = (amountMinor: number, currency: string) =>
   formatCurrency(amountMinor / 100, currency || "USD");
 
 export default function PartnerBillingPage() {
-  const {
-    data: stats,
-    isLoading: statsLoading,
-    error: statsError,
-  } = usePartnerDashboard();
+  const { data: stats, isLoading: statsLoading, error: statsError } = usePartnerDashboard();
 
   // Pagination for statements
   const statementsPagination = usePagination(10);
@@ -134,8 +139,8 @@ export default function PartnerBillingPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-bold text-foreground">Partner Billing</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Review referral revenue share, track payouts, and download statements that support
-          your finance reconciliation process.
+          Review referral revenue share, track payouts, and download statements that support your
+          finance reconciliation process.
         </p>
       </header>
 
@@ -160,9 +165,7 @@ export default function PartnerBillingPage() {
               title="Pending commissions"
               value={stats ? formatUsd(stats.pending_commissions) : "—"}
               icon={Wallet}
-              helper={
-                stats ? `${formatUsd(stats.total_commissions_paid)} paid to date` : undefined
-              }
+              helper={stats ? `${formatUsd(stats.total_commissions_paid)} paid to date` : undefined}
             />
             <MetricCard
               title="Revenue share (YTD)"
@@ -175,7 +178,9 @@ export default function PartnerBillingPage() {
               value={stats ? `${(stats.conversion_rate || 0).toFixed(1)}%` : "—"}
               icon={ShieldCheck}
               helper={
-                stats ? `${stats.converted_referrals} of ${stats.total_referrals} referrals converted` : undefined
+                stats
+                  ? `${stats.converted_referrals} of ${stats.total_referrals} referrals converted`
+                  : undefined
               }
             />
           </>
@@ -212,7 +217,9 @@ export default function PartnerBillingPage() {
         <Card>
           <CardHeader>
             <CardTitle>Statements & reporting</CardTitle>
-            <CardDescription>Download signed statements or export detailed commission reports.</CardDescription>
+            <CardDescription>
+              Download signed statements or export detailed commission reports.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <Button asChild>
@@ -366,11 +373,10 @@ export default function PartnerBillingPage() {
               <div className="space-y-3">
                 {(creditNotes ?? []).map((note) => {
                   const statusKey = note.status.toLowerCase();
-                  const statusConfig =
-                    CREDIT_NOTE_STATUS[statusKey] ?? {
-                      label: note.status,
-                      variant: "secondary" as const,
-                    };
+                  const statusConfig = CREDIT_NOTE_STATUS[statusKey] ?? {
+                    label: note.status,
+                    variant: "secondary" as const,
+                  };
                   return (
                     <div
                       key={note.id}
@@ -383,13 +389,16 @@ export default function PartnerBillingPage() {
                         </div>
                         <div className="text-xs text-muted-foreground">
                           {note.invoiceId ? `Invoice ${note.invoiceId}` : "Standalone credit"} ·{" "}
-                          {note.issuedAt ? format(new Date(note.issuedAt), "MMM d, yyyy") : "Date pending"}
+                          {note.issuedAt
+                            ? format(new Date(note.issuedAt), "MMM d, yyyy")
+                            : "Date pending"}
                         </div>
                         <div className="text-sm text-foreground">
                           {formatMinorCurrency(note.totalAmountMinor, note.currency)}{" "}
                           {note.remainingAmountMinor > 0 && (
                             <span className="text-xs text-muted-foreground">
-                              · Remaining {formatMinorCurrency(note.remainingAmountMinor, note.currency)}
+                              · Remaining{" "}
+                              {formatMinorCurrency(note.remainingAmountMinor, note.currency)}
                             </span>
                           )}
                         </div>
@@ -512,9 +521,10 @@ function StatementDetailsCard({ statement }: { statement: PartnerStatement }) {
   const adjustments = statement.adjustments_total;
   const netPayable = statement.commission_total + adjustments;
 
-  const formattedAdjustments = adjustments === 0
-    ? formatUsd(0)
-    : `${adjustments < 0 ? "-" : ""}${formatUsd(Math.abs(adjustments))}`;
+  const formattedAdjustments =
+    adjustments === 0
+      ? formatUsd(0)
+      : `${adjustments < 0 ? "-" : ""}${formatUsd(Math.abs(adjustments))}`;
 
   return (
     <Card>
@@ -526,18 +536,10 @@ function StatementDetailsCard({ statement }: { statement: PartnerStatement }) {
       </CardHeader>
       <CardContent className="space-y-4 text-sm text-muted-foreground">
         <div className="grid gap-3 sm:grid-cols-2">
-          <DetailItem label="Revenue share">
-            {formatUsd(statement.revenue_total)}
-          </DetailItem>
-          <DetailItem label="Commission due">
-            {formatUsd(statement.commission_total)}
-          </DetailItem>
-          <DetailItem label="Adjustments">
-            {formattedAdjustments}
-          </DetailItem>
-          <DetailItem label="Net payable">
-            {formatUsd(netPayable)}
-          </DetailItem>
+          <DetailItem label="Revenue share">{formatUsd(statement.revenue_total)}</DetailItem>
+          <DetailItem label="Commission due">{formatUsd(statement.commission_total)}</DetailItem>
+          <DetailItem label="Adjustments">{formattedAdjustments}</DetailItem>
+          <DetailItem label="Net payable">{formatUsd(netPayable)}</DetailItem>
         </div>
         <div className="flex flex-wrap gap-2">
           {statement.download_url ? (

@@ -6,14 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  DollarSign,
-  TrendingUp,
-  Clock,
-  CheckCircle2,
-  Calendar,
-  RefreshCw,
-} from "lucide-react";
+import { DollarSign, TrendingUp, Clock, CheckCircle2, Calendar, RefreshCw } from "lucide-react";
 import { useRevenueMetrics, useRevenueStatistics } from "@/hooks/usePartnerRevenue";
 
 export function RevenueMetricsTab() {
@@ -22,7 +15,12 @@ export function RevenueMetricsTab() {
     end: new Date().toISOString().split("T")[0], // Today
   });
 
-  const { data: metrics, isLoading, error, refetch } = useRevenueMetrics({
+  const {
+    data: metrics,
+    isLoading,
+    error,
+    refetch,
+  } = useRevenueMetrics({
     period_start: `${period.start}T00:00:00Z`,
     period_end: `${period.end}T23:59:59Z`,
   });
@@ -161,17 +159,13 @@ export function RevenueMetricsTab() {
                 {formatCurrency(metrics?.pending_amount || 0)}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Awaiting payout
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">Awaiting payout</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Payout Rate
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Payout Rate</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
@@ -183,9 +177,7 @@ export function RevenueMetricsTab() {
                 %
               </span>
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Commissions paid out
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">Commissions paid out</p>
           </CardContent>
         </Card>
       </div>
@@ -205,15 +197,11 @@ export function RevenueMetricsTab() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Pending</span>
-              <span className="font-semibold">
-                {formatCurrency(statistics.pendingCommissions)}
-              </span>
+              <span className="font-semibold">{formatCurrency(statistics.pendingCommissions)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Paid</span>
-              <span className="font-semibold">
-                {formatCurrency(statistics.paidCommissions)}
-              </span>
+              <span className="font-semibold">{formatCurrency(statistics.paidCommissions)}</span>
             </div>
             <div className="border-t pt-4 flex justify-between items-center">
               <span className="font-medium">Total</span>
@@ -221,7 +209,7 @@ export function RevenueMetricsTab() {
                 {formatCurrency(
                   statistics.approvedCommissions +
                     statistics.pendingCommissions +
-                    statistics.paidCommissions
+                    statistics.paidCommissions,
                 )}
               </span>
             </div>
@@ -241,15 +229,11 @@ export function RevenueMetricsTab() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Pending</span>
-              <span className="font-semibold">
-                {formatCurrency(statistics.pendingPayouts)}
-              </span>
+              <span className="font-semibold">{formatCurrency(statistics.pendingPayouts)}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Processing</span>
-              <span className="font-semibold">
-                {formatCurrency(statistics.processingPayouts)}
-              </span>
+              <span className="font-semibold">{formatCurrency(statistics.processingPayouts)}</span>
             </div>
             <div className="border-t pt-4 flex justify-between items-center">
               <span className="font-medium">Failed</span>
@@ -286,9 +270,7 @@ export function RevenueMetricsTab() {
               <span className="text-muted-foreground">Average Commission:</span>
               <p className="font-medium mt-1">
                 {metrics?.total_commission_count
-                  ? formatCurrency(
-                      metrics.total_commissions / metrics.total_commission_count
-                    )
+                  ? formatCurrency(metrics.total_commissions / metrics.total_commission_count)
                   : formatCurrency(0)}
               </p>
             </div>

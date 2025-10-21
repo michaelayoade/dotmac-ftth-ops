@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
@@ -61,7 +61,7 @@ export default function CustomerUsagePage() {
         total_gb: usage.total_gb,
         limit_gb: usage.limit_gb,
         days_remaining: Math.ceil(
-          (new Date(usage.period_end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+          (new Date(usage.period_end).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
         ),
       }
     : {
@@ -72,25 +72,14 @@ export default function CustomerUsagePage() {
         days_remaining: 0,
       };
 
-  const usagePercentage = currentMonth.limit_gb > 0
-    ? (currentMonth.total_gb / currentMonth.limit_gb) * 100
-    : 0;
+  const usagePercentage =
+    currentMonth.limit_gb > 0 ? (currentMonth.total_gb / currentMonth.limit_gb) * 100 : 0;
 
-  // Generate daily usage data
-  const dailyUsage = eachDayOfInterval({
-    start: subDays(new Date(), timeRange === "7d" ? 6 : timeRange === "30d" ? 29 : 89),
-    end: new Date(),
-  }).map((date) => ({
-    date: format(date, "MMM dd"),
-    download: 5 + Math.random() * 10,
-    upload: 1 + Math.random() * 3,
-  }));
-
-  const hourlyUsage = Array.from({ length: 24 }, (_, i) => ({
-    hour: `${i.toString().padStart(2, "0")}:00`,
-    download: Math.random() * 5,
-    upload: Math.random() * 2,
-  }));
+  // TODO: Implement usage history API endpoint to fetch real daily/hourly usage data
+  // For now, hide the charts until real data is available to prevent misleading customers
+  const dailyUsage: Array<{ date: string; download: number; upload: number }> = [];
+  const hourlyUsage: Array<{ hour: string; download: number; upload: number }> = [];
+  const usageHistoryAvailable = false; // Set to true when API endpoint is ready
 
   const handleDownloadReport = async () => {
     try {
@@ -114,10 +103,10 @@ export default function CustomerUsagePage() {
       };
 
       // Call API to generate PDF report
-      const response = await fetch('/api/customer/usage/report', {
-        method: 'POST',
+      const response = await fetch("/api/customer/usage/report", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(reportData),
       });
@@ -130,12 +119,12 @@ export default function CustomerUsagePage() {
       const blob = await response.blob();
 
       // Generate filename with current date
-      const dateStr = format(new Date(), 'yyyy-MM-dd');
+      const dateStr = format(new Date(), "yyyy-MM-dd");
       const filename = `usage-report-${dateStr}.pdf`;
 
       // Create a download link and trigger download
       const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
       link.download = filename;
       document.body.appendChild(link);
@@ -147,8 +136,10 @@ export default function CustomerUsagePage() {
 
       console.log(`Usage report downloaded: ${filename}`);
     } catch (error) {
-      console.error('Error downloading usage report:', error);
-      alert(`Failed to download report: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Error downloading usage report:", error);
+      alert(
+        `Failed to download report: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   };
 
@@ -158,9 +149,7 @@ export default function CustomerUsagePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Usage & Bandwidth</h1>
-          <p className="text-muted-foreground">
-            Monitor your internet usage
-          </p>
+          <p className="text-muted-foreground">Monitor your internet usage</p>
         </div>
         <Button variant="outline" onClick={handleDownloadReport}>
           <Download className="h-4 w-4 mr-2" />
@@ -176,12 +165,8 @@ export default function CustomerUsagePage() {
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {currentMonth.total_gb.toFixed(1)} GB
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {usagePercentage.toFixed(1)}% of limit
-            </p>
+            <div className="text-2xl font-bold">{currentMonth.total_gb.toFixed(1)} GB</div>
+            <p className="text-xs text-muted-foreground">{usagePercentage.toFixed(1)}% of limit</p>
           </CardContent>
         </Card>
 
@@ -194,9 +179,7 @@ export default function CustomerUsagePage() {
             <div className="text-2xl font-bold text-blue-500">
               {currentMonth.download_gb.toFixed(1)} GB
             </div>
-            <p className="text-xs text-muted-foreground">
-              This billing period
-            </p>
+            <p className="text-xs text-muted-foreground">This billing period</p>
           </CardContent>
         </Card>
 
@@ -209,9 +192,7 @@ export default function CustomerUsagePage() {
             <div className="text-2xl font-bold text-green-500">
               {currentMonth.upload_gb.toFixed(1)} GB
             </div>
-            <p className="text-xs text-muted-foreground">
-              This billing period
-            </p>
+            <p className="text-xs text-muted-foreground">This billing period</p>
           </CardContent>
         </Card>
 
@@ -221,12 +202,8 @@ export default function CustomerUsagePage() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {currentMonth.days_remaining}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Until next billing cycle
-            </p>
+            <div className="text-2xl font-bold">{currentMonth.days_remaining}</div>
+            <p className="text-xs text-muted-foreground">Until next billing cycle</p>
           </CardContent>
         </Card>
       </div>
@@ -238,9 +215,7 @@ export default function CustomerUsagePage() {
             <TrendingUp className="h-5 w-5" />
             Data Cap Usage
           </CardTitle>
-          <CardDescription>
-            Your usage against the monthly data cap
-          </CardDescription>
+          <CardDescription>Your usage against the monthly data cap</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -248,9 +223,7 @@ export default function CustomerUsagePage() {
               <span className="font-medium">
                 {currentMonth.total_gb.toFixed(1)} GB used of {currentMonth.limit_gb} GB
               </span>
-              <span className="text-muted-foreground">
-                {usagePercentage.toFixed(1)}%
-              </span>
+              <span className="text-muted-foreground">{usagePercentage.toFixed(1)}%</span>
             </div>
             <Progress value={usagePercentage} className="h-3" />
           </div>
@@ -258,9 +231,7 @@ export default function CustomerUsagePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Used</p>
-              <p className="text-2xl font-bold">
-                {currentMonth.total_gb.toFixed(1)} GB
-              </p>
+              <p className="text-2xl font-bold">{currentMonth.total_gb.toFixed(1)} GB</p>
             </div>
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">Remaining</p>
@@ -288,8 +259,8 @@ export default function CustomerUsagePage() {
               <div>
                 <p className="font-semibold text-yellow-500">Usage Alert</p>
                 <p className="text-sm text-muted-foreground">
-                  You&apos;ve used {usagePercentage.toFixed(0)}% of your monthly data cap.
-                  Consider upgrading your plan if you frequently exceed your limit.
+                  You&apos;ve used {usagePercentage.toFixed(0)}% of your monthly data cap. Consider
+                  upgrading your plan if you frequently exceed your limit.
                 </p>
               </div>
             </div>
@@ -306,9 +277,7 @@ export default function CustomerUsagePage() {
                 <BarChart3 className="h-5 w-5" />
                 Usage History
               </CardTitle>
-              <CardDescription>
-                Daily bandwidth usage
-              </CardDescription>
+              <CardDescription>Daily bandwidth usage</CardDescription>
             </div>
             <Select value={timeRange} onValueChange={setTimeRange}>
               <SelectTrigger className="w-[150px]">
@@ -324,37 +293,39 @@ export default function CustomerUsagePage() {
         </CardHeader>
         <CardContent>
           <div className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dailyUsage}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis
-                  dataKey="date"
-                  className="text-xs"
-                  tick={{ fontSize: 10 }}
-                />
-                <YAxis className="text-xs" tick={{ fontSize: 10 }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--background))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "6px",
-                  }}
-                />
-                <Legend />
-                <Bar
-                  dataKey="download"
-                  stackId="a"
-                  fill="hsl(217, 91%, 60%)"
-                  name="Download (GB)"
-                />
-                <Bar
-                  dataKey="upload"
-                  stackId="a"
-                  fill="hsl(142, 76%, 36%)"
-                  name="Upload (GB)"
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            {usageHistoryAvailable ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dailyUsage}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="date" className="text-xs" tick={{ fontSize: 10 }} />
+                  <YAxis className="text-xs" tick={{ fontSize: 10 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--background))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "6px",
+                    }}
+                  />
+                  <Legend />
+                  <Bar
+                    dataKey="download"
+                    stackId="a"
+                    fill="hsl(217, 91%, 60%)"
+                    name="Download (GB)"
+                  />
+                  <Bar dataKey="upload" stackId="a" fill="hsl(142, 76%, 36%)" name="Upload (GB)" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                <BarChart3 className="h-16 w-16 text-muted-foreground/40 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Usage History Coming Soon</h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Detailed usage history charts will be available once we implement the telemetry
+                  API endpoint.
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -366,47 +337,52 @@ export default function CustomerUsagePage() {
             <Wifi className="h-5 w-5" />
             Today&apos;s Usage Pattern
           </CardTitle>
-          <CardDescription>
-            Bandwidth usage by hour (last 24 hours)
-          </CardDescription>
+          <CardDescription>Bandwidth usage by hour (last 24 hours)</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={hourlyUsage}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis
-                  dataKey="hour"
-                  className="text-xs"
-                  tick={{ fontSize: 10 }}
-                />
-                <YAxis className="text-xs" tick={{ fontSize: 10 }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--background))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "6px",
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="download"
-                  stroke="hsl(217, 91%, 60%)"
-                  strokeWidth={2}
-                  dot={false}
-                  name="Download (Mbps)"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="upload"
-                  stroke="hsl(142, 76%, 36%)"
-                  strokeWidth={2}
-                  dot={false}
-                  name="Upload (Mbps)"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {usageHistoryAvailable ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={hourlyUsage}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="hour" className="text-xs" tick={{ fontSize: 10 }} />
+                  <YAxis className="text-xs" tick={{ fontSize: 10 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--background))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "6px",
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="download"
+                    stroke="hsl(217, 91%, 60%)"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Download (Mbps)"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="upload"
+                    stroke="hsl(142, 76%, 36%)"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Upload (Mbps)"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                <Wifi className="h-16 w-16 text-muted-foreground/40 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Hourly Pattern Coming Soon</h3>
+                <p className="text-sm text-muted-foreground max-w-md">
+                  Hourly usage patterns will be available once we implement the telemetry API
+                  endpoint.
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -432,7 +408,9 @@ export default function CustomerUsagePage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
-              <span>Consider upgrading to an unlimited plan if you consistently exceed your cap</span>
+              <span>
+                Consider upgrading to an unlimited plan if you consistently exceed your cap
+              </span>
             </li>
           </ul>
         </CardContent>

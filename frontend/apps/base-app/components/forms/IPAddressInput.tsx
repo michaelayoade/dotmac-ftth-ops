@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * IP Address Input Component
@@ -6,17 +6,12 @@
  * Form input with validation for IPv4 and IPv6 addresses
  */
 
-import React, { useState, useCallback } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import {
-  isValidIPv4,
-  isValidIPv6,
-  detectIPFamily,
-  IPFamily,
-} from '@/lib/utils/ip-address';
-import { cn } from '@/lib/utils';
+import React, { useState, useCallback } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { isValidIPv4, isValidIPv6, detectIPFamily, IPFamily } from "@/lib/utils/ip-address";
+import { cn } from "@/lib/utils";
 
 export interface IPAddressInputProps {
   value: string;
@@ -39,7 +34,7 @@ export function IPAddressInput({
   onChange,
   onBlur,
   label,
-  placeholder = 'Enter IP address',
+  placeholder = "Enter IP address",
   error,
   disabled = false,
   required = false,
@@ -65,20 +60,20 @@ export function IPAddressInput({
     if (!value) return null;
 
     if (!allowIPv4 && family === IPFamily.IPv4) {
-      return 'IPv4 addresses are not allowed';
+      return "IPv4 addresses are not allowed";
     }
 
     if (!allowIPv6 && family === IPFamily.IPv6) {
-      return 'IPv6 addresses are not allowed';
+      return "IPv6 addresses are not allowed";
     }
 
     if (!isValid) {
       if (allowIPv4 && allowIPv6) {
-        return 'Invalid IP address format';
+        return "Invalid IP address format";
       } else if (allowIPv4) {
-        return 'Invalid IPv4 address format';
+        return "Invalid IPv4 address format";
       } else {
-        return 'Invalid IPv6 address format';
+        return "Invalid IPv6 address format";
       }
     }
 
@@ -88,7 +83,7 @@ export function IPAddressInput({
   const displayError = error || validationError;
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       {label && (
         <div className="flex items-center justify-between">
           <Label htmlFor={label}>
@@ -96,8 +91,8 @@ export function IPAddressInput({
             {required && <span className="text-red-500 ml-1">*</span>}
           </Label>
           {showFamily && value && isValid && (
-            <Badge variant={family === IPFamily.IPv4 ? 'default' : 'secondary'}>
-              {family === IPFamily.IPv4 ? 'IPv4' : 'IPv6'}
+            <Badge variant={family === IPFamily.IPv4 ? "default" : "secondary"}>
+              {family === IPFamily.IPv4 ? "IPv4" : "IPv6"}
             </Badge>
           )}
         </div>
@@ -111,23 +106,15 @@ export function IPAddressInput({
         onBlur={handleBlur}
         placeholder={placeholder}
         disabled={disabled}
-        className={cn(
-          displayError && 'border-red-500 focus-visible:ring-red-500'
-        )}
+        className={cn(displayError && "border-red-500 focus-visible:ring-red-500")}
         aria-invalid={!!displayError}
         aria-describedby={displayError ? `${label}-error` : undefined}
       />
 
-      {helpText && !displayError && (
-        <p className="text-sm text-muted-foreground">{helpText}</p>
-      )}
+      {helpText && !displayError && <p className="text-sm text-muted-foreground">{helpText}</p>}
 
       {displayError && (
-        <p
-          id={`${label}-error`}
-          className="text-sm text-red-500"
-          role="alert"
-        >
+        <p id={`${label}-error`} className="text-sm text-red-500" role="alert">
           {displayError}
         </p>
       )}

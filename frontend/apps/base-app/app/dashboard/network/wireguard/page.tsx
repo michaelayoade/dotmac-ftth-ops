@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 /**
@@ -10,11 +10,11 @@ export const dynamicParams = true;
  * Main dashboard with overview statistics and quick actions.
  */
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Server,
   Users,
@@ -25,9 +25,13 @@ import {
   Plus,
   Shield,
   Globe,
-} from 'lucide-react';
-import { useDashboardStats } from '../../../../hooks/useWireGuard';
-import { formatBytes, WireGuardServerStatus, WireGuardPeerStatus } from '../../../../types/wireguard';
+} from "lucide-react";
+import { useDashboardStats } from "../../../../hooks/useWireGuard";
+import {
+  formatBytes,
+  WireGuardServerStatus,
+  WireGuardPeerStatus,
+} from "../../../../types/wireguard";
 
 export default function WireGuardDashboardPage() {
   const { data: stats, isLoading, refetch, isFetching } = useDashboardStats();
@@ -50,12 +54,8 @@ export default function WireGuardDashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={isFetching}
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+          <Button variant="outline" onClick={handleRefresh} disabled={isFetching}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Link href="/dashboard/network/wireguard/servers">
@@ -177,9 +177,7 @@ export default function WireGuardDashboardPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Online Now</p>
-                    <p className="text-3xl font-bold text-blue-600">
-                      {stats.peers.online || 0}
-                    </p>
+                    <p className="text-3xl font-bold text-blue-600">{stats.peers.online || 0}</p>
                   </div>
                   <Globe className="h-10 w-10 text-blue-500" />
                 </div>
@@ -267,9 +265,7 @@ export default function WireGuardDashboardPage() {
                       <Activity className="h-4 w-4" />
                       Total Traffic
                     </p>
-                    <p className="text-2xl font-bold">
-                      {formatBytes(stats.traffic.total_bytes)}
-                    </p>
+                    <p className="text-2xl font-bold">{formatBytes(stats.traffic.total_bytes)}</p>
                   </div>
                   <Activity className="h-10 w-10 text-purple-500" />
                 </div>

@@ -1,15 +1,15 @@
-import * as React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import * as React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // Devtools are optional; avoid hard dependency in library code
 const ReactQueryDevtools: React.FC<{ initialIsOpen?: boolean }> = () => null;
-import { AuthProvider, type PartialAuthConfig } from '@dotmac/auth';
-import type { PortalType } from '@dotmac/auth';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { ThemeProvider } from './components/ThemeProvider';
-import { NotificationProvider } from './components/NotificationProvider';
-import { FeatureProvider } from './components/FeatureProvider';
-import { TenantProvider } from './components/TenantProvider';
-import { createPortalQueryClient } from './utils/queryClients';
+import { AuthProvider, type PartialAuthConfig } from "@dotmac/auth";
+import type { PortalType } from "@dotmac/auth";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ThemeProvider } from "./components/ThemeProvider";
+import { NotificationProvider } from "./components/NotificationProvider";
+import { FeatureProvider } from "./components/FeatureProvider";
+import { TenantProvider } from "./components/TenantProvider";
+import { createPortalQueryClient } from "./utils/queryClients";
 
 export interface UniversalProviderProps {
   children: React.ReactNode;
@@ -51,8 +51,8 @@ export interface FeatureFlags {
   devtools?: boolean;
 }
 
-export type AuthVariant = 'simple' | 'secure' | 'enterprise';
-export type TenantVariant = 'single' | 'multi' | 'isp';
+export type AuthVariant = "simple" | "secure" | "enterprise";
+export type TenantVariant = "single" | "multi" | "isp";
 
 const defaultFeatures: FeatureFlags = {
   notifications: true,
@@ -78,16 +78,16 @@ export function UniversalProviders({
   children,
   portal,
   features = {},
-  authVariant = 'secure',
-  tenantVariant = 'multi',
+  authVariant = "secure",
+  tenantVariant = "multi",
   queryClient,
-  enableDevtools = process.env.NODE_ENV === 'development',
+  enableDevtools = process.env.NODE_ENV === "development",
   config = {},
 }: UniversalProviderProps) {
   // Memoize the query client to prevent recreation on re-renders
   const client = React.useMemo(
     () => queryClient || createPortalQueryClient(portal),
-    [queryClient, portal]
+    [queryClient, portal],
   );
 
   // Merge features with defaults
@@ -96,7 +96,7 @@ export function UniversalProviders({
       ...defaultFeatures,
       ...features,
     }),
-    [features]
+    [features],
   );
 
   // Portal-specific configurations
@@ -144,10 +144,10 @@ function getPortalConfig(portal: PortalType, config: any = {}) {
       enableAuditLog: true,
       tokenRefreshThreshold: 5 * 60 * 1000, // 5 minutes
       endpoints: {
-        login: '/api/admin/auth/login',
-        logout: '/api/admin/auth/logout',
-        refresh: '/api/admin/auth/refresh',
-        profile: '/api/admin/auth/profile',
+        login: "/api/admin/auth/login",
+        logout: "/api/admin/auth/logout",
+        refresh: "/api/admin/auth/refresh",
+        profile: "/api/admin/auth/profile",
       },
     },
     customer: {
@@ -160,10 +160,10 @@ function getPortalConfig(portal: PortalType, config: any = {}) {
       enableAuditLog: false,
       tokenRefreshThreshold: 2 * 60 * 1000, // 2 minutes
       endpoints: {
-        login: '/api/customer/auth/login',
-        logout: '/api/customer/auth/logout',
-        refresh: '/api/customer/auth/refresh',
-        profile: '/api/customer/auth/profile',
+        login: "/api/customer/auth/login",
+        logout: "/api/customer/auth/logout",
+        refresh: "/api/customer/auth/refresh",
+        profile: "/api/customer/auth/profile",
       },
     },
     reseller: {
@@ -176,10 +176,10 @@ function getPortalConfig(portal: PortalType, config: any = {}) {
       enableAuditLog: true,
       tokenRefreshThreshold: 10 * 60 * 1000, // 10 minutes
       endpoints: {
-        login: '/api/reseller/auth/login',
-        logout: '/api/reseller/auth/logout',
-        refresh: '/api/reseller/auth/refresh',
-        profile: '/api/reseller/auth/profile',
+        login: "/api/reseller/auth/login",
+        logout: "/api/reseller/auth/logout",
+        refresh: "/api/reseller/auth/refresh",
+        profile: "/api/reseller/auth/profile",
       },
     },
     technician: {
@@ -192,10 +192,10 @@ function getPortalConfig(portal: PortalType, config: any = {}) {
       enableAuditLog: true,
       tokenRefreshThreshold: 30 * 60 * 1000, // 30 minutes
       endpoints: {
-        login: '/api/technician/auth/login',
-        logout: '/api/technician/auth/logout',
-        refresh: '/api/technician/auth/refresh',
-        profile: '/api/technician/auth/profile',
+        login: "/api/technician/auth/login",
+        logout: "/api/technician/auth/logout",
+        refresh: "/api/technician/auth/refresh",
+        profile: "/api/technician/auth/profile",
       },
     },
     management: {
@@ -208,64 +208,64 @@ function getPortalConfig(portal: PortalType, config: any = {}) {
       enableAuditLog: true,
       tokenRefreshThreshold: 15 * 60 * 1000, // 15 minutes
       endpoints: {
-        login: '/api/management/auth/login',
-        logout: '/api/management/auth/logout',
-        refresh: '/api/management/auth/refresh',
-        profile: '/api/management/auth/profile',
+        login: "/api/management/auth/login",
+        logout: "/api/management/auth/logout",
+        refresh: "/api/management/auth/refresh",
+        profile: "/api/management/auth/profile",
       },
     },
   };
 
   const configs = {
     admin: {
-      theme: 'professional',
+      theme: "professional",
       auth: { ...baseAuthConfigs.admin, ...config.auth },
       notifications: {
         max: config.notificationOptions?.maxNotifications || 5,
         duration: config.notificationOptions?.defaultDuration || 5000,
-        position: 'top-right' as const,
+        position: "top-right" as const,
       },
-      errorFallback: 'AdminErrorFallback',
+      errorFallback: "AdminErrorFallback",
     },
     customer: {
-      theme: 'friendly',
+      theme: "friendly",
       auth: { ...baseAuthConfigs.customer, ...config.auth },
       notifications: {
         max: config.notificationOptions?.maxNotifications || 3,
         duration: config.notificationOptions?.defaultDuration || 4000,
-        position: 'bottom-right' as const,
+        position: "bottom-right" as const,
       },
-      errorFallback: 'CustomerErrorFallback',
+      errorFallback: "CustomerErrorFallback",
     },
     reseller: {
-      theme: 'business',
+      theme: "business",
       auth: { ...baseAuthConfigs.reseller, ...config.auth },
       notifications: {
         max: config.notificationOptions?.maxNotifications || 4,
         duration: config.notificationOptions?.defaultDuration || 6000,
-        position: 'top-right' as const,
+        position: "top-right" as const,
       },
-      errorFallback: 'ResellerErrorFallback',
+      errorFallback: "ResellerErrorFallback",
     },
     technician: {
-      theme: 'mobile',
+      theme: "mobile",
       auth: { ...baseAuthConfigs.technician, ...config.auth },
       notifications: {
         max: config.notificationOptions?.maxNotifications || 2,
         duration: config.notificationOptions?.defaultDuration || 8000,
-        position: 'bottom-center' as const,
+        position: "bottom-center" as const,
       },
-      errorFallback: 'TechnicianErrorFallback',
+      errorFallback: "TechnicianErrorFallback",
     },
     management: {
-      theme: 'enterprise',
+      theme: "enterprise",
       auth: { ...baseAuthConfigs.management, ...config.auth },
       notifications: {
         max: config.notificationOptions?.maxNotifications || 6,
         duration: config.notificationOptions?.defaultDuration || 7000,
-        position: 'top-center' as const,
+        position: "top-center" as const,
       },
-      errorFallback: 'ManagementErrorFallback',
+      errorFallback: "ManagementErrorFallback",
     },
   };
 

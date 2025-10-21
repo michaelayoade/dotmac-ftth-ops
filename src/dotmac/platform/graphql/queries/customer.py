@@ -4,14 +4,25 @@ GraphQL queries for Customer Management.
 Provides efficient customer queries with batched loading of activities and notes.
 """
 
+from datetime import UTC, datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 import strawberry
+
+if TYPE_CHECKING:
+    from typing import TypeAlias
+
+    JSONScalar: TypeAlias = Any
+else:
+    from strawberry.scalars import JSON as JSONScalar
 import structlog
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.billing.core.entities import InvoiceEntity
+from dotmac.platform.billing.models import BillingSubscriptionTable
 from dotmac.platform.customer_management.models import (
     Customer as CustomerModel,
 )
@@ -27,6 +38,10 @@ from dotmac.platform.graphql.types.customer import (
     CustomerOverviewMetrics,
     CustomerStatusEnum,
 )
+from dotmac.platform.graphql.types.subscription import Subscription
+from dotmac.platform.subscribers.models import Subscriber
+from dotmac.platform.ticketing.models import Ticket as TicketModel, TicketStatus
+from dotmac.platform.wireless.models import WirelessClient
 
 logger = structlog.get_logger(__name__)
 
@@ -34,6 +49,43 @@ logger = structlog.get_logger(__name__)
 @strawberry.type
 class CustomerQueries:
     """GraphQL queries for customer management."""
+
+    @staticmethod
+    async def _get_customer_uuid_for_tenant(
+        db: AsyncSession,
+        tenant_id: str,
+        customer_id: strawberry.ID,
+    ) -> UUID | None:
+        """
+        Validate that the customer belongs to the active tenant and return UUID.
+
+        Returns:
+            Customer UUID if accessible for tenant; otherwise None.
+        """
+        try:
+            customer_uuid = UUID(str(customer_id))
+        except ValueError:
+            logger.warning("customer.graphql.invalid_customer_id", customer_id=str(customer_id))
+            return None
+
+        stmt = (
+            select(CustomerModel.id)
+            .where(
+                CustomerModel.id == customer_uuid,
+                CustomerModel.tenant_id == tenant_id,
+                CustomerModel.deleted_at.is_(None),
+            )
+            .limit(1)
+        )
+        result = await db.execute(stmt)
+        if result.scalar_one_or_none() is None:
+            logger.warning(
+                "customer.graphql.customer_not_in_tenant",
+                customer_id=str(customer_uuid),
+                tenant_id=tenant_id,
+            )
+            return None
+        return customer_uuid
 
     @strawberry.field(description="Get customer by ID with activities and notes")  # type: ignore[misc]
     async def customer(
@@ -55,9 +107,6 @@ class CustomerQueries:
             Customer with batched activities and notes, or None if not found
         """
         db: AsyncSession = info.context.db
-
-        # Import here to avoid circular imports
-        from dotmac.platform.customer_management.models import Customer as CustomerModel
 
         try:
             customer_id = UUID(id)
@@ -224,3 +273,388 @@ class CustomerQueries:
             total_lifetime_value=total_ltv,
             average_lifetime_value=avg_ltv,
         )
+
+    @strawberry.field(description="Get customer subscriptions")  # type: ignore[misc]
+    async def customer_subscriptions(
+        self,
+        info: strawberry.Info[Context],
+        customer_id: strawberry.ID,
+        status: str | None = None,
+        limit: int = 50,
+    ) -> list[Subscription]:
+        """
+        Fetch all subscriptions for a customer.
+
+        Args:
+            customer_id: Customer UUID
+            status: Filter by subscription status (optional)
+            limit: Maximum number of subscriptions to return (default: 50)
+
+        Returns:
+            List of customer subscriptions
+        """
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
+
+        customer_uuid = await self._get_customer_uuid_for_tenant(db, tenant_id, customer_id)
+        if customer_uuid is None:
+            return []
+
+        limit = max(1, min(limit, 100))
+
+        stmt = (
+            select(BillingSubscriptionTable)
+            .where(
+                BillingSubscriptionTable.customer_id == str(customer_uuid),
+                BillingSubscriptionTable.tenant_id == tenant_id,
+            )
+            .order_by(BillingSubscriptionTable.created_at.desc())
+            .limit(limit)
+        )
+
+        if status:
+            stmt = stmt.where(BillingSubscriptionTable.status == status)
+
+        # Execute query
+        result = await db.execute(stmt)
+        subscription_models = result.scalars().all()
+
+        # Convert to GraphQL types
+        return [Subscription.from_model(sub) for sub in subscription_models]
+
+    @strawberry.field(description="Get customer network information")  # type: ignore[misc]
+    async def customer_network_info(
+        self,
+        info: strawberry.Info[Context],
+        customer_id: strawberry.ID,
+    ) -> JSONScalar:
+        """
+        Fetch network connection and service information for a customer.
+
+        Args:
+            customer_id: Customer UUID
+
+        Returns:
+            Network information including connection status, IP addresses, and service details
+        """
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
+
+        customer_uuid = await self._get_customer_uuid_for_tenant(db, tenant_id, customer_id)
+        if customer_uuid is None:
+            return {}
+
+        stmt = (
+            select(Subscriber)
+            .where(
+                Subscriber.customer_id == customer_uuid,
+                Subscriber.tenant_id == tenant_id,
+                Subscriber.deleted_at.is_(None),
+            )
+            .order_by(Subscriber.created_at.desc())
+        )
+        result = await db.execute(stmt)
+        subscribers = result.scalars().all()
+
+        network_info: dict[str, Any] = {
+            "customer_id": str(customer_uuid),
+            "services": [],
+            "total_services": len(subscribers),
+        }
+
+        for subscriber in subscribers:
+            download_mbps = (
+                subscriber.download_speed_kbps / 1000 if subscriber.download_speed_kbps else None
+            )
+            service_data = {
+                "service_id": subscriber.id,
+                "subscriber_id": subscriber.id,
+                "service_type": (
+                    subscriber.service_type.value
+                    if hasattr(subscriber.service_type, "value")
+                    else subscriber.service_type
+                ),
+                "status": (
+                    subscriber.status.value
+                    if hasattr(subscriber.status, "value")
+                    else subscriber.status
+                ),
+                "username": subscriber.username,
+                "ipv4_address": subscriber.static_ipv4,
+                "ipv6_address": subscriber.ipv6_prefix,
+                "bandwidth_mbps": download_mbps,
+                "download_speed_kbps": subscriber.download_speed_kbps,
+                "upload_speed_kbps": subscriber.upload_speed_kbps,
+                "vlan_id": subscriber.vlan_id,
+                "nas_identifier": subscriber.nas_identifier,
+                "onu_serial": subscriber.onu_serial,
+                "cpe_mac_address": subscriber.cpe_mac_address,
+                "service_address": subscriber.service_address,
+                "site_id": subscriber.site_id,
+                "device_metadata": subscriber.device_metadata,
+                "created_at": (
+                    subscriber.created_at.isoformat() if subscriber.created_at else None
+                ),
+                "updated_at": (
+                    subscriber.updated_at.isoformat() if subscriber.updated_at else None
+                ),
+            }
+            network_info["services"].append(service_data)
+
+        return network_info
+
+    @strawberry.field(description="Get customer devices")  # type: ignore[misc]
+    async def customer_devices(
+        self,
+        info: strawberry.Info[Context],
+        customer_id: strawberry.ID,
+        device_type: str | None = None,
+        active_only: bool = True,
+    ) -> JSONScalar:
+        """
+        Fetch devices associated with a customer.
+
+        Args:
+            customer_id: Customer UUID
+            device_type: Filter by device type (optional)
+            active_only: Only return active devices (default: True)
+
+        Returns:
+            List of customer devices (ONTs, routers, CPE, etc.)
+        """
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
+
+        customer_uuid = await self._get_customer_uuid_for_tenant(db, tenant_id, customer_id)
+        if customer_uuid is None:
+            return {"devices": [], "total_count": 0}
+
+        stmt = (
+            select(WirelessClient)
+            .where(
+                WirelessClient.customer_id == customer_uuid,
+                WirelessClient.tenant_id == tenant_id,
+            )
+            .order_by(WirelessClient.last_seen.desc())
+        )
+
+        if active_only:
+            stmt = stmt.where(WirelessClient.connected.is_(True))
+
+        if device_type:
+            device_type_value = str(device_type).lower()
+            stmt = stmt.where(func.lower(WirelessClient.device_type) == device_type_value)
+
+        result = await db.execute(stmt)
+        devices = result.scalars().all()
+
+        device_entries = []
+        for device in devices:
+            device_entries.append(
+                {
+                    "device_id": str(device.id),
+                    "device_type": device.device_type,
+                    "device_name": device.hostname or device.extra_metadata.get("device_name"),
+                    "mac_address": device.mac_address,
+                    "ip_address": device.ip_address,
+                    "hostname": device.hostname,
+                    "status": "connected" if device.connected else "disconnected",
+                    "connected": device.connected,
+                    "last_seen_at": device.last_seen.isoformat() if device.last_seen else None,
+                    "first_seen_at": device.first_seen.isoformat() if device.first_seen else None,
+                    "tx_rate_mbps": device.tx_rate_mbps,
+                    "rx_rate_mbps": device.rx_rate_mbps,
+                    "vendor": device.vendor,
+                    "extra_metadata": device.extra_metadata,
+                    "created_at": device.created_at.isoformat() if device.created_at else None,
+                    "updated_at": device.updated_at.isoformat() if device.updated_at else None,
+                }
+            )
+
+        return {"devices": device_entries, "total_count": len(device_entries)}
+
+    @strawberry.field(description="Get customer tickets")  # type: ignore[misc]
+    async def customer_tickets(
+        self,
+        info: strawberry.Info[Context],
+        customer_id: strawberry.ID,
+        status: str | None = None,
+        limit: int = 50,
+    ) -> JSONScalar:
+        """
+        Fetch support tickets for a customer.
+
+        Args:
+            customer_id: Customer UUID
+            status: Filter by ticket status (optional)
+            limit: Maximum number of tickets to return (default: 50)
+
+        Returns:
+            List of customer tickets
+        """
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
+
+        customer_uuid = await self._get_customer_uuid_for_tenant(db, tenant_id, customer_id)
+        if customer_uuid is None:
+            return {"tickets": [], "total_count": 0}
+
+        stmt = (
+            select(TicketModel)
+            .where(
+                TicketModel.customer_id == customer_uuid,
+                TicketModel.tenant_id == tenant_id,
+            )
+            .order_by(TicketModel.created_at.desc())
+            .limit(max(1, min(limit, 100)))
+        )
+
+        if status:
+            try:
+                status_enum = TicketStatus(status)
+            except ValueError:
+                logger.warning(
+                    "customer.graphql.invalid_ticket_status",
+                    status=status,
+                    tenant_id=tenant_id,
+                )
+                return {"tickets": [], "total_count": 0}
+            stmt = stmt.where(TicketModel.status == status_enum)
+
+        result = await db.execute(stmt)
+        tickets = result.scalars().all()
+
+        ticket_entries = []
+        for ticket in tickets:
+            ticket_entries.append(
+                {
+                    "id": str(ticket.id),
+                    "ticket_number": ticket.ticket_number,
+                    "subject": ticket.subject,
+                    "status": (
+                        ticket.status.value if hasattr(ticket.status, "value") else ticket.status
+                    ),
+                    "priority": (
+                        ticket.priority.value
+                        if hasattr(ticket.priority, "value")
+                        else ticket.priority
+                    ),
+                    "created_at": ticket.created_at.isoformat() if ticket.created_at else None,
+                    "updated_at": ticket.updated_at.isoformat() if ticket.updated_at else None,
+                    "assigned_to_user_id": (
+                        str(ticket.assigned_to_user_id) if ticket.assigned_to_user_id else None
+                    ),
+                }
+            )
+
+        return {"tickets": ticket_entries, "total_count": len(ticket_entries)}
+
+    @strawberry.field(description="Get customer billing information")  # type: ignore[misc]
+    async def customer_billing(
+        self,
+        info: strawberry.Info[Context],
+        customer_id: strawberry.ID,
+        include_invoices: bool = True,
+        invoice_limit: int = 10,
+    ) -> JSONScalar:
+        """
+        Fetch billing information for a customer.
+
+        Args:
+            customer_id: Customer UUID
+            include_invoices: Include recent invoices (default: True)
+            invoice_limit: Maximum number of invoices to include (default: 10)
+
+        Returns:
+            Billing information including balance, invoices, and payment methods
+        """
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
+
+        customer_uuid = await self._get_customer_uuid_for_tenant(db, tenant_id, customer_id)
+        if customer_uuid is None:
+            return {}
+
+        billing_info: dict[str, Any] = {
+            "customer_id": str(customer_uuid),
+            "outstanding_balance": "0.00",
+            "overdue_balance": "0.00",
+            "currency": "USD",
+            "invoices": [],
+        }
+
+        ZERO = Decimal("0.00")
+
+        def cents_to_decimal(value: int | None) -> Decimal:
+            if value is None:
+                return ZERO
+            return (Decimal(value) / Decimal("100")).quantize(Decimal("0.01"))
+
+        if include_invoices:
+            stmt = (
+                select(InvoiceEntity)
+                .where(
+                    InvoiceEntity.customer_id == str(customer_uuid),
+                    InvoiceEntity.tenant_id == tenant_id,
+                )
+                .order_by(InvoiceEntity.created_at.desc())
+                .limit(max(1, min(invoice_limit, 50)))
+            )
+            result = await db.execute(stmt)
+            invoices = result.scalars().all()
+
+            if invoices:
+                billing_info["currency"] = invoices[0].currency
+
+            invoice_entries = []
+            total_outstanding = ZERO
+            total_overdue = ZERO
+            now = datetime.now(UTC)
+
+            for invoice in invoices:
+                remaining_decimal = cents_to_decimal(invoice.remaining_balance)
+                total_amount_decimal = cents_to_decimal(invoice.total_amount)
+
+                invoice_entries.append(
+                    {
+                        "invoice_id": invoice.invoice_id,
+                        "invoice_number": invoice.invoice_number,
+                        "amount": str(total_amount_decimal),
+                        "remaining_balance": str(remaining_decimal),
+                        "status": (
+                            invoice.status.value
+                            if hasattr(invoice.status, "value")
+                            else invoice.status
+                        ),
+                        "payment_status": (
+                            invoice.payment_status.value
+                            if hasattr(invoice.payment_status, "value")
+                            else invoice.payment_status
+                        ),
+                        "due_date": invoice.due_date.isoformat() if invoice.due_date else None,
+                        "paid_at": invoice.paid_at.isoformat() if invoice.paid_at else None,
+                        "created_at": invoice.created_at.isoformat() if invoice.created_at else None,
+                    }
+                )
+
+                total_outstanding += remaining_decimal
+                if invoice.due_date and now > invoice.due_date and remaining_decimal > ZERO:
+                    total_overdue += remaining_decimal
+
+            billing_info["invoices"] = invoice_entries
+            billing_info["outstanding_balance"] = str(
+                total_outstanding.quantize(Decimal("0.01"))
+            )
+            billing_info["overdue_balance"] = str(total_overdue.quantize(Decimal("0.01")))
+
+        return billing_info

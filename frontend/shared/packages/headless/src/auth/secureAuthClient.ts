@@ -17,7 +17,7 @@ export interface AuthUser {
   role: string;
   permissions: string[];
   tenantId?: string;
-  portalType: 'admin' | 'customer' | 'reseller' | 'technician' | 'management';
+  portalType: "admin" | "customer" | "reseller" | "technician" | "management";
 }
 
 export interface LoginCredentials {
@@ -61,24 +61,24 @@ class SecureAuthClient {
   }
 
   private getApiBaseUrl(): string {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Client-side: detect from current URL
       const { protocol, hostname, port } = window.location;
       const apiPort = this.detectApiPort(port);
-      return `${protocol}//${hostname}${apiPort ? `:${apiPort}` : ''}`;
+      return `${protocol}//${hostname}${apiPort ? `:${apiPort}` : ""}`;
     }
 
     // Server-side: use environment variable
-    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   }
 
   private detectApiPort(currentPort: string): string | null {
     // Map frontend ports to API ports
     const portMap: { [key: string]: string } = {
-      '3000': '8000', // admin -> management platform
-      '3001': '8001', // customer -> ISP framework
-      '3002': '8000', // reseller -> management platform
-      '3003': '8001', // technician -> ISP framework
+      "3000": "8000", // admin -> management platform
+      "3001": "8001", // customer -> ISP framework
+      "3002": "8000", // reseller -> management platform
+      "3003": "8001", // technician -> ISP framework
     };
 
     return portMap[currentPort] || null;
@@ -94,23 +94,23 @@ class SecureAuthClient {
 
     try {
       const response = await fetch(`${this.baseUrl}/api/auth/csrf`, {
-        method: 'GET',
-        credentials: 'include',
+        method: "GET",
+        credentials: "include",
         headers: {
-          Accept: 'application/json',
+          Accept: "application/json",
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get CSRF token');
+        throw new Error("Failed to get CSRF token");
       }
 
       const data = await response.json();
       this.csrfToken = data.csrfToken;
       return this.csrfToken;
     } catch (error) {
-      console.error('CSRF token fetch failed:', error);
-      throw new Error('Security token unavailable');
+      console.error("CSRF token fetch failed:", error);
+      throw new Error("Security token unavailable");
     }
   }
 
@@ -118,28 +118,28 @@ class SecureAuthClient {
    * SECURITY: Make authenticated request with automatic CSRF protection
    */
   async authenticatedRequest(endpoint: string, options: RequestInit = {}): Promise<Response> {
-    const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
+    const url = endpoint.startsWith("http") ? endpoint : `${this.baseUrl}${endpoint}`;
 
     const requestOptions: RequestInit = {
       ...options,
-      credentials: 'include',
+      credentials: "include",
       headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
+        Accept: "application/json",
+        "Content-Type": "application/json",
         ...options.headers,
       },
     };
 
     // Add CSRF token for state-changing requests
-    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(options.method?.toUpperCase() || 'GET')) {
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(options.method?.toUpperCase() || "GET")) {
       try {
         const csrfToken = await this.getCSRFToken();
         requestOptions.headers = {
           ...requestOptions.headers,
-          'X-CSRF-Token': csrfToken,
+          "X-CSRF-Token": csrfToken,
         };
       } catch (error) {
-        console.error('Failed to add CSRF protection:', error);
+        console.error("Failed to add CSRF protection:", error);
         // Continue without CSRF token - server will reject if required
       }
     }
@@ -179,11 +179,11 @@ class SecureAuthClient {
       this.csrfToken = null;
 
       const response = await fetch(`${this.baseUrl}/api/auth/login`, {
-        method: 'POST',
-        credentials: 'include',
+        method: "POST",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': await this.getCSRFToken(),
+          "Content-Type": "application/json",
+          "X-CSRF-Token": await this.getCSRFToken(),
         },
         body: JSON.stringify(credentials),
       });
@@ -192,7 +192,7 @@ class SecureAuthClient {
         const errorData = await response.json();
         return {
           success: false,
-          error: errorData.message || 'Login failed',
+          error: errorData.message || "Login failed",
         };
       }
 
@@ -204,13 +204,13 @@ class SecureAuthClient {
       return {
         success: true,
         user: data.user,
-        message: 'Login successful',
+        message: "Login successful",
       };
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Login failed',
+        error: error instanceof Error ? error.message : "Login failed",
       };
     }
   }
@@ -225,21 +225,21 @@ class SecureAuthClient {
 
       // Call server logout endpoint
       await fetch(`${this.baseUrl}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
+        method: "POST",
+        credentials: "include",
         headers: {
-          'X-CSRF-Token': this.csrfToken || '',
+          "X-CSRF-Token": this.csrfToken || "",
         },
       });
     } catch (error) {
-      console.error('Logout request failed:', error);
+      console.error("Logout request failed:", error);
     } finally {
       // Always clear local state
       this.csrfToken = null;
 
       // Redirect to login page
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
       }
     }
   }
@@ -250,10 +250,10 @@ class SecureAuthClient {
   async validateSession(): Promise<SessionInfo> {
     try {
       const response = await fetch(`${this.baseUrl}/api/auth/validate`, {
-        method: 'GET',
-        credentials: 'include',
+        method: "GET",
+        credentials: "include",
         headers: {
-          Accept: 'application/json',
+          Accept: "application/json",
         },
       });
 
@@ -269,7 +269,7 @@ class SecureAuthClient {
 
       return { isValid: false };
     } catch (error) {
-      console.error('Session validation failed:', error);
+      console.error("Session validation failed:", error);
       return { isValid: false };
     }
   }
@@ -280,10 +280,10 @@ class SecureAuthClient {
   private async refreshSession(): Promise<boolean> {
     try {
       const response = await fetch(`${this.baseUrl}/api/auth/refresh`, {
-        method: 'POST',
-        credentials: 'include',
+        method: "POST",
+        credentials: "include",
         headers: {
-          Accept: 'application/json',
+          Accept: "application/json",
         },
       });
 
@@ -298,7 +298,7 @@ class SecureAuthClient {
 
       return false;
     } catch (error) {
-      console.error('Session refresh failed:', error);
+      console.error("Session refresh failed:", error);
       return false;
     }
   }
@@ -319,7 +319,7 @@ class SecureAuthClient {
           this.handleAuthenticationFailure();
         }
       },
-      25 * 60 * 1000
+      25 * 60 * 1000,
     );
   }
 
@@ -340,15 +340,15 @@ class SecureAuthClient {
     this.stopSessionRefresh();
     this.csrfToken = null;
 
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Store current URL for post-login redirect
       const currentPath = window.location.pathname + window.location.search;
-      if (currentPath !== '/login') {
-        sessionStorage.setItem('login_redirect', currentPath);
+      if (currentPath !== "/login") {
+        sessionStorage.setItem("login_redirect", currentPath);
       }
 
       // Redirect to login
-      window.location.href = '/login';
+      window.location.href = "/login";
     }
   }
 

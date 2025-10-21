@@ -7,9 +7,9 @@
  * - GET /health - Get system health status
  */
 
-import { useQuery, type UseQueryOptions, type QueryKey } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { extractDataOrThrow } from '@/lib/api/response-helpers';
+import { useQuery, type UseQueryOptions, type QueryKey } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { extractDataOrThrow } from "@/lib/api/response-helpers";
 
 // ============================================
 // Types matching backend monitoring models
@@ -86,7 +86,7 @@ export interface LogStats {
 }
 
 export interface SystemHealth {
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   checks: {
     database: ServiceHealth;
     redis: ServiceHealth;
@@ -98,7 +98,7 @@ export interface SystemHealth {
 
 export interface ServiceHealth {
   name: string;
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   message: string;
   required: boolean;
 }
@@ -109,23 +109,28 @@ export interface ServiceHealth {
 
 type QueryOptions<TData, TKey extends QueryKey> = Omit<
   UseQueryOptions<TData, Error, TData, TKey>,
-  'queryKey' | 'queryFn'
+  "queryKey" | "queryFn"
 >;
 
 /**
  * Fetch monitoring metrics
  */
 export function useMonitoringMetrics(
-  period: '1h' | '24h' | '7d' = '24h',
-  options?: QueryOptions<MonitoringMetrics, ['monitoring', 'metrics', '1h' | '24h' | '7d']>
+  period: "1h" | "24h" | "7d" = "24h",
+  options?: QueryOptions<MonitoringMetrics, ["monitoring", "metrics", "1h" | "24h" | "7d"]>,
 ) {
-  return useQuery<MonitoringMetrics, Error, MonitoringMetrics, ['monitoring', 'metrics', '1h' | '24h' | '7d']>({
-    queryKey: ['monitoring', 'metrics', period],
+  return useQuery<
+    MonitoringMetrics,
+    Error,
+    MonitoringMetrics,
+    ["monitoring", "metrics", "1h" | "24h" | "7d"]
+  >({
+    queryKey: ["monitoring", "metrics", period],
     queryFn: async () => {
-      const response = await apiClient.get<MonitoringMetrics>('/monitoring/metrics', {
+      const response = await apiClient.get<MonitoringMetrics>("/monitoring/metrics", {
         params: { period },
       });
-      return extractDataOrThrow(response, 'Failed to load monitoring metrics');
+      return extractDataOrThrow(response, "Failed to load monitoring metrics");
     },
     refetchInterval: 30000, // Refresh every 30 seconds
     ...options,
@@ -136,16 +141,16 @@ export function useMonitoringMetrics(
  * Fetch log statistics
  */
 export function useLogStats(
-  period: '1h' | '24h' | '7d' = '24h',
-  options?: QueryOptions<LogStats, ['monitoring', 'logs', 'stats', '1h' | '24h' | '7d']>
+  period: "1h" | "24h" | "7d" = "24h",
+  options?: QueryOptions<LogStats, ["monitoring", "logs", "stats", "1h" | "24h" | "7d"]>,
 ) {
-  return useQuery<LogStats, Error, LogStats, ['monitoring', 'logs', 'stats', '1h' | '24h' | '7d']>({
-    queryKey: ['monitoring', 'logs', 'stats', period],
+  return useQuery<LogStats, Error, LogStats, ["monitoring", "logs", "stats", "1h" | "24h" | "7d"]>({
+    queryKey: ["monitoring", "logs", "stats", period],
     queryFn: async () => {
-      const response = await apiClient.get<LogStats>('/monitoring/logs/stats', {
+      const response = await apiClient.get<LogStats>("/monitoring/logs/stats", {
         params: { period },
       });
-      return extractDataOrThrow(response, 'Failed to load log statistics');
+      return extractDataOrThrow(response, "Failed to load log statistics");
     },
     refetchInterval: 30000, // Refresh every 30 seconds
     ...options,
@@ -155,14 +160,12 @@ export function useLogStats(
 /**
  * Fetch system health
  */
-export function useSystemHealth(
-  options?: QueryOptions<SystemHealth, ['system', 'health']>
-) {
-  return useQuery<SystemHealth, Error, SystemHealth, ['system', 'health']>({
-    queryKey: ['system', 'health'],
+export function useSystemHealth(options?: QueryOptions<SystemHealth, ["system", "health"]>) {
+  return useQuery<SystemHealth, Error, SystemHealth, ["system", "health"]>({
+    queryKey: ["system", "health"],
     queryFn: async () => {
-      const response = await apiClient.get<SystemHealth>('/health');
-      return extractDataOrThrow(response, 'Failed to load system health');
+      const response = await apiClient.get<SystemHealth>("/health");
+      return extractDataOrThrow(response, "Failed to load system health");
     },
     refetchInterval: 15000, // Refresh every 15 seconds
     ...options,
@@ -176,11 +179,11 @@ export function useSystemHealth(
 /**
  * Get status color class
  */
-export function getStatusColor(status: 'healthy' | 'degraded' | 'unhealthy'): string {
+export function getStatusColor(status: "healthy" | "degraded" | "unhealthy"): string {
   const colors = {
-    healthy: 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30',
-    degraded: 'text-yellow-400 bg-yellow-500/15 border-yellow-500/30',
-    unhealthy: 'text-red-400 bg-red-500/15 border-red-500/30',
+    healthy: "text-emerald-400 bg-emerald-500/15 border-emerald-500/30",
+    degraded: "text-yellow-400 bg-yellow-500/15 border-yellow-500/30",
+    unhealthy: "text-red-400 bg-red-500/15 border-red-500/30",
   };
   return colors[status] || colors.unhealthy;
 }
@@ -188,11 +191,11 @@ export function getStatusColor(status: 'healthy' | 'degraded' | 'unhealthy'): st
 /**
  * Get status icon
  */
-export function getStatusIcon(status: 'healthy' | 'degraded' | 'unhealthy'): string {
+export function getStatusIcon(status: "healthy" | "degraded" | "unhealthy"): string {
   const icons = {
-    healthy: '✓',
-    degraded: '⚠',
-    unhealthy: '✗',
+    healthy: "✓",
+    degraded: "⚠",
+    unhealthy: "✗",
   };
   return icons[status] || icons.unhealthy;
 }
@@ -224,11 +227,11 @@ export function formatDuration(ms: number): string {
 /**
  * Get health status text
  */
-export function getHealthStatusText(status: 'healthy' | 'degraded' | 'unhealthy'): string {
+export function getHealthStatusText(status: "healthy" | "degraded" | "unhealthy"): string {
   const texts = {
-    healthy: 'All systems operational',
-    degraded: 'Some systems degraded',
-    unhealthy: 'System issues detected',
+    healthy: "All systems operational",
+    degraded: "Some systems degraded",
+    unhealthy: "System issues detected",
   };
   return texts[status] || texts.unhealthy;
 }
@@ -238,8 +241,8 @@ export function getHealthStatusText(status: 'healthy' | 'degraded' | 'unhealthy'
  */
 export function getSeverityColor(severity: string): string {
   const severityLower = severity.toLowerCase();
-  if (severityLower === 'critical') return 'text-red-400';
-  if (severityLower === 'high') return 'text-orange-400';
-  if (severityLower === 'medium') return 'text-yellow-400';
-  return 'text-gray-400';
+  if (severityLower === "critical") return "text-red-400";
+  if (severityLower === "high") return "text-orange-400";
+  if (severityLower === "medium") return "text-yellow-400";
+  return "text-gray-400";
 }

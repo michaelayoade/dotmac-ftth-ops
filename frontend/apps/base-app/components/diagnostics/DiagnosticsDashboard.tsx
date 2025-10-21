@@ -19,20 +19,10 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@/components/ui/use-toast";
 import { logger } from "@/lib/utils/logger";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   DiagnosticRun,
   DiagnosticType,
@@ -91,23 +81,27 @@ const getToolIcon = (iconName: string) => {
   return <Icon className="w-5 h-5" />;
 };
 
-export function DiagnosticsDashboard({ subscriberId, hasONU = false, hasCPE = false }: DiagnosticsDashboardProps) {
+export function DiagnosticsDashboard({
+  subscriberId,
+  hasONU = false,
+  hasCPE = false,
+}: DiagnosticsDashboardProps) {
   const { toast } = useToast();
 
   const [runningChecks, setRunningChecks] = useState<Set<DiagnosticType>>(new Set());
   const [results, setResults] = useState<Map<DiagnosticType, DiagnosticRun>>(new Map());
 
   const runDiagnostic = async (diagnosticType: DiagnosticType) => {
-    setRunningChecks(prev => new Set(prev).add(diagnosticType));
+    setRunningChecks((prev) => new Set(prev).add(diagnosticType));
 
     try {
-      let endpoint = '';
-      let method: 'get' | 'post' = 'get';
+      let endpoint = "";
+      let method: "get" | "post" = "get";
 
       switch (diagnosticType) {
         case DiagnosticType.CONNECTIVITY_CHECK:
           endpoint = `/api/v1/diagnostics/subscribers/${subscriberId}/connectivity`;
-          method = 'post';
+          method = "post";
           break;
         case DiagnosticType.RADIUS_SESSION:
           endpoint = `/api/v1/diagnostics/subscribers/${subscriberId}/radius-sessions`;
@@ -123,21 +117,20 @@ export function DiagnosticsDashboard({ subscriberId, hasONU = false, hasCPE = fa
           break;
         case DiagnosticType.CPE_RESTART:
           endpoint = `/api/v1/diagnostics/subscribers/${subscriberId}/restart-cpe`;
-          method = 'post';
+          method = "post";
           break;
         case DiagnosticType.HEALTH_CHECK:
           endpoint = `/api/v1/diagnostics/subscribers/${subscriberId}/health-check`;
           break;
       }
 
-      const response = await (method === 'post'
+      const response = await (method === "post"
         ? apiClient.post<DiagnosticRun>(endpoint)
-        : apiClient.get<DiagnosticRun>(endpoint)
-      );
+        : apiClient.get<DiagnosticRun>(endpoint));
 
       const diagnostic = response.data;
 
-      setResults(prev => new Map(prev).set(diagnosticType, diagnostic));
+      setResults((prev) => new Map(prev).set(diagnosticType, diagnostic));
 
       if (diagnostic.success) {
         toast({
@@ -151,7 +144,6 @@ export function DiagnosticsDashboard({ subscriberId, hasONU = false, hasCPE = fa
           variant: "destructive",
         });
       }
-
     } catch (err: any) {
       const errorMessage = err?.response?.data?.detail || err.message || "Diagnostic failed";
       logger.error("Diagnostic failed", err);
@@ -161,7 +153,7 @@ export function DiagnosticsDashboard({ subscriberId, hasONU = false, hasCPE = fa
         variant: "destructive",
       });
     } finally {
-      setRunningChecks(prev => {
+      setRunningChecks((prev) => {
         const next = new Set(prev);
         next.delete(diagnosticType);
         return next;
@@ -169,16 +161,16 @@ export function DiagnosticsDashboard({ subscriberId, hasONU = false, hasCPE = fa
     }
   };
 
-  const tools = DIAGNOSTIC_TOOLS.filter(tool => {
+  const tools = DIAGNOSTIC_TOOLS.filter((tool) => {
     if (tool.requiresONU && !hasONU) return false;
     if (tool.requiresCPE && !hasCPE) return false;
     return true;
   });
 
   const categorizedTools = {
-    check: tools.filter(t => t.category === 'check'),
-    action: tools.filter(t => t.category === 'action'),
-    comprehensive: tools.filter(t => t.category === 'comprehensive'),
+    check: tools.filter((t) => t.category === "check"),
+    action: tools.filter((t) => t.category === "action"),
+    comprehensive: tools.filter((t) => t.category === "comprehensive"),
   };
 
   return (
@@ -207,12 +199,8 @@ export function DiagnosticsDashboard({ subscriberId, hasONU = false, hasCPE = fa
                   <div className="space-y-2">
                     {result && (
                       <div className="text-sm space-y-1">
-                        {result.summary && (
-                          <p className="text-gray-600">{result.summary}</p>
-                        )}
-                        {result.severity && (
-                          <div>{getSeverityBadge(result.severity)}</div>
-                        )}
+                        {result.summary && <p className="text-gray-600">{result.summary}</p>}
+                        {result.severity && <div>{getSeverityBadge(result.severity)}</div>}
                       </div>
                     )}
                     <Button
@@ -264,9 +252,7 @@ export function DiagnosticsDashboard({ subscriberId, hasONU = false, hasCPE = fa
                       <Alert className="mb-3">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Action initiated</AlertTitle>
-                        <AlertDescription>
-                          {result.recommendations[0]?.message}
-                        </AlertDescription>
+                        <AlertDescription>{result.recommendations[0]?.message}</AlertDescription>
                       </Alert>
                     )}
                     <Button
@@ -313,11 +299,7 @@ export function DiagnosticsDashboard({ subscriberId, hasONU = false, hasCPE = fa
                     <CardDescription>{tool.description}</CardDescription>
                   </div>
                 </div>
-                {result && (
-                  <div className="text-right">
-                    {getSeverityBadge(result.severity)}
-                  </div>
-                )}
+                {result && <div className="text-right">{getSeverityBadge(result.severity)}</div>}
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -348,7 +330,14 @@ export function DiagnosticsDashboard({ subscriberId, hasONU = false, hasCPE = fa
                 <div className="space-y-2">
                   <h4 className="font-medium">Recommendations:</h4>
                   {result.recommendations.map((rec, idx) => (
-                    <Alert key={idx} variant={rec.severity === 'critical' || rec.severity === 'error' ? 'destructive' : 'default'}>
+                    <Alert
+                      key={idx}
+                      variant={
+                        rec.severity === "critical" || rec.severity === "error"
+                          ? "destructive"
+                          : "default"
+                      }
+                    >
                       <AlertCircle className="h-4 w-4" />
                       <AlertTitle>{rec.message}</AlertTitle>
                       <AlertDescription>{rec.action}</AlertDescription>

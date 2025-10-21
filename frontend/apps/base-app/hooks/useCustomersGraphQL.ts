@@ -26,7 +26,7 @@ import {
   useCustomerBillingQuery,
   useCustomer360ViewQuery,
   CustomerStatusEnum,
-} from '@/lib/graphql/generated';
+} from "@/lib/graphql/generated";
 
 // ============================================================================
 // Customer List Hook
@@ -66,7 +66,7 @@ export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
     },
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const customers = data?.customers?.customers ?? [];
@@ -100,7 +100,7 @@ export function useCustomerDetailGraphQL(options: UseCustomerDetailOptions) {
   const { data, loading, error, refetch } = useCustomerDetailQuery({
     variables: { id: customerId },
     skip: !enabled || !customerId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const customer = data?.customer ?? null;
@@ -130,7 +130,7 @@ export function useCustomerMetricsGraphQL(options: UseCustomerMetricsOptions = {
   const { data, loading, error, refetch } = useCustomerMetricsQuery({
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const metrics = data?.customerMetrics;
@@ -165,7 +165,7 @@ export function useCustomerActivitiesGraphQL(options: UseCustomerActivitiesOptio
   const { data, loading, error, refetch } = useCustomerActivitiesQuery({
     variables: { id: customerId },
     skip: !enabled || !customerId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const customer = data?.customer ?? null;
@@ -195,7 +195,7 @@ export function useCustomerNotesGraphQL(options: UseCustomerNotesOptions) {
   const { data, loading, error, refetch } = useCustomerNotesQuery({
     variables: { id: customerId },
     skip: !enabled || !customerId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const customer = data?.customer ?? null;
@@ -224,14 +224,7 @@ export interface UseCustomerDashboardOptions {
 }
 
 export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions = {}) {
-  const {
-    limit = 20,
-    offset = 0,
-    status,
-    search,
-    enabled = true,
-    pollInterval = 30000,
-  } = options;
+  const { limit = 20, offset = 0, status, search, enabled = true, pollInterval = 30000 } = options;
 
   const { data, loading, error, refetch } = useCustomerDashboardQuery({
     variables: {
@@ -242,7 +235,7 @@ export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions
     },
     skip: !enabled,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const customers = data?.customers?.customers ?? [];
@@ -287,17 +280,22 @@ export function useCustomerSubscriptionsGraphQL(options: UseCustomerSubscription
   const { data, loading, error, refetch } = useCustomerSubscriptionsQuery({
     variables: { customerId },
     skip: !enabled || !customerId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
-  const subscriptionData = data?.customerSubscriptions ?? null;
+  const subscriptions = data?.customerSubscriptions ?? [];
+
+  // Find active subscriptions
+  const activeSubscriptions = subscriptions.filter(
+    (sub) => sub.status === "ACTIVE" || sub.status === "TRIALING",
+  );
+  const currentSubscription = activeSubscriptions[0] ?? null;
 
   return {
-    currentSubscription: subscriptionData?.currentSubscription ?? null,
-    subscriptionHistory: subscriptionData?.subscriptionHistory ?? [],
-    totalSubscriptions: subscriptionData?.totalSubscriptions ?? 0,
-    activeSubscriptions: subscriptionData?.activeSubscriptions ?? 0,
-    totalRevenue: subscriptionData?.totalRevenue ?? 0,
+    subscriptions,
+    currentSubscription,
+    activeCount: activeSubscriptions.length,
+    totalCount: subscriptions.length,
     isLoading: loading,
     error: error?.message,
     refetch,
@@ -321,7 +319,7 @@ export function useCustomerNetworkInfoGraphQL(options: UseCustomerNetworkInfoOpt
     variables: { customerId },
     skip: !enabled || !customerId,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const networkInfo = data?.customerNetworkInfo ?? null;
@@ -351,7 +349,7 @@ export function useCustomerDevicesGraphQL(options: UseCustomerDevicesOptions) {
     variables: { customerId },
     skip: !enabled || !customerId,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
   const deviceData = data?.customerDevices ?? null;
@@ -395,15 +393,15 @@ export function useCustomerTicketsGraphQL(options: UseCustomerTicketsOptions) {
     variables: {
       customerId,
       limit,
-      offset,
       status,
     },
     skip: !enabled || !customerId,
     pollInterval,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
-  const ticketData = data?.customerTickets ?? null;
+  // customerTickets returns JSON scalar
+  const ticketData = (data?.customerTickets as any) ?? {};
 
   return {
     tickets: ticketData?.tickets ?? [],
@@ -434,12 +432,17 @@ export function useCustomerBillingGraphQL(options: UseCustomerBillingOptions) {
   const { customerId, limit = 50, enabled = true } = options;
 
   const { data, loading, error, refetch } = useCustomerBillingQuery({
-    variables: { customerId, limit },
+    variables: {
+      customerId,
+      includeInvoices: true,
+      invoiceLimit: limit,
+    },
     skip: !enabled || !customerId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
 
-  const billingData = data?.customerBilling ?? null;
+  // customerBilling returns JSON scalar
+  const billingData = (data?.customerBilling as any) ?? {};
 
   return {
     summary: billingData?.summary ?? null,
@@ -471,31 +474,42 @@ export function useCustomer360ViewGraphQL(options: UseCustomer360ViewOptions) {
   const { data, loading, error, refetch } = useCustomer360ViewQuery({
     variables: { customerId },
     skip: !enabled || !customerId,
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: "cache-and-network",
   });
+
+  const subscriptions = data?.customerSubscriptions ?? [];
+  const activeSubscriptions = subscriptions.filter(
+    (sub) => sub.status === "ACTIVE" || sub.status === "TRIALING",
+  );
+
+  // Parse JSON scalars
+  const networkInfo = (data?.customerNetworkInfo as any) ?? {};
+  const devicesInfo = (data?.customerDevices as any) ?? {};
+  const ticketsInfo = (data?.customerTickets as any) ?? {};
+  const billingInfo = (data?.customerBilling as any) ?? {};
 
   return {
     customer: data?.customer ?? null,
     subscriptions: {
-      current: data?.customerSubscriptions?.currentSubscription ?? null,
-      total: data?.customerSubscriptions?.totalSubscriptions ?? 0,
-      active: data?.customerSubscriptions?.activeSubscriptions ?? 0,
+      current: activeSubscriptions[0] ?? null,
+      total: subscriptions.length,
+      active: activeSubscriptions.length,
     },
-    network: data?.customerNetworkInfo ?? null,
+    network: networkInfo,
     devices: {
-      total: data?.customerDevices?.totalDevices ?? 0,
-      online: data?.customerDevices?.onlineDevices ?? 0,
-      offline: data?.customerDevices?.offlineDevices ?? 0,
+      total: devicesInfo?.totalDevices ?? 0,
+      online: devicesInfo?.onlineDevices ?? 0,
+      offline: devicesInfo?.offlineDevices ?? 0,
     },
     tickets: {
-      open: data?.customerTickets?.openCount ?? 0,
-      closed: data?.customerTickets?.closedCount ?? 0,
-      critical: data?.customerTickets?.criticalCount ?? 0,
+      open: ticketsInfo?.openCount ?? 0,
+      closed: ticketsInfo?.closedCount ?? 0,
+      critical: ticketsInfo?.criticalCount ?? 0,
     },
     billing: {
-      summary: data?.customerBilling?.summary ?? null,
-      totalInvoices: data?.customerBilling?.totalInvoices ?? 0,
-      unpaidInvoices: data?.customerBilling?.unpaidInvoices ?? 0,
+      summary: billingInfo?.summary ?? null,
+      totalInvoices: billingInfo?.totalInvoices ?? 0,
+      unpaidInvoices: billingInfo?.unpaidInvoices ?? 0,
     },
     isLoading: loading,
     error: error?.message,

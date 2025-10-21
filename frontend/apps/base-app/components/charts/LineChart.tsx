@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 interface DataPoint {
   label: string;
@@ -22,7 +22,7 @@ interface LineChartProps {
 
 export function LineChart({
   data,
-  className = '',
+  className = "",
   height = 200,
   showGrid = true,
   showLabels = true,
@@ -34,14 +34,14 @@ export function LineChart({
 
   if (!data || data.length === 0) {
     return (
-      <div className={cn('flex items-center justify-center', className)} style={{ height }}>
+      <div className={cn("flex items-center justify-center", className)} style={{ height }}>
         <p className="text-sm text-slate-500 dark:text-slate-400">No data available</p>
       </div>
     );
   }
 
-  const maxValue = Math.max(...data.map(d => d.value));
-  const minValue = Math.min(...data.map(d => d.value));
+  const maxValue = Math.max(...data.map((d) => d.value));
+  const minValue = Math.min(...data.map((d) => d.value));
   const range = maxValue - minValue || 1;
   const padding = 40;
   const chartWidth = 100;
@@ -55,18 +55,14 @@ export function LineChart({
   });
 
   // Create SVG path
-  const linePath = points.map((p, i) =>
-    `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
-  ).join(' ');
+  const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 
   // Create area path for gradient
   const lastPoint = points[points.length - 1];
-  const areaPath = gradient && lastPoint
-    ? `${linePath} L ${lastPoint.x} 100 L 0 100 Z`
-    : '';
+  const areaPath = gradient && lastPoint ? `${linePath} L ${lastPoint.x} 100 L 0 100 Z` : "";
 
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn("relative", className)}>
       {/* Labels */}
       {showLabels && (
         <div className="flex justify-between mb-2 px-2">
@@ -74,10 +70,10 @@ export function LineChart({
             <span
               key={i}
               className={cn(
-                'text-xs transition-colors',
+                "text-xs transition-colors",
                 hoveredIndex === i
-                  ? 'text-sky-500 font-medium'
-                  : 'text-slate-600 dark:text-slate-400'
+                  ? "text-sky-500 font-medium"
+                  : "text-slate-600 dark:text-slate-400",
               )}
             >
               {d.label}
@@ -88,11 +84,7 @@ export function LineChart({
 
       {/* Chart */}
       <div className="relative" style={{ height }}>
-        <svg
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          className="w-full h-full"
-        >
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
           {/* Grid lines */}
           {showGrid && (
             <g className="opacity-20">
@@ -123,7 +115,7 @@ export function LineChart({
               <path
                 d={areaPath}
                 fill="url(#lineGradient)"
-                className={animated ? 'animate-in fade-in duration-500' : ''}
+                className={animated ? "animate-in fade-in duration-500" : ""}
               />
             </>
           )}
@@ -136,7 +128,7 @@ export function LineChart({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={animated ? 'animate-in slide-in-from-left duration-700' : ''}
+            className={animated ? "animate-in slide-in-from-left duration-700" : ""}
           />
 
           {/* Data points */}
@@ -148,9 +140,9 @@ export function LineChart({
                 r={hoveredIndex === i ? pointRadius * 1.5 : pointRadius}
                 fill="rgb(14, 165, 233)"
                 className={cn(
-                  'transition-all duration-200 cursor-pointer',
-                  animated && 'animate-in zoom-in',
-                  hoveredIndex === i && 'drop-shadow-lg'
+                  "transition-all duration-200 cursor-pointer",
+                  animated && "animate-in zoom-in",
+                  hoveredIndex === i && "drop-shadow-lg",
                 )}
                 style={{ animationDelay: `${i * 50}ms` }}
                 onMouseEnter={() => setHoveredIndex(i)}
@@ -162,7 +154,7 @@ export function LineChart({
                   y={p.y - 10}
                   textAnchor="middle"
                   className="text-xs fill-sky-500 font-medium"
-                  style={{ fontSize: '4px' }}
+                  style={{ fontSize: "4px" }}
                 >
                   {p.value}
                 </text>
@@ -178,7 +170,7 @@ export function LineChart({
             style={{
               left: `${points[hoveredIndex].x}%`,
               top: `${points[hoveredIndex].y}%`,
-              transform: 'translate(-50%, -120%)',
+              transform: "translate(-50%, -120%)",
             }}
           >
             <div className="font-medium">{data[hoveredIndex].label}</div>

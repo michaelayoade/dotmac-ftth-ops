@@ -317,6 +317,11 @@ class CoverageZone(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
         Index("ix_coverage_zones_center", "center_latitude", "center_longitude"),
     )
 
+    @property
+    def name(self) -> str:
+        """Alias for zone_name to match GraphQL expectations."""
+        return self.zone_name
+
 
 class SignalMeasurement(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """

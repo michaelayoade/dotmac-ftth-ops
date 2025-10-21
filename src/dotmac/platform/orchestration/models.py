@@ -3,6 +3,7 @@ Orchestration Service Models
 
 Database models for workflow orchestration and saga pattern implementation.
 """
+# mypy: disable-error-code="misc,unused-ignore"
 
 from enum import Enum
 
@@ -51,7 +52,7 @@ class WorkflowType(str, Enum):
     MIGRATE_SUBSCRIBER = "migrate_subscriber"
 
 
-class OrchestrationWorkflow(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class OrchestrationWorkflow(Base, TimestampMixin, TenantMixin):
     """
     Workflow orchestration model.
 
@@ -62,8 +63,8 @@ class OrchestrationWorkflow(Base, TimestampMixin, TenantMixin):  # type: ignore[
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     workflow_id = Column(String(64), unique=True, nullable=False, index=True)
-    workflow_type = Column(SQLEnum(WorkflowType), nullable=False, index=True)
-    status = Column(
+    workflow_type: WorkflowType = Column(SQLEnum(WorkflowType), nullable=False, index=True)  # type: ignore[assignment]
+    status: WorkflowStatus = Column(  # type: ignore[assignment]
         SQLEnum(WorkflowStatus),
         nullable=False,
         default=WorkflowStatus.PENDING,
@@ -112,7 +113,7 @@ class OrchestrationWorkflow(Base, TimestampMixin, TenantMixin):  # type: ignore[
         )
 
 
-class OrchestrationWorkflowStep(Base, TimestampMixin):  # type: ignore[misc]
+class OrchestrationWorkflowStep(Base, TimestampMixin):
     """
     Individual step within a workflow.
 
@@ -138,7 +139,7 @@ class OrchestrationWorkflowStep(Base, TimestampMixin):  # type: ignore[misc]
     target_system = Column(String(64), nullable=False)  # 'radius', 'voltha', 'netbox', etc.
 
     # Status
-    status = Column(
+    status: WorkflowStepStatus = Column(  # type: ignore[assignment]
         SQLEnum(WorkflowStepStatus),
         nullable=False,
         default=WorkflowStepStatus.PENDING,

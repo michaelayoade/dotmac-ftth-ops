@@ -25,11 +25,7 @@ const TIER_COLORS = {
   direct: "bg-blue-500/10 text-blue-400",
 };
 
-export default function PartnersList({
-  partners,
-  onEdit,
-  onDelete,
-}: PartnersListProps) {
+export default function PartnersList({ partners, onEdit, onDelete }: PartnersListProps) {
   if (partners.length === 0) {
     return (
       <div className="text-center py-12 bg-card rounded-lg border border-border">
@@ -58,17 +54,11 @@ export default function PartnersList({
                   {partner.company_name}
                 </Link>
                 <span
-                  className={`px-2 py-1 text-xs rounded border ${
-                    STATUS_COLORS[partner.status]
-                  }`}
+                  className={`px-2 py-1 text-xs rounded border ${STATUS_COLORS[partner.status]}`}
                 >
                   {partner.status}
                 </span>
-                <span
-                  className={`px-2 py-1 text-xs rounded ${
-                    TIER_COLORS[partner.tier]
-                  }`}
-                >
+                <span className={`px-2 py-1 text-xs rounded ${TIER_COLORS[partner.tier]}`}>
                   {partner.tier}
                 </span>
               </div>
@@ -93,8 +83,7 @@ export default function PartnersList({
                   <span className="ml-2 text-yellow-600 dark:text-yellow-400">
                     $
                     {(
-                      partner.total_commissions_earned -
-                      partner.total_commissions_paid
+                      partner.total_commissions_earned - partner.total_commissions_paid
                     ).toLocaleString()}
                   </span>
                 </div>
@@ -117,10 +106,7 @@ export default function PartnersList({
                 <div>
                   Conversion:{" "}
                   {partner.total_referrals > 0
-                    ? (
-                        (partner.converted_referrals / partner.total_referrals) *
-                        100
-                      ).toFixed(1)
+                    ? ((partner.converted_referrals / partner.total_referrals) * 100).toFixed(1)
                     : "0.0"}
                   %
                 </div>

@@ -3,7 +3,7 @@
  * Handles geographic boundary validation and partner territory enforcement
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // Territory Definition Schema
 const TerritorySchema = z.object({
@@ -21,7 +21,7 @@ const TerritorySchema = z.object({
           z.object({
             lat: z.number().min(-90).max(90),
             lng: z.number().min(-180).max(180),
-          })
+          }),
         ),
       })
       .optional(),
@@ -44,7 +44,7 @@ const AddressSchema = z.object({
   city: z.string().min(1).max(100),
   state: z.string().length(2),
   zipCode: z.string().regex(/^\d{5}(-\d{4})?$/),
-  country: z.string().length(2).default('US'),
+  country: z.string().length(2).default("US"),
 });
 
 // Validation result schema
@@ -60,10 +60,10 @@ const ValidationResultSchema = z.object({
         territoryName: z.string(),
         partnerId: z.string(),
         priority: z.number(),
-      })
+      }),
     )
     .optional(),
-  validationMethod: z.enum(['zipcode', 'city', 'county', 'state', 'coordinates']),
+  validationMethod: z.enum(["zipcode", "city", "county", "state", "coordinates"]),
   confidence: z.number().min(0).max(1), // 0-1 confidence score
   warnings: z.array(z.string()).optional(),
 });
@@ -78,7 +78,7 @@ export class TerritoryValidator {
 
   constructor(
     territories: Territory[] = [],
-    geocodingService?: (address: Address) => Promise<{ lat: number; lng: number }>
+    geocodingService?: (address: Address) => Promise<{ lat: number; lng: number }>,
   ) {
     this.territories = territories.map((t) => TerritorySchema.parse(t));
     this.geocodingService = geocodingService;
@@ -113,7 +113,7 @@ export class TerritoryValidator {
     const activeTerritories = this.territories.filter((t) => t.isActive);
     const matchingTerritories: Array<{
       territory: Territory;
-      method: ValidationResult['validationMethod'];
+      method: ValidationResult["validationMethod"];
       confidence: number;
     }> = [];
 
@@ -124,7 +124,7 @@ export class TerritoryValidator {
         if (!this.isExcluded(validatedAddress, territory)) {
           matchingTerritories.push({
             territory,
-            method: 'zipcode',
+            method: "zipcode",
             confidence: 0.95,
           });
         }
@@ -136,13 +136,13 @@ export class TerritoryValidator {
       for (const territory of activeTerritories) {
         if (
           territory.boundaries.cities?.some(
-            (city) => city.toLowerCase() === validatedAddress.city.toLowerCase()
+            (city) => city.toLowerCase() === validatedAddress.city.toLowerCase(),
           )
         ) {
           if (!this.isExcluded(validatedAddress, territory)) {
             matchingTerritories.push({
               territory,
-              method: 'city',
+              method: "city",
               confidence: 0.8,
             });
           }
@@ -157,7 +157,7 @@ export class TerritoryValidator {
           if (!this.isExcluded(validatedAddress, territory)) {
             matchingTerritories.push({
               territory,
-              method: 'state',
+              method: "state",
               confidence: 0.4,
             });
           }
@@ -176,7 +176,7 @@ export class TerritoryValidator {
               if (!this.isExcluded(validatedAddress, territory)) {
                 matchingTerritories.push({
                   territory,
-                  method: 'coordinates',
+                  method: "coordinates",
                   confidence: 0.9,
                 });
               }
@@ -184,7 +184,7 @@ export class TerritoryValidator {
           }
         }
       } catch (error) {
-        console.warn('Geocoding failed:', error);
+        console.warn("Geocoding failed:", error);
       }
     }
 
@@ -226,7 +226,7 @@ export class TerritoryValidator {
       territoryName: bestMatch?.territory.name,
       conflictingTerritories:
         conflictingTerritories.length > 0 ? conflictingTerritories : undefined,
-      validationMethod: bestMatch?.method || 'state',
+      validationMethod: bestMatch?.method || "state",
       confidence: bestMatch?.confidence || 0,
       warnings: warnings.length > 0 ? warnings : undefined,
     });
@@ -245,7 +245,7 @@ export class TerritoryValidator {
     if (territory.exclusions.addresses) {
       const fullAddress = `${address.street}, ${address.city}, ${address.state} ${address.zipCode}`;
       return territory.exclusions.addresses.some((excludedAddress) =>
-        fullAddress.toLowerCase().includes(excludedAddress.toLowerCase())
+        fullAddress.toLowerCase().includes(excludedAddress.toLowerCase()),
       );
     }
 
@@ -255,7 +255,7 @@ export class TerritoryValidator {
   // Point-in-polygon algorithm for coordinate-based validation
   private isPointInPolygon(
     point: { lat: number; lng: number },
-    polygon: Array<{ lat: number; lng: number }>
+    polygon: Array<{ lat: number; lng: number }>,
   ): boolean {
     let inside = false;
 
@@ -326,11 +326,11 @@ export class TerritoryValidator {
           if (otherTerritory.id === territory.id) continue;
 
           const overlap = territory.boundaries.zipCodes.filter((zip) =>
-            otherTerritory.boundaries.zipCodes?.includes(zip)
+            otherTerritory.boundaries.zipCodes?.includes(zip),
           );
 
           if (overlap.length > 0) {
-            conflicts.push(`ZIP code overlap with ${otherTerritory.name}: ${overlap.join(', ')}`);
+            conflicts.push(`ZIP code overlap with ${otherTerritory.name}: ${overlap.join(", ")}`);
             conflictScore += overlap.length * 10;
           }
         }
@@ -343,12 +343,12 @@ export class TerritoryValidator {
 
           const overlap = territory.boundaries.cities.filter((city) =>
             otherTerritory.boundaries.cities?.some(
-              (otherCity) => city.toLowerCase() === otherCity.toLowerCase()
-            )
+              (otherCity) => city.toLowerCase() === otherCity.toLowerCase(),
+            ),
           );
 
           if (overlap.length > 0) {
-            conflicts.push(`City overlap with ${otherTerritory.name}: ${overlap.join(', ')}`);
+            conflicts.push(`City overlap with ${otherTerritory.name}: ${overlap.join(", ")}`);
             conflictScore += overlap.length * 5;
           }
         }
@@ -367,7 +367,7 @@ export class TerritoryValidator {
   // Bulk validation for multiple addresses
   async validateBulkAddresses(
     addresses: unknown[],
-    requestingPartnerId?: string
+    requestingPartnerId?: string,
   ): Promise<ValidationResult[]> {
     const results: ValidationResult[] = [];
 
@@ -379,10 +379,10 @@ export class TerritoryValidator {
         // Return invalid result for malformed addresses
         results.push({
           isValid: false,
-          validationMethod: 'state',
+          validationMethod: "state",
           confidence: 0,
           warnings: [
-            `Invalid address format: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            `Invalid address format: ${error instanceof Error ? error.message : "Unknown error"}`,
           ],
         });
       }

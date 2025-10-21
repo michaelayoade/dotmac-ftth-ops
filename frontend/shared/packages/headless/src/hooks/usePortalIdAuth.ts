@@ -3,7 +3,7 @@
  * Implements ISP Framework Portal ID authentication system
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect } from "react";
 import {
   PortalLoginCredentials,
   PortalAuthResponse,
@@ -14,7 +14,7 @@ import {
   DeviceFingerprint,
   PORTAL_ID_CONFIG,
   RISK_THRESHOLDS,
-} from '../types/portal-auth';
+} from "../types/portal-auth";
 
 interface UsePortalIdAuthState {
   isAuthenticated: boolean;
@@ -62,7 +62,7 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
     let formatted = portalId.toUpperCase().trim();
 
     // Remove invalid characters
-    formatted = formatted.replace(/[^A-Z2-9]/g, '');
+    formatted = formatted.replace(/[^A-Z2-9]/g, "");
 
     // Check length
     if (formatted.length !== PORTAL_ID_CONFIG.LENGTH) {
@@ -71,15 +71,15 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
 
     // Check format
     if (!PORTAL_ID_CONFIG.VALIDATION_REGEX.test(formatted)) {
-      errors.push('Portal ID contains invalid characters (use A-Z and 2-9 only)');
+      errors.push("Portal ID contains invalid characters (use A-Z and 2-9 only)");
     }
 
     // Check for common mistakes
-    if (formatted.includes('0') || formatted.includes('O')) {
-      errors.push('Portal ID cannot contain 0 or O (zero/oh confusion)');
+    if (formatted.includes("0") || formatted.includes("O")) {
+      errors.push("Portal ID cannot contain 0 or O (zero/oh confusion)");
     }
-    if (formatted.includes('1') || formatted.includes('I')) {
-      errors.push('Portal ID cannot contain 1 or I (one/eye confusion)');
+    if (formatted.includes("1") || formatted.includes("I")) {
+      errors.push("Portal ID cannot contain 1 or I (one/eye confusion)");
     }
 
     return {
@@ -91,12 +91,12 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
 
   // Generate device fingerprint for security
   const generateDeviceFingerprint = useCallback((): DeviceFingerprint => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
     if (ctx) {
-      ctx.textBaseline = 'top';
-      ctx.font = '14px Arial';
-      ctx.fillText('Portal ID fingerprint', 2, 2);
+      ctx.textBaseline = "top";
+      ctx.font = "14px Arial";
+      ctx.fillText("Portal ID fingerprint", 2, 2);
     }
 
     return {
@@ -134,7 +134,7 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
 
       return Math.min(risk, 100);
     },
-    []
+    [],
   );
 
   // Portal ID login implementation
@@ -147,7 +147,7 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
         const validation = validatePortalId(credentials.portal_id);
         if (!validation.is_valid) {
           throw {
-            code: 'INVALID_PORTAL_ID_FORMAT',
+            code: "INVALID_PORTAL_ID_FORMAT",
             message: validation.errors[0],
             details: { errors: validation.errors },
           };
@@ -158,10 +158,10 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
         const riskScore = calculateRiskScore(credentials, deviceFingerprint);
 
         // Call ISP Framework Portal ID authentication endpoint
-        const response = await fetch('/api/portal/v1/auth/login', {
-          method: 'POST',
+        const response = await fetch("/api/portal/v1/auth/login", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             portal_id: validation.formatted,
@@ -180,15 +180,15 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
           if (errorData.requires_2fa) {
             setState((prev) => ({ ...prev, requiresMfa: true }));
             throw {
-              code: 'MFA_REQUIRED',
-              message: 'Two-factor authentication required',
+              code: "MFA_REQUIRED",
+              message: "Two-factor authentication required",
               requires_2fa: true,
             };
           }
 
           if (errorData.account_locked) {
             throw {
-              code: 'ACCOUNT_LOCKED',
+              code: "ACCOUNT_LOCKED",
               message: `Account locked until ${errorData.locked_until}`,
               locked_until: errorData.locked_until,
             };
@@ -197,24 +197,24 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
           if (errorData.password_expired) {
             setState((prev) => ({ ...prev, requiresPasswordChange: true }));
             throw {
-              code: 'PASSWORD_EXPIRED',
-              message: 'Password has expired and must be changed',
+              code: "PASSWORD_EXPIRED",
+              message: "Password has expired and must be changed",
               password_expired: true,
             };
           }
 
           // Track failed attempts
           const currentAttempts = parseInt(
-            localStorage.getItem(`failed_attempts_${credentials.portal_id}`) || '0'
+            localStorage.getItem(`failed_attempts_${credentials.portal_id}`) || "0",
           );
           localStorage.setItem(
             `failed_attempts_${credentials.portal_id}`,
-            (currentAttempts + 1).toString()
+            (currentAttempts + 1).toString(),
           );
 
           throw {
-            code: errorData.code || 'LOGIN_FAILED',
-            message: errorData.message || 'Invalid Portal ID or password',
+            code: errorData.code || "LOGIN_FAILED",
+            message: errorData.message || "Invalid Portal ID or password",
             details: errorData,
           };
         }
@@ -222,15 +222,15 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
         const authData: PortalAuthResponse = await response.json();
 
         // Store authentication data
-        localStorage.setItem('portal_session', JSON.stringify(authData.session));
-        localStorage.setItem('portal_account', JSON.stringify(authData.portal_account));
-        localStorage.setItem('access_token', authData.access_token);
-        localStorage.setItem('refresh_token', authData.refresh_token);
+        localStorage.setItem("portal_session", JSON.stringify(authData.session));
+        localStorage.setItem("portal_account", JSON.stringify(authData.portal_account));
+        localStorage.setItem("access_token", authData.access_token);
+        localStorage.setItem("refresh_token", authData.refresh_token);
 
         // Store device fingerprint for future risk assessment
         localStorage.setItem(
           `device_fp_${credentials.portal_id}`,
-          JSON.stringify(deviceFingerprint)
+          JSON.stringify(deviceFingerprint),
         );
         localStorage.setItem(`timezone_${credentials.portal_id}`, deviceFingerprint.timezone);
 
@@ -264,7 +264,7 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
         setState((prev) => ({ ...prev, isLoading: false }));
       }
     },
-    [validatePortalId, generateDeviceFingerprint, calculateRiskScore]
+    [validatePortalId, generateDeviceFingerprint, calculateRiskScore],
   );
 
   // Logout implementation
@@ -272,26 +272,26 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
     setState((prev) => ({ ...prev, isLoading: true }));
 
     try {
-      const session = localStorage.getItem('portal_session');
+      const session = localStorage.getItem("portal_session");
       if (session) {
         // Notify backend of logout
-        await fetch('/api/portal/v1/auth/logout', {
-          method: 'POST',
+        await fetch("/api/portal/v1/auth/logout", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
           body: JSON.stringify({ session_id: JSON.parse(session).session_id }),
         });
       }
     } catch (error) {
-      console.warn('Logout request failed:', error);
+      console.warn("Logout request failed:", error);
     } finally {
       // Clear all stored data
-      localStorage.removeItem('portal_session');
-      localStorage.removeItem('portal_account');
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      localStorage.removeItem("portal_session");
+      localStorage.removeItem("portal_account");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
 
       setState({
         isAuthenticated: false,
@@ -311,26 +311,26 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
 
   // Refresh session token
   const refreshSession = useCallback(async (): Promise<boolean> => {
-    const refreshToken = localStorage.getItem('refresh_token');
+    const refreshToken = localStorage.getItem("refresh_token");
     if (!refreshToken) return false;
 
     try {
-      const response = await fetch('/api/portal/v1/auth/refresh', {
-        method: 'POST',
+      const response = await fetch("/api/portal/v1/auth/refresh", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ refresh_token: refreshToken }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
+        localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("refresh_token", data.refresh_token);
         return true;
       }
     } catch (error) {
-      console.error('Session refresh failed:', error);
+      console.error("Session refresh failed:", error);
     }
 
     // If refresh fails, logout
@@ -340,14 +340,14 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
 
   // Check session health and risk
   const checkSessionHealth = useCallback(async (): Promise<boolean> => {
-    const session = localStorage.getItem('portal_session');
-    const accessToken = localStorage.getItem('access_token');
+    const session = localStorage.getItem("portal_session");
+    const accessToken = localStorage.getItem("access_token");
 
     if (!session || !accessToken) return false;
 
     try {
-      const response = await fetch('/api/portal/v1/auth/session/health', {
-        method: 'GET',
+      const response = await fetch("/api/portal/v1/auth/session/health", {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
@@ -365,7 +365,7 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
         return healthData.is_healthy;
       }
     } catch (error) {
-      console.error('Session health check failed:', error);
+      console.error("Session health check failed:", error);
     }
 
     return false;
@@ -374,14 +374,14 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
   // Update password
   const updatePassword = useCallback(
     async (currentPassword: string, newPassword: string): Promise<boolean> => {
-      const accessToken = localStorage.getItem('access_token');
+      const accessToken = localStorage.getItem("access_token");
       if (!accessToken) return false;
 
       try {
-        const response = await fetch('/api/portal/v1/auth/password/update', {
-          method: 'POST',
+        const response = await fetch("/api/portal/v1/auth/password/update", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
@@ -395,24 +395,24 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
           return true;
         }
       } catch (error) {
-        console.error('Password update failed:', error);
+        console.error("Password update failed:", error);
       }
 
       return false;
     },
-    []
+    [],
   );
 
   // Setup MFA
   const setupMfa = useCallback(async (secret: string, code: string): Promise<boolean> => {
-    const accessToken = localStorage.getItem('access_token');
+    const accessToken = localStorage.getItem("access_token");
     if (!accessToken) return false;
 
     try {
-      const response = await fetch('/api/portal/v1/auth/mfa/setup', {
-        method: 'POST',
+      const response = await fetch("/api/portal/v1/auth/mfa/setup", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
@@ -423,7 +423,7 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
 
       return response.ok;
     } catch (error) {
-      console.error('MFA setup failed:', error);
+      console.error("MFA setup failed:", error);
     }
 
     return false;
@@ -432,9 +432,9 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
   // Initialize authentication state from storage
   useEffect(() => {
     const initAuth = async () => {
-      const portalAccount = localStorage.getItem('portal_account');
-      const session = localStorage.getItem('portal_session');
-      const accessToken = localStorage.getItem('access_token');
+      const portalAccount = localStorage.getItem("portal_account");
+      const session = localStorage.getItem("portal_session");
+      const accessToken = localStorage.getItem("access_token");
 
       if (portalAccount && session && accessToken) {
         // Verify session is still valid

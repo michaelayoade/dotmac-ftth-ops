@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Prefix List Component
@@ -6,7 +6,7 @@
  * Displays and manages IP prefixes (IPv4 and IPv6)
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -14,11 +14,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,10 +26,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Prefix } from '@/types/netbox';
-import { detectIPFamily, IPFamily, getIPv4UsableHosts, parseCIDR } from '@/lib/utils/ip-address';
-import { MoreHorizontal, Plus, Search } from 'lucide-react';
+} from "@/components/ui/dropdown-menu";
+import { Prefix } from "@/types/netbox";
+import { detectIPFamily, IPFamily, getIPv4UsableHosts, parseCIDR } from "@/lib/utils/ip-address";
+import { MoreHorizontal, Plus, Search } from "lucide-react";
 
 export interface PrefixListProps {
   prefixes: Prefix[];
@@ -48,8 +48,8 @@ export function PrefixList({
   onAllocateIP,
   isLoading = false,
 }: PrefixListProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [familyFilter, setFamilyFilter] = useState<'all' | 'ipv4' | 'ipv6'>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [familyFilter, setFamilyFilter] = useState<"all" | "ipv4" | "ipv6">("all");
 
   const filteredPrefixes = prefixes.filter((prefix) => {
     const matchesSearch =
@@ -58,11 +58,11 @@ export function PrefixList({
 
     if (!matchesSearch) return false;
 
-    if (familyFilter === 'all') return true;
+    if (familyFilter === "all") return true;
 
-    const family = detectIPFamily(prefix.prefix.split('/')[0] ?? '');
-    if (familyFilter === 'ipv4') return family === IPFamily.IPv4;
-    if (familyFilter === 'ipv6') return family === IPFamily.IPv6;
+    const family = detectIPFamily(prefix.prefix.split("/")[0] ?? "");
+    if (familyFilter === "ipv4") return family === IPFamily.IPv4;
+    if (familyFilter === "ipv6") return family === IPFamily.IPv6;
 
     return true;
   });
@@ -97,23 +97,23 @@ export function PrefixList({
           </div>
           <div className="flex gap-2">
             <Button
-              variant={familyFilter === 'all' ? 'default' : 'outline'}
+              variant={familyFilter === "all" ? "default" : "outline"}
               size="sm"
-              onClick={() => setFamilyFilter('all')}
+              onClick={() => setFamilyFilter("all")}
             >
               All
             </Button>
             <Button
-              variant={familyFilter === 'ipv4' ? 'default' : 'outline'}
+              variant={familyFilter === "ipv4" ? "default" : "outline"}
               size="sm"
-              onClick={() => setFamilyFilter('ipv4')}
+              onClick={() => setFamilyFilter("ipv4")}
             >
               IPv4
             </Button>
             <Button
-              variant={familyFilter === 'ipv6' ? 'default' : 'outline'}
+              variant={familyFilter === "ipv6" ? "default" : "outline"}
               size="sm"
-              onClick={() => setFamilyFilter('ipv6')}
+              onClick={() => setFamilyFilter("ipv6")}
             >
               IPv6
             </Button>
@@ -177,8 +177,7 @@ function PrefixRow({ prefix, onEdit, onDelete, onAllocateIP }: PrefixRowProps) {
   const parsed = parseCIDR(prefix.prefix);
   const family = parsed?.family;
 
-  const usableHosts =
-    family === IPFamily.IPv4 && parsed ? getIPv4UsableHosts(parsed.cidr) : null;
+  const usableHosts = family === IPFamily.IPv4 && parsed ? getIPv4UsableHosts(parsed.cidr) : null;
 
   return (
     <TableRow>
@@ -186,18 +185,18 @@ function PrefixRow({ prefix, onEdit, onDelete, onAllocateIP }: PrefixRowProps) {
         <span className="font-mono font-medium">{prefix.prefix}</span>
       </TableCell>
       <TableCell>
-        <Badge variant={family === IPFamily.IPv4 ? 'default' : 'secondary'}>
-          {family === IPFamily.IPv4 ? 'IPv4' : 'IPv6'}
+        <Badge variant={family === IPFamily.IPv4 ? "default" : "secondary"}>
+          {family === IPFamily.IPv4 ? "IPv4" : "IPv6"}
         </Badge>
       </TableCell>
       <TableCell>
         <Badge
           variant={
-            prefix.status.value === 'active'
-              ? 'default'
-              : prefix.status.value === 'reserved'
-              ? 'secondary'
-              : 'outline'
+            prefix.status.value === "active"
+              ? "default"
+              : prefix.status.value === "reserved"
+                ? "secondary"
+                : "outline"
           }
         >
           {prefix.status.label}
@@ -237,14 +236,9 @@ function PrefixRow({ prefix, onEdit, onDelete, onAllocateIP }: PrefixRowProps) {
                 <DropdownMenuSeparator />
               </>
             )}
-            {onEdit && (
-              <DropdownMenuItem onClick={() => onEdit(prefix)}>Edit</DropdownMenuItem>
-            )}
+            {onEdit && <DropdownMenuItem onClick={() => onEdit(prefix)}>Edit</DropdownMenuItem>}
             {onDelete && (
-              <DropdownMenuItem
-                onClick={() => onDelete(prefix.id)}
-                className="text-red-600"
-              >
+              <DropdownMenuItem onClick={() => onDelete(prefix.id)} className="text-red-600">
                 Delete
               </DropdownMenuItem>
             )}

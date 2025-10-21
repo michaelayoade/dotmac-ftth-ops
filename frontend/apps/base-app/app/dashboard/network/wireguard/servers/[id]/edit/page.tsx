@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 /**
@@ -9,20 +9,14 @@ export const dynamicParams = true;
  * Form for editing existing WireGuard VPN servers.
  */
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Server, Save, AlertCircle, Info } from 'lucide-react';
-import {
-  useWireGuardServer,
-  useUpdateWireGuardServer,
-} from '@/hooks/useWireGuard';
-import type {
-  WireGuardServerUpdate,
-  WireGuardServerStatus,
-} from '@/types/wireguard';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Server, Save, AlertCircle, Info } from "lucide-react";
+import { useWireGuardServer, useUpdateWireGuardServer } from "@/hooks/useWireGuard";
+import type { WireGuardServerUpdate, WireGuardServerStatus } from "@/types/wireguard";
 
 interface EditServerPageProps {
   params: {
@@ -34,20 +28,13 @@ export default function EditServerPage({ params }: EditServerPageProps) {
   const { id } = params;
   const router = useRouter();
 
-  const {
-    data: server,
-    isLoading,
-    error: loadError,
-  } = useWireGuardServer(id);
-  const { mutate: updateServer, isPending, error: updateError } =
-    useUpdateWireGuardServer();
+  const { data: server, isLoading, error: loadError } = useWireGuardServer(id);
+  const { mutate: updateServer, isPending, error: updateError } = useUpdateWireGuardServer();
 
   const [formData, setFormData] = useState<WireGuardServerUpdate>({});
-  const [dnsInput, setDnsInput] = useState('');
-  const [allowedIpsInput, setAllowedIpsInput] = useState('');
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, string>
-  >({});
+  const [dnsInput, setDnsInput] = useState("");
+  const [allowedIpsInput, setAllowedIpsInput] = useState("");
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Initialize form data when server loads
   useEffect(() => {
@@ -64,8 +51,8 @@ export default function EditServerPage({ params }: EditServerPageProps) {
         location: server.location,
         metadata: server.metadata_,
       });
-      setDnsInput(server.dns_servers.join(', '));
-      setAllowedIpsInput(server.allowed_ips.join(', '));
+      setDnsInput(server.dns_servers.join(", "));
+      setAllowedIpsInput(server.allowed_ips.join(", "));
     }
   }, [server]);
 
@@ -73,31 +60,31 @@ export default function EditServerPage({ params }: EditServerPageProps) {
     const errors: Record<string, string> = {};
 
     if (formData.name && !formData.name.trim()) {
-      errors.name = 'Server name cannot be empty';
+      errors.name = "Server name cannot be empty";
     }
 
     if (formData.public_endpoint && !formData.public_endpoint.trim()) {
-      errors.public_endpoint = 'Public endpoint cannot be empty';
+      errors.public_endpoint = "Public endpoint cannot be empty";
     }
 
     if (formData.max_peers && (formData.max_peers < 1 || formData.max_peers > 65535)) {
-      errors.max_peers = 'Max peers must be between 1 and 65535';
+      errors.max_peers = "Max peers must be between 1 and 65535";
     }
 
     const dns_servers = dnsInput
-      .split(',')
+      .split(",")
       .map((s) => s.trim())
       .filter((s) => s);
     if (dns_servers.length === 0) {
-      errors.dns_servers = 'At least one DNS server is required';
+      errors.dns_servers = "At least one DNS server is required";
     }
 
     const allowed_ips = allowedIpsInput
-      .split(',')
+      .split(",")
       .map((s) => s.trim())
       .filter((s) => s);
     if (allowed_ips.length === 0) {
-      errors.allowed_ips = 'At least one allowed IP range is required';
+      errors.allowed_ips = "At least one allowed IP range is required";
     }
 
     setValidationErrors(errors);
@@ -113,11 +100,11 @@ export default function EditServerPage({ params }: EditServerPageProps) {
 
     // Parse DNS servers and allowed IPs
     const dns_servers = dnsInput
-      .split(',')
+      .split(",")
       .map((s) => s.trim())
       .filter((s) => s);
     const allowed_ips = allowedIpsInput
-      .split(',')
+      .split(",")
       .map((s) => s.trim())
       .filter((s) => s);
 
@@ -135,14 +122,11 @@ export default function EditServerPage({ params }: EditServerPageProps) {
         onSuccess: () => {
           router.push(`/dashboard/network/wireguard/servers/${id}`);
         },
-      }
+      },
     );
   };
 
-  const handleFieldChange = (
-    field: keyof WireGuardServerUpdate,
-    value: unknown
-  ) => {
+  const handleFieldChange = (field: keyof WireGuardServerUpdate, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear validation error for this field
     if (validationErrors[field]) {
@@ -169,7 +153,7 @@ export default function EditServerPage({ params }: EditServerPageProps) {
       <div className="space-y-6 p-6">
         <Card className="p-6">
           <p className="text-red-500">
-            Error loading server: {String(loadError) || 'Server not found'}
+            Error loading server: {String(loadError) || "Server not found"}
           </p>
           <Button className="mt-4" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -193,9 +177,7 @@ export default function EditServerPage({ params }: EditServerPageProps) {
             <Server className="h-8 w-8" />
             Edit Server: {server.name}
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Update server configuration and settings
-          </p>
+          <p className="text-muted-foreground mt-1">Update server configuration and settings</p>
         </div>
       </div>
 
@@ -206,8 +188,8 @@ export default function EditServerPage({ params }: EditServerPageProps) {
           <div>
             <p className="font-semibold">Note</p>
             <p className="text-sm mt-1">
-              Network configuration fields (IPv4, IPv6, listen port, keys) cannot
-              be changed after server creation for security reasons.
+              Network configuration fields (IPv4, IPv6, listen port, keys) cannot be changed after
+              server creation for security reasons.
             </p>
           </div>
         </div>
@@ -236,42 +218,34 @@ export default function EditServerPage({ params }: EditServerPageProps) {
               </label>
               <input
                 type="text"
-                value={formData.name || ''}
-                onChange={(e) => handleFieldChange('name', e.target.value)}
+                value={formData.name || ""}
+                onChange={(e) => handleFieldChange("name", e.target.value)}
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors.name ? 'border-red-500' : ''
+                  validationErrors.name ? "border-red-500" : ""
                 }`}
                 required
               />
               {validationErrors.name && (
-                <p className="text-sm text-red-500 mt-1">
-                  {validationErrors.name}
-                </p>
+                <p className="text-sm text-red-500 mt-1">{validationErrors.name}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Description
-              </label>
+              <label className="block text-sm font-medium mb-1">Description</label>
               <textarea
-                value={formData.description || ''}
-                onChange={(e) =>
-                  handleFieldChange('description', e.target.value)
-                }
+                value={formData.description || ""}
+                onChange={(e) => handleFieldChange("description", e.target.value)}
                 rows={3}
                 className="w-full px-4 py-2 border rounded-md"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">
-                Location
-              </label>
+              <label className="block text-sm font-medium mb-1">Location</label>
               <input
                 type="text"
-                value={formData.location || ''}
-                onChange={(e) => handleFieldChange('location', e.target.value)}
+                value={formData.location || ""}
+                onChange={(e) => handleFieldChange("location", e.target.value)}
                 placeholder="e.g., New York, US"
                 className="w-full px-4 py-2 border rounded-md"
               />
@@ -284,10 +258,7 @@ export default function EditServerPage({ params }: EditServerPageProps) {
               <select
                 value={formData.status || server.status}
                 onChange={(e) =>
-                  handleFieldChange(
-                    'status',
-                    e.target.value as WireGuardServerStatus
-                  )
+                  handleFieldChange("status", e.target.value as WireGuardServerStatus)
                 }
                 className="w-full px-4 py-2 border rounded-md"
                 required
@@ -325,9 +296,7 @@ export default function EditServerPage({ params }: EditServerPageProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-600">
-                  Listen Port
-                </label>
+                <label className="block text-sm font-medium mb-1 text-gray-600">Listen Port</label>
                 <input
                   type="text"
                   value={server.listen_port}
@@ -337,9 +306,7 @@ export default function EditServerPage({ params }: EditServerPageProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-600">
-                  Server IPv4
-                </label>
+                <label className="block text-sm font-medium mb-1 text-gray-600">Server IPv4</label>
                 <input
                   type="text"
                   value={server.server_ipv4}
@@ -364,9 +331,7 @@ export default function EditServerPage({ params }: EditServerPageProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-600">
-                Public Key
-              </label>
+              <label className="block text-sm font-medium mb-1 text-gray-600">Public Key</label>
               <input
                 type="text"
                 value={server.public_key}
@@ -387,19 +352,15 @@ export default function EditServerPage({ params }: EditServerPageProps) {
               </label>
               <input
                 type="text"
-                value={formData.public_endpoint || ''}
-                onChange={(e) =>
-                  handleFieldChange('public_endpoint', e.target.value)
-                }
+                value={formData.public_endpoint || ""}
+                onChange={(e) => handleFieldChange("public_endpoint", e.target.value)}
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors.public_endpoint ? 'border-red-500' : ''
+                  validationErrors.public_endpoint ? "border-red-500" : ""
                 }`}
                 required
               />
               {validationErrors.public_endpoint && (
-                <p className="text-sm text-red-500 mt-1">
-                  {validationErrors.public_endpoint}
-                </p>
+                <p className="text-sm text-red-500 mt-1">{validationErrors.public_endpoint}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Update if the public DNS or IP changes
@@ -413,24 +374,19 @@ export default function EditServerPage({ params }: EditServerPageProps) {
               <input
                 type="number"
                 value={formData.max_peers || 0}
-                onChange={(e) =>
-                  handleFieldChange('max_peers', parseInt(e.target.value))
-                }
+                onChange={(e) => handleFieldChange("max_peers", parseInt(e.target.value))}
                 min={server.current_peers}
                 max={65535}
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors.max_peers ? 'border-red-500' : ''
+                  validationErrors.max_peers ? "border-red-500" : ""
                 }`}
                 required
               />
               {validationErrors.max_peers && (
-                <p className="text-sm text-red-500 mt-1">
-                  {validationErrors.max_peers}
-                </p>
+                <p className="text-sm text-red-500 mt-1">{validationErrors.max_peers}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                Current peers: {server.current_peers}. Cannot set below this
-                value.
+                Current peers: {server.current_peers}. Cannot set below this value.
               </p>
             </div>
 
@@ -443,14 +399,12 @@ export default function EditServerPage({ params }: EditServerPageProps) {
                 value={dnsInput}
                 onChange={(e) => setDnsInput(e.target.value)}
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors.dns_servers ? 'border-red-500' : ''
+                  validationErrors.dns_servers ? "border-red-500" : ""
                 }`}
                 required
               />
               {validationErrors.dns_servers && (
-                <p className="text-sm text-red-500 mt-1">
-                  {validationErrors.dns_servers}
-                </p>
+                <p className="text-sm text-red-500 mt-1">{validationErrors.dns_servers}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Comma-separated DNS servers (affects new peer configs)
@@ -466,14 +420,12 @@ export default function EditServerPage({ params }: EditServerPageProps) {
                 value={allowedIpsInput}
                 onChange={(e) => setAllowedIpsInput(e.target.value)}
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors.allowed_ips ? 'border-red-500' : ''
+                  validationErrors.allowed_ips ? "border-red-500" : ""
                 }`}
                 required
               />
               {validationErrors.allowed_ips && (
-                <p className="text-sm text-red-500 mt-1">
-                  {validationErrors.allowed_ips}
-                </p>
+                <p className="text-sm text-red-500 mt-1">{validationErrors.allowed_ips}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Comma-separated CIDR ranges (affects new peer configs)
@@ -488,10 +440,7 @@ export default function EditServerPage({ params }: EditServerPageProps) {
                 type="number"
                 value={formData.persistent_keepalive || 0}
                 onChange={(e) =>
-                  handleFieldChange(
-                    'persistent_keepalive',
-                    parseInt(e.target.value)
-                  )
+                  handleFieldChange("persistent_keepalive", parseInt(e.target.value))
                 }
                 min={0}
                 max={300}
@@ -506,14 +455,9 @@ export default function EditServerPage({ params }: EditServerPageProps) {
 
         {/* Actions */}
         <div className="flex items-center gap-4">
-          <Button
-            type="submit"
-            disabled={isPending}
-            size="lg"
-            className="flex-1"
-          >
+          <Button type="submit" disabled={isPending} size="lg" className="flex-1">
             <Save className="mr-2 h-5 w-5" />
-            {isPending ? 'Saving Changes...' : 'Save Changes'}
+            {isPending ? "Saving Changes..." : "Save Changes"}
           </Button>
           <Button
             type="button"

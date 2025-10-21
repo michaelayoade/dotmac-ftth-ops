@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Activity,
   CheckCircle2,
@@ -15,7 +15,7 @@ import {
   Eye,
   Play,
   Pause,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   useOrchestrationStats,
   useWorkflows,
@@ -25,14 +25,14 @@ import {
   type Workflow,
   type WorkflowStatus,
   type WorkflowType,
-} from '@/hooks/useOrchestration';
+} from "@/hooks/useOrchestration";
 
 // ============================================================================
 // Utility Functions
 // ============================================================================
 
 function formatDuration(startedAt?: string, completedAt?: string): string {
-  if (!startedAt) return 'N/A';
+  if (!startedAt) return "N/A";
   const start = new Date(startedAt).getTime();
   const end = completedAt ? new Date(completedAt).getTime() : Date.now();
   const seconds = Math.floor((end - start) / 1000);
@@ -44,41 +44,41 @@ function formatDuration(startedAt?: string, completedAt?: string): string {
 
 function formatWorkflowType(type: WorkflowType): string {
   return type
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 function getStatusColor(status: WorkflowStatus): string {
   switch (status) {
-    case 'completed':
-      return 'text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-950';
-    case 'running':
-      return 'text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950';
-    case 'failed':
-      return 'text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950';
-    case 'rolling_back':
-    case 'rolled_back':
-      return 'text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-950';
-    case 'pending':
-      return 'text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-950';
+    case "completed":
+      return "text-green-600 bg-green-50 dark:text-green-400 dark:bg-green-950";
+    case "running":
+      return "text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950";
+    case "failed":
+      return "text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950";
+    case "rolling_back":
+    case "rolled_back":
+      return "text-orange-600 bg-orange-50 dark:text-orange-400 dark:bg-orange-950";
+    case "pending":
+      return "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-950";
     default:
-      return 'text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-950';
+      return "text-gray-600 bg-gray-50 dark:text-gray-400 dark:bg-gray-950";
   }
 }
 
 function getStatusIcon(status: WorkflowStatus) {
   switch (status) {
-    case 'completed':
+    case "completed":
       return CheckCircle2;
-    case 'running':
+    case "running":
       return Loader2;
-    case 'failed':
+    case "failed":
       return XCircle;
-    case 'rolling_back':
-    case 'rolled_back':
+    case "rolling_back":
+    case "rolled_back":
       return RotateCcw;
-    case 'pending':
+    case "pending":
       return Clock;
     default:
       return Activity;
@@ -96,12 +96,12 @@ function StatsCard({ title, value, subtitle, icon: Icon, trend }: any) {
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
-          {subtitle && (
-            <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-          )}
+          {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
           {trend !== undefined && (
-            <div className={`mt-2 flex items-center text-sm ${trend >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-              <TrendingUp className={`h-4 w-4 mr-1 ${trend < 0 ? 'rotate-180' : ''}`} />
+            <div
+              className={`mt-2 flex items-center text-sm ${trend >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+            >
+              <TrendingUp className={`h-4 w-4 mr-1 ${trend < 0 ? "rotate-180" : ""}`} />
               {Math.abs(trend).toFixed(1)}%
             </div>
           )}
@@ -140,10 +140,7 @@ function WorkflowDetailModal({ workflowId, onClose }: { workflowId: string; onCl
       <div className="bg-card rounded-lg p-6 max-w-5xl w-full mx-4 my-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-foreground">Workflow Details</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg transition-colors">
             <XOctagon className="h-5 w-5" />
           </button>
         </div>
@@ -161,15 +158,21 @@ function WorkflowDetailModal({ workflowId, onClose }: { workflowId: string; onCl
           <div>
             <p className="text-sm text-muted-foreground">Status</p>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(workflow.status)}`}>
-                <StatusIcon className={`h-3.5 w-3.5 ${workflow.status === 'running' ? 'animate-spin' : ''}`} />
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(workflow.status)}`}
+              >
+                <StatusIcon
+                  className={`h-3.5 w-3.5 ${workflow.status === "running" ? "animate-spin" : ""}`}
+                />
                 {workflow.status.toUpperCase()}
               </span>
             </div>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Duration</p>
-            <p className="font-medium mt-1">{formatDuration(workflow.started_at, workflow.completed_at || workflow.failed_at)}</p>
+            <p className="font-medium mt-1">
+              {formatDuration(workflow.started_at, workflow.completed_at || workflow.failed_at)}
+            </p>
           </div>
         </div>
 
@@ -180,7 +183,9 @@ function WorkflowDetailModal({ workflowId, onClose }: { workflowId: string; onCl
               <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-red-900 dark:text-red-100">Error</p>
-                <p className="text-sm text-red-700 dark:text-red-300 mt-1">{workflow.error_message}</p>
+                <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                  {workflow.error_message}
+                </p>
               </div>
             </div>
           </div>
@@ -198,8 +203,12 @@ function WorkflowDetailModal({ workflowId, onClose }: { workflowId: string; onCl
                   className="flex items-start gap-4 p-4 border border-border rounded-lg"
                 >
                   <div className="flex-shrink-0">
-                    <div className={`flex items-center justify-center w-8 h-8 rounded-full ${getStatusColor(step.status as any)}`}>
-                      <StepIcon className={`h-4 w-4 ${step.status === 'running' ? 'animate-spin' : ''}`} />
+                    <div
+                      className={`flex items-center justify-center w-8 h-8 rounded-full ${getStatusColor(step.status as any)}`}
+                    >
+                      <StepIcon
+                        className={`h-4 w-4 ${step.status === "running" ? "animate-spin" : ""}`}
+                      />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
@@ -215,7 +224,9 @@ function WorkflowDetailModal({ workflowId, onClose }: { workflowId: string; onCl
                       </div>
                     </div>
                     {step.error_message && (
-                      <p className="text-sm text-red-600 dark:text-red-400 mt-2">{step.error_message}</p>
+                      <p className="text-sm text-red-600 dark:text-red-400 mt-2">
+                        {step.error_message}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -293,15 +304,23 @@ function WorkflowList({
             className="flex items-center gap-4 p-4 border border-border rounded-lg hover:border-primary/50 transition-colors"
           >
             <div className="flex-shrink-0">
-              <div className={`flex items-center justify-center w-10 h-10 rounded-full ${getStatusColor(workflow.status)}`}>
-                <StatusIcon className={`h-5 w-5 ${workflow.status === 'running' ? 'animate-spin' : ''}`} />
+              <div
+                className={`flex items-center justify-center w-10 h-10 rounded-full ${getStatusColor(workflow.status)}`}
+              >
+                <StatusIcon
+                  className={`h-5 w-5 ${workflow.status === "running" ? "animate-spin" : ""}`}
+                />
               </div>
             </div>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="font-medium text-foreground">{formatWorkflowType(workflow.workflow_type)}</p>
-                <span className="text-xs text-muted-foreground">#{workflow.workflow_id.slice(0, 8)}</span>
+                <p className="font-medium text-foreground">
+                  {formatWorkflowType(workflow.workflow_type)}
+                </p>
+                <span className="text-xs text-muted-foreground">
+                  #{workflow.workflow_id.slice(0, 8)}
+                </span>
               </div>
               <p className="text-sm text-muted-foreground mt-1">
                 {workflow.started_at ? (
@@ -318,7 +337,8 @@ function WorkflowList({
               </p>
               {workflow.steps && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  {workflow.steps.filter(s => s.status === 'completed').length}/{workflow.steps.length} steps
+                  {workflow.steps.filter((s) => s.status === "completed").length}/
+                  {workflow.steps.length} steps
                 </p>
               )}
             </div>
@@ -331,7 +351,7 @@ function WorkflowList({
               >
                 <Eye className="h-4 w-4" />
               </button>
-              {workflow.status === 'failed' && (
+              {workflow.status === "failed" && (
                 <button
                   onClick={() => onRetry(workflow.workflow_id)}
                   className="p-2 hover:bg-muted rounded-lg transition-colors text-orange-600"
@@ -340,7 +360,7 @@ function WorkflowList({
                   <RefreshCw className="h-4 w-4" />
                 </button>
               )}
-              {workflow.status === 'running' && (
+              {workflow.status === "running" && (
                 <button
                   onClick={() => onCancel(workflow.workflow_id)}
                   className="p-2 hover:bg-muted rounded-lg transition-colors text-red-600"
@@ -367,14 +387,22 @@ export default function OrchestrationDashboard() {
 
   const { stats, loading: statsLoading, refetch: refetchStats } = useOrchestrationStats();
 
-  const { workflows: runningWorkflows, loading: runningLoading, refetch: refetchRunning } = useWorkflows({
-    status: 'running',
+  const {
+    workflows: runningWorkflows,
+    loading: runningLoading,
+    refetch: refetchRunning,
+  } = useWorkflows({
+    status: "running",
     autoRefresh: autoRefresh,
     refreshInterval: 3000,
   });
 
-  const { workflows: failedWorkflows, loading: failedLoading, refetch: refetchFailed } = useWorkflows({
-    status: 'failed',
+  const {
+    workflows: failedWorkflows,
+    loading: failedLoading,
+    refetch: refetchFailed,
+  } = useWorkflows({
+    status: "failed",
     pageSize: 10,
   });
 
@@ -418,8 +446,8 @@ export default function OrchestrationDashboard() {
             onClick={() => setAutoRefresh(!autoRefresh)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
               autoRefresh
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-foreground hover:bg-muted/80'
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-foreground hover:bg-muted/80"
             }`}
           >
             {autoRefresh ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
@@ -437,11 +465,7 @@ export default function OrchestrationDashboard() {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title="Total Workflows"
-          value={stats?.total || 0}
-          icon={Activity}
-        />
+        <StatsCard title="Total Workflows" value={stats?.total || 0} icon={Activity} />
         <StatsCard
           title="Running"
           value={stats?.running || 0}
@@ -451,13 +475,19 @@ export default function OrchestrationDashboard() {
         <StatsCard
           title="Completed"
           value={stats?.completed || 0}
-          subtitle={stats?.success_rate ? `${stats.success_rate.toFixed(1)}% success rate` : undefined}
+          subtitle={
+            stats?.success_rate ? `${stats.success_rate.toFixed(1)}% success rate` : undefined
+          }
           icon={CheckCircle2}
         />
         <StatsCard
           title="Failed"
           value={stats?.failed || 0}
-          subtitle={stats?.avg_duration_seconds ? `${stats.avg_duration_seconds.toFixed(1)}s avg` : undefined}
+          subtitle={
+            stats?.avg_duration_seconds
+              ? `${stats.avg_duration_seconds.toFixed(1)}s avg`
+              : undefined
+          }
           icon={XCircle}
         />
       </div>
@@ -466,9 +496,7 @@ export default function OrchestrationDashboard() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-foreground">Active Workflows</h2>
-          <span className="text-sm text-muted-foreground">
-            {runningWorkflows.length} running
-          </span>
+          <span className="text-sm text-muted-foreground">{runningWorkflows.length} running</span>
         </div>
         <div className="border border-border rounded-lg p-4 bg-card">
           <WorkflowList
@@ -485,9 +513,7 @@ export default function OrchestrationDashboard() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-foreground">Failed Workflows</h2>
-          <span className="text-sm text-muted-foreground">
-            {failedWorkflows.length} failed
-          </span>
+          <span className="text-sm text-muted-foreground">{failedWorkflows.length} failed</span>
         </div>
         <div className="border border-border rounded-lg p-4 bg-card">
           <WorkflowList

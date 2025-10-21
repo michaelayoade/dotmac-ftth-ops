@@ -2,10 +2,10 @@
  * Utility Hooks for DotMac Components
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from "react";
 
 // useId hook implementation
-export function useId(prefix = 'id'): string {
+export function useId(prefix = "id"): string {
   const id = useRef<string>();
   if (!id.current) {
     id.current = `${prefix}-${Math.random().toString(36).substring(2, 9)}`;
@@ -44,9 +44,9 @@ export function useMediaQuery(query: string): boolean {
     setMatches(mediaQuery.matches);
 
     const handler = (event: MediaQueryListEvent) => setMatches(event.matches);
-    mediaQuery.addEventListener('change', handler);
+    mediaQuery.addEventListener("change", handler);
 
-    return () => mediaQuery.removeEventListener('change', handler);
+    return () => mediaQuery.removeEventListener("change", handler);
   }, [query]);
 
   return matches;
@@ -56,7 +56,7 @@ export function useMediaQuery(query: string): boolean {
 export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         const item = window.localStorage.getItem(key);
         return item ? JSON.parse(item) : initialValue;
       }
@@ -71,14 +71,14 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
     (value: T) => {
       try {
         setStoredValue(value);
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           window.localStorage.setItem(key, JSON.stringify(value));
         }
       } catch (error) {
         console.warn(`Error setting localStorage key "${key}":`, error);
       }
     },
-    [key]
+    [key],
   );
 
   return [storedValue, setValue];
@@ -88,7 +88,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T)
 export function useSessionStorage<T>(key: string, initialValue: T): [T, (value: T) => void] {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         const item = window.sessionStorage.getItem(key);
         return item ? JSON.parse(item) : initialValue;
       }
@@ -103,14 +103,14 @@ export function useSessionStorage<T>(key: string, initialValue: T): [T, (value: 
     (value: T) => {
       try {
         setStoredValue(value);
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           window.sessionStorage.setItem(key, JSON.stringify(value));
         }
       } catch (error) {
         console.warn(`Error setting sessionStorage key "${key}":`, error);
       }
     },
-    [key]
+    [key],
   );
 
   return [storedValue, setValue];
@@ -118,14 +118,14 @@ export function useSessionStorage<T>(key: string, initialValue: T): [T, (value: 
 
 // usePrefersReducedMotion hook
 export function usePrefersReducedMotion(): boolean {
-  return useMediaQuery('(prefers-reduced-motion: reduce)');
+  return useMediaQuery("(prefers-reduced-motion: reduce)");
 }
 
 // useUserPreferences hook
 export function useUserPreferences() {
-  const [theme, setTheme] = useLocalStorage('theme', 'light');
-  const [fontSize, setFontSize] = useLocalStorage('fontSize', 'medium');
-  const [language, setLanguage] = useLocalStorage('language', 'en');
+  const [theme, setTheme] = useLocalStorage("theme", "light");
+  const [fontSize, setFontSize] = useLocalStorage("fontSize", "medium");
+  const [language, setLanguage] = useLocalStorage("language", "en");
   const prefersReducedMotion = usePrefersReducedMotion();
 
   return {
@@ -148,13 +148,13 @@ export function useFocusTrap(enabled: boolean = true) {
 
     const container = containerRef.current;
     const focusableElements = container.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const firstFocusable = focusableElements[0] as HTMLElement;
     const lastFocusable = focusableElements[focusableElements.length - 1] as HTMLElement;
 
     const handleTabKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
+      if (e.key !== "Tab") return;
 
       if (e.shiftKey) {
         if (document.activeElement === firstFocusable) {
@@ -169,11 +169,11 @@ export function useFocusTrap(enabled: boolean = true) {
       }
     };
 
-    container.addEventListener('keydown', handleTabKey);
+    container.addEventListener("keydown", handleTabKey);
     firstFocusable?.focus();
 
     return () => {
-      container.removeEventListener('keydown', handleTabKey);
+      container.removeEventListener("keydown", handleTabKey);
     };
   }, [enabled]);
 
@@ -187,31 +187,31 @@ export function useKeyboardNavigation(items: string[], onSelect: (item: string) 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       switch (e.key) {
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
           setActiveIndex((prev) => (prev + 1) % items.length);
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
           setActiveIndex((prev) => (prev - 1 + items.length) % items.length);
           break;
-        case 'Enter':
-        case ' ':
+        case "Enter":
+        case " ":
           e.preventDefault();
           onSelect(items[activeIndex]);
           break;
-        case 'Escape':
+        case "Escape":
           e.preventDefault();
           setActiveIndex(0);
           break;
       }
     },
-    [items, activeIndex, onSelect]
+    [items, activeIndex, onSelect],
   );
 
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
   return { activeIndex, setActiveIndex };
@@ -219,11 +219,11 @@ export function useKeyboardNavigation(items: string[], onSelect: (item: string) 
 
 // useScreenReaderAnnouncement hook
 export function useScreenReaderAnnouncement() {
-  const announce = useCallback((message: string, priority: 'polite' | 'assertive' = 'polite') => {
-    const announcement = document.createElement('div');
-    announcement.setAttribute('aria-live', priority);
-    announcement.setAttribute('aria-atomic', 'true');
-    announcement.className = 'sr-only';
+  const announce = useCallback((message: string, priority: "polite" | "assertive" = "polite") => {
+    const announcement = document.createElement("div");
+    announcement.setAttribute("aria-live", priority);
+    announcement.setAttribute("aria-atomic", "true");
+    announcement.className = "sr-only";
     announcement.textContent = message;
 
     document.body.appendChild(announcement);
@@ -250,7 +250,7 @@ export function useAriaExpanded(initialExpanded = false) {
     toggle,
     expand,
     collapse,
-    'aria-expanded': expanded,
+    "aria-expanded": expanded,
   };
 }
 
@@ -268,7 +268,7 @@ export function useAriaSelection<T>(items: T[], multiSelect = false) {
         }
       });
     },
-    [multiSelect]
+    [multiSelect],
   );
 
   const deselect = useCallback((item: T) => {
@@ -283,7 +283,7 @@ export function useAriaSelection<T>(items: T[], multiSelect = false) {
     (item: T) => {
       return selectedItems.includes(item);
     },
-    [selectedItems]
+    [selectedItems],
   );
 
   return {

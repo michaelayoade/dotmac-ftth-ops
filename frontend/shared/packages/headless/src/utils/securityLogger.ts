@@ -4,7 +4,7 @@
 
 export interface SecurityEvent {
   type: SecurityEventType;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   message: string;
   metadata?: Record<string, unknown>;
   timestamp: string;
@@ -15,22 +15,22 @@ export interface SecurityEvent {
 }
 
 export type SecurityEventType =
-  | 'auth_success'
-  | 'auth_failure'
-  | 'auth_rate_limited'
-  | 'token_refresh'
-  | 'token_expired'
-  | 'csrf_token_missing'
-  | 'csrf_token_invalid'
-  | 'xss_attempt_blocked'
-  | 'suspicious_activity'
-  | 'session_hijack_attempt'
-  | 'mfa_setup'
-  | 'mfa_success'
-  | 'mfa_failure'
-  | 'logout'
-  | 'permission_denied'
-  | 'data_access_attempt';
+  | "auth_success"
+  | "auth_failure"
+  | "auth_rate_limited"
+  | "token_refresh"
+  | "token_expired"
+  | "csrf_token_missing"
+  | "csrf_token_invalid"
+  | "xss_attempt_blocked"
+  | "suspicious_activity"
+  | "session_hijack_attempt"
+  | "mfa_setup"
+  | "mfa_success"
+  | "mfa_failure"
+  | "logout"
+  | "permission_denied"
+  | "data_access_attempt";
 
 class SecurityLogger {
   private events: SecurityEvent[] = [];
@@ -54,13 +54,13 @@ class SecurityLogger {
    */
   private setupErrorHandlers(): void {
     // Monitor for potential XSS attempts
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const originalAlert = window.alert;
       window.alert = (message: string) => {
         this.logEvent({
-          type: 'suspicious_activity',
-          severity: 'medium',
-          message: 'Alert function called - potential XSS',
+          type: "suspicious_activity",
+          severity: "medium",
+          message: "Alert function called - potential XSS",
           metadata: { alertMessage: message },
         });
         return originalAlert.call(window, message);
@@ -70,12 +70,12 @@ class SecurityLogger {
       const originalConsoleError = console.error;
 
       console.error = (...args: unknown[]) => {
-        const message = args.join(' ');
-        if (message.includes('Content Security Policy') || message.includes('CSP')) {
+        const message = args.join(" ");
+        if (message.includes("Content Security Policy") || message.includes("CSP")) {
           this.logEvent({
-            type: 'suspicious_activity',
-            severity: 'high',
-            message: 'CSP violation detected',
+            type: "suspicious_activity",
+            severity: "high",
+            message: "CSP violation detected",
             metadata: { errorArgs: args },
           });
         }
@@ -87,13 +87,13 @@ class SecurityLogger {
   /**
    * Log a security event
    */
-  logEvent(event: Omit<SecurityEvent, 'timestamp' | 'userAgent' | 'sessionId'>): void {
+  logEvent(event: Omit<SecurityEvent, "timestamp" | "userAgent" | "sessionId">): void {
     const securityEvent: SecurityEvent = {
       ...event,
       timestamp: new Date().toISOString(),
       sessionId: this.sessionId,
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
-      location: typeof window !== 'undefined' ? window.location.href : 'unknown',
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "unknown",
+      location: typeof window !== "undefined" ? window.location.href : "unknown",
     };
 
     // Add to memory store
@@ -119,13 +119,13 @@ class SecurityLogger {
     const _metadata = { ...event.metadata, sessionId: event.sessionId };
 
     switch (event.severity) {
-      case 'critical':
+      case "critical":
         break;
-      case 'high':
+      case "high":
         break;
-      case 'medium':
+      case "medium":
         break;
-      case 'low':
+      case "low":
         break;
     }
   }
@@ -135,16 +135,16 @@ class SecurityLogger {
    */
   private sendToSecurityService(event: SecurityEvent): void {
     // In development, just log to console
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       return;
     }
 
     // In production, send to security monitoring endpoint
     try {
-      fetch('/api/security/events', {
-        method: 'POST',
+      fetch("/api/security/events", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(event),
       }).catch((_error) => {
@@ -160,9 +160,9 @@ class SecurityLogger {
    */
   logAuthSuccess(userId: string, metadata?: Record<string, unknown>): void {
     this.logEvent({
-      type: 'auth_success',
-      severity: 'low',
-      message: 'User authentication successful',
+      type: "auth_success",
+      severity: "low",
+      message: "User authentication successful",
       userId,
       metadata,
     });
@@ -173,8 +173,8 @@ class SecurityLogger {
    */
   logAuthFailure(reason: string, metadata?: Record<string, unknown>): void {
     this.logEvent({
-      type: 'auth_failure',
-      severity: 'medium',
+      type: "auth_failure",
+      severity: "medium",
       message: `Authentication failed: ${reason}`,
       metadata,
     });
@@ -185,8 +185,8 @@ class SecurityLogger {
    */
   logRateLimit(endpoint: string, identifier: string): void {
     this.logEvent({
-      type: 'auth_rate_limited',
-      severity: 'high',
+      type: "auth_rate_limited",
+      severity: "high",
       message: `Rate limit exceeded for ${endpoint}`,
       metadata: { endpoint, identifier },
     });
@@ -197,9 +197,9 @@ class SecurityLogger {
    */
   logTokenRefresh(success: boolean, reason?: string): void {
     this.logEvent({
-      type: 'token_refresh',
-      severity: success ? 'low' : 'medium',
-      message: success ? 'Token refreshed successfully' : `Token refresh failed: ${reason}`,
+      type: "token_refresh",
+      severity: success ? "low" : "medium",
+      message: success ? "Token refreshed successfully" : `Token refresh failed: ${reason}`,
       metadata: { success, reason },
     });
   }
@@ -208,12 +208,12 @@ class SecurityLogger {
    * Log CSRF protection events
    */
   logCSRFEvent(
-    eventType: 'missing' | 'invalid' | 'valid',
-    metadata?: Record<string, unknown>
+    eventType: "missing" | "invalid" | "valid",
+    metadata?: Record<string, unknown>,
   ): void {
-    const severity = eventType === 'valid' ? 'low' : 'high';
+    const severity = eventType === "valid" ? "low" : "high";
     this.logEvent({
-      type: eventType === 'missing' ? 'csrf_token_missing' : 'csrf_token_invalid',
+      type: eventType === "missing" ? "csrf_token_missing" : "csrf_token_invalid",
       severity,
       message: `CSRF token ${eventType}`,
       metadata,
@@ -224,21 +224,21 @@ class SecurityLogger {
    * Log MFA events
    */
   logMFAEvent(
-    eventType: 'setup' | 'success' | 'failure',
+    eventType: "setup" | "success" | "failure",
     userId?: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): void {
     const typeMap = {
-      setup: 'mfa_setup' as SecurityEventType,
-      success: 'mfa_success' as SecurityEventType,
-      failure: 'mfa_failure' as SecurityEventType,
+      setup: "mfa_setup" as SecurityEventType,
+      success: "mfa_success" as SecurityEventType,
+      failure: "mfa_failure" as SecurityEventType,
     };
 
     this.logEvent({
       type: typeMap[eventType],
-      severity: eventType === 'failure' ? 'medium' : 'low',
+      severity: eventType === "failure" ? "medium" : "low",
       message: `MFA ${eventType}`,
-      userId: userId ?? 'unknown',
+      userId: userId ?? "unknown",
       metadata: metadata ?? {},
     });
   }
@@ -248,10 +248,10 @@ class SecurityLogger {
    */
   logPermissionDenied(resource: string, action: string, userId?: string): void {
     this.logEvent({
-      type: 'permission_denied',
-      severity: 'medium',
+      type: "permission_denied",
+      severity: "medium",
       message: `Access denied to ${resource} for action ${action}`,
-      userId: userId ?? 'unknown',
+      userId: userId ?? "unknown",
       metadata: { resource, action },
     });
   }
@@ -261,8 +261,8 @@ class SecurityLogger {
    */
   logSuspiciousActivity(description: string, metadata?: Record<string, unknown>): void {
     this.logEvent({
-      type: 'suspicious_activity',
-      severity: 'high',
+      type: "suspicious_activity",
+      severity: "high",
       message: description,
       metadata: metadata ?? {},
     });
@@ -271,7 +271,7 @@ class SecurityLogger {
   /**
    * Get recent security events
    */
-  getRecentEvents(count: number = 50, severity?: SecurityEvent['severity']): SecurityEvent[] {
+  getRecentEvents(count: number = 50, severity?: SecurityEvent["severity"]): SecurityEvent[] {
     let events = [...this.events].reverse();
 
     if (severity) {
@@ -297,7 +297,7 @@ class SecurityLogger {
       },
       {
         // Implementation pending
-      } as Record<string, number>
+      } as Record<string, number>,
     );
 
     const eventsByType = this.events.reduce(
@@ -307,11 +307,11 @@ class SecurityLogger {
       },
       {
         // Implementation pending
-      } as Record<string, number>
+      } as Record<string, number>,
     );
 
     const recentHighSeverityEvents = this.events
-      .filter((event) => event.severity === 'high' || event.severity === 'critical')
+      .filter((event) => event.severity === "high" || event.severity === "critical")
       .slice(-10)
       .reverse();
 

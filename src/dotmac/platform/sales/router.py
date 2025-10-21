@@ -3,7 +3,9 @@ Sales Order API Router
 
 Public and internal APIs for order processing and service activation.
 """
+# mypy: disable-error-code="arg-type"
 
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -372,7 +374,7 @@ def cancel_order(
     order_id: int,
     current_user: UserInfo = Depends(require_permissions("order.delete")),
     service: OrderProcessingService = Depends(get_order_service),
-) -> dict:
+) -> dict[str, Any]:
     """
     Cancel order (Internal API)
 
@@ -473,7 +475,7 @@ def retry_failed_activations(
     current_user: UserInfo = Depends(require_permissions("order.process")),
     order_service: OrderProcessingService = Depends(get_order_service),
     orchestrator: ActivationOrchestrator = Depends(get_activation_orchestrator),
-) -> dict:
+) -> dict[str, Any]:
     """
     Retry failed service activations (Internal API)
 
@@ -501,7 +503,7 @@ def retry_failed_activations(
 def get_order_statistics(
     current_user: UserInfo = Depends(require_permissions("order.read")),
     service: OrderProcessingService = Depends(get_order_service),
-) -> dict:
+) -> dict[str, Any]:
     """
     Get order statistics (Internal API)
 

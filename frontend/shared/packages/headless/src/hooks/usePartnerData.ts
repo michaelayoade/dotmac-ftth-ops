@@ -2,25 +2,25 @@
  * React Query hooks for Partner Portal data
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { partnerApiClient } from '../api/partner-client';
-import type { Customer, PartnerDashboardData } from '../api/partner-client';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { partnerApiClient } from "../api/partner-client";
+import type { Customer, PartnerDashboardData } from "../api/partner-client";
 
 // Query Keys
 export const partnerQueryKeys = {
-  all: ['partner'] as const,
-  dashboard: (partnerId: string) => [...partnerQueryKeys.all, 'dashboard', partnerId] as const,
-  customers: (partnerId: string) => [...partnerQueryKeys.all, 'customers', partnerId] as const,
+  all: ["partner"] as const,
+  dashboard: (partnerId: string) => [...partnerQueryKeys.all, "dashboard", partnerId] as const,
+  customers: (partnerId: string) => [...partnerQueryKeys.all, "customers", partnerId] as const,
   customer: (partnerId: string, customerId: string) =>
     [...partnerQueryKeys.customers(partnerId), customerId] as const,
-  commissions: (partnerId: string) => [...partnerQueryKeys.all, 'commissions', partnerId] as const,
-  analytics: (partnerId: string) => [...partnerQueryKeys.all, 'analytics', partnerId] as const,
+  commissions: (partnerId: string) => [...partnerQueryKeys.all, "commissions", partnerId] as const,
+  analytics: (partnerId: string) => [...partnerQueryKeys.all, "analytics", partnerId] as const,
 };
 
 // Dashboard Hook
 export function usePartnerDashboard(partnerId: string | undefined) {
   return useQuery({
-    queryKey: partnerQueryKeys.dashboard(partnerId || ''),
+    queryKey: partnerQueryKeys.dashboard(partnerId || ""),
     queryFn: () => partnerApiClient.getDashboard(partnerId!),
     enabled: !!partnerId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -36,10 +36,10 @@ export function usePartnerCustomers(
     limit?: number;
     search?: string;
     status?: string;
-  }
+  },
 ) {
   return useQuery({
-    queryKey: [...partnerQueryKeys.customers(partnerId || ''), params],
+    queryKey: [...partnerQueryKeys.customers(partnerId || ""), params],
     queryFn: () => partnerApiClient.getCustomers(partnerId!, params),
     enabled: !!partnerId,
     staleTime: 2 * 60 * 1000, // 2 minutes
@@ -49,7 +49,7 @@ export function usePartnerCustomers(
 
 export function usePartnerCustomer(partnerId: string | undefined, customerId: string | undefined) {
   return useQuery({
-    queryKey: partnerQueryKeys.customer(partnerId || '', customerId || ''),
+    queryKey: partnerQueryKeys.customer(partnerId || "", customerId || ""),
     queryFn: () => partnerApiClient.getCustomer(partnerId!, customerId!),
     enabled: !!partnerId && !!customerId,
     select: (response) => response.data,
@@ -107,10 +107,10 @@ export function usePartnerCommissions(
     limit?: number;
     period?: string;
     status?: string;
-  }
+  },
 ) {
   return useQuery({
-    queryKey: [...partnerQueryKeys.commissions(partnerId || ''), params],
+    queryKey: [...partnerQueryKeys.commissions(partnerId || ""), params],
     queryFn: () => partnerApiClient.getCommissions(partnerId!, params),
     enabled: !!partnerId,
     staleTime: 10 * 60 * 1000, // 10 minutes (financial data changes less frequently)
@@ -124,10 +124,10 @@ export function usePartnerAnalytics(
   params?: {
     period?: string;
     metrics?: string[];
-  }
+  },
 ) {
   return useQuery({
-    queryKey: [...partnerQueryKeys.analytics(partnerId || ''), params],
+    queryKey: [...partnerQueryKeys.analytics(partnerId || ""), params],
     queryFn: () => partnerApiClient.getAnalytics(partnerId!, params),
     enabled: !!partnerId,
     staleTime: 15 * 60 * 1000, // 15 minutes
@@ -153,12 +153,12 @@ export function usePartnerDataWithErrorBoundary<T>(hookResult: {
   if (hookResult.isError && hookResult.error) {
     // Log security-relevant errors
     if (hookResult.error.status === 403 || hookResult.error.status === 401) {
-      console.error('Partner access denied:', hookResult.error);
+      console.error("Partner access denied:", hookResult.error);
       // Could trigger logout or redirect to unauthorized page
     }
 
     if (hookResult.error.status >= 500) {
-      console.error('Server error in partner data:', hookResult.error);
+      console.error("Server error in partner data:", hookResult.error);
     }
   }
 

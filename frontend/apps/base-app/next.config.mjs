@@ -1,6 +1,11 @@
 import { createRequire } from 'module';
+import bundleAnalyzer from '@next/bundle-analyzer';
 
 const require = createRequire(import.meta.url);
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -44,7 +49,7 @@ const nextConfig = {
       },
     ];
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve.alias = config.resolve.alias || {};
     try {
       // Ensure workspace packages resolve correctly when symlinked
@@ -72,8 +77,53 @@ const nextConfig = {
       '.cjs': ['.cjs', '.cts'],
     };
 
+    // Optimize bundle splitting for better caching
+    if (!isServer) {
+      config.optimization = config.optimization || {};
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          // Split Apollo Client into separate chunk
+          apollo: {
+            test: /[\\/]node_modules[\\/]@apollo[\\/]/,
+            name: 'apollo',
+            priority: 10,
+            reuseExistingChunk: true,
+          },
+          // Split Radix UI components
+          radix: {
+            test: /[\\/]node_modules[\\/]@radix-ui[\\/]/,
+            name: 'radix',
+            priority: 9,
+            reuseExistingChunk: true,
+          },
+          // Split TanStack Query
+          query: {
+            test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
+            name: 'tanstack',
+            priority: 8,
+            reuseExistingChunk: true,
+          },
+          // Split React
+          react: {
+            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+            name: 'react',
+            priority: 11,
+            reuseExistingChunk: true,
+          },
+          // Other vendor dependencies
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendor',
+            priority: 5,
+            reuseExistingChunk: true,
+          },
+        },
+      };
+    }
+
     return config;
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

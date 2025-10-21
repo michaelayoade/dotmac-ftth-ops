@@ -4,14 +4,14 @@
  * Manage feature modules, quotas, and service plans
  */
 
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import React, { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -19,13 +19,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   Package,
   BarChart3,
@@ -38,36 +38,32 @@ import {
   Search,
   CheckCircle2,
   XCircle,
-} from 'lucide-react';
-import { useLicensing } from '../../../../hooks/useLicensing';
-import { ModuleCategory, PricingModel } from '../../../../types/licensing';
+} from "lucide-react";
+import { useLicensing } from "../../../../hooks/useLicensing";
+import { ModuleCategory, PricingModel } from "../../../../types/licensing";
 
 export default function PlatformAdminLicensingPage() {
-  const {
-    modules,
-    modulesLoading,
-    quotas,
-    quotasLoading,
-    plans,
-    plansLoading,
-  } = useLicensing();
+  const { modules, modulesLoading, quotas, quotasLoading, plans, plansLoading } = useLicensing();
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Filter functions
-  const filteredModules = modules.filter(m =>
-    m.module_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.module_code.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredModules = modules.filter(
+    (m) =>
+      m.module_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.module_code.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const filteredQuotas = quotas.filter(q =>
-    q.quota_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    q.quota_code.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredQuotas = quotas.filter(
+    (q) =>
+      q.quota_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      q.quota_code.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const filteredPlans = plans.filter(p =>
-    p.plan_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.plan_code.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredPlans = plans.filter(
+    (p) =>
+      p.plan_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.plan_code.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -90,7 +86,7 @@ export default function PlatformAdminLicensingPage() {
           <CardContent>
             <div className="text-2xl font-bold">{modules.length}</div>
             <p className="text-xs text-muted-foreground">
-              {modules.filter(m => m.is_active).length} active
+              {modules.filter((m) => m.is_active).length} active
             </p>
           </CardContent>
         </Card>
@@ -103,7 +99,7 @@ export default function PlatformAdminLicensingPage() {
           <CardContent>
             <div className="text-2xl font-bold">{quotas.length}</div>
             <p className="text-xs text-muted-foreground">
-              {quotas.filter(q => q.is_metered).length} metered
+              {quotas.filter((q) => q.is_metered).length} metered
             </p>
           </CardContent>
         </Card>
@@ -116,7 +112,7 @@ export default function PlatformAdminLicensingPage() {
           <CardContent>
             <div className="text-2xl font-bold">{plans.length}</div>
             <p className="text-xs text-muted-foreground">
-              {plans.filter(p => p.is_public).length} public
+              {plans.filter((p) => p.is_public).length} public
             </p>
           </CardContent>
         </Card>
@@ -188,9 +184,7 @@ export default function PlatformAdminLicensingPage() {
                       <TableCell>
                         <div>
                           <p className="font-medium">{module.module_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {module.module_code}
-                          </p>
+                          <p className="text-sm text-muted-foreground">{module.module_code}</p>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -199,10 +193,7 @@ export default function PlatformAdminLicensingPage() {
                       <TableCell>
                         <div className="text-sm">
                           ${module.base_price.toFixed(2)}
-                          <span className="text-muted-foreground">
-                            {' '}
-                            ({module.pricing_model})
-                          </span>
+                          <span className="text-muted-foreground"> ({module.pricing_model})</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -254,9 +245,7 @@ export default function PlatformAdminLicensingPage() {
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-lg font-medium">Quota Definitions</h3>
-              <p className="text-sm text-muted-foreground">
-                Resource limits and usage tracking
-              </p>
+              <p className="text-sm text-muted-foreground">Resource limits and usage tracking</p>
             </div>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -294,9 +283,7 @@ export default function PlatformAdminLicensingPage() {
                       <TableCell>
                         <div>
                           <p className="font-medium">{quota.quota_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {quota.quota_code}
-                          </p>
+                          <p className="text-sm text-muted-foreground">{quota.quota_code}</p>
                         </div>
                       </TableCell>
                       <TableCell>{quota.unit_name}</TableCell>
@@ -305,10 +292,7 @@ export default function PlatformAdminLicensingPage() {
                           {quota.overage_rate ? (
                             <>
                               ${quota.overage_rate.toFixed(4)}
-                              <span className="text-muted-foreground">
-                                {' '}
-                                per {quota.unit_name}
-                              </span>
+                              <span className="text-muted-foreground"> per {quota.unit_name}</span>
                             </>
                           ) : (
                             <span className="text-muted-foreground">No overage</span>
@@ -395,9 +379,7 @@ export default function PlatformAdminLicensingPage() {
                       <TableCell>
                         <div>
                           <p className="font-medium">{plan.plan_name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {plan.plan_code}
-                          </p>
+                          <p className="text-sm text-muted-foreground">{plan.plan_code}</p>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -411,7 +393,7 @@ export default function PlatformAdminLicensingPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {plan.modules?.filter(m => m.included_by_default).length || 0} included
+                        {plan.modules?.filter((m) => m.included_by_default).length || 0} included
                       </TableCell>
                       <TableCell>{plan.quotas?.length || 0} limits</TableCell>
                       <TableCell>

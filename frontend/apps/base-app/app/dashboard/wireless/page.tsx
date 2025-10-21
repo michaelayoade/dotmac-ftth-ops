@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 /**
@@ -11,19 +11,19 @@ export const dynamicParams = true;
  * Now powered by GraphQL for improved performance and real-time updates
  */
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   useWirelessDashboardGraphQL,
   useAccessPointListGraphQL,
@@ -31,8 +31,8 @@ import {
   useCoverageZoneListGraphQL,
   getSignalQualityLabel,
   getFrequencyBandLabel,
-} from '@/hooks/useWirelessGraphQL';
-import type { AccessPointStatus, FrequencyBand } from '@/lib/graphql/generated';
+} from "@/hooks/useWirelessGraphQL";
+import type { AccessPointStatus, FrequencyBand } from "@/lib/graphql/generated";
 import {
   Wifi,
   Radio,
@@ -46,13 +46,13 @@ import {
   Filter,
   RefreshCw,
   Cable,
-} from 'lucide-react';
-import Link from 'next/link';
+} from "lucide-react";
+import Link from "next/link";
 
 export default function WirelessDashboardPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<AccessPointStatus | 'all'>('all');
-  const [frequencyFilter, setFrequencyFilter] = useState<FrequencyBand | 'all'>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<AccessPointStatus | "all">("all");
+  const [frequencyFilter, setFrequencyFilter] = useState<FrequencyBand | "all">("all");
 
   // Fetch dashboard data with GraphQL
   const {
@@ -72,7 +72,7 @@ export default function WirelessDashboardPage() {
   } = useAccessPointListGraphQL({
     limit: 100,
     offset: 0,
-    status: statusFilter !== 'all' ? statusFilter : undefined,
+    status: statusFilter !== "all" ? statusFilter : undefined,
     pollInterval: 60000,
   });
 
@@ -100,7 +100,7 @@ export default function WirelessDashboardPage() {
 
   // Compute derived data
   const accessPointsNeedingAttention = accessPoints.filter(
-    (ap: any) => ap.status === 'OFFLINE' || ap.status === 'DEGRADED'
+    (ap: any) => ap.status === "OFFLINE" || ap.status === "DEGRADED",
   );
 
   const topCoverageZones = zones
@@ -113,40 +113,43 @@ export default function WirelessDashboardPage() {
     (ap: any) =>
       ap.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ap.siteName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ap.ipAddress?.toLowerCase().includes(searchTerm.toLowerCase())
+      ap.ipAddress?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Calculate status colors
   const getStatusColor = (status: AccessPointStatus) => {
     switch (status) {
-      case 'ONLINE':
-        return 'bg-green-500';
-      case 'DEGRADED':
-        return 'bg-yellow-500';
-      case 'OFFLINE':
-        return 'bg-red-500';
-      case 'MAINTENANCE':
-        return 'bg-blue-500';
+      case "ONLINE":
+        return "bg-green-500";
+      case "DEGRADED":
+        return "bg-yellow-500";
+      case "OFFLINE":
+        return "bg-red-500";
+      case "MAINTENANCE":
+        return "bg-blue-500";
       default:
-        return 'bg-gray-500';
+        return "bg-gray-500";
     }
   };
 
   const getStatusBadgeVariant = (status: AccessPointStatus) => {
     switch (status) {
-      case 'ONLINE':
-        return 'default';
-      case 'DEGRADED':
-        return 'secondary';
-      case 'OFFLINE':
-        return 'destructive';
+      case "ONLINE":
+        return "default";
+      case "DEGRADED":
+        return "secondary";
+      case "OFFLINE":
+        return "destructive";
       default:
-        return 'secondary';
+        return "secondary";
     }
   };
 
   const formatStatus = (status: string) => {
-    return status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+    return status
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   if (dashboardError) {
@@ -205,17 +208,11 @@ export default function WirelessDashboardPage() {
               <div className="text-2xl font-bold text-muted-foreground">Loading...</div>
             ) : (
               <>
-                <div className="text-2xl font-bold">
-                  {dashboard?.totalAccessPoints || 0}
-                </div>
+                <div className="text-2xl font-bold">{dashboard?.totalAccessPoints || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  <span className="text-green-600">
-                    {dashboard?.onlineAps || 0} online
-                  </span>
-                  {' • '}
-                  <span className="text-red-600">
-                    {dashboard?.offlineAps || 0} offline
-                  </span>
+                  <span className="text-green-600">{dashboard?.onlineAps || 0} online</span>
+                  {" • "}
+                  <span className="text-red-600">{dashboard?.offlineAps || 0} offline</span>
                 </p>
               </>
             )}
@@ -232,9 +229,7 @@ export default function WirelessDashboardPage() {
               <div className="text-2xl font-bold text-muted-foreground">Loading...</div>
             ) : (
               <>
-                <div className="text-2xl font-bold">
-                  {(dashboard?.onlineAps || 0) * 2 || 0}
-                </div>
+                <div className="text-2xl font-bold">{(dashboard?.onlineAps || 0) * 2 || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   of {(dashboard?.onlineAps || 0) * 2 || 0} total radios
                 </p>
@@ -255,7 +250,10 @@ export default function WirelessDashboardPage() {
               <>
                 <div className="text-2xl font-bold">{totalClients}</div>
                 <p className="text-xs text-muted-foreground">
-                  {((dashboard?.totalClients || 0) / (dashboard?.totalAccessPoints || 1))?.toFixed(1) ?? 0} avg per AP
+                  {((dashboard?.totalClients || 0) / (dashboard?.totalAccessPoints || 1))?.toFixed(
+                    1,
+                  ) ?? 0}{" "}
+                  avg per AP
                 </p>
               </>
             )}
@@ -273,9 +271,7 @@ export default function WirelessDashboardPage() {
             ) : (
               <>
                 <div className="text-2xl font-bold">{totalZones}</div>
-                <p className="text-xs text-muted-foreground">
-                  {0?.toFixed(2) || 0} km² coverage
-                </p>
+                <p className="text-xs text-muted-foreground">{(0)?.toFixed(2) || 0} km² coverage</p>
               </>
             )}
           </CardContent>
@@ -316,11 +312,13 @@ export default function WirelessDashboardPage() {
                     <Badge variant={getStatusBadgeVariant(ap.status)}>
                       {formatStatus(ap.status)}
                     </Badge>
-                    {ap?.performance?.connectedClients ?? 0 !== undefined && ap?.performance?.connectedClients ?? 0 > 50 && (
-                      <Badge variant="outline" className="text-amber-600 border-amber-600">
-                        High Load
-                      </Badge>
-                    )}
+                    {ap?.performance?.connectedClients ??
+                      (0 !== undefined && ap?.performance?.connectedClients) ??
+                      (0 > 50 && (
+                        <Badge variant="outline" className="text-amber-600 border-amber-600">
+                          High Load
+                        </Badge>
+                      ))}
                   </div>
                 </div>
               ))}
@@ -363,11 +361,13 @@ export default function WirelessDashboardPage() {
                         <div className="space-y-1 flex-1">
                           <div className="font-medium">{ap.name}</div>
                           <div className="text-xs text-muted-foreground">
-                            {ap.siteName || 'Unknown Site'}
+                            {ap.siteName || "Unknown Site"}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-lg font-bold">{ap?.performance?.connectedClients ?? 0}</div>
+                          <div className="text-lg font-bold">
+                            {ap?.performance?.connectedClients ?? 0}
+                          </div>
                           <div className="text-xs text-muted-foreground">clients</div>
                         </div>
                       </div>
@@ -398,15 +398,15 @@ export default function WirelessDashboardPage() {
                         <div className="space-y-1 flex-1">
                           <div className="font-medium">{zone.zoneName}</div>
                           <div className="text-xs text-muted-foreground">
-                            {zone.coverageType ? formatStatus(zone.coverageType) : 'Unknown'}
+                            {zone.coverageType ? formatStatus(zone.coverageType) : "Unknown"}
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-medium">
-                            {zone.signalStrengthDbm ? `${zone.signalStrengthDbm} dBm` : 'N/A'}
+                            {zone.signalStrengthDbm ? `${zone.signalStrengthDbm} dBm` : "N/A"}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {zone.radiusMeters ? `${zone.radiusMeters.toFixed(0)}m` : 'N/A'}
+                            {zone.radiusMeters ? `${zone.radiusMeters.toFixed(0)}m` : "N/A"}
                           </div>
                         </div>
                       </div>
@@ -469,10 +469,7 @@ export default function WirelessDashboardPage() {
                     />
                   </div>
                 </div>
-                <Select
-                  value={statusFilter}
-                  onValueChange={(value: any) => setStatusFilter(value)}
-                >
+                <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -519,21 +516,27 @@ export default function WirelessDashboardPage() {
                         <tr key={ap.id} className="border-b">
                           <td className="p-4">
                             <div className="flex items-center gap-2">
-                              <div className={`h-2 w-2 rounded-full ${getStatusColor(ap.status)}`} />
+                              <div
+                                className={`h-2 w-2 rounded-full ${getStatusColor(ap.status)}`}
+                              />
                               <Badge variant={getStatusBadgeVariant(ap.status) as any}>
                                 {formatStatus(ap.status)}
                               </Badge>
                             </div>
                           </td>
                           <td className="p-4 font-medium">{ap.name}</td>
-                          <td className="p-4">{ap.siteName || '-'}</td>
-                          <td className="p-4 font-mono text-xs">{ap.ipAddress || '-'}</td>
+                          <td className="p-4">{ap.siteName || "-"}</td>
+                          <td className="p-4 font-mono text-xs">{ap.ipAddress || "-"}</td>
                           <td className="p-4">{ap?.performance?.connectedClients ?? 0}</td>
                           <td className="p-4">{ap?.performance?.connectedClients ?? 0}</td>
                           <td className="p-4">
-                            {(ap.lastRebootAt ? (Date.now() - new Date(ap.lastRebootAt).getTime()) / 1000 : 0)
+                            {(
+                              ap.lastRebootAt
+                                ? (Date.now() - new Date(ap.lastRebootAt).getTime()) / 1000
+                                : 0
+                            )
                               ? `${Math.floor((ap.lastRebootAt ? (Date.now() - new Date(ap.lastRebootAt).getTime()) / 1000 : 0) / 3600)}h`
-                              : '-'}
+                              : "-"}
                           </td>
                           <td className="p-4">
                             <Link href={`/dashboard/wireless/access-points/${ap.id}`}>
@@ -588,22 +591,22 @@ export default function WirelessDashboardPage() {
                       </tr>
                     ) : (
                       clients.map((client) => {
-                        const duration = 0
-                          ? Math.floor(0 / 60)
-                          : 0;
+                        const duration = 0 ? Math.floor(0 / 60) : 0;
                         const signalQuality = getSignalQualityLabel(client.signalStrengthDbm);
 
                         return (
                           <tr key={client.id} className="border-b">
                             <td className="p-4 font-mono text-xs">{client.macAddress}</td>
-                            <td className="p-4 font-mono text-xs">{client.ipAddress || '-'}</td>
-                            <td className="p-4">{client.hostname || '-'}</td>
-                            <td className="p-4">{client.accessPointName || 'Unknown'}</td>
-                            <td className="p-4">{client.ssid || '-'}</td>
+                            <td className="p-4 font-mono text-xs">{client.ipAddress || "-"}</td>
+                            <td className="p-4">{client.hostname || "-"}</td>
+                            <td className="p-4">{client.accessPointName || "Unknown"}</td>
+                            <td className="p-4">{client.ssid || "-"}</td>
                             <td className="p-4">
                               <div className="space-y-1">
                                 <div className="text-xs">
-                                  {client.signalStrengthDbm ? `${client.signalStrengthDbm} dBm` : '-'}
+                                  {client.signalStrengthDbm
+                                    ? `${client.signalStrengthDbm} dBm`
+                                    : "-"}
                                 </div>
                                 <Badge variant="outline" className="text-xs">
                                   {signalQuality}
@@ -661,24 +664,22 @@ export default function WirelessDashboardPage() {
                         <tr key={zone.id} className="border-b">
                           <td className="p-4 font-medium">{zone.zoneName}</td>
                           <td className="p-4 capitalize">
-                            {zone.coverageType ? formatStatus(zone.coverageType) : '-'}
+                            {zone.coverageType ? formatStatus(zone.coverageType) : "-"}
                           </td>
-                          <td className="p-4">{zone.accessPointName || '-'}</td>
+                          <td className="p-4">{zone.accessPointName || "-"}</td>
                           <td className="p-4 font-mono text-xs">
                             {zone.centerLatitude && zone.centerLongitude
                               ? `${zone.centerLatitude.toFixed(6)}, ${zone.centerLongitude.toFixed(6)}`
-                              : '-'}
+                              : "-"}
                           </td>
                           <td className="p-4">
-                            {zone.radiusMeters ? `${zone.radiusMeters.toFixed(0)}m` : '-'}
+                            {zone.radiusMeters ? `${zone.radiusMeters.toFixed(0)}m` : "-"}
                           </td>
                           <td className="p-4">
-                            {zone.signalStrengthDbm ? `${zone.signalStrengthDbm} dBm` : '-'}
+                            {zone.signalStrengthDbm ? `${zone.signalStrengthDbm} dBm` : "-"}
                           </td>
                           <td className="p-4">
-                            {zone.frequencyBand
-                              ? getFrequencyBandLabel(zone.frequencyBand)
-                              : '-'}
+                            {zone.frequencyBand ? getFrequencyBandLabel(zone.frequencyBand) : "-"}
                           </td>
                         </tr>
                       ))
@@ -713,7 +714,9 @@ export default function WirelessDashboardPage() {
                     <Card>
                       <CardContent className="pt-6">
                         <div className="text-2xl font-bold">
-                          {((dashboard.totalClients || 0) / (dashboard.totalAccessPoints || 1))?.toFixed(1) || 0}
+                          {(
+                            (dashboard.totalClients || 0) / (dashboard.totalAccessPoints || 1)
+                          )?.toFixed(1) || 0}
                         </div>
                         <p className="text-xs text-muted-foreground">Avg Clients per AP</p>
                       </CardContent>
@@ -721,16 +724,14 @@ export default function WirelessDashboardPage() {
                     <Card>
                       <CardContent className="pt-6">
                         <div className="text-2xl font-bold">
-                          {((dashboard.onlineAps || 0) * 2) || 0}
+                          {(dashboard.onlineAps || 0) * 2 || 0}
                         </div>
                         <p className="text-xs text-muted-foreground">Total Radios</p>
                       </CardContent>
                     </Card>
                     <Card>
                       <CardContent className="pt-6">
-                        <div className="text-2xl font-bold">
-                          {0?.toFixed(2) || 0} km²
-                        </div>
+                        <div className="text-2xl font-bold">{(0)?.toFixed(2) || 0} km²</div>
                         <p className="text-xs text-muted-foreground">Coverage Area</p>
                       </CardContent>
                     </Card>
@@ -742,7 +743,10 @@ export default function WirelessDashboardPage() {
                     <p className="text-sm text-muted-foreground text-center py-8">
                       Detailed RF analytics charts and trends will be displayed here.
                       <br />
-                      <Link href="/dashboard/wireless/analytics" className="text-primary hover:underline">
+                      <Link
+                        href="/dashboard/wireless/analytics"
+                        className="text-primary hover:underline"
+                      >
                         View detailed analytics
                       </Link>
                     </p>

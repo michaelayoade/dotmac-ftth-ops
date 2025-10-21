@@ -11,25 +11,25 @@
  * - Debounced search for real-time search as user types
  */
 
-import React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/components/ui/use-toast';
-import { searchService } from '@/lib/services/search-service';
+import React from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
+import { searchService } from "@/lib/services/search-service";
 import type {
   SearchResponse,
   SearchParams,
   IndexContentRequest,
   IndexContentResponse,
   RemoveFromIndexResponse,
-} from '@/types/search';
-import type { SearchStatistics, ReindexRequest } from '@/lib/services/search-service';
+} from "@/types/search";
+import type { SearchStatistics, ReindexRequest } from "@/lib/services/search-service";
 
 // ==================== Query Keys ====================
 
 export const searchKeys = {
-  all: ['search'] as const,
-  searches: (params: SearchParams) => ['search', params] as const,
-  statistics: () => ['search', 'statistics'] as const,
+  all: ["search"] as const,
+  searches: (params: SearchParams) => ["search", params] as const,
+  statistics: () => ["search", "statistics"] as const,
 };
 
 // ==================== Search Operations ====================
@@ -64,9 +64,19 @@ export function useQuickSearch(query: string, type?: string, limit: number = 10,
 /**
  * Search by entity type
  */
-export function useSearchByType(query: string, entityType: string, limit: number = 20, enabled = true) {
+export function useSearchByType(
+  query: string,
+  entityType: string,
+  limit: number = 20,
+  enabled = true,
+) {
   return useQuery<SearchResponse, Error>({
-    queryKey: searchKeys.searches({ q: query, type: entityType, limit, page: 1 }),
+    queryKey: searchKeys.searches({
+      q: query,
+      type: entityType,
+      limit,
+      page: 1,
+    }),
     queryFn: () => searchService.searchByType(query, entityType, limit),
     enabled: enabled && !!query && query.trim().length > 0,
     staleTime: 30000, // 30 seconds
@@ -95,7 +105,7 @@ export function useDebouncedSearch(query: string, type?: string, debounceMs = 30
       limit: 10,
       page: 1,
     },
-    !!debouncedQuery && debouncedQuery.trim().length > 0
+    !!debouncedQuery && debouncedQuery.trim().length > 0,
   );
 }
 
@@ -159,10 +169,7 @@ export function useRemoveFromIndex(options?: {
  * Reindex entity
  * POST /api/v1/search/reindex
  */
-export function useReindex(options?: {
-  onSuccess?: () => void;
-  onError?: (error: Error) => void;
-}) {
+export function useReindex(options?: { onSuccess?: () => void; onError?: (error: Error) => void }) {
   const queryClient = useQueryClient();
 
   return useMutation<void, Error, ReindexRequest>({

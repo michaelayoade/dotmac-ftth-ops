@@ -2,35 +2,35 @@
  * Unstyled, composable Table primitive
  */
 
-import { Slot } from '@radix-ui/react-slot';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { clsx } from 'clsx';
-import React, { forwardRef } from 'react';
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { clsx } from "clsx";
+import React, { forwardRef } from "react";
 
 // Table variants for different use cases
-const tableVariants = cva('', {
+const tableVariants = cva("", {
   variants: {
     size: {
-      sm: '',
-      md: '',
-      lg: '',
+      sm: "",
+      md: "",
+      lg: "",
     },
     variant: {
-      default: '',
-      bordered: '',
-      striped: '',
-      hover: '',
+      default: "",
+      bordered: "",
+      striped: "",
+      hover: "",
     },
     density: {
-      compact: '',
-      comfortable: '',
-      spacious: '',
+      compact: "",
+      comfortable: "",
+      spacious: "",
     },
   },
   defaultVariants: {
-    size: 'md',
-    variant: 'default',
-    density: 'comfortable',
+    size: "md",
+    variant: "default",
+    density: "comfortable",
   },
 });
 
@@ -47,8 +47,8 @@ export interface Column<T = any> {
   render?: (value: unknown, record: T, index: number) => React.ReactNode;
   sortable?: boolean;
   width?: string | number;
-  align?: 'left' | 'center' | 'right';
-  fixed?: 'left' | 'right';
+  align?: "left" | "center" | "right";
+  fixed?: "left" | "right";
   hidden?: boolean;
 }
 
@@ -66,8 +66,8 @@ export interface TableData<T = any> {
   };
   sorting?: {
     field?: string;
-    order?: 'asc' | 'desc';
-    onChange?: (field: string, order: 'asc' | 'desc') => void;
+    order?: "asc" | "desc";
+    onChange?: (field: string, order: "asc" | "desc") => void;
   };
   selection?: {
     selectedKeys: string[];
@@ -83,7 +83,7 @@ export interface TableData<T = any> {
 
 const Table = forwardRef<HTMLTableElement, TableProps>(
   ({ className, size, variant, density, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'table';
+    const Comp = asChild ? Slot : "table";
 
     return (
       <Comp
@@ -92,23 +92,23 @@ const Table = forwardRef<HTMLTableElement, TableProps>(
         {...props}
       />
     );
-  }
+  },
 );
 
 const TableHeader = forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => <thead ref={ref} className={clsx('', className)} {...props} />);
+>(({ className, ...props }, ref) => <thead ref={ref} className={clsx("", className)} {...props} />);
 
 const TableBody = forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => <tbody ref={ref} className={clsx('', className)} {...props} />);
+>(({ className, ...props }, ref) => <tbody ref={ref} className={clsx("", className)} {...props} />);
 
 const TableFooter = forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => <tfoot ref={ref} className={clsx('', className)} {...props} />);
+>(({ className, ...props }, ref) => <tfoot ref={ref} className={clsx("", className)} {...props} />);
 
 const TableRow = forwardRef<
   HTMLTableRowElement,
@@ -121,13 +121,13 @@ const TableRow = forwardRef<
   <tr
     ref={ref}
     className={clsx(
-      '',
+      "",
       {
         selected,
         expandable,
         expanded,
       },
-      className
+      className,
     )}
     {...props}
   />
@@ -137,32 +137,32 @@ const TableHead = forwardRef<
   HTMLTableCellElement,
   React.ThHTMLAttributes<HTMLTableCellElement> & {
     sortable?: boolean;
-    sorted?: 'asc' | 'desc' | false;
+    sorted?: "asc" | "desc" | false;
     onSort?: () => void;
   }
 >(({ className, sortable, sorted, onSort, children, ...props }, ref) => (
   <th
     ref={ref}
     className={clsx(
-      '',
+      "",
       {
         sortable,
-        'sorted-asc': sorted === 'asc',
-        'sorted-desc': sorted === 'desc',
+        "sorted-asc": sorted === "asc",
+        "sorted-desc": sorted === "desc",
       },
-      className
+      className,
     )}
     onClick={sortable ? onSort : undefined}
-    onKeyDown={(e) => (e.key === 'Enter' && sortable ? onSort : undefined)}
+    onKeyDown={(e) => (e.key === "Enter" && sortable ? onSort : undefined)}
     {...props}
   >
-    <div className='table-head-content'>
+    <div className="table-head-content">
       {children}
       {sortable ? (
-        <span className='sort-indicator'>
-          {sorted === 'asc' && '↑'}
-          {sorted === 'desc' && '↓'}
-          {!sorted && '↕'}
+        <span className="sort-indicator">
+          {sorted === "asc" && "↑"}
+          {sorted === "desc" && "↓"}
+          {!sorted && "↕"}
         </span>
       ) : null}
     </div>
@@ -172,19 +172,19 @@ const TableHead = forwardRef<
 const TableCell = forwardRef<
   HTMLTableCellElement,
   React.TdHTMLAttributes<HTMLTableCellElement> & {
-    align?: 'left' | 'center' | 'right';
+    align?: "left" | "center" | "right";
   }
->(({ className, align = 'left', ...props }, ref) => (
+>(({ className, align = "left", ...props }, ref) => (
   <td
     ref={ref}
     className={clsx(
-      '',
+      "",
       {
-        'text-left': align === 'left',
-        'text-center': align === 'center',
-        'text-right': align === 'right',
+        "text-left": align === "left",
+        "text-center": align === "center",
+        "text-right": align === "right",
       },
-      className
+      className,
     )}
     {...props}
   />
@@ -194,7 +194,7 @@ const TableCaption = forwardRef<
   HTMLTableCaptionElement,
   React.HTMLAttributes<HTMLTableCaptionElement>
 >(({ className, ...props }, ref) => (
-  <caption ref={ref} className={clsx('', className)} {...props} />
+  <caption ref={ref} className={clsx("", className)} {...props} />
 ));
 
 // Data Table component that uses the primitives
@@ -211,8 +211,8 @@ export function DataTable<T = any>({
   sorting,
   selection,
   expandable,
-  emptyText = 'No data',
-  loadingText = 'Loading...',
+  emptyText = "No data",
+  loadingText = "Loading...",
   className,
   ...tableProps
 }: DataTableProps<T>) {
@@ -222,7 +222,7 @@ export function DataTable<T = any>({
     }
 
     const currentOrder = sorting.field === column.key ? sorting.order : undefined;
-    const newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
+    const newOrder = currentOrder === "asc" ? "desc" : "asc";
 
     sorting.onChange(column.key, newOrder);
   };
@@ -266,18 +266,18 @@ export function DataTable<T = any>({
   };
 
   if (loading) {
-    return <div className='table-loading'>{loadingText}</div>;
+    return <div className="table-loading">{loadingText}</div>;
   }
 
   return (
-    <div className='table-container'>
+    <div className="table-container">
       <Table className={className} {...tableProps}>
         <TableHeader>
           <TableRow>
             {selection ? (
               <TableHead>
                 <input
-                  type='checkbox'
+                  type="checkbox"
                   checked={data.length > 0 && selection.selectedKeys.length === data.length}
                   onChange={(e) => handleSelectAll(e.target.checked)}
                 />
@@ -305,7 +305,7 @@ export function DataTable<T = any>({
             <TableRow>
               <TableCell
                 colSpan={columns.length + (selection ? 1 : 0) + (expandable ? 1 : 0)}
-                className='empty-cell'
+                className="empty-cell"
               >
                 {emptyText}
               </TableCell>
@@ -321,7 +321,7 @@ export function DataTable<T = any>({
                     {selection ? (
                       <TableCell>
                         <input
-                          type='checkbox'
+                          type="checkbox"
                           checked={selected}
                           onChange={(e) => handleSelectRow(record, e.target.checked)}
                         />
@@ -337,12 +337,12 @@ export function DataTable<T = any>({
                     {expandable ? (
                       <TableCell>
                         <button
-                          type='button'
+                          type="button"
                           onClick={() =>
                             expandable.onExpand?.(!expandable.expandedKeys.includes(rowKey), record)
                           }
                         >
-                          {expandable.expandedKeys.includes(rowKey) ? '−' : '+'}
+                          {expandable.expandedKeys.includes(rowKey) ? "−" : "+"}
                         </button>
                       </TableCell>
                     ) : null}
@@ -352,7 +352,7 @@ export function DataTable<T = any>({
                     <TableRow>
                       <TableCell
                         colSpan={columns.length + (selection ? 1 : 0) + 1}
-                        className='expanded-content'
+                        className="expanded-content"
                       >
                         {expandable.expandedRowRender?.(record)}
                       </TableCell>
@@ -366,7 +366,7 @@ export function DataTable<T = any>({
       </Table>
 
       {pagination ? (
-        <div className='table-pagination'>
+        <div className="table-pagination">
           {/* Pagination controls would go here */}
           <span>
             Page {pagination.current} of {Math.ceil(pagination.total / pagination.pageSize)}
@@ -377,13 +377,13 @@ export function DataTable<T = any>({
   );
 }
 
-Table.displayName = 'Table';
-TableHeader.displayName = 'TableHeader';
-TableBody.displayName = 'TableBody';
-TableFooter.displayName = 'TableFooter';
-TableRow.displayName = 'TableRow';
-TableHead.displayName = 'TableHead';
-TableCell.displayName = 'TableCell';
-TableCaption.displayName = 'TableCaption';
+Table.displayName = "Table";
+TableHeader.displayName = "TableHeader";
+TableBody.displayName = "TableBody";
+TableFooter.displayName = "TableFooter";
+TableRow.displayName = "TableRow";
+TableHead.displayName = "TableHead";
+TableCell.displayName = "TableCell";
+TableCaption.displayName = "TableCaption";
 
 export { Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableCaption };

@@ -110,14 +110,14 @@ Edit `__tests__/mocks/handlers.ts`:
 ```typescript
 export const handlers = [
   // Add your handler
-  http.get('*/api/v1/my-endpoint', () => {
-    return HttpResponse.json({ data: 'mock data' });
+  http.get("*/api/v1/my-endpoint", () => {
+    return HttpResponse.json({ data: "mock data" });
   }),
 
   // POST example
-  http.post('*/api/v1/create', async ({ request }) => {
+  http.post("*/api/v1/create", async ({ request }) => {
     const body = await request.json();
-    return HttpResponse.json({ id: '123', ...body });
+    return HttpResponse.json({ id: "123", ...body });
   }),
 ];
 ```
@@ -135,7 +135,7 @@ await act(async () => {
 });
 
 await act(async () => {
-  await user.type(input, 'text');
+  await user.type(input, "text");
 });
 ```
 
@@ -215,12 +215,12 @@ it('has accessible labels', () => {
 
 ```typescript
 // Good
-it('displays error message when API call fails', async () => {
+it("displays error message when API call fails", async () => {
   // ...
 });
 
 // Bad
-it('test 1', () => {
+it("test 1", () => {
   // ...
 });
 ```
@@ -255,26 +255,28 @@ it('my test', () => {
 ### See What Queries Are Available
 
 ```typescript
-import { screen } from '@testing-library/react';
+import { screen } from "@testing-library/react";
 
 screen.debug(); // Shows entire document
-screen.debug(screen.getByRole('button')); // Shows specific element
+screen.debug(screen.getByRole("button")); // Shows specific element
 ```
 
 ### Common Errors
 
 **Error**: "Unable to find element"
+
 ```typescript
 // Check if element exists but is hidden
-expect(screen.queryByText('text')).toBeInTheDocument();
+expect(screen.queryByText("text")).toBeInTheDocument();
 
 // Wait for async elements
 await waitFor(() => {
-  expect(screen.getByText('text')).toBeInTheDocument();
+  expect(screen.getByText("text")).toBeInTheDocument();
 });
 ```
 
 **Error**: "Not wrapped in act()"
+
 ```typescript
 // Wrap user events
 await act(async () => {
@@ -283,6 +285,7 @@ await act(async () => {
 ```
 
 **Error**: "MSW handler not found"
+
 ```typescript
 // Check handler URL pattern matches
 http.get('*/api/v1/endpoint', ...) // Matches any base URL
@@ -291,12 +294,12 @@ http.get('http://localhost:3000/api/v1/endpoint', ...) // Exact match
 
 ## Coverage Goals
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Branches | 60% | TBD |
-| Functions | 60% | TBD |
-| Lines | 60% | TBD |
-| Statements | 60% | TBD |
+| Metric     | Target | Current |
+| ---------- | ------ | ------- |
+| Branches   | 60%    | TBD     |
+| Functions  | 60%    | TBD     |
+| Lines      | 60%    | TBD     |
+| Statements | 60%    | TBD     |
 
 ## Quick Commands Reference
 

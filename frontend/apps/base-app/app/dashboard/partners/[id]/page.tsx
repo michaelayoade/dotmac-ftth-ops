@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
@@ -16,7 +16,9 @@ export default function PartnerDetailPage() {
   const partnerId = params.id as string;
   const { data: partner, isLoading, error } = usePartner(partnerId);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview" | "customers" | "commissions" | "referrals" | "quota">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "customers" | "commissions" | "referrals" | "quota"
+  >("overview");
   const checkQuota = useCheckLicenseQuota();
   const [quotaInfo, setQuotaInfo] = useState<any>(null);
 
@@ -78,9 +80,10 @@ export default function PartnerDetailPage() {
   };
 
   const pendingCommissions = partner.total_commissions_earned - partner.total_commissions_paid;
-  const conversionRate = partner.total_referrals > 0
-    ? ((partner.converted_referrals / partner.total_referrals) * 100).toFixed(1)
-    : "0.0";
+  const conversionRate =
+    partner.total_referrals > 0
+      ? ((partner.converted_referrals / partner.total_referrals) * 100).toFixed(1)
+      : "0.0";
 
   return (
     <div className="p-6">
@@ -139,7 +142,9 @@ export default function PartnerDetailPage() {
         </div>
         <div className="bg-accent p-4 rounded-lg border border-border">
           <div className="text-sm text-muted-foreground mb-1">Referral Conversion</div>
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">{conversionRate}%</div>
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            {conversionRate}%
+          </div>
           <div className="text-xs text-foreground0 mt-1">
             {partner.converted_referrals}/{partner.total_referrals}
           </div>
@@ -302,13 +307,9 @@ export default function PartnerDetailPage() {
           </div>
         )}
 
-        {activeTab === "customers" && (
-          <PartnerCustomerManagement partnerId={partnerId} />
-        )}
+        {activeTab === "customers" && <PartnerCustomerManagement partnerId={partnerId} />}
 
-        {activeTab === "commissions" && (
-          <CommissionTrackingView partnerId={partnerId} />
-        )}
+        {activeTab === "commissions" && <CommissionTrackingView partnerId={partnerId} />}
 
         {activeTab === "quota" && (
           <div className="space-y-6">
@@ -380,10 +381,28 @@ export default function PartnerDetailPage() {
 
                   <div className="mt-4 pt-4 border-t border-border">
                     <div className="text-xs text-muted-foreground space-y-1">
-                      <p>Partner Status: <span className="text-foreground">{quotaInfo.partner_status}</span></p>
-                      <p>Partner Tier: <span className="text-foreground">{quotaInfo.partner_tier}</span></p>
-                      <p>Can Allocate: <span className={quotaInfo.can_allocate ? "text-green-400" : "text-red-400"}>{quotaInfo.can_allocate ? "Yes" : "No"}</span></p>
-                      <p>Checked At: <span className="text-foreground">{new Date(quotaInfo.checked_at).toLocaleString()}</span></p>
+                      <p>
+                        Partner Status:{" "}
+                        <span className="text-foreground">{quotaInfo.partner_status}</span>
+                      </p>
+                      <p>
+                        Partner Tier:{" "}
+                        <span className="text-foreground">{quotaInfo.partner_tier}</span>
+                      </p>
+                      <p>
+                        Can Allocate:{" "}
+                        <span
+                          className={quotaInfo.can_allocate ? "text-green-400" : "text-red-400"}
+                        >
+                          {quotaInfo.can_allocate ? "Yes" : "No"}
+                        </span>
+                      </p>
+                      <p>
+                        Checked At:{" "}
+                        <span className="text-foreground">
+                          {new Date(quotaInfo.checked_at).toLocaleString()}
+                        </span>
+                      </p>
                     </div>
                   </div>
                 </div>

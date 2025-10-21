@@ -34,7 +34,9 @@ class DeploymentService:
     Coordinates between adapters, registry, and business logic.
     """
 
-    def __init__(self, db: Session, adapter_configs: dict[DeploymentBackend, dict] | None = None):
+    def __init__(
+        self, db: Session, adapter_configs: dict[DeploymentBackend, dict[str, Any]] | None = None
+    ):
         """
         Initialize deployment service
 
@@ -55,10 +57,12 @@ class DeploymentService:
         return self._adapter_cache[backend]
 
     def _create_execution_context(
-        self, instance: DeploymentInstance, operation: str, **kwargs
+        self, instance: DeploymentInstance, operation: str, **kwargs: Any
     ) -> ExecutionContext:
         """Create execution context from instance"""
         template = self.registry.get_template(instance.template_id)
+        if not template:
+            raise ValueError(f"Template {instance.template_id} not found")
 
         return ExecutionContext(
             tenant_id=instance.tenant_id,
@@ -190,9 +194,11 @@ class DeploymentService:
                 logger.error(f"Failed to provision deployment {instance.id}: {result.message}")
 
             # Refresh instance
-            instance = self.registry.get_instance(instance.id)
+            refreshed_instance = self.registry.get_instance(instance.id)
+            if not refreshed_instance:
+                raise ValueError(f"Instance {instance.id} not found after provision")
 
-            return instance, execution
+            return refreshed_instance, execution
 
         except Exception as e:
             logger.error(f"Error provisioning deployment: {e}", exc_info=True)
@@ -242,6 +248,8 @@ class DeploymentService:
 
         # Get template
         template = self.registry.get_template(instance.template_id)
+        if not template:
+            raise ValueError(f"Template {instance.template_id} not found")
 
         # Create execution
         execution = DeploymentExecution(
@@ -341,6 +349,8 @@ class DeploymentService:
             raise ValueError(f"Instance {instance_id} not found")
 
         template = self.registry.get_template(instance.template_id)
+        if not template:
+            raise ValueError(f"Template {instance.template_id} not found")
 
         # Create execution
         execution = DeploymentExecution(
@@ -413,6 +423,8 @@ class DeploymentService:
             raise ValueError(f"Instance {instance_id} not found")
 
         template = self.registry.get_template(instance.template_id)
+        if not template:
+            raise ValueError(f"Template {instance.template_id} not found")
         adapter = self._get_adapter(template.backend)
 
         execution = DeploymentExecution(
@@ -462,6 +474,8 @@ class DeploymentService:
             raise ValueError(f"Cannot resume instance in state {instance.state.value}")
 
         template = self.registry.get_template(instance.template_id)
+        if not template:
+            raise ValueError(f"Template {instance.template_id} not found")
         adapter = self._get_adapter(template.backend)
 
         execution = DeploymentExecution(
@@ -508,6 +522,8 @@ class DeploymentService:
             raise ValueError(f"Instance {instance_id} not found")
 
         template = self.registry.get_template(instance.template_id)
+        if not template:
+            raise ValueError(f"Template {instance.template_id} not found")
         adapter = self._get_adapter(template.backend)
 
         execution = DeploymentExecution(
@@ -573,6 +589,8 @@ class DeploymentService:
             raise ValueError("No previous version to rollback to")
 
         template = self.registry.get_template(instance.template_id)
+        if not template:
+            raise ValueError(f"Template {instance.template_id} not found")
         adapter = self._get_adapter(template.backend)
 
         execution = DeploymentExecution(
@@ -665,12 +683,9 @@ class DeploymentService:
         from dotmac.platform.jobs.scheduler_service import SchedulerService
 
         logger.info(
-            "Scheduling deployment operation",
-            tenant_id=tenant_id,
-            operation=operation,
-            scheduled_at=scheduled_at,
-            instance_id=instance_id,
-            is_recurring=bool(cron_expression or interval_seconds),
+            f"Scheduling deployment operation: tenant_id={tenant_id}, operation={operation}, "
+            f"scheduled_at={scheduled_at}, instance_id={instance_id}, "
+            f"is_recurring={bool(cron_expression or interval_seconds)}"
         )
 
         # Validate operation and parameters
@@ -755,11 +770,8 @@ class DeploymentService:
             )
 
             logger.info(
-                "Created recurring deployment schedule",
-                schedule_id=scheduled_job.id,
-                operation=operation,
-                cron=cron_expression,
-                interval=interval_seconds,
+                f"Created recurring deployment schedule: schedule_id={scheduled_job.id}, "
+                f"operation={operation}, cron={cron_expression}, interval={interval_seconds}"
             )
 
             return {
@@ -797,10 +809,8 @@ class DeploymentService:
 
             # Deactivate after first run by setting flag in parameters
             logger.info(
-                "Created one-time deployment schedule",
-                schedule_id=scheduled_job.id,
-                operation=operation,
-                scheduled_at=scheduled_at,
+                f"Created one-time deployment schedule: schedule_id={scheduled_job.id}, "
+                f"operation={operation}, scheduled_at={scheduled_at}"
             )
 
             return {
@@ -818,6 +828,8 @@ class DeploymentService:
             raise ValueError(f"Instance {instance_id} not found")
 
         template = self.registry.get_template(instance.template_id)
+        if not template:
+            raise ValueError(f"Template {instance.template_id} not found")
         adapter = self._get_adapter(template.backend)
 
         context = self._create_execution_context(instance, "health_check")

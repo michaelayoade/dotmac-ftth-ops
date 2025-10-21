@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * ISP Internet Service Plan Validation and Testing Page
@@ -7,11 +7,11 @@
  * to show if plans work as designed before activation.
  */
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertCircle,
   CheckCircle,
@@ -24,18 +24,15 @@ import {
   DollarSign,
   Gauge,
   Clock,
-} from 'lucide-react';
-import {
-  useInternetPlan,
-  useValidatePlan,
-} from '../../../../../../hooks/useInternetPlans';
+} from "lucide-react";
+import { useInternetPlan, useValidatePlan } from "../../../../../../hooks/useInternetPlans";
 import type {
   PlanValidationRequest,
   PlanValidationResponse,
   ValidationResult,
   ValidationSeverity,
   ValidationSimulationConfig,
-} from '../../../../../../types/internet-plans';
+} from "../../../../../../types/internet-plans";
 
 export default function PlanValidationPage() {
   const params = useParams();
@@ -45,17 +42,14 @@ export default function PlanValidationPage() {
   const { data: plan, isLoading: planLoading } = useInternetPlan(planId);
   const { mutate: validatePlan, isPending: validating } = useValidatePlan();
 
-  const [validationResult, setValidationResult] = useState<PlanValidationResponse | null>(
-    null
-  );
-  const [simulationConfig, setSimulationConfig] =
-    useState<ValidationSimulationConfig>({
-      usageScenario: 'moderate',
-      downloadGB: 300,
-      uploadGB: 50,
-      durationHours: 720, // 30 days
-      concurrentUsers: 3,
-    });
+  const [validationResult, setValidationResult] = useState<PlanValidationResponse | null>(null);
+  const [simulationConfig, setSimulationConfig] = useState<ValidationSimulationConfig>({
+    usageScenario: "moderate",
+    downloadGB: 300,
+    uploadGB: 50,
+    durationHours: 720, // 30 days
+    concurrentUsers: 3,
+  });
 
   // Preset usage scenarios
   const usageScenarios = {
@@ -63,25 +57,25 @@ export default function PlanValidationPage() {
       downloadGB: 100,
       uploadGB: 10,
       concurrentUsers: 1,
-      description: 'Light usage: Email, browsing, social media',
+      description: "Light usage: Email, browsing, social media",
     },
     moderate: {
       downloadGB: 300,
       uploadGB: 50,
       concurrentUsers: 3,
-      description: 'Moderate usage: Streaming HD, video calls, gaming',
+      description: "Moderate usage: Streaming HD, video calls, gaming",
     },
     heavy: {
       downloadGB: 800,
       uploadGB: 150,
       concurrentUsers: 5,
-      description: 'Heavy usage: 4K streaming, large downloads, multiple devices',
+      description: "Heavy usage: 4K streaming, large downloads, multiple devices",
     },
     custom: {
       downloadGB: 2000,
       uploadGB: 500,
       concurrentUsers: 10,
-      description: 'Extreme usage: Multiple 4K streams, gaming, work from home',
+      description: "Extreme usage: Multiple 4K streams, gaming, work from home",
     },
   };
 
@@ -115,7 +109,7 @@ export default function PlanValidationPage() {
         onSuccess: (data) => {
           setValidationResult(data);
         },
-      }
+      },
     );
   };
 
@@ -189,29 +183,27 @@ export default function PlanValidationPage() {
         <div className="mb-6">
           <label className="text-sm font-medium mb-2 block">Usage Scenario</label>
           <div className="grid gap-3 md:grid-cols-4">
-            {(Object.keys(usageScenarios) as Array<keyof typeof usageScenarios>).map(
-              (key) => (
-                <button
-                  key={key}
-                  onClick={() => handleScenarioChange(key)}
-                  className={`p-4 border rounded-lg text-left transition-colors ${
-                    simulationConfig.usageScenario === key
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-300 hover:border-blue-300'
-                  }`}
-                >
-                  <p className="font-semibold capitalize">{key}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {usageScenarios[key].description}
-                  </p>
-                  <div className="mt-2 text-xs">
-                    <p>↓ {usageScenarios[key].downloadGB} GB</p>
-                    <p>↑ {usageScenarios[key].uploadGB} GB</p>
-                    <p>👥 {usageScenarios[key].concurrentUsers} users</p>
-                  </div>
-                </button>
-              )
-            )}
+            {(Object.keys(usageScenarios) as Array<keyof typeof usageScenarios>).map((key) => (
+              <button
+                key={key}
+                onClick={() => handleScenarioChange(key)}
+                className={`p-4 border rounded-lg text-left transition-colors ${
+                  simulationConfig.usageScenario === key
+                    ? "border-blue-500 bg-blue-50"
+                    : "border-gray-300 hover:border-blue-300"
+                }`}
+              >
+                <p className="font-semibold capitalize">{key}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {usageScenarios[key].description}
+                </p>
+                <div className="mt-2 text-xs">
+                  <p>↓ {usageScenarios[key].downloadGB} GB</p>
+                  <p>↑ {usageScenarios[key].uploadGB} GB</p>
+                  <p>👥 {usageScenarios[key].concurrentUsers} users</p>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -225,7 +217,7 @@ export default function PlanValidationPage() {
               onChange={(e) =>
                 setSimulationConfig((prev) => ({
                   ...prev,
-                  usageScenario: 'custom',
+                  usageScenario: "custom",
                   downloadGB: Number(e.target.value),
                 }))
               }
@@ -241,7 +233,7 @@ export default function PlanValidationPage() {
               onChange={(e) =>
                 setSimulationConfig((prev) => ({
                   ...prev,
-                  usageScenario: 'custom',
+                  usageScenario: "custom",
                   uploadGB: Number(e.target.value),
                 }))
               }
@@ -289,7 +281,7 @@ export default function PlanValidationPage() {
         <div className="mt-6">
           <Button onClick={handleValidate} disabled={validating} className="w-full">
             <Play className="mr-2 h-4 w-4" />
-            {validating ? 'Running Validation...' : 'Run Validation Tests'}
+            {validating ? "Running Validation..." : "Run Validation Tests"}
           </Button>
         </div>
       </Card>
@@ -309,8 +301,7 @@ export default function PlanValidationPage() {
               <div className="text-right">
                 <ValidationStatusBadge status={validationResult.overall_status} />
                 <p className="text-sm text-muted-foreground mt-2">
-                  {validationResult.passed_checks} / {validationResult.total_checks}{' '}
-                  checks passed
+                  {validationResult.passed_checks} / {validationResult.total_checks} checks passed
                 </p>
               </div>
             </div>
@@ -320,27 +311,21 @@ export default function PlanValidationPage() {
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-8 w-8 text-green-500" />
                 <div>
-                  <p className="text-2xl font-bold">
-                    {validationResult.passed_checks}
-                  </p>
+                  <p className="text-2xl font-bold">{validationResult.passed_checks}</p>
                   <p className="text-sm text-muted-foreground">Passed</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <AlertCircle className="h-8 w-8 text-red-500" />
                 <div>
-                  <p className="text-2xl font-bold">
-                    {validationResult.failed_checks}
-                  </p>
+                  <p className="text-2xl font-bold">{validationResult.failed_checks}</p>
                   <p className="text-sm text-muted-foreground">Failed</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <AlertTriangle className="h-8 w-8 text-yellow-500" />
                 <div>
-                  <p className="text-2xl font-bold">
-                    {validationResult.warning_checks}
-                  </p>
+                  <p className="text-2xl font-bold">{validationResult.warning_checks}</p>
                   <p className="text-sm text-muted-foreground">Warnings</p>
                 </div>
               </div>
@@ -369,23 +354,21 @@ export default function PlanValidationPage() {
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
                     <span className="text-sm">Monthly Price</span>
                     <span className="font-bold">
-                      {plan.currency}{' '}
-                      {validationResult.estimated_monthly_cost.toFixed(2)}
+                      {plan.currency} {validationResult.estimated_monthly_cost.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
                     <span className="text-sm">Overage Charges</span>
                     <span
-                      className={`font-bold ${validationResult.estimated_overage_cost > 0 ? 'text-red-500' : ''}`}
+                      className={`font-bold ${validationResult.estimated_overage_cost > 0 ? "text-red-500" : ""}`}
                     >
-                      {plan.currency}{' '}
-                      {validationResult.estimated_overage_cost.toFixed(2)}
+                      {plan.currency} {validationResult.estimated_overage_cost.toFixed(2)}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-blue-50 rounded border-2 border-blue-200">
                     <span className="font-semibold">Total Estimated Cost</span>
                     <span className="font-bold text-lg">
-                      {plan.currency}{' '}
+                      {plan.currency}{" "}
                       {(
                         validationResult.estimated_monthly_cost +
                         validationResult.estimated_overage_cost
@@ -464,15 +447,14 @@ export default function PlanValidationPage() {
                   </span>
                 </div>
               )}
-              {!validationResult.data_cap_exceeded &&
-                !validationResult.throttling_triggered && (
-                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded">
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                    <span className="text-sm font-medium text-green-700">
-                      Plan performs well under this usage scenario
-                    </span>
-                  </div>
-                )}
+              {!validationResult.data_cap_exceeded && !validationResult.throttling_triggered && (
+                <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span className="text-sm font-medium text-green-700">
+                    Plan performs well under this usage scenario
+                  </span>
+                </div>
+              )}
             </div>
           </Card>
 
@@ -497,9 +479,9 @@ export default function PlanValidationPage() {
 
 function ValidationStatusBadge({ status }: { status: string }) {
   const colors = {
-    passed: 'bg-green-100 text-green-800 border-green-300',
-    failed: 'bg-red-100 text-red-800 border-red-300',
-    warning: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+    passed: "bg-green-100 text-green-800 border-green-300",
+    failed: "bg-red-100 text-red-800 border-red-300",
+    warning: "bg-yellow-100 text-yellow-800 border-yellow-300",
   };
 
   const icons = {
@@ -509,7 +491,7 @@ function ValidationStatusBadge({ status }: { status: string }) {
   };
 
   const Icon = icons[status as keyof typeof icons] || Activity;
-  const colorClass = colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  const colorClass = colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800";
 
   return (
     <Badge className={`${colorClass} border px-4 py-2 text-lg font-semibold`}>
@@ -522,11 +504,11 @@ function ValidationStatusBadge({ status }: { status: string }) {
 function ValidationResultItem({ result }: { result: ValidationResult }) {
   const getSeverityIcon = (severity: ValidationSeverity) => {
     switch (severity) {
-      case 'error':
+      case "error":
         return <AlertCircle className="h-5 w-5 text-red-500" />;
-      case 'warning':
+      case "warning":
         return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
-      case 'info':
+      case "info":
         return <CheckCircle className="h-5 w-5 text-green-500" />;
       default:
         return <AlertCircle className="h-5 w-5 text-gray-500" />;
@@ -535,14 +517,14 @@ function ValidationResultItem({ result }: { result: ValidationResult }) {
 
   const getSeverityColor = (severity: ValidationSeverity) => {
     switch (severity) {
-      case 'error':
-        return 'border-red-200 bg-red-50';
-      case 'warning':
-        return 'border-yellow-200 bg-yellow-50';
-      case 'info':
-        return 'border-green-200 bg-green-50';
+      case "error":
+        return "border-red-200 bg-red-50";
+      case "warning":
+        return "border-yellow-200 bg-yellow-50";
+      case "info":
+        return "border-green-200 bg-green-50";
       default:
-        return 'border-gray-200 bg-gray-50';
+        return "border-gray-200 bg-gray-50";
     }
   };
 
@@ -553,12 +535,9 @@ function ValidationResultItem({ result }: { result: ValidationResult }) {
       <div className="mt-0.5">{getSeverityIcon(result.severity)}</div>
       <div className="flex-1">
         <div className="flex items-center justify-between">
-          <span className="font-medium">{result.check_name.replace(/_/g, ' ')}</span>
-          <Badge
-            variant={result.passed ? 'default' : 'destructive'}
-            className="text-xs"
-          >
-            {result.passed ? 'PASS' : 'FAIL'}
+          <span className="font-medium">{result.check_name.replace(/_/g, " ")}</span>
+          <Badge variant={result.passed ? "default" : "destructive"} className="text-xs">
+            {result.passed ? "PASS" : "FAIL"}
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground mt-1">{result.message}</p>

@@ -4,9 +4,9 @@
  * Custom hook for sending notifications to teams via role or explicit user lists
  */
 
-import { useState, useCallback } from 'react';
-import { apiClient } from '@/lib/api/client';
-import type { NotificationPriority, NotificationType } from './useNotifications';
+import { useState, useCallback } from "react";
+import { apiClient } from "@/lib/api/client";
+import type { NotificationPriority, NotificationType } from "./useNotifications";
 
 // ============================================================================
 // Types
@@ -52,37 +52,34 @@ export function useTeamNotifications() {
 
         // Validate that either team_members or role_filter is provided
         if (!request.team_members && !request.role_filter) {
-          throw new Error('Either team_members or role_filter must be provided');
+          throw new Error("Either team_members or role_filter must be provided");
         }
 
-        const response = await apiClient.post<TeamNotificationResponse>(
-          '/notifications/team',
-          {
-            team_members: request.team_members,
-            role_filter: request.role_filter,
-            notification_type: request.notification_type || 'system_announcement',
-            title: request.title,
-            message: request.message,
-            priority: request.priority || 'medium',
-            action_url: request.action_url,
-            action_label: request.action_label,
-            related_entity_type: request.related_entity_type,
-            related_entity_id: request.related_entity_id,
-            metadata: request.metadata || {},
-            auto_send: request.auto_send !== undefined ? request.auto_send : true,
-          }
-        );
+        const response = await apiClient.post<TeamNotificationResponse>("/notifications/team", {
+          team_members: request.team_members,
+          role_filter: request.role_filter,
+          notification_type: request.notification_type || "system_announcement",
+          title: request.title,
+          message: request.message,
+          priority: request.priority || "medium",
+          action_url: request.action_url,
+          action_label: request.action_label,
+          related_entity_type: request.related_entity_type,
+          related_entity_id: request.related_entity_id,
+          metadata: request.metadata || {},
+          auto_send: request.auto_send !== undefined ? request.auto_send : true,
+        });
 
         return response.data;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Failed to send team notification');
+        const error = err instanceof Error ? err : new Error("Failed to send team notification");
         setError(error);
         throw error;
       } finally {
         setIsLoading(false);
       }
     },
-    []
+    [],
   );
 
   return {
@@ -100,13 +97,13 @@ export function useTeamNotifications() {
  * Get list of available roles for filtering
  */
 export const AVAILABLE_ROLES = [
-  { value: 'admin', label: 'Administrators' },
-  { value: 'support_agent', label: 'Support Agents' },
-  { value: 'sales', label: 'Sales Team' },
-  { value: 'technician', label: 'Technicians' },
-  { value: 'manager', label: 'Managers' },
-  { value: 'billing', label: 'Billing Team' },
-  { value: 'noc', label: 'Network Operations Center' },
+  { value: "admin", label: "Administrators" },
+  { value: "support_agent", label: "Support Agents" },
+  { value: "sales", label: "Sales Team" },
+  { value: "technician", label: "Technicians" },
+  { value: "manager", label: "Managers" },
+  { value: "billing", label: "Billing Team" },
+  { value: "noc", label: "Network Operations Center" },
 ] as const;
 
 /**

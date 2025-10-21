@@ -8,7 +8,7 @@ export interface FilterState {
   searchTerm: string;
   statusFilter: string;
   sortBy: string;
-  sortOrder: 'asc' | 'desc';
+  sortOrder: "asc" | "desc";
   dateRange?: {
     start: Date | null;
     end: Date | null;
@@ -47,7 +47,7 @@ export interface LoadingState {
 
 export interface NotificationItem {
   id: string;
-  type: 'success' | 'error' | 'warning' | 'info';
+  type: "success" | "error" | "warning" | "info";
   title: string;
   message: string;
   timestamp: Date;
@@ -56,7 +56,7 @@ export interface NotificationItem {
   actions?: Array<{
     label: string;
     action: () => void;
-    variant?: 'primary' | 'secondary';
+    variant?: "primary" | "secondary";
   }>;
 }
 
@@ -70,8 +70,8 @@ export interface UIState {
   showBulkActions: boolean;
 
   // Theme and display
-  theme: 'light' | 'dark' | 'auto';
-  density: 'compact' | 'comfortable' | 'spacious';
+  theme: "light" | "dark" | "auto";
+  density: "compact" | "comfortable" | "spacious";
   language: string;
 
   // Notifications
@@ -87,7 +87,7 @@ export interface UIState {
       onCancel?: () => void;
       confirmText?: string;
       cancelText?: string;
-      variant?: 'danger' | 'warning' | 'info';
+      variant?: "danger" | "warning" | "info";
     };
     [key: string]: any; // Allow custom modals
   };
@@ -142,7 +142,7 @@ export interface FilterActions {
   resetFilters: (context: string) => void;
   setSearchTerm: (context: string, term: string) => void;
   setStatusFilter: (context: string, status: string) => void;
-  setSorting: (context: string, sortBy: string, sortOrder?: 'asc' | 'desc') => void;
+  setSorting: (context: string, sortBy: string, sortOrder?: "asc" | "desc") => void;
   setDateRange: (context: string, start: Date | null, end: Date | null) => void;
   setCustomFilter: (context: string, key: string, value: any) => void;
   toggleAdvancedFilters: (context: string) => void;
@@ -188,18 +188,18 @@ export interface UIActions {
   toggleBulkActions: (context?: string) => void;
 
   // Theme and display
-  setTheme: (theme: 'light' | 'dark' | 'auto') => void;
-  setDensity: (density: 'compact' | 'comfortable' | 'spacious') => void;
+  setTheme: (theme: "light" | "dark" | "auto") => void;
+  setDensity: (density: "compact" | "comfortable" | "spacious") => void;
   setLanguage: (language: string) => void;
 
   // Notifications
-  addNotification: (notification: Omit<NotificationItem, 'id' | 'timestamp' | 'dismissed'>) => void;
+  addNotification: (notification: Omit<NotificationItem, "id" | "timestamp" | "dismissed">) => void;
   dismissNotification: (id: string) => void;
   clearNotifications: () => void;
-  clearNotificationsByType: (type: NotificationItem['type']) => void;
+  clearNotificationsByType: (type: NotificationItem["type"]) => void;
 
   // Modal and dialog
-  openConfirmDialog: (config: Omit<UIState['modals']['confirmDialog'], 'open'>) => void;
+  openConfirmDialog: (config: Omit<UIState["modals"]["confirmDialog"], "open">) => void;
   closeConfirmDialog: () => void;
   openModal: (modalId: string, props?: any) => void;
   closeModal: (modalId: string) => void;

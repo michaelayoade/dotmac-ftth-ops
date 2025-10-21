@@ -56,10 +56,16 @@ class UserQueries:
         Returns:
             User with conditionally loaded related data
         """
-        db: AsyncSession = info.context.db
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
 
         # Fetch user
-        stmt = select(UserModel).where(UserModel.id == str(id))
+        stmt = select(UserModel).where(
+            UserModel.id == str(id),
+            UserModel.tenant_id == tenant_id,
+        )
         result = await db.execute(stmt)
         user_model = result.scalar_one_or_none()
 
@@ -144,14 +150,17 @@ class UserQueries:
         Returns:
             UserConnection with paginated users and metadata
         """
-        db: AsyncSession = info.context.db
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
 
         # Limit page_size
         page_size = min(page_size, 100)
         offset = (page - 1) * page_size
 
         # Build base query (only active users in tenant)
-        stmt = select(UserModel)
+        stmt = select(UserModel).where(UserModel.tenant_id == tenant_id)
 
         # Apply filters
         if is_active is not None:
@@ -243,7 +252,10 @@ class UserQueries:
         Returns:
             UserOverviewMetrics with counts, distribution, and activity metrics
         """
-        db: AsyncSession = info.context.db
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
 
         # Get status counts
         status_stmt = select(
@@ -261,7 +273,7 @@ class UserQueries:
             func.count(func.case((UserModel.mfa_enabled == True, 1))).label(  # noqa: E712
                 "mfa_enabled"
             ),
-        )
+        ).where(UserModel.tenant_id == tenant_id)
 
         status_result = await db.execute(status_stmt)
         status_row = status_result.one()
@@ -284,7 +296,7 @@ class UserQueries:
                     )
                 )
             ).label("regular_users"),
-        )
+        ).where(UserModel.tenant_id == tenant_id)
 
         role_result = await db.execute(role_stmt)
         role_row = role_result.one()
@@ -301,7 +313,7 @@ class UserQueries:
             func.count(func.case((UserModel.last_login >= week_ago, 1))).label("day_7d"),
             func.count(func.case((UserModel.last_login >= month_ago, 1))).label("day_30d"),
             func.count(func.case((UserModel.last_login.is_(None), 1))).label("never"),
-        )
+        ).where(UserModel.tenant_id == tenant_id)
 
         activity_result = await db.execute(activity_stmt)
         activity_row = activity_result.one()
@@ -324,7 +336,7 @@ class UserQueries:
                     )
                 )
             ).label("last_month"),
-        )
+        ).where(UserModel.tenant_id == tenant_id)
 
         growth_result = await db.execute(growth_stmt)
         growth_row = growth_result.one()

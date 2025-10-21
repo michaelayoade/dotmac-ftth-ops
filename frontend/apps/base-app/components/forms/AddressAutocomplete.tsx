@@ -88,9 +88,7 @@ export function AddressAutocomplete({
     if (typeof google !== "undefined" && google.maps) {
       setIsApiLoaded(true);
       autocompleteService.current = new google.maps.places.AutocompleteService();
-      placesService.current = new google.maps.places.PlacesService(
-        document.createElement("div")
-      );
+      placesService.current = new google.maps.places.PlacesService(document.createElement("div"));
       geocoder.current = new google.maps.Geocoder();
       return;
     }
@@ -103,9 +101,7 @@ export function AddressAutocomplete({
     script.onload = () => {
       setIsApiLoaded(true);
       autocompleteService.current = new google.maps.places.AutocompleteService();
-      placesService.current = new google.maps.places.PlacesService(
-        document.createElement("div")
-      );
+      placesService.current = new google.maps.places.PlacesService(document.createElement("div"));
       geocoder.current = new google.maps.Geocoder();
     };
     script.onerror = () => {
@@ -116,7 +112,7 @@ export function AddressAutocomplete({
     return () => {
       // Cleanup script on unmount
       const existingScript = document.querySelector(
-        `script[src^="https://maps.googleapis.com/maps/api/js"]`
+        `script[src^="https://maps.googleapis.com/maps/api/js"]`,
       );
       if (existingScript) {
         document.head.removeChild(existingScript);
@@ -153,9 +149,9 @@ export function AddressAutocomplete({
                 } else {
                   reject(status);
                 }
-              }
+              },
             );
-          }
+          },
         );
 
         setSuggestions(response);
@@ -166,12 +162,12 @@ export function AddressAutocomplete({
         setIsLoading(false);
       }
     },
-    [isApiLoaded]
+    [isApiLoaded],
   );
 
   // Parse Google Places result into structured components
   const parseAddressComponents = (
-    placeResult: google.maps.places.PlaceResult
+    placeResult: google.maps.places.PlaceResult,
   ): AddressComponents => {
     const components: AddressComponents = {
       formattedAddress: placeResult.formatted_address,
@@ -219,23 +215,21 @@ export function AddressAutocomplete({
     }
 
     try {
-      const result = await new Promise<google.maps.places.PlaceResult>(
-        (resolve, reject) => {
-          placesService.current!.getDetails(
-            {
-              placeId,
-              fields: ["address_components", "formatted_address", "geometry"],
-            },
-            (place: any, status: any) => {
-              if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-                resolve(place);
-              } else {
-                reject(status);
-              }
+      const result = await new Promise<google.maps.places.PlaceResult>((resolve, reject) => {
+        placesService.current!.getDetails(
+          {
+            placeId,
+            fields: ["address_components", "formatted_address", "geometry"],
+          },
+          (place: any, status: any) => {
+            if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+              resolve(place);
+            } else {
+              reject(status);
             }
-          );
-        }
-      );
+          },
+        );
+      });
 
       const addressComponents = parseAddressComponents(result);
       const formattedAddress = result.formatted_address || description;
@@ -278,9 +272,7 @@ export function AddressAutocomplete({
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev < suggestions.length - 1 ? prev + 1 : prev
-        );
+        setSelectedIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
         break;
       case "ArrowUp":
         e.preventDefault();
@@ -344,9 +336,7 @@ export function AddressAutocomplete({
         />
 
         {!isApiLoaded && googleApiKey && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Loading address autocomplete...
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">Loading address autocomplete...</p>
         )}
 
         {!googleApiKey && (
@@ -362,12 +352,10 @@ export function AddressAutocomplete({
               <button
                 key={suggestion.place_id}
                 type="button"
-                onClick={() =>
-                  handleSelectAddress(suggestion.place_id, suggestion.description)
-                }
+                onClick={() => handleSelectAddress(suggestion.place_id, suggestion.description)}
                 className={cn(
                   "w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors flex items-start gap-2",
-                  selectedIndex === index && "bg-accent"
+                  selectedIndex === index && "bg-accent",
                 )}
               >
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />

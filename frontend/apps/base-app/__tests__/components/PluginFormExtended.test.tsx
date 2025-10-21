@@ -1,7 +1,7 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { PluginForm } from '../../app/dashboard/settings/plugins/components/PluginForm';
+import React from "react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { PluginForm } from "../../app/dashboard/settings/plugins/components/PluginForm";
 
 const mockPlugin = {
   name: "Test Plugin",
@@ -18,16 +18,16 @@ const mockPlugin = {
       description: "Test string field",
       required: false,
       min_length: 5,
-      max_length: 20
+      max_length: 20,
     },
     {
       key: "test_file",
       label: "Test File",
       type: "file" as const,
       description: "Test file upload",
-      required: false
-    }
-  ]
+      required: false,
+    },
+  ],
 };
 
 const defaultProps = {
@@ -38,24 +38,24 @@ const defaultProps = {
   onTestConnection: jest.fn(),
 };
 
-describe('PluginForm Extended Coverage', () => {
+describe("PluginForm Extended Coverage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('handles file upload field', async () => {
+  it("handles file upload field", async () => {
     const user = userEvent.setup();
     render(<PluginForm {...defaultProps} />);
 
     // Create a fake file
-    const file = new File(['test content'], 'test.txt', { type: 'text/plain' });
+    const file = new File(["test content"], "test.txt", { type: "text/plain" });
 
     // Mock FileReader
     const originalFileReader = global.FileReader;
     const mockFileReader = {
       readAsDataURL: jest.fn(),
       onload: null,
-      result: 'data:text/plain;base64,dGVzdCBjb250ZW50'
+      result: "data:text/plain;base64,dGVzdCBjb250ZW50",
     };
 
     global.FileReader = jest.fn(() => mockFileReader) as any;
@@ -75,17 +75,17 @@ describe('PluginForm Extended Coverage', () => {
     global.FileReader = originalFileReader;
   });
 
-  it('validates string field length constraints', async () => {
+  it("validates string field length constraints", async () => {
     const user = userEvent.setup();
     render(<PluginForm {...defaultProps} />);
 
     const instanceNameField = screen.getByLabelText(/Instance Name/);
-    await user.type(instanceNameField, 'Test');
+    await user.type(instanceNameField, "Test");
 
     const stringField = screen.getByLabelText(/Test String/);
-    await user.type(stringField, 'abc'); // Too short (min 5)
+    await user.type(stringField, "abc"); // Too short (min 5)
 
-    const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+    const submitButton = screen.getByRole("button", { name: /Create Plugin/ });
     await user.click(submitButton);
 
     await waitFor(() => {
@@ -93,33 +93,35 @@ describe('PluginForm Extended Coverage', () => {
     });
   });
 
-  it('validates string field max length', async () => {
+  it("validates string field max length", async () => {
     const user = userEvent.setup();
     render(<PluginForm {...defaultProps} />);
 
     const instanceNameField = screen.getByLabelText(/Instance Name/);
-    await user.type(instanceNameField, 'Test');
+    await user.type(instanceNameField, "Test");
 
     const stringField = screen.getByLabelText(/Test String/) as HTMLInputElement;
     // Use fireEvent to bypass HTML maxLength attribute
-    fireEvent.change(stringField, { target: { value: 'a'.repeat(25) } }); // Too long (max 20)
+    fireEvent.change(stringField, { target: { value: "a".repeat(25) } }); // Too long (max 20)
 
-    const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+    const submitButton = screen.getByRole("button", { name: /Create Plugin/ });
     await user.click(submitButton);
 
     expect(await screen.findByText(/Maximum length is 20 characters/)).toBeInTheDocument();
   });
 
-  it('handles JSON field parsing correctly', async () => {
+  it("handles JSON field parsing correctly", async () => {
     const pluginWithJson = {
       ...mockPlugin,
-      fields: [{
-        key: "json_field",
-        label: "JSON Field",
-        type: "json" as const,
-        description: "Test JSON field",
-        required: false
-      }]
+      fields: [
+        {
+          key: "json_field",
+          label: "JSON Field",
+          type: "json" as const,
+          description: "Test JSON field",
+          required: false,
+        },
+      ],
     };
 
     render(<PluginForm {...defaultProps} plugin={pluginWithJson} />);
@@ -131,11 +133,11 @@ describe('PluginForm Extended Coverage', () => {
     fireEvent.change(jsonField, { target: { value: jsonValue } });
 
     // Verify the field accepts the input (may be formatted)
-    expect(jsonField.value).toContain('key');
-    expect(jsonField.value).toContain('value');
+    expect(jsonField.value).toContain("key");
+    expect(jsonField.value).toContain("value");
   });
 
-  it('handles non-plugin-provided case', async () => {
+  it("handles non-plugin-provided case", async () => {
     const user = userEvent.setup();
 
     render(<PluginForm {...defaultProps} plugin={null} />);
@@ -145,30 +147,30 @@ describe('PluginForm Extended Coverage', () => {
 
     // Select a plugin
     const pluginSelect = screen.getByLabelText(/Plugin/);
-    await user.selectOptions(pluginSelect, 'Test Plugin');
+    await user.selectOptions(pluginSelect, "Test Plugin");
 
     await waitFor(() => {
       expect(screen.getByLabelText(/Test String/)).toBeInTheDocument();
     });
   });
 
-  it('handles connection test error', async () => {
+  it("handles connection test error", async () => {
     const user = userEvent.setup();
-    const onTestConnection = jest.fn().mockRejectedValue(new Error('Test failed'));
+    const onTestConnection = jest.fn().mockRejectedValue(new Error("Test failed"));
 
     render(<PluginForm {...defaultProps} onTestConnection={onTestConnection} />);
 
     // Fill in required fields to pass validation
     const instanceNameField = screen.getByLabelText(/Instance Name/);
-    await user.type(instanceNameField, 'Test Instance');
+    await user.type(instanceNameField, "Test Instance");
 
-    const testButton = screen.getByRole('button', { name: /Test Connection/ });
+    const testButton = screen.getByRole("button", { name: /Test Connection/ });
     await user.click(testButton);
 
     expect(await screen.findByText(/Test failed/)).toBeInTheDocument();
   });
 
-  it('handles configuration validation edge cases', async () => {
+  it("handles configuration validation edge cases", async () => {
     const user = userEvent.setup();
 
     const pluginWithComplexValidation = {
@@ -180,7 +182,7 @@ describe('PluginForm Extended Coverage', () => {
           type: "integer" as const,
           required: false,
           min_value: 5,
-          max_value: 10
+          max_value: 10,
         },
         {
           key: "float_field",
@@ -188,25 +190,25 @@ describe('PluginForm Extended Coverage', () => {
           type: "float" as const,
           required: false,
           min_value: 1.5,
-          max_value: 5.5
-        }
-      ]
+          max_value: 5.5,
+        },
+      ],
     };
 
     render(<PluginForm {...defaultProps} plugin={pluginWithComplexValidation} />);
 
     const instanceNameField = screen.getByLabelText(/Instance Name/);
-    await user.type(instanceNameField, 'Test');
+    await user.type(instanceNameField, "Test");
 
     // Test integer bounds
     const intField = screen.getByLabelText(/Integer Field/);
-    await user.type(intField, '15'); // Above max
+    await user.type(intField, "15"); // Above max
 
     // Test float bounds
     const floatField = screen.getByLabelText(/Float Field/);
-    await user.type(floatField, '0.5'); // Below min
+    await user.type(floatField, "0.5"); // Below min
 
-    const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+    const submitButton = screen.getByRole("button", { name: /Create Plugin/ });
     await user.click(submitButton);
 
     await waitFor(() => {
@@ -215,26 +217,28 @@ describe('PluginForm Extended Coverage', () => {
     });
   });
 
-  it('clears field errors when values are corrected', async () => {
+  it("clears field errors when values are corrected", async () => {
     const user = userEvent.setup();
 
     const pluginWithRequired = {
       ...mockPlugin,
-      fields: [{
-        key: "required_field",
-        label: "Required Field",
-        type: "string" as const,
-        required: true
-      }]
+      fields: [
+        {
+          key: "required_field",
+          label: "Required Field",
+          type: "string" as const,
+          required: true,
+        },
+      ],
     };
 
     render(<PluginForm {...defaultProps} plugin={pluginWithRequired} />);
 
     const instanceNameField = screen.getByLabelText(/Instance Name/);
-    await user.type(instanceNameField, 'Test');
+    await user.type(instanceNameField, "Test");
 
     // Submit without required field to trigger error
-    const submitButton = screen.getByRole('button', { name: /Create Plugin/ });
+    const submitButton = screen.getByRole("button", { name: /Create Plugin/ });
     await user.click(submitButton);
 
     await waitFor(() => {
@@ -243,7 +247,7 @@ describe('PluginForm Extended Coverage', () => {
 
     // Now fill the required field
     const requiredField = screen.getByLabelText(/Required Field/);
-    await user.type(requiredField, 'test value');
+    await user.type(requiredField, "test value");
 
     // Error should clear
     await waitFor(() => {
@@ -251,7 +255,7 @@ describe('PluginForm Extended Coverage', () => {
     });
   });
 
-  it('handles default values correctly', () => {
+  it("handles default values correctly", () => {
     const pluginWithDefaults = {
       ...mockPlugin,
       fields: [
@@ -259,32 +263,32 @@ describe('PluginForm Extended Coverage', () => {
           key: "default_string",
           label: "Default String",
           type: "string" as const,
-          default: "default value"
+          default: "default value",
         },
         {
           key: "default_boolean",
           label: "Default Boolean",
           type: "boolean" as const,
-          default: true
+          default: true,
         },
         {
           key: "default_integer",
           label: "Default Integer",
           type: "integer" as const,
-          default: 42
-        }
-      ]
+          default: 42,
+        },
+      ],
     };
 
     render(<PluginForm {...defaultProps} plugin={pluginWithDefaults} />);
 
     const stringField = screen.getByLabelText(/Default String/) as HTMLInputElement;
-    expect(stringField.value).toBe('default value');
+    expect(stringField.value).toBe("default value");
 
     const booleanField = screen.getByLabelText(/Default Boolean/) as HTMLInputElement;
     expect(booleanField.checked).toBe(true);
 
     const integerField = screen.getByLabelText(/Default Integer/) as HTMLInputElement;
-    expect(integerField.value).toBe('42');
+    expect(integerField.value).toBe("42");
   });
 });

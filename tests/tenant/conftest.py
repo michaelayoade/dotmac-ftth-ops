@@ -15,6 +15,7 @@ from dotmac.platform.tenant.service import TenantNotFoundError, TenantService
 from dotmac.platform.tenant.usage_billing_integration import (
     TenantUsageBillingIntegration,
 )
+from tests.shared_fixtures import mock_user_service as shared_mock_user_service
 
 
 @pytest.fixture
@@ -762,8 +763,19 @@ async def authenticated_client(
             email="test@example.com",
             username="testuser",
             roles=["admin"],
-            permissions=["read", "write", "admin"],
-            tenant_id="tenant-123",
+            permissions=[
+                "read",
+                "write",
+                "admin",
+                "platform:tenants:write",
+                "platform:tenants:read",
+                "tenants:write",
+                "tenants:read",
+                "isp.oss.read",
+                "isp.oss.configure",
+            ],
+            tenant_id=None,
+            is_platform_admin=True,
         )
 
     async def mock_get_session():
@@ -783,7 +795,7 @@ async def authenticated_client(
 
     # Include the routers
     app.include_router(tenant_router.router, prefix="/api/v1/tenants")
-    app.include_router(onboarding_router, prefix="/api/v1/tenants")
+    app.include_router(onboarding_router, prefix="/api/v1")
     app.include_router(
         usage_billing_router, prefix="/api/v1/tenants", tags=["Tenant Usage Billing"]
     )
@@ -798,3 +810,7 @@ async def authenticated_client(
 async def async_client(authenticated_client: AsyncClient) -> AsyncClient:
     """Alias for authenticated_client for backwards compatibility."""
     return authenticated_client
+@pytest.fixture
+def mock_user_service(shared_mock_user_service: AsyncMock) -> AsyncMock:
+    """Re-export shared mock user service for tenant tests."""
+    return shared_mock_user_service

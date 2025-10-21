@@ -168,9 +168,7 @@ async function fetchPartnerProfile(): Promise<PartnerProfile> {
   return response.json();
 }
 
-async function updatePartnerProfile(
-  data: Partial<PartnerProfile>
-): Promise<PartnerProfile> {
+async function updatePartnerProfile(data: Partial<PartnerProfile>): Promise<PartnerProfile> {
   const response = await fetch(`${API_BASE}/api/v1/partners/portal/profile`, {
     method: "PATCH",
     credentials: "include",
@@ -216,17 +214,14 @@ async function submitReferral(data: {
   estimated_value?: number;
   notes?: string;
 }): Promise<PartnerReferral> {
-  const response = await fetch(
-    `${API_BASE}/api/v1/partners/portal/referrals`,
-    {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    }
-  );
+  const response = await fetch(`${API_BASE}/api/v1/partners/portal/referrals`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
 
   if (!response.ok) {
     const error = await response.json();
@@ -236,7 +231,10 @@ async function submitReferral(data: {
   return response.json();
 }
 
-async function fetchPartnerCommissions(limit?: number, offset?: number): Promise<PartnerCommission[]> {
+async function fetchPartnerCommissions(
+  limit?: number,
+  offset?: number,
+): Promise<PartnerCommission[]> {
   const params = new URLSearchParams();
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());
@@ -276,7 +274,10 @@ async function fetchPartnerCustomers(limit?: number, offset?: number): Promise<P
   return response.json();
 }
 
-async function fetchPartnerStatements(limit?: number, offset?: number): Promise<PartnerStatement[]> {
+async function fetchPartnerStatements(
+  limit?: number,
+  offset?: number,
+): Promise<PartnerStatement[]> {
   const params = new URLSearchParams();
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());
@@ -305,16 +306,17 @@ async function fetchPartnerStatements(limit?: number, offset?: number): Promise<
     period_end: statement.period_end,
     issued_at: statement.issued_at,
     revenue_total: normaliseDecimal(statement.revenue_total),
-    commission_total: normaliseDecimal(
-      statement.commission_total ?? statement.revenue_total
-    ),
+    commission_total: normaliseDecimal(statement.commission_total ?? statement.revenue_total),
     adjustments_total: normaliseDecimal(statement.adjustments_total),
     status: (statement.status || "pending").toLowerCase() as PartnerPayoutStatus,
     download_url: statement.download_url ?? null,
   }));
 }
 
-async function fetchPartnerPayoutHistory(limit?: number, offset?: number): Promise<PartnerPayoutRecord[]> {
+async function fetchPartnerPayoutHistory(
+  limit?: number,
+  offset?: number,
+): Promise<PartnerPayoutRecord[]> {
   const params = new URLSearchParams();
   if (limit !== undefined) params.append("limit", limit.toString());
   if (offset !== undefined) params.append("offset", offset.toString());

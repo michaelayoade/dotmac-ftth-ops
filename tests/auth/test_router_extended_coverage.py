@@ -54,7 +54,7 @@ async def test_user_extended(async_db_session: AsyncSession):
 def extended_app():
     """Create test app for extended tests."""
     app = FastAPI()
-    app.include_router(auth_router, prefix="/auth")
+    app.include_router(auth_router)
     return app
 
 

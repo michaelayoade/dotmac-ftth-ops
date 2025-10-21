@@ -11,40 +11,44 @@
  * - API contract validation
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Admin Data Transfer Dashboard', () => {
+test.describe("Admin Data Transfer Dashboard", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/admin/data-transfer');
-    await page.waitForSelector('h1:has-text("Import / Export Jobs")', { timeout: 10000 });
+    await page.goto("/admin/data-transfer");
+    await page.waitForSelector('h1:has-text("Import / Export Jobs")', {
+      timeout: 10000,
+    });
   });
 
-  test('should load data transfer dashboard successfully', async ({ page }) => {
+  test("should load data transfer dashboard successfully", async ({ page }) => {
     // Verify page title
-    await expect(page.locator('h1')).toContainText('Import / Export Jobs');
+    await expect(page.locator("h1")).toContainText("Import / Export Jobs");
 
     // Verify description
-    await expect(page.locator('text=Monitor and manage data import and export operations')).toBeVisible();
+    await expect(
+      page.locator("text=Monitor and manage data import and export operations"),
+    ).toBeVisible();
 
     // Verify refresh button
     await expect(page.locator('button:has-text("Refresh")')).toBeVisible();
   });
 
-  test('should display statistics cards', async ({ page }) => {
+  test("should display statistics cards", async ({ page }) => {
     await page.waitForTimeout(1000);
 
     // Verify stat cards are visible
-    await expect(page.locator('text=Total Jobs')).toBeVisible();
-    await expect(page.locator('text=Running')).toBeVisible();
-    await expect(page.locator('text=Completed')).toBeVisible();
-    await expect(page.locator('text=Failed')).toBeVisible();
+    await expect(page.locator("text=Total Jobs")).toBeVisible();
+    await expect(page.locator("text=Running")).toBeVisible();
+    await expect(page.locator("text=Completed")).toBeVisible();
+    await expect(page.locator("text=Failed")).toBeVisible();
   });
 
-  test('should load jobs from real API', async ({ page, request }) => {
+  test("should load jobs from real API", async ({ page, request }) => {
     // Direct API call
-    const apiResponse = await request.get('http://localhost:8000/api/v1/data-transfer/jobs', {
+    const apiResponse = await request.get("http://localhost:8000/api/v1/data-transfer/jobs", {
       headers: {
-        'Authorization': `Bearer ${process.env.E2E_AUTH_TOKEN || 'test-token'}`,
+        Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,
       },
     });
 
@@ -52,17 +56,17 @@ test.describe('Admin Data Transfer Dashboard', () => {
     const data = await apiResponse.json();
 
     // Validate response structure
-    expect(data).toHaveProperty('jobs');
-    expect(data).toHaveProperty('total');
-    expect(data).toHaveProperty('page');
-    expect(data).toHaveProperty('page_size');
-    expect(data).toHaveProperty('has_more');
+    expect(data).toHaveProperty("jobs");
+    expect(data).toHaveProperty("total");
+    expect(data).toHaveProperty("page");
+    expect(data).toHaveProperty("page_size");
+    expect(data).toHaveProperty("has_more");
   });
 
-  test('should filter jobs by type', async ({ page }) => {
+  test("should filter jobs by type", async ({ page }) => {
     await page.waitForTimeout(1000);
 
-    const typeFilter = page.locator('select').first();
+    const typeFilter = page.locator("select").first();
     await typeFilter.selectOption({ label: /Import/i });
     await page.waitForTimeout(500);
 
@@ -72,10 +76,10 @@ test.describe('Admin Data Transfer Dashboard', () => {
     await typeFilter.selectOption({ label: /All Types/i });
   });
 
-  test('should filter jobs by status', async ({ page }) => {
+  test("should filter jobs by status", async ({ page }) => {
     await page.waitForTimeout(1000);
 
-    const statusFilter = page.locator('select').nth(1);
+    const statusFilter = page.locator("select").nth(1);
     await statusFilter.selectOption({ label: /Running/i });
     await page.waitForTimeout(500);
 
@@ -85,31 +89,34 @@ test.describe('Admin Data Transfer Dashboard', () => {
     await statusFilter.selectOption({ label: /All Status/i });
   });
 
-  test('should validate API contract - job response structure', async ({ request }) => {
-    const response = await request.get('http://localhost:8000/api/v1/data-transfer/jobs?page=1&page_size=20', {
-      headers: {
-        'Authorization': `Bearer ${process.env.E2E_AUTH_TOKEN || 'test-token'}`,
+  test("should validate API contract - job response structure", async ({ request }) => {
+    const response = await request.get(
+      "http://localhost:8000/api/v1/data-transfer/jobs?page=1&page_size=20",
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,
+        },
       },
-    });
+    );
 
     expect(response.ok()).toBeTruthy();
     const data = await response.json();
 
     // Validate list response
-    expect(data).toHaveProperty('jobs');
-    expect(data).toHaveProperty('total');
-    expect(typeof data.total).toBe('number');
-    expect(typeof data.page).toBe('number');
-    expect(typeof data.page_size).toBe('number');
-    expect(typeof data.has_more).toBe('boolean');
+    expect(data).toHaveProperty("jobs");
+    expect(data).toHaveProperty("total");
+    expect(typeof data.total).toBe("number");
+    expect(typeof data.page).toBe("number");
+    expect(typeof data.page_size).toBe("number");
+    expect(typeof data.has_more).toBe("boolean");
     expect(Array.isArray(data.jobs)).toBeTruthy();
   });
 
-  test('should navigate through pages', async ({ page, request }) => {
+  test("should navigate through pages", async ({ page, request }) => {
     // Check if pagination is needed
-    const apiResponse = await request.get('http://localhost:8000/api/v1/data-transfer/jobs', {
+    const apiResponse = await request.get("http://localhost:8000/api/v1/data-transfer/jobs", {
       headers: {
-        'Authorization': `Bearer ${process.env.E2E_AUTH_TOKEN || 'test-token'}`,
+        Authorization: `Bearer ${process.env.E2E_AUTH_TOKEN || "test-token"}`,
       },
     });
 

@@ -215,8 +215,15 @@ TENANT_ROUTER_CONFIGS = [
         "module_path": "dotmac.platform.services.router",
         "router_name": "router",
         "prefix": "",  # Module already has /orchestration prefix
-        "tags": ["ISP - Orchestration"],
-        "description": "Service orchestration workflows",
+        "tags": ["ISP - Service Orchestration"],
+        "description": "Subscriber provisioning workflows",
+    },
+    {
+        "module_path": "dotmac.platform.orchestration.router",
+        "router_name": "router",
+        "prefix": "",  # Module already has /orchestration prefix
+        "tags": ["ISP - Workflow Orchestration"],
+        "description": "Workflow orchestration and automation",
     },
     {
         "module_path": "dotmac.platform.services.internet_plans.router",
@@ -440,8 +447,8 @@ def create_tenant_app() -> FastAPI:
         description="ISP operations and management for multi-tenant platform",
         version=settings.app_version,
         lifespan=lifespan,
-        docs_url="/docs" if settings.environment != "production" else None,
-        redoc_url="/redoc" if settings.environment != "production" else None,
+        docs_url="/docs" if not settings.is_production else None,
+        redoc_url="/redoc" if not settings.is_production else None,
     )
 
     # Register tenant routers

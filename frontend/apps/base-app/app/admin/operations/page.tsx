@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
@@ -37,17 +37,32 @@ import {
 } from "@/hooks/useOperations";
 
 export default function OperationsPage() {
-  const [metricsPeriod, setMetricsPeriod] = useState<'1h' | '24h' | '7d'>('24h');
-  const [logsPeriod, setLogsPeriod] = useState<'1h' | '24h' | '7d'>('24h');
+  const [metricsPeriod, setMetricsPeriod] = useState<"1h" | "24h" | "7d">("24h");
+  const [logsPeriod, setLogsPeriod] = useState<"1h" | "24h" | "7d">("24h");
 
   // Query hooks
-  const { data: metrics, isLoading: loadingMetrics, error: metricsError, refetch: refetchMetrics } = useMonitoringMetrics(metricsPeriod);
-  const { data: logStats, isLoading: loadingLogs, error: logsError, refetch: refetchLogs } = useLogStats(logsPeriod);
-  const { data: health, isLoading: loadingHealth, error: healthError, refetch: refetchHealth } = useSystemHealth();
+  const {
+    data: metrics,
+    isLoading: loadingMetrics,
+    error: metricsError,
+    refetch: refetchMetrics,
+  } = useMonitoringMetrics(metricsPeriod);
+  const {
+    data: logStats,
+    isLoading: loadingLogs,
+    error: logsError,
+    refetch: refetchLogs,
+  } = useLogStats(logsPeriod);
+  const {
+    data: health,
+    isLoading: loadingHealth,
+    error: healthError,
+    refetch: refetchHealth,
+  } = useSystemHealth();
 
   const serviceChecks: Array<[string, ServiceHealth]> = health
     ? (Object.entries(health.checks) as Array<[string, ServiceHealth | undefined]>).filter(
-        (entry): entry is [string, ServiceHealth] => Boolean(entry[1])
+        (entry): entry is [string, ServiceHealth] => Boolean(entry[1]),
       )
     : [];
   const topErrors = metrics?.top_errors ?? [];
@@ -67,7 +82,9 @@ export default function OperationsPage() {
       <header className="space-y-2">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Operations</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Operations
+            </p>
             <h1 className="text-3xl font-semibold text-foreground flex items-center gap-2">
               <Activity className="h-8 w-8 text-primary" />
               System Monitoring
@@ -76,8 +93,13 @@ export default function OperationsPage() {
               Real-time system health, performance metrics, and operational insights
             </p>
           </div>
-          <Button onClick={handleRefreshAll} disabled={isLoading} variant="outline" className="gap-2">
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <Button
+            onClick={handleRefreshAll}
+            disabled={isLoading}
+            variant="outline"
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh All
           </Button>
         </div>
@@ -87,9 +109,7 @@ export default function OperationsPage() {
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to load monitoring data: {error.message}
-          </AlertDescription>
+          <AlertDescription>Failed to load monitoring data: {error.message}</AlertDescription>
         </Alert>
       )}
 
@@ -124,7 +144,9 @@ export default function OperationsPage() {
                   </div>
                   <p className="text-xs opacity-80">{check.message}</p>
                   {check.required && (
-                    <Badge variant="outline" className="mt-2 text-xs">Required</Badge>
+                    <Badge variant="outline" className="mt-2 text-xs">
+                      Required
+                    </Badge>
                   )}
                 </div>
               ))}
@@ -140,23 +162,23 @@ export default function OperationsPage() {
             <h2 className="text-xl font-semibold text-foreground">Performance Metrics</h2>
             <div className="flex items-center gap-2">
               <Button
-                variant={metricsPeriod === '1h' ? 'default' : 'outline'}
+                variant={metricsPeriod === "1h" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setMetricsPeriod('1h')}
+                onClick={() => setMetricsPeriod("1h")}
               >
                 1H
               </Button>
               <Button
-                variant={metricsPeriod === '24h' ? 'default' : 'outline'}
+                variant={metricsPeriod === "24h" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setMetricsPeriod('24h')}
+                onClick={() => setMetricsPeriod("24h")}
               >
                 24H
               </Button>
               <Button
-                variant={metricsPeriod === '7d' ? 'default' : 'outline'}
+                variant={metricsPeriod === "7d" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setMetricsPeriod('7d')}
+                onClick={() => setMetricsPeriod("7d")}
               >
                 7D
               </Button>
@@ -167,12 +189,17 @@ export default function OperationsPage() {
             {/* Total Requests */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Total Requests</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Requests
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{metrics.total_requests.toLocaleString()}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {formatPercentage(calculateSuccessRate(metrics.successful_requests, metrics.total_requests))} success rate
+                  {formatPercentage(
+                    calculateSuccessRate(metrics.successful_requests, metrics.total_requests),
+                  )}{" "}
+                  success rate
                 </p>
               </CardContent>
             </Card>
@@ -180,7 +207,9 @@ export default function OperationsPage() {
             {/* Error Rate */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Error Rate</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Error Rate
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{formatPercentage(metrics.error_rate)}</div>
@@ -199,7 +228,9 @@ export default function OperationsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatDuration(metrics.avg_response_time_ms)}</div>
+                <div className="text-2xl font-bold">
+                  {formatDuration(metrics.avg_response_time_ms)}
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   P95: {formatDuration(metrics.p95_response_time_ms)}
                 </p>
@@ -216,9 +247,7 @@ export default function OperationsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{metrics.high_latency_requests}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Requests &gt;1s
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Requests &gt;1s</p>
               </CardContent>
             </Card>
           </div>
@@ -250,7 +279,9 @@ export default function OperationsPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">User Activities</span>
-                    <span className="font-semibold">{metrics.user_activities.toLocaleString()}</span>
+                    <span className="font-semibold">
+                      {metrics.user_activities.toLocaleString()}
+                    </span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
@@ -264,7 +295,9 @@ export default function OperationsPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">System Activities</span>
-                    <span className="font-semibold">{metrics.system_activities.toLocaleString()}</span>
+                    <span className="font-semibold">
+                      {metrics.system_activities.toLocaleString()}
+                    </span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
@@ -292,7 +325,10 @@ export default function OperationsPage() {
               <CardContent>
                 <div className="space-y-3">
                   {topErrors.slice(0, 10).map((error, index) => (
-                    <div key={index} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                    >
                       <div className="flex-1">
                         <p className="text-sm font-medium text-foreground">{error.error_type}</p>
                         <p className="text-xs text-muted-foreground">
@@ -316,23 +352,23 @@ export default function OperationsPage() {
             <h2 className="text-xl font-semibold text-foreground">Log Statistics</h2>
             <div className="flex items-center gap-2">
               <Button
-                variant={logsPeriod === '1h' ? 'default' : 'outline'}
+                variant={logsPeriod === "1h" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setLogsPeriod('1h')}
+                onClick={() => setLogsPeriod("1h")}
               >
                 1H
               </Button>
               <Button
-                variant={logsPeriod === '24h' ? 'default' : 'outline'}
+                variant={logsPeriod === "24h" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setLogsPeriod('24h')}
+                onClick={() => setLogsPeriod("24h")}
               >
                 24H
               </Button>
               <Button
-                variant={logsPeriod === '7d' ? 'default' : 'outline'}
+                variant={logsPeriod === "7d" ? "default" : "outline"}
                 size="sm"
-                onClick={() => setLogsPeriod('7d')}
+                onClick={() => setLogsPeriod("7d")}
               >
                 7D
               </Button>
@@ -365,7 +401,9 @@ export default function OperationsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-400">{logStats.critical_logs.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-red-400">
+                  {logStats.critical_logs.toLocaleString()}
+                </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {logStats.high_logs} high severity
                 </p>
@@ -375,7 +413,9 @@ export default function OperationsPage() {
             {/* Error Logs */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Error Logs</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Error Logs
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{logStats.error_logs.toLocaleString()}</div>
@@ -395,9 +435,7 @@ export default function OperationsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{logStats.auth_logs.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Authentication events
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Authentication events</p>
               </CardContent>
             </Card>
           </div>
@@ -415,7 +453,10 @@ export default function OperationsPage() {
               <CardContent>
                 <div className="space-y-3">
                   {commonErrors.slice(0, 10).map((error, index) => (
-                    <div key={index} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                    >
                       <div className="flex-1">
                         <p className="text-sm font-medium text-foreground">{error.error_type}</p>
                         <p className={`text-xs ${getSeverityColor(error.severity)}`}>

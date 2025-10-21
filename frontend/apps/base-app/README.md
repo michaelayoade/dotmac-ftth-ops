@@ -122,17 +122,20 @@ The script saves your answers in `.env.branding` (and can append to `.env.local`
 ## Production Deployment
 
 ### Docker
+
 ```bash
 docker build -t my-app .
 docker run -p 3000:3000 my-app
 ```
 
 ### Vercel
+
 ```bash
 vercel deploy
 ```
 
 ### Manual
+
 ```bash
 pnpm build
 pnpm start
@@ -145,16 +148,19 @@ pnpm start
 **Issue**: `pnpm storybook:smoke` fails with webpack compilation errors.
 
 **Root Cause**: Known incompatibility between `@storybook/nextjs` 8.6.14 and Next.js 14.2.x webpack configuration. The error occurs during webpack's cache shutdown phase:
+
 ```
 TypeError: Cannot read properties of undefined (reading 'tap')
 ```
 
 **Workaround**:
+
 - Webpack caching is disabled in `.storybook/main.ts` to mitigate the issue
 - Storybook smoke test is **not** included in CI workflow
 - Regular Storybook dev server (`pnpm storybook`) works for manual testing
 
 **Resolution Timeline**:
+
 - ✅ Short-term: Skipped in CI, documented here
 - ⏳ Medium-term: Wait for Storybook 8.7+ or Next.js 15 with better compatibility
 - 🔄 Alternative: Consider Storybook 7.6.x (stable with Next.js 14)

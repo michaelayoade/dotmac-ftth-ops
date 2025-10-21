@@ -3,10 +3,10 @@
  * Provides client-side business rule validation with server synchronization
  */
 
-import { useCallback, useState } from 'react';
-import { commissionEngine } from '../business/commission-engine';
-import { territoryValidator } from '../business/territory-validator';
-import type { Customer } from '../validation/partner-schemas';
+import { useCallback, useState } from "react";
+import { commissionEngine } from "../business/commission-engine";
+import { territoryValidator } from "../business/territory-validator";
+import type { Customer } from "../validation/partner-schemas";
 
 export interface BusinessValidationResult {
   isValid: boolean;
@@ -31,7 +31,7 @@ export interface CustomerBusinessValidation extends BusinessValidationResult {
 
 export function useBusinessValidation(partnerId?: string) {
   const [validationCache, setValidationCache] = useState<Map<string, BusinessValidationResult>>(
-    new Map()
+    new Map(),
   );
 
   // Validate customer business rules
@@ -47,11 +47,11 @@ export function useBusinessValidation(partnerId?: string) {
         if (customer.address && partnerId) {
           try {
             // Parse address for validation
-            const addressParts = customer.address.split(',').map((s) => s.trim());
+            const addressParts = customer.address.split(",").map((s) => s.trim());
             if (addressParts.length >= 3) {
               const street = addressParts[0];
               const city = addressParts[1];
-              const stateZip = addressParts[2].split(' ');
+              const stateZip = addressParts[2].split(" ");
               const state = stateZip[0];
               const zipCode = stateZip[1];
 
@@ -67,10 +67,10 @@ export function useBusinessValidation(partnerId?: string) {
                 };
 
                 if (!result.isValid) {
-                  errors.push('Customer address is not in any assigned territory');
+                  errors.push("Customer address is not in any assigned territory");
                 } else if (result.assignedPartnerId !== partnerId) {
                   errors.push(
-                    `Customer is in territory assigned to partner ${result.assignedPartnerId}`
+                    `Customer is in territory assigned to partner ${result.assignedPartnerId}`,
                   );
                 }
 
@@ -80,13 +80,13 @@ export function useBusinessValidation(partnerId?: string) {
 
                 if (result.confidence < 0.8) {
                   warnings.push(
-                    'Territory assignment has low confidence - manual review recommended'
+                    "Territory assignment has low confidence - manual review recommended",
                   );
                 }
               }
             }
           } catch (error) {
-            warnings.push('Could not validate territory - address format may be incorrect');
+            warnings.push("Could not validate territory - address format may be incorrect");
           }
         }
 
@@ -98,7 +98,7 @@ export function useBusinessValidation(partnerId?: string) {
             const tier = commissionEngine.determineEligibleTier(100000); // Assume $100k lifetime revenue for estimation
 
             const commissionResult = commissionEngine.calculateCommission({
-              customerId: customer.id || 'new-customer',
+              customerId: customer.id || "new-customer",
               partnerId,
               partnerTier: tier.id,
               productType: customer.plan,
@@ -117,45 +117,45 @@ export function useBusinessValidation(partnerId?: string) {
             // Add suggestions based on commission calculation
             if (commissionResult.effectiveRate < 0.05) {
               suggestions.push(
-                'Consider upgrading customer to higher-value plan for better commission rates'
+                "Consider upgrading customer to higher-value plan for better commission rates",
               );
             }
 
             if (commissionResult.breakdown.newCustomerBonus > 0) {
               suggestions.push(
-                `New customer bonus of $${commissionResult.breakdown.newCustomerBonus.toFixed(2)} applies`
+                `New customer bonus of $${commissionResult.breakdown.newCustomerBonus.toFixed(2)} applies`,
               );
             }
           } catch (error) {
-            warnings.push('Could not calculate commission estimate');
+            warnings.push("Could not calculate commission estimate");
           }
         }
 
         // Business rule validations
         if (customer.mrr && customer.mrr < 10) {
-          warnings.push('Monthly recurring revenue is very low - confirm pricing accuracy');
+          warnings.push("Monthly recurring revenue is very low - confirm pricing accuracy");
         }
 
         if (customer.mrr && customer.mrr > 1000) {
-          suggestions.push('High-value customer - consider priority support assignment');
+          suggestions.push("High-value customer - consider priority support assignment");
         }
 
-        if (customer.plan === 'enterprise' && customer.mrr && customer.mrr < 200) {
-          warnings.push('Enterprise plan pricing seems low - verify plan selection');
+        if (customer.plan === "enterprise" && customer.mrr && customer.mrr < 200) {
+          warnings.push("Enterprise plan pricing seems low - verify plan selection");
         }
 
-        if (customer.status === 'suspended') {
-          warnings.push('Customer account is suspended - resolve issues before activation');
+        if (customer.status === "suspended") {
+          warnings.push("Customer account is suspended - resolve issues before activation");
         }
 
-        if (customer.status === 'pending' && customer.joinDate) {
+        if (customer.status === "pending" && customer.joinDate) {
           const joinDate = new Date(customer.joinDate);
           const daysSinceJoin = Math.floor(
-            (Date.now() - joinDate.getTime()) / (1000 * 60 * 60 * 24)
+            (Date.now() - joinDate.getTime()) / (1000 * 60 * 60 * 24),
           );
 
           if (daysSinceJoin > 30) {
-            warnings.push('Customer has been pending for over 30 days - follow up required');
+            warnings.push("Customer has been pending for over 30 days - follow up required");
           }
         }
 
@@ -175,7 +175,7 @@ export function useBusinessValidation(partnerId?: string) {
           warnings,
           errors: [
             ...errors,
-            `Validation error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            `Validation error: ${error instanceof Error ? error.message : "Unknown error"}`,
           ],
           suggestions,
           territoryValidation,
@@ -183,7 +183,7 @@ export function useBusinessValidation(partnerId?: string) {
         };
       }
     },
-    [partnerId]
+    [partnerId],
   );
 
   // Validate commission calculation
@@ -194,7 +194,7 @@ export function useBusinessValidation(partnerId?: string) {
       productType: string,
       partnerTier: string,
       isNewCustomer: boolean = false,
-      contractLength: number = 12
+      contractLength: number = 12,
     ): BusinessValidationResult => {
       const warnings: string[] = [];
       const errors: string[] = [];
@@ -202,7 +202,7 @@ export function useBusinessValidation(partnerId?: string) {
 
       try {
         if (!partnerId) {
-          errors.push('Partner ID is required for commission validation');
+          errors.push("Partner ID is required for commission validation");
           return { isValid: false, warnings, errors, suggestions };
         }
 
@@ -220,24 +220,24 @@ export function useBusinessValidation(partnerId?: string) {
 
         // Business rule checks
         if (result.effectiveRate > 0.25) {
-          warnings.push('Commission rate exceeds 25% - verify calculation parameters');
+          warnings.push("Commission rate exceeds 25% - verify calculation parameters");
         }
 
         if (result.totalCommission > monthlyRevenue * 0.5) {
-          errors.push('Commission exceeds 50% of monthly revenue - calculation may be incorrect');
+          errors.push("Commission exceeds 50% of monthly revenue - calculation may be incorrect");
         }
 
         if (result.breakdown.newCustomerBonus > 0 && !isNewCustomer) {
-          errors.push('New customer bonus applied to existing customer');
+          errors.push("New customer bonus applied to existing customer");
         }
 
         // Suggestions
         if (contractLength < 12) {
-          suggestions.push('Longer contract terms may increase commission rates');
+          suggestions.push("Longer contract terms may increase commission rates");
         }
 
         if (result.breakdown.territoryBonus === 0) {
-          suggestions.push('Check if territory bonus applies for this customer location');
+          suggestions.push("Check if territory bonus applies for this customer location");
         }
 
         return {
@@ -250,12 +250,12 @@ export function useBusinessValidation(partnerId?: string) {
         return {
           isValid: false,
           warnings,
-          errors: [error instanceof Error ? error.message : 'Commission validation failed'],
+          errors: [error instanceof Error ? error.message : "Commission validation failed"],
           suggestions,
         };
       }
     },
-    [partnerId]
+    [partnerId],
   );
 
   // Validate territory assignment
@@ -267,25 +267,25 @@ export function useBusinessValidation(partnerId?: string) {
 
       try {
         if (!partnerId) {
-          errors.push('Partner ID is required for territory validation');
+          errors.push("Partner ID is required for territory validation");
           return { isValid: false, warnings, errors, suggestions };
         }
 
         // Parse address
-        const addressParts = address.split(',').map((s) => s.trim());
+        const addressParts = address.split(",").map((s) => s.trim());
         if (addressParts.length < 3) {
-          errors.push('Address must include street, city, and state/zip');
+          errors.push("Address must include street, city, and state/zip");
           return { isValid: false, warnings, errors, suggestions };
         }
 
         const street = addressParts[0];
         const city = addressParts[1];
-        const stateZip = addressParts[2].split(' ');
+        const stateZip = addressParts[2].split(" ");
         const state = stateZip[0];
         const zipCode = stateZip[1];
 
         if (!street || !city || !state || !zipCode) {
-          errors.push('Incomplete address information');
+          errors.push("Incomplete address information");
           return { isValid: false, warnings, errors, suggestions };
         }
 
@@ -293,14 +293,14 @@ export function useBusinessValidation(partnerId?: string) {
         const result = await territoryValidator.validateAddress(addressObj, partnerId);
 
         if (!result.isValid) {
-          errors.push('Address is not in any assigned territory');
+          errors.push("Address is not in any assigned territory");
         } else if (result.assignedPartnerId !== partnerId) {
           errors.push(`Address is in territory assigned to partner ${result.assignedPartnerId}`);
-          suggestions.push('Contact territory management for reassignment if needed');
+          suggestions.push("Contact territory management for reassignment if needed");
         }
 
         if (result.confidence < 0.7) {
-          warnings.push('Low confidence territory match - manual review recommended');
+          warnings.push("Low confidence territory match - manual review recommended");
         }
 
         if (result.warnings) {
@@ -318,13 +318,13 @@ export function useBusinessValidation(partnerId?: string) {
           isValid: false,
           warnings,
           errors: [
-            `Territory validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            `Territory validation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
           ],
           suggestions,
         };
       }
     },
-    [partnerId]
+    [partnerId],
   );
 
   // Get cached validation result
@@ -332,7 +332,7 @@ export function useBusinessValidation(partnerId?: string) {
     (key: string): BusinessValidationResult | null => {
       return validationCache.get(key) || null;
     },
-    [validationCache]
+    [validationCache],
   );
 
   // Cache validation result

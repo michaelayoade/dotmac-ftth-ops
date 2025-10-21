@@ -3,7 +3,7 @@
  * Critical test suite for multi-channel communication and alert management
  */
 
-import { NotificationsApiClient } from '../NotificationsApiClient';
+import { NotificationsApiClient } from "../NotificationsApiClient";
 import type {
   NotificationTemplate,
   Notification,
@@ -16,16 +16,16 @@ import type {
   CampaignScheduling,
   CampaignMetrics,
   EscalationRule,
-} from '../NotificationsApiClient';
+} from "../NotificationsApiClient";
 
 // Mock fetch
 global.fetch = jest.fn();
 const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
 
-describe('NotificationsApiClient', () => {
+describe("NotificationsApiClient", () => {
   let client: NotificationsApiClient;
-  const baseURL = 'https://api.test.com';
-  const defaultHeaders = { Authorization: 'Bearer test-token' };
+  const baseURL = "https://api.test.com";
+  const defaultHeaders = { Authorization: "Bearer test-token" };
 
   beforeEach(() => {
     client = new NotificationsApiClient(baseURL, defaultHeaders);
@@ -40,74 +40,74 @@ describe('NotificationsApiClient', () => {
     } as Response);
   };
 
-  describe('Notification Templates Management', () => {
+  describe("Notification Templates Management", () => {
     const mockVariables: TemplateVariable[] = [
       {
-        name: 'customer_name',
-        type: 'STRING',
-        description: 'Customer full name',
+        name: "customer_name",
+        type: "STRING",
+        description: "Customer full name",
         required: true,
       },
       {
-        name: 'bill_amount',
-        type: 'NUMBER',
-        description: 'Total bill amount',
+        name: "bill_amount",
+        type: "NUMBER",
+        description: "Total bill amount",
         required: true,
-        format: 'currency',
+        format: "currency",
       },
       {
-        name: 'due_date',
-        type: 'DATE',
-        description: 'Payment due date',
+        name: "due_date",
+        type: "DATE",
+        description: "Payment due date",
         required: true,
-        format: 'YYYY-MM-DD',
+        format: "YYYY-MM-DD",
       },
     ];
 
     const mockChannels: NotificationChannel[] = [
       {
-        type: 'EMAIL',
+        type: "EMAIL",
         enabled: true,
         priority: 1,
         retry_attempts: 3,
         retry_delay: 300,
-        fallback_channel: 'SMS',
+        fallback_channel: "SMS",
         configuration: {
-          sender_email: 'noreply@isp.com',
-          sender_name: 'ISP Billing',
+          sender_email: "noreply@isp.com",
+          sender_name: "ISP Billing",
         },
       },
       {
-        type: 'SMS',
+        type: "SMS",
         enabled: true,
         priority: 2,
         retry_attempts: 2,
         retry_delay: 600,
         configuration: {
-          sender_id: 'ISP_BILL',
+          sender_id: "ISP_BILL",
         },
       },
     ];
 
     const mockTemplate: NotificationTemplate = {
-      id: 'template_123',
-      name: 'Monthly Bill Notification',
-      description: 'Template for monthly billing notifications',
-      template_type: 'EMAIL',
-      category: 'BILLING',
-      subject: 'Your monthly bill is ready - ${bill_amount}',
-      content: 'Dear ${customer_name}, your monthly bill of ${bill_amount} is due on ${due_date}.',
+      id: "template_123",
+      name: "Monthly Bill Notification",
+      description: "Template for monthly billing notifications",
+      template_type: "EMAIL",
+      category: "BILLING",
+      subject: "Your monthly bill is ready - ${bill_amount}",
+      content: "Dear ${customer_name}, your monthly bill of ${bill_amount} is due on ${due_date}.",
       variables: mockVariables,
       channels: mockChannels,
-      priority: 'HIGH',
+      priority: "HIGH",
       active: true,
       version: 1,
-      created_by: 'billing_admin',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-15T10:30:00Z',
+      created_by: "billing_admin",
+      created_at: "2024-01-01T00:00:00Z",
+      updated_at: "2024-01-15T10:30:00Z",
     };
 
-    it('should get templates with category filtering', async () => {
+    it("should get templates with category filtering", async () => {
       mockResponse({
         data: [mockTemplate],
         pagination: {
@@ -119,199 +119,199 @@ describe('NotificationsApiClient', () => {
       });
 
       const result = await client.getTemplates({
-        category: 'BILLING',
-        template_type: 'EMAIL',
+        category: "BILLING",
+        template_type: "EMAIL",
         active: true,
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/templates?category=BILLING&template_type=EMAIL&active=true',
-        expect.any(Object)
+        "https://api.test.com/api/notifications/templates?category=BILLING&template_type=EMAIL&active=true",
+        expect.any(Object),
       );
 
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].category).toBe('BILLING');
+      expect(result.data[0].category).toBe("BILLING");
     });
 
-    it('should create comprehensive notification template', async () => {
+    it("should create comprehensive notification template", async () => {
       const templateData = {
-        name: 'Service Outage Alert',
-        description: 'Template for service outage notifications',
-        template_type: 'PUSH' as const,
-        category: 'SERVICE' as const,
-        subject: 'Service Alert: ${outage_type} in ${affected_area}',
+        name: "Service Outage Alert",
+        description: "Template for service outage notifications",
+        template_type: "PUSH" as const,
+        category: "SERVICE" as const,
+        subject: "Service Alert: ${outage_type} in ${affected_area}",
         content:
-          'We are experiencing ${outage_type} in ${affected_area}. Estimated resolution: ${eta}. We apologize for the inconvenience.',
+          "We are experiencing ${outage_type} in ${affected_area}. Estimated resolution: ${eta}. We apologize for the inconvenience.",
         variables: [
           {
-            name: 'outage_type',
-            type: 'STRING' as const,
-            description: 'Type of service outage',
+            name: "outage_type",
+            type: "STRING" as const,
+            description: "Type of service outage",
             required: true,
           },
           {
-            name: 'affected_area',
-            type: 'STRING' as const,
-            description: 'Geographic area affected',
+            name: "affected_area",
+            type: "STRING" as const,
+            description: "Geographic area affected",
             required: true,
           },
           {
-            name: 'eta',
-            type: 'STRING' as const,
-            description: 'Estimated time to resolution',
+            name: "eta",
+            type: "STRING" as const,
+            description: "Estimated time to resolution",
             required: false,
-            default_value: 'TBD',
+            default_value: "TBD",
           },
         ],
         channels: [
           {
-            type: 'PUSH' as const,
+            type: "PUSH" as const,
             enabled: true,
             priority: 1,
             retry_attempts: 1,
             retry_delay: 0,
             configuration: {
-              title: 'Service Alert',
+              title: "Service Alert",
               badge: 1,
-              sound: 'alert.wav',
+              sound: "alert.wav",
             },
           },
           {
-            type: 'SMS' as const,
+            type: "SMS" as const,
             enabled: true,
             priority: 2,
             retry_attempts: 2,
             retry_delay: 300,
             configuration: {
-              sender_id: 'ISP_ALERT',
+              sender_id: "ISP_ALERT",
             },
           },
         ],
-        priority: 'URGENT' as const,
+        priority: "URGENT" as const,
         active: true,
-        created_by: 'network_ops',
+        created_by: "network_ops",
       };
 
       mockResponse({
         data: {
           ...templateData,
-          id: 'template_124',
+          id: "template_124",
           version: 1,
-          created_at: '2024-01-17T14:00:00Z',
-          updated_at: '2024-01-17T14:00:00Z',
+          created_at: "2024-01-17T14:00:00Z",
+          updated_at: "2024-01-17T14:00:00Z",
         },
       });
 
       const result = await client.createTemplate(templateData);
 
-      expect(result.data.id).toBe('template_124');
-      expect(result.data.category).toBe('SERVICE');
+      expect(result.data.id).toBe("template_124");
+      expect(result.data.category).toBe("SERVICE");
       expect(result.data.variables).toHaveLength(3);
     });
 
-    it('should test template with variables', async () => {
+    it("should test template with variables", async () => {
       const testData = {
-        recipient: 'test@example.com',
-        channel: 'EMAIL' as const,
+        recipient: "test@example.com",
+        channel: "EMAIL" as const,
         variables: {
-          customer_name: 'John Doe',
-          bill_amount: '$89.99',
-          due_date: '2024-02-15',
+          customer_name: "John Doe",
+          bill_amount: "$89.99",
+          due_date: "2024-02-15",
         },
       };
 
       mockResponse({
         data: {
           success: true,
-          preview: 'Dear John Doe, your monthly bill of $89.99 is due on 2024-02-15.',
+          preview: "Dear John Doe, your monthly bill of $89.99 is due on 2024-02-15.",
         },
       });
 
-      const result = await client.testTemplate('template_123', testData);
+      const result = await client.testTemplate("template_123", testData);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/templates/template_123/test',
+        "https://api.test.com/api/notifications/templates/template_123/test",
         expect.objectContaining({
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify(testData),
-        })
+        }),
       );
 
       expect(result.data.success).toBe(true);
-      expect(result.data.preview).toContain('John Doe');
+      expect(result.data.preview).toContain("John Doe");
     });
 
-    it('should preview template with variable substitution', async () => {
+    it("should preview template with variable substitution", async () => {
       const variables = {
-        customer_name: 'Alice Smith',
-        bill_amount: '$125.50',
-        due_date: '2024-02-20',
+        customer_name: "Alice Smith",
+        bill_amount: "$125.50",
+        due_date: "2024-02-20",
       };
 
       mockResponse({
         data: {
-          rendered_content: 'Dear Alice Smith, your monthly bill of $125.50 is due on 2024-02-20.',
-          rendered_subject: 'Your monthly bill is ready - $125.50',
+          rendered_content: "Dear Alice Smith, your monthly bill of $125.50 is due on 2024-02-20.",
+          rendered_subject: "Your monthly bill is ready - $125.50",
         },
       });
 
-      const result = await client.previewTemplate('template_123', variables);
+      const result = await client.previewTemplate("template_123", variables);
 
-      expect(result.data.rendered_content).toContain('Alice Smith');
-      expect(result.data.rendered_subject).toContain('$125.50');
+      expect(result.data.rendered_content).toContain("Alice Smith");
+      expect(result.data.rendered_subject).toContain("$125.50");
     });
   });
 
-  describe('Notification Management', () => {
+  describe("Notification Management", () => {
     const mockNotification: Notification = {
-      id: 'notification_123',
-      template_id: 'template_123',
-      recipient_id: 'customer_456',
-      recipient_type: 'CUSTOMER',
+      id: "notification_123",
+      template_id: "template_123",
+      recipient_id: "customer_456",
+      recipient_type: "CUSTOMER",
       recipient_contact: {
-        email: 'customer@example.com',
-        phone: '+1-555-0123',
+        email: "customer@example.com",
+        phone: "+1-555-0123",
       },
-      channel: 'EMAIL',
-      status: 'DELIVERED',
-      priority: 'HIGH',
-      subject: 'Your monthly bill is ready - $89.99',
-      message: 'Dear John Doe, your monthly bill of $89.99 is due on 2024-02-15.',
+      channel: "EMAIL",
+      status: "DELIVERED",
+      priority: "HIGH",
+      subject: "Your monthly bill is ready - $89.99",
+      message: "Dear John Doe, your monthly bill of $89.99 is due on 2024-02-15.",
       data: {
-        customer_name: 'John Doe',
-        bill_amount: '$89.99',
-        due_date: '2024-02-15',
+        customer_name: "John Doe",
+        bill_amount: "$89.99",
+        due_date: "2024-02-15",
       },
-      sent_at: '2024-01-17T09:00:00Z',
-      delivered_at: '2024-01-17T09:02:30Z',
+      sent_at: "2024-01-17T09:00:00Z",
+      delivered_at: "2024-01-17T09:02:30Z",
       retry_count: 0,
       max_retries: 3,
-      expires_at: '2024-01-24T09:00:00Z',
-      created_at: '2024-01-17T08:58:00Z',
+      expires_at: "2024-01-24T09:00:00Z",
+      created_at: "2024-01-17T08:58:00Z",
     };
 
-    it('should send single notification with template', async () => {
+    it("should send single notification with template", async () => {
       const notificationData = {
-        template_id: 'template_123',
-        recipient_id: 'customer_456',
+        template_id: "template_123",
+        recipient_id: "customer_456",
         recipient_contact: {
-          email: 'customer@example.com',
-          phone: '+1-555-0123',
+          email: "customer@example.com",
+          phone: "+1-555-0123",
         },
-        channel: 'EMAIL' as const,
+        channel: "EMAIL" as const,
         variables: {
-          customer_name: 'John Doe',
-          bill_amount: '$89.99',
-          due_date: '2024-02-15',
+          customer_name: "John Doe",
+          bill_amount: "$89.99",
+          due_date: "2024-02-15",
         },
-        priority: 'HIGH' as const,
+        priority: "HIGH" as const,
       };
 
       mockResponse({
         data: {
           ...mockNotification,
-          id: 'notification_124',
-          status: 'PENDING',
+          id: "notification_124",
+          status: "PENDING",
           sent_at: undefined,
           delivered_at: undefined,
         },
@@ -320,136 +320,136 @@ describe('NotificationsApiClient', () => {
       const result = await client.sendNotification(notificationData);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/send',
+        "https://api.test.com/api/notifications/send",
         expect.objectContaining({
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify(notificationData),
-        })
+        }),
       );
 
-      expect(result.data.id).toBe('notification_124');
-      expect(result.data.status).toBe('PENDING');
+      expect(result.data.id).toBe("notification_124");
+      expect(result.data.status).toBe("PENDING");
     });
 
-    it('should send bulk notifications', async () => {
+    it("should send bulk notifications", async () => {
       const bulkData = {
-        template_id: 'template_123',
+        template_id: "template_123",
         recipients: [
           {
-            recipient_id: 'customer_001',
-            recipient_contact: { email: 'customer1@example.com' },
-            variables: { customer_name: 'Alice', bill_amount: '$99.99' },
+            recipient_id: "customer_001",
+            recipient_contact: { email: "customer1@example.com" },
+            variables: { customer_name: "Alice", bill_amount: "$99.99" },
           },
           {
-            recipient_id: 'customer_002',
-            recipient_contact: { email: 'customer2@example.com' },
-            variables: { customer_name: 'Bob', bill_amount: '$79.99' },
+            recipient_id: "customer_002",
+            recipient_contact: { email: "customer2@example.com" },
+            variables: { customer_name: "Bob", bill_amount: "$79.99" },
           },
         ],
-        channel: 'EMAIL' as const,
-        priority: 'MEDIUM' as const,
+        channel: "EMAIL" as const,
+        priority: "MEDIUM" as const,
       };
 
       mockResponse({
         data: {
           notifications_created: 2,
-          batch_id: 'batch_789',
+          batch_id: "batch_789",
         },
       });
 
       const result = await client.sendBulkNotifications(bulkData);
 
       expect(result.data.notifications_created).toBe(2);
-      expect(result.data.batch_id).toBe('batch_789');
+      expect(result.data.batch_id).toBe("batch_789");
     });
 
-    it('should cancel scheduled notification', async () => {
+    it("should cancel scheduled notification", async () => {
       mockResponse({
         data: {
           ...mockNotification,
-          status: 'CANCELLED',
+          status: "CANCELLED",
         },
       });
 
-      const result = await client.cancelNotification('notification_123');
+      const result = await client.cancelNotification("notification_123");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/notification_123/cancel',
+        "https://api.test.com/api/notifications/notification_123/cancel",
         expect.objectContaining({
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({}),
-        })
+        }),
       );
 
-      expect(result.data.status).toBe('CANCELLED');
+      expect(result.data.status).toBe("CANCELLED");
     });
 
-    it('should retry failed notification', async () => {
+    it("should retry failed notification", async () => {
       mockResponse({
         data: {
           ...mockNotification,
-          status: 'PENDING',
+          status: "PENDING",
           retry_count: 1,
         },
       });
 
-      const result = await client.retryNotification('notification_123');
+      const result = await client.retryNotification("notification_123");
 
       expect(result.data.retry_count).toBe(1);
-      expect(result.data.status).toBe('PENDING');
+      expect(result.data.status).toBe("PENDING");
     });
 
-    it('should mark notification as read', async () => {
+    it("should mark notification as read", async () => {
       mockResponse({
         data: {
           ...mockNotification,
-          read_at: '2024-01-17T10:15:00Z',
+          read_at: "2024-01-17T10:15:00Z",
         },
       });
 
-      const result = await client.markAsRead('notification_123');
+      const result = await client.markAsRead("notification_123");
 
-      expect(result.data.read_at).toBe('2024-01-17T10:15:00Z');
+      expect(result.data.read_at).toBe("2024-01-17T10:15:00Z");
     });
 
-    it('should track notification click', async () => {
+    it("should track notification click", async () => {
       mockResponse({
         data: {
           ...mockNotification,
-          clicked_at: '2024-01-17T10:20:00Z',
+          clicked_at: "2024-01-17T10:20:00Z",
         },
       });
 
-      const result = await client.trackClick('notification_123', 'https://portal.isp.com/billing');
+      const result = await client.trackClick("notification_123", "https://portal.isp.com/billing");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/notification_123/click',
+        "https://api.test.com/api/notifications/notification_123/click",
         expect.objectContaining({
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({
-            link_url: 'https://portal.isp.com/billing',
+            link_url: "https://portal.isp.com/billing",
           }),
-        })
+        }),
       );
 
-      expect(result.data.clicked_at).toBe('2024-01-17T10:20:00Z');
+      expect(result.data.clicked_at).toBe("2024-01-17T10:20:00Z");
     });
   });
 
-  describe('Campaign Management', () => {
+  describe("Campaign Management", () => {
     const mockAudience: AudienceFilter = {
-      customer_segments: ['premium', 'fiber'],
-      territories: ['downtown', 'suburbs'],
-      service_types: ['residential'],
+      customer_segments: ["premium", "fiber"],
+      territories: ["downtown", "suburbs"],
+      service_types: ["residential"],
       exclude_opted_out: true,
       max_recipients: 5000,
     };
 
     const mockScheduling: CampaignScheduling = {
-      schedule_type: 'SCHEDULED',
-      start_date: '2024-01-20T10:00:00Z',
-      end_date: '2024-01-20T18:00:00Z',
-      time_zone: 'America/New_York',
+      schedule_type: "SCHEDULED",
+      start_date: "2024-01-20T10:00:00Z",
+      end_date: "2024-01-20T18:00:00Z",
+      time_zone: "America/New_York",
       send_time_optimization: true,
     };
 
@@ -469,48 +469,48 @@ describe('NotificationsApiClient', () => {
     };
 
     const mockCampaign: NotificationCampaign = {
-      id: 'campaign_123',
-      name: 'Winter Promotion Campaign',
-      description: 'Promote winter service upgrades to premium customers',
-      campaign_type: 'TARGETED',
-      template_id: 'template_promo_456',
+      id: "campaign_123",
+      name: "Winter Promotion Campaign",
+      description: "Promote winter service upgrades to premium customers",
+      campaign_type: "TARGETED",
+      template_id: "template_promo_456",
       target_audience: mockAudience,
-      channels: ['EMAIL', 'PUSH'],
+      channels: ["EMAIL", "PUSH"],
       scheduling: mockScheduling,
-      status: 'COMPLETED',
+      status: "COMPLETED",
       metrics: mockMetrics,
-      created_by: 'marketing_manager',
-      created_at: '2024-01-15T14:00:00Z',
-      started_at: '2024-01-20T10:00:00Z',
-      completed_at: '2024-01-20T18:30:00Z',
+      created_by: "marketing_manager",
+      created_at: "2024-01-15T14:00:00Z",
+      started_at: "2024-01-20T10:00:00Z",
+      completed_at: "2024-01-20T18:30:00Z",
     };
 
-    it('should create targeted campaign', async () => {
+    it("should create targeted campaign", async () => {
       const campaignData = {
-        name: 'Service Upgrade Notification',
-        description: 'Notify customers about available service upgrades',
-        campaign_type: 'BROADCAST' as const,
-        template_id: 'template_upgrade_789',
+        name: "Service Upgrade Notification",
+        description: "Notify customers about available service upgrades",
+        campaign_type: "BROADCAST" as const,
+        template_id: "template_upgrade_789",
         target_audience: {
-          customer_segments: ['standard'],
-          territories: ['north_zone'],
+          customer_segments: ["standard"],
+          territories: ["north_zone"],
           exclude_opted_out: true,
           max_recipients: 10000,
         },
-        channels: ['EMAIL'] as const,
+        channels: ["EMAIL"] as const,
         scheduling: {
-          schedule_type: 'IMMEDIATE' as const,
-          time_zone: 'America/Chicago',
+          schedule_type: "IMMEDIATE" as const,
+          time_zone: "America/Chicago",
           send_time_optimization: false,
         },
-        created_by: 'product_manager',
+        created_by: "product_manager",
       };
 
       mockResponse({
         data: {
           ...campaignData,
-          id: 'campaign_124',
-          status: 'DRAFT',
+          id: "campaign_124",
+          status: "DRAFT",
           metrics: {
             total_recipients: 0,
             sent_count: 0,
@@ -525,88 +525,88 @@ describe('NotificationsApiClient', () => {
             click_rate: 0,
             unsubscribe_rate: 0,
           },
-          created_at: '2024-01-17T15:00:00Z',
+          created_at: "2024-01-17T15:00:00Z",
         },
       });
 
       const result = await client.createCampaign(campaignData);
 
-      expect(result.data.id).toBe('campaign_124');
-      expect(result.data.campaign_type).toBe('BROADCAST');
-      expect(result.data.status).toBe('DRAFT');
+      expect(result.data.id).toBe("campaign_124");
+      expect(result.data.campaign_type).toBe("BROADCAST");
+      expect(result.data.status).toBe("DRAFT");
     });
 
-    it('should start campaign', async () => {
+    it("should start campaign", async () => {
       mockResponse({
         data: {
           ...mockCampaign,
-          status: 'RUNNING',
-          started_at: '2024-01-17T15:30:00Z',
+          status: "RUNNING",
+          started_at: "2024-01-17T15:30:00Z",
         },
       });
 
-      const result = await client.startCampaign('campaign_123');
+      const result = await client.startCampaign("campaign_123");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/campaigns/campaign_123/start',
+        "https://api.test.com/api/notifications/campaigns/campaign_123/start",
         expect.objectContaining({
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({}),
-        })
+        }),
       );
 
-      expect(result.data.status).toBe('RUNNING');
-      expect(result.data.started_at).toBe('2024-01-17T15:30:00Z');
+      expect(result.data.status).toBe("RUNNING");
+      expect(result.data.started_at).toBe("2024-01-17T15:30:00Z");
     });
 
-    it('should pause and resume campaign', async () => {
+    it("should pause and resume campaign", async () => {
       // Test pause
       mockResponse({
         data: {
           ...mockCampaign,
-          status: 'PAUSED',
+          status: "PAUSED",
         },
       });
 
-      const pauseResult = await client.pauseCampaign('campaign_123');
-      expect(pauseResult.data.status).toBe('PAUSED');
+      const pauseResult = await client.pauseCampaign("campaign_123");
+      expect(pauseResult.data.status).toBe("PAUSED");
 
       // Test resume
       mockResponse({
         data: {
           ...mockCampaign,
-          status: 'RUNNING',
+          status: "RUNNING",
         },
       });
 
-      const resumeResult = await client.resumeCampaign('campaign_123');
-      expect(resumeResult.data.status).toBe('RUNNING');
+      const resumeResult = await client.resumeCampaign("campaign_123");
+      expect(resumeResult.data.status).toBe("RUNNING");
     });
 
-    it('should get campaign metrics', async () => {
+    it("should get campaign metrics", async () => {
       mockResponse({ data: mockMetrics });
 
-      const result = await client.getCampaignMetrics('campaign_123');
+      const result = await client.getCampaignMetrics("campaign_123");
 
       expect(result.data.delivery_rate).toBe(99.1);
       expect(result.data.open_rate).toBe(50.0);
       expect(result.data.click_rate).toBe(5.0);
     });
 
-    it('should get campaign recipients with status', async () => {
+    it("should get campaign recipients with status", async () => {
       const recipients = [
         {
-          recipient_id: 'customer_001',
-          recipient_contact: { email: 'customer1@example.com' },
-          status: 'DELIVERED' as const,
-          sent_at: '2024-01-20T10:05:00Z',
-          delivered_at: '2024-01-20T10:07:30Z',
+          recipient_id: "customer_001",
+          recipient_contact: { email: "customer1@example.com" },
+          status: "DELIVERED" as const,
+          sent_at: "2024-01-20T10:05:00Z",
+          delivered_at: "2024-01-20T10:07:30Z",
         },
         {
-          recipient_id: 'customer_002',
-          recipient_contact: { email: 'customer2@example.com' },
-          status: 'FAILED' as const,
-          sent_at: '2024-01-20T10:05:00Z',
+          recipient_id: "customer_002",
+          recipient_contact: { email: "customer2@example.com" },
+          status: "FAILED" as const,
+          sent_at: "2024-01-20T10:05:00Z",
         },
       ];
 
@@ -620,87 +620,87 @@ describe('NotificationsApiClient', () => {
         },
       });
 
-      const result = await client.getCampaignRecipients('campaign_123', {
-        status: 'DELIVERED',
+      const result = await client.getCampaignRecipients("campaign_123", {
+        status: "DELIVERED",
       });
 
       expect(result.data).toHaveLength(2);
-      expect(result.data[0].status).toBe('DELIVERED');
+      expect(result.data[0].status).toBe("DELIVERED");
     });
   });
 
-  describe('Alert Management', () => {
+  describe("Alert Management", () => {
     const mockEscalationRules: EscalationRule[] = [
       {
         level: 1,
         delay_minutes: 15,
-        notify_roles: ['network_ops'],
-        notify_users: ['ops_manager'],
+        notify_roles: ["network_ops"],
+        notify_users: ["ops_manager"],
         triggered: true,
-        triggered_at: '2024-01-17T09:15:00Z',
+        triggered_at: "2024-01-17T09:15:00Z",
       },
       {
         level: 2,
         delay_minutes: 30,
-        notify_roles: ['senior_ops', 'management'],
-        notify_users: ['network_director'],
-        escalation_message: 'Critical alert requires immediate attention',
+        notify_roles: ["senior_ops", "management"],
+        notify_users: ["network_director"],
+        escalation_message: "Critical alert requires immediate attention",
         triggered: false,
       },
     ];
 
     const mockAlert: Alert = {
-      id: 'alert_123',
-      alert_type: 'NETWORK',
-      severity: 'CRITICAL',
-      title: 'Fiber Core Outage Detected',
-      message: 'Multiple fiber connections down in downtown core network',
-      source: 'network_monitoring_system',
-      affected_entities: ['fiber_core_001', 'switch_downtown_main'],
+      id: "alert_123",
+      alert_type: "NETWORK",
+      severity: "CRITICAL",
+      title: "Fiber Core Outage Detected",
+      message: "Multiple fiber connections down in downtown core network",
+      source: "network_monitoring_system",
+      affected_entities: ["fiber_core_001", "switch_downtown_main"],
       actions_required: [
-        'Dispatch field technician',
-        'Notify affected customers',
-        'Activate backup routing',
+        "Dispatch field technician",
+        "Notify affected customers",
+        "Activate backup routing",
       ],
       auto_resolve: false,
       resolved: false,
       acknowledged: true,
-      acknowledged_by: 'network_ops_lead',
-      acknowledged_at: '2024-01-17T09:10:00Z',
+      acknowledged_by: "network_ops_lead",
+      acknowledged_at: "2024-01-17T09:10:00Z",
       escalation_rules: mockEscalationRules,
       metadata: {
         affected_customers: 2500,
-        estimated_repair_time: '2 hours',
+        estimated_repair_time: "2 hours",
         backup_available: true,
       },
-      created_at: '2024-01-17T09:00:00Z',
+      created_at: "2024-01-17T09:00:00Z",
     };
 
-    it('should create critical alert with escalation rules', async () => {
+    it("should create critical alert with escalation rules", async () => {
       const alertData = {
-        alert_type: 'SERVICE' as const,
-        severity: 'ERROR' as const,
-        title: 'Customer Portal Login Issues',
-        message: 'High rate of login failures detected on customer portal',
-        source: 'portal_monitoring',
-        affected_entities: ['customer_portal', 'auth_service'],
+        alert_type: "SERVICE" as const,
+        severity: "ERROR" as const,
+        title: "Customer Portal Login Issues",
+        message: "High rate of login failures detected on customer portal",
+        source: "portal_monitoring",
+        affected_entities: ["customer_portal", "auth_service"],
         actions_required: [
-          'Check authentication service status',
-          'Review recent deployments',
-          'Monitor error logs',
+          "Check authentication service status",
+          "Review recent deployments",
+          "Monitor error logs",
         ],
         auto_resolve: false,
         escalation_rules: [
           {
             level: 1,
             delay_minutes: 10,
-            notify_roles: ['support_team'],
-            notify_users: ['support_manager'],
+            notify_roles: ["support_team"],
+            notify_users: ["support_manager"],
             triggered: false,
           },
         ],
         metadata: {
-          error_rate: '15%',
+          error_rate: "15%",
           affected_users: 150,
         },
       };
@@ -708,68 +708,68 @@ describe('NotificationsApiClient', () => {
       mockResponse({
         data: {
           ...alertData,
-          id: 'alert_124',
+          id: "alert_124",
           resolved: false,
           acknowledged: false,
-          created_at: '2024-01-17T16:00:00Z',
+          created_at: "2024-01-17T16:00:00Z",
         },
       });
 
       const result = await client.createAlert(alertData);
 
-      expect(result.data.id).toBe('alert_124');
-      expect(result.data.severity).toBe('ERROR');
+      expect(result.data.id).toBe("alert_124");
+      expect(result.data.severity).toBe("ERROR");
       expect(result.data.escalation_rules).toHaveLength(1);
     });
 
-    it('should acknowledge alert', async () => {
+    it("should acknowledge alert", async () => {
       mockResponse({
         data: {
           ...mockAlert,
           acknowledged: true,
-          acknowledged_by: 'network_engineer_456',
-          acknowledged_at: '2024-01-17T16:30:00Z',
+          acknowledged_by: "network_engineer_456",
+          acknowledged_at: "2024-01-17T16:30:00Z",
         },
       });
 
       const result = await client.acknowledgeAlert(
-        'alert_123',
-        'Investigating fiber cuts in downtown area'
+        "alert_123",
+        "Investigating fiber cuts in downtown area",
       );
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/alerts/alert_123/acknowledge',
+        "https://api.test.com/api/notifications/alerts/alert_123/acknowledge",
         expect.objectContaining({
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({
-            note: 'Investigating fiber cuts in downtown area',
+            note: "Investigating fiber cuts in downtown area",
           }),
-        })
+        }),
       );
 
       expect(result.data.acknowledged).toBe(true);
-      expect(result.data.acknowledged_by).toBe('network_engineer_456');
+      expect(result.data.acknowledged_by).toBe("network_engineer_456");
     });
 
-    it('should resolve alert with resolution note', async () => {
+    it("should resolve alert with resolution note", async () => {
       mockResponse({
         data: {
           ...mockAlert,
           resolved: true,
-          resolved_at: '2024-01-17T18:45:00Z',
+          resolved_at: "2024-01-17T18:45:00Z",
         },
       });
 
       const result = await client.resolveAlert(
-        'alert_123',
-        'Fiber splice repair completed. Services restored.'
+        "alert_123",
+        "Fiber splice repair completed. Services restored.",
       );
 
       expect(result.data.resolved).toBe(true);
-      expect(result.data.resolved_at).toBe('2024-01-17T18:45:00Z');
+      expect(result.data.resolved_at).toBe("2024-01-17T18:45:00Z");
     });
 
-    it('should escalate alert to next level', async () => {
+    it("should escalate alert to next level", async () => {
       mockResponse({
         data: {
           ...mockAlert,
@@ -778,42 +778,42 @@ describe('NotificationsApiClient', () => {
             {
               ...mockEscalationRules[1],
               triggered: true,
-              triggered_at: '2024-01-17T09:30:00Z',
+              triggered_at: "2024-01-17T09:30:00Z",
             },
           ],
         },
       });
 
-      const result = await client.escalateAlert('alert_123', 2);
+      const result = await client.escalateAlert("alert_123", 2);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/alerts/alert_123/escalate',
+        "https://api.test.com/api/notifications/alerts/alert_123/escalate",
         expect.objectContaining({
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({ level: 2 }),
-        })
+        }),
       );
 
       expect(result.data.escalation_rules[1].triggered).toBe(true);
     });
 
-    it('should snooze alert for specified duration', async () => {
+    it("should snooze alert for specified duration", async () => {
       mockResponse({
         data: {
           ...mockAlert,
           metadata: {
             ...mockAlert.metadata,
-            snoozed_until: '2024-01-17T20:00:00Z',
+            snoozed_until: "2024-01-17T20:00:00Z",
           },
         },
       });
 
-      const result = await client.snoozeAlert('alert_123', '2024-01-17T20:00:00Z');
+      const result = await client.snoozeAlert("alert_123", "2024-01-17T20:00:00Z");
 
-      expect(result.data.metadata.snoozed_until).toBe('2024-01-17T20:00:00Z');
+      expect(result.data.metadata.snoozed_until).toBe("2024-01-17T20:00:00Z");
     });
 
-    it('should get alerts with filtering', async () => {
+    it("should get alerts with filtering", async () => {
       mockResponse({
         data: [mockAlert],
         pagination: {
@@ -825,82 +825,82 @@ describe('NotificationsApiClient', () => {
       });
 
       const result = await client.getAlerts({
-        alert_type: 'NETWORK',
-        severity: 'CRITICAL',
+        alert_type: "NETWORK",
+        severity: "CRITICAL",
         resolved: false,
         acknowledged: true,
       });
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/alerts?alert_type=NETWORK&severity=CRITICAL&resolved=false&acknowledged=true',
-        expect.any(Object)
+        "https://api.test.com/api/notifications/alerts?alert_type=NETWORK&severity=CRITICAL&resolved=false&acknowledged=true",
+        expect.any(Object),
       );
 
-      expect(result.data[0].alert_type).toBe('NETWORK');
+      expect(result.data[0].alert_type).toBe("NETWORK");
       expect(result.data[0].resolved).toBe(false);
     });
   });
 
-  describe('User Notification Preferences', () => {
+  describe("User Notification Preferences", () => {
     const mockPreferences: NotificationPreference[] = [
       {
-        id: 'pref_billing',
-        user_id: 'user_123',
-        category: 'BILLING',
+        id: "pref_billing",
+        user_id: "user_123",
+        category: "BILLING",
         channels: {
-          email: { enabled: true, address: 'user@example.com' },
-          sms: { enabled: true, number: '+1-555-0123' },
+          email: { enabled: true, address: "user@example.com" },
+          sms: { enabled: true, number: "+1-555-0123" },
           push: { enabled: false },
           in_app: { enabled: true },
         },
         quiet_hours: {
           enabled: true,
-          start_time: '22:00',
-          end_time: '07:00',
-          time_zone: 'America/New_York',
+          start_time: "22:00",
+          end_time: "07:00",
+          time_zone: "America/New_York",
         },
         frequency_limits: {
           max_per_hour: 3,
           max_per_day: 10,
         },
-        updated_at: '2024-01-15T12:00:00Z',
+        updated_at: "2024-01-15T12:00:00Z",
       },
       {
-        id: 'pref_service',
-        user_id: 'user_123',
-        category: 'SERVICE',
+        id: "pref_service",
+        user_id: "user_123",
+        category: "SERVICE",
         channels: {
-          email: { enabled: true, address: 'user@example.com' },
+          email: { enabled: true, address: "user@example.com" },
           sms: { enabled: false },
           push: { enabled: true },
           in_app: { enabled: true },
         },
-        updated_at: '2024-01-15T12:00:00Z',
+        updated_at: "2024-01-15T12:00:00Z",
       },
     ];
 
-    it('should get user notification preferences', async () => {
+    it("should get user notification preferences", async () => {
       mockResponse({ data: mockPreferences });
 
-      const result = await client.getUserPreferences('user_123');
+      const result = await client.getUserPreferences("user_123");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/users/user_123/preferences',
-        expect.any(Object)
+        "https://api.test.com/api/notifications/users/user_123/preferences",
+        expect.any(Object),
       );
 
       expect(result.data).toHaveLength(2);
-      expect(result.data[0].category).toBe('BILLING');
+      expect(result.data[0].category).toBe("BILLING");
       expect(result.data[0].quiet_hours?.enabled).toBe(true);
     });
 
-    it('should update user preferences', async () => {
+    it("should update user preferences", async () => {
       const updatedPreferences = [
         {
-          id: 'pref_billing',
-          category: 'BILLING' as const,
+          id: "pref_billing",
+          category: "BILLING" as const,
           channels: {
-            email: { enabled: true, address: 'newemail@example.com' },
+            email: { enabled: true, address: "newemail@example.com" },
             sms: { enabled: false },
             push: { enabled: true },
             in_app: { enabled: true },
@@ -918,71 +918,71 @@ describe('NotificationsApiClient', () => {
             ...mockPreferences[0],
             channels: updatedPreferences[0].channels,
             frequency_limits: updatedPreferences[0].frequency_limits,
-            updated_at: '2024-01-17T16:00:00Z',
+            updated_at: "2024-01-17T16:00:00Z",
           },
         ],
       });
 
-      const result = await client.updateUserPreferences('user_123', updatedPreferences);
+      const result = await client.updateUserPreferences("user_123", updatedPreferences);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/users/user_123/preferences',
+        "https://api.test.com/api/notifications/users/user_123/preferences",
         expect.objectContaining({
-          method: 'PUT',
+          method: "PUT",
           body: JSON.stringify({ preferences: updatedPreferences }),
-        })
+        }),
       );
 
-      expect(result.data[0].channels.email.address).toBe('newemail@example.com');
+      expect(result.data[0].channels.email.address).toBe("newemail@example.com");
       expect(result.data[0].frequency_limits?.max_per_hour).toBe(2);
     });
 
-    it('should opt user out of categories', async () => {
+    it("should opt user out of categories", async () => {
       mockResponse({ data: { success: true } });
 
-      const result = await client.optOut('user_123', ['MARKETING', 'SYSTEM']);
+      const result = await client.optOut("user_123", ["MARKETING", "SYSTEM"]);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/users/user_123/opt-out',
+        "https://api.test.com/api/notifications/users/user_123/opt-out",
         expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify({ categories: ['MARKETING', 'SYSTEM'] }),
-        })
+          method: "POST",
+          body: JSON.stringify({ categories: ["MARKETING", "SYSTEM"] }),
+        }),
       );
 
       expect(result.data.success).toBe(true);
     });
 
-    it('should opt user back in to categories', async () => {
+    it("should opt user back in to categories", async () => {
       mockResponse({ data: { success: true } });
 
-      const result = await client.optIn('user_123', ['MARKETING']);
+      const result = await client.optIn("user_123", ["MARKETING"]);
 
       expect(result.data.success).toBe(true);
     });
   });
 
-  describe('Channel Management and Analytics', () => {
-    it('should get channel status overview', async () => {
+  describe("Channel Management and Analytics", () => {
+    it("should get channel status overview", async () => {
       const channelStatus = [
         {
-          channel: 'EMAIL' as const,
-          status: 'HEALTHY' as const,
-          last_success: '2024-01-17T16:30:00Z',
+          channel: "EMAIL" as const,
+          status: "HEALTHY" as const,
+          last_success: "2024-01-17T16:30:00Z",
           error_rate: 0.5,
           throughput: 1200,
         },
         {
-          channel: 'SMS' as const,
-          status: 'DEGRADED' as const,
-          last_success: '2024-01-17T16:15:00Z',
+          channel: "SMS" as const,
+          status: "DEGRADED" as const,
+          last_success: "2024-01-17T16:15:00Z",
           error_rate: 8.2,
           throughput: 450,
         },
         {
-          channel: 'PUSH' as const,
-          status: 'HEALTHY' as const,
-          last_success: '2024-01-17T16:29:00Z',
+          channel: "PUSH" as const,
+          status: "HEALTHY" as const,
+          last_success: "2024-01-17T16:29:00Z",
           error_rate: 1.1,
           throughput: 800,
         },
@@ -993,15 +993,15 @@ describe('NotificationsApiClient', () => {
       const result = await client.getChannelStatus();
 
       expect(result.data).toHaveLength(3);
-      expect(result.data[1].status).toBe('DEGRADED');
+      expect(result.data[1].status).toBe("DEGRADED");
       expect(result.data[1].error_rate).toBe(8.2);
     });
 
-    it('should test channel configuration', async () => {
+    it("should test channel configuration", async () => {
       const testConfig = {
-        smtp_server: 'smtp.example.com',
+        smtp_server: "smtp.example.com",
         smtp_port: 587,
-        username: 'notifications@isp.com',
+        username: "notifications@isp.com",
         use_tls: true,
       };
 
@@ -1011,23 +1011,23 @@ describe('NotificationsApiClient', () => {
         },
       });
 
-      const result = await client.testChannelConfiguration('EMAIL', testConfig);
+      const result = await client.testChannelConfiguration("EMAIL", testConfig);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/channels/test',
+        "https://api.test.com/api/notifications/channels/test",
         expect.objectContaining({
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({
-            channel: 'EMAIL',
+            channel: "EMAIL",
             configuration: testConfig,
           }),
-        })
+        }),
       );
 
       expect(result.data.success).toBe(true);
     });
 
-    it('should get notification metrics', async () => {
+    it("should get notification metrics", async () => {
       const metricsData = {
         total_sent: 125000,
         delivery_rate: 98.5,
@@ -1036,18 +1036,18 @@ describe('NotificationsApiClient', () => {
         bounce_rate: 1.2,
         unsubscribe_rate: 0.3,
         trends: [
-          { date: '2024-01-15', sent: 4200, delivered: 4150 },
-          { date: '2024-01-16', sent: 4500, delivered: 4425 },
-          { date: '2024-01-17', sent: 4800, delivered: 4730 },
+          { date: "2024-01-15", sent: 4200, delivered: 4150 },
+          { date: "2024-01-16", sent: 4500, delivered: 4425 },
+          { date: "2024-01-17", sent: 4800, delivered: 4730 },
         ],
       };
 
       mockResponse({ data: metricsData });
 
       const result = await client.getNotificationMetrics({
-        start_date: '2024-01-15',
-        end_date: '2024-01-17',
-        channel: 'EMAIL',
+        start_date: "2024-01-15",
+        end_date: "2024-01-17",
+        channel: "EMAIL",
       });
 
       expect(result.data.total_sent).toBe(125000);
@@ -1055,10 +1055,10 @@ describe('NotificationsApiClient', () => {
       expect(result.data.trends).toHaveLength(3);
     });
 
-    it('should get channel performance comparison', async () => {
+    it("should get channel performance comparison", async () => {
       const performanceData = [
         {
-          channel: 'EMAIL' as const,
+          channel: "EMAIL" as const,
           sent_count: 50000,
           delivered_count: 49250,
           failed_count: 750,
@@ -1066,7 +1066,7 @@ describe('NotificationsApiClient', () => {
           average_delivery_time: 45.2,
         },
         {
-          channel: 'SMS' as const,
+          channel: "SMS" as const,
           sent_count: 25000,
           delivered_count: 24100,
           failed_count: 900,
@@ -1078,8 +1078,8 @@ describe('NotificationsApiClient', () => {
       mockResponse({ data: performanceData });
 
       const result = await client.getChannelPerformance({
-        start_date: '2024-01-01',
-        end_date: '2024-01-31',
+        start_date: "2024-01-01",
+        end_date: "2024-01-31",
       });
 
       expect(result.data).toHaveLength(2);
@@ -1087,7 +1087,7 @@ describe('NotificationsApiClient', () => {
       expect(result.data[1].average_delivery_time).toBe(12.8);
     });
 
-    it('should get engagement analytics', async () => {
+    it("should get engagement analytics", async () => {
       const engagementData = {
         engagement_by_time: [
           { hour: 9, open_rate: 65.2 },
@@ -1095,24 +1095,32 @@ describe('NotificationsApiClient', () => {
           { hour: 18, open_rate: 58.9 },
         ],
         engagement_by_channel: [
-          { channel: 'EMAIL', engagement_score: 68.5 },
-          { channel: 'PUSH', engagement_score: 42.3 },
+          { channel: "EMAIL", engagement_score: 68.5 },
+          { channel: "PUSH", engagement_score: 42.3 },
         ],
         top_performing_templates: [
-          { template_id: 'template_123', name: 'Monthly Bill', open_rate: 78.2 },
-          { template_id: 'template_456', name: 'Service Alert', open_rate: 89.1 },
+          {
+            template_id: "template_123",
+            name: "Monthly Bill",
+            open_rate: 78.2,
+          },
+          {
+            template_id: "template_456",
+            name: "Service Alert",
+            open_rate: 89.1,
+          },
         ],
         user_engagement_segments: [
-          { segment: 'high_engagement', users: 2500, avg_open_rate: 85.2 },
-          { segment: 'low_engagement', users: 800, avg_open_rate: 12.5 },
+          { segment: "high_engagement", users: 2500, avg_open_rate: 85.2 },
+          { segment: "low_engagement", users: 800, avg_open_rate: 12.5 },
         ],
       };
 
       mockResponse({ data: engagementData });
 
       const result = await client.getEngagementAnalytics({
-        start_date: '2024-01-01',
-        end_date: '2024-01-31',
+        start_date: "2024-01-01",
+        end_date: "2024-01-31",
       });
 
       expect(result.data.top_performing_templates).toHaveLength(2);
@@ -1120,125 +1128,125 @@ describe('NotificationsApiClient', () => {
     });
   });
 
-  describe('Webhooks and Real-time Events', () => {
-    it('should subscribe to notification events', async () => {
+  describe("Webhooks and Real-time Events", () => {
+    it("should subscribe to notification events", async () => {
       const subscriptionData = {
-        webhook_url: 'https://external-system.com/webhooks/notifications',
+        webhook_url: "https://external-system.com/webhooks/notifications",
         events: [
-          'notification.sent',
-          'notification.delivered',
-          'notification.failed',
-          'alert.created',
+          "notification.sent",
+          "notification.delivered",
+          "notification.failed",
+          "alert.created",
         ],
       };
 
       mockResponse({
         data: {
-          subscription_id: 'webhook_sub_123',
+          subscription_id: "webhook_sub_123",
         },
       });
 
       const result = await client.subscribeToNotificationEvents(
         subscriptionData.webhook_url,
-        subscriptionData.events
+        subscriptionData.events,
       );
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/webhooks/subscribe',
+        "https://api.test.com/api/notifications/webhooks/subscribe",
         expect.objectContaining({
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify(subscriptionData),
-        })
+        }),
       );
 
-      expect(result.data.subscription_id).toBe('webhook_sub_123');
+      expect(result.data.subscription_id).toBe("webhook_sub_123");
     });
 
-    it('should unsubscribe from notification events', async () => {
+    it("should unsubscribe from notification events", async () => {
       mockResponse({
         data: {
           success: true,
         },
       });
 
-      const result = await client.unsubscribeFromNotificationEvents('webhook_sub_123');
+      const result = await client.unsubscribeFromNotificationEvents("webhook_sub_123");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'https://api.test.com/api/notifications/webhooks/subscriptions/webhook_sub_123',
+        "https://api.test.com/api/notifications/webhooks/subscriptions/webhook_sub_123",
         expect.objectContaining({
-          method: 'DELETE',
-        })
+          method: "DELETE",
+        }),
       );
 
       expect(result.data.success).toBe(true);
     });
   });
 
-  describe('Error Handling and Edge Cases', () => {
-    it('should handle template not found errors', async () => {
+  describe("Error Handling and Edge Cases", () => {
+    it("should handle template not found errors", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
-        statusText: 'Not Found',
+        statusText: "Not Found",
         json: async () => ({
           error: {
-            code: 'TEMPLATE_NOT_FOUND',
-            message: 'Notification template not found',
+            code: "TEMPLATE_NOT_FOUND",
+            message: "Notification template not found",
           },
         }),
       } as Response);
 
-      await expect(client.getTemplate('invalid_template')).rejects.toThrow('Not Found');
+      await expect(client.getTemplate("invalid_template")).rejects.toThrow("Not Found");
     });
 
-    it('should handle notification send failures', async () => {
+    it("should handle notification send failures", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 422,
-        statusText: 'Unprocessable Entity',
+        statusText: "Unprocessable Entity",
         json: async () => ({
           error: {
-            code: 'INVALID_RECIPIENT',
-            message: 'Recipient has opted out of this notification category',
+            code: "INVALID_RECIPIENT",
+            message: "Recipient has opted out of this notification category",
           },
         }),
       } as Response);
 
       await expect(
         client.sendNotification({
-          recipient_id: 'opted_out_user',
-          recipient_contact: { email: 'opted@example.com' },
-          channel: 'EMAIL',
-          message: 'Test message',
-        })
-      ).rejects.toThrow('Unprocessable Entity');
+          recipient_id: "opted_out_user",
+          recipient_contact: { email: "opted@example.com" },
+          channel: "EMAIL",
+          message: "Test message",
+        }),
+      ).rejects.toThrow("Unprocessable Entity");
     });
 
-    it('should handle campaign audience size limits', async () => {
+    it("should handle campaign audience size limits", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
-        statusText: 'Bad Request',
+        statusText: "Bad Request",
         json: async () => ({
           error: {
-            code: 'AUDIENCE_TOO_LARGE',
-            message: 'Campaign audience exceeds maximum allowed size',
+            code: "AUDIENCE_TOO_LARGE",
+            message: "Campaign audience exceeds maximum allowed size",
           },
         }),
       } as Response);
 
-      await expect(client.startCampaign('oversized_campaign')).rejects.toThrow('Bad Request');
+      await expect(client.startCampaign("oversized_campaign")).rejects.toThrow("Bad Request");
     });
 
-    it('should handle network connectivity errors', async () => {
-      mockFetch.mockRejectedValue(new Error('Network connection failed'));
+    it("should handle network connectivity errors", async () => {
+      mockFetch.mockRejectedValue(new Error("Network connection failed"));
 
-      await expect(client.getNotifications()).rejects.toThrow('Network connection failed');
+      await expect(client.getNotifications()).rejects.toThrow("Network connection failed");
     });
   });
 
-  describe('Performance and Scalability', () => {
-    it('should handle large notification lists efficiently', async () => {
+  describe("Performance and Scalability", () => {
+    it("should handle large notification lists efficiently", async () => {
       const largeNotificationList = Array.from({ length: 5000 }, (_, i) => ({
         ...mockNotification,
         id: `notification_${i}`,
@@ -1264,7 +1272,7 @@ describe('NotificationsApiClient', () => {
       expect(result.pagination?.total).toBe(5000);
     });
 
-    it('should handle bulk notification sending efficiently', async () => {
+    it("should handle bulk notification sending efficiently", async () => {
       const bulkRecipients = Array.from({ length: 1000 }, (_, i) => ({
         recipient_id: `customer_${i}`,
         recipient_contact: { email: `customer${i}@example.com` },
@@ -1274,15 +1282,15 @@ describe('NotificationsApiClient', () => {
       mockResponse({
         data: {
           notifications_created: 1000,
-          batch_id: 'batch_large_123',
+          batch_id: "batch_large_123",
         },
       });
 
       const startTime = performance.now();
       const result = await client.sendBulkNotifications({
-        template_id: 'template_bulk',
+        template_id: "template_bulk",
         recipients: bulkRecipients,
-        channel: 'EMAIL',
+        channel: "EMAIL",
       });
       const endTime = performance.now();
 
@@ -1290,7 +1298,7 @@ describe('NotificationsApiClient', () => {
       expect(result.data.notifications_created).toBe(1000);
     });
 
-    it('should handle complex campaign metrics efficiently', async () => {
+    it("should handle complex campaign metrics efficiently", async () => {
       const complexMetrics = {
         ...mockMetrics,
         detailed_breakdown: Array.from({ length: 100 }, (_, i) => ({
@@ -1302,7 +1310,7 @@ describe('NotificationsApiClient', () => {
 
       mockResponse({ data: complexMetrics });
 
-      const result = await client.getCampaignMetrics('complex_campaign');
+      const result = await client.getCampaignMetrics("complex_campaign");
 
       expect(result.data.detailed_breakdown).toHaveLength(100);
     });

@@ -116,7 +116,7 @@ export function OSSConfigurationCard({ service }: OSSConfigurationCardProps) {
           setFormData({});
           setValidationErrors([]);
         },
-      }
+      },
     );
   };
 
@@ -206,11 +206,7 @@ export function OSSConfigurationCard({ service }: OSSConfigurationCardProps) {
                   >
                     Cancel
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleSave}
-                    disabled={updateConfig.isPending}
-                  >
+                  <Button size="sm" onClick={handleSave} disabled={updateConfig.isPending}>
                     <Save className="h-4 w-4 mr-2" />
                     {updateConfig.isPending ? "Saving..." : "Save"}
                   </Button>
@@ -251,8 +247,8 @@ export function OSSConfigurationCard({ service }: OSSConfigurationCardProps) {
                     {config.config.api_token
                       ? "API Token"
                       : config.config.username
-                      ? "Username/Password"
-                      : "None"}
+                        ? "Username/Password"
+                        : "None"}
                   </p>
                 </div>
               </div>
@@ -266,17 +262,14 @@ export function OSSConfigurationCard({ service }: OSSConfigurationCardProps) {
                         Tenant Overrides
                       </Label>
                       <p className="text-sm mt-1">
-                        {overriddenFields.length} field{overriddenFields.length !== 1 ? "s" : ""}{" "}
-                        customized: {overriddenFields.join(", ")}
+                        {overriddenFields.length} field
+                        {overriddenFields.length !== 1 ? "s" : ""} customized:{" "}
+                        {overriddenFields.join(", ")}
                       </p>
                     </div>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={resetConfig.isPending}
-                        >
+                        <Button variant="outline" size="sm" disabled={resetConfig.isPending}>
                           <RotateCcw className="h-4 w-4 mr-2" />
                           Reset to Defaults
                         </Button>
@@ -313,9 +306,7 @@ export function OSSConfigurationCard({ service }: OSSConfigurationCardProps) {
                     <div className="flex items-start gap-2">
                       <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
                       <div>
-                        <p className="text-sm font-medium text-destructive">
-                          Validation Errors
-                        </p>
+                        <p className="text-sm font-medium text-destructive">Validation Errors</p>
                         <ul className="text-sm text-muted-foreground list-disc list-inside mt-1">
                           {validationErrors.map((error, index) => (
                             <li key={index}>{error}</li>
@@ -353,7 +344,10 @@ export function OSSConfigurationCard({ service }: OSSConfigurationCardProps) {
                     placeholder="admin"
                     value={formData.username || ""}
                     onChange={(e) =>
-                      setFormData({ ...formData, username: e.target.value || null })
+                      setFormData({
+                        ...formData,
+                        username: e.target.value || null,
+                      })
                     }
                   />
                 </div>
@@ -367,7 +361,10 @@ export function OSSConfigurationCard({ service }: OSSConfigurationCardProps) {
                       placeholder="••••••••"
                       value={formData.password || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, password: e.target.value || null })
+                        setFormData({
+                          ...formData,
+                          password: e.target.value || null,
+                        })
                       }
                     />
                     <Button
@@ -377,11 +374,7 @@ export function OSSConfigurationCard({ service }: OSSConfigurationCardProps) {
                       className="absolute right-0 top-0 h-full px-3"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
                 </div>
@@ -395,7 +388,10 @@ export function OSSConfigurationCard({ service }: OSSConfigurationCardProps) {
                       placeholder="token_..."
                       value={formData.api_token || ""}
                       onChange={(e) =>
-                        setFormData({ ...formData, api_token: e.target.value || null })
+                        setFormData({
+                          ...formData,
+                          api_token: e.target.value || null,
+                        })
                       }
                     />
                     <Button
@@ -405,11 +401,7 @@ export function OSSConfigurationCard({ service }: OSSConfigurationCardProps) {
                       className="absolute right-0 top-0 h-full px-3"
                       onClick={() => setShowApiToken(!showApiToken)}
                     >
-                      {showApiToken ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
+                      {showApiToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
                 </div>
@@ -429,9 +421,7 @@ export function OSSConfigurationCard({ service }: OSSConfigurationCardProps) {
                   <Switch
                     id="verify_ssl"
                     checked={formData.verify_ssl ?? config.config.verify_ssl}
-                    onCheckedChange={(checked) =>
-                      setFormData({ ...formData, verify_ssl: checked })
-                    }
+                    onCheckedChange={(checked) => setFormData({ ...formData, verify_ssl: checked })}
                   />
                 </div>
 
@@ -461,7 +451,10 @@ export function OSSConfigurationCard({ service }: OSSConfigurationCardProps) {
                     step="1"
                     value={formData.max_retries ?? config.config.max_retries}
                     onChange={(e) =>
-                      setFormData({ ...formData, max_retries: parseInt(e.target.value) })
+                      setFormData({
+                        ...formData,
+                        max_retries: parseInt(e.target.value),
+                      })
                     }
                   />
                 </div>

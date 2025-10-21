@@ -3,17 +3,17 @@
  * Actual performance tests for optimized components
  */
 
-import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
 import {
   PerformanceTestSuite,
   ComponentBenchmarks,
   BundleSizeAnalyzer,
   MemoryLeakDetector,
   PERFORMANCE_BUDGETS,
-} from '../utils/performance-tests';
+} from "../utils/performance-tests";
 
 // Mock performance API for Node.js environment
-Object.defineProperty(global, 'performance', {
+Object.defineProperty(global, "performance", {
   value: {
     now: () => Date.now(),
     memory: {
@@ -23,7 +23,7 @@ Object.defineProperty(global, 'performance', {
   writable: true,
 });
 
-describe('Performance Tests', () => {
+describe("Performance Tests", () => {
   beforeEach(() => {
     // Reset any global state before each test
     jest.clearAllMocks();
@@ -33,8 +33,8 @@ describe('Performance Tests', () => {
     // Cleanup after each test
   });
 
-  describe('Component Performance Benchmarks', () => {
-    it('should test chart component performance within budget', async () => {
+  describe("Component Performance Benchmarks", () => {
+    it("should test chart component performance within budget", async () => {
       const mockChartData = Array(100)
         .fill(0)
         .map((_, i) => ({
@@ -47,64 +47,64 @@ describe('Performance Tests', () => {
       const result = await ComponentBenchmarks.testChartPerformance(
         {} as any, // Mock component
         mockChartData,
-        PERFORMANCE_BUDGETS.charts
+        PERFORMANCE_BUDGETS.charts,
       );
 
-      expect(result.testName).toContain('Chart Performance');
+      expect(result.testName).toContain("Chart Performance");
       expect(result.metrics.renderTime).toBeLessThanOrEqual(PERFORMANCE_BUDGETS.charts.renderTime);
       expect(result.metrics.componentCount).toBe(mockChartData.length);
       expect(result.passed).toBe(true);
       expect(result.timestamp).toBeDefined();
     });
 
-    it('should test status indicator performance with multiple instances', async () => {
+    it("should test status indicator performance with multiple instances", async () => {
       const indicatorCount = 25;
 
       const result = await ComponentBenchmarks.testStatusIndicatorPerformance(
         {} as any, // Mock component
         indicatorCount,
-        PERFORMANCE_BUDGETS.statusIndicators
+        PERFORMANCE_BUDGETS.statusIndicators,
       );
 
-      expect(result.testName).toContain('Status Indicator Performance');
+      expect(result.testName).toContain("Status Indicator Performance");
       expect(result.metrics.renderTime).toBeLessThanOrEqual(
-        PERFORMANCE_BUDGETS.statusIndicators.renderTime
+        PERFORMANCE_BUDGETS.statusIndicators.renderTime,
       );
       expect(result.metrics.componentCount).toBe(indicatorCount);
       expect(result.metrics.reRenderCount).toBeLessThanOrEqual(
-        PERFORMANCE_BUDGETS.statusIndicators.reRenderLimit
+        PERFORMANCE_BUDGETS.statusIndicators.reRenderLimit,
       );
       expect(result.passed).toBe(true);
     });
 
-    it('should test virtualized list performance with large datasets', async () => {
+    it("should test virtualized list performance with large datasets", async () => {
       const itemCount = 5000;
 
       const result = await ComponentBenchmarks.testVirtualizedListPerformance(
         {} as any, // Mock component
         itemCount,
-        PERFORMANCE_BUDGETS.virtualizedLists
+        PERFORMANCE_BUDGETS.virtualizedLists,
       );
 
-      expect(result.testName).toContain('Virtualized List Performance');
+      expect(result.testName).toContain("Virtualized List Performance");
       expect(result.metrics.renderTime).toBeLessThanOrEqual(
-        PERFORMANCE_BUDGETS.virtualizedLists.renderTime
+        PERFORMANCE_BUDGETS.virtualizedLists.renderTime,
       );
       expect(result.metrics.componentCount).toBe(itemCount);
       expect(result.metrics.interactionTime).toBeLessThanOrEqual(
-        PERFORMANCE_BUDGETS.virtualizedLists.interactionTime
+        PERFORMANCE_BUDGETS.virtualizedLists.interactionTime,
       );
       expect(result.passed).toBe(true);
     });
 
-    it('should handle performance test failures gracefully', async () => {
+    it("should handle performance test failures gracefully", async () => {
       // Mock a component that exceeds performance budget
       const veryLargeDataset = Array(50000).fill(0);
 
       const result = await ComponentBenchmarks.testChartPerformance(
         {} as any,
         veryLargeDataset,
-        { ...PERFORMANCE_BUDGETS.charts, renderTime: 1 } // Unrealistic budget
+        { ...PERFORMANCE_BUDGETS.charts, renderTime: 1 }, // Unrealistic budget
       );
 
       expect(result.passed).toBe(false);
@@ -112,24 +112,24 @@ describe('Performance Tests', () => {
     });
   });
 
-  describe('Bundle Size Analysis', () => {
-    it('should analyze bundle sizes correctly', async () => {
+  describe("Bundle Size Analysis", () => {
+    it("should analyze bundle sizes correctly", async () => {
       const bundleSizes = await BundleSizeAnalyzer.analyzeBundleSize();
 
-      expect(bundleSizes).toHaveProperty('charts');
-      expect(bundleSizes).toHaveProperty('indicators');
-      expect(bundleSizes).toHaveProperty('virtualized');
-      expect(bundleSizes).toHaveProperty('utils');
-      expect(bundleSizes).toHaveProperty('types');
-      expect(bundleSizes).toHaveProperty('total');
+      expect(bundleSizes).toHaveProperty("charts");
+      expect(bundleSizes).toHaveProperty("indicators");
+      expect(bundleSizes).toHaveProperty("virtualized");
+      expect(bundleSizes).toHaveProperty("utils");
+      expect(bundleSizes).toHaveProperty("types");
+      expect(bundleSizes).toHaveProperty("total");
 
       // Verify sizes are reasonable numbers
-      expect(typeof bundleSizes.charts).toBe('number');
+      expect(typeof bundleSizes.charts).toBe("number");
       expect(bundleSizes.charts).toBeGreaterThan(0);
       expect(bundleSizes.total).toBeGreaterThan(bundleSizes.charts);
     });
 
-    it('should check bundle budgets and identify violations', async () => {
+    it("should check bundle budgets and identify violations", async () => {
       const mockSizes = {
         charts: 150, // Exceeds 100KB budget
         indicators: 30, // Within 50KB budget
@@ -141,12 +141,12 @@ describe('Performance Tests', () => {
 
       expect(result.passed).toBe(false);
       expect(result.violations).toHaveLength(3); // charts, virtualized, total
-      expect(result.violations[0]).toContain('charts');
-      expect(result.violations[1]).toContain('virtualized');
-      expect(result.violations[2]).toContain('total');
+      expect(result.violations[0]).toContain("charts");
+      expect(result.violations[1]).toContain("virtualized");
+      expect(result.violations[2]).toContain("total");
     });
 
-    it('should pass when all bundles are within budget', async () => {
+    it("should pass when all bundles are within budget", async () => {
       const mockSizes = {
         charts: 80, // Within 100KB budget
         indicators: 40, // Within 50KB budget
@@ -161,8 +161,8 @@ describe('Performance Tests', () => {
     });
   });
 
-  describe('Memory Leak Detection', () => {
-    it('should detect no leaks for well-behaved functions', async () => {
+  describe("Memory Leak Detection", () => {
+    it("should detect no leaks for well-behaved functions", async () => {
       const testFunction = async () => {
         // Simulate a clean component lifecycle
         const data = Array(100).fill(0);
@@ -178,7 +178,7 @@ describe('Performance Tests', () => {
       expect(result.iterations).toBe(5);
     });
 
-    it('should handle environments without memory API', async () => {
+    it("should handle environments without memory API", async () => {
       // Temporarily remove memory API
       const originalMemory = (global.performance as any).memory;
       delete (global.performance as any).memory;
@@ -194,45 +194,45 @@ describe('Performance Tests', () => {
     });
   });
 
-  describe('Full Performance Test Suite', () => {
-    it('should run complete performance test suite', async () => {
+  describe("Full Performance Test Suite", () => {
+    it("should run complete performance test suite", async () => {
       const results = await PerformanceTestSuite.runFullSuite();
 
       expect(results.benchmarks).toHaveLength(3); // Chart, indicator, virtualized tests
-      expect(results.bundleAnalysis).toHaveProperty('total');
+      expect(results.bundleAnalysis).toHaveProperty("total");
       expect(results.memoryLeaks).toBeDefined();
-      expect(typeof results.overallPassed).toBe('boolean');
+      expect(typeof results.overallPassed).toBe("boolean");
 
       // Verify all benchmark tests have required properties
       results.benchmarks.forEach((benchmark) => {
-        expect(benchmark).toHaveProperty('testName');
-        expect(benchmark).toHaveProperty('metrics');
-        expect(benchmark).toHaveProperty('passed');
-        expect(benchmark).toHaveProperty('timestamp');
-        expect(benchmark.metrics).toHaveProperty('renderTime');
-        expect(benchmark.metrics).toHaveProperty('memoryUsage');
-        expect(benchmark.metrics).toHaveProperty('componentCount');
-        expect(benchmark.metrics).toHaveProperty('reRenderCount');
+        expect(benchmark).toHaveProperty("testName");
+        expect(benchmark).toHaveProperty("metrics");
+        expect(benchmark).toHaveProperty("passed");
+        expect(benchmark).toHaveProperty("timestamp");
+        expect(benchmark.metrics).toHaveProperty("renderTime");
+        expect(benchmark.metrics).toHaveProperty("memoryUsage");
+        expect(benchmark.metrics).toHaveProperty("componentCount");
+        expect(benchmark.metrics).toHaveProperty("reRenderCount");
       });
     });
 
-    it('should handle test suite failures gracefully', async () => {
+    it("should handle test suite failures gracefully", async () => {
       // Mock a scenario where tests might fail
       const originalConsoleError = console.error;
       console.error = jest.fn();
 
       const results = await PerformanceTestSuite.runFullSuite();
 
-      expect(results).toHaveProperty('benchmarks');
-      expect(results).toHaveProperty('bundleAnalysis');
-      expect(results).toHaveProperty('overallPassed');
+      expect(results).toHaveProperty("benchmarks");
+      expect(results).toHaveProperty("bundleAnalysis");
+      expect(results).toHaveProperty("overallPassed");
 
       console.error = originalConsoleError;
     });
   });
 
-  describe('Performance Budget Validation', () => {
-    it('should have realistic performance budgets', () => {
+  describe("Performance Budget Validation", () => {
+    it("should have realistic performance budgets", () => {
       expect(PERFORMANCE_BUDGETS.charts.renderTime).toBeLessThan(200);
       expect(PERFORMANCE_BUDGETS.statusIndicators.renderTime).toBeLessThan(100);
       expect(PERFORMANCE_BUDGETS.virtualizedLists.interactionTime).toBeLessThanOrEqual(16); // 60fps
@@ -246,15 +246,15 @@ describe('Performance Tests', () => {
       expect(PERFORMANCE_BUDGETS.statusIndicators.bundleSize).toBeLessThan(100);
     });
 
-    it('should validate re-render limits are conservative', () => {
+    it("should validate re-render limits are conservative", () => {
       expect(PERFORMANCE_BUDGETS.charts.reRenderLimit).toBeLessThanOrEqual(5);
       expect(PERFORMANCE_BUDGETS.statusIndicators.reRenderLimit).toBeLessThanOrEqual(3);
       expect(PERFORMANCE_BUDGETS.virtualizedLists.reRenderLimit).toBeLessThanOrEqual(2);
     });
   });
 
-  describe('Performance Regression Detection', () => {
-    it('should detect performance regressions', async () => {
+  describe("Performance Regression Detection", () => {
+    it("should detect performance regressions", async () => {
       const baseline = {
         renderTime: 50,
         memoryUsage: 20,
@@ -270,15 +270,15 @@ describe('Performance Tests', () => {
       };
 
       // Import the comparison function
-      const { PerformanceComparison } = await import('../utils/performance-tests');
+      const { PerformanceComparison } = await import("../utils/performance-tests");
       const improvement = PerformanceComparison.compare(current, baseline);
 
-      expect(improvement.renderTime).toContain('-'); // Negative improvement
-      expect(improvement.memoryUsage).toContain('-'); // Negative improvement
-      expect(improvement.reRenderCount).toContain('-'); // Negative improvement
+      expect(improvement.renderTime).toContain("-"); // Negative improvement
+      expect(improvement.memoryUsage).toContain("-"); // Negative improvement
+      expect(improvement.reRenderCount).toContain("-"); // Negative improvement
     });
 
-    it('should detect performance improvements', async () => {
+    it("should detect performance improvements", async () => {
       const baseline = {
         renderTime: 100,
         memoryUsage: 50,
@@ -293,12 +293,12 @@ describe('Performance Tests', () => {
         reRenderCount: 2, // 60% fewer re-renders
       };
 
-      const { PerformanceComparison } = await import('../utils/performance-tests');
+      const { PerformanceComparison } = await import("../utils/performance-tests");
       const improvement = PerformanceComparison.compare(current, baseline);
 
-      expect(improvement.renderTime).toContain('+'); // Positive improvement
-      expect(improvement.memoryUsage).toContain('+'); // Positive improvement
-      expect(improvement.reRenderCount).toContain('+'); // Positive improvement
+      expect(improvement.renderTime).toContain("+"); // Positive improvement
+      expect(improvement.memoryUsage).toContain("+"); // Positive improvement
+      expect(improvement.reRenderCount).toContain("+"); // Positive improvement
     });
   });
 });

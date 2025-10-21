@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
-import { apiClient } from '@/lib/api/client';
-import { logger } from '@/lib/logger';
+import { useState, useCallback, useEffect } from "react";
+import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // Types
@@ -8,12 +8,20 @@ import { logger } from '@/lib/logger';
 
 export interface PaymentMethod {
   payment_method_id: string;
-  method_type: 'card' | 'bank_account' | 'wallet' | 'wire_transfer' | 'check';
-  status: 'active' | 'pending_verification' | 'verification_failed' | 'expired' | 'inactive';
+  method_type: "card" | "bank_account" | "wallet" | "wire_transfer" | "check";
+  status: "active" | "pending_verification" | "verification_failed" | "expired" | "inactive";
   is_default: boolean;
 
   // Card details
-  card_brand?: 'visa' | 'mastercard' | 'amex' | 'discover' | 'diners' | 'jcb' | 'unionpay' | 'unknown';
+  card_brand?:
+    | "visa"
+    | "mastercard"
+    | "amex"
+    | "discover"
+    | "diners"
+    | "jcb"
+    | "unionpay"
+    | "unknown";
   card_last4?: string;
   card_exp_month?: number;
   card_exp_year?: number;
@@ -49,7 +57,7 @@ export interface PaymentMethod {
 }
 
 export interface AddPaymentMethodRequest {
-  method_type: 'card' | 'bank_account' | 'wallet';
+  method_type: "card" | "bank_account" | "wallet";
 
   // Tokens from Stripe.js
   card_token?: string;
@@ -110,14 +118,14 @@ export const useTenantPaymentMethods = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await apiClient.get('/billing/tenant/payment-methods');
+      const response = await apiClient.get("/billing/tenant/payment-methods");
       setPaymentMethods(response.data);
-      logger.info('Fetched payment methods', { count: response.data.length });
+      logger.info("Fetched payment methods", { count: response.data.length });
       return response.data;
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || 'Failed to fetch payment methods';
+      const errorMsg = err.response?.data?.detail || "Failed to fetch payment methods";
       setError(errorMsg);
-      logger.error('Error fetching payment methods', { error: errorMsg });
+      logger.error("Error fetching payment methods", { error: errorMsg });
       throw err;
     } finally {
       setLoading(false);
@@ -133,21 +141,23 @@ export const useTenantPaymentMethods = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await apiClient.post('/billing/tenant/payment-methods', request);
+        const response = await apiClient.post("/billing/tenant/payment-methods", request);
         // Refresh payment methods
         await fetchPaymentMethods();
-        logger.info('Added payment method', { method_type: request.method_type });
+        logger.info("Added payment method", {
+          method_type: request.method_type,
+        });
         return response.data;
       } catch (err: any) {
-        const errorMsg = err.response?.data?.detail || 'Failed to add payment method';
+        const errorMsg = err.response?.data?.detail || "Failed to add payment method";
         setError(errorMsg);
-        logger.error('Error adding payment method', { error: errorMsg });
+        logger.error("Error adding payment method", { error: errorMsg });
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [fetchPaymentMethods]
+    [fetchPaymentMethods],
   );
 
   // ============================================================================
@@ -161,22 +171,27 @@ export const useTenantPaymentMethods = () => {
       try {
         const response = await apiClient.patch(
           `/billing/tenant/payment-methods/${paymentMethodId}`,
-          request
+          request,
         );
         // Refresh payment methods
         await fetchPaymentMethods();
-        logger.info('Updated payment method', { payment_method_id: paymentMethodId });
+        logger.info("Updated payment method", {
+          payment_method_id: paymentMethodId,
+        });
         return response.data;
       } catch (err: any) {
-        const errorMsg = err.response?.data?.detail || 'Failed to update payment method';
+        const errorMsg = err.response?.data?.detail || "Failed to update payment method";
         setError(errorMsg);
-        logger.error('Error updating payment method', { payment_method_id: paymentMethodId, error: errorMsg });
+        logger.error("Error updating payment method", {
+          payment_method_id: paymentMethodId,
+          error: errorMsg,
+        });
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [fetchPaymentMethods]
+    [fetchPaymentMethods],
   );
 
   // ============================================================================
@@ -189,22 +204,27 @@ export const useTenantPaymentMethods = () => {
       setError(null);
       try {
         const response = await apiClient.post(
-          `/billing/tenant/payment-methods/${paymentMethodId}/set-default`
+          `/billing/tenant/payment-methods/${paymentMethodId}/set-default`,
         );
         // Refresh payment methods
         await fetchPaymentMethods();
-        logger.info('Set default payment method', { payment_method_id: paymentMethodId });
+        logger.info("Set default payment method", {
+          payment_method_id: paymentMethodId,
+        });
         return response.data;
       } catch (err: any) {
-        const errorMsg = err.response?.data?.detail || 'Failed to set default payment method';
+        const errorMsg = err.response?.data?.detail || "Failed to set default payment method";
         setError(errorMsg);
-        logger.error('Error setting default payment method', { payment_method_id: paymentMethodId, error: errorMsg });
+        logger.error("Error setting default payment method", {
+          payment_method_id: paymentMethodId,
+          error: errorMsg,
+        });
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [fetchPaymentMethods]
+    [fetchPaymentMethods],
   );
 
   // ============================================================================
@@ -219,17 +239,22 @@ export const useTenantPaymentMethods = () => {
         await apiClient.delete(`/billing/tenant/payment-methods/${paymentMethodId}`);
         // Refresh payment methods
         await fetchPaymentMethods();
-        logger.info('Removed payment method', { payment_method_id: paymentMethodId });
+        logger.info("Removed payment method", {
+          payment_method_id: paymentMethodId,
+        });
       } catch (err: any) {
-        const errorMsg = err.response?.data?.detail || 'Failed to remove payment method';
+        const errorMsg = err.response?.data?.detail || "Failed to remove payment method";
         setError(errorMsg);
-        logger.error('Error removing payment method', { payment_method_id: paymentMethodId, error: errorMsg });
+        logger.error("Error removing payment method", {
+          payment_method_id: paymentMethodId,
+          error: errorMsg,
+        });
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [fetchPaymentMethods]
+    [fetchPaymentMethods],
   );
 
   // ============================================================================
@@ -243,22 +268,27 @@ export const useTenantPaymentMethods = () => {
       try {
         const response = await apiClient.post(
           `/billing/tenant/payment-methods/${paymentMethodId}/verify`,
-          request
+          request,
         );
         // Refresh payment methods
         await fetchPaymentMethods();
-        logger.info('Verified payment method', { payment_method_id: paymentMethodId });
+        logger.info("Verified payment method", {
+          payment_method_id: paymentMethodId,
+        });
         return response.data;
       } catch (err: any) {
-        const errorMsg = err.response?.data?.detail || 'Failed to verify payment method';
+        const errorMsg = err.response?.data?.detail || "Failed to verify payment method";
         setError(errorMsg);
-        logger.error('Error verifying payment method', { payment_method_id: paymentMethodId, error: errorMsg });
+        logger.error("Error verifying payment method", {
+          payment_method_id: paymentMethodId,
+          error: errorMsg,
+        });
         throw err;
       } finally {
         setLoading(false);
       }
     },
-    [fetchPaymentMethods]
+    [fetchPaymentMethods],
   );
 
   // ============================================================================

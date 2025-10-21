@@ -8,6 +8,7 @@ batched loading via DataLoaders to prevent N+1 query problems.
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
+from typing import Any
 
 import strawberry
 
@@ -77,7 +78,7 @@ class CustomerActivity:
     created_at: datetime
 
     @classmethod
-    def from_model(cls, activity: any) -> "CustomerActivity":
+    def from_model(cls, activity: Any) -> "CustomerActivity":
         """Convert SQLAlchemy model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(activity.id)),
@@ -106,7 +107,7 @@ class CustomerNote:
     updated_at: datetime
 
     @classmethod
-    def from_model(cls, note: any) -> "CustomerNote":
+    def from_model(cls, note: Any) -> "CustomerNote":
         """Convert SQLAlchemy model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(note.id)),
@@ -196,7 +197,7 @@ class Customer:
     notes: list[CustomerNote] = strawberry.field(default_factory=list)
 
     @classmethod
-    def from_model(cls, customer: any) -> "Customer":
+    def from_model(cls, customer: Any) -> "Customer":
         """Convert SQLAlchemy Customer model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(customer.id)),

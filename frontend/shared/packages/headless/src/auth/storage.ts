@@ -13,34 +13,34 @@ export interface StorageBackend {
 export interface SecureStorageOptions {
   prefix?: string;
   encrypt?: boolean;
-  backend?: 'localStorage' | 'sessionStorage' | 'cookies' | 'memory';
+  backend?: "localStorage" | "sessionStorage" | "cookies" | "memory";
   cookieOptions?: {
     secure?: boolean;
-    sameSite?: 'strict' | 'lax' | 'none';
+    sameSite?: "strict" | "lax" | "none";
     maxAge?: number;
   };
 }
 
 class CookieStorage implements StorageBackend {
-  private options: SecureStorageOptions['cookieOptions'];
+  private options: SecureStorageOptions["cookieOptions"];
 
-  constructor(options: SecureStorageOptions['cookieOptions'] = {}) {
+  constructor(options: SecureStorageOptions["cookieOptions"] = {}) {
     this.options = {
       secure: true,
-      sameSite: 'strict',
+      sameSite: "strict",
       maxAge: 7 * 24 * 60 * 60, // 7 days
       ...options,
     };
   }
 
   getItem(key: string): string | null {
-    if (typeof document === 'undefined') return null;
+    if (typeof document === "undefined") return null;
 
     try {
       const value = document.cookie
-        .split('; ')
+        .split("; ")
         .find((row) => row.startsWith(`${key}=`))
-        ?.split('=')[1];
+        ?.split("=")[1];
 
       return value ? decodeURIComponent(value) : null;
     } catch {
@@ -49,34 +49,34 @@ class CookieStorage implements StorageBackend {
   }
 
   setItem(key: string, value: string): void {
-    if (typeof document === 'undefined') return;
+    if (typeof document === "undefined") return;
 
     try {
       const cookieString = [
         `${key}=${encodeURIComponent(value)}`,
-        'path=/',
+        "path=/",
         `max-age=${this.options.maxAge}`,
         `samesite=${this.options.sameSite}`,
-        this.options.secure ? 'secure' : '',
+        this.options.secure ? "secure" : "",
       ]
         .filter(Boolean)
-        .join('; ');
+        .join("; ");
 
       document.cookie = cookieString;
     } catch (error) {
-      console.warn('Failed to set cookie:', error);
+      console.warn("Failed to set cookie:", error);
     }
   }
 
   removeItem(key: string): void {
-    if (typeof document === 'undefined') return;
+    if (typeof document === "undefined") return;
     document.cookie = `${key}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
   }
 
   clear(): void {
-    if (typeof document === 'undefined') return;
-    document.cookie.split(';').forEach((c) => {
-      const eqPos = c.indexOf('=');
+    if (typeof document === "undefined") return;
+    document.cookie.split(";").forEach((c) => {
+      const eqPos = c.indexOf("=");
       const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim();
       document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
     });
@@ -109,27 +109,27 @@ export class SecureStorage {
   private encrypt: boolean;
 
   constructor(options: SecureStorageOptions = {}) {
-    this.prefix = options.prefix || 'dotmac_';
+    this.prefix = options.prefix || "dotmac_";
     this.encrypt = options.encrypt || false;
 
     // Select storage backend
     switch (options.backend) {
-      case 'cookies':
+      case "cookies":
         this.backend = new CookieStorage(options.cookieOptions);
         break;
-      case 'sessionStorage':
+      case "sessionStorage":
         this.backend =
-          typeof window !== 'undefined' && window.sessionStorage
+          typeof window !== "undefined" && window.sessionStorage
             ? window.sessionStorage
             : new MemoryStorage();
         break;
-      case 'memory':
+      case "memory":
         this.backend = new MemoryStorage();
         break;
-      case 'localStorage':
+      case "localStorage":
       default:
         this.backend =
-          typeof window !== 'undefined' && window.localStorage
+          typeof window !== "undefined" && window.localStorage
             ? window.localStorage
             : new MemoryStorage();
         break;
@@ -144,8 +144,8 @@ export class SecureStorage {
     if (!this.encrypt) return value;
 
     // Simple XOR encryption for demo - use proper encryption in production
-    const key = 'dotmac-auth-key';
-    let encrypted = '';
+    const key = "dotmac-auth-key";
+    let encrypted = "";
     for (let i = 0; i < value.length; i++) {
       encrypted += String.fromCharCode(value.charCodeAt(i) ^ key.charCodeAt(i % key.length));
     }
@@ -157,8 +157,8 @@ export class SecureStorage {
 
     try {
       const decoded = atob(value);
-      const key = 'dotmac-auth-key';
-      let decrypted = '';
+      const key = "dotmac-auth-key";
+      let decrypted = "";
       for (let i = 0; i < decoded.length; i++) {
         decrypted += String.fromCharCode(decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length));
       }
@@ -216,13 +216,13 @@ export class SecureStorage {
       // Only clear items with our prefix
       if (this.backend instanceof MemoryStorage) {
         this.backend.clear();
-      } else if (typeof window !== 'undefined') {
+      } else if (typeof window !== "undefined") {
         const storage = this.backend === window.localStorage ? localStorage : sessionStorage;
         const keys = Object.keys(storage).filter((key) => key.startsWith(this.prefix));
         keys.forEach((key) => storage.removeItem(key));
       }
     } catch (error) {
-      console.warn('Failed to clear storage:', error);
+      console.warn("Failed to clear storage:", error);
     }
   }
 
@@ -230,10 +230,10 @@ export class SecureStorage {
   isAvailable(): boolean {
     try {
       const testKey = `${this.prefix}test`;
-      this.backend.setItem(testKey, 'test');
+      this.backend.setItem(testKey, "test");
       const value = this.backend.getItem(testKey);
       this.backend.removeItem(testKey);
-      return value === 'test';
+      return value === "test";
     } catch {
       return false;
     }
@@ -241,7 +241,13 @@ export class SecureStorage {
 }
 
 // Export default instances
-export const secureStorage = new SecureStorage({ backend: 'localStorage', encrypt: true });
-export const sessionStorage = new SecureStorage({ backend: 'sessionStorage' });
-export const cookieStorage = new SecureStorage({ backend: 'cookies', encrypt: false });
-export const memoryStorage = new SecureStorage({ backend: 'memory' });
+export const secureStorage = new SecureStorage({
+  backend: "localStorage",
+  encrypt: true,
+});
+export const sessionStorage = new SecureStorage({ backend: "sessionStorage" });
+export const cookieStorage = new SecureStorage({
+  backend: "cookies",
+  encrypt: false,
+});
+export const memoryStorage = new SecureStorage({ backend: "memory" });

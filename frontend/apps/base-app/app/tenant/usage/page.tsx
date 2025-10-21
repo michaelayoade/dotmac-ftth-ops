@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useEffect, useState } from "react";
@@ -26,8 +26,7 @@ export default function TenantUsagePage() {
       .finally(() => setLoading(false));
   }, [currentTenant?.id]);
 
-  const usageMeter = (value: number, max: number) =>
-    Math.min(100, Math.round((value / max) * 100));
+  const usageMeter = (value: number, max: number) => Math.min(100, Math.round((value / max) * 100));
 
   return (
     <div className="space-y-6">
@@ -74,7 +73,8 @@ export default function TenantUsagePage() {
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>You’re approaching API limits</AlertTitle>
           <AlertDescription>
-            Requests will be throttled after 100,000 calls in a 30-day window. Consider upgrading your plan or contacting support.
+            Requests will be throttled after 100,000 calls in a 30-day window. Consider upgrading
+            your plan or contacting support.
           </AlertDescription>
         </Alert>
       )}

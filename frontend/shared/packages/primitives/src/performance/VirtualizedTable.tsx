@@ -21,8 +21,8 @@ import React, {
   useState,
   forwardRef,
   useImperativeHandle,
-} from 'react';
-import { FixedSizeList as List, VariableSizeList } from 'react-window';
+} from "react";
+import { FixedSizeList as List, VariableSizeList } from "react-window";
 
 export interface VirtualizedTableColumn<T = any> {
   key: keyof T;
@@ -32,11 +32,11 @@ export interface VirtualizedTableColumn<T = any> {
   maxWidth?: number;
   sortable?: boolean;
   filterable?: boolean;
-  sticky?: 'left' | 'right';
+  sticky?: "left" | "right";
   render?: (value: any, item: T, index: number) => React.ReactNode;
   headerRender?: () => React.ReactNode;
   className?: string;
-  align?: 'left' | 'center' | 'right';
+  align?: "left" | "center" | "right";
 }
 
 export interface VirtualizedTableProps<T = any> {
@@ -47,10 +47,10 @@ export interface VirtualizedTableProps<T = any> {
   className?: string;
   onRowClick?: (item: T, index: number) => void;
   onRowDoubleClick?: (item: T, index: number) => void;
-  onSort?: (column: keyof T, direction: 'asc' | 'desc') => void;
+  onSort?: (column: keyof T, direction: "asc" | "desc") => void;
   onFilter?: (column: keyof T, value: string) => void;
   sortBy?: keyof T;
-  sortDirection?: 'asc' | 'desc';
+  sortDirection?: "asc" | "desc";
   loading?: boolean;
   loadingComponent?: React.ComponentType;
   emptyComponent?: React.ComponentType;
@@ -80,7 +80,7 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
       columns,
       height,
       rowHeight = DEFAULT_ROW_HEIGHT,
-      className = '',
+      className = "",
       onRowClick,
       onRowDoubleClick,
       onSort,
@@ -98,7 +98,7 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
       overscanCount = DEFAULT_OVERSCAN_COUNT,
       estimatedItemSize,
     }: VirtualizedTableProps<T>,
-    ref
+    ref,
   ) => {
     const listRef = useRef<List | VariableSizeList>(null);
     const [visibleRange, setVisibleRange] = useState<[number, number]>([0, 0]);
@@ -127,10 +127,10 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
       (column: VirtualizedTableColumn<T>) => {
         if (!column.sortable || !onSort) return;
 
-        const newDirection = sortBy === column.key && sortDirection === 'asc' ? 'desc' : 'asc';
+        const newDirection = sortBy === column.key && sortDirection === "asc" ? "desc" : "asc";
         onSort(column.key, newDirection);
       },
-      [sortBy, sortDirection, onSort]
+      [sortBy, sortDirection, onSort],
     );
 
     // Handle row selection
@@ -146,7 +146,7 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
         }
         onSelectionChange(newSelection);
       },
-      [selectedRows, onSelectionChange]
+      [selectedRows, onSelectionChange],
     );
 
     // Handle select all
@@ -159,85 +159,85 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
           : new Set<string | number>();
         onSelectionChange(newSelection);
       },
-      [data, getItemId, onSelectionChange]
+      [data, getItemId, onSelectionChange],
     );
 
     // Header component
     const TableHeader = useMemo(
       () => (
         <div
-          className={`virtualized-table-header ${stickyHeader ? 'sticky top-0 z-10' : ''}`}
+          className={`virtualized-table-header ${stickyHeader ? "sticky top-0 z-10" : ""}`}
           style={{ width: totalWidth }}
-          role='row'
+          role="row"
         >
           {onSelectionChange && (
-            <div className='virtualized-table-cell select-cell'>
+            <div className="virtualized-table-cell select-cell">
               <input
-                type='checkbox'
+                type="checkbox"
                 checked={selectedRows.size === data.length && data.length > 0}
                 onChange={(e) => handleSelectAll(e.target.checked)}
-                aria-label='Select all rows'
+                aria-label="Select all rows"
               />
             </div>
           )}
           {columns.map((column) => (
             <div
               key={String(column.key)}
-              className={`virtualized-table-cell header-cell ${column.className || ''} ${
-                column.sticky ? `sticky-${column.sticky}` : ''
+              className={`virtualized-table-cell header-cell ${column.className || ""} ${
+                column.sticky ? `sticky-${column.sticky}` : ""
               }`}
               style={{
                 width: column.width,
-                textAlign: column.align || 'left',
+                textAlign: column.align || "left",
                 minWidth: column.minWidth,
                 maxWidth: column.maxWidth,
               }}
-              role='columnheader'
+              role="columnheader"
               aria-sort={
                 sortBy === column.key
-                  ? sortDirection === 'asc'
-                    ? 'ascending'
-                    : 'descending'
+                  ? sortDirection === "asc"
+                    ? "ascending"
+                    : "descending"
                   : column.sortable
-                    ? 'none'
+                    ? "none"
                     : undefined
               }
             >
               <div
-                className={`header-content ${column.sortable ? 'sortable' : ''}`}
+                className={`header-content ${column.sortable ? "sortable" : ""}`}
                 onClick={() => handleSort(column)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
+                  if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
                     handleSort(column);
                   }
                 }}
                 tabIndex={column.sortable ? 0 : -1}
-                role={column.sortable ? 'button' : undefined}
+                role={column.sortable ? "button" : undefined}
                 aria-label={
                   column.sortable
                     ? `Sort by ${column.title} ${
                         sortBy === column.key
-                          ? sortDirection === 'asc'
-                            ? 'descending'
-                            : 'ascending'
-                          : 'ascending'
+                          ? sortDirection === "asc"
+                            ? "descending"
+                            : "ascending"
+                          : "ascending"
                       }`
                     : undefined
                 }
               >
                 {column.headerRender ? column.headerRender() : column.title}
                 {column.sortable && (
-                  <span className='sort-indicator'>
-                    {sortBy === column.key ? (sortDirection === 'asc' ? '↑' : '↓') : '↕'}
+                  <span className="sort-indicator">
+                    {sortBy === column.key ? (sortDirection === "asc" ? "↑" : "↓") : "↕"}
                   </span>
                 )}
               </div>
               {column.filterable && onFilter && (
                 <input
-                  type='text'
+                  type="text"
                   placeholder={`Filter ${column.title}`}
-                  className='filter-input'
+                  className="filter-input"
                   onChange={(e) => onFilter(column.key, e.target.value)}
                   onClick={(e) => e.stopPropagation()}
                   aria-label={`Filter by ${column.title}`}
@@ -259,7 +259,7 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
         sortBy,
         sortDirection,
         onFilter,
-      ]
+      ],
     );
 
     // Row renderer
@@ -270,29 +270,29 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
         const isSelected = selectedRows.has(itemId);
 
         const computedRowClassName =
-          typeof rowClassName === 'function' ? rowClassName(item, index) : rowClassName || '';
+          typeof rowClassName === "function" ? rowClassName(item, index) : rowClassName || "";
 
         return (
           <div
             style={style}
-            className={`virtualized-table-row ${computedRowClassName} ${isSelected ? 'selected' : ''}`}
+            className={`virtualized-table-row ${computedRowClassName} ${isSelected ? "selected" : ""}`}
             onClick={() => onRowClick?.(item, index)}
             onDoubleClick={() => onRowDoubleClick?.(item, index)}
-            role='row'
+            role="row"
             aria-rowindex={index + 1}
             aria-selected={onSelectionChange ? isSelected : undefined}
             tabIndex={0}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
+              if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
                 onRowClick?.(item, index);
               }
             }}
           >
             {onSelectionChange && (
-              <div className='virtualized-table-cell select-cell' role='cell'>
+              <div className="virtualized-table-cell select-cell" role="cell">
                 <input
-                  type='checkbox'
+                  type="checkbox"
                   checked={isSelected}
                   onChange={(e) => handleRowSelect(itemId, e.target.checked)}
                   aria-label={`Select row ${index + 1}`}
@@ -304,21 +304,21 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
               const value = item[column.key];
               const cellContent = column.render
                 ? column.render(value, item, index)
-                : String(value || '');
+                : String(value || "");
 
               return (
                 <div
                   key={String(column.key)}
-                  className={`virtualized-table-cell ${column.className || ''} ${
-                    column.sticky ? `sticky-${column.sticky}` : ''
+                  className={`virtualized-table-cell ${column.className || ""} ${
+                    column.sticky ? `sticky-${column.sticky}` : ""
                   }`}
                   style={{
                     width: column.width,
-                    textAlign: column.align || 'left',
+                    textAlign: column.align || "left",
                     minWidth: column.minWidth,
                     maxWidth: column.maxWidth,
                   }}
-                  role='cell'
+                  role="cell"
                 >
                   {cellContent}
                 </div>
@@ -337,7 +337,7 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
         onRowDoubleClick,
         onSelectionChange,
         handleRowSelect,
-      ]
+      ],
     );
 
     // Handle visible items change for performance monitoring
@@ -351,7 +351,7 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
       }) => {
         setVisibleRange([visibleStartIndex, visibleStopIndex]);
       },
-      []
+      [],
     );
 
     // Loading state
@@ -359,7 +359,7 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
       return (
         <div className={`virtualized-table-container ${className}`} style={{ height }}>
           {TableHeader}
-          <div className='loading-container' style={{ height: height - (stickyHeader ? 48 : 0) }}>
+          <div className="loading-container" style={{ height: height - (stickyHeader ? 48 : 0) }}>
             <LoadingComponent />
           </div>
         </div>
@@ -371,7 +371,7 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
       return (
         <div className={`virtualized-table-container ${className}`} style={{ height }}>
           {TableHeader}
-          <div className='empty-container' style={{ height: height - (stickyHeader ? 48 : 0) }}>
+          <div className="empty-container" style={{ height: height - (stickyHeader ? 48 : 0) }}>
             <EmptyComponent />
           </div>
         </div>
@@ -379,15 +379,15 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
     }
 
     // Determine which list component to use
-    const ListComponent = typeof rowHeight === 'function' ? VariableSizeList : List;
+    const ListComponent = typeof rowHeight === "function" ? VariableSizeList : List;
     const listHeight = height - (stickyHeader ? 48 : 0);
 
     return (
       <div
         className={`virtualized-table-container ${className}`}
         style={{ height }}
-        role='table'
-        aria-label='Data table'
+        role="table"
+        aria-label="Data table"
         aria-rowcount={data.length}
       >
         {TableHeader}
@@ -395,33 +395,33 @@ export const VirtualizedTable = forwardRef<VirtualizedTableRef, VirtualizedTable
           ref={listRef}
           height={listHeight}
           itemCount={data.length}
-          itemSize={typeof rowHeight === 'function' ? rowHeight : rowHeight}
+          itemSize={typeof rowHeight === "function" ? rowHeight : rowHeight}
           estimatedItemSize={estimatedItemSize}
           overscanCount={overscanCount}
           onItemsRendered={handleItemsRendered}
-          role='rowgroup'
+          role="rowgroup"
         >
           {Row}
         </ListComponent>
       </div>
     );
-  }
+  },
 );
 
-VirtualizedTable.displayName = 'VirtualizedTable';
+VirtualizedTable.displayName = "VirtualizedTable";
 
 // Default components
 export const DefaultLoadingComponent = () => (
-  <div className='flex items-center justify-center h-full'>
-    <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500'></div>
-    <span className='ml-2'>Loading...</span>
+  <div className="flex items-center justify-center h-full">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+    <span className="ml-2">Loading...</span>
   </div>
 );
 
 export const DefaultEmptyComponent = () => (
-  <div className='flex items-center justify-center h-full text-gray-500'>
-    <div className='text-center'>
-      <div className='text-4xl mb-2'>📄</div>
+  <div className="flex items-center justify-center h-full text-gray-500">
+    <div className="text-center">
+      <div className="text-4xl mb-2">📄</div>
       <div>No data available</div>
     </div>
   </div>
@@ -432,18 +432,18 @@ export function useVirtualizedTable<T>(
   data: T[],
   options: {
     defaultSortBy?: keyof T;
-    defaultSortDirection?: 'asc' | 'desc';
+    defaultSortDirection?: "asc" | "desc";
     onDataChange?: (data: T[]) => void;
-  } = {}
+  } = {},
 ) {
   const [sortBy, setSortBy] = useState<keyof T | undefined>(options.defaultSortBy);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(
-    options.defaultSortDirection || 'asc'
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
+    options.defaultSortDirection || "asc",
   );
   const [selectedRows, setSelectedRows] = useState<Set<string | number>>(new Set());
 
   const handleSort = useCallback(
-    (column: keyof T, direction: 'asc' | 'desc') => {
+    (column: keyof T, direction: "asc" | "desc") => {
       setSortBy(column);
       setSortDirection(direction);
 
@@ -455,13 +455,13 @@ export function useVirtualizedTable<T>(
           if (aVal === bVal) return 0;
 
           const comparison = aVal > bVal ? 1 : -1;
-          return direction === 'asc' ? comparison : -comparison;
+          return direction === "asc" ? comparison : -comparison;
         });
 
         options.onDataChange(sorted);
       }
     },
-    [data, options]
+    [data, options],
   );
 
   const clearSelection = useCallback(() => {

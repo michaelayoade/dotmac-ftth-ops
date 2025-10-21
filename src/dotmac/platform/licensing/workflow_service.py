@@ -41,7 +41,7 @@ class LicenseService(WorkflowServiceBase):
     - Transaction management
     """
 
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession) -> Any:
         super().__init__(db=db, service_name="LicenseService")
         self.db = db
 
@@ -62,7 +62,7 @@ class LicenseService(WorkflowServiceBase):
         This method creates a fully functional software license using the
         composable licensing framework with comprehensive error handling and retry logic.
 
-        Features (via WorkflowServiceBase):
+        Features (via WorkflowServiceBase) -> Any:
         - Automatic request/response logging
         - Performance metrics tracking
         - Input validation with Pydantic
@@ -124,7 +124,7 @@ class LicenseService(WorkflowServiceBase):
         # Use transaction context manager with automatic rollback
         async with self.transaction("issue_license"):
             # Fetch license template with retry logic
-            async def fetch_template():
+            async def fetch_template() -> Any:
                 result = await self.db.execute(
                     select(LicenseTemplate).where(
                         LicenseTemplate.id == license_template_id,
@@ -146,7 +146,7 @@ class LicenseService(WorkflowServiceBase):
             # Get customer details if issued_to not provided
             if not issued_to:
                 # Try to get customer from database with retry
-                async def fetch_customer():
+                async def fetch_customer() -> Any:
                     from ..customer_management.models import Customer
 
                     customer_result = await self.db.execute(
@@ -264,7 +264,7 @@ class LicenseService(WorkflowServiceBase):
         This method allows partners to distribute licenses from their
         allocated quota to their customers with comprehensive error handling and retry logic.
 
-        Features (via WorkflowServiceBase):
+        Features (via WorkflowServiceBase) -> Any:
         - Automatic request/response logging
         - Performance metrics tracking
         - Input validation with Pydantic

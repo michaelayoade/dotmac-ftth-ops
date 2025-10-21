@@ -73,15 +73,15 @@ export function isDefined<T>(value: T | null | undefined): value is T {
 }
 
 export function isString(value: unknown): value is string {
-  return typeof value === 'string';
+  return typeof value === "string";
 }
 
 export function isNumber(value: unknown): value is number {
-  return typeof value === 'number' && !isNaN(value);
+  return typeof value === "number" && !isNaN(value);
 }
 
 export function isBoolean(value: unknown): value is boolean {
-  return typeof value === 'boolean';
+  return typeof value === "boolean";
 }
 
 export function isArray<T = unknown>(value: unknown): value is T[] {
@@ -89,7 +89,7 @@ export function isArray<T = unknown>(value: unknown): value is T[] {
 }
 
 export function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 // Assertion functions
@@ -99,7 +99,7 @@ export function assertNever(value: never): never {
 
 export function assertDefined<T>(
   value: T | null | undefined,
-  message = 'Value is not defined'
+  message = "Value is not defined",
 ): asserts value is T {
   if (value === null || value === undefined) {
     throw new Error(message);
@@ -110,9 +110,9 @@ export function assertDefined<T>(
 export type Brand<K, T> = K & { __brand: T };
 
 // Example branded types
-export type EmailAddress = Brand<string, 'EmailAddress'>;
-export type PositiveNumber = Brand<number, 'PositiveNumber'>;
-export type NonEmptyString = Brand<string, 'NonEmptyString'>;
+export type EmailAddress = Brand<string, "EmailAddress">;
+export type PositiveNumber = Brand<number, "PositiveNumber">;
+export type NonEmptyString = Brand<string, "NonEmptyString">;
 
 // Validators for branded types
 export function isValidEmail(value: string): value is EmailAddress {

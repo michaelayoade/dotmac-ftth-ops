@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -13,18 +13,18 @@ import {
   Settings,
   TrendingUp,
   XCircle,
-} from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   useVersions,
   useBreakingChanges,
   useVersionAdoption,
   useVersioningConfiguration,
-} from '@/hooks/useVersioning';
-import type { APIVersionInfo, BreakingChange, VersionStatus } from '@/hooks/useVersioning';
+} from "@/hooks/useVersioning";
+import type { APIVersionInfo, BreakingChange, VersionStatus } from "@/hooks/useVersioning";
 
 // ============================================
 // Status Badge Component
@@ -33,26 +33,30 @@ import type { APIVersionInfo, BreakingChange, VersionStatus } from '@/hooks/useV
 function VersionStatusBadge({ status }: { status: VersionStatus }) {
   const statusConfig: Record<
     VersionStatus,
-    { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: any }
+    {
+      label: string;
+      variant: "default" | "secondary" | "destructive" | "outline";
+      icon: any;
+    }
   > = {
     active: {
-      label: 'Active',
-      variant: 'default',
+      label: "Active",
+      variant: "default",
       icon: CheckCircle2,
     },
     deprecated: {
-      label: 'Deprecated',
-      variant: 'secondary',
+      label: "Deprecated",
+      variant: "secondary",
       icon: AlertCircle,
     },
     sunset: {
-      label: 'Sunset',
-      variant: 'outline',
+      label: "Sunset",
+      variant: "outline",
       icon: Clock,
     },
     removed: {
-      label: 'Removed',
-      variant: 'destructive',
+      label: "Removed",
+      variant: "destructive",
       icon: XCircle,
     },
   };
@@ -77,8 +81,8 @@ function OverviewTab() {
   const { data: adoption, isLoading: adoptionLoading } = useVersionAdoption(30);
   const { data: config, isLoading: configLoading } = useVersioningConfiguration();
 
-  const activeVersions = versions.filter((v) => v.status === 'active');
-  const deprecatedVersions = versions.filter((v) => v.status === 'deprecated');
+  const activeVersions = versions.filter((v) => v.status === "active");
+  const deprecatedVersions = versions.filter((v) => v.status === "deprecated");
   const defaultVersion = versions.find((v) => v.is_default);
 
   if (versionsLoading || adoptionLoading || configLoading) {
@@ -151,9 +155,7 @@ function OverviewTab() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-400 mb-1">Total Clients</p>
-                <p className="text-3xl font-bold text-white">
-                  {adoption?.total_clients || 0}
-                </p>
+                <p className="text-3xl font-bold text-white">{adoption?.total_clients || 0}</p>
               </div>
               <div className="p-3 rounded-lg bg-purple-500/20">
                 <TrendingUp className="h-6 w-6 text-purple-400" />
@@ -204,14 +206,14 @@ function OverviewTab() {
               </div>
               <div>
                 <p className="text-sm text-slate-400 mb-1">Strict Mode</p>
-                <Badge variant={config.strict_mode ? 'default' : 'outline'}>
-                  {config.strict_mode ? 'Enabled' : 'Disabled'}
+                <Badge variant={config.strict_mode ? "default" : "outline"}>
+                  {config.strict_mode ? "Enabled" : "Disabled"}
                 </Badge>
               </div>
               <div>
                 <p className="text-sm text-slate-400 mb-1">Auto Upgrade</p>
-                <Badge variant={config.auto_upgrade ? 'default' : 'outline'}>
-                  {config.auto_upgrade ? 'Enabled' : 'Disabled'}
+                <Badge variant={config.auto_upgrade ? "default" : "outline"}>
+                  {config.auto_upgrade ? "Enabled" : "Disabled"}
                 </Badge>
               </div>
               <div>
@@ -261,7 +263,8 @@ function OverviewTab() {
                             </span>
                           </div>
                           <p className="text-xs text-slate-500">
-                            {versionStats.request_count.toLocaleString()} requests • {versionStats.unique_clients} clients
+                            {versionStats.request_count.toLocaleString()} requests •{" "}
+                            {versionStats.unique_clients} clients
                           </p>
                         </div>
                       </div>
@@ -368,7 +371,7 @@ function VersionsTab() {
                 <Button variant="outline" size="sm" className="flex-1 border-slate-700">
                   Edit
                 </Button>
-                {version.status === 'active' && !version.is_default && (
+                {version.status === "active" && !version.is_default && (
                   <Button variant="outline" size="sm" className="flex-1 border-slate-700">
                     Deprecate
                   </Button>
@@ -383,7 +386,9 @@ function VersionsTab() {
         <div className="flex flex-col items-center justify-center py-12">
           <GitBranch className="h-12 w-12 text-slate-600 mb-4" />
           <p className="text-slate-400 text-lg mb-2">No versions found</p>
-          <p className="text-slate-500 text-sm mb-4">Create your first API version to get started</p>
+          <p className="text-slate-500 text-sm mb-4">
+            Create your first API version to get started
+          </p>
           <Button className="bg-blue-600 hover:bg-blue-700">
             <Plus className="h-4 w-4 mr-2" />
             Add Version
@@ -403,12 +408,12 @@ function BreakingChangesTab() {
 
   const getSeverityColor = (severity: string) => {
     const colorMap: Record<string, string> = {
-      critical: 'text-red-400 bg-red-500/20',
-      high: 'text-orange-400 bg-orange-500/20',
-      medium: 'text-yellow-400 bg-yellow-500/20',
-      low: 'text-blue-400 bg-blue-500/20',
+      critical: "text-red-400 bg-red-500/20",
+      high: "text-orange-400 bg-orange-500/20",
+      medium: "text-yellow-400 bg-yellow-500/20",
+      low: "text-blue-400 bg-blue-500/20",
     };
-    return colorMap[severity] || 'text-gray-400 bg-gray-500/20';
+    return colorMap[severity] || "text-gray-400 bg-gray-500/20";
   };
 
   if (isLoading) {
@@ -446,9 +451,7 @@ function BreakingChangesTab() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <Badge variant="outline">{change.version}</Badge>
-                    <Badge className={getSeverityColor(change.severity)}>
-                      {change.severity}
-                    </Badge>
+                    <Badge className={getSeverityColor(change.severity)}>{change.severity}</Badge>
                     <Badge variant="secondary">{change.change_type}</Badge>
                   </div>
                   <h3 className="text-white font-medium text-lg">{change.title}</h3>
@@ -520,7 +523,7 @@ function BreakingChangesTab() {
 // ============================================
 
 export default function VersioningPage() {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
 
   return (
     <div className="space-y-6 p-6">

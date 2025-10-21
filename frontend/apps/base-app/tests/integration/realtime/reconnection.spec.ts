@@ -4,11 +4,11 @@
  * Tests for connection resilience, auto-reconnection, and error recovery.
  */
 
-import { test, expect } from '@playwright/test';
-import { generateTestUser } from '../../fixtures/test-data';
-import { createTestUser, loginUser } from '../../helpers/api-helpers';
+import { test, expect } from "@playwright/test";
+import { generateTestUser } from "../../fixtures/test-data";
+import { createTestUser, loginUser } from "../../helpers/api-helpers";
 
-test.describe('Real-Time Reconnection and Resilience', () => {
+test.describe("Real-Time Reconnection and Resilience", () => {
   let authToken: string;
 
   test.beforeEach(async ({ page }) => {
@@ -18,10 +18,10 @@ test.describe('Real-Time Reconnection and Resilience', () => {
     authToken = await loginUser(page, testUser.email, testUser.password);
   });
 
-  test.describe('Auto-Reconnection', () => {
-    test('should auto-reconnect after connection loss', async ({ page }) => {
+  test.describe("Auto-Reconnection", () => {
+    test("should auto-reconnect after connection loss", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Act - Simulate connection loss
@@ -33,19 +33,23 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await page.waitForTimeout(2000);
 
       // Assert - Should show reconnecting, then connected
-      await expect(page.locator('[data-testid="connection-indicator"][data-status="reconnecting"]')).toBeVisible();
-      await expect(page.locator('[data-testid="connection-indicator"][data-status="connected"]')).toBeVisible({ timeout: 15000 });
+      await expect(
+        page.locator('[data-testid="connection-indicator"][data-status="reconnecting"]'),
+      ).toBeVisible();
+      await expect(
+        page.locator('[data-testid="connection-indicator"][data-status="connected"]'),
+      ).toBeVisible({ timeout: 15000 });
     });
 
-    test('should use exponential backoff for reconnection attempts', async ({ page }) => {
+    test("should use exponential backoff for reconnection attempts", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Track reconnection timings
       const reconnectTimes: number[] = [];
 
-      await page.exposeFunction('logReconnect', (timestamp: number) => {
+      await page.exposeFunction("logReconnect", (timestamp: number) => {
         reconnectTimes.push(timestamp);
       });
 
@@ -65,9 +69,9 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       }
     });
 
-    test('should not exceed maximum backoff time', async ({ page }) => {
+    test("should not exceed maximum backoff time", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Act - Force many reconnections to reach max backoff
@@ -86,9 +90,9 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       expect(backoffTime).toBeLessThanOrEqual(30000);
     });
 
-    test('should reset backoff after successful connection', async ({ page }) => {
+    test("should reset backoff after successful connection", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Act - Disconnect and reconnect successfully
@@ -97,7 +101,9 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       });
 
       await page.waitForTimeout(5000);
-      await expect(page.locator('[data-testid="connection-indicator"][data-status="connected"]')).toBeVisible({ timeout: 15000 });
+      await expect(
+        page.locator('[data-testid="connection-indicator"][data-status="connected"]'),
+      ).toBeVisible({ timeout: 15000 });
 
       // Wait for stable connection
       await page.waitForTimeout(5000);
@@ -111,10 +117,10 @@ test.describe('Real-Time Reconnection and Resilience', () => {
     });
   });
 
-  test.describe('Connection State Management', () => {
-    test('should maintain state during reconnection', async ({ page }) => {
+  test.describe("Connection State Management", () => {
+    test("should maintain state during reconnection", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Store initial state
@@ -127,7 +133,9 @@ test.describe('Real-Time Reconnection and Resilience', () => {
         (window as any).__forceDisconnect?.();
       });
 
-      await expect(page.locator('[data-testid="connection-indicator"][data-status="connected"]')).toBeVisible({ timeout: 15000 });
+      await expect(
+        page.locator('[data-testid="connection-indicator"][data-status="connected"]'),
+      ).toBeVisible({ timeout: 15000 });
 
       // Assert - State should be preserved
       const reconnectedData = await page.evaluate(() => {
@@ -137,9 +145,9 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       expect(reconnectedData).toEqual(initialData);
     });
 
-    test('should restore subscriptions after reconnection', async ({ page }) => {
+    test("should restore subscriptions after reconnection", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       await page.click('[data-testid="connection-indicator"]');
@@ -150,7 +158,9 @@ test.describe('Real-Time Reconnection and Resilience', () => {
         (window as any).__forceDisconnect?.();
       });
 
-      await expect(page.locator('[data-testid="connection-indicator"][data-status="connected"]')).toBeVisible({ timeout: 15000 });
+      await expect(
+        page.locator('[data-testid="connection-indicator"][data-status="connected"]'),
+      ).toBeVisible({ timeout: 15000 });
 
       await page.click('[data-testid="connection-indicator"]');
       const reconnectedStreams = await page.locator('[data-status="connected"]').count();
@@ -159,9 +169,9 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       expect(reconnectedStreams).toBe(initialStreams);
     });
 
-    test('should queue messages during disconnection', async ({ page }) => {
+    test("should queue messages during disconnection", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard/jobs');
+      await page.goto("/dashboard/jobs");
       await page.waitForSelector('[data-testid="ws-status"][data-status="connected"]');
 
       // Act - Disconnect
@@ -173,15 +183,19 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await page.click('[data-job-id="test-job"] [data-testid="pause-button"]');
 
       // Reconnect
-      await expect(page.locator('[data-testid="ws-status"][data-status="connected"]')).toBeVisible({ timeout: 15000 });
+      await expect(page.locator('[data-testid="ws-status"][data-status="connected"]')).toBeVisible({
+        timeout: 15000,
+      });
 
       // Assert - Command should be sent after reconnection
-      await expect(page.locator('[data-job-id="test-job"][data-status="paused"]')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator('[data-job-id="test-job"][data-status="paused"]')).toBeVisible({
+        timeout: 10000,
+      });
     });
 
-    test('should notify user of queued actions', async ({ page }) => {
+    test("should notify user of queued actions", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard/jobs');
+      await page.goto("/dashboard/jobs");
       await page.waitForSelector('[data-testid="ws-status"][data-status="connected"]');
 
       // Act - Disconnect
@@ -195,15 +209,15 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await page.click('[data-job-id="test-job"] [data-testid="pause-button"]');
 
       // Assert
-      await expect(page.locator('text=Action queued')).toBeVisible();
-      await expect(page.locator('text=Will be sent when reconnected')).toBeVisible();
+      await expect(page.locator("text=Action queued")).toBeVisible();
+      await expect(page.locator("text=Will be sent when reconnected")).toBeVisible();
     });
   });
 
-  test.describe('Network Interruption Handling', () => {
-    test('should detect network offline', async ({ page, context }) => {
+  test.describe("Network Interruption Handling", () => {
+    test("should detect network offline", async ({ page, context }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Act - Simulate offline
@@ -214,9 +228,9 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await expect(page.locator('[data-testid="offline-indicator"]')).toBeVisible();
     });
 
-    test('should reconnect when network comes back online', async ({ page, context }) => {
+    test("should reconnect when network comes back online", async ({ page, context }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Act - Go offline then online
@@ -225,12 +239,14 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await context.setOffline(false);
 
       // Assert
-      await expect(page.locator('[data-testid="connection-indicator"][data-status="connected"]')).toBeVisible({ timeout: 15000 });
+      await expect(
+        page.locator('[data-testid="connection-indicator"][data-status="connected"]'),
+      ).toBeVisible({ timeout: 15000 });
     });
 
-    test('should show offline banner', async ({ page, context }) => {
+    test("should show offline banner", async ({ page, context }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Act
@@ -239,12 +255,12 @@ test.describe('Real-Time Reconnection and Resilience', () => {
 
       // Assert
       await expect(page.locator('[data-testid="offline-banner"]')).toBeVisible();
-      await expect(page.locator('text=You are currently offline')).toBeVisible();
+      await expect(page.locator("text=You are currently offline")).toBeVisible();
     });
 
-    test('should disable actions while offline', async ({ page, context }) => {
+    test("should disable actions while offline", async ({ page, context }) => {
       // Arrange
-      await page.goto('/dashboard/jobs');
+      await page.goto("/dashboard/jobs");
       await page.waitForSelector('[data-testid="ws-status"][data-status="connected"]');
 
       // Act
@@ -256,9 +272,9 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await expect(page.locator('[data-testid="resume-button"]')).toBeDisabled();
     });
 
-    test('should cache read-only data while offline', async ({ page, context }) => {
+    test("should cache read-only data while offline", async ({ page, context }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Record initial data
@@ -274,18 +290,18 @@ test.describe('Real-Time Reconnection and Resilience', () => {
     });
   });
 
-  test.describe('Server Errors and Recovery', () => {
-    test('should handle 5xx server errors', async ({ page }) => {
+  test.describe("Server Errors and Recovery", () => {
+    test("should handle 5xx server errors", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Mock server error
-      await page.route('**/api/v1/realtime/**', route => {
+      await page.route("**/api/v1/realtime/**", (route) => {
         route.fulfill({
           status: 503,
-          contentType: 'application/json',
-          body: JSON.stringify({ detail: 'Service temporarily unavailable' }),
+          contentType: "application/json",
+          body: JSON.stringify({ detail: "Service temporarily unavailable" }),
         });
       });
 
@@ -297,24 +313,26 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await page.waitForTimeout(2000);
 
       // Assert
-      await expect(page.locator('text=Server temporarily unavailable')).toBeVisible();
-      await expect(page.locator('[data-testid="connection-indicator"][data-status="error"]')).toBeVisible();
+      await expect(page.locator("text=Server temporarily unavailable")).toBeVisible();
+      await expect(
+        page.locator('[data-testid="connection-indicator"][data-status="error"]'),
+      ).toBeVisible();
     });
 
-    test('should retry after server error', async ({ page }) => {
+    test("should retry after server error", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       let attempt = 0;
 
       // Mock server error then success
-      await page.route('**/api/v1/realtime/**', route => {
+      await page.route("**/api/v1/realtime/**", (route) => {
         if (attempt < 2) {
           attempt++;
           route.fulfill({
             status: 503,
-            body: JSON.stringify({ detail: 'Service unavailable' }),
+            body: JSON.stringify({ detail: "Service unavailable" }),
           });
         } else {
           route.continue();
@@ -327,19 +345,21 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       });
 
       // Assert - Should eventually reconnect
-      await expect(page.locator('[data-testid="connection-indicator"][data-status="connected"]')).toBeVisible({ timeout: 30000 });
+      await expect(
+        page.locator('[data-testid="connection-indicator"][data-status="connected"]'),
+      ).toBeVisible({ timeout: 30000 });
     });
 
-    test('should show different message for 401 Unauthorized', async ({ page }) => {
+    test("should show different message for 401 Unauthorized", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Mock auth error
-      await page.route('**/api/v1/realtime/**', route => {
+      await page.route("**/api/v1/realtime/**", (route) => {
         route.fulfill({
           status: 401,
-          body: JSON.stringify({ detail: 'Unauthorized' }),
+          body: JSON.stringify({ detail: "Unauthorized" }),
         });
       });
 
@@ -351,17 +371,17 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await page.waitForTimeout(3000);
 
       // Assert
-      await expect(page.locator('text=Session expired')).toBeVisible();
+      await expect(page.locator("text=Session expired")).toBeVisible();
       await expect(page.locator('button:has-text("Login Again")')).toBeVisible();
     });
 
-    test('should stop retrying after too many failures', async ({ page }) => {
+    test("should stop retrying after too many failures", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Mock continuous failures
-      await page.route('**/api/v1/realtime/**', route => route.abort('failed'));
+      await page.route("**/api/v1/realtime/**", (route) => route.abort("failed"));
 
       // Act - Force disconnect
       await page.evaluate(() => {
@@ -372,15 +392,15 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await page.waitForTimeout(60000);
 
       // Assert - Should give up and show manual option
-      await expect(page.locator('text=Unable to connect')).toBeVisible();
+      await expect(page.locator("text=Unable to connect")).toBeVisible();
       await expect(page.locator('button:has-text("Try Again")')).toBeVisible();
     });
   });
 
-  test.describe('User Notifications', () => {
-    test('should show toast notification on disconnect', async ({ page }) => {
+  test.describe("User Notifications", () => {
+    test("should show toast notification on disconnect", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Act
@@ -392,9 +412,9 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await expect(page.locator('.toast:has-text("Connection lost")')).toBeVisible();
     });
 
-    test('should show toast notification on reconnect', async ({ page }) => {
+    test("should show toast notification on reconnect", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Act - Disconnect and reconnect
@@ -402,15 +422,17 @@ test.describe('Real-Time Reconnection and Resilience', () => {
         (window as any).__forceDisconnect?.();
       });
 
-      await expect(page.locator('[data-testid="connection-indicator"][data-status="connected"]')).toBeVisible({ timeout: 15000 });
+      await expect(
+        page.locator('[data-testid="connection-indicator"][data-status="connected"]'),
+      ).toBeVisible({ timeout: 15000 });
 
       // Assert
       await expect(page.locator('.toast:has-text("Reconnected successfully")')).toBeVisible();
     });
 
-    test('should not spam notifications during unstable connection', async ({ page }) => {
+    test("should not spam notifications during unstable connection", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Act - Multiple rapid disconnects/reconnects
@@ -424,13 +446,13 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await page.waitForTimeout(3000);
 
       // Assert - Should consolidate notifications
-      const toastCount = await page.locator('.toast').count();
+      const toastCount = await page.locator(".toast").count();
       expect(toastCount).toBeLessThan(5); // Should not show all 5 disconnections
     });
 
-    test('should allow dismissing connection notifications', async ({ page }) => {
+    test("should allow dismissing connection notifications", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Act
@@ -447,14 +469,14 @@ test.describe('Real-Time Reconnection and Resilience', () => {
     });
   });
 
-  test.describe('Manual Reconnection', () => {
-    test('should allow manual reconnection attempt', async ({ page }) => {
+  test.describe("Manual Reconnection", () => {
+    test("should allow manual reconnection attempt", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Mock connection failure
-      await page.route('**/api/v1/realtime/**', route => route.abort('failed'));
+      await page.route("**/api/v1/realtime/**", (route) => route.abort("failed"));
 
       await page.evaluate(() => {
         (window as any).__forceDisconnect?.();
@@ -467,12 +489,12 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await page.click('[data-testid="manual-reconnect"]');
 
       // Assert
-      await expect(page.locator('text=Attempting to reconnect')).toBeVisible();
+      await expect(page.locator("text=Attempting to reconnect")).toBeVisible();
     });
 
-    test('should disable manual reconnect button during attempt', async ({ page }) => {
+    test("should disable manual reconnect button during attempt", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       await page.evaluate(() => {
@@ -490,17 +512,17 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await expect(reconnectButton).toBeDisabled();
     });
 
-    test('should show success message on successful manual reconnect', async ({ page }) => {
+    test("should show success message on successful manual reconnect", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       let disconnected = true;
 
       // Mock initial failure, then success
-      await page.route('**/api/v1/realtime/**', route => {
+      await page.route("**/api/v1/realtime/**", (route) => {
         if (disconnected) {
-          route.abort('failed');
+          route.abort("failed");
         } else {
           route.continue();
         }
@@ -518,15 +540,17 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await page.click('[data-testid="manual-reconnect"]');
 
       // Assert
-      await expect(page.locator('text=Successfully reconnected')).toBeVisible();
-      await expect(page.locator('[data-testid="connection-indicator"][data-status="connected"]')).toBeVisible({ timeout: 10000 });
+      await expect(page.locator("text=Successfully reconnected")).toBeVisible();
+      await expect(
+        page.locator('[data-testid="connection-indicator"][data-status="connected"]'),
+      ).toBeVisible({ timeout: 10000 });
     });
   });
 
-  test.describe('Connection Quality Indicators', () => {
-    test('should show connection quality status', async ({ page }) => {
+  test.describe("Connection Quality Indicators", () => {
+    test("should show connection quality status", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       await page.click('[data-testid="connection-indicator"]');
@@ -535,9 +559,9 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await expect(page.locator('[data-testid="connection-quality"]')).toBeVisible();
     });
 
-    test('should show good quality for stable connection', async ({ page }) => {
+    test("should show good quality for stable connection", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       await page.waitForTimeout(3000);
@@ -545,12 +569,14 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await page.click('[data-testid="connection-indicator"]');
 
       // Assert
-      await expect(page.locator('[data-testid="connection-quality"][data-quality="good"]')).toBeVisible();
+      await expect(
+        page.locator('[data-testid="connection-quality"][data-quality="good"]'),
+      ).toBeVisible();
     });
 
-    test('should show poor quality for unstable connection', async ({ page }) => {
+    test("should show poor quality for unstable connection", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       // Simulate unstable connection
@@ -564,19 +590,21 @@ test.describe('Real-Time Reconnection and Resilience', () => {
       await page.click('[data-testid="connection-indicator"]');
 
       // Assert
-      await expect(page.locator('[data-testid="connection-quality"][data-quality="poor"]')).toBeVisible();
+      await expect(
+        page.locator('[data-testid="connection-quality"][data-quality="poor"]'),
+      ).toBeVisible();
     });
 
-    test('should show latency information', async ({ page }) => {
+    test("should show latency information", async ({ page }) => {
       // Arrange
-      await page.goto('/dashboard');
+      await page.goto("/dashboard");
       await page.waitForSelector('[data-testid="connection-indicator"][data-status="connected"]');
 
       await page.click('[data-testid="connection-indicator"]');
 
       // Assert
       await expect(page.locator('[data-testid="connection-latency"]')).toBeVisible();
-      await expect(page.locator('[data-testid="connection-latency"]')).toContainText('ms');
+      await expect(page.locator('[data-testid="connection-latency"]')).toContainText("ms");
     });
   });
 });

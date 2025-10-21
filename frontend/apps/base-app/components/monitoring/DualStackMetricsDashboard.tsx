@@ -5,14 +5,14 @@
  * including subscriber allocation, IP utilization, connectivity, and performance.
  */
 
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   TrendingUp,
   TrendingDown,
@@ -21,8 +21,8 @@ import {
   Wifi,
   AlertTriangle,
   CheckCircle2,
-  XCircle
-} from 'lucide-react';
+  XCircle,
+} from "lucide-react";
 
 interface MetricsData {
   subscriber_metrics: {
@@ -74,7 +74,7 @@ interface MetricsData {
 }
 
 interface Alert {
-  severity: 'critical' | 'warning';
+  severity: "critical" | "warning";
   metric: string;
   value: number;
   threshold: number;
@@ -91,12 +91,12 @@ export function DualStackMetricsDashboard() {
     const fetchMetrics = async () => {
       try {
         const [metricsRes, alertsRes] = await Promise.all([
-          fetch('/metrics/dual-stack/current'),
-          fetch('/metrics/dual-stack/alerts'),
+          fetch("/metrics/dual-stack/current"),
+          fetch("/metrics/dual-stack/alerts"),
         ]);
 
         if (!metricsRes.ok || !alertsRes.ok) {
-          throw new Error('Failed to fetch metrics');
+          throw new Error("Failed to fetch metrics");
         }
 
         const metricsData = await metricsRes.json();
@@ -106,7 +106,7 @@ export function DualStackMetricsDashboard() {
         setAlerts(alertsData.alerts || []);
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
+        setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
         setLoading(false);
       }
@@ -119,18 +119,24 @@ export function DualStackMetricsDashboard() {
   }, []);
 
   const getUtilizationColor = (percentage: number): string => {
-    if (percentage >= 85) return 'text-red-600';
-    if (percentage >= 70) return 'text-yellow-600';
-    return 'text-green-600';
+    if (percentage >= 85) return "text-red-600";
+    if (percentage >= 70) return "text-yellow-600";
+    return "text-green-600";
   };
 
   const getHealthStatus = () => {
-    const criticalAlerts = alerts.filter(a => a.severity === 'critical');
-    const warningAlerts = alerts.filter(a => a.severity === 'warning');
+    const criticalAlerts = alerts.filter((a) => a.severity === "critical");
+    const warningAlerts = alerts.filter((a) => a.severity === "warning");
 
-    if (criticalAlerts.length > 0) return { status: 'critical', icon: XCircle, color: 'text-red-600' };
-    if (warningAlerts.length > 0) return { status: 'warning', icon: AlertTriangle, color: 'text-yellow-600' };
-    return { status: 'healthy', icon: CheckCircle2, color: 'text-green-600' };
+    if (criticalAlerts.length > 0)
+      return { status: "critical", icon: XCircle, color: "text-red-600" };
+    if (warningAlerts.length > 0)
+      return {
+        status: "warning",
+        icon: AlertTriangle,
+        color: "text-yellow-600",
+      };
+    return { status: "healthy", icon: CheckCircle2, color: "text-green-600" };
   };
 
   if (loading) {
@@ -149,7 +155,7 @@ export function DualStackMetricsDashboard() {
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
         <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error || 'Failed to load metrics'}</AlertDescription>
+        <AlertDescription>{error || "Failed to load metrics"}</AlertDescription>
       </Alert>
     );
   }
@@ -167,7 +173,15 @@ export function DualStackMetricsDashboard() {
         </div>
         <div className="flex items-center gap-2">
           <HealthIcon className={`h-6 w-6 ${health.color}`} />
-          <Badge variant={health.status === 'critical' ? 'destructive' : health.status === 'warning' ? 'default' : 'outline'}>
+          <Badge
+            variant={
+              health.status === "critical"
+                ? "destructive"
+                : health.status === "warning"
+                  ? "default"
+                  : "outline"
+            }
+          >
             {health.status.toUpperCase()}
           </Badge>
         </div>
@@ -177,9 +191,11 @@ export function DualStackMetricsDashboard() {
       {alerts.length > 0 && (
         <div className="space-y-2">
           {alerts.map((alert, idx) => (
-            <Alert key={idx} variant={alert.severity === 'critical' ? 'destructive' : 'default'}>
+            <Alert key={idx} variant={alert.severity === "critical" ? "destructive" : "default"}>
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>{alert.severity.toUpperCase()}: {alert.metric}</AlertTitle>
+              <AlertTitle>
+                {alert.severity.toUpperCase()}: {alert.metric}
+              </AlertTitle>
               <AlertDescription>{alert.message}</AlertDescription>
             </Alert>
           ))}
@@ -194,9 +210,12 @@ export function DualStackMetricsDashboard() {
             <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.subscriber_metrics.total_subscribers.toLocaleString()}</div>
+            <div className="text-2xl font-bold">
+              {metrics.subscriber_metrics.total_subscribers.toLocaleString()}
+            </div>
             <p className="text-xs text-muted-foreground">
-              {metrics.subscriber_metrics.dual_stack_subscribers} dual-stack ({metrics.subscriber_metrics.dual_stack_percentage.toFixed(1)}%)
+              {metrics.subscriber_metrics.dual_stack_subscribers} dual-stack (
+              {metrics.subscriber_metrics.dual_stack_percentage.toFixed(1)}%)
             </p>
           </CardContent>
         </Card>
@@ -207,10 +226,15 @@ export function DualStackMetricsDashboard() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${getUtilizationColor(metrics.ip_allocation_metrics.ipv4_pool_utilization)}`}>
+            <div
+              className={`text-2xl font-bold ${getUtilizationColor(metrics.ip_allocation_metrics.ipv4_pool_utilization)}`}
+            >
               {metrics.ip_allocation_metrics.ipv4_pool_utilization.toFixed(1)}%
             </div>
-            <Progress value={metrics.ip_allocation_metrics.ipv4_pool_utilization} className="mt-2" />
+            <Progress
+              value={metrics.ip_allocation_metrics.ipv4_pool_utilization}
+              className="mt-2"
+            />
           </CardContent>
         </Card>
 
@@ -220,10 +244,15 @@ export function DualStackMetricsDashboard() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${getUtilizationColor(metrics.ip_allocation_metrics.ipv6_prefix_utilization)}`}>
+            <div
+              className={`text-2xl font-bold ${getUtilizationColor(metrics.ip_allocation_metrics.ipv6_prefix_utilization)}`}
+            >
               {metrics.ip_allocation_metrics.ipv6_prefix_utilization.toFixed(1)}%
             </div>
-            <Progress value={metrics.ip_allocation_metrics.ipv6_prefix_utilization} className="mt-2" />
+            <Progress
+              value={metrics.ip_allocation_metrics.ipv6_prefix_utilization}
+              className="mt-2"
+            />
           </CardContent>
         </Card>
 
@@ -233,7 +262,9 @@ export function DualStackMetricsDashboard() {
             <Wifi className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.subscriber_metrics.dual_stack_percentage.toFixed(1)}%</div>
+            <div className="text-2xl font-bold">
+              {metrics.subscriber_metrics.dual_stack_percentage.toFixed(1)}%
+            </div>
             <Progress value={metrics.subscriber_metrics.dual_stack_percentage} className="mt-2" />
           </CardContent>
         </Card>
@@ -257,8 +288,13 @@ export function DualStackMetricsDashboard() {
                 <CardDescription>Reachable devices over IPv4</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{metrics.connectivity_metrics.ipv4_connectivity_percentage.toFixed(1)}%</div>
-                <Progress value={metrics.connectivity_metrics.ipv4_connectivity_percentage} className="mt-2" />
+                <div className="text-3xl font-bold">
+                  {metrics.connectivity_metrics.ipv4_connectivity_percentage.toFixed(1)}%
+                </div>
+                <Progress
+                  value={metrics.connectivity_metrics.ipv4_connectivity_percentage}
+                  className="mt-2"
+                />
                 <p className="text-sm text-muted-foreground mt-2">
                   {metrics.connectivity_metrics.ipv4_reachable_devices} devices reachable
                 </p>
@@ -271,8 +307,13 @@ export function DualStackMetricsDashboard() {
                 <CardDescription>Reachable devices over IPv6</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{metrics.connectivity_metrics.ipv6_connectivity_percentage.toFixed(1)}%</div>
-                <Progress value={metrics.connectivity_metrics.ipv6_connectivity_percentage} className="mt-2" />
+                <div className="text-3xl font-bold">
+                  {metrics.connectivity_metrics.ipv6_connectivity_percentage.toFixed(1)}%
+                </div>
+                <Progress
+                  value={metrics.connectivity_metrics.ipv6_connectivity_percentage}
+                  className="mt-2"
+                />
                 <p className="text-sm text-muted-foreground mt-2">
                   {metrics.connectivity_metrics.ipv6_reachable_devices} devices reachable
                 </p>
@@ -292,16 +333,30 @@ export function DualStackMetricsDashboard() {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">IPv4</span>
-                    <span className="text-sm font-bold">{metrics.performance_metrics.avg_ipv4_latency_ms.toFixed(2)} ms</span>
+                    <span className="text-sm font-bold">
+                      {metrics.performance_metrics.avg_ipv4_latency_ms.toFixed(2)} ms
+                    </span>
                   </div>
-                  <Progress value={Math.min((metrics.performance_metrics.avg_ipv4_latency_ms / 100) * 100, 100)} />
+                  <Progress
+                    value={Math.min(
+                      (metrics.performance_metrics.avg_ipv4_latency_ms / 100) * 100,
+                      100,
+                    )}
+                  />
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">IPv6</span>
-                    <span className="text-sm font-bold">{metrics.performance_metrics.avg_ipv6_latency_ms.toFixed(2)} ms</span>
+                    <span className="text-sm font-bold">
+                      {metrics.performance_metrics.avg_ipv6_latency_ms.toFixed(2)} ms
+                    </span>
                   </div>
-                  <Progress value={Math.min((metrics.performance_metrics.avg_ipv6_latency_ms / 100) * 100, 100)} />
+                  <Progress
+                    value={Math.min(
+                      (metrics.performance_metrics.avg_ipv6_latency_ms / 100) * 100,
+                      100,
+                    )}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -315,21 +370,33 @@ export function DualStackMetricsDashboard() {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">IPv4</span>
-                    <span className="text-sm font-bold">{metrics.performance_metrics.ipv4_packet_loss_percentage.toFixed(2)}%</span>
+                    <span className="text-sm font-bold">
+                      {metrics.performance_metrics.ipv4_packet_loss_percentage.toFixed(2)}%
+                    </span>
                   </div>
                   <Progress
                     value={metrics.performance_metrics.ipv4_packet_loss_percentage * 10}
-                    className={metrics.performance_metrics.ipv4_packet_loss_percentage > 5 ? 'bg-red-200' : ''}
+                    className={
+                      metrics.performance_metrics.ipv4_packet_loss_percentage > 5
+                        ? "bg-red-200"
+                        : ""
+                    }
                   />
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">IPv6</span>
-                    <span className="text-sm font-bold">{metrics.performance_metrics.ipv6_packet_loss_percentage.toFixed(2)}%</span>
+                    <span className="text-sm font-bold">
+                      {metrics.performance_metrics.ipv6_packet_loss_percentage.toFixed(2)}%
+                    </span>
                   </div>
                   <Progress
                     value={metrics.performance_metrics.ipv6_packet_loss_percentage * 10}
-                    className={metrics.performance_metrics.ipv6_packet_loss_percentage > 5 ? 'bg-red-200' : ''}
+                    className={
+                      metrics.performance_metrics.ipv6_packet_loss_percentage > 5
+                        ? "bg-red-200"
+                        : ""
+                    }
                   />
                 </div>
               </CardContent>
@@ -348,7 +415,8 @@ export function DualStackMetricsDashboard() {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">IPv4 Traffic</span>
                   <span className="text-sm font-bold">
-                    {metrics.traffic_metrics.ipv4_traffic_percentage.toFixed(1)}% ({metrics.traffic_metrics.ipv4_bandwidth_mbps.toFixed(0)} Mbps)
+                    {metrics.traffic_metrics.ipv4_traffic_percentage.toFixed(1)}% (
+                    {metrics.traffic_metrics.ipv4_bandwidth_mbps.toFixed(0)} Mbps)
                   </span>
                 </div>
                 <Progress value={metrics.traffic_metrics.ipv4_traffic_percentage} />
@@ -357,7 +425,8 @@ export function DualStackMetricsDashboard() {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">IPv6 Traffic</span>
                   <span className="text-sm font-bold">
-                    {metrics.traffic_metrics.ipv6_traffic_percentage.toFixed(1)}% ({metrics.traffic_metrics.ipv6_bandwidth_mbps.toFixed(0)} Mbps)
+                    {metrics.traffic_metrics.ipv6_traffic_percentage.toFixed(1)}% (
+                    {metrics.traffic_metrics.ipv6_bandwidth_mbps.toFixed(0)} Mbps)
                   </span>
                 </div>
                 <Progress value={metrics.traffic_metrics.ipv6_traffic_percentage} />
@@ -381,12 +450,17 @@ export function DualStackMetricsDashboard() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Dual-Stack Servers</span>
-                    <span className="font-bold">{metrics.wireguard_metrics.wireguard_dual_stack_servers}</span>
+                    <span className="font-bold">
+                      {metrics.wireguard_metrics.wireguard_dual_stack_servers}
+                    </span>
                   </div>
                   <Progress
-                    value={metrics.wireguard_metrics.wireguard_servers > 0
-                      ? (metrics.wireguard_metrics.wireguard_dual_stack_servers / metrics.wireguard_metrics.wireguard_servers * 100)
-                      : 0
+                    value={
+                      metrics.wireguard_metrics.wireguard_servers > 0
+                        ? (metrics.wireguard_metrics.wireguard_dual_stack_servers /
+                            metrics.wireguard_metrics.wireguard_servers) *
+                          100
+                        : 0
                     }
                     className="mt-2"
                   />
@@ -407,12 +481,17 @@ export function DualStackMetricsDashboard() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm">Dual-Stack Peers</span>
-                    <span className="font-bold">{metrics.wireguard_metrics.wireguard_dual_stack_peers}</span>
+                    <span className="font-bold">
+                      {metrics.wireguard_metrics.wireguard_dual_stack_peers}
+                    </span>
                   </div>
                   <Progress
-                    value={metrics.wireguard_metrics.wireguard_peers > 0
-                      ? (metrics.wireguard_metrics.wireguard_dual_stack_peers / metrics.wireguard_metrics.wireguard_peers * 100)
-                      : 0
+                    value={
+                      metrics.wireguard_metrics.wireguard_peers > 0
+                        ? (metrics.wireguard_metrics.wireguard_dual_stack_peers /
+                            metrics.wireguard_metrics.wireguard_peers) *
+                          100
+                        : 0
                     }
                     className="mt-2"
                   />
@@ -432,21 +511,32 @@ export function DualStackMetricsDashboard() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium">Overall Progress</span>
-                  <span className="text-2xl font-bold">{metrics.migration_metrics.migration_progress_percentage.toFixed(1)}%</span>
+                  <span className="text-2xl font-bold">
+                    {metrics.migration_metrics.migration_progress_percentage.toFixed(1)}%
+                  </span>
                 </div>
-                <Progress value={metrics.migration_metrics.migration_progress_percentage} className="h-4" />
+                <Progress
+                  value={metrics.migration_metrics.migration_progress_percentage}
+                  className="h-4"
+                />
               </div>
               <div className="grid grid-cols-3 gap-4 mt-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">{metrics.migration_metrics.migration_started}</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {metrics.migration_metrics.migration_started}
+                  </div>
                   <div className="text-xs text-muted-foreground">Started</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{metrics.migration_metrics.migration_completed}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {metrics.migration_metrics.migration_completed}
+                  </div>
                   <div className="text-xs text-muted-foreground">Completed</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">{metrics.migration_metrics.migration_failed}</div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {metrics.migration_metrics.migration_failed}
+                  </div>
                   <div className="text-xs text-muted-foreground">Failed</div>
                 </div>
               </div>

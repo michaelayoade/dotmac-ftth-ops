@@ -11,9 +11,9 @@
  * - Automatic refetching and background updates
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/components/ui/use-toast';
-import { communicationsService } from '@/lib/services/communications-service';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
+import { communicationsService } from "@/lib/services/communications-service";
 import type {
   // Requests
   SendEmailRequest,
@@ -41,34 +41,34 @@ import type {
   ActivityResponse,
   HealthResponse,
   MetricsResponse,
-} from '@/types/communications';
+} from "@/types/communications";
 
 // ==================== Query Keys ====================
 
 export const communicationsKeys = {
-  all: ['communications'] as const,
+  all: ["communications"] as const,
   logs: {
-    all: ['communications', 'logs'] as const,
-    list: (params: ListCommunicationsParams) => ['communications', 'logs', 'list', params] as const,
-    detail: (id: string) => ['communications', 'logs', 'detail', id] as const,
+    all: ["communications", "logs"] as const,
+    list: (params: ListCommunicationsParams) => ["communications", "logs", "list", params] as const,
+    detail: (id: string) => ["communications", "logs", "detail", id] as const,
   },
   templates: {
-    all: ['communications', 'templates'] as const,
-    list: (params: ListTemplatesParams) => ['communications', 'templates', 'list', params] as const,
-    detail: (id: string) => ['communications', 'templates', 'detail', id] as const,
+    all: ["communications", "templates"] as const,
+    list: (params: ListTemplatesParams) => ["communications", "templates", "list", params] as const,
+    detail: (id: string) => ["communications", "templates", "detail", id] as const,
   },
   bulk: {
-    all: ['communications', 'bulk'] as const,
-    detail: (id: string) => ['communications', 'bulk', 'detail', id] as const,
+    all: ["communications", "bulk"] as const,
+    detail: (id: string) => ["communications", "bulk", "detail", id] as const,
   },
   tasks: {
-    detail: (taskId: string) => ['communications', 'tasks', 'detail', taskId] as const,
+    detail: (taskId: string) => ["communications", "tasks", "detail", taskId] as const,
   },
   stats: {
-    overview: (params: StatsParams) => ['communications', 'stats', 'overview', params] as const,
-    activity: (params: ActivityParams) => ['communications', 'stats', 'activity', params] as const,
-    health: () => ['communications', 'stats', 'health'] as const,
-    metrics: () => ['communications', 'stats', 'metrics'] as const,
+    overview: (params: StatsParams) => ["communications", "stats", "overview", params] as const,
+    activity: (params: ActivityParams) => ["communications", "stats", "activity", params] as const,
+    health: () => ["communications", "stats", "health"] as const,
+    metrics: () => ["communications", "stats", "metrics"] as const,
   },
 };
 
@@ -88,7 +88,9 @@ export function useSendEmail(options?: {
     mutationFn: (data) => communicationsService.sendEmail(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: communicationsKeys.logs.all });
-      queryClient.invalidateQueries({ queryKey: communicationsKeys.stats.overview({}) });
+      queryClient.invalidateQueries({
+        queryKey: communicationsKeys.stats.overview({}),
+      });
       // toast.success('Email sent successfully');
       options?.onSuccess?.(data);
     },
@@ -144,7 +146,7 @@ export function useTemplates(params: ListTemplatesParams = {}) {
  */
 export function useTemplate(id: string | null) {
   return useQuery<CommunicationTemplate, Error>({
-    queryKey: communicationsKeys.templates.detail(id || ''),
+    queryKey: communicationsKeys.templates.detail(id || ""),
     queryFn: () => communicationsService.getTemplate(id!),
     enabled: !!id,
     staleTime: 60000, // 1 minute
@@ -165,8 +167,12 @@ export function useCreateTemplate(options?: {
   return useMutation<CommunicationTemplate, Error, CreateTemplateRequest>({
     mutationFn: (data) => communicationsService.createTemplate(data),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: communicationsKeys.templates.all });
-      queryClient.invalidateQueries({ queryKey: communicationsKeys.stats.metrics() });
+      queryClient.invalidateQueries({
+        queryKey: communicationsKeys.templates.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: communicationsKeys.stats.metrics(),
+      });
       // toast.success('Template created successfully');
       options?.onSuccess?.(data);
     },
@@ -190,8 +196,12 @@ export function useUpdateTemplate(options?: {
   return useMutation<CommunicationTemplate, Error, { id: string; updates: UpdateTemplateRequest }>({
     mutationFn: ({ id, updates }) => communicationsService.updateTemplate(id, updates),
     onSuccess: (data, { id }) => {
-      queryClient.invalidateQueries({ queryKey: communicationsKeys.templates.detail(id) });
-      queryClient.invalidateQueries({ queryKey: communicationsKeys.templates.all });
+      queryClient.invalidateQueries({
+        queryKey: communicationsKeys.templates.detail(id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: communicationsKeys.templates.all,
+      });
       // toast.success('Template updated successfully');
       options?.onSuccess?.(data);
     },
@@ -215,9 +225,15 @@ export function useDeleteTemplate(options?: {
   return useMutation<void, Error, string>({
     mutationFn: (id) => communicationsService.deleteTemplate(id),
     onSuccess: (_, id) => {
-      queryClient.invalidateQueries({ queryKey: communicationsKeys.templates.all });
-      queryClient.invalidateQueries({ queryKey: communicationsKeys.stats.metrics() });
-      queryClient.removeQueries({ queryKey: communicationsKeys.templates.detail(id) });
+      queryClient.invalidateQueries({
+        queryKey: communicationsKeys.templates.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: communicationsKeys.stats.metrics(),
+      });
+      queryClient.removeQueries({
+        queryKey: communicationsKeys.templates.detail(id),
+      });
       // toast.success('Template deleted successfully');
       options?.onSuccess?.();
     },
@@ -236,16 +252,18 @@ export function useRenderTemplate(options?: {
   onSuccess?: (data: RenderTemplateResponse) => void;
   onError?: (error: Error) => void;
 }) {
-  return useMutation<RenderTemplateResponse, Error, { id: string; variables: Record<string, any> }>({
-    mutationFn: ({ id, variables }) => communicationsService.renderTemplate(id, variables),
-    onSuccess: (data) => {
-      options?.onSuccess?.(data);
+  return useMutation<RenderTemplateResponse, Error, { id: string; variables: Record<string, any> }>(
+    {
+      mutationFn: ({ id, variables }) => communicationsService.renderTemplate(id, variables),
+      onSuccess: (data) => {
+        options?.onSuccess?.(data);
+      },
+      onError: (error) => {
+        // toast.error('Failed to render template', { description: error.message });
+        options?.onError?.(error);
+      },
     },
-    onError: (error) => {
-      // toast.error('Failed to render template', { description: error.message });
-      options?.onError?.(error);
-    },
-  });
+  );
 }
 
 /**
@@ -289,7 +307,7 @@ export function useCommunicationLogs(params: ListCommunicationsParams = {}) {
  */
 export function useCommunicationLog(id: string | null) {
   return useQuery<CommunicationLog, Error>({
-    queryKey: communicationsKeys.logs.detail(id || ''),
+    queryKey: communicationsKeys.logs.detail(id || ""),
     queryFn: () => communicationsService.getLog(id!),
     enabled: !!id,
     staleTime: 30000, // 30 seconds
@@ -313,7 +331,9 @@ export function useQueueBulk(options?: {
     mutationFn: (data) => communicationsService.queueBulkEmail(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: communicationsKeys.bulk.all });
-      queryClient.invalidateQueries({ queryKey: communicationsKeys.stats.overview({}) });
+      queryClient.invalidateQueries({
+        queryKey: communicationsKeys.stats.overview({}),
+      });
       // toast.success('Bulk operation queued successfully');
       options?.onSuccess?.(data);
     },
@@ -330,7 +350,7 @@ export function useQueueBulk(options?: {
  */
 export function useBulkOperationStatus(id: string | null, options?: { refetchInterval?: number }) {
   return useQuery<BulkOperationStatusResponse, Error>({
-    queryKey: communicationsKeys.bulk.detail(id || ''),
+    queryKey: communicationsKeys.bulk.detail(id || ""),
     queryFn: () => communicationsService.getBulkEmailStatus(id!),
     enabled: !!id,
     refetchInterval: options?.refetchInterval, // For live updates
@@ -352,7 +372,9 @@ export function useCancelBulk(options?: {
   return useMutation<BulkOperation, Error, string>({
     mutationFn: (id) => communicationsService.cancelBulkEmail(id),
     onSuccess: (data, id) => {
-      queryClient.invalidateQueries({ queryKey: communicationsKeys.bulk.detail(id) });
+      queryClient.invalidateQueries({
+        queryKey: communicationsKeys.bulk.detail(id),
+      });
       queryClient.invalidateQueries({ queryKey: communicationsKeys.bulk.all });
       // toast.success('Bulk operation cancelled');
       options?.onSuccess?.(data);
@@ -372,7 +394,7 @@ export function useCancelBulk(options?: {
  */
 export function useTaskStatus(taskId: string | null, options?: { refetchInterval?: number }) {
   return useQuery<TaskStatusResponse, Error>({
-    queryKey: communicationsKeys.tasks.detail(taskId || ''),
+    queryKey: communicationsKeys.tasks.detail(taskId || ""),
     queryFn: () => communicationsService.getTaskStatus(taskId!),
     enabled: !!taskId,
     refetchInterval: options?.refetchInterval, // For live updates
@@ -444,7 +466,12 @@ export function useCommunicationMetrics() {
 export function useCommunicationsDashboard() {
   const stats = useCommunicationStats();
   const health = useCommunicationHealth();
-  const logs = useCommunicationLogs({ page: 1, page_size: 10, sort_by: 'created_at', sort_order: 'desc' });
+  const logs = useCommunicationLogs({
+    page: 1,
+    page_size: 10,
+    sort_by: "created_at",
+    sort_order: "desc",
+  });
   const metrics = useCommunicationMetrics();
 
   return {
@@ -490,9 +517,9 @@ export function useMonitorTask(taskId: string | null) {
     task: status.data,
     isLoading: status.isLoading,
     error: status.error,
-    isComplete: status.data?.status === 'success' || status.data?.status === 'failure',
-    isSuccess: status.data?.status === 'success',
-    isFailed: status.data?.status === 'failure',
+    isComplete: status.data?.status === "success" || status.data?.status === "failure",
+    isSuccess: status.data?.status === "success",
+    isFailed: status.data?.status === "failure",
   };
 }
 
@@ -509,7 +536,7 @@ export function useTemplateWithPreview(id: string | null, variables: Record<stri
       const result = await render.mutateAsync({ id, variables });
       return result;
     } catch (error) {
-      console.error('Preview error:', error);
+      console.error("Preview error:", error);
       throw error;
     }
   };

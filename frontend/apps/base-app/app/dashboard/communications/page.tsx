@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Communications Dashboard Page
@@ -6,13 +6,13 @@
  * Overview of email/SMS communications with stats, health, and recent activity.
  */
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useCommunicationsDashboard } from '@/hooks/useCommunications';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState } from "react";
+import Link from "next/link";
+import { useCommunicationsDashboard } from "@/hooks/useCommunications";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Mail,
   Send,
@@ -27,14 +27,14 @@ import {
   TrendingUp,
   Activity,
   RefreshCw,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   getStatusColor,
   getStatusLabel,
   getTimeAgo,
   formatRate,
   type CommunicationStatus,
-} from '@/types/communications';
+} from "@/types/communications";
 
 export default function CommunicationsDashboard() {
   const { stats, health, recentLogs, metrics, isLoading, error } = useCommunicationsDashboard();
@@ -122,7 +122,8 @@ export default function CommunicationsDashboard() {
               {stats?.total_delivered?.toLocaleString() || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats?.total_sent ? Math.round((stats.total_delivered / stats.total_sent) * 100) : 0}% of total
+              {stats?.total_sent ? Math.round((stats.total_delivered / stats.total_sent) * 100) : 0}
+              % of total
             </p>
           </CardContent>
         </Card>
@@ -240,7 +241,9 @@ export default function CommunicationsDashboard() {
                       </p>
                     </div>
                     <Link href={`/dashboard/communications/templates/${template.template_id}`}>
-                      <Button variant="ghost" size="sm">View</Button>
+                      <Button variant="ghost" size="sm">
+                        View
+                      </Button>
                     </Link>
                   </div>
                 ))}
@@ -278,7 +281,10 @@ export default function CommunicationsDashboard() {
           {recentLogs && recentLogs.length > 0 ? (
             <div className="space-y-3">
               {recentLogs.map((log) => (
-                <div key={log.id} className="flex items-start justify-between border-b pb-3 last:border-0">
+                <div
+                  key={log.id}
+                  className="flex items-start justify-between border-b pb-3 last:border-0"
+                >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <Badge className={getStatusColor(log.status as CommunicationStatus)}>
@@ -295,7 +301,9 @@ export default function CommunicationsDashboard() {
                     </p>
                   </div>
                   <Link href={`/dashboard/communications/history/${log.id}`}>
-                    <Button variant="ghost" size="sm">Details</Button>
+                    <Button variant="ghost" size="sm">
+                      Details
+                    </Button>
                   </Link>
                 </div>
               ))}
@@ -333,7 +341,10 @@ export default function CommunicationsDashboard() {
           <CardContent>
             <div className="space-y-3">
               {metrics.recent_failures.slice(0, 5).map((failure) => (
-                <div key={failure.log_id} className="flex items-start justify-between border-b pb-3 last:border-0">
+                <div
+                  key={failure.log_id}
+                  className="flex items-start justify-between border-b pb-3 last:border-0"
+                >
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{failure.recipient}</p>
                     <p className="text-sm text-red-600 truncate">{failure.error_message}</p>
@@ -342,7 +353,9 @@ export default function CommunicationsDashboard() {
                     </p>
                   </div>
                   <Link href={`/dashboard/communications/history/${failure.log_id}`}>
-                    <Button variant="ghost" size="sm">Details</Button>
+                    <Button variant="ghost" size="sm">
+                      Details
+                    </Button>
                   </Link>
                 </div>
               ))}

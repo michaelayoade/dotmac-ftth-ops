@@ -1,33 +1,51 @@
-import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { extractDataOrThrow } from '@/lib/api/response-helpers';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationResult,
+  type UseQueryOptions,
+  type UseQueryResult,
+} from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { extractDataOrThrow } from "@/lib/api/response-helpers";
 import type {
   ServiceInstanceDetail,
   ServiceInstanceSummary,
   ServiceStatistics,
   ServiceStatusValue,
-} from '@/types';
+} from "@/types";
 
-type StatisticsQueryKey = ['services', 'statistics'];
+type StatisticsQueryKey = ["services", "statistics"];
 type ServiceListKey = [
-  'services',
-  'instances',
-  { status?: ServiceStatusValue | 'provisioning' | 'active'; serviceType?: string | null; limit: number; offset: number }
+  "services",
+  "instances",
+  {
+    status?: ServiceStatusValue | "provisioning" | "active";
+    serviceType?: string | null;
+    limit: number;
+    offset: number;
+  },
 ];
-type ServiceDetailKey = ['services', 'instance', string];
+type ServiceDetailKey = ["services", "instance", string];
 
 interface UseServiceStatisticsOptions {
   enabled?: boolean;
-  queryOptions?: Omit<UseQueryOptions<ServiceStatistics, Error, ServiceStatistics, StatisticsQueryKey>, 'queryKey' | 'queryFn'>;
+  queryOptions?: Omit<
+    UseQueryOptions<ServiceStatistics, Error, ServiceStatistics, StatisticsQueryKey>,
+    "queryKey" | "queryFn"
+  >;
 }
 
 interface UseServiceInstancesOptions {
-  status?: ServiceStatusValue | 'provisioning' | 'active';
+  status?: ServiceStatusValue | "provisioning" | "active";
   serviceType?: string;
   limit?: number;
   offset?: number;
   enabled?: boolean;
-  queryOptions?: Omit<UseQueryOptions<ServiceInstanceSummary[], Error, ServiceInstanceSummary[], ServiceListKey>, 'queryKey' | 'queryFn'>;
+  queryOptions?: Omit<
+    UseQueryOptions<ServiceInstanceSummary[], Error, ServiceInstanceSummary[], ServiceListKey>,
+    "queryKey" | "queryFn"
+  >;
 }
 
 /**
@@ -38,9 +56,9 @@ export function useServiceStatistics({
   queryOptions,
 }: UseServiceStatisticsOptions = {}): UseQueryResult<ServiceStatistics, Error> {
   return useQuery<ServiceStatistics, Error, ServiceStatistics, StatisticsQueryKey>({
-    queryKey: ['services', 'statistics'],
+    queryKey: ["services", "statistics"],
     queryFn: async () => {
-      const response = await apiClient.get<ServiceStatistics>('/services/lifecycle/statistics');
+      const response = await apiClient.get<ServiceStatistics>("/services/lifecycle/statistics");
       return extractDataOrThrow(response);
     },
     enabled,
@@ -73,11 +91,18 @@ export function useServiceInstances({
   }
 
   return useQuery<ServiceInstanceSummary[], Error, ServiceInstanceSummary[], ServiceListKey>({
-    queryKey: ['services', 'instances', { status, serviceType: serviceType ?? null, limit, offset }],
+    queryKey: [
+      "services",
+      "instances",
+      { status, serviceType: serviceType ?? null, limit, offset },
+    ],
     queryFn: async () => {
-      const response = await apiClient.get<ServiceInstanceSummary[]>('/services/lifecycle/services', {
-        params,
-      });
+      const response = await apiClient.get<ServiceInstanceSummary[]>(
+        "/services/lifecycle/services",
+        {
+          params,
+        },
+      );
       return extractDataOrThrow(response);
     },
     enabled,
@@ -91,15 +116,20 @@ export function useServiceInstances({
  */
 export function useServiceInstance(
   serviceId: string | null,
-  options?: Omit<UseQueryOptions<ServiceInstanceDetail, Error, ServiceInstanceDetail, ServiceDetailKey>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<ServiceInstanceDetail, Error, ServiceInstanceDetail, ServiceDetailKey>,
+    "queryKey" | "queryFn"
+  >,
 ): UseQueryResult<ServiceInstanceDetail, Error> {
   return useQuery<ServiceInstanceDetail, Error, ServiceInstanceDetail, ServiceDetailKey>({
-    queryKey: ['services', 'instance', serviceId ?? ''],
+    queryKey: ["services", "instance", serviceId ?? ""],
     queryFn: async () => {
       if (!serviceId) {
-        throw new Error('Service ID is required');
+        throw new Error("Service ID is required");
       }
-      const response = await apiClient.get<ServiceInstanceDetail>(`/services/lifecycle/services/${serviceId}`);
+      const response = await apiClient.get<ServiceInstanceDetail>(
+        `/services/lifecycle/services/${serviceId}`,
+      );
       return extractDataOrThrow(response);
     },
     enabled: Boolean(serviceId),
@@ -121,9 +151,11 @@ export function useSuspendService(): UseMutationResult<void, Error, LifecycleOpe
     },
     onSuccess: async (_, { serviceId }) => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['services', 'instances'] }),
-        queryClient.invalidateQueries({ queryKey: ['services', 'instance', serviceId] }),
-        queryClient.invalidateQueries({ queryKey: ['services', 'statistics'] }),
+        queryClient.invalidateQueries({ queryKey: ["services", "instances"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["services", "instance", serviceId],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["services", "statistics"] }),
       ]);
     },
   });
@@ -137,9 +169,11 @@ export function useResumeService(): UseMutationResult<void, Error, LifecycleOper
     },
     onSuccess: async (_, { serviceId }) => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['services', 'instances'] }),
-        queryClient.invalidateQueries({ queryKey: ['services', 'instance', serviceId] }),
-        queryClient.invalidateQueries({ queryKey: ['services', 'statistics'] }),
+        queryClient.invalidateQueries({ queryKey: ["services", "instances"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["services", "instance", serviceId],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["services", "statistics"] }),
       ]);
     },
   });
@@ -149,17 +183,24 @@ interface ProvisionServiceVariables {
   payload: Record<string, unknown>;
 }
 
-export function useProvisionService(): UseMutationResult<{ service_instance_id: string }, Error, ProvisionServiceVariables> {
+export function useProvisionService(): UseMutationResult<
+  { service_instance_id: string },
+  Error,
+  ProvisionServiceVariables
+> {
   const queryClient = useQueryClient();
   return useMutation<{ service_instance_id: string }, Error, ProvisionServiceVariables>({
     mutationFn: async ({ payload }) => {
-      const response = await apiClient.post<{ service_instance_id: string }>('/services/lifecycle/services/provision', payload);
+      const response = await apiClient.post<{ service_instance_id: string }>(
+        "/services/lifecycle/services/provision",
+        payload,
+      );
       return extractDataOrThrow(response);
     },
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['services', 'instances'] }),
-        queryClient.invalidateQueries({ queryKey: ['services', 'statistics'] }),
+        queryClient.invalidateQueries({ queryKey: ["services", "instances"] }),
+        queryClient.invalidateQueries({ queryKey: ["services", "statistics"] }),
       ]);
     },
   });
@@ -173,9 +214,11 @@ export function useActivateService(): UseMutationResult<void, Error, LifecycleOp
     },
     onSuccess: async (_, { serviceId }) => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['services', 'instances'] }),
-        queryClient.invalidateQueries({ queryKey: ['services', 'instance', serviceId] }),
-        queryClient.invalidateQueries({ queryKey: ['services', 'statistics'] }),
+        queryClient.invalidateQueries({ queryKey: ["services", "instances"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["services", "instance", serviceId],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["services", "statistics"] }),
       ]);
     },
   });
@@ -189,9 +232,11 @@ export function useTerminateService(): UseMutationResult<void, Error, LifecycleO
     },
     onSuccess: async (_, { serviceId }) => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['services', 'instances'] }),
-        queryClient.invalidateQueries({ queryKey: ['services', 'instance', serviceId] }),
-        queryClient.invalidateQueries({ queryKey: ['services', 'statistics'] }),
+        queryClient.invalidateQueries({ queryKey: ["services", "instances"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["services", "instance", serviceId],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["services", "statistics"] }),
       ]);
     },
   });
@@ -205,21 +250,29 @@ export function useModifyService(): UseMutationResult<void, Error, LifecycleOper
     },
     onSuccess: async (_, { serviceId }) => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['services', 'instances'] }),
-        queryClient.invalidateQueries({ queryKey: ['services', 'instance', serviceId] }),
+        queryClient.invalidateQueries({ queryKey: ["services", "instances"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["services", "instance", serviceId],
+        }),
       ]);
     },
   });
 }
 
-export function useHealthCheckService(): UseMutationResult<void, Error, LifecycleOperationVariables> {
+export function useHealthCheckService(): UseMutationResult<
+  void,
+  Error,
+  LifecycleOperationVariables
+> {
   const queryClient = useQueryClient();
   return useMutation<void, Error, LifecycleOperationVariables>({
     mutationFn: async ({ serviceId, payload }) => {
       await apiClient.post(`/services/lifecycle/services/${serviceId}/health-check`, payload ?? {});
     },
     onSuccess: async (_, { serviceId }) => {
-      await queryClient.invalidateQueries({ queryKey: ['services', 'instance', serviceId] });
+      await queryClient.invalidateQueries({
+        queryKey: ["services", "instance", serviceId],
+      });
     },
   });
 }

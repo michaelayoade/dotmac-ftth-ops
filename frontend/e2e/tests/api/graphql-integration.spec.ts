@@ -2,14 +2,14 @@
  * E2E tests for GraphQL API integration
  * Tests GraphQL queries, mutations, and their effects on the UI
  */
-import { test, expect, type APIRequestContext } from '@playwright/test';
+import { test, expect, type APIRequestContext } from "@playwright/test";
 
-test.describe('GraphQL API Integration', () => {
-  const BASE_URL = 'http://localhost:8000';
-  const APP_URL = 'http://localhost:3000';
+test.describe("GraphQL API Integration", () => {
+  const BASE_URL = "http://localhost:8000";
+  const APP_URL = "http://localhost:3000";
   const GRAPHQL_ENDPOINT = `${BASE_URL}/graphql`;
-  const TEST_EMAIL = 'admin@test.com';
-  const TEST_PASSWORD = 'Test123!@#';
+  const TEST_EMAIL = "admin@test.com";
+  const TEST_PASSWORD = "Test123!@#";
 
   let authToken: string;
 
@@ -20,15 +20,15 @@ test.describe('GraphQL API Integration', () => {
     const response = await request.post(`${BASE_URL}/api/v1/auth/login`, {
       data: {
         email: TEST_EMAIL,
-        password: TEST_PASSWORD
-      }
+        password: TEST_PASSWORD,
+      },
     });
 
     if (response.ok()) {
       const data = await response.json();
       return data.access_token || data.token;
     }
-    return '';
+    return "";
   }
 
   /**
@@ -37,17 +37,17 @@ test.describe('GraphQL API Integration', () => {
   async function executeGraphQL(
     request: APIRequestContext,
     query: string,
-    variables?: Record<string, any>
+    variables?: Record<string, any>,
   ) {
     return await request.post(GRAPHQL_ENDPOINT, {
       headers: {
-        'Authorization': authToken ? `Bearer ${authToken}` : '',
-        'Content-Type': 'application/json'
+        Authorization: authToken ? `Bearer ${authToken}` : "",
+        "Content-Type": "application/json",
       },
       data: {
         query,
-        variables
-      }
+        variables,
+      },
     });
   }
 
@@ -56,8 +56,8 @@ test.describe('GraphQL API Integration', () => {
     authToken = await authenticate(request);
   });
 
-  test.describe('GraphQL Queries', () => {
-    test('should execute basic query', async ({ request }) => {
+  test.describe("GraphQL Queries", () => {
+    test("should execute basic query", async ({ request }) => {
       const query = `
         query {
           __schema {
@@ -72,20 +72,20 @@ test.describe('GraphQL API Integration', () => {
 
       // Check if GraphQL endpoint exists
       if (response.status() === 404) {
-        console.log('GraphQL endpoint not found at', GRAPHQL_ENDPOINT);
+        console.log("GraphQL endpoint not found at", GRAPHQL_ENDPOINT);
         test.skip();
       }
 
       if (response.ok()) {
         const data = await response.json();
-        expect(data).toHaveProperty('data');
-        console.log('GraphQL query successful');
+        expect(data).toHaveProperty("data");
+        console.log("GraphQL query successful");
       } else {
-        console.log('GraphQL query failed with status:', response.status());
+        console.log("GraphQL query failed with status:", response.status());
       }
     });
 
-    test('should query dashboard analytics data', async ({ request }) => {
+    test("should query dashboard analytics data", async ({ request }) => {
       // Use the actual dashboard_overview query from backend
       const query = `
         query GetDashboardOverview($period: String!) {
@@ -112,13 +112,13 @@ test.describe('GraphQL API Integration', () => {
       `;
 
       const variables = {
-        period: '30d'
+        period: "30d",
       };
 
       const response = await executeGraphQL(request, query, variables);
 
       if (response.status() === 404) {
-        console.log('GraphQL endpoint not found');
+        console.log("GraphQL endpoint not found");
         return;
       }
 
@@ -126,17 +126,17 @@ test.describe('GraphQL API Integration', () => {
         const data = await response.json();
 
         if (data.errors) {
-          console.log('GraphQL errors:', data.errors);
+          console.log("GraphQL errors:", data.errors);
         } else {
-          expect(data.data).toHaveProperty('dashboardOverview');
-          console.log('Dashboard analytics retrieved successfully');
+          expect(data.data).toHaveProperty("dashboardOverview");
+          console.log("Dashboard analytics retrieved successfully");
         }
       }
     });
   });
 
-  test.describe('GraphQL Mutations', () => {
-    test('should execute ping mutation', async ({ request }) => {
+  test.describe("GraphQL Mutations", () => {
+    test("should execute ping mutation", async ({ request }) => {
       // Use the actual ping mutation from backend schema
       const mutation = `
         mutation PingTest {
@@ -147,7 +147,7 @@ test.describe('GraphQL API Integration', () => {
       const response = await executeGraphQL(request, mutation);
 
       if (response.status() === 404) {
-        console.log('GraphQL endpoint not found');
+        console.log("GraphQL endpoint not found");
         return;
       }
 
@@ -155,18 +155,18 @@ test.describe('GraphQL API Integration', () => {
         const data = await response.json();
 
         if (data.errors) {
-          console.log('GraphQL mutation errors:', data.errors);
+          console.log("GraphQL mutation errors:", data.errors);
         } else if (data.data) {
-          expect(data.data).toHaveProperty('ping');
-          expect(data.data.ping).toBe('pong');
-          console.log('Ping mutation executed successfully');
+          expect(data.data).toHaveProperty("ping");
+          expect(data.data.ping).toBe("pong");
+          console.log("Ping mutation executed successfully");
         }
       }
     });
   });
 
-  test.describe('GraphQL Error Handling', () => {
-    test('should handle invalid queries', async ({ request }) => {
+  test.describe("GraphQL Error Handling", () => {
+    test("should handle invalid queries", async ({ request }) => {
       const invalidQuery = `
         query {
           nonExistentField {
@@ -178,7 +178,7 @@ test.describe('GraphQL API Integration', () => {
       const response = await executeGraphQL(request, invalidQuery);
 
       if (response.status() === 404) {
-        console.log('GraphQL endpoint not available');
+        console.log("GraphQL endpoint not available");
         return;
       }
 
@@ -188,11 +188,11 @@ test.describe('GraphQL API Integration', () => {
       if (data.errors) {
         expect(data.errors).toBeTruthy();
         expect(Array.isArray(data.errors)).toBe(true);
-        console.log('GraphQL properly handles invalid queries');
+        console.log("GraphQL properly handles invalid queries");
       }
     });
 
-    test('should handle syntax errors', async ({ request }) => {
+    test("should handle syntax errors", async ({ request }) => {
       const malformedQuery = `
         query {
           __schema {
@@ -204,7 +204,7 @@ test.describe('GraphQL API Integration', () => {
       const response = await executeGraphQL(request, malformedQuery);
 
       if (response.status() === 404) {
-        console.log('GraphQL endpoint not available');
+        console.log("GraphQL endpoint not available");
         return;
       }
 
@@ -213,13 +213,13 @@ test.describe('GraphQL API Integration', () => {
       // Should return errors for malformed queries
       if (data.errors) {
         expect(data.errors.length).toBeGreaterThan(0);
-        console.log('GraphQL handles syntax errors:', data.errors[0].message);
+        console.log("GraphQL handles syntax errors:", data.errors[0].message);
       }
     });
   });
 
-  test.describe('GraphQL Schema Introspection', () => {
-    test('should support schema introspection', async ({ request }) => {
+  test.describe("GraphQL Schema Introspection", () => {
+    test("should support schema introspection", async ({ request }) => {
       const introspectionQuery = `
         query IntrospectionQuery {
           __schema {
@@ -243,7 +243,7 @@ test.describe('GraphQL API Integration', () => {
       const response = await executeGraphQL(request, introspectionQuery);
 
       if (response.status() === 404) {
-        console.log('GraphQL endpoint not available');
+        console.log("GraphQL endpoint not available");
         return;
       }
 
@@ -251,28 +251,28 @@ test.describe('GraphQL API Integration', () => {
         const data = await response.json();
 
         if (data.data && data.data.__schema) {
-          console.log('GraphQL schema introspection supported');
-          console.log('Query type:', data.data.__schema.queryType?.name);
-          console.log('Mutation type:', data.data.__schema.mutationType?.name);
-          console.log('Subscription type:', data.data.__schema.subscriptionType?.name);
+          console.log("GraphQL schema introspection supported");
+          console.log("Query type:", data.data.__schema.queryType?.name);
+          console.log("Mutation type:", data.data.__schema.mutationType?.name);
+          console.log("Subscription type:", data.data.__schema.subscriptionType?.name);
         } else if (data.errors) {
-          console.log('Introspection disabled or not supported:', data.errors);
+          console.log("Introspection disabled or not supported:", data.errors);
         }
       }
     });
   });
 
-  test('GraphQL implementation status check', async ({ request }) => {
+  test("GraphQL implementation status check", async ({ request }) => {
     // This test documents current GraphQL implementation status
     const testQueries = [
       {
-        name: 'Basic introspection',
-        query: '{ __schema { queryType { name } } }'
+        name: "Basic introspection",
+        query: "{ __schema { queryType { name } } }",
       },
       {
-        name: 'Analytics query',
-        query: '{ analytics { totalUsers } }'
-      }
+        name: "Analytics query",
+        query: "{ analytics { totalUsers } }",
+      },
     ];
 
     const results: { name: string; status: string }[] = [];
@@ -282,11 +282,11 @@ test.describe('GraphQL API Integration', () => {
         const response = await executeGraphQL(request, query);
 
         if (response.status() === 404) {
-          results.push({ name, status: 'endpoint_not_found' });
+          results.push({ name, status: "endpoint_not_found" });
         } else {
           const data = await response.json();
           if (data.data && !data.errors) {
-            results.push({ name, status: 'success' });
+            results.push({ name, status: "success" });
           } else if (data.errors) {
             results.push({ name, status: `error: ${data.errors[0].message}` });
           }
@@ -296,7 +296,7 @@ test.describe('GraphQL API Integration', () => {
       }
     }
 
-    console.log('GraphQL Implementation Status:', results);
+    console.log("GraphQL Implementation Status:", results);
 
     // This test always passes - it's just for documentation
     expect(true).toBe(true);

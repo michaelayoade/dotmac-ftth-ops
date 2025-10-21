@@ -3,8 +3,8 @@
  * Handles subscription limits and usage tracking
  */
 
-import { useMemo, useCallback } from 'react';
-import { TenantLimitsUsage, TenantSession } from '../../types/tenant';
+import { useMemo, useCallback } from "react";
+import { TenantLimitsUsage, TenantSession } from "../../types/tenant";
 
 export interface UseTenantLimitsReturn {
   getLimitsUsage: () => TenantLimitsUsage;
@@ -72,7 +72,7 @@ export function useTenantLimits(session: TenantSession | null): UseTenantLimitsR
       const usage = limitsUsage[limit as keyof TenantLimitsUsage];
       return usage ? usage.percentage >= 100 : false;
     },
-    [limitsUsage]
+    [limitsUsage],
   );
 
   const getUsagePercentage = useCallback(
@@ -80,14 +80,14 @@ export function useTenantLimits(session: TenantSession | null): UseTenantLimitsR
       const usage = limitsUsage[limit as keyof TenantLimitsUsage];
       return usage ? usage.percentage : 0;
     },
-    [limitsUsage]
+    [limitsUsage],
   );
 
   const isTrialExpiring = useCallback((): boolean => {
     if (!session?.tenant?.subscription) return false;
 
     const { subscription } = session.tenant;
-    if (subscription.type !== 'TRIAL') return false;
+    if (subscription.type !== "TRIAL") return false;
 
     const trialEndDate = new Date(subscription.trial_end_date);
     const now = new Date();
@@ -107,7 +107,7 @@ export function useTenantLimits(session: TenantSession | null): UseTenantLimitsR
   }, [session?.tenant?.subscription?.trial_end_date]);
 
   const isTenantActive = useCallback((): boolean => {
-    return session?.tenant?.status === 'ACTIVE';
+    return session?.tenant?.status === "ACTIVE";
   }, [session?.tenant?.status]);
 
   return {

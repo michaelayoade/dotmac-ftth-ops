@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useCallback } from 'react';
-import { create } from 'zustand';
-import { subscribeWithSelector } from 'zustand/middleware';
+import { useEffect, useMemo, useCallback } from "react";
+import { create } from "zustand";
+import { subscribeWithSelector } from "zustand/middleware";
 
-export type NotificationType = 'success' | 'error' | 'warning' | 'info';
+export type NotificationType = "success" | "error" | "warning" | "info";
 
 export interface Notification {
   id: string;
@@ -22,7 +22,7 @@ export interface Notification {
 
 interface NotificationStore {
   notifications: Notification[];
-  addNotification: (notification: Omit<Notification, 'id' | 'timestamp'>) => string;
+  addNotification: (notification: Omit<Notification, "id" | "timestamp">) => string;
   removeNotification: (id: string) => void;
   clearNotifications: () => void;
   markAsRead: (id: string) => void;
@@ -39,7 +39,7 @@ const useNotificationStore = create<NotificationStore>()(
         ...notificationData,
         id,
         timestamp: new Date(),
-        duration: notificationData.duration ?? (notificationData.type === 'error' ? 0 : 5000),
+        duration: notificationData.duration ?? (notificationData.type === "error" ? 0 : 5000),
       };
 
       set((state) => ({
@@ -77,7 +77,7 @@ const useNotificationStore = create<NotificationStore>()(
         notifications: state.notifications.map((n) => (n.id === id ? { ...n, ...updates } : n)),
       }));
     },
-  }))
+  })),
 );
 
 export function useNotifications() {
@@ -87,7 +87,7 @@ export function useNotifications() {
     () => ({
       success: (title: string, message?: string, options?: Partial<Notification>) => {
         return store.addNotification({
-          type: 'success',
+          type: "success",
           title,
           message,
           ...options,
@@ -96,7 +96,7 @@ export function useNotifications() {
 
       error: (title: string, message?: string, options?: Partial<Notification>) => {
         return store.addNotification({
-          type: 'error',
+          type: "error",
           title,
           message,
           persistent: true, // Errors are persistent by default
@@ -106,7 +106,7 @@ export function useNotifications() {
 
       warning: (title: string, message?: string, options?: Partial<Notification>) => {
         return store.addNotification({
-          type: 'warning',
+          type: "warning",
           title,
           message,
           ...options,
@@ -115,14 +115,14 @@ export function useNotifications() {
 
       info: (title: string, message?: string, options?: Partial<Notification>) => {
         return store.addNotification({
-          type: 'info',
+          type: "info",
           title,
           message,
           ...options,
         });
       },
     }),
-    [store]
+    [store],
   );
 
   return {
@@ -145,34 +145,34 @@ export function useApiErrorNotifications() {
       const isServerError = error?.status >= 500;
       const isAuthError = error?.status === 401 || error?.status === 403;
 
-      let title = 'Something went wrong';
-      let message = error?.message || 'An unexpected error occurred';
+      let title = "Something went wrong";
+      let message = error?.message || "An unexpected error occurred";
 
       if (isNetworkError) {
-        title = 'Connection Problem';
-        message = 'Unable to connect to our servers. Please check your internet connection.';
+        title = "Connection Problem";
+        message = "Unable to connect to our servers. Please check your internet connection.";
       } else if (isServerError) {
-        title = 'Server Error';
-        message = 'Our servers are experiencing issues. Please try again later.';
+        title = "Server Error";
+        message = "Our servers are experiencing issues. Please try again later.";
       } else if (isAuthError) {
-        title = 'Authentication Required';
-        message = 'Please log in to continue.';
+        title = "Authentication Required";
+        message = "Please log in to continue.";
       }
 
-      const contextMessage = context ? ` while ${context.toLowerCase()}` : '';
+      const contextMessage = context ? ` while ${context.toLowerCase()}` : "";
 
       return notify.error(title, message + contextMessage, {
         actions: [
           {
-            label: 'Retry',
+            label: "Retry",
             action: () => window.location.reload(),
           },
           ...(isAuthError
             ? [
                 {
-                  label: 'Log In',
+                  label: "Log In",
                   action: () => {
-                    window.location.href = '/auth/login';
+                    window.location.href = "/auth/login";
                   },
                   primary: true,
                 },
@@ -189,16 +189,16 @@ export function useApiErrorNotifications() {
         },
       });
     },
-    [notify]
+    [notify],
   );
 
   const notifyApiSuccess = useCallback(
     (message: string, context?: string) => {
-      const contextMessage = context ? ` ${context}` : '';
+      const contextMessage = context ? ` ${context}` : "";
 
-      return notify.success('Success', message + contextMessage);
+      return notify.success("Success", message + contextMessage);
     },
-    [notify]
+    [notify],
   );
 
   return {
@@ -212,10 +212,10 @@ export function useErrorNotifications() {
   const { notify } = useNotifications();
 
   const notifyNetworkError = useCallback(() => {
-    return notify.error('Network Error', 'Please check your internet connection and try again.', {
+    return notify.error("Network Error", "Please check your internet connection and try again.", {
       actions: [
         {
-          label: 'Retry',
+          label: "Retry",
           action: () => window.location.reload(),
           primary: true,
         },
@@ -228,26 +228,26 @@ export function useErrorNotifications() {
       const errorMessages = Object.values(errors).flat();
 
       return notify.warning(
-        'Validation Error',
+        "Validation Error",
         errorMessages.length === 1
           ? errorMessages[0]
           : `${errorMessages.length} validation errors occurred`,
         {
           metadata: { errors },
-        }
+        },
       );
     },
-    [notify]
+    [notify],
   );
 
   const notifyPermissionError = useCallback(() => {
-    return notify.error('Permission Denied', 'You do not have permission to perform this action.', {
+    return notify.error("Permission Denied", "You do not have permission to perform this action.", {
       actions: [
         {
-          label: 'Contact Support',
+          label: "Contact Support",
           action: () => {
             // Navigate to support page
-            window.location.href = '/support';
+            window.location.href = "/support";
           },
         },
       ],
@@ -257,24 +257,24 @@ export function useErrorNotifications() {
   const notifyMaintenanceMode = useCallback(
     (estimatedTime?: string) => {
       return notify.warning(
-        'Maintenance Mode',
+        "Maintenance Mode",
         estimatedTime
           ? `Service will resume at ${estimatedTime}`
-          : 'The service is temporarily unavailable for maintenance.',
+          : "The service is temporarily unavailable for maintenance.",
         {
           persistent: true,
           actions: [
             {
-              label: 'Check Status',
+              label: "Check Status",
               action: () => {
-                window.open('https://status.dotmac.com', '_blank');
+                window.open("https://status.dotmac.com", "_blank");
               },
             },
           ],
-        }
+        },
       );
     },
-    [notify]
+    [notify],
   );
 
   return {
@@ -293,28 +293,28 @@ export function useGlobalErrorListener() {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       // Check if it's an API error
       if (event.reason?.status || event.reason?.message) {
-        notifyApiError(event.reason, 'processing request');
+        notifyApiError(event.reason, "processing request");
       }
     };
 
     const handleError = (event: ErrorEvent) => {
       // Only notify for unexpected errors, not development/console errors
-      if (event.error && !event.error.message?.includes('ResizeObserver')) {
+      if (event.error && !event.error.message?.includes("ResizeObserver")) {
         notifyApiError(
           {
-            message: event.error.message || 'An unexpected error occurred',
+            message: event.error.message || "An unexpected error occurred",
           },
-          'loading page'
+          "loading page",
         );
       }
     };
 
-    window.addEventListener('unhandledrejection', handleUnhandledRejection);
-    window.addEventListener('error', handleError);
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+    window.addEventListener("error", handleError);
 
     return () => {
-      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
-      window.removeEventListener('error', handleError);
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+      window.removeEventListener("error", handleError);
     };
   }, [notifyApiError]);
 }

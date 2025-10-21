@@ -64,7 +64,7 @@ export function CreateCreditNoteModal({
 
     if (creditAmount > invoice.amount_due) {
       const confirmed = confirm(
-        `The credit amount (${formatCurrency(creditAmount)}) is greater than the amount due (${formatCurrency(invoice.amount_due)}). Continue anyway?`
+        `The credit amount (${formatCurrency(creditAmount)}) is greater than the amount due (${formatCurrency(invoice.amount_due)}). Continue anyway?`,
       );
       if (!confirmed) return;
     }
@@ -127,9 +127,7 @@ export function CreateCreditNoteModal({
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Amount Due:</span>
-              <span className="font-medium text-primary">
-                {formatCurrency(invoice.amount_due)}
-              </span>
+              <span className="font-medium text-primary">{formatCurrency(invoice.amount_due)}</span>
             </div>
           </div>
 

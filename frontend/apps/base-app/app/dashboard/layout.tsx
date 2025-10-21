@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { SkipLink } from '@/components/ui/skip-link';
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { SkipLink } from "@/components/ui/skip-link";
 import {
   Home,
   Settings,
@@ -41,19 +41,18 @@ import {
   AlertTriangle,
   Cable,
   Bell,
-  Calendar
-} from 'lucide-react';
-import { TenantSelector } from '@/components/tenant-selector';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { apiClient } from '@/lib/api/client';
-import { logger } from '@/lib/logger';
-import { Can } from '@/components/auth/PermissionGuard';
-import { useRBAC } from '@/contexts/RBACContext';
-import { useBranding } from '@/hooks/useBranding';
-import { NotificationCenter } from '@/components/notifications/NotificationCenter';
-import { ConnectionStatusIndicator } from '@/components/realtime/ConnectionStatusIndicator';
-import { RealtimeAlerts } from '@/components/realtime/RealtimeAlerts';
-import { GlobalCommandPalette } from '@/components/global-command-palette';
+  Calendar,
+} from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
+import { Can } from "@/components/auth/PermissionGuard";
+import { useRBAC } from "@/contexts/RBACContext";
+import { useBranding } from "@/hooks/useBranding";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import { ConnectionStatusIndicator } from "@/components/realtime/ConnectionStatusIndicator";
+import { RealtimeAlerts } from "@/components/realtime/RealtimeAlerts";
+import { GlobalCommandPalette } from "@/components/global-command-palette";
 
 interface NavItem {
   name: string;
@@ -74,156 +73,344 @@ interface NavSection {
 
 const sections: NavSection[] = [
   {
-    id: 'noc',
-    label: 'NOC Dashboard',
+    id: "noc",
+    label: "NOC Dashboard",
     icon: LayoutDashboard,
-    href: '/dashboard',
+    href: "/dashboard",
   },
   {
-    id: 'subscribers',
-    label: 'Subscribers',
+    id: "subscribers",
+    label: "Subscribers",
     icon: Users,
-    href: '/dashboard/subscribers',
-    permission: 'isp.radius.read',
+    href: "/dashboard/subscribers",
+    permission: "isp.radius.read",
     items: [
-      { name: 'Overview', href: '/dashboard/subscribers', icon: LayoutDashboard, permission: 'isp.radius.read' },
+      {
+        name: "Overview",
+        href: "/dashboard/subscribers",
+        icon: LayoutDashboard,
+        permission: "isp.radius.read",
+      },
     ],
   },
   {
-    id: 'network',
-    label: 'Network',
+    id: "network",
+    label: "Network",
     icon: Server,
-    href: '/dashboard/network',
-    permission: 'isp.ipam.read',
+    href: "/dashboard/network",
+    permission: "isp.ipam.read",
     items: [
-      { name: 'Inventory', href: '/dashboard/network', icon: Database, permission: 'isp.ipam.read' },
-      { name: 'Fiber Infrastructure', href: '/dashboard/network/fiber', icon: Cable, permission: 'isp.ipam.read' },
-      { name: 'Monitoring', href: '/dashboard/network-monitoring', icon: Activity },
-      { name: 'Faults', href: '/dashboard/network/faults', icon: AlertTriangle, permission: 'faults.alarms.read' },
-      { name: 'IPAM', href: '/dashboard/ipam', icon: NetworkIcon, permission: 'isp.ipam.read' },
-      { name: 'DCIM', href: '/dashboard/dcim', icon: MapPin, permission: 'isp.ipam.read' },
+      {
+        name: "Inventory",
+        href: "/dashboard/network",
+        icon: Database,
+        permission: "isp.ipam.read",
+      },
+      {
+        name: "Fiber Infrastructure",
+        href: "/dashboard/network/fiber",
+        icon: Cable,
+        permission: "isp.ipam.read",
+      },
+      {
+        name: "Monitoring",
+        href: "/dashboard/network-monitoring",
+        icon: Activity,
+      },
+      {
+        name: "Faults",
+        href: "/dashboard/network/faults",
+        icon: AlertTriangle,
+        permission: "faults.alarms.read",
+      },
+      {
+        name: "IPAM",
+        href: "/dashboard/ipam",
+        icon: NetworkIcon,
+        permission: "isp.ipam.read",
+      },
+      {
+        name: "DCIM",
+        href: "/dashboard/dcim",
+        icon: MapPin,
+        permission: "isp.ipam.read",
+      },
     ],
   },
   {
-    id: 'wireless',
-    label: 'Wireless',
+    id: "wireless",
+    label: "Wireless",
     icon: Wifi,
-    href: '/dashboard/wireless',
-    items: [
-      { name: 'Overview', href: '/dashboard/wireless', icon: LayoutDashboard },
-    ],
+    href: "/dashboard/wireless",
+    items: [{ name: "Overview", href: "/dashboard/wireless", icon: LayoutDashboard }],
   },
   {
-    id: 'automation',
-    label: 'Automation',
+    id: "automation",
+    label: "Automation",
     icon: Repeat,
-    href: '/dashboard/automation',
+    href: "/dashboard/automation",
     items: [
-      { name: 'Overview', href: '/dashboard/automation', icon: LayoutDashboard },
+      {
+        name: "Overview",
+        href: "/dashboard/automation",
+        icon: LayoutDashboard,
+      },
     ],
   },
   {
-    id: 'orchestration',
-    label: 'Orchestration',
+    id: "orchestration",
+    label: "Orchestration",
     icon: Activity,
-    href: '/dashboard/orchestration',
+    href: "/dashboard/orchestration",
     items: [
-      { name: 'Workflow Monitor', href: '/dashboard/orchestration', icon: Activity },
-      { name: 'Workflow History', href: '/dashboard/orchestration/history', icon: FileText },
-      { name: 'Analytics', href: '/dashboard/orchestration/analytics', icon: BarChart3 },
-      { name: 'Schedule Deployment', href: '/dashboard/orchestration/schedule', icon: Calendar, permission: 'deployment.schedule.create' },
+      {
+        name: "Workflow Monitor",
+        href: "/dashboard/orchestration",
+        icon: Activity,
+      },
+      {
+        name: "Workflow History",
+        href: "/dashboard/orchestration/history",
+        icon: FileText,
+      },
+      {
+        name: "Analytics",
+        href: "/dashboard/orchestration/analytics",
+        icon: BarChart3,
+      },
+      {
+        name: "Schedule Deployment",
+        href: "/dashboard/orchestration/schedule",
+        icon: Calendar,
+        permission: "deployment.schedule.create",
+      },
     ],
   },
   {
-    id: 'support',
-    label: 'Support',
+    id: "support",
+    label: "Support",
     icon: LifeBuoy,
-    href: '/dashboard/support',
+    href: "/dashboard/support",
     items: [
-      { name: 'Tickets', href: '/dashboard/support', icon: LifeBuoy },
-      { name: 'New Ticket', href: '/dashboard/support/new', icon: FileText },
+      { name: "Tickets", href: "/dashboard/support", icon: LifeBuoy },
+      { name: "New Ticket", href: "/dashboard/support/new", icon: FileText },
     ],
   },
   {
-    id: 'crm',
-    label: 'Sales CRM',
+    id: "crm",
+    label: "Sales CRM",
     icon: Handshake,
-    href: '/dashboard/crm',
-    permission: ['customers.read'],
+    href: "/dashboard/crm",
+    permission: ["customers.read"],
     items: [
-      { name: 'Overview', href: '/dashboard/crm', icon: LayoutDashboard, permission: 'customers.read' },
-      { name: 'Leads', href: '/dashboard/crm/leads', icon: Users, permission: 'customers.read' },
-      { name: 'Quotes', href: '/dashboard/crm/quotes', icon: FileText, permission: 'customers.read' },
-      { name: 'Site Surveys', href: '/dashboard/crm/site-surveys', icon: Activity, permission: 'customers.read' },
+      {
+        name: "Overview",
+        href: "/dashboard/crm",
+        icon: LayoutDashboard,
+        permission: "customers.read",
+      },
+      {
+        name: "Leads",
+        href: "/dashboard/crm/leads",
+        icon: Users,
+        permission: "customers.read",
+      },
+      {
+        name: "Quotes",
+        href: "/dashboard/crm/quotes",
+        icon: FileText,
+        permission: "customers.read",
+      },
+      {
+        name: "Site Surveys",
+        href: "/dashboard/crm/site-surveys",
+        icon: Activity,
+        permission: "customers.read",
+      },
     ],
   },
   {
-    id: 'business-support',
-    label: 'Business Operations',
+    id: "business-support",
+    label: "Business Operations",
     icon: DollarSign,
-    href: '/dashboard/billing-revenue',
-    permission: 'billing.read',
+    href: "/dashboard/billing-revenue",
+    permission: "billing.read",
     items: [
-      { name: 'Revenue Overview', href: '/dashboard/billing-revenue', icon: BarChart3, permission: 'billing.read' },
-      { name: 'Invoices', href: '/dashboard/billing-revenue/invoices', icon: FileText, permission: 'billing.read' },
-      { name: 'Subscriptions', href: '/dashboard/billing-revenue/subscriptions', icon: Repeat, permission: 'billing.read' },
-      { name: 'Payments', href: '/dashboard/billing-revenue/payments', icon: CreditCard, permission: 'billing.read' },
-      { name: 'Plans', href: '/dashboard/billing-revenue/plans', icon: Package, permission: 'billing.read' },
+      {
+        name: "Revenue Overview",
+        href: "/dashboard/billing-revenue",
+        icon: BarChart3,
+        permission: "billing.read",
+      },
+      {
+        name: "Invoices",
+        href: "/dashboard/billing-revenue/invoices",
+        icon: FileText,
+        permission: "billing.read",
+      },
+      {
+        name: "Subscriptions",
+        href: "/dashboard/billing-revenue/subscriptions",
+        icon: Repeat,
+        permission: "billing.read",
+      },
+      {
+        name: "Payments",
+        href: "/dashboard/billing-revenue/payments",
+        icon: CreditCard,
+        permission: "billing.read",
+      },
+      {
+        name: "Plans",
+        href: "/dashboard/billing-revenue/plans",
+        icon: Package,
+        permission: "billing.read",
+      },
     ],
   },
   {
-    id: 'security-access',
-    label: 'Security & Access',
+    id: "security-access",
+    label: "Security & Access",
     icon: Shield,
-    href: '/dashboard/security-access',
+    href: "/dashboard/security-access",
     items: [
-      { name: 'Overview', href: '/dashboard/security-access', icon: BarChart3 },
-      { name: 'API Keys', href: '/dashboard/security-access/api-keys', icon: Key, permission: 'settings.read' },
-      { name: 'Secrets', href: '/dashboard/security-access/secrets', icon: Lock, permission: 'secrets.read' },
-      { name: 'Roles', href: '/dashboard/security-access/roles', icon: Shield, permission: 'system.read' },
-      { name: 'Users', href: '/dashboard/security-access/users', icon: Users, permission: 'users.read' },
+      { name: "Overview", href: "/dashboard/security-access", icon: BarChart3 },
+      {
+        name: "API Keys",
+        href: "/dashboard/security-access/api-keys",
+        icon: Key,
+        permission: "settings.read",
+      },
+      {
+        name: "Secrets",
+        href: "/dashboard/security-access/secrets",
+        icon: Lock,
+        permission: "secrets.read",
+      },
+      {
+        name: "Roles",
+        href: "/dashboard/security-access/roles",
+        icon: Shield,
+        permission: "system.read",
+      },
+      {
+        name: "Users",
+        href: "/dashboard/security-access/users",
+        icon: Users,
+        permission: "users.read",
+      },
     ],
   },
   {
-    id: 'observability',
-    label: 'Observability & Health',
+    id: "observability",
+    label: "Observability & Health",
     icon: Activity,
-    href: '/dashboard/infrastructure',
-    permission: 'infrastructure.read',
+    href: "/dashboard/infrastructure",
+    permission: "infrastructure.read",
     items: [
-      { name: 'Overview', href: '/dashboard/infrastructure', icon: BarChart3, permission: 'infrastructure.read' },
-      { name: 'Health', href: '/dashboard/infrastructure/health', icon: Activity, permission: 'infrastructure.read' },
-      { name: 'Logs', href: '/dashboard/infrastructure/logs', icon: FileText, permission: 'infrastructure.read' },
-      { name: 'Observability', href: '/dashboard/infrastructure/observability', icon: Search, permission: 'infrastructure.read' },
-      { name: 'Feature Flags', href: '/dashboard/infrastructure/feature-flags', icon: ToggleLeft, permission: 'infrastructure.read' },
+      {
+        name: "Overview",
+        href: "/dashboard/infrastructure",
+        icon: BarChart3,
+        permission: "infrastructure.read",
+      },
+      {
+        name: "Health",
+        href: "/dashboard/infrastructure/health",
+        icon: Activity,
+        permission: "infrastructure.read",
+      },
+      {
+        name: "Logs",
+        href: "/dashboard/infrastructure/logs",
+        icon: FileText,
+        permission: "infrastructure.read",
+      },
+      {
+        name: "Observability",
+        href: "/dashboard/infrastructure/observability",
+        icon: Search,
+        permission: "infrastructure.read",
+      },
+      {
+        name: "Feature Flags",
+        href: "/dashboard/infrastructure/feature-flags",
+        icon: ToggleLeft,
+        permission: "infrastructure.read",
+      },
     ],
   },
   {
-    id: 'platform-admin',
-    label: 'Platform Admin',
+    id: "platform-admin",
+    label: "Platform Admin",
     icon: Shield,
-    href: '/dashboard/platform-admin',
-    permission: 'platform:admin',
+    href: "/dashboard/platform-admin",
+    permission: "platform:admin",
     items: [
-      { name: 'Overview', href: '/dashboard/platform-admin', icon: LayoutDashboard },
-      { name: 'Tenant Management', href: '/dashboard/platform-admin/tenants', icon: Building2 },
-      { name: 'Cross-Tenant Search', href: '/dashboard/platform-admin/search', icon: Search },
-      { name: 'Audit Activity', href: '/dashboard/platform-admin/audit', icon: Activity },
-      { name: 'System Configuration', href: '/dashboard/platform-admin/system', icon: Settings },
+      {
+        name: "Overview",
+        href: "/dashboard/platform-admin",
+        icon: LayoutDashboard,
+      },
+      {
+        name: "Tenant Management",
+        href: "/dashboard/platform-admin/tenants",
+        icon: Building2,
+      },
+      {
+        name: "Cross-Tenant Search",
+        href: "/dashboard/platform-admin/search",
+        icon: Search,
+      },
+      {
+        name: "Audit Activity",
+        href: "/dashboard/platform-admin/audit",
+        icon: Activity,
+      },
+      {
+        name: "System Configuration",
+        href: "/dashboard/platform-admin/system",
+        icon: Settings,
+      },
     ],
   },
   {
-    id: 'settings',
-    label: 'Settings',
+    id: "settings",
+    label: "Settings",
     icon: Settings,
-    href: '/dashboard/settings',
+    href: "/dashboard/settings",
     items: [
-      { name: 'Profile', href: '/dashboard/settings/profile', icon: User },
-      { name: 'Organization', href: '/dashboard/settings/organization', icon: Users, permission: 'settings.read' },
-      { name: 'Billing', href: '/dashboard/settings/billing', icon: CreditCard, permission: 'billing.read' },
-      { name: 'Notifications', href: '/dashboard/settings/notifications', icon: Mail, permission: 'settings.read' },
-      { name: 'Team Notifications', href: '/dashboard/notifications/team', icon: Bell, permission: 'notifications.write' },
-      { name: 'Integrations', href: '/dashboard/settings/integrations', icon: Package, permission: 'settings.read' },
+      { name: "Profile", href: "/dashboard/settings/profile", icon: User },
+      {
+        name: "Organization",
+        href: "/dashboard/settings/organization",
+        icon: Users,
+        permission: "settings.read",
+      },
+      {
+        name: "Billing",
+        href: "/dashboard/settings/billing",
+        icon: CreditCard,
+        permission: "billing.read",
+      },
+      {
+        name: "Notifications",
+        href: "/dashboard/settings/notifications",
+        icon: Mail,
+        permission: "settings.read",
+      },
+      {
+        name: "Team Notifications",
+        href: "/dashboard/notifications/team",
+        icon: Bell,
+        permission: "notifications.write",
+      },
+      {
+        name: "Integrations",
+        href: "/dashboard/settings/integrations",
+        icon: Package,
+        permission: "settings.read",
+      },
     ],
   },
 ];
@@ -232,7 +419,7 @@ const sections: NavSection[] = [
 function checkSectionVisibility(
   section: NavSection,
   hasPermission: (permission: string) => boolean,
-  hasAnyPermission: (permissions: string[]) => boolean
+  hasAnyPermission: (permissions: string[]) => boolean,
 ): boolean {
   // If section has explicit permission requirement, check it
   if (section.permission) {
@@ -244,7 +431,7 @@ function checkSectionVisibility(
 
   // If section has no permission but has items, check if user has access to any item
   if (section.items && section.items.length > 0) {
-    return section.items.some(item => {
+    return section.items.some((item) => {
       if (!item.permission) return true;
       return hasPermission(item.permission);
     });
@@ -254,11 +441,7 @@ function checkSectionVisibility(
   return true;
 }
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
@@ -268,17 +451,26 @@ export default function DashboardLayout({
   const { branding } = useBranding();
 
   // Type helper for user data
-  const userData = user as { id?: string; username?: string; email?: string; full_name?: string; roles?: string[] } | null;
+  const userData = user as {
+    id?: string;
+    username?: string;
+    email?: string;
+    full_name?: string;
+    roles?: string[];
+  } | null;
 
   // Filter sections based on permissions
   const visibleSections = useMemo(
-    () => sections.filter(section => checkSectionVisibility(section, hasPermission, hasAnyPermission)),
-    [hasPermission, hasAnyPermission]
+    () =>
+      sections.filter((section) =>
+        checkSectionVisibility(section, hasPermission, hasAnyPermission),
+      ),
+    [hasPermission, hasAnyPermission],
   );
 
   // Toggle section expansion
   const toggleSection = (sectionId: string) => {
-    setExpandedSections(prev => {
+    setExpandedSections((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(sectionId)) {
         newSet.delete(sectionId);
@@ -293,9 +485,10 @@ export default function DashboardLayout({
   useEffect(() => {
     const activeSections = new Set<string>();
 
-    visibleSections.forEach(section => {
-      const hasActiveItem = section.items?.some(item =>
-        pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
+    visibleSections.forEach((section) => {
+      const hasActiveItem = section.items?.some(
+        (item) =>
+          pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href)),
       );
 
       if (hasActiveItem) {
@@ -307,11 +500,11 @@ export default function DashboardLayout({
       return;
     }
 
-    setExpandedSections(prev => {
+    setExpandedSections((prev) => {
       const next = new Set(prev);
       let changed = false;
 
-      activeSections.forEach(sectionId => {
+      activeSections.forEach((sectionId) => {
         if (!next.has(sectionId)) {
           next.add(sectionId);
           changed = true;
@@ -329,46 +522,55 @@ export default function DashboardLayout({
 
   const fetchCurrentUser = async () => {
     // Skip auth check in E2E test mode
-    if (typeof window !== 'undefined' && (window as any).__e2e_test__) {
-      logger.info('Dashboard: E2E test mode detected, skipping auth check');
+    if (typeof window !== "undefined" && (window as any).__e2e_test__) {
+      logger.info("Dashboard: E2E test mode detected, skipping auth check");
       setUser({
-        id: 'e2e-test-user',
-        username: 'admin',
-        email: 'admin@example.com',
-        full_name: 'Test Admin',
-        roles: ['platform_admin']
+        id: "e2e-test-user",
+        username: "admin",
+        email: "admin@example.com",
+        full_name: "Test Admin",
+        roles: ["platform_admin"],
       });
       return;
     }
 
     try {
-      logger.debug('Dashboard: Fetching current user');
-      const response = await apiClient.get('/auth/me');
+      logger.debug("Dashboard: Fetching current user");
+      const response = await apiClient.get("/auth/me");
 
       if (response.data) {
-        const userData = response.data as Record<string, unknown> & { id?: string };
-        logger.info('Dashboard: User fetched successfully', { userId: userData.id });
+        const userData = response.data as Record<string, unknown> & {
+          id?: string;
+        };
+        logger.info("Dashboard: User fetched successfully", {
+          userId: userData.id,
+        });
         setUser(userData);
       } else {
-        logger.warn('Dashboard: Failed to fetch user, redirecting to login', { response: response });
+        logger.warn("Dashboard: Failed to fetch user, redirecting to login", {
+          response: response,
+        });
         // Token expired or invalid - redirect to login
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
     } catch (error) {
-      logger.error('Dashboard: Error fetching user', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Dashboard: Error fetching user",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       // On error, redirect to login
-      window.location.href = '/login';
+      window.location.href = "/login";
     }
   };
 
   const handleLogout = async () => {
     try {
-      await apiClient.post('/auth/logout');
-      window.location.href = '/login';
+      await apiClient.post("/auth/logout");
+      window.location.href = "/login";
     } catch (error) {
-      logger.error('Logout error', error instanceof Error ? error : new Error(String(error)));
+      logger.error("Logout error", error instanceof Error ? error : new Error(String(error)));
       // Still redirect even if logout fails
-      window.location.href = '/login';
+      window.location.href = "/login";
     }
   };
 
@@ -376,7 +578,10 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-background">
       <SkipLink />
       {/* Top Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border" aria-label="Main navigation">
+      <nav
+        className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border"
+        aria-label="Main navigation"
+      >
         <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center">
             <button
@@ -389,13 +594,13 @@ export default function DashboardLayout({
               <Menu className="h-6 w-6" aria-hidden="true" />
             </button>
             <div className="flex items-center ml-4 lg:ml-0">
-              {(branding.logo.light || branding.logo.dark) ? (
+              {branding.logo.light || branding.logo.dark ? (
                 <picture>
                   {branding.logo.dark ? (
                     <source srcSet={branding.logo.dark} media="(prefers-color-scheme: dark)" />
                   ) : null}
                   <img
-                    src={branding.logo.light || branding.logo.dark || ''}
+                    src={branding.logo.light || branding.logo.dark || ""}
                     alt={`${branding.productName} logo`}
                     className="h-6 w-auto"
                   />
@@ -406,9 +611,8 @@ export default function DashboardLayout({
             </div>
           </div>
 
-          {/* Right side - Tenant selector, Notifications, Theme toggle and User menu */}
+          {/* Right side - Notifications, Theme toggle and User menu */}
           <div className="flex items-center gap-4">
-            <TenantSelector />
             <NotificationCenter
               maxNotifications={5}
               refreshInterval={30000}
@@ -424,7 +628,7 @@ export default function DashboardLayout({
                 aria-haspopup="true"
               >
                 <User className="h-5 w-5" aria-hidden="true" />
-                <span className="hidden sm:block">{userData?.username || 'User'}</span>
+                <span className="hidden sm:block">{userData?.username || "User"}</span>
                 <ChevronDown className="h-4 w-4" aria-hidden="true" />
               </button>
 
@@ -432,9 +636,13 @@ export default function DashboardLayout({
                 <div className="absolute right-0 mt-2 w-56 rounded-md bg-popover shadow-lg ring-1 ring-border">
                   <div className="py-1">
                     <div className="px-4 py-2 text-sm text-muted-foreground">
-                      <div className="font-semibold text-foreground">{userData?.full_name || userData?.username}</div>
+                      <div className="font-semibold text-foreground">
+                        {userData?.full_name || userData?.username}
+                      </div>
                       <div className="text-xs">{userData?.email}</div>
-                      <div className="text-xs mt-1">Role: {userData?.roles?.join(', ') || 'User'}</div>
+                      <div className="text-xs mt-1">
+                        Role: {userData?.roles?.join(", ") || "User"}
+                      </div>
                     </div>
                     <hr className="my-1 border-border" />
                     <Link
@@ -462,9 +670,11 @@ export default function DashboardLayout({
       </nav>
 
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border pt-16 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
+      <div
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-card border-r border-border pt-16 transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         {/* Mobile close button */}
         <div className="lg:hidden absolute top-20 right-4 z-10">
           <button
@@ -480,11 +690,13 @@ export default function DashboardLayout({
           <ul className="space-y-1">
             {visibleSections.map((section) => {
               const isExpanded = expandedSections.has(section.id);
-              const isSectionActive = pathname === section.href ||
-                (section.href !== '/dashboard' && pathname.startsWith(section.href));
-              const hasActiveChild = section.items?.some(item =>
-                pathname === item.href ||
-                (item.href !== '/dashboard' && pathname.startsWith(item.href))
+              const isSectionActive =
+                pathname === section.href ||
+                (section.href !== "/dashboard" && pathname.startsWith(section.href));
+              const hasActiveChild = section.items?.some(
+                (item) =>
+                  pathname === item.href ||
+                  (item.href !== "/dashboard" && pathname.startsWith(item.href)),
               );
 
               return (
@@ -496,10 +708,10 @@ export default function DashboardLayout({
                         href={section.href}
                         className={`flex-1 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                           isSectionActive && !hasActiveChild
-                            ? 'bg-primary/10 text-primary'
+                            ? "bg-primary/10 text-primary"
                             : hasActiveChild
-                            ? 'text-foreground'
-                            : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                              ? "text-foreground"
+                              : "text-muted-foreground hover:bg-accent hover:text-foreground"
                         }`}
                         onClick={() => setSidebarOpen(false)}
                       >
@@ -511,9 +723,11 @@ export default function DashboardLayout({
                           onClick={() => toggleSection(section.id)}
                           className="p-1 mr-1 text-muted-foreground hover:text-foreground transition-colors"
                         >
-                          <ChevronRight className={`h-4 w-4 transform transition-transform ${
-                            isExpanded ? 'rotate-90' : ''
-                          }`} />
+                          <ChevronRight
+                            className={`h-4 w-4 transform transition-transform ${
+                              isExpanded ? "rotate-90" : ""
+                            }`}
+                          />
                         </button>
                       )}
                     </div>
@@ -522,8 +736,9 @@ export default function DashboardLayout({
                     {section.items && isExpanded && (
                       <ul className="mt-1 ml-4 border-l border-border space-y-1">
                         {section.items.map((item) => {
-                          const isItemActive = pathname === item.href ||
-                            (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                          const isItemActive =
+                            pathname === item.href ||
+                            (item.href !== "/dashboard" && pathname.startsWith(item.href));
 
                           // If item has permission requirement, wrap with Can component
                           if (item.permission) {
@@ -534,8 +749,8 @@ export default function DashboardLayout({
                                     href={item.href}
                                     className={`flex items-center gap-3 rounded-lg px-3 py-1.5 ml-2 text-sm transition-colors ${
                                       isItemActive
-                                        ? 'bg-primary/10 text-primary'
-                                        : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                                        ? "bg-primary/10 text-primary"
+                                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
                                     }`}
                                     onClick={() => setSidebarOpen(false)}
                                   >
@@ -559,8 +774,8 @@ export default function DashboardLayout({
                                 href={item.href}
                                 className={`flex items-center gap-3 rounded-lg px-3 py-1.5 ml-2 text-sm transition-colors ${
                                   isItemActive
-                                    ? 'bg-primary/10 text-primary'
-                                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                                 }`}
                                 onClick={() => setSidebarOpen(false)}
                               >
@@ -595,7 +810,11 @@ export default function DashboardLayout({
 
       {/* Main content area */}
       <div className="lg:pl-64 pt-16">
-        <main id="main-content" className="min-h-screen p-4 sm:p-6 lg:p-8 bg-background" aria-label="Main content">
+        <main
+          id="main-content"
+          className="min-h-screen p-4 sm:p-6 lg:p-8 bg-background"
+          aria-label="Main content"
+        >
           {children}
         </main>
       </div>

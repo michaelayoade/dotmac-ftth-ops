@@ -9,7 +9,7 @@ from typing import Any
 import structlog
 from elasticsearch import AsyncElasticsearch, NotFoundError
 
-from dotmac.platform.search.models import (
+from dotmac.platform.search.models_elasticsearch import (
     INDEX_MAPPINGS,
     AggregationResult,
     SearchableEntity,

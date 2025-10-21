@@ -4,16 +4,16 @@
  * Custom hooks for interacting with the fault management API
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '@/lib/api/client';
+import { useState, useEffect, useCallback } from "react";
+import { apiClient } from "@/lib/api/client";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type AlarmSeverity = 'critical' | 'major' | 'minor' | 'warning' | 'info';
-export type AlarmStatus = 'active' | 'acknowledged' | 'cleared' | 'resolved';
-export type AlarmSource = 'genieacs' | 'voltha' | 'netbox' | 'manual' | 'api';
+export type AlarmSeverity = "critical" | "major" | "minor" | "warning" | "info";
+export type AlarmStatus = "active" | "acknowledged" | "cleared" | "resolved";
+export type AlarmSource = "genieacs" | "voltha" | "netbox" | "manual" | "api";
 
 export interface Alarm {
   id: string;
@@ -116,21 +116,22 @@ export function useAlarms(params?: AlarmQueryParams) {
 
       // Build query string
       const queryParams = new URLSearchParams();
-      if (params?.severity) params.severity.forEach(s => queryParams.append('severity', s));
-      if (params?.status) params.status.forEach(s => queryParams.append('status', s));
-      if (params?.source) params.source.forEach(s => queryParams.append('source', s));
-      if (params?.alarm_type) queryParams.set('alarm_type', params.alarm_type);
-      if (params?.resource_type) queryParams.set('resource_type', params.resource_type);
-      if (params?.resource_id) queryParams.set('resource_id', params.resource_id);
-      if (params?.customer_id) queryParams.set('customer_id', params.customer_id);
-      if (params?.assigned_to) queryParams.set('assigned_to', params.assigned_to);
-      if (params?.is_root_cause !== undefined) queryParams.set('is_root_cause', String(params.is_root_cause));
-      if (params?.from_date) queryParams.set('from_date', params.from_date);
-      if (params?.to_date) queryParams.set('to_date', params.to_date);
-      if (params?.limit) queryParams.set('limit', String(params.limit));
-      if (params?.offset) queryParams.set('offset', String(params.offset));
+      if (params?.severity) params.severity.forEach((s) => queryParams.append("severity", s));
+      if (params?.status) params.status.forEach((s) => queryParams.append("status", s));
+      if (params?.source) params.source.forEach((s) => queryParams.append("source", s));
+      if (params?.alarm_type) queryParams.set("alarm_type", params.alarm_type);
+      if (params?.resource_type) queryParams.set("resource_type", params.resource_type);
+      if (params?.resource_id) queryParams.set("resource_id", params.resource_id);
+      if (params?.customer_id) queryParams.set("customer_id", params.customer_id);
+      if (params?.assigned_to) queryParams.set("assigned_to", params.assigned_to);
+      if (params?.is_root_cause !== undefined)
+        queryParams.set("is_root_cause", String(params.is_root_cause));
+      if (params?.from_date) queryParams.set("from_date", params.from_date);
+      if (params?.to_date) queryParams.set("to_date", params.to_date);
+      if (params?.limit) queryParams.set("limit", String(params.limit));
+      if (params?.offset) queryParams.set("offset", String(params.offset));
 
-      const endpoint = `/faults/alarms${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const endpoint = `/faults/alarms${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
       const response = await apiClient.get(endpoint);
 
       if (response.data) {
@@ -138,7 +139,7 @@ export function useAlarms(params?: AlarmQueryParams) {
       }
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to fetch alarms:', err);
+      console.error("Failed to fetch alarms:", err);
     } finally {
       setIsLoading(false);
     }
@@ -169,14 +170,14 @@ export function useAlarmStatistics() {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.get('/faults/alarms/statistics');
+      const response = await apiClient.get("/faults/alarms/statistics");
 
       if (response.data) {
         setStatistics(response.data as AlarmStatistics);
       }
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to fetch alarm statistics:', err);
+      console.error("Failed to fetch alarm statistics:", err);
     } finally {
       setIsLoading(false);
     }
@@ -206,15 +207,15 @@ export function useAlarmOperations() {
       setIsLoading(true);
       setError(null);
 
-      const promises = alarmIds.map(id =>
-        apiClient.post(`/faults/alarms/${id}/acknowledge`, { note })
+      const promises = alarmIds.map((id) =>
+        apiClient.post(`/faults/alarms/${id}/acknowledge`, { note }),
       );
 
       await Promise.all(promises);
       return true;
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to acknowledge alarms:', err);
+      console.error("Failed to acknowledge alarms:", err);
       return false;
     } finally {
       setIsLoading(false);
@@ -226,35 +227,33 @@ export function useAlarmOperations() {
       setIsLoading(true);
       setError(null);
 
-      const promises = alarmIds.map(id =>
-        apiClient.post(`/faults/alarms/${id}/clear`, {})
-      );
+      const promises = alarmIds.map((id) => apiClient.post(`/faults/alarms/${id}/clear`, {}));
 
       await Promise.all(promises);
       return true;
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to clear alarms:', err);
+      console.error("Failed to clear alarms:", err);
       return false;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const createTickets = useCallback(async (alarmIds: string[], priority: string = 'normal') => {
+  const createTickets = useCallback(async (alarmIds: string[], priority: string = "normal") => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const promises = alarmIds.map(id =>
-        apiClient.post(`/faults/alarms/${id}/create-ticket`, { priority })
+      const promises = alarmIds.map((id) =>
+        apiClient.post(`/faults/alarms/${id}/create-ticket`, { priority }),
       );
 
       await Promise.all(promises);
       return true;
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to create tickets:', err);
+      console.error("Failed to create tickets:", err);
       return false;
     } finally {
       setIsLoading(false);
@@ -287,7 +286,7 @@ export function useSLACompliance(days: number = 30) {
       fromDate.setDate(fromDate.getDate() - days);
 
       const response = await apiClient.get(
-        `/faults/sla/compliance?from_date=${fromDate.toISOString()}`
+        `/faults/sla/compliance?from_date=${fromDate.toISOString()}`,
       );
 
       if (response.data) {
@@ -295,7 +294,7 @@ export function useSLACompliance(days: number = 30) {
       }
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to fetch SLA compliance:', err);
+      console.error("Failed to fetch SLA compliance:", err);
     } finally {
       setIsLoading(false);
     }
@@ -339,7 +338,7 @@ export function useAlarmDetails(alarmId: string | null) {
       setNotes(notesResponse.data || []);
     } catch (err) {
       setError(err as Error);
-      console.error('Failed to fetch alarm details:', err);
+      console.error("Failed to fetch alarm details:", err);
     } finally {
       setIsLoading(false);
     }
@@ -349,19 +348,22 @@ export function useAlarmDetails(alarmId: string | null) {
     fetchDetails();
   }, [fetchDetails]);
 
-  const addNote = useCallback(async (content: string) => {
-    if (!alarmId) return false;
+  const addNote = useCallback(
+    async (content: string) => {
+      if (!alarmId) return false;
 
-    try {
-      await apiClient.post(`/faults/alarms/${alarmId}/notes`, { content });
-      await fetchDetails(); // Refresh notes
-      return true;
-    } catch (err) {
-      setError(err as Error);
-      console.error('Failed to add note:', err);
-      return false;
-    }
-  }, [alarmId, fetchDetails]);
+      try {
+        await apiClient.post(`/faults/alarms/${alarmId}/notes`, { content });
+        await fetchDetails(); // Refresh notes
+        return true;
+      } catch (err) {
+        setError(err as Error);
+        console.error("Failed to add note:", err);
+        return false;
+      }
+    },
+    [alarmId, fetchDetails],
+  );
 
   return {
     history,

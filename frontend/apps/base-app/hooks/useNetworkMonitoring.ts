@@ -4,9 +4,9 @@
  * React hooks for network device monitoring API integration
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { useToast } from "@/components/ui/use-toast";
 import type {
   NetworkOverview,
   DeviceHealth,
@@ -19,9 +19,9 @@ import type {
   AlertSeverity,
   AcknowledgeAlertRequest,
   CreateAlertRuleRequest,
-} from '@/types/network-monitoring';
+} from "@/types/network-monitoring";
 
-const API_BASE = '/api/v1';
+const API_BASE = "/api/v1";
 
 // ============================================================================
 // Network Overview
@@ -29,7 +29,7 @@ const API_BASE = '/api/v1';
 
 export function useNetworkOverview() {
   return useQuery({
-    queryKey: ['network', 'overview'],
+    queryKey: ["network", "overview"],
     queryFn: async () => {
       const response = await apiClient.get<NetworkOverview>(`${API_BASE}/network/overview`);
       return response.data;
@@ -49,14 +49,14 @@ interface UseDevicesParams {
 
 export function useNetworkDevices(params: UseDevicesParams = {}) {
   return useQuery({
-    queryKey: ['network', 'devices', params],
+    queryKey: ["network", "devices", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.device_type) searchParams.append('device_type', params.device_type);
-      if (params.status) searchParams.append('status', params.status);
+      if (params.device_type) searchParams.append("device_type", params.device_type);
+      if (params.status) searchParams.append("status", params.status);
 
       const response = await apiClient.get<DeviceHealth[]>(
-        `${API_BASE}/network/devices?${searchParams.toString()}`
+        `${API_BASE}/network/devices?${searchParams.toString()}`,
       );
       return response.data;
     },
@@ -66,11 +66,11 @@ export function useNetworkDevices(params: UseDevicesParams = {}) {
 
 export function useDeviceHealth(deviceId: string | undefined) {
   return useQuery({
-    queryKey: ['network', 'devices', deviceId, 'health'],
+    queryKey: ["network", "devices", deviceId, "health"],
     queryFn: async () => {
-      if (!deviceId) throw new Error('Device ID is required');
+      if (!deviceId) throw new Error("Device ID is required");
       const response = await apiClient.get<DeviceHealth>(
-        `${API_BASE}/network/devices/${deviceId}/health`
+        `${API_BASE}/network/devices/${deviceId}/health`,
       );
       return response.data;
     },
@@ -85,11 +85,11 @@ export function useDeviceHealth(deviceId: string | undefined) {
 
 export function useDeviceMetrics(deviceId: string | undefined) {
   return useQuery({
-    queryKey: ['network', 'devices', deviceId, 'metrics'],
+    queryKey: ["network", "devices", deviceId, "metrics"],
     queryFn: async () => {
-      if (!deviceId) throw new Error('Device ID is required');
+      if (!deviceId) throw new Error("Device ID is required");
       const response = await apiClient.get<DeviceMetrics>(
-        `${API_BASE}/network/devices/${deviceId}/metrics`
+        `${API_BASE}/network/devices/${deviceId}/metrics`,
       );
       return response.data;
     },
@@ -104,11 +104,11 @@ export function useDeviceMetrics(deviceId: string | undefined) {
 
 export function useDeviceTraffic(deviceId: string | undefined) {
   return useQuery({
-    queryKey: ['network', 'devices', deviceId, 'traffic'],
+    queryKey: ["network", "devices", deviceId, "traffic"],
     queryFn: async () => {
-      if (!deviceId) throw new Error('Device ID is required');
+      if (!deviceId) throw new Error("Device ID is required");
       const response = await apiClient.get<TrafficStats>(
-        `${API_BASE}/network/devices/${deviceId}/traffic`
+        `${API_BASE}/network/devices/${deviceId}/traffic`,
       );
       return response.data;
     },
@@ -130,18 +130,18 @@ interface UseAlertsParams {
 
 export function useNetworkAlerts(params: UseAlertsParams = {}) {
   return useQuery({
-    queryKey: ['network', 'alerts', params],
+    queryKey: ["network", "alerts", params],
     queryFn: async () => {
       const searchParams = new URLSearchParams();
-      if (params.severity) searchParams.append('severity', params.severity);
+      if (params.severity) searchParams.append("severity", params.severity);
       if (params.active_only !== undefined) {
-        searchParams.append('active_only', params.active_only.toString());
+        searchParams.append("active_only", params.active_only.toString());
       }
-      if (params.device_id) searchParams.append('device_id', params.device_id);
-      if (params.limit) searchParams.append('limit', params.limit.toString());
+      if (params.device_id) searchParams.append("device_id", params.device_id);
+      if (params.limit) searchParams.append("limit", params.limit.toString());
 
       const response = await apiClient.get<NetworkAlert[]>(
-        `${API_BASE}/network/alerts?${searchParams.toString()}`
+        `${API_BASE}/network/alerts?${searchParams.toString()}`,
       );
       return response.data;
     },
@@ -157,23 +157,23 @@ export function useAcknowledgeAlert() {
     mutationFn: async ({ alertId, data }: { alertId: string; data: AcknowledgeAlertRequest }) => {
       const response = await apiClient.post<NetworkAlert>(
         `${API_BASE}/network/alerts/${alertId}/acknowledge`,
-        data
+        data,
       );
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['network', 'alerts'] });
-      queryClient.invalidateQueries({ queryKey: ['network', 'overview'] });
+      queryClient.invalidateQueries({ queryKey: ["network", "alerts"] });
+      queryClient.invalidateQueries({ queryKey: ["network", "overview"] });
       toast({
-        title: 'Alert Acknowledged',
-        description: 'The alert has been acknowledged successfully',
+        title: "Alert Acknowledged",
+        description: "The alert has been acknowledged successfully",
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to acknowledge alert',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to acknowledge alert",
+        variant: "destructive",
       });
     },
   });
@@ -185,7 +185,7 @@ export function useAcknowledgeAlert() {
 
 export function useAlertRules() {
   return useQuery({
-    queryKey: ['network', 'alert-rules'],
+    queryKey: ["network", "alert-rules"],
     queryFn: async () => {
       const response = await apiClient.get<AlertRule[]>(`${API_BASE}/network/alert-rules`);
       return response.data;
@@ -204,17 +204,17 @@ export function useCreateAlertRule() {
       return response.data;
     },
     onSuccess: (rule) => {
-      queryClient.invalidateQueries({ queryKey: ['network', 'alert-rules'] });
+      queryClient.invalidateQueries({ queryKey: ["network", "alert-rules"] });
       toast({
-        title: 'Alert Rule Created',
+        title: "Alert Rule Created",
         description: `Alert rule "${rule.name}" has been created successfully`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Error',
-        description: error.response?.data?.detail || 'Failed to create alert rule',
-        variant: 'destructive',
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to create alert rule",
+        variant: "destructive",
       });
     },
   });

@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
 // Force dynamic rendering to avoid SSR issues with React Query hooks
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -23,17 +23,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { useRBAC } from '@/contexts/RBACContext';
-import { useFiberCableListGraphQL } from '@/hooks/useFiberGraphQL';
-import {
-  FiberCableStatus,
-  FiberType,
-  CableInstallationType,
-} from '@/lib/graphql/generated';
-import { platformConfig } from '@/lib/config';
-import { Cable, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
+} from "@/components/ui/table";
+import { useRBAC } from "@/contexts/RBACContext";
+import { useFiberCableListGraphQL } from "@/hooks/useFiberGraphQL";
+import { FiberCableStatus, FiberType, CableInstallationType } from "@/lib/graphql/generated";
+import { platformConfig } from "@/lib/config";
+import { Cable, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 const FIBER_CABLE_STATUSES: FiberCableStatus[] = [
   FiberCableStatus.Active,
@@ -44,11 +40,7 @@ const FIBER_CABLE_STATUSES: FiberCableStatus[] = [
   FiberCableStatus.Decommissioned,
 ];
 
-const FIBER_TYPES: FiberType[] = [
-  FiberType.SingleMode,
-  FiberType.MultiMode,
-  FiberType.Hybrid,
-];
+const FIBER_TYPES: FiberType[] = [FiberType.SingleMode, FiberType.MultiMode, FiberType.Hybrid];
 
 const INSTALLATION_TYPES: CableInstallationType[] = [
   CableInstallationType.Aerial,
@@ -61,14 +53,14 @@ const INSTALLATION_TYPES: CableInstallationType[] = [
 
 export default function FiberCablesPage() {
   const { hasPermission } = useRBAC();
-  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission('isp.ipam.read');
+  const hasFiberAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
 
   // Filter state
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [status, setStatus] = useState<FiberCableStatus | undefined>(undefined);
   const [fiberType, setFiberType] = useState<FiberType | undefined>(undefined);
   const [installationType, setInstallationType] = useState<CableInstallationType | undefined>(
-    undefined
+    undefined,
   );
   const [limit] = useState(50);
   const [offset, setOffset] = useState(0);
@@ -89,7 +81,7 @@ export default function FiberCablesPage() {
     ? cables.filter((cable) =>
         [cable.name, cable.cableId]
           .filter(Boolean)
-          .some((field) => field!.toString().toLowerCase().includes(searchLower))
+          .some((field) => field!.toString().toLowerCase().includes(searchLower)),
       )
     : cables;
 
@@ -128,7 +120,7 @@ export default function FiberCablesPage() {
   };
 
   const handleClearFilters = () => {
-    setSearch('');
+    setSearch("");
     setStatus(undefined);
     setFiberType(undefined);
     setInstallationType(undefined);
@@ -137,25 +129,28 @@ export default function FiberCablesPage() {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'ACTIVE':
-        return 'default';
-      case 'INACTIVE':
-        return 'secondary';
-      case 'UNDER_CONSTRUCTION':
-        return 'outline';
-      case 'MAINTENANCE':
-        return 'secondary';
-      case 'DAMAGED':
-        return 'destructive';
-      case 'DECOMMISSIONED':
-        return 'secondary';
+      case "ACTIVE":
+        return "default";
+      case "INACTIVE":
+        return "secondary";
+      case "UNDER_CONSTRUCTION":
+        return "outline";
+      case "MAINTENANCE":
+        return "secondary";
+      case "DAMAGED":
+        return "destructive";
+      case "DECOMMISSIONED":
+        return "secondary";
       default:
-        return 'outline';
+        return "outline";
     }
   };
 
   const formatFiberType = (type: string) => {
-    return type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+    return type
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   return (
@@ -213,9 +208,9 @@ export default function FiberCablesPage() {
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select
-                value={status || 'all'}
+                value={status || "all"}
                 onValueChange={(value) => {
-                  setStatus(value === 'all' ? undefined : (value as FiberCableStatus));
+                  setStatus(value === "all" ? undefined : (value as FiberCableStatus));
                   setOffset(0);
                 }}
               >
@@ -237,9 +232,9 @@ export default function FiberCablesPage() {
             <div className="space-y-2">
               <Label htmlFor="fiberType">Fiber Type</Label>
               <Select
-                value={fiberType || 'all'}
+                value={fiberType || "all"}
                 onValueChange={(value) => {
-                  setFiberType(value === 'all' ? undefined : (value as FiberType));
+                  setFiberType(value === "all" ? undefined : (value as FiberType));
                   setOffset(0);
                 }}
               >
@@ -261,10 +256,10 @@ export default function FiberCablesPage() {
             <div className="space-y-2">
               <Label htmlFor="installationType">Installation</Label>
               <Select
-                value={installationType || 'all'}
+                value={installationType || "all"}
                 onValueChange={(value) => {
                   setInstallationType(
-                    value === 'all' ? undefined : (value as CableInstallationType)
+                    value === "all" ? undefined : (value as CableInstallationType),
                   );
                   setOffset(0);
                 }}
@@ -291,7 +286,8 @@ export default function FiberCablesPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>
-              Cables {totalCount > 0 && <span className="text-muted-foreground">({totalCount})</span>}
+              Cables{" "}
+              {totalCount > 0 && <span className="text-muted-foreground">({totalCount})</span>}
             </CardTitle>
             {loading && <Badge variant="outline">Loading...</Badge>}
           </div>
@@ -304,8 +300,8 @@ export default function FiberCablesPage() {
               <h3 className="text-lg font-medium mb-2">No fiber cables found</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 {search || status || fiberType || installationType
-                  ? 'Try adjusting your filters'
-                  : 'No fiber cables have been added to the system yet'}
+                  ? "Try adjusting your filters"
+                  : "No fiber cables have been added to the system yet"}
               </p>
               <Button variant="outline" onClick={() => refetch()}>
                 Refresh
@@ -353,8 +349,8 @@ export default function FiberCablesPage() {
                           <span
                             className={
                               cable.capacityUtilizationPercent > 80
-                                ? 'text-amber-600 font-medium'
-                                : ''
+                                ? "text-amber-600 font-medium"
+                                : ""
                             }
                           >
                             {cable.capacityUtilizationPercent.toFixed(1)}%
@@ -380,7 +376,7 @@ export default function FiberCablesPage() {
               {totalCount > limit && (
                 <div className="flex items-center justify-between pt-4 border-t">
                   <p className="text-sm text-muted-foreground">
-                    Showing {offset + 1} to {Math.min(offset + limit, totalCount)} of {totalCount}{' '}
+                    Showing {offset + 1} to {Math.min(offset + limit, totalCount)} of {totalCount}{" "}
                     cables
                   </p>
                   <div className="flex gap-2">

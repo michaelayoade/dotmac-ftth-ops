@@ -6,6 +6,7 @@ Configures OTLP exporters and auto-instrumentation for FastAPI, SQLAlchemy, and 
 
 import os
 from collections.abc import Sequence
+from weakref import WeakSet
 
 import structlog
 from fastapi import FastAPI
@@ -29,6 +30,9 @@ from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 from structlog.typing import Processor
 
 from dotmac.platform.settings import settings
+
+# Track which FastAPI apps have already been instrumented to avoid duplicate middleware wiring.
+_FASTAPI_INSTRUMENTED_APPS: "WeakSet[FastAPI]" = WeakSet()
 
 
 class ResilientOTLPExporter(SpanExporter):
@@ -302,15 +306,34 @@ def instrument_libraries(app: FastAPI | None = None) -> None:
 
     # Instrument FastAPI if app provided and enabled
     if app and settings.observability.otel_instrument_fastapi:
-        try:
-            FastAPIInstrumentor.instrument_app(
-                app,
-                tracer_provider=trace.get_tracer_provider(),
-                excluded_urls="health,ready,metrics",  # Don't trace health checks
+        if app in _FASTAPI_INSTRUMENTED_APPS:
+            structlog.get_logger(__name__).debug(
+                "FastAPI instrumentation already applied", app_id=id(app)
             )
-            structlog.get_logger(__name__).debug("FastAPI instrumentation enabled")
-        except Exception as e:
-            structlog.get_logger(__name__).warning("Failed to instrument FastAPI", error=str(e))
+        else:
+            try:
+                FastAPIInstrumentor.instrument_app(
+                    app,
+                    tracer_provider=trace.get_tracer_provider(),
+                    excluded_urls="health,ready,metrics",  # Don't trace health checks
+                )
+                _FASTAPI_INSTRUMENTED_APPS.add(app)
+                structlog.get_logger(__name__).debug("FastAPI instrumentation enabled")
+            except RuntimeError as e:
+                message = str(e)
+                if "Cannot add middleware after an application has started" in message:
+                    structlog.get_logger(__name__).warning(
+                        "FastAPI instrumentation skipped because the application already started",
+                        error=message,
+                    )
+                else:
+                    structlog.get_logger(__name__).warning(
+                        "Failed to instrument FastAPI", error=message
+                    )
+            except Exception as e:
+                structlog.get_logger(__name__).warning(
+                    "Failed to instrument FastAPI", error=str(e)
+                )
     elif app:
         structlog.get_logger(__name__).debug("FastAPI instrumentation disabled by settings")
 

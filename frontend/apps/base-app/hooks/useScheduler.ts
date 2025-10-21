@@ -1,6 +1,13 @@
-import { useMutation, useQuery, useQueryClient, type UseMutationResult, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { extractDataOrThrow } from '@/lib/api/response-helpers';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type UseMutationResult,
+  type UseQueryOptions,
+  type UseQueryResult,
+} from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { extractDataOrThrow } from "@/lib/api/response-helpers";
 import type {
   JobChain,
   ScheduledJob,
@@ -12,21 +19,24 @@ import type {
   JobChainResponse,
   JobChainListResponse,
   JobChainExecuteResponse,
-} from '@/types';
+} from "@/types";
 
-type ScheduledJobsKey = ['scheduler', 'scheduled-jobs'];
-type JobChainsKey = ['scheduler', 'job-chains'];
+type ScheduledJobsKey = ["scheduler", "scheduled-jobs"];
+type JobChainsKey = ["scheduler", "job-chains"];
 
 /**
  * Fetch scheduled jobs configured through the job scheduler router.
  */
 export function useScheduledJobs(
-  options?: Omit<UseQueryOptions<ScheduledJob[], Error, ScheduledJob[], ScheduledJobsKey>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<ScheduledJob[], Error, ScheduledJob[], ScheduledJobsKey>,
+    "queryKey" | "queryFn"
+  >,
 ): UseQueryResult<ScheduledJob[], Error> {
   return useQuery<ScheduledJob[], Error, ScheduledJob[], ScheduledJobsKey>({
-    queryKey: ['scheduler', 'scheduled-jobs'],
+    queryKey: ["scheduler", "scheduled-jobs"],
     queryFn: async () => {
-      const response = await apiClient.get<ScheduledJob[]>('/jobs/scheduler/scheduled-jobs');
+      const response = await apiClient.get<ScheduledJob[]>("/jobs/scheduler/scheduled-jobs");
       return extractDataOrThrow(response);
     },
     staleTime: 60_000,
@@ -38,13 +48,16 @@ export function useScheduledJobs(
  * Fetch job chains for orchestrated workflows.
  */
 export function useJobChains(
-  options?: Omit<UseQueryOptions<JobChain[], Error, JobChain[], JobChainsKey>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<JobChain[], Error, JobChain[], JobChainsKey>,
+    "queryKey" | "queryFn"
+  >,
 ): UseQueryResult<JobChain[], Error> {
   return useQuery<JobChain[], Error, JobChain[], JobChainsKey>({
-    queryKey: ['scheduler', 'job-chains'],
+    queryKey: ["scheduler", "job-chains"],
     queryFn: async () => {
       try {
-        const response = await apiClient.get<JobChain[]>('/jobs/scheduler/chains');
+        const response = await apiClient.get<JobChain[]>("/jobs/scheduler/chains");
         return extractDataOrThrow(response);
       } catch (error: any) {
         if (error?.response?.status === 404) {
@@ -71,8 +84,10 @@ export function useExecuteJobChain(): UseMutationResult<JobChain, Error, Execute
     },
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['scheduler', 'job-chains'] }),
-        queryClient.invalidateQueries({ queryKey: ['services', 'instances'] }),
+        queryClient.invalidateQueries({
+          queryKey: ["scheduler", "job-chains"],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["services", "instances"] }),
       ]);
     },
   });
@@ -87,11 +102,11 @@ export function useExecuteJobChain(): UseMutationResult<JobChain, Error, Execute
  */
 export function useScheduledJob(jobId: string | null): UseQueryResult<ScheduledJobResponse, Error> {
   return useQuery<ScheduledJobResponse, Error>({
-    queryKey: ['scheduler', 'scheduled-job', jobId],
+    queryKey: ["scheduler", "scheduled-job", jobId],
     queryFn: async () => {
-      if (!jobId) throw new Error('Job ID is required');
+      if (!jobId) throw new Error("Job ID is required");
       const response = await apiClient.get<ScheduledJobResponse>(
-        `/jobs/scheduler/scheduled-jobs/${jobId}`
+        `/jobs/scheduler/scheduled-jobs/${jobId}`,
       );
       return extractDataOrThrow(response);
     },
@@ -112,13 +127,15 @@ export function useCreateScheduledJob(): UseMutationResult<
   return useMutation<ScheduledJobResponse, Error, ScheduledJobCreate>({
     mutationFn: async (payload) => {
       const response = await apiClient.post<ScheduledJobResponse>(
-        '/jobs/scheduler/scheduled-jobs',
-        payload
+        "/jobs/scheduler/scheduled-jobs",
+        payload,
       );
       return extractDataOrThrow(response);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['scheduler', 'scheduled-jobs'] });
+      await queryClient.invalidateQueries({
+        queryKey: ["scheduler", "scheduled-jobs"],
+      });
     },
   });
 }
@@ -137,14 +154,18 @@ export function useUpdateScheduledJob(): UseMutationResult<
     mutationFn: async ({ jobId, payload }) => {
       const response = await apiClient.patch<ScheduledJobResponse>(
         `/jobs/scheduler/scheduled-jobs/${jobId}`,
-        payload
+        payload,
       );
       return extractDataOrThrow(response);
     },
     onSuccess: async (_, { jobId }) => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['scheduler', 'scheduled-jobs'] }),
-        queryClient.invalidateQueries({ queryKey: ['scheduler', 'scheduled-job', jobId] }),
+        queryClient.invalidateQueries({
+          queryKey: ["scheduler", "scheduled-jobs"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["scheduler", "scheduled-job", jobId],
+        }),
       ]);
     },
   });
@@ -153,24 +174,24 @@ export function useUpdateScheduledJob(): UseMutationResult<
 /**
  * Toggle scheduled job active status
  */
-export function useToggleScheduledJob(): UseMutationResult<
-  ScheduledJobResponse,
-  Error,
-  string
-> {
+export function useToggleScheduledJob(): UseMutationResult<ScheduledJobResponse, Error, string> {
   const queryClient = useQueryClient();
 
   return useMutation<ScheduledJobResponse, Error, string>({
     mutationFn: async (jobId) => {
       const response = await apiClient.post<ScheduledJobResponse>(
-        `/jobs/scheduler/scheduled-jobs/${jobId}/toggle`
+        `/jobs/scheduler/scheduled-jobs/${jobId}/toggle`,
       );
       return extractDataOrThrow(response);
     },
     onSuccess: async (_, jobId) => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['scheduler', 'scheduled-jobs'] }),
-        queryClient.invalidateQueries({ queryKey: ['scheduler', 'scheduled-job', jobId] }),
+        queryClient.invalidateQueries({
+          queryKey: ["scheduler", "scheduled-jobs"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["scheduler", "scheduled-job", jobId],
+        }),
       ]);
     },
   });
@@ -187,7 +208,9 @@ export function useDeleteScheduledJob(): UseMutationResult<void, Error, string> 
       await apiClient.delete(`/jobs/scheduler/scheduled-jobs/${jobId}`);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['scheduler', 'scheduled-jobs'] });
+      await queryClient.invalidateQueries({
+        queryKey: ["scheduler", "scheduled-jobs"],
+      });
     },
   });
 }
@@ -197,12 +220,10 @@ export function useDeleteScheduledJob(): UseMutationResult<void, Error, string> 
  */
 export function useJobChain(chainId: string | null): UseQueryResult<JobChainResponse, Error> {
   return useQuery<JobChainResponse, Error>({
-    queryKey: ['scheduler', 'job-chain', chainId],
+    queryKey: ["scheduler", "job-chain", chainId],
     queryFn: async () => {
-      if (!chainId) throw new Error('Chain ID is required');
-      const response = await apiClient.get<JobChainResponse>(
-        `/jobs/scheduler/chains/${chainId}`
-      );
+      if (!chainId) throw new Error("Chain ID is required");
+      const response = await apiClient.get<JobChainResponse>(`/jobs/scheduler/chains/${chainId}`);
       return extractDataOrThrow(response);
     },
     enabled: !!chainId,
@@ -217,14 +238,13 @@ export function useCreateJobChain(): UseMutationResult<JobChainResponse, Error, 
 
   return useMutation<JobChainResponse, Error, JobChainCreate>({
     mutationFn: async (payload) => {
-      const response = await apiClient.post<JobChainResponse>(
-        '/jobs/scheduler/chains',
-        payload
-      );
+      const response = await apiClient.post<JobChainResponse>("/jobs/scheduler/chains", payload);
       return extractDataOrThrow(response);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['scheduler', 'job-chains'] });
+      await queryClient.invalidateQueries({
+        queryKey: ["scheduler", "job-chains"],
+      });
     },
   });
 }

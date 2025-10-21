@@ -2,24 +2,24 @@
  * Subresource Integrity (SRI) utilities for securing external resources
  */
 
-import { createHash } from 'crypto';
-import fetch from 'node-fetch';
+import { createHash } from "crypto";
+import fetch from "node-fetch";
 
 /**
  * Supported hash algorithms for SRI
  */
-export type SRIAlgorithm = 'sha256' | 'sha384' | 'sha512';
+export type SRIAlgorithm = "sha256" | "sha384" | "sha512";
 
 /**
  * Generate SRI hash for content
  */
 export function generateSRIHash(
   content: string | Buffer,
-  algorithm: SRIAlgorithm = 'sha384'
+  algorithm: SRIAlgorithm = "sha384",
 ): string {
   const hash = createHash(algorithm);
   hash.update(content);
-  const digest = hash.digest('base64');
+  const digest = hash.digest("base64");
   return `${algorithm}-${digest}`;
 }
 
@@ -28,7 +28,7 @@ export function generateSRIHash(
  */
 export async function generateSRIHashFromURL(
   url: string,
-  algorithm: SRIAlgorithm = 'sha384'
+  algorithm: SRIAlgorithm = "sha384",
 ): Promise<string> {
   try {
     const response = await fetch(url);
@@ -47,7 +47,7 @@ export async function generateSRIHashFromURL(
  * Verify SRI hash matches content
  */
 export function verifySRIHash(content: string | Buffer, sriHash: string): boolean {
-  const [algorithm, expectedHash] = sriHash.split('-') as [SRIAlgorithm, string];
+  const [algorithm, expectedHash] = sriHash.split("-") as [SRIAlgorithm, string];
   const actualHash = generateSRIHash(content, algorithm);
   return actualHash === sriHash;
 }
@@ -57,9 +57,9 @@ export function verifySRIHash(content: string | Buffer, sriHash: string): boolea
  */
 export function generateSRIHashes(
   content: string | Buffer,
-  algorithms: SRIAlgorithm[] = ['sha256', 'sha384', 'sha512']
+  algorithms: SRIAlgorithm[] = ["sha256", "sha384", "sha512"],
 ): string {
-  return algorithms.map((algorithm) => generateSRIHash(content, algorithm)).join(' ');
+  return algorithms.map((algorithm) => generateSRIHash(content, algorithm)).join(" ");
 }
 
 /**
@@ -68,9 +68,9 @@ export function generateSRIHashes(
  */
 export const KNOWN_SRI_HASHES = {
   // Google Fonts - Inter font
-  'fonts.googleapis.com/css2?family=Inter': {
-    hash: 'sha384-PLACEHOLDER', // Will be generated at build time
-    crossorigin: 'anonymous',
+  "fonts.googleapis.com/css2?family=Inter": {
+    hash: "sha384-PLACEHOLDER", // Will be generated at build time
+    crossorigin: "anonymous",
   },
   // Add more known resources as needed
 } as const;
@@ -84,20 +84,20 @@ export function generateScriptTag(
   options?: {
     async?: boolean;
     defer?: boolean;
-    crossorigin?: 'anonymous' | 'use-credentials';
+    crossorigin?: "anonymous" | "use-credentials";
     nonce?: string;
-  }
+  },
 ): string {
   const attrs = [
     `src="${src}"`,
     `integrity="${integrity}"`,
     options?.crossorigin ? `crossorigin="${options.crossorigin}"` : 'crossorigin="anonymous"',
-    options?.async ? 'async' : '',
-    options?.defer ? 'defer' : '',
-    options?.nonce ? `nonce="${options.nonce}"` : '',
+    options?.async ? "async" : "",
+    options?.defer ? "defer" : "",
+    options?.nonce ? `nonce="${options.nonce}"` : "",
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   return `<script ${attrs}></script>`;
 }
@@ -109,19 +109,19 @@ export function generateLinkTag(
   href: string,
   integrity: string,
   options?: {
-    crossorigin?: 'anonymous' | 'use-credentials';
+    crossorigin?: "anonymous" | "use-credentials";
     media?: string;
-  }
+  },
 ): string {
   const attrs = [
     'rel="stylesheet"',
     `href="${href}"`,
     `integrity="${integrity}"`,
     options?.crossorigin ? `crossorigin="${options.crossorigin}"` : 'crossorigin="anonymous"',
-    options?.media ? `media="${options.media}"` : '',
+    options?.media ? `media="${options.media}"` : "",
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   return `<link ${attrs}>`;
 }
@@ -132,7 +132,7 @@ export function generateLinkTag(
 export interface ScriptWithSRIProps {
   src: string;
   integrity?: string;
-  strategy?: 'beforeInteractive' | 'afterInteractive' | 'lazyOnload';
+  strategy?: "beforeInteractive" | "afterInteractive" | "lazyOnload";
   onLoad?: () => void;
   onError?: () => void;
 }
@@ -150,7 +150,7 @@ export interface LinkWithSRIProps {
  * Build-time function to generate SRI manifest
  */
 export async function generateSRIManifest(
-  resources: Array<{ url: string; type: 'script' | 'style' }>
+  resources: Array<{ url: string; type: "script" | "style" }>,
 ): Promise<Record<string, { hash: string; type: string }>> {
   const manifest: Record<string, { hash: string; type: string }> = {};
 
@@ -172,7 +172,10 @@ export async function generateSRIManifest(
 /**
  * Validate all SRI hashes in HTML
  */
-export function validateSRIInHTML(html: string): { valid: boolean; errors: string[] } {
+export function validateSRIInHTML(html: string): {
+  valid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   // Check script tags

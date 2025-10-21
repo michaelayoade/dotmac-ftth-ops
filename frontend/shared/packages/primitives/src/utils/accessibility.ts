@@ -2,31 +2,31 @@
  * Accessibility utilities for keyboard navigation and ARIA support
  */
 
-import React from 'react';
+import React from "react";
 
-import { isBrowser } from './ssr';
+import { isBrowser } from "./ssr";
 
 /**
  * ARIA live region priorities
  */
-export type AriaLive = 'off' | 'polite' | 'assertive';
+export type AriaLive = "off" | "polite" | "assertive";
 
 /**
  * Common keyboard key codes
  */
 export const KEYS = {
-  ENTER: 'Enter',
-  SPACE: ' ',
-  ESCAPE: 'Escape',
-  ARROW_UP: 'ArrowUp',
-  ARROW_DOWN: 'ArrowDown',
-  ARROW_LEFT: 'ArrowLeft',
-  ARROW_RIGHT: 'ArrowRight',
-  HOME: 'Home',
-  END: 'End',
-  PAGE_UP: 'PageUp',
-  PAGE_DOWN: 'PageDown',
-  TAB: 'Tab',
+  ENTER: "Enter",
+  SPACE: " ",
+  ESCAPE: "Escape",
+  ARROW_UP: "ArrowUp",
+  ARROW_DOWN: "ArrowDown",
+  ARROW_LEFT: "ArrowLeft",
+  ARROW_RIGHT: "ArrowRight",
+  HOME: "Home",
+  END: "End",
+  PAGE_UP: "PageUp",
+  PAGE_DOWN: "PageDown",
+  TAB: "Tab",
 } as const;
 
 /**
@@ -39,38 +39,38 @@ export function useKeyboardNavigation<T>(
   items: T[],
   options: {
     loop?: boolean;
-    orientation?: 'horizontal' | 'vertical';
+    orientation?: "horizontal" | "vertical";
     onSelect?: (item: T, index: number) => void;
     initialIndex?: number;
   } = {
     // Implementation pending
-  }
+  },
 ) {
-  const { loop = true, orientation = 'vertical', onSelect, initialIndex = -1 } = options;
+  const { loop = true, orientation = "vertical", onSelect, initialIndex = -1 } = options;
   const [focusedIndex, setFocusedIndex] = React.useState(initialIndex);
 
   const navigate = React.useCallback(
-    (direction: 'next' | 'previous' | 'first' | 'last') => {
+    (direction: "next" | "previous" | "first" | "last") => {
       setFocusedIndex((prevIndex) => {
         let newIndex = prevIndex;
 
         switch (direction) {
-          case 'next':
+          case "next":
             newIndex = prevIndex + 1;
             if (newIndex >= items.length) {
               newIndex = loop ? 0 : items.length - 1;
             }
             break;
-          case 'previous':
+          case "previous":
             newIndex = prevIndex - 1;
             if (newIndex < 0) {
               newIndex = loop ? items.length - 1 : 0;
             }
             break;
-          case 'first':
+          case "first":
             newIndex = 0;
             break;
-          case 'last':
+          case "last":
             newIndex = items.length - 1;
             break;
         }
@@ -78,29 +78,29 @@ export function useKeyboardNavigation<T>(
         return newIndex;
       });
     },
-    [items.length, loop]
+    [items.length, loop],
   );
 
   // Navigation key handlers composition
   const NavigationHandlers = {
-    getNavigationKeys: (orientation: 'horizontal' | 'vertical') => ({
-      next: orientation === 'vertical' ? KEYS.ARROW_DOWN : KEYS.ARROW_RIGHT,
-      prev: orientation === 'vertical' ? KEYS.ARROW_UP : KEYS.ARROW_LEFT,
+    getNavigationKeys: (orientation: "horizontal" | "vertical") => ({
+      next: orientation === "vertical" ? KEYS.ARROW_DOWN : KEYS.ARROW_RIGHT,
+      prev: orientation === "vertical" ? KEYS.ARROW_UP : KEYS.ARROW_LEFT,
     }),
 
     handleNavigationKey: (
       key: string,
-      orientation: 'horizontal' | 'vertical',
-      navigate: (direction: 'next' | 'previous' | 'first' | 'last') => void,
-      event: React.KeyboardEvent
+      orientation: "horizontal" | "vertical",
+      navigate: (direction: "next" | "previous" | "first" | "last") => void,
+      event: React.KeyboardEvent,
     ) => {
       const keys = NavigationHandlers.getNavigationKeys(orientation);
 
       const handlers = {
-        [keys.next]: () => navigate('next'),
-        [keys.prev]: () => navigate('previous'),
-        [KEYS.HOME]: () => navigate('first'),
-        [KEYS.END]: () => navigate('last'),
+        [keys.next]: () => navigate("next"),
+        [keys.prev]: () => navigate("previous"),
+        [KEYS.HOME]: () => navigate("first"),
+        [KEYS.END]: () => navigate("last"),
       };
 
       if (handlers[key]) {
@@ -116,7 +116,7 @@ export function useKeyboardNavigation<T>(
       focusedIndex: number,
       items: unknown[],
       onSelect?: (item: unknown, index: number) => void,
-      event?: React.KeyboardEvent
+      event?: React.KeyboardEvent,
     ) => {
       if (key === KEYS.ENTER || key === KEYS.SPACE) {
         event?.preventDefault();
@@ -149,7 +149,7 @@ export function useKeyboardNavigation<T>(
       onSelect,
       NavigationHandlers.handleNavigationKey, // Then try selection keys
       NavigationHandlers.handleSelectionKey,
-    ]
+    ],
   );
 
   return {
@@ -169,7 +169,7 @@ export function useKeyboardNavigation<T>(
 const FocusTrapHelpers = {
   getFocusableElements: (container: HTMLElement): NodeListOf<HTMLElement> =>
     container.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     ),
 
   getFirstAndLastElements: (elements: NodeListOf<HTMLElement>) => ({
@@ -203,9 +203,9 @@ const FocusTrapHelpers = {
     first?.focus();
 
     const handleTabKey = FocusTrapHelpers.createTabHandler(first, last);
-    document.addEventListener('keydown', handleTabKey);
+    document.addEventListener("keydown", handleTabKey);
 
-    return () => document.removeEventListener('keydown', handleTabKey);
+    return () => document.removeEventListener("keydown", handleTabKey);
   },
 };
 
@@ -229,24 +229,24 @@ export function useFocusTrap(isActive: boolean) {
  * @param priority - ARIA live priority
  */
 export function useScreenReaderAnnouncement() {
-  const [announcement, setAnnouncement] = React.useState('');
-  const [priority, setPriority] = React.useState<AriaLive>('polite');
+  const [announcement, setAnnouncement] = React.useState("");
+  const [priority, setPriority] = React.useState<AriaLive>("polite");
 
-  const announce = React.useCallback((message: string, livePriority: AriaLive = 'polite') => {
+  const announce = React.useCallback((message: string, livePriority: AriaLive = "polite") => {
     setAnnouncement(message);
     setPriority(livePriority);
   }, []);
 
   // Create live region element
   const liveRegionProps = {
-    'aria-live': priority,
-    'aria-atomic': true,
+    "aria-live": priority,
+    "aria-atomic": true,
     style: {
-      position: 'absolute' as const,
-      left: '-10000px',
-      width: '1px',
-      height: '1px',
-      overflow: 'hidden',
+      position: "absolute" as const,
+      left: "-10000px",
+      width: "1px",
+      height: "1px",
+      overflow: "hidden",
     },
   };
 
@@ -268,13 +268,13 @@ export function useAriaExpanded(initialExpanded = false) {
   }, []);
 
   const triggerProps = {
-    'aria-expanded': expanded,
-    'aria-controls': contentId,
+    "aria-expanded": expanded,
+    "aria-controls": contentId,
     id: triggerId,
   };
 
   const contentProps = {
-    'aria-labelledby': triggerId,
+    "aria-labelledby": triggerId,
     id: contentId,
     hidden: !expanded,
   };
@@ -294,9 +294,13 @@ export function useAriaExpanded(initialExpanded = false) {
  * @returns Selection state and handlers
  */
 export function useAriaSelection<T>(
-  options: { items: T[]; multiple?: boolean; onSelectionChange?: (selected: T[]) => void } = {
+  options: {
+    items: T[];
+    multiple?: boolean;
+    onSelectionChange?: (selected: T[]) => void;
+  } = {
     items: [],
-  }
+  },
 ) {
   const { _items, multiple = false, _onSelectionChange } = options;
   const [selectedItems, setSelectedItems] = React.useState<T[]>([]);
@@ -317,14 +321,14 @@ export function useAriaSelection<T>(
         return newSelection;
       });
     },
-    [multiple]
+    [multiple],
   );
 
   const isSelected = React.useCallback(
     (item: T) => {
       return selectedItems.includes(item);
     },
-    [selectedItems]
+    [selectedItems],
   );
 
   const clearSelection = React.useCallback(() => {
@@ -345,7 +349,7 @@ export function useAriaSelection<T>(
  * @param prefix - Optional prefix for the ID
  * @returns Unique ID string
  */
-export function useId(prefix = 'id'): string {
+export function useId(prefix = "id"): string {
   const [id] = React.useState(() => `${prefix}-${Math.random().toString(36).substr(2, 9)}`);
   return id;
 }
@@ -362,13 +366,13 @@ export function usePrefersReducedMotion(): boolean {
       return;
     }
 
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     setPrefersReducedMotion(mediaQuery.matches);
 
     const listener = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
-    mediaQuery.addEventListener('change', listener);
+    mediaQuery.addEventListener("change", listener);
 
-    return () => mediaQuery.removeEventListener('change', listener);
+    return () => mediaQuery.removeEventListener("change", listener);
   }, []);
 
   return prefersReducedMotion;
@@ -378,37 +382,37 @@ export function usePrefersReducedMotion(): boolean {
  * Common ARIA role types
  */
 export const ARIA_ROLES = {
-  BUTTON: 'button',
-  MENU: 'menu',
-  MENUITEM: 'menuitem',
-  MENUBAR: 'menubar',
-  TAB: 'tab',
-  TABLIST: 'tablist',
-  TABPANEL: 'tabpanel',
-  DIALOG: 'dialog',
-  ALERTDIALOG: 'alertdialog',
-  TOOLTIP: 'tooltip',
-  COMBOBOX: 'combobox',
-  LISTBOX: 'listbox',
-  OPTION: 'option',
-  GRID: 'grid',
-  GRIDCELL: 'gridcell',
-  COLUMNHEADER: 'columnheader',
-  ROWHEADER: 'rowheader',
-  REGION: 'region',
-  BANNER: 'banner',
-  MAIN: 'main',
-  NAVIGATION: 'navigation',
-  COMPLEMENTARY: 'complementary',
-  CONTENTINFO: 'contentinfo',
-  SEARCH: 'search',
-  FORM: 'form',
-  ARTICLE: 'article',
-  SECTION: 'section',
-  LIST: 'list',
-  LISTITEM: 'listitem',
-  SEPARATOR: 'separator',
-  IMG: 'img',
-  PRESENTATION: 'presentation',
-  NONE: 'none',
+  BUTTON: "button",
+  MENU: "menu",
+  MENUITEM: "menuitem",
+  MENUBAR: "menubar",
+  TAB: "tab",
+  TABLIST: "tablist",
+  TABPANEL: "tabpanel",
+  DIALOG: "dialog",
+  ALERTDIALOG: "alertdialog",
+  TOOLTIP: "tooltip",
+  COMBOBOX: "combobox",
+  LISTBOX: "listbox",
+  OPTION: "option",
+  GRID: "grid",
+  GRIDCELL: "gridcell",
+  COLUMNHEADER: "columnheader",
+  ROWHEADER: "rowheader",
+  REGION: "region",
+  BANNER: "banner",
+  MAIN: "main",
+  NAVIGATION: "navigation",
+  COMPLEMENTARY: "complementary",
+  CONTENTINFO: "contentinfo",
+  SEARCH: "search",
+  FORM: "form",
+  ARTICLE: "article",
+  SECTION: "section",
+  LIST: "list",
+  LISTITEM: "listitem",
+  SEPARATOR: "separator",
+  IMG: "img",
+  PRESENTATION: "presentation",
+  NONE: "none",
 } as const;

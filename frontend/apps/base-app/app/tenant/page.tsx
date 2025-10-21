@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useEffect, useMemo, useState } from "react";
@@ -9,15 +9,7 @@ import { useTenant } from "@/lib/contexts/tenant-context";
 import { tenantService, TenantStats } from "@/lib/services/tenant-service";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Users,
-  CreditCard,
-  Gauge,
-  Plug,
-  LifeBuoy,
-  TrendingUp,
-  AlertTriangle,
-} from "lucide-react";
+import { Users, CreditCard, Gauge, Plug, LifeBuoy, TrendingUp, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -90,7 +82,7 @@ export default function TenantOverviewPage() {
       <section className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">
-            {tenantLoading ? "Loading tenant…" : currentTenant?.name ?? "Tenant Overview"}
+            {tenantLoading ? "Loading tenant…" : (currentTenant?.name ?? "Tenant Overview")}
           </h1>
           <p className="text-sm text-muted-foreground">
             Unified workspace for your team’s customers, billing, usage, and integrations.
@@ -103,7 +95,10 @@ export default function TenantOverviewPage() {
             </Badge>
           )}
           {currentTenant?.status && (
-            <Badge variant={currentTenant.status === "active" ? "default" : "secondary"} className="capitalize">
+            <Badge
+              variant={currentTenant.status === "active" ? "default" : "secondary"}
+              className="capitalize"
+            >
               {tenantService.getStatusDisplayName(currentTenant.status)}
             </Badge>
           )}
@@ -112,7 +107,9 @@ export default function TenantOverviewPage() {
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {statsLoading ? (
-          Array.from({ length: 4 }).map((_, idx) => <Skeleton key={idx} className="h-32 rounded-lg" />)
+          Array.from({ length: 4 }).map((_, idx) => (
+            <Skeleton key={idx} className="h-32 rounded-lg" />
+          ))
         ) : (
           <>
             <MetricCard
@@ -159,7 +156,10 @@ export default function TenantOverviewPage() {
         {QUICK_LINKS.map((link) => {
           const Icon = link.icon;
           return (
-            <Card key={link.href} className="h-full border-border hover:border-primary/40 transition-colors">
+            <Card
+              key={link.href}
+              className="h-full border-border hover:border-primary/40 transition-colors"
+            >
               <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                 <div>
                   <CardTitle className="text-base">{link.title}</CardTitle>

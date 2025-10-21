@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import React, { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -14,7 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -22,17 +22,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from "@/components/ui/dropdown-menu";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Shield,
   Users,
@@ -49,16 +49,22 @@ import {
   UserPlus,
   AlertCircle,
   CheckCircle2,
-} from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { useRBAC, PermissionCategory, PermissionAction, type Role, type Permission } from '@/contexts/RBACContext';
-import { LoadingState, LoadingTable, LoadingSpinner } from '@/components/ui/loading-states';
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  useRBAC,
+  PermissionCategory,
+  PermissionAction,
+  type Role,
+  type Permission,
+} from "@/contexts/RBACContext";
+import { LoadingState, LoadingTable, LoadingSpinner } from "@/components/ui/loading-states";
 
 // Group permissions by category for display
 function groupPermissionsByCategory(permissions: Permission[]): Record<string, Permission[]> {
   const grouped: Record<string, Permission[]> = {};
 
-  permissions.forEach(permission => {
+  permissions.forEach((permission) => {
     const categoryName = getCategoryDisplayName(permission.category);
     if (!grouped[categoryName]) {
       grouped[categoryName] = [];
@@ -71,15 +77,15 @@ function groupPermissionsByCategory(permissions: Permission[]): Record<string, P
 
 function getCategoryDisplayName(category: PermissionCategory): string {
   const categoryNames = {
-    [PermissionCategory.USERS]: 'User Management',
-    [PermissionCategory.BILLING]: 'Billing',
-    [PermissionCategory.ANALYTICS]: 'Analytics',
-    [PermissionCategory.COMMUNICATIONS]: 'Communications',
-    [PermissionCategory.INFRASTRUCTURE]: 'Infrastructure',
-    [PermissionCategory.SECRETS]: 'Secrets',
-    [PermissionCategory.CUSTOMERS]: 'Customers',
-    [PermissionCategory.SETTINGS]: 'Settings',
-    [PermissionCategory.SYSTEM]: 'System Administration',
+    [PermissionCategory.USERS]: "User Management",
+    [PermissionCategory.BILLING]: "Billing",
+    [PermissionCategory.ANALYTICS]: "Analytics",
+    [PermissionCategory.COMMUNICATIONS]: "Communications",
+    [PermissionCategory.INFRASTRUCTURE]: "Infrastructure",
+    [PermissionCategory.SECRETS]: "Secrets",
+    [PermissionCategory.CUSTOMERS]: "Customers",
+    [PermissionCategory.SETTINGS]: "Settings",
+    [PermissionCategory.SYSTEM]: "System Administration",
   };
 
   return categoryNames[category] || category;
@@ -98,8 +104,8 @@ export default function RolesPage() {
     canAccess,
   } = useRBAC();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -112,9 +118,9 @@ export default function RolesPage() {
 
   // New role form state
   const [newRole, setNewRole] = useState({
-    name: '',
-    display_name: '',
-    description: '',
+    name: "",
+    display_name: "",
+    description: "",
     permissions: new Set<string>(),
   });
 
@@ -129,11 +135,11 @@ export default function RolesPage() {
         const permissions = await getAllPermissions();
         setAllPermissions(permissions);
       } catch (error) {
-        console.error('Failed to load permissions:', error);
+        console.error("Failed to load permissions:", error);
         toast({
-          title: 'Error',
-          description: 'Failed to load permissions',
-          variant: 'destructive'
+          title: "Error",
+          description: "Failed to load permissions",
+          variant: "destructive",
         });
       } finally {
         setPermissionsLoading(false);
@@ -146,12 +152,14 @@ export default function RolesPage() {
   }, [getAllPermissions, canManageRoles, toast]);
 
   // Filter roles
-  const filteredRoles = roles.filter(role => {
-    const matchesSearch = role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (role.description && role.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesType = filterType === 'all' ||
-                       (filterType === 'system' && role.is_system) ||
-                       (filterType === 'custom' && !role.is_system);
+  const filteredRoles = roles.filter((role) => {
+    const matchesSearch =
+      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (role.description && role.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesType =
+      filterType === "all" ||
+      (filterType === "system" && role.is_system) ||
+      (filterType === "custom" && !role.is_system);
     return matchesSearch && matchesType;
   });
 
@@ -161,18 +169,18 @@ export default function RolesPage() {
   const handleCreateRole = async () => {
     if (!canManageRoles) {
       toast({
-        title: 'Error',
-        description: 'You do not have permission to create roles',
-        variant: 'destructive'
+        title: "Error",
+        description: "You do not have permission to create roles",
+        variant: "destructive",
       });
       return;
     }
 
     if (!newRole.name || !newRole.display_name) {
       toast({
-        title: 'Error',
-        description: 'Role name and display name are required',
-        variant: 'destructive'
+        title: "Error",
+        description: "Role name and display name are required",
+        variant: "destructive",
       });
       return;
     }
@@ -187,9 +195,14 @@ export default function RolesPage() {
       });
 
       setIsCreateOpen(false);
-      setNewRole({ name: '', display_name: '', description: '', permissions: new Set() });
+      setNewRole({
+        name: "",
+        display_name: "",
+        description: "",
+        permissions: new Set(),
+      });
     } catch (error) {
-      console.error('Failed to create role:', error);
+      console.error("Failed to create role:", error);
       // Error is handled by the RBAC context
     } finally {
       setOperationLoading(false);
@@ -199,18 +212,18 @@ export default function RolesPage() {
   const handleUpdateRole = async () => {
     if (!selectedRole || !canManageRoles) {
       toast({
-        title: 'Error',
-        description: 'You do not have permission to update roles',
-        variant: 'destructive'
+        title: "Error",
+        description: "You do not have permission to update roles",
+        variant: "destructive",
       });
       return;
     }
 
     if (selectedRole.is_system) {
       toast({
-        title: 'Error',
-        description: 'System roles cannot be modified',
-        variant: 'destructive'
+        title: "Error",
+        description: "System roles cannot be modified",
+        variant: "destructive",
       });
       return;
     }
@@ -225,7 +238,7 @@ export default function RolesPage() {
 
       setIsEditOpen(false);
     } catch (error) {
-      console.error('Failed to update role:', error);
+      console.error("Failed to update role:", error);
       // Error is handled by the RBAC context
     } finally {
       setOperationLoading(false);
@@ -235,18 +248,18 @@ export default function RolesPage() {
   const handleDeleteRole = async () => {
     if (!selectedRole || !canManageRoles) {
       toast({
-        title: 'Error',
-        description: 'You do not have permission to delete roles',
-        variant: 'destructive'
+        title: "Error",
+        description: "You do not have permission to delete roles",
+        variant: "destructive",
       });
       return;
     }
 
     if (selectedRole.is_system) {
       toast({
-        title: 'Error',
-        description: 'System roles cannot be deleted',
-        variant: 'destructive'
+        title: "Error",
+        description: "System roles cannot be deleted",
+        variant: "destructive",
       });
       return;
     }
@@ -258,7 +271,7 @@ export default function RolesPage() {
       setIsDeleteOpen(false);
       setSelectedRole(null);
     } catch (error) {
-      console.error('Failed to delete role:', error);
+      console.error("Failed to delete role:", error);
       // Error is handled by the RBAC context
     } finally {
       setOperationLoading(false);
@@ -268,9 +281,9 @@ export default function RolesPage() {
   const handleDuplicateRole = async (role: Role) => {
     if (!canManageRoles) {
       toast({
-        title: 'Error',
-        description: 'You do not have permission to create roles',
-        variant: 'destructive'
+        title: "Error",
+        description: "You do not have permission to create roles",
+        variant: "destructive",
       });
       return;
     }
@@ -281,10 +294,10 @@ export default function RolesPage() {
         name: `${role.name}_copy`,
         display_name: `${role.display_name} (Copy)`,
         description: role.description,
-        permissions: role.permissions.map(p => p.name),
+        permissions: role.permissions.map((p) => p.name),
       });
     } catch (error) {
-      console.error('Failed to duplicate role:', error);
+      console.error("Failed to duplicate role:", error);
       // Error is handled by the RBAC context
     } finally {
       setOperationLoading(false);
@@ -326,7 +339,9 @@ export default function RolesPage() {
             <div className="flex flex-col items-center justify-center text-center">
               <AlertCircle className="h-12 w-12 text-red-600 dark:text-red-400 mb-4" />
               <p className="text-muted-foreground mb-2">Access Denied</p>
-              <p className="text-foreground text-sm">You do not have permission to manage roles and permissions.</p>
+              <p className="text-foreground text-sm">
+                You do not have permission to manage roles and permissions.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -350,92 +365,99 @@ export default function RolesPage() {
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="max-w-3xl max-h-[80vh]">
-            <DialogHeader>
-              <DialogTitle>Create New Role</DialogTitle>
-              <DialogDescription>
-                Define a new role with specific permissions
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="role-name">Role Name (Technical)</Label>
-                <Input
-                  id="role-name"
-                  value={newRole.name}
-                  onChange={(e) => setNewRole({ ...newRole, name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_') })}
-                  placeholder="e.g., content_manager"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role-display-name">Display Name</Label>
-                <Input
-                  id="role-display-name"
-                  value={newRole.display_name}
-                  onChange={(e) => setNewRole({ ...newRole, display_name: e.target.value })}
-                  placeholder="e.g., Content Manager"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role-description">Description</Label>
-                <Textarea
-                  id="role-description"
-                  value={newRole.description}
-                  onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
-                  placeholder="Describe the role's purpose and responsibilities"
-                  rows={3}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Permissions</Label>
-                <LoadingState
-                  loading={permissionsLoading}
-                  loadingComponent={<LoadingSpinner className="mx-auto my-4" />}
-                >
-                  <ScrollArea className="h-[300px] border rounded-md p-4">
-                    {Object.entries(groupedPermissions).map(([category, permissions]) => (
-                      <div key={category} className="mb-6">
-                        <h4 className="font-semibold mb-3">{category}</h4>
-                        <div className="space-y-2">
-                          {permissions.map(permission => (
-                            <div key={permission.name} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`new-${permission.name}`}
-                                checked={newRole.permissions.has(permission.name)}
-                                onChange={() => togglePermission(permission.name, true)}
-                              />
-                              <Label
-                                htmlFor={`new-${permission.name}`}
-                                className="text-sm font-normal cursor-pointer"
-                              >
-                                {permission.display_name}
-                                {permission.description && (
-                                  <span className="text-xs text-muted-foreground block">
-                                    {permission.description}
-                                  </span>
-                                )}
-                              </Label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </ScrollArea>
-                </LoadingState>
-              </div>
+          <DialogHeader>
+            <DialogTitle>Create New Role</DialogTitle>
+            <DialogDescription>Define a new role with specific permissions</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="role-name">Role Name (Technical)</Label>
+              <Input
+                id="role-name"
+                value={newRole.name}
+                onChange={(e) =>
+                  setNewRole({
+                    ...newRole,
+                    name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"),
+                  })
+                }
+                placeholder="e.g., content_manager"
+              />
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateOpen(false)} disabled={operationLoading}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleCreateRole}
-                disabled={!newRole.name || !newRole.display_name || operationLoading}
+            <div className="space-y-2">
+              <Label htmlFor="role-display-name">Display Name</Label>
+              <Input
+                id="role-display-name"
+                value={newRole.display_name}
+                onChange={(e) => setNewRole({ ...newRole, display_name: e.target.value })}
+                placeholder="e.g., Content Manager"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="role-description">Description</Label>
+              <Textarea
+                id="role-description"
+                value={newRole.description}
+                onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+                placeholder="Describe the role's purpose and responsibilities"
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Permissions</Label>
+              <LoadingState
+                loading={permissionsLoading}
+                loadingComponent={<LoadingSpinner className="mx-auto my-4" />}
               >
-                {operationLoading && <LoadingSpinner size="sm" className="mr-2" />}
-                Create Role
-              </Button>
-            </DialogFooter>
-          </DialogContent>
+                <ScrollArea className="h-[300px] border rounded-md p-4">
+                  {Object.entries(groupedPermissions).map(([category, permissions]) => (
+                    <div key={category} className="mb-6">
+                      <h4 className="font-semibold mb-3">{category}</h4>
+                      <div className="space-y-2">
+                        {permissions.map((permission) => (
+                          <div key={permission.name} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`new-${permission.name}`}
+                              checked={newRole.permissions.has(permission.name)}
+                              onChange={() => togglePermission(permission.name, true)}
+                            />
+                            <Label
+                              htmlFor={`new-${permission.name}`}
+                              className="text-sm font-normal cursor-pointer"
+                            >
+                              {permission.display_name}
+                              {permission.description && (
+                                <span className="text-xs text-muted-foreground block">
+                                  {permission.description}
+                                </span>
+                              )}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </ScrollArea>
+              </LoadingState>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateOpen(false)}
+              disabled={operationLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateRole}
+              disabled={!newRole.name || !newRole.display_name || operationLoading}
+            >
+              {operationLoading && <LoadingSpinner size="sm" className="mr-2" />}
+              Create Role
+            </Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
 
       {/* Stats Cards */}
@@ -448,7 +470,7 @@ export default function RolesPage() {
           <CardContent>
             <div className="text-2xl font-bold">{roles.length}</div>
             <p className="text-xs text-muted-foreground">
-              {roles.filter(r => !r.is_system).length} custom roles
+              {roles.filter((r) => !r.is_system).length} custom roles
             </p>
           </CardContent>
         </Card>
@@ -459,12 +481,8 @@ export default function RolesPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {roles.length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Active roles
-            </p>
+            <div className="text-2xl font-bold">{roles.length}</div>
+            <p className="text-xs text-muted-foreground">Active roles</p>
           </CardContent>
         </Card>
 
@@ -474,12 +492,8 @@ export default function RolesPage() {
             <Lock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {roles.filter(r => r.is_system).length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Built-in roles
-            </p>
+            <div className="text-2xl font-bold">{roles.filter((r) => r.is_system).length}</div>
+            <p className="text-xs text-muted-foreground">Built-in roles</p>
           </CardContent>
         </Card>
 
@@ -489,12 +503,8 @@ export default function RolesPage() {
             <Key className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {roles.filter(r => !r.is_system).length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Organization-specific
-            </p>
+            <div className="text-2xl font-bold">{roles.filter((r) => !r.is_system).length}</div>
+            <p className="text-xs text-muted-foreground">Organization-specific</p>
           </CardContent>
         </Card>
       </div>
@@ -555,8 +565,8 @@ export default function RolesPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={role.is_system ? 'secondary' : 'outline'}>
-                        {role.is_system ? 'system' : 'custom'}
+                      <Badge variant={role.is_system ? "secondary" : "outline"}>
+                        {role.is_system ? "system" : "custom"}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -573,17 +583,18 @@ export default function RolesPage() {
                         )}
                       </div>
                     </TableCell>
+                    <TableCell>{new Date(role.updated_at).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      {new Date(role.updated_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={role.is_active ? 'default' : 'secondary'}>
-                        {role.is_active ? 'active' : 'inactive'}
+                      <Badge variant={role.is_active ? "default" : "secondary"}>
+                        {role.is_active ? "active" : "inactive"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
-                        <DropdownMenuTrigger className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md text-sm font-medium hover:bg-accent" disabled={operationLoading}>
+                        <DropdownMenuTrigger
+                          className="h-8 w-8 p-0 inline-flex items-center justify-center rounded-md text-sm font-medium hover:bg-accent"
+                          disabled={operationLoading}
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="absolute right-0">
@@ -592,11 +603,17 @@ export default function RolesPage() {
                             onClick={() => {
                               if (!role.is_system && !operationLoading) {
                                 setSelectedRole(role);
-                                setSelectedPermissions(new Set(role.permissions.map(p => p.name)));
+                                setSelectedPermissions(
+                                  new Set(role.permissions.map((p) => p.name)),
+                                );
                                 setIsEditOpen(true);
                               }
                             }}
-                            className={role.is_system || operationLoading ? 'opacity-50 cursor-not-allowed' : ''}
+                            className={
+                              role.is_system || operationLoading
+                                ? "opacity-50 cursor-not-allowed"
+                                : ""
+                            }
                           >
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
@@ -607,7 +624,7 @@ export default function RolesPage() {
                                 handleDuplicateRole(role);
                               }
                             }}
-                            className={operationLoading ? 'opacity-50 cursor-not-allowed' : ''}
+                            className={operationLoading ? "opacity-50 cursor-not-allowed" : ""}
                           >
                             <Copy className="h-4 w-4 mr-2" />
                             Duplicate
@@ -619,7 +636,7 @@ export default function RolesPage() {
                                 setIsAssignOpen(true);
                               }
                             }}
-                            className={operationLoading ? 'opacity-50 cursor-not-allowed' : ''}
+                            className={operationLoading ? "opacity-50 cursor-not-allowed" : ""}
                           >
                             <UserPlus className="h-4 w-4 mr-2" />
                             Assign Users
@@ -631,7 +648,7 @@ export default function RolesPage() {
                                 setIsDeleteOpen(true);
                               }
                             }}
-                            className={`text-red-600 dark:text-red-400 ${role.is_system || operationLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`text-red-600 dark:text-red-400 ${role.is_system || operationLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
@@ -652,9 +669,7 @@ export default function RolesPage() {
         <DialogContent className="max-w-3xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>Edit Role</DialogTitle>
-            <DialogDescription>
-              Modify role permissions and settings
-            </DialogDescription>
+            <DialogDescription>Modify role permissions and settings</DialogDescription>
           </DialogHeader>
           {selectedRole && (
             <div className="space-y-4 py-4">
@@ -673,7 +688,12 @@ export default function RolesPage() {
                 <Input
                   id="edit-role-display-name"
                   value={selectedRole.display_name}
-                  onChange={(e) => setSelectedRole({ ...selectedRole, display_name: e.target.value })}
+                  onChange={(e) =>
+                    setSelectedRole({
+                      ...selectedRole,
+                      display_name: e.target.value,
+                    })
+                  }
                   placeholder="Display name"
                 />
               </div>
@@ -682,7 +702,12 @@ export default function RolesPage() {
                 <Textarea
                   id="edit-role-description"
                   value={selectedRole.description}
-                  onChange={(e) => setSelectedRole({ ...selectedRole, description: e.target.value })}
+                  onChange={(e) =>
+                    setSelectedRole({
+                      ...selectedRole,
+                      description: e.target.value,
+                    })
+                  }
                   placeholder="Role description"
                   rows={3}
                 />
@@ -698,7 +723,7 @@ export default function RolesPage() {
                       <div key={category} className="mb-6">
                         <h4 className="font-semibold mb-3">{category}</h4>
                         <div className="space-y-2">
-                          {permissions.map(permission => (
+                          {permissions.map((permission) => (
                             <div key={permission.name} className="flex items-center space-x-2">
                               <Checkbox
                                 id={`edit-${permission.name}`}
@@ -727,7 +752,11 @@ export default function RolesPage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)} disabled={operationLoading}>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditOpen(false)}
+              disabled={operationLoading}
+            >
               Cancel
             </Button>
             <Button onClick={handleUpdateRole} disabled={operationLoading}>
@@ -765,7 +794,11 @@ export default function RolesPage() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteOpen(false)} disabled={operationLoading}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteOpen(false)}
+              disabled={operationLoading}
+            >
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDeleteRole} disabled={operationLoading}>
@@ -788,10 +821,7 @@ export default function RolesPage() {
           <div className="py-4">
             <div className="space-y-2">
               <Label htmlFor="user-search">Search Users</Label>
-              <Input
-                id="user-search"
-                placeholder="Search by name or email..."
-              />
+              <Input id="user-search" placeholder="Search by name or email..." />
             </div>
             <div className="mt-4 border rounded-md p-4 bg-muted">
               <p className="text-sm text-muted-foreground text-center">
@@ -800,16 +830,23 @@ export default function RolesPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAssignOpen(false)} disabled={operationLoading}>
+            <Button
+              variant="outline"
+              onClick={() => setIsAssignOpen(false)}
+              disabled={operationLoading}
+            >
               Cancel
             </Button>
-            <Button onClick={() => {
-              setIsAssignOpen(false);
-              toast({
-                title: 'Success',
-                description: 'User assignments updated successfully'
-              });
-            }} disabled={operationLoading}>
+            <Button
+              onClick={() => {
+                setIsAssignOpen(false);
+                toast({
+                  title: "Success",
+                  description: "User assignments updated successfully",
+                });
+              }}
+              disabled={operationLoading}
+            >
               Save Assignments
             </Button>
           </DialogFooter>

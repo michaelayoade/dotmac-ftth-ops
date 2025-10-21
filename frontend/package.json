@@ -24,8 +24,8 @@
     "e2e:headed": "playwright test --headed",
     "e2e:debug": "playwright test --debug",
     "clean": "pnpm -r --filter ./shared/packages/** run clean && pnpm --filter @dotmac/base-app run clean",
-    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\" --ignore-path .gitignore",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\" --ignore-path .gitignore"
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
   },
   "engines": {
     "node": ">=18",
@@ -34,6 +34,7 @@
   "devDependencies": {
     "@playwright/test": "^1.55.1",
     "concurrently": "^8.2.0",
-    "openapi-typescript": "^7.5.2"
+    "openapi-typescript": "^7.5.2",
+    "prettier": "^3.6.2"
   }
 }

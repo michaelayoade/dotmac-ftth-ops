@@ -3,14 +3,14 @@
  * Displays key performance indicators in a grid layout with consistent styling
  */
 
-'use client';
+"use client";
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { UniversalMetricCard, UniversalMetricCardProps } from './UniversalMetricCard';
-import { cn } from '../utils/cn';
+import React from "react";
+import { motion } from "framer-motion";
+import { UniversalMetricCard, UniversalMetricCardProps } from "./UniversalMetricCard";
+import { cn } from "../utils/cn";
 
-export interface KPIItem extends Omit<UniversalMetricCardProps, 'size' | 'variant'> {
+export interface KPIItem extends Omit<UniversalMetricCardProps, "size" | "variant"> {
   id: string;
 }
 
@@ -27,11 +27,11 @@ export interface UniversalKPISectionProps {
     lg?: 3 | 4 | 5 | 6;
     xl?: 4 | 5 | 6;
   };
-  gap?: 'tight' | 'normal' | 'relaxed';
+  gap?: "tight" | "normal" | "relaxed";
 
   // Card Options
-  cardSize?: 'sm' | 'md' | 'lg';
-  cardVariant?: 'default' | 'compact' | 'featured';
+  cardSize?: "sm" | "md" | "lg";
+  cardVariant?: "default" | "compact" | "featured";
 
   // Section Styling
   className?: string;
@@ -46,14 +46,14 @@ export interface UniversalKPISectionProps {
 }
 
 const gapClasses = {
-  tight: 'gap-4',
-  normal: 'gap-6',
-  relaxed: 'gap-8',
+  tight: "gap-4",
+  normal: "gap-6",
+  relaxed: "gap-8",
 };
 
 const getGridColumns = (
   columns: number,
-  responsive?: UniversalKPISectionProps['responsiveColumns']
+  responsive?: UniversalKPISectionProps["responsiveColumns"],
 ): string => {
   const baseColumns = `grid-cols-${columns}`;
 
@@ -66,7 +66,7 @@ const getGridColumns = (
   if (responsive.lg) classes.push(`lg:grid-cols-${responsive.lg}`);
   if (responsive.xl) classes.push(`xl:grid-cols-${responsive.xl}`);
 
-  return classes.join(' ');
+  return classes.join(" ");
 };
 
 export function UniversalKPISection({
@@ -75,11 +75,11 @@ export function UniversalKPISection({
   kpis,
   columns = 4,
   responsiveColumns = { sm: 1, md: 2, lg: 4 },
-  gap = 'normal',
-  cardSize = 'md',
-  cardVariant = 'default',
-  className = '',
-  contentClassName = '',
+  gap = "normal",
+  cardSize = "md",
+  cardVariant = "default",
+  className = "",
+  contentClassName = "",
   loading = false,
   staggerChildren = true,
   animationDelay = 0,
@@ -106,26 +106,26 @@ export function UniversalKPISection({
 
   return (
     <motion.section
-      className={cn('space-y-4', className)}
+      className={cn("space-y-4", className)}
       variants={containerVariants}
-      initial='hidden'
-      animate='visible'
+      initial="hidden"
+      animate="visible"
     >
       {/* Section Header */}
       {(title || subtitle) && (
-        <div className='space-y-1'>
-          {title && <h2 className='text-lg font-semibold text-gray-900'>{title}</h2>}
-          {subtitle && <p className='text-sm text-gray-600'>{subtitle}</p>}
+        <div className="space-y-1">
+          {title && <h2 className="text-lg font-semibold text-gray-900">{title}</h2>}
+          {subtitle && <p className="text-sm text-gray-600">{subtitle}</p>}
         </div>
       )}
 
       {/* KPI Grid */}
       <motion.div
         className={cn(
-          'grid',
+          "grid",
           getGridColumns(columns, responsiveColumns),
           gapClasses[gap],
-          contentClassName
+          contentClassName,
         )}
         variants={containerVariants}
       >
@@ -139,34 +139,34 @@ export function UniversalKPISection({
       {/* Empty State */}
       {kpis.length === 0 && !loading && (
         <motion.div
-          className='text-center py-12'
+          className="text-center py-12"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
         >
-          <p className='text-gray-500'>No metrics available</p>
+          <p className="text-gray-500">No metrics available</p>
         </motion.div>
       )}
 
       {/* Loading State */}
       {loading && kpis.length === 0 && (
-        <div className={cn('grid', getGridColumns(columns, responsiveColumns), gapClasses[gap])}>
+        <div className={cn("grid", getGridColumns(columns, responsiveColumns), gapClasses[gap])}>
           {Array.from({ length: 4 }, (_, index) => (
             <div
               key={index}
-              className='bg-white rounded-xl shadow-sm border border-gray-200 p-5 animate-pulse'
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 animate-pulse"
             >
-              <div className='space-y-3'>
-                <div className='flex items-center justify-between'>
-                  <div className='h-4 bg-gray-200 rounded w-24' />
-                  <div className='h-8 w-8 bg-gray-200 rounded-full' />
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="h-4 bg-gray-200 rounded w-24" />
+                  <div className="h-8 w-8 bg-gray-200 rounded-full" />
                 </div>
-                <div className='h-8 bg-gray-200 rounded w-16' />
-                <div className='space-y-2'>
-                  <div className='h-2 bg-gray-200 rounded' />
-                  <div className='flex justify-between'>
-                    <div className='h-3 bg-gray-200 rounded w-12' />
-                    <div className='h-3 bg-gray-200 rounded w-12' />
+                <div className="h-8 bg-gray-200 rounded w-16" />
+                <div className="space-y-2">
+                  <div className="h-2 bg-gray-200 rounded" />
+                  <div className="flex justify-between">
+                    <div className="h-3 bg-gray-200 rounded w-12" />
+                    <div className="h-3 bg-gray-200 rounded w-12" />
                   </div>
                 </div>
               </div>

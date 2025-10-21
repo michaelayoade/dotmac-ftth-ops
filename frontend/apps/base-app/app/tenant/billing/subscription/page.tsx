@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { useTenantSubscription, AvailablePlan } from '@/hooks/useTenantSubscription';
-import { SubscriptionCard } from '@/components/tenant/billing/SubscriptionCard';
-import { PlanComparison } from '@/components/tenant/billing/PlanComparison';
-import { UpgradeModal } from '@/components/tenant/billing/UpgradeModal';
-import { CancelSubscriptionModal } from '@/components/tenant/billing/CancelSubscriptionModal';
-import { SubscriptionPageSkeleton } from '@/components/tenant/billing/SkeletonLoaders';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, Receipt, CreditCard, TrendingUp } from 'lucide-react';
-import Link from 'next/link';
+import React, { useState } from "react";
+import { useTenantSubscription, AvailablePlan } from "@/hooks/useTenantSubscription";
+import { SubscriptionCard } from "@/components/tenant/billing/SubscriptionCard";
+import { PlanComparison } from "@/components/tenant/billing/PlanComparison";
+import { UpgradeModal } from "@/components/tenant/billing/UpgradeModal";
+import { CancelSubscriptionModal } from "@/components/tenant/billing/CancelSubscriptionModal";
+import { SubscriptionPageSkeleton } from "@/components/tenant/billing/SkeletonLoaders";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Receipt, CreditCard, TrendingUp } from "lucide-react";
+import Link from "next/link";
 
 export default function SubscriptionPage() {
   const {
@@ -55,7 +55,7 @@ export default function SubscriptionPage() {
         billing_cycle: plan.billing_cycle,
       });
     } catch (err: any) {
-      setModalError(err.message || 'Failed to load pricing preview');
+      setModalError(err.message || "Failed to load pricing preview");
     } finally {
       setIsLoadingPreview(false);
     }
@@ -75,7 +75,7 @@ export default function SubscriptionPage() {
       setUpgradeModalOpen(false);
       setSelectedPlan(null);
     } catch (err: any) {
-      setModalError(err.message || 'Failed to change plan');
+      setModalError(err.message || "Failed to change plan");
     } finally {
       setIsChangingPlan(false);
     }
@@ -89,7 +89,7 @@ export default function SubscriptionPage() {
       await cancelSubscription(request);
       setCancelModalOpen(false);
     } catch (err: any) {
-      setModalError(err.message || 'Failed to cancel subscription');
+      setModalError(err.message || "Failed to cancel subscription");
     } finally {
       setIsCanceling(false);
     }
@@ -99,7 +99,7 @@ export default function SubscriptionPage() {
     try {
       await reactivateSubscription();
     } catch (err: any) {
-      console.error('Failed to reactivate subscription:', err);
+      console.error("Failed to reactivate subscription:", err);
     }
   };
 
@@ -179,7 +179,7 @@ export default function SubscriptionPage() {
             subscription={subscription}
             onUpgrade={() => {
               // Scroll to plans section
-              document.getElementById('available-plans')?.scrollIntoView({ behavior: 'smooth' });
+              document.getElementById("available-plans")?.scrollIntoView({ behavior: "smooth" });
             }}
             onCancel={() => setCancelModalOpen(true)}
             onReactivate={handleReactivateSubscription}

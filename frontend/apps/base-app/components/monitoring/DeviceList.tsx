@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Device List Component with Dual-Stack Support
@@ -6,7 +6,7 @@
  * Displays monitored devices with their IPv4 and IPv6 addresses
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -14,11 +14,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,15 +26,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { IPAddressDisplay, DualStackBadge } from '@/components/forms/IPAddressDisplay';
-import { MoreHorizontal, Plus, Search, Activity } from 'lucide-react';
+} from "@/components/ui/dropdown-menu";
+import { IPAddressDisplay, DualStackBadge } from "@/components/forms/IPAddressDisplay";
+import { MoreHorizontal, Plus, Search, Activity } from "lucide-react";
 
 export interface MonitoredDevice {
   id: string;
   name: string;
   type: string;
-  status: 'online' | 'offline' | 'warning' | 'unknown';
+  status: "online" | "offline" | "warning" | "unknown";
   ipv4_address?: string | null;
   ipv6_address?: string | null;
   management_ip: string;
@@ -61,8 +61,8 @@ export function DeviceList({
   onViewMetrics,
   isLoading = false,
 }: DeviceListProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'online' | 'offline' | 'warning'>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "online" | "offline" | "warning">("all");
 
   const filteredDevices = devices.filter((device) => {
     const matchesSearch =
@@ -74,15 +74,15 @@ export function DeviceList({
 
     if (!matchesSearch) return false;
 
-    if (statusFilter !== 'all' && device.status !== statusFilter) return false;
+    if (statusFilter !== "all" && device.status !== statusFilter) return false;
 
     return true;
   });
 
   const statusCounts = {
-    online: devices.filter((d) => d.status === 'online').length,
-    offline: devices.filter((d) => d.status === 'offline').length,
-    warning: devices.filter((d) => d.status === 'warning').length,
+    online: devices.filter((d) => d.status === "online").length,
+    offline: devices.filter((d) => d.status === "offline").length,
+    warning: devices.filter((d) => d.status === "warning").length,
   };
 
   return (
@@ -92,7 +92,8 @@ export function DeviceList({
           <div>
             <CardTitle>Monitored Devices</CardTitle>
             <CardDescription>
-              {devices.length} devices • {statusCounts.online} online • {statusCounts.offline} offline
+              {devices.length} devices • {statusCounts.online} online • {statusCounts.offline}{" "}
+              offline
             </CardDescription>
           </div>
           {onAddDevice && (
@@ -117,30 +118,30 @@ export function DeviceList({
           </div>
           <div className="flex gap-2">
             <Button
-              variant={statusFilter === 'all' ? 'default' : 'outline'}
+              variant={statusFilter === "all" ? "default" : "outline"}
               size="sm"
-              onClick={() => setStatusFilter('all')}
+              onClick={() => setStatusFilter("all")}
             >
               All
             </Button>
             <Button
-              variant={statusFilter === 'online' ? 'default' : 'outline'}
+              variant={statusFilter === "online" ? "default" : "outline"}
               size="sm"
-              onClick={() => setStatusFilter('online')}
+              onClick={() => setStatusFilter("online")}
             >
               Online ({statusCounts.online})
             </Button>
             <Button
-              variant={statusFilter === 'offline' ? 'default' : 'outline'}
+              variant={statusFilter === "offline" ? "default" : "outline"}
               size="sm"
-              onClick={() => setStatusFilter('offline')}
+              onClick={() => setStatusFilter("offline")}
             >
               Offline ({statusCounts.offline})
             </Button>
             <Button
-              variant={statusFilter === 'warning' ? 'default' : 'outline'}
+              variant={statusFilter === "warning" ? "default" : "outline"}
               size="sm"
-              onClick={() => setStatusFilter('warning')}
+              onClick={() => setStatusFilter("warning")}
             >
               Warning ({statusCounts.warning})
             </Button>
@@ -201,12 +202,12 @@ interface DeviceRowProps {
 }
 
 function DeviceRow({ device, onEdit, onDelete, onViewMetrics }: DeviceRowProps) {
-  const getStatusBadge = (status: MonitoredDevice['status']) => {
+  const getStatusBadge = (status: MonitoredDevice["status"]) => {
     const variants = {
-      online: 'default' as const,
-      offline: 'destructive' as const,
-      warning: 'secondary' as const,
-      unknown: 'outline' as const,
+      online: "default" as const,
+      offline: "destructive" as const,
+      warning: "secondary" as const,
+      unknown: "outline" as const,
     };
 
     return (
@@ -235,7 +236,7 @@ function DeviceRow({ device, onEdit, onDelete, onViewMetrics }: DeviceRowProps) 
             showBadges={true}
             compress={true}
           />
-          {(!device.ipv4_address && !device.ipv6_address) && (
+          {!device.ipv4_address && !device.ipv6_address && (
             <span className="text-sm text-muted-foreground italic">Not configured</span>
           )}
         </div>
@@ -255,10 +256,7 @@ function DeviceRow({ device, onEdit, onDelete, onViewMetrics }: DeviceRowProps) 
           <div className="flex items-center gap-2">
             <span className="text-sm">{device.uptime_percent.toFixed(1)}%</span>
             <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary"
-                style={{ width: `${device.uptime_percent}%` }}
-              />
+              <div className="h-full bg-primary" style={{ width: `${device.uptime_percent}%` }} />
             </div>
           </div>
         ) : (
@@ -282,14 +280,9 @@ function DeviceRow({ device, onEdit, onDelete, onViewMetrics }: DeviceRowProps) 
                 <DropdownMenuSeparator />
               </>
             )}
-            {onEdit && (
-              <DropdownMenuItem onClick={() => onEdit(device)}>Edit</DropdownMenuItem>
-            )}
+            {onEdit && <DropdownMenuItem onClick={() => onEdit(device)}>Edit</DropdownMenuItem>}
             {onDelete && (
-              <DropdownMenuItem
-                onClick={() => onDelete(device.id)}
-                className="text-red-600"
-              >
+              <DropdownMenuItem onClick={() => onDelete(device.id)} className="text-red-600">
                 Delete
               </DropdownMenuItem>
             )}

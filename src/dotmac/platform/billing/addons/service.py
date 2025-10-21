@@ -379,8 +379,6 @@ class AddonService:
 
         # Get customer information from subscription or use tenant as customer
         customer_id = tenant_id
-        billing_email = f"billing@{tenant_id}.example.com"  # Default fallback
-        billing_address = {}
 
         if subscription_id:
             from dotmac.platform.billing.models import BillingSubscriptionTable
@@ -392,9 +390,14 @@ class AddonService:
             subscription = sub_result.scalar_one_or_none()
             if subscription:
                 customer_id = subscription.customer_id
-                # Try to get customer billing info
-                # For now, we'll use the customer_id as billing email
-                billing_email = f"{customer_id}@tenant-{tenant_id}.example.com"
+
+        # Resolve real billing contact data (email + address)
+        from dotmac.platform.billing.integration import BillingIntegrationService
+
+        billing_integration = BillingIntegrationService(self.db)
+        billing_email, billing_address = await billing_integration._resolve_customer_billing_details(
+            customer_id=str(customer_id), tenant_id=str(tenant_id)
+        )
 
         # Prepare invoice line items
         line_items = []
@@ -624,8 +627,6 @@ class AddonService:
 
                 # Get customer information
                 customer_id = tenant_id
-                billing_email = f"billing@{tenant_id}.example.com"
-                billing_address = {}
 
                 if tenant_addon.subscription_id:
                     from dotmac.platform.billing.models import BillingSubscriptionTable
@@ -637,7 +638,13 @@ class AddonService:
                     subscription = sub_result.scalar_one_or_none()
                     if subscription:
                         customer_id = subscription.customer_id
-                        billing_email = f"{customer_id}@tenant-{tenant_id}.example.com"
+
+                from dotmac.platform.billing.integration import BillingIntegrationService
+
+                integration_service = BillingIntegrationService(self.db)
+                billing_email, billing_address = await integration_service._resolve_customer_billing_details(
+                    customer_id=str(customer_id), tenant_id=str(tenant_id)
+                )
 
                 # Prepare invoice line items for quantity increase
                 line_items = [{

@@ -4,15 +4,15 @@
  */
 
 // Re-export primary tenant and API types
-export * from './tenant';
-export * from '../api/types/api';
-export * from '@dotmac/headless/auth';
-export * from './portal-auth';
-export * from './migration';
-export * from './plugins';
+export * from "./tenant";
+export * from "../api/types/api";
+export * from "@dotmac/headless/auth";
+export * from "./portal-auth";
+export * from "./migration";
+export * from "./plugins";
 
 // Core portal type
-export type PortalType = 'admin' | 'customer' | 'reseller' | 'technician';
+export type PortalType = "admin" | "customer" | "reseller" | "technician";
 
 // Unified user interface (extends ISP UserData)
 export interface User {
@@ -36,7 +36,7 @@ export interface Tenant {
   name: string;
   domain: string;
   plan: string;
-  status: 'ACTIVE' | 'SUSPENDED' | 'CANCELLED';
+  status: "ACTIVE" | "SUSPENDED" | "CANCELLED";
   settings: Record<string, unknown>;
   created_at: string;
   updated_at: string;
@@ -50,7 +50,7 @@ export interface Customer {
   name: string;
   phone?: string;
   address?: AddressData;
-  status: 'ACTIVE' | 'SUSPENDED' | 'CANCELLED';
+  status: "ACTIVE" | "SUSPENDED" | "CANCELLED";
   services: ServiceData[];
   billing_info: BillingInfoData;
   created_at: string;
@@ -76,7 +76,7 @@ export interface CustomerService {
   customer_id: string;
   service_id: string;
   service_name: string;
-  status: 'ACTIVE' | 'SUSPENDED' | 'PENDING' | 'CANCELLED';
+  status: "ACTIVE" | "SUSPENDED" | "PENDING" | "CANCELLED";
   plan: string;
   bandwidth: string;
   ip_address?: string;
@@ -89,8 +89,8 @@ export interface CustomerService {
 // Legacy billing interface - use BillingInfoData from API types instead
 export interface BillingInfo {
   customer_id: string;
-  billing_cycle: 'MONTHLY' | 'QUARTERLY' | 'ANNUALLY';
-  payment_method: 'credit_card' | 'bank_transfer' | 'check';
+  billing_cycle: "MONTHLY" | "QUARTERLY" | "ANNUALLY";
+  payment_method: "credit_card" | "bank_transfer" | "check";
   last_payment_date?: string;
   next_billing_date: string;
   balance: number;
@@ -104,7 +104,7 @@ export interface Invoice {
   amount: number;
   tax: number;
   total: number;
-  status: 'DRAFT' | 'SENT' | 'PAID' | 'OVERDUE' | 'CANCELLED';
+  status: "DRAFT" | "SENT" | "PAID" | "OVERDUE" | "CANCELLED";
   due_date: string;
   paid_date?: string;
   items: InvoiceItem[];
@@ -124,10 +124,10 @@ export interface InvoiceItem {
 export interface NetworkDevice {
   id: string;
   name: string;
-  type: 'ROUTER' | 'SWITCH' | 'ACCESS_POINT' | 'MODEM' | 'SERVER';
+  type: "ROUTER" | "SWITCH" | "ACCESS_POINT" | "MODEM" | "SERVER";
   ip_address: string;
   mac_address: string;
-  status: 'ONLINE' | 'OFFLINE' | 'WARNING' | 'ERROR';
+  status: "ONLINE" | "OFFLINE" | "WARNING" | "ERROR";
   location: string;
   last_seen: string;
   uptime: number;
@@ -142,7 +142,7 @@ export interface DeviceMetrics {
   disk_usage: number;
   network_utilization: number;
   temperature?: number;
-  power_status?: 'NORMAL' | 'WARNING' | 'CRITICAL';
+  power_status?: "NORMAL" | "WARNING" | "CRITICAL";
 }
 
 export interface ChatMessage {
@@ -150,10 +150,10 @@ export interface ChatMessage {
   chat_id: string;
   sender_id: string;
   sender_name: string;
-  sender_type: 'CUSTOMER' | 'AGENT' | 'SYSTEM';
+  sender_type: "CUSTOMER" | "AGENT" | "SYSTEM";
   content: string;
   timestamp: string;
-  status: 'SENT' | 'DELIVERED' | 'READ';
+  status: "SENT" | "DELIVERED" | "READ";
   attachments?: ChatAttachment[];
 }
 
@@ -169,8 +169,8 @@ export interface ChatSession {
   id: string;
   customer_id: string;
   agent_id?: string;
-  status: 'WAITING' | 'ACTIVE' | 'RESOLVED' | 'CLOSED';
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  status: "WAITING" | "ACTIVE" | "RESOLVED" | "CLOSED";
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   subject?: string;
   tags: string[];
   messages: ChatMessage[];
@@ -183,7 +183,7 @@ export interface ChatSession {
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS';
+  type: "INFO" | "WARNING" | "ERROR" | "SUCCESS";
   title: string;
   message: string;
   read: boolean;
@@ -197,7 +197,7 @@ export interface ServicePlan {
   id: string;
   name: string;
   description: string;
-  type: 'INTERNET' | 'VOICE' | 'TV' | 'BUNDLE';
+  type: "INTERNET" | "VOICE" | "TV" | "BUNDLE";
   bandwidth: string;
   monthly_rate: number;
   setup_fee: number;
@@ -211,11 +211,11 @@ export interface NetworkAlert {
   id: string;
   device_id: string;
   device_name: string;
-  severity: 'INFO' | 'WARNING' | 'CRITICAL';
-  type: 'CONNECTIVITY' | 'PERFORMANCE' | 'SECURITY' | 'MAINTENANCE';
+  severity: "INFO" | "WARNING" | "CRITICAL";
+  type: "CONNECTIVITY" | "PERFORMANCE" | "SECURITY" | "MAINTENANCE";
   title: string;
   description: string;
-  status: 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED';
+  status: "ACTIVE" | "ACKNOWLEDGED" | "RESOLVED";
   acknowledged_by?: string;
   acknowledged_at?: string;
   resolved_at?: string;
@@ -257,7 +257,7 @@ export interface LegacyQueryParams {
   page?: number;
   limit?: number;
   sort?: string;
-  order?: 'asc' | 'desc';
+  order?: "asc" | "desc";
   search?: string;
   filters?: Record<string, unknown>;
 }

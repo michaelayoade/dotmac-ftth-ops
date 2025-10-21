@@ -3,9 +3,9 @@
  * Handles tenant-level notifications and alerts
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { TenantNotification, TenantSession } from '../../types/tenant';
-import { getISPApiClient } from '../../api/isp-client';
+import { useState, useCallback, useEffect } from "react";
+import { TenantNotification, TenantSession } from "../../types/tenant";
+import { getISPApiClient } from "../../api/isp-client";
 
 export interface UseTenantNotificationsReturn {
   notifications: TenantNotification[];
@@ -15,11 +15,11 @@ export interface UseTenantNotificationsReturn {
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   dismissNotification: (notificationId: string) => Promise<void>;
-  addNotification: (notification: Omit<TenantNotification, 'id' | 'created_at'>) => void;
+  addNotification: (notification: Omit<TenantNotification, "id" | "created_at">) => void;
 }
 
 export function useTenantNotifications(
-  session: TenantSession | null
+  session: TenantSession | null,
 ): UseTenantNotificationsReturn {
   const [notifications, setNotifications] = useState<TenantNotification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,7 +40,7 @@ export function useTenantNotifications(
 
       setNotifications(response.data);
     } catch (error) {
-      console.error('Failed to load notifications:', error);
+      console.error("Failed to load notifications:", error);
       // Don't throw - notifications are non-critical
     } finally {
       setIsLoading(false);
@@ -58,15 +58,19 @@ export function useTenantNotifications(
         setNotifications((prev) =>
           prev.map((notification) =>
             notification.id === notificationId
-              ? { ...notification, read: true, read_at: new Date().toISOString() }
-              : notification
-          )
+              ? {
+                  ...notification,
+                  read: true,
+                  read_at: new Date().toISOString(),
+                }
+              : notification,
+          ),
         );
       } catch (error) {
-        console.error('Failed to mark notification as read:', error);
+        console.error("Failed to mark notification as read:", error);
       }
     },
-    [session?.tenant?.id]
+    [session?.tenant?.id],
   );
 
   const markAllAsRead = useCallback(async () => {
@@ -82,10 +86,10 @@ export function useTenantNotifications(
           ...notification,
           read: true,
           read_at: notification.read_at || now,
-        }))
+        })),
       );
     } catch (error) {
-      console.error('Failed to mark all notifications as read:', error);
+      console.error("Failed to mark all notifications as read:", error);
     }
   }, [session?.tenant?.id]);
 
@@ -98,17 +102,17 @@ export function useTenantNotifications(
         await apiClient.dismissNotification(notificationId);
 
         setNotifications((prev) =>
-          prev.filter((notification) => notification.id !== notificationId)
+          prev.filter((notification) => notification.id !== notificationId),
         );
       } catch (error) {
-        console.error('Failed to dismiss notification:', error);
+        console.error("Failed to dismiss notification:", error);
       }
     },
-    [session?.tenant?.id]
+    [session?.tenant?.id],
   );
 
   const addNotification = useCallback(
-    (notification: Omit<TenantNotification, 'id' | 'created_at'>) => {
+    (notification: Omit<TenantNotification, "id" | "created_at">) => {
       const newNotification: TenantNotification = {
         ...notification,
         id: `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -117,7 +121,7 @@ export function useTenantNotifications(
 
       setNotifications((prev) => [newNotification, ...prev]);
     },
-    []
+    [],
   );
 
   // Load notifications when session changes

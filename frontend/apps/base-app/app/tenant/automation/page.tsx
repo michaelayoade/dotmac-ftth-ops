@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 import {
   Play,
   RefreshCw,
@@ -14,12 +14,12 @@ import {
   FileCode,
   Zap,
   Server,
-} from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+} from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -27,26 +27,26 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   useAWXHealth,
   useJobTemplates,
   useJobs,
   useLaunchJob,
   useCancelJob,
-} from '@/hooks/useAnsible';
-import type { JobTemplate, Job } from '@/types';
-import { useToast } from '@/components/ui/use-toast';
-import { formatDistanceToNow } from 'date-fns';
+} from "@/hooks/useAnsible";
+import type { JobTemplate, Job } from "@/types";
+import { useToast } from "@/components/ui/use-toast";
+import { formatDistanceToNow } from "date-fns";
 
 function ConnectionStatus() {
   const { data: health, isLoading } = useAWXHealth();
@@ -85,35 +85,34 @@ function ConnectionStatus() {
 function JobStatusBadge({ status }: { status: string }) {
   const statusConfig: Record<string, { label: string; icon: any; className: string }> = {
     pending: {
-      label: 'Pending',
+      label: "Pending",
       icon: Clock,
-      className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+      className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
     },
     running: {
-      label: 'Running',
+      label: "Running",
       icon: Activity,
-      className: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+      className: "bg-blue-500/20 text-blue-400 border-blue-500/30",
     },
     successful: {
-      label: 'Successful',
+      label: "Successful",
       icon: CheckCircle,
-      className: 'bg-green-500/20 text-green-400 border-green-500/30',
+      className: "bg-green-500/20 text-green-400 border-green-500/30",
     },
     failed: {
-      label: 'Failed',
+      label: "Failed",
       icon: XCircle,
-      className: 'bg-red-500/20 text-red-400 border-red-500/30',
+      className: "bg-red-500/20 text-red-400 border-red-500/30",
     },
     canceled: {
-      label: 'Canceled',
+      label: "Canceled",
       icon: StopCircle,
-      className: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
+      className: "bg-gray-500/20 text-gray-400 border-gray-500/30",
     },
   };
 
   const normalizedStatus = status.toLowerCase() as keyof typeof statusConfig;
-  const configRecord =
-    (statusConfig[normalizedStatus] ?? statusConfig.pending)!;
+  const configRecord = (statusConfig[normalizedStatus] ?? statusConfig.pending)!;
   const Icon = configRecord.icon;
 
   return (
@@ -125,16 +124,20 @@ function JobStatusBadge({ status }: { status: string }) {
 }
 
 export default function AutomationPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [templateFilter, setTemplateFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [templateFilter, setTemplateFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isLaunchDialogOpen, setIsLaunchDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<JobTemplate | null>(null);
-  const [extraVars, setExtraVars] = useState('{}');
+  const [extraVars, setExtraVars] = useState("{}");
   const { toast } = useToast();
 
   // API Hooks
-  const { data: templates = [], isLoading: templatesLoading, refetch: refetchTemplates } = useJobTemplates();
+  const {
+    data: templates = [],
+    isLoading: templatesLoading,
+    refetch: refetchTemplates,
+  } = useJobTemplates();
   const { data: jobs = [], isLoading: jobsLoading, refetch: refetchJobs } = useJobs();
   const launchMutation = useLaunchJob();
   const cancelMutation = useCancelJob();
@@ -143,15 +146,16 @@ export default function AutomationPage() {
   const filteredJobs = useMemo(() => {
     return jobs.filter((job) => {
       const matchesSearch =
-        searchQuery === '' ||
+        searchQuery === "" ||
         job.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.id.toString().includes(searchQuery);
 
       const matchesTemplate =
-        templateFilter === 'all' ||
+        templateFilter === "all" ||
         templates.find((t) => t.name === job.name && t.id.toString() === templateFilter);
 
-      const matchesStatus = statusFilter === 'all' || job.status.toLowerCase() === statusFilter.toLowerCase();
+      const matchesStatus =
+        statusFilter === "all" || job.status.toLowerCase() === statusFilter.toLowerCase();
 
       return matchesSearch && matchesTemplate && matchesStatus;
     });
@@ -159,9 +163,9 @@ export default function AutomationPage() {
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const runningJobs = jobs.filter((j) => j.status.toLowerCase() === 'running').length;
-    const successfulJobs = jobs.filter((j) => j.status.toLowerCase() === 'successful').length;
-    const failedJobs = jobs.filter((j) => j.status.toLowerCase() === 'failed').length;
+    const runningJobs = jobs.filter((j) => j.status.toLowerCase() === "running").length;
+    const successfulJobs = jobs.filter((j) => j.status.toLowerCase() === "successful").length;
+    const failedJobs = jobs.filter((j) => j.status.toLowerCase() === "failed").length;
 
     return {
       total: jobs.length,
@@ -173,7 +177,7 @@ export default function AutomationPage() {
 
   const handleLaunchTemplate = (template: JobTemplate) => {
     setSelectedTemplate(template);
-    setExtraVars('{}');
+    setExtraVars("{}");
     setIsLaunchDialogOpen(true);
   };
 
@@ -192,7 +196,7 @@ export default function AutomationPage() {
       });
 
       toast({
-        title: 'Job Launched',
+        title: "Job Launched",
         description: `Job #${response.job_id} has been launched successfully. Status: ${response.status}`,
       });
 
@@ -200,28 +204,28 @@ export default function AutomationPage() {
       refetchJobs();
     } catch (error) {
       toast({
-        title: 'Failed to Launch Job',
-        description: error instanceof Error ? error.message : 'An error occurred',
-        variant: 'destructive',
+        title: "Failed to Launch Job",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
       });
     }
   };
 
   const handleCancelJob = async (jobId: number) => {
-    if (!confirm('Are you sure you want to cancel this job?')) return;
+    if (!confirm("Are you sure you want to cancel this job?")) return;
 
     try {
       await cancelMutation.mutateAsync({ jobId });
       toast({
-        title: 'Job Canceled',
+        title: "Job Canceled",
         description: `Job #${jobId} has been canceled.`,
       });
       refetchJobs();
     } catch (error) {
       toast({
-        title: 'Failed to Cancel Job',
-        description: error instanceof Error ? error.message : 'An error occurred',
-        variant: 'destructive',
+        title: "Failed to Cancel Job",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
       });
     }
   };
@@ -304,8 +308,13 @@ export default function AutomationPage() {
               <CardTitle className="text-white">Job Templates</CardTitle>
               <CardDescription>Available automation playbooks</CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={() => refetchTemplates()} disabled={templatesLoading}>
-              <RefreshCw className={`h-4 w-4 ${templatesLoading ? 'animate-spin' : ''}`} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetchTemplates()}
+              disabled={templatesLoading}
+            >
+              <RefreshCw className={`h-4 w-4 ${templatesLoading ? "animate-spin" : ""}`} />
             </Button>
           </div>
         </CardHeader>
@@ -323,7 +332,10 @@ export default function AutomationPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {templates.map((template) => (
-                <Card key={template.id} className="bg-slate-900 border-slate-700 hover:border-slate-600 transition-colors">
+                <Card
+                  key={template.id}
+                  className="bg-slate-900 border-slate-700 hover:border-slate-600 transition-colors"
+                >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -332,7 +344,9 @@ export default function AutomationPage() {
                       </div>
                     </div>
                     {template.description && (
-                      <p className="text-slate-400 text-xs mb-3 line-clamp-2">{template.description}</p>
+                      <p className="text-slate-400 text-xs mb-3 line-clamp-2">
+                        {template.description}
+                      </p>
                     )}
                     {template.playbook && (
                       <p className="text-slate-500 text-xs mb-3 font-mono">{template.playbook}</p>
@@ -399,8 +413,13 @@ export default function AutomationPage() {
               </SelectContent>
             </Select>
 
-            <Button variant="outline" onClick={() => refetchJobs()} disabled={jobsLoading} className="border-slate-700">
-              <RefreshCw className={`h-4 w-4 ${jobsLoading ? 'animate-spin' : ''}`} />
+            <Button
+              variant="outline"
+              onClick={() => refetchJobs()}
+              disabled={jobsLoading}
+              className="border-slate-700"
+            >
+              <RefreshCw className={`h-4 w-4 ${jobsLoading ? "animate-spin" : ""}`} />
             </Button>
           </div>
 
@@ -415,15 +434,18 @@ export default function AutomationPage() {
                 <Activity className="h-12 w-12 text-slate-600 mb-4" />
                 <p className="text-slate-400 text-lg mb-2">No jobs found</p>
                 <p className="text-slate-500 text-sm">
-                  {searchQuery || templateFilter !== 'all' || statusFilter !== 'all'
-                    ? 'Try adjusting your filters'
-                    : 'Launch a template to see job executions'}
+                  {searchQuery || templateFilter !== "all" || statusFilter !== "all"
+                    ? "Try adjusting your filters"
+                    : "Launch a template to see job executions"}
                 </p>
               </div>
             ) : (
               <div className="space-y-3">
                 {filteredJobs.map((job) => (
-                  <Card key={job.id} className="bg-slate-900 border-slate-700 hover:border-slate-600 transition-colors">
+                  <Card
+                    key={job.id}
+                    className="bg-slate-900 border-slate-700 hover:border-slate-600 transition-colors"
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -436,18 +458,27 @@ export default function AutomationPage() {
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
                             <div className="flex items-center text-slate-400">
                               <Clock className="h-3 w-3 mr-2" />
-                              Created: {formatDistanceToNow(new Date(job.created), { addSuffix: true })}
+                              Created:{" "}
+                              {formatDistanceToNow(new Date(job.created), {
+                                addSuffix: true,
+                              })}
                             </div>
                             {job.started && (
                               <div className="flex items-center text-slate-400">
                                 <Play className="h-3 w-3 mr-2" />
-                                Started: {formatDistanceToNow(new Date(job.started), { addSuffix: true })}
+                                Started:{" "}
+                                {formatDistanceToNow(new Date(job.started), {
+                                  addSuffix: true,
+                                })}
                               </div>
                             )}
                             {job.finished && (
                               <div className="flex items-center text-slate-400">
                                 <CheckCircle className="h-3 w-3 mr-2" />
-                                Finished: {formatDistanceToNow(new Date(job.finished), { addSuffix: true })}
+                                Finished:{" "}
+                                {formatDistanceToNow(new Date(job.finished), {
+                                  addSuffix: true,
+                                })}
                               </div>
                             )}
                             {job.elapsed && (
@@ -459,7 +490,7 @@ export default function AutomationPage() {
                           </div>
                         </div>
 
-                        {job.status.toLowerCase() === 'running' && (
+                        {job.status.toLowerCase() === "running" && (
                           <Button
                             variant="destructive"
                             size="sm"
@@ -485,15 +516,17 @@ export default function AutomationPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Launch Job Template</DialogTitle>
-            <DialogDescription>
-              Configure and launch {selectedTemplate?.name}
-            </DialogDescription>
+            <DialogDescription>Configure and launch {selectedTemplate?.name}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div>
               <Label>Template</Label>
-              <Input value={selectedTemplate?.name || ''} disabled className="bg-slate-900 border-slate-700" />
+              <Input
+                value={selectedTemplate?.name || ""}
+                disabled
+                className="bg-slate-900 border-slate-700"
+              />
             </div>
 
             {selectedTemplate?.description && (
@@ -522,7 +555,11 @@ export default function AutomationPage() {
             <Button variant="outline" onClick={() => setIsLaunchDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleLaunchJob} disabled={launchMutation.isPending} className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              onClick={handleLaunchJob}
+              disabled={launchMutation.isPending}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               {launchMutation.isPending ? (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" />

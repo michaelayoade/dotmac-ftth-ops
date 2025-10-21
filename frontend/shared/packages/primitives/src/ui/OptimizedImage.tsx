@@ -5,7 +5,7 @@
  * and fallback for non-Next.js environments.
  */
 
-import * as React from 'react';
+import * as React from "react";
 
 export interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   /**
@@ -35,7 +35,7 @@ export interface OptimizedImageProps extends React.ImgHTMLAttributes<HTMLImageEl
   /**
    * Placeholder strategy
    */
-  placeholder?: 'blur' | 'empty';
+  placeholder?: "blur" | "empty";
   /**
    * Blur data URL for placeholder
    */
@@ -59,12 +59,12 @@ export const OptimizedImage = React.forwardRef<HTMLImageElement, OptimizedImageP
         width={width}
         height={height}
         className={className}
-        loading={priority ? 'eager' : 'lazy'}
-        decoding='async'
+        loading={priority ? "eager" : "lazy"}
+        decoding="async"
         {...props}
       />
     );
-  }
+  },
 );
 
-OptimizedImage.displayName = 'OptimizedImage';
+OptimizedImage.displayName = "OptimizedImage";

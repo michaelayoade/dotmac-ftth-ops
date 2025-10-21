@@ -11,6 +11,7 @@ A comprehensive modal dialog for viewing and managing detailed alarm information
 **File**: `AlarmDetailModal.tsx`
 
 **Features**:
+
 - Complete alarm information display
 - Interactive history timeline
 - Notes and comments management
@@ -20,25 +21,27 @@ A comprehensive modal dialog for viewing and managing detailed alarm information
 - Responsive design with tabbed interface
 
 **Props**:
+
 ```typescript
 interface AlarmDetailModalProps {
-  alarm: Alarm | null;        // The alarm to display
-  open: boolean;              // Control visibility
-  onClose: () => void;        // Close handler
-  onUpdate?: () => void;      // Optional update callback
+  alarm: Alarm | null; // The alarm to display
+  open: boolean; // Control visibility
+  onClose: () => void; // Close handler
+  onUpdate?: () => void; // Optional update callback
 }
 ```
 
 **Usage**:
+
 ```tsx
-import { AlarmDetailModal } from '@/components/faults/AlarmDetailModal';
+import { AlarmDetailModal } from "@/components/faults/AlarmDetailModal";
 
 <AlarmDetailModal
   alarm={selectedAlarm}
   open={isModalOpen}
   onClose={() => setIsModalOpen(false)}
   onUpdate={() => refetchAlarms()}
-/>
+/>;
 ```
 
 **See**: `AlarmDetailModal.examples.tsx` for more usage examples.
@@ -56,6 +59,7 @@ components/faults/
 ## Related Files
 
 ### Hooks
+
 - `hooks/useFaults.ts` - Custom hooks for alarm operations
   - `useAlarms()` - Fetch and filter alarms
   - `useAlarmStatistics()` - Get alarm statistics
@@ -64,20 +68,24 @@ components/faults/
   - `useSLACompliance()` - Get SLA metrics
 
 ### Pages
+
 - `app/dashboard/network/faults/page.tsx` - Main fault management page
 
 ### Documentation
+
 - `docs/ALARM_DETAIL_MODAL.md` - Comprehensive component documentation
 
 ## Component Guidelines
 
 ### Styling
+
 - Use Tailwind CSS classes for styling
 - Follow the design system color palette
 - Use semantic color variables (e.g., `bg-red-500` for critical)
 - Maintain consistent spacing with the grid system
 
 ### Accessibility
+
 - Ensure keyboard navigation works properly
 - Add ARIA labels to interactive elements
 - Use semantic HTML elements
@@ -85,12 +93,14 @@ components/faults/
 - Provide loading and error states
 
 ### Performance
+
 - Lazy load modal content
 - Use React.memo for expensive components
 - Implement proper cleanup in useEffect
 - Avoid unnecessary re-renders
 
 ### Error Handling
+
 - Display user-friendly error messages
 - Provide retry mechanisms
 - Log errors for debugging
@@ -111,17 +121,19 @@ components/faults/
 ### Testing
 
 Components should include:
+
 - Unit tests for logic
 - Integration tests for API calls
 - Accessibility tests
 - Visual regression tests
 
 Example test structure:
+
 ```typescript
-describe('ComponentName', () => {
-  it('should render correctly', () => {});
-  it('should handle user interactions', () => {});
-  it('should handle errors gracefully', () => {});
+describe("ComponentName", () => {
+  it("should render correctly", () => {});
+  it("should handle user interactions", () => {});
+  it("should handle errors gracefully", () => {});
 });
 ```
 
@@ -161,6 +173,7 @@ When adding or modifying components:
 ## Support
 
 For questions or issues:
+
 - Check component documentation
 - Review example implementations
 - Consult the team's technical lead

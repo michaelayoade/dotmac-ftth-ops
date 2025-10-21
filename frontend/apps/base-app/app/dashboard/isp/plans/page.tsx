@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * ISP Internet Service Plans Management Page
@@ -6,26 +6,26 @@
  * Main dashboard for managing internet service plans with CRUD operations.
  */
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Plus, Search, Filter, TrendingUp, Users, DollarSign } from 'lucide-react';
-import { useInternetPlans, usePlanStatistics } from '../../../../hooks/useInternetPlans';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Plus, Search, Filter, TrendingUp, Users, DollarSign } from "lucide-react";
+import { useInternetPlans, usePlanStatistics } from "../../../../hooks/useInternetPlans";
 import type {
   InternetServicePlan,
   ListPlansParams,
   PlanStatus,
   PlanType,
-} from '../../../../types/internet-plans';
-import Link from 'next/link';
+} from "../../../../types/internet-plans";
+import Link from "next/link";
 
 export default function InternetPlansPage() {
   const [filters, setFilters] = useState<ListPlansParams>({
     limit: 50,
     offset: 0,
   });
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: plans = [], isLoading, error } = useInternetPlans(filters);
 
@@ -47,7 +47,7 @@ export default function InternetPlansPage() {
 
   const clearFilters = () => {
     setFilters({ limit: 50, offset: 0 });
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
   return (
@@ -84,7 +84,7 @@ export default function InternetPlansPage() {
             <div>
               <p className="text-sm text-muted-foreground">Active Plans</p>
               <p className="text-2xl font-bold">
-                {plans.filter((p) => p.status === 'active').length}
+                {plans.filter((p) => p.status === "active").length}
               </p>
             </div>
             <TrendingUp className="h-8 w-8 text-green-500" />
@@ -94,9 +94,7 @@ export default function InternetPlansPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Promotional</p>
-              <p className="text-2xl font-bold">
-                {plans.filter((p) => p.is_promotional).length}
-              </p>
+              <p className="text-2xl font-bold">{plans.filter((p) => p.is_promotional).length}</p>
             </div>
             <DollarSign className="h-8 w-8 text-purple-500" />
           </div>
@@ -106,7 +104,7 @@ export default function InternetPlansPage() {
             <div>
               <p className="text-sm text-muted-foreground">Business Plans</p>
               <p className="text-2xl font-bold">
-                {plans.filter((p) => p.plan_type === 'business').length}
+                {plans.filter((p) => p.plan_type === "business").length}
               </p>
             </div>
             <Users className="h-8 w-8 text-orange-500" />
@@ -127,7 +125,7 @@ export default function InternetPlansPage() {
                   placeholder="Search plans by name, code, or description..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                   className="pl-10 pr-4 py-2 w-full border rounded-md"
                 />
               </div>
@@ -140,10 +138,8 @@ export default function InternetPlansPage() {
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-muted-foreground" />
               <select
-                value={filters.plan_type || ''}
-                onChange={(e) =>
-                  handleFilterChange('plan_type', e.target.value || undefined)
-                }
+                value={filters.plan_type || ""}
+                onChange={(e) => handleFilterChange("plan_type", e.target.value || undefined)}
                 className="border rounded-md px-3 py-2"
               >
                 <option value="">All Types</option>
@@ -154,8 +150,8 @@ export default function InternetPlansPage() {
               </select>
 
               <select
-                value={filters.status || ''}
-                onChange={(e) => handleFilterChange('status', e.target.value || undefined)}
+                value={filters.status || ""}
+                onChange={(e) => handleFilterChange("status", e.target.value || undefined)}
                 className="border rounded-md px-3 py-2"
               >
                 <option value="">All Status</option>
@@ -166,17 +162,11 @@ export default function InternetPlansPage() {
               </select>
 
               <select
-                value={
-                  filters.is_public === undefined
-                    ? ''
-                    : filters.is_public
-                      ? 'true'
-                      : 'false'
-                }
+                value={filters.is_public === undefined ? "" : filters.is_public ? "true" : "false"}
                 onChange={(e) =>
                   handleFilterChange(
-                    'is_public',
-                    e.target.value === '' ? undefined : e.target.value === 'true'
+                    "is_public",
+                    e.target.value === "" ? undefined : e.target.value === "true",
                   )
                 }
                 className="border rounded-md px-3 py-2"
@@ -235,31 +225,31 @@ function PlanCard({ plan }: { plan: InternetServicePlan }) {
 
   const getStatusColor = (status: PlanStatus): string => {
     switch (status) {
-      case 'active':
-        return 'bg-green-500';
-      case 'draft':
-        return 'bg-gray-500';
-      case 'inactive':
-        return 'bg-yellow-500';
-      case 'archived':
-        return 'bg-red-500';
+      case "active":
+        return "bg-green-500";
+      case "draft":
+        return "bg-gray-500";
+      case "inactive":
+        return "bg-yellow-500";
+      case "archived":
+        return "bg-red-500";
       default:
-        return 'bg-gray-500';
+        return "bg-gray-500";
     }
   };
 
   const getTypeColor = (type: PlanType): string => {
     switch (type) {
-      case 'residential':
-        return 'bg-blue-500';
-      case 'business':
-        return 'bg-purple-500';
-      case 'enterprise':
-        return 'bg-orange-500';
-      case 'promotional':
-        return 'bg-pink-500';
+      case "residential":
+        return "bg-blue-500";
+      case "business":
+        return "bg-purple-500";
+      case "enterprise":
+        return "bg-orange-500";
+      case "promotional":
+        return "bg-pink-500";
       default:
-        return 'bg-gray-500';
+        return "bg-gray-500";
     }
   };
 
@@ -281,9 +271,7 @@ function PlanCard({ plan }: { plan: InternetServicePlan }) {
 
           {/* Description */}
           {plan.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {plan.description}
-            </p>
+            <p className="text-sm text-muted-foreground line-clamp-2">{plan.description}</p>
           )}
 
           {/* Speed Info */}

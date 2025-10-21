@@ -4,7 +4,7 @@
  * Factory functions to generate test data for all features.
  */
 
-import type { Page } from '@playwright/test';
+import type { Page } from "@playwright/test";
 
 // ==================== Types ====================
 
@@ -18,7 +18,7 @@ export interface TestServer {
   subnet: string;
   dns_servers: string;
   max_peers: number;
-  status?: 'active' | 'inactive' | 'degraded' | 'maintenance';
+  status?: "active" | "inactive" | "degraded" | "maintenance";
   peer_count?: number;
   traffic_rx?: number;
   traffic_tx?: number;
@@ -32,7 +32,7 @@ export interface TestPeer {
   peer_ip?: string;
   allowed_ips: string;
   persistent_keepalive?: number;
-  status?: 'active' | 'inactive' | 'disabled' | 'expired';
+  status?: "active" | "inactive" | "disabled" | "expired";
   expiration_date?: string;
   notes?: string;
 }
@@ -42,7 +42,7 @@ export interface TestTemplate {
   tenant_id?: string;
   name: string;
   description?: string;
-  channel: 'email' | 'sms';
+  channel: "email" | "sms";
   subject?: string;
   body_html?: string;
   body_text?: string;
@@ -64,13 +64,13 @@ export function generateTestServer(overrides: Partial<TestServer> = {}): TestSer
 
   return {
     name: `test-server-${Date.now()}`,
-    location: 'US-East-1',
+    location: "US-East-1",
     endpoint: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}:51820`,
     listen_port: 51820,
     subnet: `10.${Math.floor(Math.random() * 255)}.0.0/24`,
-    dns_servers: '1.1.1.1, 8.8.8.8',
+    dns_servers: "1.1.1.1, 8.8.8.8",
     max_peers: 100,
-    status: 'active',
+    status: "active",
     peer_count: 0,
     traffic_rx: 0,
     traffic_tx: 0,
@@ -82,9 +82,9 @@ export function generateTestPeer(serverId: string, overrides: Partial<TestPeer> 
   return {
     server_id: serverId,
     peer_name: `test-peer-${Date.now()}`,
-    allowed_ips: '0.0.0.0/0, ::/0',
+    allowed_ips: "0.0.0.0/0, ::/0",
     persistent_keepalive: 25,
-    status: 'active',
+    status: "active",
     ...overrides,
   };
 }
@@ -96,7 +96,7 @@ export function generateMultipleServers(count: number): TestServer[] {
       peer_count: Math.floor(Math.random() * 20),
       traffic_rx: Math.floor(Math.random() * 10000000),
       traffic_tx: Math.floor(Math.random() * 5000000),
-    })
+    }),
   );
 }
 
@@ -104,7 +104,7 @@ export function generateMultiplePeers(serverId: string, count: number): TestPeer
   return Array.from({ length: count }, (_, i) =>
     generateTestPeer(serverId, {
       peer_name: `test-peer-${i + 1}`,
-    })
+    }),
   );
 }
 
@@ -113,10 +113,10 @@ export function generateMultiplePeers(serverId: string, count: number): TestPeer
 export function generateTestTemplate(overrides: Partial<TestTemplate> = {}): TestTemplate {
   return {
     name: `test-template-${Date.now()}`,
-    channel: 'email',
-    subject: 'Test Subject {{ variable }}',
-    body_text: 'Hello {{ name }}, this is a test email.',
-    body_html: '<p>Hello {{ name }}, this is a test email.</p>',
+    channel: "email",
+    subject: "Test Subject {{ variable }}",
+    body_text: "Hello {{ name }}, this is a test email.",
+    body_html: "<p>Hello {{ name }}, this is a test email.</p>",
     is_active: true,
     usage_count: 0,
     ...overrides,
@@ -128,7 +128,7 @@ export function generateMultipleTemplates(count: number): TestTemplate[] {
     generateTestTemplate({
       name: `template-${i + 1}`,
       usage_count: Math.floor(Math.random() * 100),
-    })
+    }),
   );
 }
 
@@ -143,9 +143,9 @@ export interface TestEmail {
 
 export function generateTestEmail(overrides: Partial<TestEmail> = {}): TestEmail {
   return {
-    to: 'test@example.com',
-    subject: 'Test Email',
-    body_text: 'This is a test email message.',
+    to: "test@example.com",
+    subject: "Test Email",
+    body_text: "This is a test email message.",
     ...overrides,
   };
 }
@@ -156,9 +156,9 @@ export function generateTestUser(overrides: Partial<TestUser> = {}): TestUser {
   const timestamp = Date.now();
   return {
     email: `testuser${timestamp}@example.com`,
-    password: 'Test123!@#',
-    tenant_id: 'test-tenant',
-    role: 'admin',
+    password: "Test123!@#",
+    tenant_id: "test-tenant",
+    role: "admin",
     ...overrides,
   };
 }
@@ -168,7 +168,7 @@ export function generateMultipleUsers(count: number, tenantId?: string): TestUse
     generateTestUser({
       email: `testuser${i + 1}@example.com`,
       tenant_id: tenantId || `tenant-${i + 1}`,
-    })
+    }),
   );
 }
 
@@ -207,11 +207,11 @@ export function generateTestStats(overrides: Partial<TestStats> = {}): TestStats
 // ==================== Real-Time Event Fixtures ====================
 
 export interface TestAlertEvent {
-  event_type: 'alert.raised' | 'alert.cleared';
+  event_type: "alert.raised" | "alert.cleared";
   tenant_id: string;
   alert_id: string;
   alert_type: string;
-  severity: 'info' | 'warning' | 'error' | 'critical';
+  severity: "info" | "warning" | "error" | "critical";
   source: string;
   message: string;
   timestamp?: string;
@@ -219,20 +219,20 @@ export interface TestAlertEvent {
 
 export function generateAlertEvent(overrides: Partial<TestAlertEvent> = {}): TestAlertEvent {
   return {
-    event_type: 'alert.raised',
-    tenant_id: 'test-tenant',
+    event_type: "alert.raised",
+    tenant_id: "test-tenant",
     alert_id: `alert-${Date.now()}`,
-    alert_type: 'test',
-    severity: 'warning',
-    source: 'test-source',
-    message: 'Test alert message',
+    alert_type: "test",
+    severity: "warning",
+    source: "test-source",
+    message: "Test alert message",
     timestamp: new Date().toISOString(),
     ...overrides,
   };
 }
 
 export interface TestSessionEvent {
-  event_type: 'session.started' | 'session.stopped' | 'session.update';
+  event_type: "session.started" | "session.stopped" | "session.update";
   tenant_id: string;
   session_id: string;
   username?: string;
@@ -245,12 +245,12 @@ export interface TestSessionEvent {
 
 export function generateSessionEvent(overrides: Partial<TestSessionEvent> = {}): TestSessionEvent {
   return {
-    event_type: 'session.started',
-    tenant_id: 'test-tenant',
+    event_type: "session.started",
+    tenant_id: "test-tenant",
     session_id: `session-${Date.now()}`,
-    username: 'testuser@isp',
-    nas_ip: '10.0.0.1',
-    framed_ip: '100.64.1.5',
+    username: "testuser@isp",
+    nas_ip: "10.0.0.1",
+    framed_ip: "100.64.1.5",
     acct_input_octets: 0,
     acct_output_octets: 0,
     timestamp: new Date().toISOString(),
@@ -269,9 +269,7 @@ export interface BulkTestData {
 
 export function generateBulkTestData(): BulkTestData {
   const servers = generateMultipleServers(3);
-  const peers = servers.flatMap(server =>
-    generateMultiplePeers(server.name, 5)
-  );
+  const peers = servers.flatMap((server) => generateMultiplePeers(server.name, 5));
   const templates = generateMultipleTemplates(5);
   const users = generateMultipleUsers(3);
 
@@ -286,7 +284,9 @@ export function generateBulkTestData(): BulkTestData {
 // ==================== Helper Functions ====================
 
 export function randomString(length: number = 10): string {
-  return Math.random().toString(36).substring(2, length + 2);
+  return Math.random()
+    .toString(36)
+    .substring(2, length + 2);
 }
 
 export function randomEmail(): string {
@@ -306,5 +306,5 @@ export function randomSubnet(): string {
 }
 
 export function waitForSeconds(seconds: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }

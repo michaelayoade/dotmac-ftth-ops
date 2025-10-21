@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Search, Download, RefreshCw, X, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState, useEffect } from "react";
+import { Search, Download, RefreshCw, X, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { ActivityType, ActivitySeverity, ACTIVITY_CATEGORIES } from '@/types/audit';
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { ActivityType, ActivitySeverity, ACTIVITY_CATEGORIES } from "@/types/audit";
 
 interface AuditLogFiltersProps {
   onFilterChange: (filters: AuditFilters) => void;
-  onExport: (format: 'csv' | 'json') => void;
+  onExport: (format: "csv" | "json") => void;
   onRefresh: () => void;
   isRefreshing?: boolean;
 }
@@ -39,7 +39,7 @@ export function AuditLogFilters({
   isRefreshing = false,
 }: AuditLogFiltersProps) {
   const [filters, setFilters] = useState<AuditFilters>({});
-  const [searchInput, setSearchInput] = useState('');
+  const [searchInput, setSearchInput] = useState("");
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
@@ -61,7 +61,7 @@ export function AuditLogFilters({
 
   const clearFilters = () => {
     setFilters({});
-    setSearchInput('');
+    setSearchInput("");
     onFilterChange({});
   };
 
@@ -88,7 +88,9 @@ export function AuditLogFilters({
         {/* Days Filter */}
         <Select
           value={filters.days?.toString()}
-          onValueChange={(value) => handleFilterChange('days', value === 'all' ? undefined : parseInt(value))}
+          onValueChange={(value) =>
+            handleFilterChange("days", value === "all" ? undefined : parseInt(value))
+          }
         >
           <SelectTrigger>
             <div className="flex items-center gap-2">
@@ -115,24 +117,14 @@ export function AuditLogFilters({
             disabled={isRefreshing}
             className="flex-1"
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onExport('csv')}
-            className="flex-1"
-          >
+          <Button variant="outline" size="sm" onClick={() => onExport("csv")} className="flex-1">
             <Download className="h-4 w-4 mr-2" />
             CSV
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onExport('json')}
-            className="flex-1"
-          >
+          <Button variant="outline" size="sm" onClick={() => onExport("json")} className="flex-1">
             <Download className="h-4 w-4 mr-2" />
             JSON
           </Button>
@@ -144,7 +136,9 @@ export function AuditLogFilters({
         {/* Severity Filter */}
         <Select
           value={filters.severity}
-          onValueChange={(value) => handleFilterChange('severity', value === 'all' ? undefined : value)}
+          onValueChange={(value) =>
+            handleFilterChange("severity", value === "all" ? undefined : value)
+          }
         >
           <SelectTrigger>
             <SelectValue placeholder="All Severities" />
@@ -161,22 +155,22 @@ export function AuditLogFilters({
         {/* User ID Filter */}
         <Input
           placeholder="User ID"
-          value={filters.userId || ''}
-          onChange={(e) => handleFilterChange('userId', e.target.value || undefined)}
+          value={filters.userId || ""}
+          onChange={(e) => handleFilterChange("userId", e.target.value || undefined)}
         />
 
         {/* Resource Type Filter */}
         <Input
           placeholder="Resource Type"
-          value={filters.resourceType || ''}
-          onChange={(e) => handleFilterChange('resourceType', e.target.value || undefined)}
+          value={filters.resourceType || ""}
+          onChange={(e) => handleFilterChange("resourceType", e.target.value || undefined)}
         />
 
         {/* Resource ID Filter */}
         <Input
           placeholder="Resource ID"
-          value={filters.resourceId || ''}
-          onChange={(e) => handleFilterChange('resourceId', e.target.value || undefined)}
+          value={filters.resourceId || ""}
+          onChange={(e) => handleFilterChange("resourceId", e.target.value || undefined)}
         />
       </div>
 
@@ -193,10 +187,10 @@ export function AuditLogFilters({
                   return (
                     <Badge
                       key={activityType}
-                      variant={isSelected ? 'default' : 'outline'}
+                      variant={isSelected ? "default" : "outline"}
                       className="cursor-pointer hover:bg-accent transition-colors"
                       onClick={() =>
-                        handleFilterChange('activityType', isSelected ? undefined : activityType)
+                        handleFilterChange("activityType", isSelected ? undefined : activityType)
                       }
                     >
                       {formatActivityTypeLabel(activityType)}
@@ -225,10 +219,10 @@ export function AuditLogFilters({
 
 // Helper function to format activity type labels
 function formatActivityTypeLabel(activityType: ActivityType): string {
-  const parts = activityType.split('.');
-  const lastPart = parts[parts.length - 1] ?? '';
+  const parts = activityType.split(".");
+  const lastPart = parts[parts.length - 1] ?? "";
   return lastPart
-    .split('_')
+    .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+    .join(" ");
 }

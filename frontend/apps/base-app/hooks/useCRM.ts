@@ -5,57 +5,52 @@
  * Provides data fetching, mutations, and state management for the sales pipeline.
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '@/lib/api/client';
+import { useState, useEffect, useCallback } from "react";
+import { apiClient } from "@/lib/api/client";
 
 // ============================================================================
 // Type Definitions
 // ============================================================================
 
 export type LeadStatus =
-  | 'new'
-  | 'contacted'
-  | 'qualified'
-  | 'site_survey_scheduled'
-  | 'site_survey_completed'
-  | 'quote_sent'
-  | 'negotiating'
-  | 'won'
-  | 'lost'
-  | 'disqualified';
+  | "new"
+  | "contacted"
+  | "qualified"
+  | "site_survey_scheduled"
+  | "site_survey_completed"
+  | "quote_sent"
+  | "negotiating"
+  | "won"
+  | "lost"
+  | "disqualified";
 
 export type LeadSource =
-  | 'website'
-  | 'referral'
-  | 'partner'
-  | 'cold_call'
-  | 'social_media'
-  | 'event'
-  | 'advertisement'
-  | 'walk_in'
-  | 'other';
+  | "website"
+  | "referral"
+  | "partner"
+  | "cold_call"
+  | "social_media"
+  | "event"
+  | "advertisement"
+  | "walk_in"
+  | "other";
 
 export type QuoteStatus =
-  | 'draft'
-  | 'sent'
-  | 'viewed'
-  | 'accepted'
-  | 'rejected'
-  | 'expired'
-  | 'revised';
+  | "draft"
+  | "sent"
+  | "viewed"
+  | "accepted"
+  | "rejected"
+  | "expired"
+  | "revised";
 
-export type SiteSurveyStatus =
-  | 'scheduled'
-  | 'in_progress'
-  | 'completed'
-  | 'failed'
-  | 'canceled';
+export type SiteSurveyStatus = "scheduled" | "in_progress" | "completed" | "failed" | "canceled";
 
 export type Serviceability =
-  | 'serviceable'
-  | 'not_serviceable'
-  | 'pending_expansion'
-  | 'requires_construction';
+  | "serviceable"
+  | "not_serviceable"
+  | "pending_expansion"
+  | "requires_construction";
 
 export interface Lead {
   id: string;
@@ -196,7 +191,7 @@ export interface SiteSurvey {
   // Installation Requirements
   estimated_installation_time_hours?: number;
   special_equipment_required: string[];
-  installation_complexity?: 'simple' | 'moderate' | 'complex';
+  installation_complexity?: "simple" | "moderate" | "complex";
 
   // Site Photos
   photos: Array<{
@@ -307,7 +302,7 @@ export interface SiteSurveyCompleteRequest {
   available_pon_ports?: number;
   estimated_installation_time_hours?: number;
   special_equipment_required?: string[];
-  installation_complexity?: 'simple' | 'moderate' | 'complex';
+  installation_complexity?: "simple" | "moderate" | "complex";
   photos?: Array<{
     url: string;
     description?: string;
@@ -342,20 +337,20 @@ export function useLeads(options: UseLeadsOptions = {}) {
       setError(null);
 
       const params = new URLSearchParams();
-      if (options.status) params.append('status', options.status);
-      if (options.source) params.append('source', options.source);
-      if (options.assignedToId) params.append('assigned_to_id', options.assignedToId);
-      if (options.partnerId) params.append('partner_id', options.partnerId);
+      if (options.status) params.append("status", options.status);
+      if (options.source) params.append("source", options.source);
+      if (options.assignedToId) params.append("assigned_to_id", options.assignedToId);
+      if (options.partnerId) params.append("partner_id", options.partnerId);
 
       const response = await apiClient.get<Lead[]>(
-        `/crm/leads${params.toString() ? `?${params.toString()}` : ''}`
+        `/crm/leads${params.toString() ? `?${params.toString()}` : ""}`,
       );
 
       if (response.data) {
         setLeads(response.data);
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch leads'));
+      setError(err instanceof Error ? err : new Error("Failed to fetch leads"));
     } finally {
       setIsLoading(false);
     }
@@ -376,31 +371,34 @@ export function useLeads(options: UseLeadsOptions = {}) {
 
   const createLead = useCallback(async (data: LeadCreateRequest): Promise<Lead | null> => {
     try {
-      const response = await apiClient.post<Lead>('/crm/leads', data);
+      const response = await apiClient.post<Lead>("/crm/leads", data);
       if (response.data) {
         setLeads((prev) => [response.data, ...prev]);
         return response.data;
       }
       return null;
     } catch (err) {
-      console.error('Failed to create lead:', err);
+      console.error("Failed to create lead:", err);
       throw err;
     }
   }, []);
 
-  const updateLead = useCallback(async (id: string, data: LeadUpdateRequest): Promise<Lead | null> => {
-    try {
-      const response = await apiClient.patch<Lead>(`/crm/leads/${id}`, data);
-      if (response.data) {
-        setLeads((prev) => prev.map((l) => (l.id === id ? response.data : l)));
-        return response.data;
+  const updateLead = useCallback(
+    async (id: string, data: LeadUpdateRequest): Promise<Lead | null> => {
+      try {
+        const response = await apiClient.patch<Lead>(`/crm/leads/${id}`, data);
+        if (response.data) {
+          setLeads((prev) => prev.map((l) => (l.id === id ? response.data : l)));
+          return response.data;
+        }
+        return null;
+      } catch (err) {
+        console.error("Failed to update lead:", err);
+        throw err;
       }
-      return null;
-    } catch (err) {
-      console.error('Failed to update lead:', err);
-      throw err;
-    }
-  }, []);
+    },
+    [],
+  );
 
   const updateLeadStatus = useCallback(async (id: string, status: LeadStatus): Promise<boolean> => {
     try {
@@ -408,7 +406,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
       setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
       return true;
     } catch (err) {
-      console.error('Failed to update lead status:', err);
+      console.error("Failed to update lead status:", err);
       return false;
     }
   }, []);
@@ -418,12 +416,18 @@ export function useLeads(options: UseLeadsOptions = {}) {
       await apiClient.post(`/crm/leads/${id}/qualify`, {});
       setLeads((prev) =>
         prev.map((l) =>
-          l.id === id ? { ...l, status: 'qualified' as LeadStatus, qualified_at: new Date().toISOString() } : l
-        )
+          l.id === id
+            ? {
+                ...l,
+                status: "qualified" as LeadStatus,
+                qualified_at: new Date().toISOString(),
+              }
+            : l,
+        ),
       );
       return true;
     } catch (err) {
-      console.error('Failed to qualify lead:', err);
+      console.error("Failed to qualify lead:", err);
       return false;
     }
   }, []);
@@ -436,16 +440,16 @@ export function useLeads(options: UseLeadsOptions = {}) {
           l.id === id
             ? {
                 ...l,
-                status: 'disqualified' as LeadStatus,
+                status: "disqualified" as LeadStatus,
                 disqualified_at: new Date().toISOString(),
                 disqualification_reason: reason,
               }
-            : l
-        )
+            : l,
+        ),
       );
       return true;
     } catch (err) {
-      console.error('Failed to disqualify lead:', err);
+      console.error("Failed to disqualify lead:", err);
       return false;
     }
   }, []);
@@ -456,7 +460,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
       setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, assigned_to_id: userId } : l)));
       return true;
     } catch (err) {
-      console.error('Failed to assign lead:', err);
+      console.error("Failed to assign lead:", err);
       return false;
     }
   }, []);
@@ -477,43 +481,49 @@ export function useLeads(options: UseLeadsOptions = {}) {
                   serviceability_checked_at: new Date().toISOString(),
                   serviceability_notes: notes,
                 }
-              : l
-          )
+              : l,
+          ),
         );
         return true;
       } catch (err) {
-        console.error('Failed to update serviceability:', err);
+        console.error("Failed to update serviceability:", err);
         return false;
       }
     },
-    []
+    [],
   );
 
-  const convertToCustomer = useCallback(async (id: string, conversionData?: Record<string, any>): Promise<any> => {
-    try {
-      const response = await apiClient.post(`/crm/leads/${id}/convert-to-customer`, conversionData || {});
-      if (response.data) {
-        // Update lead status to 'won'
-        setLeads((prev) =>
-          prev.map((l) =>
-            l.id === id
-              ? {
-                  ...l,
-                  status: 'won' as LeadStatus,
-                  converted_at: response.data.converted_at || new Date().toISOString(),
-                  converted_to_customer_id: response.data.converted_to_customer_id,
-                }
-              : l
-          )
+  const convertToCustomer = useCallback(
+    async (id: string, conversionData?: Record<string, any>): Promise<any> => {
+      try {
+        const response = await apiClient.post(
+          `/crm/leads/${id}/convert-to-customer`,
+          conversionData || {},
         );
-        return response.data;
+        if (response.data) {
+          // Update lead status to 'won'
+          setLeads((prev) =>
+            prev.map((l) =>
+              l.id === id
+                ? {
+                    ...l,
+                    status: "won" as LeadStatus,
+                    converted_at: response.data.converted_at || new Date().toISOString(),
+                    converted_to_customer_id: response.data.converted_to_customer_id,
+                  }
+                : l,
+            ),
+          );
+          return response.data;
+        }
+        return null;
+      } catch (err) {
+        console.error("Failed to convert lead to customer:", err);
+        throw err;
       }
-      return null;
-    } catch (err) {
-      console.error('Failed to convert lead to customer:', err);
-      throw err;
-    }
-  }, []);
+    },
+    [],
+  );
 
   return {
     leads,
@@ -551,18 +561,18 @@ export function useQuotes(options: UseQuotesOptions = {}) {
       setError(null);
 
       const params = new URLSearchParams();
-      if (options.leadId) params.append('lead_id', options.leadId);
-      if (options.status) params.append('status', options.status);
+      if (options.leadId) params.append("lead_id", options.leadId);
+      if (options.status) params.append("status", options.status);
 
       const response = await apiClient.get<Quote[]>(
-        `/crm/quotes${params.toString() ? `?${params.toString()}` : ''}`
+        `/crm/quotes${params.toString() ? `?${params.toString()}` : ""}`,
       );
 
       if (response.data) {
         setQuotes(response.data);
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch quotes'));
+      setError(err instanceof Error ? err : new Error("Failed to fetch quotes"));
     } finally {
       setIsLoading(false);
     }
@@ -574,14 +584,14 @@ export function useQuotes(options: UseQuotesOptions = {}) {
 
   const createQuote = useCallback(async (data: QuoteCreateRequest): Promise<Quote | null> => {
     try {
-      const response = await apiClient.post<Quote>('/crm/quotes', data);
+      const response = await apiClient.post<Quote>("/crm/quotes", data);
       if (response.data) {
         setQuotes((prev) => [response.data, ...prev]);
         return response.data;
       }
       return null;
     } catch (err) {
-      console.error('Failed to create quote:', err);
+      console.error("Failed to create quote:", err);
       throw err;
     }
   }, []);
@@ -591,37 +601,48 @@ export function useQuotes(options: UseQuotesOptions = {}) {
       await apiClient.post(`/crm/quotes/${id}/send`, {});
       setQuotes((prev) =>
         prev.map((q) =>
-          q.id === id ? { ...q, status: 'sent' as QuoteStatus, sent_at: new Date().toISOString() } : q
-        )
+          q.id === id
+            ? {
+                ...q,
+                status: "sent" as QuoteStatus,
+                sent_at: new Date().toISOString(),
+              }
+            : q,
+        ),
       );
       return true;
     } catch (err) {
-      console.error('Failed to send quote:', err);
+      console.error("Failed to send quote:", err);
       return false;
     }
   }, []);
 
-  const acceptQuote = useCallback(async (id: string, signatureData?: Record<string, any>): Promise<boolean> => {
-    try {
-      await apiClient.post(`/crm/quotes/${id}/accept`, { signature_data: signatureData });
-      setQuotes((prev) =>
-        prev.map((q) =>
-          q.id === id
-            ? {
-                ...q,
-                status: 'accepted' as QuoteStatus,
-                accepted_at: new Date().toISOString(),
-                signature_data: signatureData,
-              }
-            : q
-        )
-      );
-      return true;
-    } catch (err) {
-      console.error('Failed to accept quote:', err);
-      return false;
-    }
-  }, []);
+  const acceptQuote = useCallback(
+    async (id: string, signatureData?: Record<string, any>): Promise<boolean> => {
+      try {
+        await apiClient.post(`/crm/quotes/${id}/accept`, {
+          signature_data: signatureData,
+        });
+        setQuotes((prev) =>
+          prev.map((q) =>
+            q.id === id
+              ? {
+                  ...q,
+                  status: "accepted" as QuoteStatus,
+                  accepted_at: new Date().toISOString(),
+                  signature_data: signatureData,
+                }
+              : q,
+          ),
+        );
+        return true;
+      } catch (err) {
+        console.error("Failed to accept quote:", err);
+        return false;
+      }
+    },
+    [],
+  );
 
   const rejectQuote = useCallback(async (id: string, reason: string): Promise<boolean> => {
     try {
@@ -631,16 +652,16 @@ export function useQuotes(options: UseQuotesOptions = {}) {
           q.id === id
             ? {
                 ...q,
-                status: 'rejected' as QuoteStatus,
+                status: "rejected" as QuoteStatus,
                 rejected_at: new Date().toISOString(),
                 rejection_reason: reason,
               }
-            : q
-        )
+            : q,
+        ),
       );
       return true;
     } catch (err) {
-      console.error('Failed to reject quote:', err);
+      console.error("Failed to reject quote:", err);
       return false;
     }
   }, []);
@@ -651,7 +672,7 @@ export function useQuotes(options: UseQuotesOptions = {}) {
       setQuotes((prev) => prev.filter((q) => q.id !== id));
       return true;
     } catch (err) {
-      console.error('Failed to delete quote:', err);
+      console.error("Failed to delete quote:", err);
       return false;
     }
   }, []);
@@ -690,19 +711,19 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
       setError(null);
 
       const params = new URLSearchParams();
-      if (options.leadId) params.append('lead_id', options.leadId);
-      if (options.status) params.append('status', options.status);
-      if (options.technicianId) params.append('technician_id', options.technicianId);
+      if (options.leadId) params.append("lead_id", options.leadId);
+      if (options.status) params.append("status", options.status);
+      if (options.technicianId) params.append("technician_id", options.technicianId);
 
       const response = await apiClient.get<SiteSurvey[]>(
-        `/crm/site-surveys${params.toString() ? `?${params.toString()}` : ''}`
+        `/crm/site-surveys${params.toString() ? `?${params.toString()}` : ""}`,
       );
 
       if (response.data) {
         setSurveys(response.data);
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch site surveys'));
+      setError(err instanceof Error ? err : new Error("Failed to fetch site surveys"));
     } finally {
       setIsLoading(false);
     }
@@ -712,60 +733,70 @@ export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
     fetchSurveys();
   }, [fetchSurveys]);
 
-  const scheduleSurvey = useCallback(async (data: SiteSurveyScheduleRequest): Promise<SiteSurvey | null> => {
-    try {
-      const response = await apiClient.post<SiteSurvey>('/crm/site-surveys', data);
-      if (response.data) {
-        setSurveys((prev) => [response.data, ...prev]);
-        return response.data;
+  const scheduleSurvey = useCallback(
+    async (data: SiteSurveyScheduleRequest): Promise<SiteSurvey | null> => {
+      try {
+        const response = await apiClient.post<SiteSurvey>("/crm/site-surveys", data);
+        if (response.data) {
+          setSurveys((prev) => [response.data, ...prev]);
+          return response.data;
+        }
+        return null;
+      } catch (err) {
+        console.error("Failed to schedule survey:", err);
+        throw err;
       }
-      return null;
-    } catch (err) {
-      console.error('Failed to schedule survey:', err);
-      throw err;
-    }
-  }, []);
+    },
+    [],
+  );
 
   const startSurvey = useCallback(async (id: string): Promise<boolean> => {
     try {
       await apiClient.post(`/crm/site-surveys/${id}/start`, {});
-      setSurveys((prev) => prev.map((s) => (s.id === id ? { ...s, status: 'in_progress' as SiteSurveyStatus } : s)));
+      setSurveys((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, status: "in_progress" as SiteSurveyStatus } : s)),
+      );
       return true;
     } catch (err) {
-      console.error('Failed to start survey:', err);
+      console.error("Failed to start survey:", err);
       return false;
     }
   }, []);
 
-  const completeSurvey = useCallback(async (id: string, data: SiteSurveyCompleteRequest): Promise<boolean> => {
-    try {
-      await apiClient.post(`/crm/site-surveys/${id}/complete`, data);
-      setSurveys((prev) =>
-        prev.map((s) =>
-          s.id === id
-            ? {
-                ...s,
-                status: 'completed' as SiteSurveyStatus,
-                completed_date: new Date().toISOString(),
-                ...data,
-              }
-            : s
-        )
-      );
-      return true;
-    } catch (err) {
-      console.error('Failed to complete survey:', err);
-      return false;
-    }
-  }, []);
+  const completeSurvey = useCallback(
+    async (id: string, data: SiteSurveyCompleteRequest): Promise<boolean> => {
+      try {
+        await apiClient.post(`/crm/site-surveys/${id}/complete`, data);
+        setSurveys((prev) =>
+          prev.map((s) =>
+            s.id === id
+              ? {
+                  ...s,
+                  status: "completed" as SiteSurveyStatus,
+                  completed_date: new Date().toISOString(),
+                  ...data,
+                }
+              : s,
+          ),
+        );
+        return true;
+      } catch (err) {
+        console.error("Failed to complete survey:", err);
+        return false;
+      }
+    },
+    [],
+  );
 
   const cancelSurvey = useCallback(async (id: string, reason?: string): Promise<boolean> => {
     try {
       await apiClient.post(`/crm/site-surveys/${id}/cancel`, { reason });
-      setSurveys((prev) => prev.map((s) => (s.id === id ? { ...s, status: 'canceled' as SiteSurveyStatus } : s)));
+      setSurveys((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, status: "canceled" as SiteSurveyStatus } : s)),
+      );
       return true;
     } catch (err) {
-      console.error('Failed to cancel survey:', err);
+      console.error("Failed to cancel survey:", err);
       return false;
     }
   }, []);

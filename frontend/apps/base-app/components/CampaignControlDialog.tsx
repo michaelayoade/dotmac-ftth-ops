@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,14 +8,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
-import type { DunningCampaign } from '@/types';
-import { useCampaignWebSocket, useUpdateCampaign } from '@/hooks/useCampaigns';
-import { AlertTriangle } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
+import type { DunningCampaign } from "@/types";
+import { useCampaignWebSocket, useUpdateCampaign } from "@/hooks/useCampaigns";
+import { AlertTriangle } from "lucide-react";
 
 interface CampaignControlDialogProps {
   campaign: DunningCampaign | null;
@@ -23,9 +23,13 @@ interface CampaignControlDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function CampaignControlDialog({ campaign, open, onOpenChange }: CampaignControlDialogProps) {
+export function CampaignControlDialog({
+  campaign,
+  open,
+  onOpenChange,
+}: CampaignControlDialogProps) {
   const { toast } = useToast();
-  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReason, setCancelReason] = useState("");
   const updateCampaign = useUpdateCampaign();
   const { pause, resume, cancel, isConnected } = useCampaignWebSocket(campaign?.id ?? null);
 
@@ -40,12 +44,15 @@ export function CampaignControlDialog({ campaign, open, onOpenChange }: Campaign
         campaignId: campaign.id,
         data: { is_active: false },
       });
-      toast({ title: 'Campaign paused', description: `${campaign.name} is paused.` });
+      toast({
+        title: "Campaign paused",
+        description: `${campaign.name} is paused.`,
+      });
     } catch (error) {
       toast({
-        title: 'Pause failed',
-        description: error instanceof Error ? error.message : 'Unable to pause campaign',
-        variant: 'destructive',
+        title: "Pause failed",
+        description: error instanceof Error ? error.message : "Unable to pause campaign",
+        variant: "destructive",
       });
     }
   };
@@ -57,12 +64,15 @@ export function CampaignControlDialog({ campaign, open, onOpenChange }: Campaign
         campaignId: campaign.id,
         data: { is_active: true },
       });
-      toast({ title: 'Campaign resumed', description: `${campaign.name} has been resumed.` });
+      toast({
+        title: "Campaign resumed",
+        description: `${campaign.name} has been resumed.`,
+      });
     } catch (error) {
       toast({
-        title: 'Resume failed',
-        description: error instanceof Error ? error.message : 'Unable to resume campaign',
-        variant: 'destructive',
+        title: "Resume failed",
+        description: error instanceof Error ? error.message : "Unable to resume campaign",
+        variant: "destructive",
       });
     }
   };
@@ -75,15 +85,15 @@ export function CampaignControlDialog({ campaign, open, onOpenChange }: Campaign
         data: { is_active: false },
       });
       toast({
-        title: 'Campaign cancelled',
+        title: "Campaign cancelled",
         description: cancelReason ? cancelReason : `${campaign.name} has been cancelled.`,
       });
       onOpenChange(false);
     } catch (error) {
       toast({
-        title: 'Cancel failed',
-        description: error instanceof Error ? error.message : 'Unable to cancel campaign',
-        variant: 'destructive',
+        title: "Cancel failed",
+        description: error instanceof Error ? error.message : "Unable to cancel campaign",
+        variant: "destructive",
       });
     }
   };
@@ -100,8 +110,8 @@ export function CampaignControlDialog({ campaign, open, onOpenChange }: Campaign
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-foreground">{campaign.name}</h3>
-              <Badge variant={campaign.is_active ? 'outline' : 'secondary'}>
-                {campaign.is_active ? 'ACTIVE' : 'INACTIVE'}
+              <Badge variant={campaign.is_active ? "outline" : "secondary"}>
+                {campaign.is_active ? "ACTIVE" : "INACTIVE"}
               </Badge>
             </div>
             {campaign.description && (
@@ -140,9 +150,10 @@ export function CampaignControlDialog({ campaign, open, onOpenChange }: Campaign
             <div>
               <span className="text-muted-foreground">Recovered amount</span>
               <div className="text-2xl font-semibold">
-                ${(campaign.total_recovered_amount / 100).toLocaleString(undefined, {
-                  style: 'currency',
-                  currency: 'USD',
+                $
+                {(campaign.total_recovered_amount / 100).toLocaleString(undefined, {
+                  style: "currency",
+                  currency: "USD",
                 })}
               </div>
             </div>
@@ -151,7 +162,7 @@ export function CampaignControlDialog({ campaign, open, onOpenChange }: Campaign
           <div className="rounded-md border border-border/60 bg-card/40 p-3 text-xs text-muted-foreground">
             <p className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" />
-              WebSocket status: {isConnected ? 'Connected' : 'Disconnected'}
+              WebSocket status: {isConnected ? "Connected" : "Disconnected"}
             </p>
           </div>
 

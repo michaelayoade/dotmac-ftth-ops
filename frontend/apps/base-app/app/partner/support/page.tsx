@@ -1,6 +1,6 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import Link from "next/link";
@@ -57,7 +57,9 @@ export default function PartnerSupportPage() {
             <FileText className="h-4 w-4 text-muted-foreground" />
             Partner updates
           </CardTitle>
-          <CardDescription>Highlights and program announcements from the DotMac partner team.</CardDescription>
+          <CardDescription>
+            Highlights and program announcements from the DotMac partner team.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>• May 10 – New co-selling incentives for enterprise deals.</p>

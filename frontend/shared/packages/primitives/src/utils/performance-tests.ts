@@ -3,7 +3,7 @@
  * Comprehensive test suite for measuring and validating component performance
  */
 
-import { performance } from 'perf_hooks';
+import { performance } from "perf_hooks";
 
 // Performance metrics collection
 export interface PerformanceMetrics {
@@ -73,7 +73,7 @@ export class PerformanceMeasurer {
     this.renderCount = 0;
 
     // Measure initial memory if available
-    if (typeof window !== 'undefined' && 'memory' in performance) {
+    if (typeof window !== "undefined" && "memory" in performance) {
       this.initialMemory = (performance as any).memory.usedJSHeapSize;
     }
 
@@ -93,7 +93,7 @@ export class PerformanceMeasurer {
     const renderTime = endTime - this.startTime;
 
     let memoryUsage = 0;
-    if (typeof window !== 'undefined' && 'memory' in performance) {
+    if (typeof window !== "undefined" && "memory" in performance) {
       const currentMemory = (performance as any).memory.usedJSHeapSize;
       memoryUsage = (currentMemory - this.initialMemory) / (1024 * 1024); // Convert to MB
     }
@@ -127,7 +127,7 @@ export const ComponentBenchmarks = {
   async testChartPerformance(
     ChartComponent: React.ComponentType<any>,
     testData: any[],
-    budget: PerformanceBudget
+    budget: PerformanceBudget,
   ): Promise<BenchmarkResult> {
     const measurer = new PerformanceMeasurer();
     const testName = `Chart Performance - ${testData.length} data points`;
@@ -169,7 +169,7 @@ export const ComponentBenchmarks = {
   async testStatusIndicatorPerformance(
     IndicatorComponent: React.ComponentType<any>,
     testCount: number,
-    budget: PerformanceBudget
+    budget: PerformanceBudget,
   ): Promise<BenchmarkResult> {
     const measurer = new PerformanceMeasurer();
     const testName = `Status Indicator Performance - ${testCount} indicators`;
@@ -206,7 +206,7 @@ export const ComponentBenchmarks = {
   async testVirtualizedListPerformance(
     ListComponent: React.ComponentType<any>,
     itemCount: number,
-    budget: PerformanceBudget
+    budget: PerformanceBudget,
   ): Promise<BenchmarkResult> {
     const measurer = new PerformanceMeasurer();
     const testName = `Virtualized List Performance - ${itemCount} items`;
@@ -248,8 +248,8 @@ export const ComponentBenchmarks = {
 export const PerformanceComparison = {
   compare(
     current: PerformanceMetrics,
-    baseline: PerformanceMetrics
-  ): BenchmarkResult['improvement'] {
+    baseline: PerformanceMetrics,
+  ): BenchmarkResult["improvement"] {
     const renderTimeImprovement =
       ((baseline.renderTime - current.renderTime) / baseline.renderTime) * 100;
     const memoryImprovement =
@@ -258,9 +258,9 @@ export const PerformanceComparison = {
       ((baseline.reRenderCount - current.reRenderCount) / baseline.reRenderCount) * 100;
 
     return {
-      renderTime: `${renderTimeImprovement > 0 ? '+' : ''}${renderTimeImprovement.toFixed(1)}%`,
-      memoryUsage: `${memoryImprovement > 0 ? '+' : ''}${memoryImprovement.toFixed(1)}%`,
-      reRenderCount: `${reRenderImprovement > 0 ? '+' : ''}${reRenderImprovement.toFixed(1)}%`,
+      renderTime: `${renderTimeImprovement > 0 ? "+" : ""}${renderTimeImprovement.toFixed(1)}%`,
+      memoryUsage: `${memoryImprovement > 0 ? "+" : ""}${memoryImprovement.toFixed(1)}%`,
+      reRenderCount: `${reRenderImprovement > 0 ? "+" : ""}${reRenderImprovement.toFixed(1)}%`,
     };
   },
 
@@ -275,7 +275,7 @@ export const PerformanceComparison = {
 
     results.forEach((result) => {
       report += `🧪 ${result.testName}\n`;
-      report += `   Status: ${result.passed ? '✅ PASSED' : '❌ FAILED'}\n`;
+      report += `   Status: ${result.passed ? "✅ PASSED" : "❌ FAILED"}\n`;
       report += `   Render Time: ${result.metrics.renderTime.toFixed(2)}ms\n`;
       report += `   Memory Usage: ${result.metrics.memoryUsage.toFixed(2)}MB\n`;
       report += `   Re-renders: ${result.metrics.reRenderCount}\n`;
@@ -312,7 +312,7 @@ export const BundleSizeAnalyzer = {
       total: 223.7, // KB
     };
 
-    console.log('📦 Bundle Size Analysis:');
+    console.log("📦 Bundle Size Analysis:");
     Object.entries(bundleSizes).forEach(([module, size]) => {
       console.log(`  ${module}: ${size}KB`);
     });
@@ -320,7 +320,10 @@ export const BundleSizeAnalyzer = {
     return bundleSizes;
   },
 
-  checkBundleBudgets(sizes: { [key: string]: number }): { passed: boolean; violations: string[] } {
+  checkBundleBudgets(sizes: { [key: string]: number }): {
+    passed: boolean;
+    violations: string[];
+  } {
     const violations: string[] = [];
     const budgets = {
       charts: 100, // KB
@@ -347,13 +350,13 @@ export const BundleSizeAnalyzer = {
 export const MemoryLeakDetector = {
   async detectLeaks(
     testFunction: () => Promise<void>,
-    iterations: number = 10
+    iterations: number = 10,
   ): Promise<{
     hasLeaks: boolean;
     memoryGrowth: number;
     iterations: number;
   }> {
-    if (typeof window === 'undefined' || !('memory' in performance)) {
+    if (typeof window === "undefined" || !("memory" in performance)) {
       return {
         hasLeaks: false,
         memoryGrowth: 0,
@@ -367,7 +370,7 @@ export const MemoryLeakDetector = {
       await testFunction();
 
       // Force garbage collection if available
-      if ('gc' in window) {
+      if ("gc" in window) {
         (window as any).gc();
       }
 
@@ -386,7 +389,7 @@ export const MemoryLeakDetector = {
     console.log(`  Final Memory: ${(finalMemory / 1024 / 1024).toFixed(2)}MB`);
     console.log(`  Growth: ${memoryGrowth.toFixed(2)}MB`);
     console.log(
-      `  Has Leaks: ${hasLeaks ? '⚠️  Potential leak detected' : '✅ No leaks detected'}`
+      `  Has Leaks: ${hasLeaks ? "⚠️  Potential leak detected" : "✅ No leaks detected"}`,
     );
 
     return {
@@ -405,8 +408,8 @@ export const PerformanceTestSuite = {
     memoryLeaks: any[];
     overallPassed: boolean;
   }> {
-    console.log('🚀 Starting Comprehensive Performance Test Suite');
-    console.log('================================================');
+    console.log("🚀 Starting Comprehensive Performance Test Suite");
+    console.log("================================================");
 
     const results = {
       benchmarks: [] as BenchmarkResult[],
@@ -430,21 +433,21 @@ export const PerformanceTestSuite = {
           Array(100)
             .fill(0)
             .map((_, i) => ({ month: `Month ${i}`, revenue: i * 1000 })),
-          chartsBudget
+          chartsBudget,
         );
         results.benchmarks.push(chartTest);
 
         const indicatorTest = await ComponentBenchmarks.testStatusIndicatorPerformance(
           {} as any, // Mock component
           50,
-          statusBudget
+          statusBudget,
         );
         results.benchmarks.push(indicatorTest);
 
         const virtualizedTest = await ComponentBenchmarks.testVirtualizedListPerformance(
           {} as any, // Mock component
           10000,
-          virtualizedBudget
+          virtualizedBudget,
         );
         results.benchmarks.push(virtualizedTest);
       }
@@ -459,15 +462,15 @@ export const PerformanceTestSuite = {
       console.log(report);
 
       if (!bundleCheck.passed) {
-        console.log('📦 Bundle Budget Violations:');
+        console.log("📦 Bundle Budget Violations:");
         bundleCheck.violations.forEach((violation) => console.log(`  ❌ ${violation}`));
       }
 
       console.log(
-        `🎯 Overall Result: ${results.overallPassed ? '✅ ALL TESTS PASSED' : '❌ SOME TESTS FAILED'}`
+        `🎯 Overall Result: ${results.overallPassed ? "✅ ALL TESTS PASSED" : "❌ SOME TESTS FAILED"}`,
       );
     } catch (error) {
-      console.error('❌ Performance test suite failed:', error);
+      console.error("❌ Performance test suite failed:", error);
       results.overallPassed = false;
     }
 

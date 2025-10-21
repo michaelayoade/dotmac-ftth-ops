@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * IPAM Dashboard Component
@@ -6,12 +6,12 @@
  * Overview dashboard for IP Address Management
  */
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { parseCIDR, IPFamily, getIPv4UsableHosts } from '@/lib/utils/ip-address';
-import { Network, Globe, Server, TrendingUp } from 'lucide-react';
+import React from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { parseCIDR, IPFamily, getIPv4UsableHosts } from "@/lib/utils/ip-address";
+import { Network, Globe, Server, TrendingUp } from "lucide-react";
 
 export interface IPAMStats {
   totalPrefixes: number;
@@ -26,7 +26,7 @@ export interface IPAMStats {
 export interface PrefixUtilization {
   id: number;
   prefix: string;
-  family: 'ipv4' | 'ipv6';
+  family: "ipv4" | "ipv6";
   totalIPs: number;
   allocatedIPs: number;
   utilizationPercent: number;
@@ -37,9 +37,10 @@ export interface IPAMDashboardProps {
 }
 
 export function IPAMDashboard({ stats }: IPAMDashboardProps) {
-  const totalUtilization = stats.totalAllocated > 0
-    ? ((stats.ipv4Allocated + stats.ipv6Allocated) / stats.totalAllocated) * 100
-    : 0;
+  const totalUtilization =
+    stats.totalAllocated > 0
+      ? ((stats.ipv4Allocated + stats.ipv6Allocated) / stats.totalAllocated) * 100
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -78,9 +79,7 @@ export function IPAMDashboard({ stats }: IPAMDashboardProps) {
         <Card>
           <CardHeader>
             <CardTitle>Prefix Utilization</CardTitle>
-            <CardDescription>
-              IP address allocation across prefixes
-            </CardDescription>
+            <CardDescription>IP address allocation across prefixes</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {stats.utilizationByPrefix.map((prefix) => (
@@ -125,22 +124,22 @@ interface PrefixUtilizationRowProps {
 
 function PrefixUtilizationRow({ utilization }: PrefixUtilizationRowProps) {
   const getUtilizationColor = (percent: number) => {
-    if (percent >= 90) return 'text-red-600';
-    if (percent >= 75) return 'text-yellow-600';
-    return 'text-green-600';
+    if (percent >= 90) return "text-red-600";
+    if (percent >= 75) return "text-yellow-600";
+    return "text-green-600";
   };
 
   const getProgressColor = (percent: number) => {
-    if (percent >= 90) return 'bg-red-600';
-    if (percent >= 75) return 'bg-yellow-600';
-    return 'bg-primary';
+    if (percent >= 90) return "bg-red-600";
+    if (percent >= 75) return "bg-yellow-600";
+    return "bg-primary";
   };
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Badge variant={utilization.family === 'ipv4' ? 'default' : 'secondary'}>
+          <Badge variant={utilization.family === "ipv4" ? "default" : "secondary"}>
             {utilization.family.toUpperCase()}
           </Badge>
           <span className="font-mono text-sm font-medium">{utilization.prefix}</span>
@@ -149,7 +148,9 @@ function PrefixUtilizationRow({ utilization }: PrefixUtilizationRowProps) {
           <span className="text-sm text-muted-foreground">
             {utilization.allocatedIPs.toLocaleString()} / {utilization.totalIPs.toLocaleString()}
           </span>
-          <span className={`text-sm font-medium ${getUtilizationColor(utilization.utilizationPercent)}`}>
+          <span
+            className={`text-sm font-medium ${getUtilizationColor(utilization.utilizationPercent)}`}
+          >
             {utilization.utilizationPercent.toFixed(1)}%
           </span>
         </div>

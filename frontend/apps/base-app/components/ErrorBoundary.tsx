@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { Component, ReactNode } from 'react';
-import { logger } from '@/lib/logger';
+import React, { Component, ReactNode } from "react";
+import { logger } from "@/lib/logger";
 
 interface Props {
   children: ReactNode;
@@ -36,17 +36,17 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // In E2E test mode with development, ignore hydration errors
-    const isE2ETest = typeof window !== 'undefined' && (window as any).__e2e_test__;
-    const isHydrationError = error.message && (
-      error.message.includes('Hydration') ||
-      error.message.includes('hydration') ||
-      error.message.includes('Text content does not match')
-    );
+    const isE2ETest = typeof window !== "undefined" && (window as any).__e2e_test__;
+    const isHydrationError =
+      error.message &&
+      (error.message.includes("Hydration") ||
+        error.message.includes("hydration") ||
+        error.message.includes("Text content does not match"));
 
-    if (isE2ETest && process.env.NODE_ENV === 'development' && isHydrationError) {
+    if (isE2ETest && process.env.NODE_ENV === "development" && isHydrationError) {
       // Ignore hydration errors in E2E tests - they're expected due to SSR/client mismatch
-      logger.warn('Ignoring hydration error in E2E test mode', {
-        error: error.message
+      logger.warn("Ignoring hydration error in E2E test mode", {
+        error: error.message,
       });
       // Reset error state to allow app to continue
       this.setState({
@@ -58,11 +58,11 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     // Log error to error reporting service
-    logger.error('ErrorBoundary caught error', {
+    logger.error("ErrorBoundary caught error", {
       error: error.message,
       stack: error.stack,
       componentStack: errorInfo.componentStack,
-      errorBoundary: true
+      errorBoundary: true,
     });
 
     // Update state with error details
@@ -77,7 +77,7 @@ export class ErrorBoundary extends Component<Props, State> {
     }
 
     // Send to monitoring service (e.g., Sentry)
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+    if (typeof window !== "undefined" && process.env.NODE_ENV === "production") {
       // Example: Sentry integration
       // Sentry.captureException(error, {
       //   contexts: {
@@ -110,11 +110,12 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="error-content">
             <h1 className="error-title">Oops! Something went wrong</h1>
             <p className="error-message">
-              We&apos;re sorry for the inconvenience. The error has been logged and we&apos;ll look into it.
+              We&apos;re sorry for the inconvenience. The error has been logged and we&apos;ll look
+              into it.
             </p>
 
             {/* Show error details in development */}
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {process.env.NODE_ENV === "development" && this.state.error && (
               <details className="error-details">
                 <summary>Error Details (Development Only)</summary>
                 <pre className="error-stack">
@@ -125,16 +126,10 @@ export class ErrorBoundary extends Component<Props, State> {
             )}
 
             <div className="error-actions">
-              <button
-                onClick={this.handleReset}
-                className="error-reset-button"
-              >
+              <button onClick={this.handleReset} className="error-reset-button">
                 Try Again
               </button>
-              <button
-                onClick={() => window.location.href = '/'}
-                className="error-home-button"
-              >
+              <button onClick={() => (window.location.href = "/")} className="error-home-button">
                 Go to Home
               </button>
             </div>
@@ -193,7 +188,7 @@ export class ErrorBoundary extends Component<Props, State> {
               color: #f7fafc;
               border-radius: 4px;
               overflow-x: auto;
-              font-family: 'Monaco', 'Courier New', monospace;
+              font-family: "Monaco", "Courier New", monospace;
               font-size: 0.875rem;
               line-height: 1.5;
             }
@@ -253,7 +248,7 @@ export function useAsyncError() {
         throw e;
       });
     },
-    [setError]
+    [setError],
   );
 }
 
@@ -261,7 +256,7 @@ export function useAsyncError() {
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
   fallback?: ReactNode,
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void,
 ) {
   const WrappedComponent = (props: P) => (
     <ErrorBoundary fallback={fallback} onError={onError}>
@@ -269,7 +264,7 @@ export function withErrorBoundary<P extends object>(
     </ErrorBoundary>
   );
 
-  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name || 'Component'})`;
+  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name || "Component"})`;
 
   return WrappedComponent;
 }

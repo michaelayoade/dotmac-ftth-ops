@@ -27,14 +27,14 @@ export const usePermissions = () => {
   return {
     hasPermission: (permission: string): boolean => {
       // Implementation will be added later
-      console.log('Checking permission:', permission);
+      console.log("Checking permission:", permission);
       return true; // Placeholder
     },
     hasRole: (role: string): boolean => {
       // Implementation will be added later
-      console.log('Checking role:', role);
+      console.log("Checking role:", role);
       return true; // Placeholder
-    }
+    },
   };
 };
 
@@ -46,14 +46,14 @@ export const useRBAC = () => {
     canAccess: (resource: string, action: string): boolean => {
       const permission = `${resource}:${action}`;
       return permissions.hasPermission(permission);
-    }
+    },
   };
 };
 
 // Utility functions
 export const checkPermission = (user: User, permission: string): boolean => {
   // Implementation will be added later
-  console.log('Checking permission for user:', user.id, permission);
+  console.log("Checking permission for user:", user.id, permission);
   return true; // Placeholder
 };
 
@@ -61,7 +61,7 @@ export const checkPermission = (user: User, permission: string): boolean => {
 const RBAC = {
   usePermissions,
   useRBAC,
-  checkPermission
+  checkPermission,
 };
 
 export default RBAC;

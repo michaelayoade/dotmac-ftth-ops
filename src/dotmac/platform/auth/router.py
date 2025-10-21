@@ -6,6 +6,7 @@ Provides login, register, token refresh endpoints with rate limiting.
 
 import inspect
 import json
+import secrets
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 from typing import Any, Literal
@@ -59,10 +60,10 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
         refresh_token: JWT refresh token
     """
     # Cookie settings - secure only in production (requires HTTPS)
-    secure = settings.environment == "production"
+    secure = settings.is_production
     # Use 'lax' for development to allow cross-origin requests, 'strict' for production
     samesite: Literal["strict", "lax", "none"] = (
-        "strict" if settings.environment == "production" else "lax"
+        "strict" if settings.is_production else "lax"
     )
 
     # Set access token cookie (15 minutes)
@@ -407,6 +408,64 @@ async def _authenticate_and_issue_tokens(
     )
 
 
+async def _complete_cookie_login(
+    user: User,
+    request: Request,
+    response: Response,
+    session: AsyncSession,
+) -> None:
+    """Issue tokens, create session, and set cookies for non-2FA logins."""
+
+    client_ip = request.client.host if request.client else None
+    user_service = UserService(session)
+
+    await user_service.update_last_login(user.id, ip_address=client_ip)
+
+    access_token = jwt_service.create_access_token(
+        subject=str(user.id),
+        additional_claims={
+            "username": user.username,
+            "email": user.email,
+            "roles": user.roles or [],
+            "permissions": user.permissions or [],
+            "tenant_id": user.tenant_id,
+            "is_platform_admin": getattr(user, "is_platform_admin", False),
+        },
+    )
+
+    refresh_token = jwt_service.create_refresh_token(subject=str(user.id))
+
+    await session_manager.create_session(
+        user_id=str(user.id),
+        data={
+            "username": user.username,
+            "email": user.email,
+            "roles": user.roles or [],
+            "access_token": access_token,
+        },
+    )
+
+    set_auth_cookies(response, access_token, refresh_token)
+
+    await log_user_activity(
+        user_id=str(user.id),
+        activity_type=ActivityType.USER_LOGIN,
+        action="login_success",
+        description=f"User {user.username} logged in successfully (cookie-auth)",
+        severity=ActivitySeverity.LOW,
+        details={
+            "username": user.username,
+            "email": user.email,
+            "roles": user.roles or [],
+            "auth_method": "cookie",
+        },
+        ip_address=client_ip,
+        user_agent=request.headers.get("user-agent"),
+        tenant_id=user.tenant_id,
+        session=session,
+    )
+
+
 @auth_router.post("/login", response_model=TokenResponse)
 @rate_limit("5/minute")  # type: ignore[misc]  # SECURITY: Prevent brute force attacks
 async def login(
@@ -666,6 +725,7 @@ async def verify_2fa_login(
 
 
 @auth_router.post("/login/cookie", response_model=LoginSuccessResponse)
+@rate_limit("5/minute")
 async def login_cookie_only(
     login_request: LoginRequest,
     request: Request,
@@ -716,58 +776,30 @@ async def login_cookie_only(
             detail="Account is disabled",
         )
 
-    # Update last login
-    client_ip = request.client.host if request.client else None
-    await user_service.update_last_login(user.id, ip_address=client_ip)
+    if user.mfa_enabled:
+        # Mirror the JSON login behaviour by issuing a 2FA challenge
+        await log_user_activity(
+            user_id=str(user.id),
+            activity_type=ActivityType.USER_LOGIN,
+            action="2fa_challenge_issued",
+            description=f"2FA challenge issued for user {user.username} (cookie-auth)",
+            severity=ActivitySeverity.LOW,
+            details={"username": user.username},
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+            tenant_id=user.tenant_id,
+            session=session,
+        )
+        # Match JSON login behaviour: rely on 403 to signal pending 2FA; no success body returned
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="2FA verification required",
+            headers={"X-2FA-Required": "true", "X-User-ID": str(user.id)},
+        )
 
-    # Create tokens
-    access_token = jwt_service.create_access_token(
-        subject=str(user.id),
-        additional_claims={
-            "username": user.username,
-            "email": user.email,
-            "roles": user.roles or [],
-            "permissions": user.permissions or [],
-            "tenant_id": user.tenant_id,
-            "is_platform_admin": getattr(user, "is_platform_admin", False),
-        },
-    )
+    # Reuse shared helper to update last login, create session, set cookies, and log activity
+    await _complete_cookie_login(user, request, response, session)
 
-    refresh_token = jwt_service.create_refresh_token(subject=str(user.id))
-
-    # Create session
-    await session_manager.create_session(
-        user_id=str(user.id),
-        data={
-            "username": user.username,
-            "email": user.email,
-            "roles": user.roles or [],
-        },
-    )
-
-    # Set HttpOnly authentication cookies
-    set_auth_cookies(response, access_token, refresh_token)
-
-    # Log successful login
-    await log_user_activity(
-        user_id=str(user.id),
-        activity_type=ActivityType.USER_LOGIN,
-        action="login_success",
-        description=f"User {user.username} logged in successfully (cookie-auth)",
-        severity=ActivitySeverity.LOW,
-        details={
-            "username": user.username,
-            "email": user.email,
-            "roles": user.roles or [],
-            "auth_method": "cookie",
-        },
-        ip_address=client_ip,
-        user_agent=request.headers.get("user-agent"),
-        tenant_id=user.tenant_id,
-        session=session,
-    )
-
-    # Return success response without tokens
     return LoginSuccessResponse(
         user_id=str(user.id), username=user.username, email=user.email, roles=user.roles or []
     )
@@ -808,6 +840,12 @@ async def register(
 
     # Get current tenant from request context (set by TenantMiddleware)
     current_tenant_id = get_current_tenant_id()
+
+    if current_tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant context is required for registration. Provide a valid tenant identifier.",
+        )
 
     # Check if user already exists within current tenant - use generic error message to prevent enumeration
     existing_user_by_username = await user_service.get_user_by_username(
@@ -1376,7 +1414,7 @@ async def verify_token(
 @rate_limit("3/minute")  # type: ignore[misc]  # SECURITY: Prevent abuse of password reset
 async def request_password_reset(
     reset_request: PasswordResetRequest,
-    http_request: Request,
+    request: Request,
     session: AsyncSession = Depends(get_auth_session),
 ) -> dict[str, Any]:
     """
@@ -1395,7 +1433,7 @@ async def request_password_reset(
 
     # Try to resolve tenant from request (header or query param)
     resolver = TenantIdentityResolver()
-    tenant_id = await resolver.resolve(http_request)
+    tenant_id = await resolver.resolve(request)
 
     # Find user by email with optional tenant filtering
     # Handle MultipleResultsFound when same email exists in multiple tenants
@@ -2997,10 +3035,8 @@ async def request_phone_verification(
                 detail="Phone number is required",
             )
 
-        # Generate 6-digit verification code
-        import random
-
-        verification_code = f"{random.randint(100000, 999999)}"
+        # Generate 6-digit verification code using cryptographically secure RNG
+        verification_code = f"{secrets.randbelow(1_000_000):06d}"
 
         # Get Redis client
         redis_client = await session_manager._get_redis()

@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 from concurrent.futures import Future
 from datetime import UTC, datetime
 from smtplib import SMTPException
-from typing import Any, Protocol
+from typing import Any, Protocol, TypeVar
 from uuid import uuid4
 
 import structlog
@@ -17,6 +17,8 @@ from dotmac.platform.celery_app import celery_app
 from .email_service import EmailMessage, EmailResponse, get_email_service
 
 logger = structlog.get_logger(__name__)
+
+T = TypeVar("T")
 
 
 class EmailServiceProtocol(Protocol):
@@ -58,7 +60,7 @@ class BulkEmailResult(BaseModel):  # BaseModel resolves to Any in isolation
 # ---------------------------------------------------------------------------
 
 
-def _run_async[T](coro: Coroutine[Any, Any, T]) -> T:
+def _run_async(coro: Coroutine[Any, Any, T]) -> T:
     """Execute an async coroutine from a synchronous Celery task."""
 
     try:

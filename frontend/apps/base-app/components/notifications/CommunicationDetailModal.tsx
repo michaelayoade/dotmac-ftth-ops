@@ -5,10 +5,10 @@
  * Shows full content, metadata, delivery timeline, and retry options.
  */
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { formatDistanceToNow, format } from 'date-fns';
+import { useState } from "react";
+import { formatDistanceToNow, format } from "date-fns";
 import {
   Mail,
   MessageSquare,
@@ -26,20 +26,20 @@ import {
   Server,
   Hash,
   FileText,
-} from 'lucide-react';
-import type { CommunicationLog } from '@/hooks/useNotifications';
+} from "lucide-react";
+import type { CommunicationLog } from "@/hooks/useNotifications";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CommunicationDetailModalProps {
   isOpen: boolean;
@@ -70,7 +70,7 @@ export function CommunicationDetailModal({
       await onRetry();
       onClose();
     } catch (err) {
-      console.error('Failed to retry communication:', err);
+      console.error("Failed to retry communication:", err);
     } finally {
       setIsRetrying(false);
     }
@@ -79,13 +79,13 @@ export function CommunicationDetailModal({
   // Get type icon
   const getTypeIcon = () => {
     switch (log.type) {
-      case 'email':
+      case "email":
         return <Mail className="h-5 w-5" />;
-      case 'sms':
+      case "sms":
         return <MessageSquare className="h-5 w-5" />;
-      case 'push':
+      case "push":
         return <Bell className="h-5 w-5" />;
-      case 'webhook':
+      case "webhook":
         return <Webhook className="h-5 w-5" />;
       default:
         return <Bell className="h-5 w-5" />;
@@ -95,12 +95,28 @@ export function CommunicationDetailModal({
   // Get status badge
   const getStatusBadge = () => {
     const statusConfig = {
-      pending: { variant: 'secondary' as const, icon: Clock, label: 'Pending' },
-      sent: { variant: 'default' as const, icon: CheckCircle2, label: 'Sent' },
-      delivered: { variant: 'default' as const, icon: CheckCircle2, label: 'Delivered' },
-      failed: { variant: 'destructive' as const, icon: XCircle, label: 'Failed' },
-      bounced: { variant: 'destructive' as const, icon: AlertCircle, label: 'Bounced' },
-      cancelled: { variant: 'outline' as const, icon: XCircle, label: 'Cancelled' },
+      pending: { variant: "secondary" as const, icon: Clock, label: "Pending" },
+      sent: { variant: "default" as const, icon: CheckCircle2, label: "Sent" },
+      delivered: {
+        variant: "default" as const,
+        icon: CheckCircle2,
+        label: "Delivered",
+      },
+      failed: {
+        variant: "destructive" as const,
+        icon: XCircle,
+        label: "Failed",
+      },
+      bounced: {
+        variant: "destructive" as const,
+        icon: AlertCircle,
+        label: "Bounced",
+      },
+      cancelled: {
+        variant: "outline" as const,
+        icon: XCircle,
+        label: "Cancelled",
+      },
     };
 
     const config = statusConfig[log.status] || statusConfig.pending;
@@ -115,16 +131,14 @@ export function CommunicationDetailModal({
   };
 
   // Can retry if failed or bounced
-  const canRetry = ['failed', 'bounced'].includes(log.status);
+  const canRetry = ["failed", "bounced"].includes(log.status);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-2">
-              {getTypeIcon()}
-            </div>
+            <div className="rounded-lg bg-primary/10 p-2">{getTypeIcon()}</div>
             <div className="flex-1">
               <DialogTitle>Communication Details</DialogTitle>
               <DialogDescription>
@@ -146,12 +160,12 @@ export function CommunicationDetailModal({
                 </div>
                 <div className="space-y-1">
                   <p className="text-muted-foreground">Provider</p>
-                  <p className="font-medium">{log.provider || 'N/A'}</p>
+                  <p className="font-medium">{log.provider || "N/A"}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-muted-foreground">Sent At</p>
                   <p className="font-medium">
-                    {log.sent_at ? format(new Date(log.sent_at), 'PPpp') : 'Not sent'}
+                    {log.sent_at ? format(new Date(log.sent_at), "PPpp") : "Not sent"}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -185,8 +199,11 @@ export function CommunicationDetailModal({
                   <div className="absolute -left-[1.3rem] top-1 h-3 w-3 rounded-full border-2 border-background bg-primary" />
                   <p className="text-sm font-medium">Created</p>
                   <p className="text-xs text-muted-foreground">
-                    {format(new Date(log.created_at), 'PPpp')} (
-                    {formatDistanceToNow(new Date(log.created_at), { addSuffix: true })})
+                    {format(new Date(log.created_at), "PPpp")} (
+                    {formatDistanceToNow(new Date(log.created_at), {
+                      addSuffix: true,
+                    })}
+                    )
                   </p>
                 </div>
                 {log.sent_at && (
@@ -194,8 +211,11 @@ export function CommunicationDetailModal({
                     <div className="absolute -left-[1.3rem] top-1 h-3 w-3 rounded-full border-2 border-background bg-blue-600" />
                     <p className="text-sm font-medium">Sent</p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(log.sent_at), 'PPpp')} (
-                      {formatDistanceToNow(new Date(log.sent_at), { addSuffix: true })})
+                      {format(new Date(log.sent_at), "PPpp")} (
+                      {formatDistanceToNow(new Date(log.sent_at), {
+                        addSuffix: true,
+                      })}
+                      )
                     </p>
                   </div>
                 )}
@@ -204,8 +224,11 @@ export function CommunicationDetailModal({
                     <div className="absolute -left-[1.3rem] top-1 h-3 w-3 rounded-full border-2 border-background bg-green-600" />
                     <p className="text-sm font-medium">Delivered</p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(log.delivered_at), 'PPpp')} (
-                      {formatDistanceToNow(new Date(log.delivered_at), { addSuffix: true })})
+                      {format(new Date(log.delivered_at), "PPpp")} (
+                      {formatDistanceToNow(new Date(log.delivered_at), {
+                        addSuffix: true,
+                      })}
+                      )
                     </p>
                   </div>
                 )}
@@ -214,8 +237,11 @@ export function CommunicationDetailModal({
                     <div className="absolute -left-[1.3rem] top-1 h-3 w-3 rounded-full border-2 border-background bg-destructive" />
                     <p className="text-sm font-medium">Failed</p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(log.failed_at), 'PPpp')} (
-                      {formatDistanceToNow(new Date(log.failed_at), { addSuffix: true })})
+                      {format(new Date(log.failed_at), "PPpp")} (
+                      {formatDistanceToNow(new Date(log.failed_at), {
+                        addSuffix: true,
+                      })}
+                      )
                     </p>
                   </div>
                 )}
@@ -251,9 +277,9 @@ export function CommunicationDetailModal({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleCopy('subject', log.subject || '')}
+                        onClick={() => handleCopy("subject", log.subject || "")}
                       >
-                        {copiedField === 'subject' ? (
+                        {copiedField === "subject" ? (
                           <>
                             <Check className="mr-1 h-3 w-3" />
                             Copied
@@ -280,9 +306,9 @@ export function CommunicationDetailModal({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleCopy('text', log.text_body || '')}
+                        onClick={() => handleCopy("text", log.text_body || "")}
                       >
-                        {copiedField === 'text' ? (
+                        {copiedField === "text" ? (
                           <>
                             <Check className="mr-1 h-3 w-3" />
                             Copied
@@ -298,7 +324,7 @@ export function CommunicationDetailModal({
                     <div className="rounded-lg border bg-card p-3">
                       <p className="whitespace-pre-wrap text-sm">{log.text_body}</p>
                     </div>
-                    {log.type === 'sms' && (
+                    {log.type === "sms" && (
                       <p className="text-xs text-muted-foreground">
                         Length: {log.text_body.length} characters
                         {log.text_body.length > 160 &&
@@ -309,16 +335,16 @@ export function CommunicationDetailModal({
                 )}
 
                 {/* HTML Body (Email only) */}
-                {log.type === 'email' && log.html_body && (
+                {log.type === "email" && log.html_body && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm font-semibold">HTML Body</h4>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleCopy('html', log.html_body || '')}
+                        onClick={() => handleCopy("html", log.html_body || "")}
                       >
-                        {copiedField === 'html' ? (
+                        {copiedField === "html" ? (
                           <>
                             <Check className="mr-1 h-3 w-3" />
                             Copied
@@ -361,15 +387,15 @@ export function CommunicationDetailModal({
                   </div>
                   <div className="grid grid-cols-3 gap-2 rounded-lg border p-3">
                     <p className="text-sm font-semibold">Provider</p>
-                    <p className="col-span-2 text-sm">{log.provider || 'N/A'}</p>
+                    <p className="col-span-2 text-sm">{log.provider || "N/A"}</p>
                   </div>
                   <div className="grid grid-cols-3 gap-2 rounded-lg border p-3">
                     <p className="text-sm font-semibold">Template</p>
-                    <p className="col-span-2 text-sm">{log.template_name || 'Custom Message'}</p>
+                    <p className="col-span-2 text-sm">{log.template_name || "Custom Message"}</p>
                   </div>
                   <div className="grid grid-cols-3 gap-2 rounded-lg border p-3">
                     <p className="text-sm font-semibold">User ID</p>
-                    <p className="col-span-2 text-sm font-mono">{log.user_id || 'N/A'}</p>
+                    <p className="col-span-2 text-sm font-mono">{log.user_id || "N/A"}</p>
                   </div>
                   <div className="grid grid-cols-3 gap-2 rounded-lg border p-3">
                     <p className="text-sm font-semibold">Tenant ID</p>
@@ -389,7 +415,7 @@ export function CommunicationDetailModal({
                       <div className="col-span-2 space-y-1">
                         {Object.entries(log.metadata).map(([key, value]) => (
                           <div key={key} className="text-sm">
-                            <span className="font-mono text-muted-foreground">{key}:</span>{' '}
+                            <span className="font-mono text-muted-foreground">{key}:</span>{" "}
                             <span className="font-mono">{JSON.stringify(value)}</span>
                           </div>
                         ))}
@@ -407,9 +433,9 @@ export function CommunicationDetailModal({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleCopy('raw', JSON.stringify(log, null, 2))}
+                      onClick={() => handleCopy("raw", JSON.stringify(log, null, 2))}
                     >
-                      {copiedField === 'raw' ? (
+                      {copiedField === "raw" ? (
                         <>
                           <Check className="mr-1 h-3 w-3" />
                           Copied
@@ -437,13 +463,9 @@ export function CommunicationDetailModal({
         <div className="flex justify-between gap-2 pt-4 border-t">
           <div>
             {canRetry && onRetry && (
-              <Button
-                variant="outline"
-                onClick={handleRetry}
-                disabled={isRetrying}
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
-                {isRetrying ? 'Retrying...' : 'Retry Delivery'}
+              <Button variant="outline" onClick={handleRetry} disabled={isRetrying}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${isRetrying ? "animate-spin" : ""}`} />
+                {isRetrying ? "Retrying..." : "Retry Delivery"}
               </Button>
             )}
           </div>

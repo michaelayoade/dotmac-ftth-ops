@@ -3,7 +3,7 @@
  * Code splitting, tree shaking, and dynamic loading optimizations
  */
 
-import React, { lazy, ComponentType, LazyExoticComponent } from 'react';
+import React, { lazy, ComponentType, LazyExoticComponent } from "react";
 
 // Bundle analysis utilities
 export interface BundleAnalysis {
@@ -17,7 +17,7 @@ export interface BundleAnalysis {
 export const createDynamicImport = <T extends ComponentType<any>>(
   importFunc: () => Promise<{ default: T }>,
   componentName: string,
-  preloadCondition?: () => boolean
+  preloadCondition?: () => boolean,
 ): LazyExoticComponent<T> => {
   // Preload component if condition is met
   if (preloadCondition?.()) {
@@ -45,18 +45,18 @@ export const createDynamicImport = <T extends ComponentType<any>>(
       return {
         default: React.forwardRef((props: any, ref: any) =>
           React.createElement(
-            'div',
+            "div",
             {
-              className: 'p-4 bg-red-50 border border-red-200 rounded',
+              className: "p-4 bg-red-50 border border-red-200 rounded",
               ref,
               ...props,
             },
             React.createElement(
-              'p',
-              { className: 'text-red-800' },
-              `Failed to load ${componentName}`
-            )
-          )
+              "p",
+              { className: "text-red-800" },
+              `Failed to load ${componentName}`,
+            ),
+          ),
         ) as T,
       };
     }
@@ -68,44 +68,44 @@ export const SplitPoints = {
   // Charts - Heavy recharts dependency
   CHARTS: {
     threshold: 50000, // 50KB
-    priority: 'high',
+    priority: "high",
     preloadCondition: () => {
       // Preload if user is likely to need charts (SSR safe)
-      if (typeof window === 'undefined') return false;
-      return window.innerWidth > 768 && 'IntersectionObserver' in window;
+      if (typeof window === "undefined") return false;
+      return window.innerWidth > 768 && "IntersectionObserver" in window;
     },
   },
 
   // Complex forms - Heavy validation libraries
   FORMS: {
     threshold: 30000, // 30KB
-    priority: 'medium',
+    priority: "medium",
     preloadCondition: () => {
       // Preload if forms are visible in viewport (SSR safe)
-      if (typeof document === 'undefined') return false;
-      return document.querySelector('form') !== null;
+      if (typeof document === "undefined") return false;
+      return document.querySelector("form") !== null;
     },
   },
 
   // Admin features - Only for admin users
   ADMIN: {
     threshold: 25000, // 25KB
-    priority: 'low',
+    priority: "low",
     preloadCondition: () => {
       // Check if user has admin role (SSR safe)
-      if (typeof localStorage === 'undefined') return false;
-      return localStorage.getItem('userRole') === 'admin';
+      if (typeof localStorage === "undefined") return false;
+      return localStorage.getItem("userRole") === "admin";
     },
   },
 
   // Animations - Optional enhancements
   ANIMATIONS: {
     threshold: 20000, // 20KB
-    priority: 'low',
+    priority: "low",
     preloadCondition: () => {
       // Only load if user prefers animations (SSR safe)
-      if (typeof window === 'undefined') return false;
-      return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (typeof window === "undefined") return false;
+      return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     },
   },
 } as const;
@@ -113,27 +113,39 @@ export const SplitPoints = {
 // Lazy loaded chart components with optimized splitting
 export const LazyCharts = {
   RevenueChart: createDynamicImport(
-    () => import('../charts/OptimizedCharts').then((m) => ({ default: m.OptimizedRevenueChart })),
-    'RevenueChart',
-    SplitPoints.CHARTS.preloadCondition
+    () =>
+      import("../charts/OptimizedCharts").then((m) => ({
+        default: m.OptimizedRevenueChart,
+      })),
+    "RevenueChart",
+    SplitPoints.CHARTS.preloadCondition,
   ),
 
   NetworkUsageChart: createDynamicImport(
-    () => import('../charts/InteractiveChart').then((m) => ({ default: m.NetworkUsageChart })),
-    'NetworkUsageChart',
-    SplitPoints.CHARTS.preloadCondition
+    () =>
+      import("../charts/InteractiveChart").then((m) => ({
+        default: m.NetworkUsageChart,
+      })),
+    "NetworkUsageChart",
+    SplitPoints.CHARTS.preloadCondition,
   ),
 
   ServiceStatusChart: createDynamicImport(
-    () => import('../charts/InteractiveChart').then((m) => ({ default: m.ServiceStatusChart })),
-    'ServiceStatusChart',
-    SplitPoints.CHARTS.preloadCondition
+    () =>
+      import("../charts/InteractiveChart").then((m) => ({
+        default: m.ServiceStatusChart,
+      })),
+    "ServiceStatusChart",
+    SplitPoints.CHARTS.preloadCondition,
   ),
 
   BandwidthChart: createDynamicImport(
-    () => import('../charts/InteractiveChart').then((m) => ({ default: m.BandwidthChart })),
-    'BandwidthChart',
-    SplitPoints.CHARTS.preloadCondition
+    () =>
+      import("../charts/InteractiveChart").then((m) => ({
+        default: m.BandwidthChart,
+      })),
+    "BandwidthChart",
+    SplitPoints.CHARTS.preloadCondition,
   ),
 };
 
@@ -141,26 +153,26 @@ export const LazyCharts = {
 export const LazyStatusIndicators = {
   StatusBadge: createDynamicImport(
     () =>
-      import('../indicators/OptimizedStatusIndicators').then((m) => ({
+      import("../indicators/OptimizedStatusIndicators").then((m) => ({
         default: m.OptimizedStatusBadge,
       })),
-    'StatusBadge'
+    "StatusBadge",
   ),
 
   UptimeIndicator: createDynamicImport(
     () =>
-      import('../indicators/OptimizedStatusIndicators').then((m) => ({
+      import("../indicators/OptimizedStatusIndicators").then((m) => ({
         default: m.OptimizedUptimeIndicator,
       })),
-    'UptimeIndicator'
+    "UptimeIndicator",
   ),
 
   NetworkPerformanceIndicator: createDynamicImport(
     () =>
-      import('../indicators/StatusIndicators').then((m) => ({
+      import("../indicators/StatusIndicators").then((m) => ({
         default: m.NetworkPerformanceIndicator,
       })),
-    'NetworkPerformanceIndicator'
+    "NetworkPerformanceIndicator",
   ),
 };
 
@@ -168,23 +180,23 @@ export const LazyStatusIndicators = {
 export const TreeShakableUtils = {
   // Only import specific accessibility functions when needed
   a11y: {
-    announceToScreenReader: () => import('../utils/a11y').then((m) => m.announceToScreenReader),
-    generateChartDescription: () => import('../utils/a11y').then((m) => m.generateChartDescription),
-    useKeyboardNavigation: () => import('../utils/a11y').then((m) => m.useKeyboardNavigation),
+    announceToScreenReader: () => import("../utils/a11y").then((m) => m.announceToScreenReader),
+    generateChartDescription: () => import("../utils/a11y").then((m) => m.generateChartDescription),
+    useKeyboardNavigation: () => import("../utils/a11y").then((m) => m.useKeyboardNavigation),
   },
 
   // Only import specific security functions when needed
   security: {
-    sanitizeText: () => import('../utils/security').then((m) => m.sanitizeText),
-    validateData: () => import('../utils/security').then((m) => m.validateData),
-    validateArray: () => import('../utils/security').then((m) => m.validateArray),
+    sanitizeText: () => import("../utils/security").then((m) => m.sanitizeText),
+    validateData: () => import("../utils/security").then((m) => m.validateData),
+    validateArray: () => import("../utils/security").then((m) => m.validateArray),
   },
 
   // Only import specific performance functions when needed
   performance: {
-    useRenderProfiler: () => import('../utils/performance').then((m) => m.useRenderProfiler),
-    useThrottledState: () => import('../utils/performance').then((m) => m.useThrottledState),
-    useDebouncedState: () => import('../utils/performance').then((m) => m.useDebouncedState),
+    useRenderProfiler: () => import("../utils/performance").then((m) => m.useRenderProfiler),
+    useThrottledState: () => import("../utils/performance").then((m) => m.useThrottledState),
+    useDebouncedState: () => import("../utils/performance").then((m) => m.useDebouncedState),
   },
 };
 
@@ -200,12 +212,12 @@ export const analyzeBundleSize = async (): Promise<BundleAnalysis> => {
   try {
     // Analyze component sizes (mock implementation - would integrate with webpack-bundle-analyzer)
     const components = [
-      { name: 'Charts', size: 85000, category: 'heavy' },
-      { name: 'StatusIndicators', size: 25000, category: 'medium' },
-      { name: 'ErrorBoundary', size: 8000, category: 'light' },
-      { name: 'Accessibility', size: 15000, category: 'medium' },
-      { name: 'Security', size: 12000, category: 'medium' },
-      { name: 'Performance', size: 18000, category: 'medium' },
+      { name: "Charts", size: 85000, category: "heavy" },
+      { name: "StatusIndicators", size: 25000, category: "medium" },
+      { name: "ErrorBoundary", size: 8000, category: "light" },
+      { name: "Accessibility", size: 15000, category: "medium" },
+      { name: "Security", size: 12000, category: "medium" },
+      { name: "Performance", size: 18000, category: "medium" },
     ];
 
     components.forEach((component) => {
@@ -215,12 +227,12 @@ export const analyzeBundleSize = async (): Promise<BundleAnalysis> => {
       // Generate recommendations
       if (component.size > SplitPoints.CHARTS.threshold) {
         analysis.recommendations.push(
-          `Consider code splitting for ${component.name} (${(component.size / 1000).toFixed(1)}KB)`
+          `Consider code splitting for ${component.name} (${(component.size / 1000).toFixed(1)}KB)`,
         );
         analysis.splitPoints.push(component.name);
       } else if (component.size > 20000) {
         analysis.recommendations.push(
-          `Monitor bundle size for ${component.name} (${(component.size / 1000).toFixed(1)}KB)`
+          `Monitor bundle size for ${component.name} (${(component.size / 1000).toFixed(1)}KB)`,
         );
       }
     });
@@ -228,16 +240,16 @@ export const analyzeBundleSize = async (): Promise<BundleAnalysis> => {
     // Overall bundle recommendations
     if (analysis.totalSize > 200000) {
       analysis.recommendations.push(
-        'Bundle size exceeds 200KB - implement aggressive code splitting'
+        "Bundle size exceeds 200KB - implement aggressive code splitting",
       );
     } else if (analysis.totalSize > 100000) {
       analysis.recommendations.push(
-        'Bundle size is large - consider lazy loading non-critical components'
+        "Bundle size is large - consider lazy loading non-critical components",
       );
     }
   } catch (error) {
-    console.error('Bundle analysis failed:', error);
-    analysis.recommendations.push('Bundle analysis failed - manual inspection recommended');
+    console.error("Bundle analysis failed:", error);
+    analysis.recommendations.push("Bundle analysis failed - manual inspection recommended");
   }
 
   return analysis;
@@ -262,10 +274,10 @@ export const PreloadingStrategies = {
   },
 
   // Preload when component enters viewport
-  onVisible: (importFunc: () => Promise<any>, rootMargin = '100px') => {
+  onVisible: (importFunc: () => Promise<any>, rootMargin = "100px") => {
     return {
       ref: (element: HTMLElement | null) => {
-        if (!element || typeof window === 'undefined' || !('IntersectionObserver' in window))
+        if (!element || typeof window === "undefined" || !("IntersectionObserver" in window))
           return;
 
         const observer = new IntersectionObserver(
@@ -277,7 +289,7 @@ export const PreloadingStrategies = {
               }
             });
           },
-          { rootMargin }
+          { rootMargin },
         );
 
         observer.observe(element);
@@ -287,9 +299,9 @@ export const PreloadingStrategies = {
 
   // Preload during idle time
   onIdle: (importFunc: () => Promise<any>) => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
-    if ('requestIdleCallback' in window) {
+    if ("requestIdleCallback" in window) {
       requestIdleCallback(() => {
         importFunc().catch(console.error);
       });
@@ -325,27 +337,27 @@ export const PreloadingStrategies = {
 
 // Resource hints for browser optimization
 export const addResourceHints = () => {
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
 
   const head = document.head;
 
   // Preload critical CSS
-  const preloadCSS = document.createElement('link');
-  preloadCSS.rel = 'preload';
-  preloadCSS.href = '/styles/accessibility.css';
-  preloadCSS.as = 'style';
+  const preloadCSS = document.createElement("link");
+  preloadCSS.rel = "preload";
+  preloadCSS.href = "/styles/accessibility.css";
+  preloadCSS.as = "style";
   head.appendChild(preloadCSS);
 
   // DNS prefetch for external resources
-  const dnsPrefetch = document.createElement('link');
-  dnsPrefetch.rel = 'dns-prefetch';
-  dnsPrefetch.href = '//fonts.googleapis.com';
+  const dnsPrefetch = document.createElement("link");
+  dnsPrefetch.rel = "dns-prefetch";
+  dnsPrefetch.href = "//fonts.googleapis.com";
   head.appendChild(dnsPrefetch);
 
   // Preconnect for critical third-party resources
-  const preconnect = document.createElement('link');
-  preconnect.rel = 'preconnect';
-  preconnect.href = 'https://api.example.com';
+  const preconnect = document.createElement("link");
+  preconnect.rel = "preconnect";
+  preconnect.href = "https://api.example.com";
   head.appendChild(preconnect);
 };
 
@@ -353,35 +365,35 @@ export const addResourceHints = () => {
 export const bundleSplitConfig = {
   // Vendor chunk for third-party libraries
   vendor: {
-    name: 'vendor',
+    name: "vendor",
     test: /[\\/]node_modules[\\/]/,
     priority: 10,
-    chunks: 'all',
+    chunks: "all",
   },
 
   // Common chunk for shared utilities
   common: {
-    name: 'common',
+    name: "common",
     minChunks: 2,
     priority: 5,
-    chunks: 'all',
+    chunks: "all",
     reuseExistingChunk: true,
   },
 
   // Chart components chunk
   charts: {
-    name: 'charts',
+    name: "charts",
     test: /[\\/]src[\\/]charts[\\/]/,
     priority: 8,
-    chunks: 'all',
+    chunks: "all",
   },
 
   // Status indicators chunk
   indicators: {
-    name: 'indicators',
+    name: "indicators",
     test: /[\\/]src[\\/]indicators[\\/]/,
     priority: 7,
-    chunks: 'all',
+    chunks: "all",
   },
 };
 

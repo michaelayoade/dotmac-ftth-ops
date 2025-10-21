@@ -1,26 +1,33 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { useRBAC } from '@/contexts/RBACContext';
-import { useNetboxHealth, useNetboxSites } from '@/hooks/useNetworkInventory';
-import { platformConfig } from '@/lib/config';
-import { NetworkTopologyMap } from '@dotmac/primitives';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { useRBAC } from "@/contexts/RBACContext";
+import { useNetboxHealth, useNetboxSites } from "@/hooks/useNetworkInventory";
+import { platformConfig } from "@/lib/config";
+import { NetworkTopologyMap } from "@dotmac/primitives";
 
 // Type definition (matches @dotmac/primitives NetworkNode)
 interface NetworkNode {
   id: string;
-  type: 'router' | 'switch' | 'server' | 'tower' | 'fiber_node';
+  type: "router" | "switch" | "server" | "tower" | "fiber_node";
   name: string;
   coordinates: { lat: number; lng: number };
-  status: 'online' | 'offline' | 'degraded' | 'maintenance';
+  status: "online" | "offline" | "degraded" | "maintenance";
   metadata?: Record<string, any>;
 }
 
 export default function NetworkOverviewPage() {
   const { hasPermission } = useRBAC();
-  const hasNetworkAccess = platformConfig.features.enableNetwork && hasPermission('isp.ipam.read');
+  const hasNetworkAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
 
   const { data: netboxHealth, isLoading: healthLoading } = useNetboxHealth({
     enabled: hasNetworkAccess,
@@ -37,7 +44,8 @@ export default function NetworkOverviewPage() {
           <CardHeader>
             <CardTitle>Network inventory</CardTitle>
             <CardDescription>
-              Access requires <code>isp.ipam.read</code> and the NetBox integration to be configured for this tenant.
+              Access requires <code>isp.ipam.read</code> and the NetBox integration to be configured
+              for this tenant.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -52,18 +60,22 @@ export default function NetworkOverviewPage() {
   }
 
   const topologyNodes: NetworkNode[] = (netboxSites ?? [])
-    .filter(site => site.latitude != null && site.longitude != null)
-    .map(site => ({
+    .filter((site) => site.latitude != null && site.longitude != null)
+    .map((site) => ({
       id: `site-${site.id}`,
       name: site.name,
-      type: 'fiber_node' as NetworkNode['type'],
-      coordinates: { lat: site.latitude as number, lng: site.longitude as number },
-      status: (netboxHealth?.healthy ? 'online' : 'maintenance') as NetworkNode['status'],
+      type: "fiber_node" as NetworkNode["type"],
+      coordinates: {
+        lat: site.latitude as number,
+        lng: site.longitude as number,
+      },
+      status: (netboxHealth?.healthy ? "online" : "maintenance") as NetworkNode["status"],
     }));
 
-  const mapCenter = topologyNodes.length > 0 && topologyNodes[0]
-    ? topologyNodes[0].coordinates
-    : { lat: 0, lng: 0 };
+  const mapCenter =
+    topologyNodes.length > 0 && topologyNodes[0]
+      ? topologyNodes[0].coordinates
+      : { lat: 0, lng: 0 };
 
   return (
     <main className="max-w-5xl mx-auto px-6 py-12 space-y-8">
@@ -84,12 +96,17 @@ export default function NetworkOverviewPage() {
             <p className="text-sm text-muted-foreground">Checking NetBox…</p>
           ) : netboxHealth ? (
             <>
-              <Badge variant={netboxHealth.healthy ? 'outline' : 'destructive'} className="w-fit uppercase tracking-wide">
-                {netboxHealth.healthy ? 'Healthy' : 'Degraded'}
+              <Badge
+                variant={netboxHealth.healthy ? "outline" : "destructive"}
+                className="w-fit uppercase tracking-wide"
+              >
+                {netboxHealth.healthy ? "Healthy" : "Degraded"}
               </Badge>
               <p className="text-sm text-muted-foreground">{netboxHealth.message}</p>
               {netboxHealth.version && (
-                <p className="text-xs text-muted-foreground">Reported version: {netboxHealth.version}</p>
+                <p className="text-xs text-muted-foreground">
+                  Reported version: {netboxHealth.version}
+                </p>
               )}
             </>
           ) : (
@@ -128,13 +145,15 @@ export default function NetworkOverviewPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {netboxSites?.map(site => (
+              {netboxSites?.map((site) => (
                 <TableRow key={site.id}>
                   <TableCell className="font-medium text-foreground">{site.name}</TableCell>
-                  <TableCell className="text-xs uppercase tracking-wide text-muted-foreground">{site.slug}</TableCell>
-                  <TableCell>{site.facility ?? '—'}</TableCell>
+                  <TableCell className="text-xs uppercase tracking-wide text-muted-foreground">
+                    {site.slug}
+                  </TableCell>
+                  <TableCell>{site.facility ?? "—"}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {site.physical_address || site.description || '—'}
+                    {site.physical_address || site.description || "—"}
                   </TableCell>
                 </TableRow>
               ))}
@@ -147,7 +166,8 @@ export default function NetworkOverviewPage() {
         <CardHeader>
           <CardTitle>Topology view</CardTitle>
           <CardDescription>
-            Interactive map rendering NetBox site coordinates. Enhance with device-level nodes once available.
+            Interactive map rendering NetBox site coordinates. Enhance with device-level nodes once
+            available.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -159,12 +179,12 @@ export default function NetworkOverviewPage() {
               height={360}
               variant="admin"
               showLegend
-              onNodeSelect={(node: any) => console.log('Selected node:', node)}
+              onNodeSelect={(node: any) => console.log("Selected node:", node)}
             />
           ) : (
             <p className="text-sm text-muted-foreground">
-              No geographic coordinates detected for NetBox sites. Populate latitude/longitude fields to enable the
-              topology map.
+              No geographic coordinates detected for NetBox sites. Populate latitude/longitude
+              fields to enable the topology map.
             </p>
           )}
         </CardContent>
