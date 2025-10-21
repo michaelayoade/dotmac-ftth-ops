@@ -119,7 +119,7 @@ class TestAuditModels:
     async def test_audit_activity_database_constraints(self, async_db_session):
         """Test database constraints on audit_activities table."""
         # Test required fields
-        with pytest.raises(Exception):  # Should fail without required fields
+        with pytest.raises((TypeError, ValueError)):  # Should fail without required fields
             activity = AuditActivity(
                 id=uuid4(),
                 activity_type=ActivityType.USER_LOGIN,

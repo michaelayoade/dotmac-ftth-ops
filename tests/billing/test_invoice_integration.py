@@ -565,7 +565,7 @@ class TestInvoicePaymentApplication:
                     billing_address={"street": f"Multi St {i}"},
                     line_items=[
                         {
-                            "description": f"Invoice {i+1}",
+                            "description": f"Invoice {i + 1}",
                             "quantity": 1,
                             "unit_price": 2000,  # $20 each
                             "total_price": 2000,

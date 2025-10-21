@@ -17,20 +17,20 @@ export interface BaseEntity {
 }
 
 export enum EntityStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  PENDING = 'pending',
-  SUSPENDED = 'suspended',
-  DELETED = 'deleted',
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  PENDING = "pending",
+  SUSPENDED = "suspended",
+  DELETED = "deleted",
 }
 
 export enum EntityType {
-  TENANT = 'tenant',
-  CUSTOMER = 'customer',
-  USER = 'user',
-  SERVICE = 'service',
-  RESELLER = 'reseller',
-  PARTNER = 'partner',
+  TENANT = "tenant",
+  CUSTOMER = "customer",
+  USER = "user",
+  SERVICE = "service",
+  RESELLER = "reseller",
+  PARTNER = "partner",
 }
 
 // ===== ENTITY MANAGEMENT =====
@@ -45,7 +45,7 @@ export interface EntityFilters {
   limit?: number;
   offset?: number;
   sort_by?: string;
-  sort_order?: 'asc' | 'desc';
+  sort_order?: "asc" | "desc";
 }
 
 export interface EntityListResponse<T extends BaseEntity> {
@@ -90,9 +90,9 @@ export interface BillingEntity extends BaseEntity {
 }
 
 export enum BillingCycle {
-  MONTHLY = 'monthly',
-  QUARTERLY = 'quarterly',
-  ANNUALLY = 'annually',
+  MONTHLY = "monthly",
+  QUARTERLY = "quarterly",
+  ANNUALLY = "annually",
 }
 
 export interface BillingAddress {
@@ -135,11 +135,11 @@ export interface Invoice {
 }
 
 export enum InvoiceStatus {
-  DRAFT = 'draft',
-  SENT = 'sent',
-  PAID = 'paid',
-  OVERDUE = 'overdue',
-  CANCELLED = 'cancelled',
+  DRAFT = "draft",
+  SENT = "sent",
+  PAID = "paid",
+  OVERDUE = "overdue",
+  CANCELLED = "cancelled",
 }
 
 export interface InvoiceLineItem {
@@ -166,20 +166,20 @@ export interface Payment {
 }
 
 export enum PaymentStatus {
-  PENDING = 'pending',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  REFUNDED = 'refunded',
-  CANCELLED = 'cancelled',
+  PENDING = "pending",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  REFUNDED = "refunded",
+  CANCELLED = "cancelled",
 }
 
 export enum PaymentMethod {
-  CREDIT_CARD = 'credit_card',
-  BANK_TRANSFER = 'bank_transfer',
-  ACH = 'ach',
-  WIRE = 'wire',
-  CHECK = 'check',
-  CASH = 'cash',
+  CREDIT_CARD = "credit_card",
+  BANK_TRANSFER = "bank_transfer",
+  ACH = "ach",
+  WIRE = "wire",
+  CHECK = "check",
+  CASH = "cash",
 }
 
 export interface PaymentResult {
@@ -275,19 +275,19 @@ export interface GrowthMetrics {
 // ===== REPORTING =====
 
 export enum ReportType {
-  FINANCIAL = 'financial',
-  USAGE = 'usage',
-  OPERATIONAL = 'operational',
-  COMPLIANCE = 'compliance',
-  EXECUTIVE = 'executive',
-  CUSTOM = 'custom',
+  FINANCIAL = "financial",
+  USAGE = "usage",
+  OPERATIONAL = "operational",
+  COMPLIANCE = "compliance",
+  EXECUTIVE = "executive",
+  CUSTOM = "custom",
 }
 
 export enum ReportFormat {
-  JSON = 'json',
-  CSV = 'csv',
-  PDF = 'pdf',
-  EXCEL = 'excel',
+  JSON = "json",
+  CSV = "csv",
+  PDF = "pdf",
+  EXCEL = "excel",
 }
 
 export interface ReportParams {
@@ -316,11 +316,11 @@ export interface Report {
 }
 
 export enum ReportStatus {
-  QUEUED = 'queued',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  EXPIRED = 'expired',
+  QUEUED = "queued",
+  PROCESSING = "processing",
+  COMPLETED = "completed",
+  FAILED = "failed",
+  EXPIRED = "expired",
 }
 
 export interface ReportData {
@@ -332,14 +332,14 @@ export interface ReportData {
 
 export interface ReportSection {
   title: string;
-  type: 'table' | 'chart' | 'text' | 'metrics';
+  type: "table" | "chart" | "text" | "metrics";
   data: any;
   metadata?: Record<string, any>;
 }
 
 export interface ChartData {
   id: string;
-  type: 'line' | 'bar' | 'pie' | 'area' | 'scatter';
+  type: "line" | "bar" | "pie" | "area" | "scatter";
   title: string;
   data: any[];
   config: Record<string, any>;
@@ -361,21 +361,21 @@ export interface Service extends BaseEntity {
 }
 
 export enum ServiceType {
-  INTERNET = 'internet',
-  VOICE = 'voice',
-  TV = 'tv',
-  CLOUD_STORAGE = 'cloud_storage',
-  EMAIL = 'email',
-  SECURITY = 'security',
-  SUPPORT = 'support',
-  CUSTOM = 'custom',
+  INTERNET = "internet",
+  VOICE = "voice",
+  TV = "tv",
+  CLOUD_STORAGE = "cloud_storage",
+  EMAIL = "email",
+  SECURITY = "security",
+  SUPPORT = "support",
+  CUSTOM = "custom",
 }
 
 export enum PricingModel {
-  FIXED = 'fixed',
-  TIERED = 'tiered',
-  USAGE_BASED = 'usage_based',
-  HYBRID = 'hybrid',
+  FIXED = "fixed",
+  TIERED = "tiered",
+  USAGE_BASED = "usage_based",
+  HYBRID = "hybrid",
 }
 
 export interface ServiceFeature {

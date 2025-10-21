@@ -8,10 +8,10 @@ and recovering from billing errors gracefully.
 import asyncio
 import secrets
 import uuid
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterable
 from datetime import UTC, datetime
 from functools import wraps
-from typing import Any, TypeVar
+from typing import Any, ParamSpec, TypeVar
 
 import structlog
 
@@ -24,6 +24,8 @@ from dotmac.platform.billing.exceptions import (
 logger = structlog.get_logger(__name__)
 
 T = TypeVar("T")
+P = ParamSpec("P")
+RetryCallback = Callable[[int, Exception], Awaitable[None] | None]
 
 
 class RetryStrategy:
@@ -82,12 +84,12 @@ class BillingRetry:
         self,
         max_attempts: int = 3,
         strategy: RetryStrategy | None = None,
-        retryable_exceptions: tuple = (PaymentError, WebhookError),
-        on_retry: Callable | None = None,
-    ):
+        retryable_exceptions: Iterable[type[Exception]] = (PaymentError, WebhookError),
+        on_retry: RetryCallback | None = None,
+    ) -> None:
         self.max_attempts = max_attempts
         self.strategy = strategy or ExponentialBackoff()
-        self.retryable_exceptions = retryable_exceptions
+        self.retryable_exceptions = tuple(retryable_exceptions)
         self.on_retry = on_retry
 
     async def execute(self, func: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any) -> T:
@@ -134,7 +136,9 @@ class BillingRetry:
                     )
 
                     if self.on_retry:
-                        await self.on_retry(attempt, e)
+                        callback_result = self.on_retry(attempt, e)
+                        if isinstance(callback_result, Awaitable):
+                            await callback_result
 
                     await asyncio.sleep(delay)
                 else:
@@ -161,7 +165,7 @@ def with_retry(
     max_attempts: int = 3,
     strategy: RetryStrategy | None = None,
     retryable_exceptions: tuple[type[Exception], ...] = (PaymentError, WebhookError),
-) -> Callable[[Callable[..., Awaitable[T]]], Callable[..., Awaitable[T]]]:
+) -> Callable[[Callable[P, Awaitable[T]]], Callable[P, Awaitable[T]]]:
     """
     Decorator for adding retry logic to async functions.
 
@@ -172,9 +176,9 @@ def with_retry(
             pass
     """
 
-    def decorator(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:
+    def decorator(func: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
         @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> T:
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             retry = BillingRetry(
                 max_attempts=max_attempts,
                 strategy=strategy,
@@ -299,7 +303,7 @@ class RecoveryContext:
         self.save_state = save_state
         self.state_key = state_key or str(uuid.uuid4())
         self.state: dict[str, Any] = {}
-        self.attempts: list = []
+        self.attempts: list[dict[str, Any]] = []
 
     async def __aenter__(self) -> "RecoveryContext":
         """Enter recovery context."""
@@ -396,7 +400,7 @@ class IdempotencyManager:
 
     def __init__(self, cache_ttl: int = 3600) -> None:
         self.cache_ttl = cache_ttl
-        self._cache: dict[str, Any] = {}
+        self._cache: dict[str, dict[str, Any]] = {}
 
     async def ensure_idempotent(
         self, key: str, func: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any

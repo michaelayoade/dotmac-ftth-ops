@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { AuthContext } from '../AuthProvider';
+import * as React from "react";
+import { AuthContext } from "../AuthProvider";
 import type {
   AuthConfig,
   AuthContextValue,
@@ -8,7 +8,7 @@ import type {
   Permission,
   UserRole,
   PortalType,
-} from '../types';
+} from "../types";
 
 interface EnterpriseAuthProviderProps {
   children: React.ReactNode;
@@ -37,7 +37,7 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
     isAuthenticated: false,
     isLoading: true,
     isRefreshing: false,
-    error: '',
+    error: "",
     loginAttempts: 0,
     lockedUntil: null,
     deviceTrusted: false,
@@ -62,7 +62,7 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
               user,
               isAuthenticated: true,
               deviceTrusted:
-                localStorage.getItem(`enterprise_auth_${portal}_device_trusted`) === 'true',
+                localStorage.getItem(`enterprise_auth_${portal}_device_trusted`) === "true",
             }));
             setupSecurityMonitoring();
           } else {
@@ -70,7 +70,7 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
           }
         }
       } catch (error) {
-        console.error('Enterprise auth initialization failed:', error);
+        console.error("Enterprise auth initialization failed:", error);
         await clearAuthData();
       } finally {
         setState((prev) => ({ ...prev, isLoading: false }));
@@ -86,7 +86,7 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
       }
     };
 
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    const events = ["mousedown", "mousemove", "keypress", "scroll", "touchstart"];
     events.forEach((event) => {
       document.addEventListener(event, handleActivity, true);
     });
@@ -119,18 +119,18 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
     const activityTimeout = config.sessionTimeout * 0.8; // 80% of session timeout
     activityTimeoutRef.current = setTimeout(() => {
       // Could show warning modal here
-      console.warn('User inactive - session will expire soon');
+      console.warn("User inactive - session will expire soon");
     }, activityTimeout);
   };
 
   // Enhanced session validation
   const validateSession = async (token: string): Promise<boolean> => {
     try {
-      const response = await fetch('/api/auth/validate', {
-        method: 'POST',
+      const response = await fetch("/api/auth/validate", {
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           portal,
@@ -140,7 +140,7 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
 
       return response.ok;
     } catch (error) {
-      console.error('Session validation failed:', error);
+      console.error("Session validation failed:", error);
       return false;
     }
   };
@@ -167,7 +167,7 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
       isAuthenticated: false,
       isLoading: false,
       isRefreshing: false,
-      error: '',
+      error: "",
       loginAttempts: 0,
       lockedUntil: null,
       deviceTrusted: false,
@@ -182,7 +182,7 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
       throw new Error(`Account is locked. Try again in ${remainingTime} seconds.`);
     }
 
-    setState((prev) => ({ ...prev, isLoading: true, error: '' }));
+    setState((prev) => ({ ...prev, isLoading: true, error: "" }));
 
     try {
       const loginPayload = {
@@ -193,10 +193,10 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
       };
 
       const response = await fetch(config.endpoints.login, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'X-Portal-Type': portal,
+          "Content-Type": "application/json",
+          "X-Portal-Type": portal,
         },
         body: JSON.stringify(loginPayload),
       });
@@ -214,11 +214,11 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
             loginAttempts: newAttempts,
             lockedUntil: shouldLock ? Date.now() + config.lockoutDuration : null,
             isLoading: false,
-            error: errorData.message || 'Authentication failed',
+            error: errorData.message || "Authentication failed",
           };
         });
 
-        throw new Error(errorData.message || 'Authentication failed');
+        throw new Error(errorData.message || "Authentication failed");
       }
 
       const data = await response.json();
@@ -227,7 +227,7 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Authentication failed',
+        error: error instanceof Error ? error.message : "Authentication failed",
       }));
       throw error;
     }
@@ -249,7 +249,7 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
     localStorage.setItem(`enterprise_auth_${portal}_user`, JSON.stringify(user));
     localStorage.setItem(
       `enterprise_auth_${portal}_device_trusted`,
-      data.deviceTrusted?.toString() || 'false'
+      data.deviceTrusted?.toString() || "false",
     );
 
     setState({
@@ -260,7 +260,7 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
       loginAttempts: 0,
       lockedUntil: null,
       deviceTrusted: data.deviceTrusted || false,
-      error: '',
+      error: "",
     });
 
     setupSecurityMonitoring();
@@ -275,10 +275,10 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
 
       if (token) {
         await fetch(config.endpoints.logout, {
-          method: 'POST',
+          method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             deviceFingerprint: generateDeviceFingerprint(),
@@ -309,9 +309,9 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
 
     try {
       const response = await fetch(config.endpoints.refresh, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           refreshToken: token,
@@ -333,7 +333,7 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
       // Reset security monitoring
       setupSecurityMonitoring();
     } catch (error) {
-      console.error('Token refresh failed:', error);
+      console.error("Token refresh failed:", error);
       await logout();
     }
   };
@@ -346,10 +346,10 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
 
     try {
       const response = await fetch(config.endpoints.profile, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           ...updates,
@@ -358,13 +358,17 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
       });
 
       if (response.ok) {
-        const updatedUser = { ...state.user, ...updates, updatedAt: new Date() };
+        const updatedUser = {
+          ...state.user,
+          ...updates,
+          updatedAt: new Date(),
+        };
         localStorage.setItem(`enterprise_auth_${portal}_user`, JSON.stringify(updatedUser));
         setState((prev) => ({ ...prev, user: updatedUser }));
         setupSecurityMonitoring(); // Reset timeouts
       }
     } catch (error) {
-      console.error('Profile update failed:', error);
+      console.error("Profile update failed:", error);
       throw error;
     }
   };
@@ -376,16 +380,16 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
         !state.user ||
         !config.enablePermissions ||
         (Array.isArray(permission) ? permission : [permission]).some((p) =>
-          state.user!.permissions.includes(p)
+          state.user!.permissions.includes(p),
         );
 
       if (!result && config.enableAuditLog) {
-        console.warn('Permission denied:', permission);
+        console.warn("Permission denied:", permission);
       }
 
       return result;
     },
-    [state.user, config.enablePermissions, config.enableAuditLog]
+    [state.user, config.enablePermissions, config.enableAuditLog],
   );
 
   const hasRole = React.useCallback(
@@ -395,11 +399,11 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
       const roles = Array.isArray(role) ? role : [role];
       return roles.includes(state.user.role);
     },
-    [state.user]
+    [state.user],
   );
 
   const isSuperAdmin = React.useCallback((): boolean => {
-    return state.user?.role === 'super_admin';
+    return state.user?.role === "super_admin";
   }, [state.user]);
 
   // Enhanced session management
@@ -448,7 +452,7 @@ export const EnterpriseAuthProvider: React.FC<EnterpriseAuthProviderProps> = ({
     getSessionTimeRemaining,
 
     // MFA methods (simplified stubs)
-    setupMFA: async () => ({ qrCode: '', secret: '' }),
+    setupMFA: async () => ({ qrCode: "", secret: "" }),
     verifyMFA: async () => false,
     disableMFA: async () => {},
   };

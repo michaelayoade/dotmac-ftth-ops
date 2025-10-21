@@ -27,64 +27,64 @@
  * ```
  */
 
-import * as React from 'react';
+import * as React from "react";
 const { createContext, useContext, forwardRef, useId } = React;
 
-import * as LabelPrimitive from '@radix-ui/react-label';
-import { Slot } from '@radix-ui/react-slot';
-import type { VariantProps } from 'class-variance-authority';
-import { cva } from 'class-variance-authority';
-import { clsx } from 'clsx';
-import type { FieldValues, RegisterOptions, UseFormReturn } from 'react-hook-form';
+import * as LabelPrimitive from "@radix-ui/react-label";
+import { Slot } from "@radix-ui/react-slot";
+import type { VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
+import { clsx } from "clsx";
+import type { FieldValues, RegisterOptions, UseFormReturn } from "react-hook-form";
 
-import type { ValidationRule } from '../types';
+import type { ValidationRule } from "../types";
 // useId is already destructured from React above
 
 // Form variants
-const formVariants = cva('', {
+const formVariants = cva("", {
   variants: {
     layout: {
-      vertical: '',
-      horizontal: '',
-      inline: '',
+      vertical: "",
+      horizontal: "",
+      inline: "",
     },
     size: {
-      sm: '',
-      md: '',
-      lg: '',
+      sm: "",
+      md: "",
+      lg: "",
     },
   },
   defaultVariants: {
-    layout: 'vertical',
-    size: 'md',
+    layout: "vertical",
+    size: "md",
   },
 });
 
 // Input variants
-const inputVariants = cva('', {
+const inputVariants = cva("", {
   variants: {
     variant: {
-      default: '',
-      outlined: '',
-      filled: '',
-      underlined: '',
+      default: "",
+      outlined: "",
+      filled: "",
+      underlined: "",
     },
     size: {
-      sm: '',
-      md: '',
-      lg: '',
+      sm: "",
+      md: "",
+      lg: "",
     },
     state: {
-      default: '',
-      error: '',
-      success: '',
-      warning: '',
+      default: "",
+      error: "",
+      success: "",
+      warning: "",
     },
   },
   defaultVariants: {
-    variant: 'default',
-    size: 'md',
-    state: 'default',
+    variant: "default",
+    size: "md",
+    state: "default",
   },
 });
 
@@ -98,7 +98,7 @@ const FormContext = createContext<FormContextValue | null>(null);
 export const useFormContext = () => {
   const context = useContext(FormContext);
   if (!context) {
-    throw new Error('Form components must be used within a Form');
+    throw new Error("Form components must be used within a Form");
   }
   return context;
 };
@@ -135,7 +135,7 @@ export const useFormContext = () => {
  * ```
  */
 export interface FormProps<TFieldValues extends FieldValues = FieldValues>
-  extends Omit<React.FormHTMLAttributes<HTMLFormElement>, 'onSubmit'>,
+  extends Omit<React.FormHTMLAttributes<HTMLFormElement>, "onSubmit">,
     VariantProps<typeof formVariants> {
   /** React Hook Form instance */
   form: UseFormReturn<TFieldValues>;
@@ -155,7 +155,7 @@ export function Form<TFieldValues extends FieldValues = FieldValues>({
   asChild = false,
   ...props
 }: FormProps<TFieldValues>) {
-  const Comp = asChild ? Slot : 'form';
+  const Comp = asChild ? Slot : "form";
 
   return (
     <FormContext.Provider value={{ form }}>
@@ -216,10 +216,10 @@ export interface FormItemProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const FormItem = forwardRef<HTMLDivElement, FormItemProps>(
   ({ className, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
 
-    return <Comp ref={ref} className={clsx('form-item', className)} {...props} />;
-  }
+    return <Comp ref={ref} className={clsx("form-item", className)} {...props} />;
+  },
 );
 
 // Form Label
@@ -231,13 +231,13 @@ export const FormLabel = forwardRef<React.ElementRef<typeof LabelPrimitive.Root>
   ({ className, required, children, ...props }, ref) => (
     <LabelPrimitive.Root
       ref={ref}
-      className={clsx('form-label', { required }, className)}
+      className={clsx("form-label", { required }, className)}
       {...props}
     >
       {children}
-      {required ? <span className='required-indicator'>*</span> : null}
+      {required ? <span className="required-indicator">*</span> : null}
     </LabelPrimitive.Root>
-  )
+  ),
 );
 
 // Form Description
@@ -245,18 +245,18 @@ export const FormDescription = forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
-  <p ref={ref} className={clsx('form-description', className)} {...props} />
+  <p ref={ref} className={clsx("form-description", className)} {...props} />
 ));
 
 // Form Message (Error/Success/Warning)
 export interface FormMessageProps extends React.HTMLAttributes<HTMLParagraphElement> {
-  variant?: 'error' | 'success' | 'warning' | 'info';
+  variant?: "error" | "success" | "warning" | "info";
 }
 
 export const FormMessage = forwardRef<HTMLParagraphElement, FormMessageProps>(
-  ({ className, variant = 'error', ...props }, ref) => (
-    <p ref={ref} className={clsx('form-message', `variant-${variant}`, className)} {...props} />
-  )
+  ({ className, variant = "error", ...props }, ref) => (
+    <p ref={ref} className={clsx("form-message", `variant-${variant}`, className)} {...props} />
+  ),
 );
 
 /**
@@ -290,7 +290,7 @@ export const FormMessage = forwardRef<HTMLParagraphElement, FormMessageProps>(
  * ```
  */
 export interface InputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>,
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">,
     VariantProps<typeof inputVariants> {
   /** Render as child element instead of input tag */
   asChild?: boolean;
@@ -307,39 +307,39 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       variant,
       size,
       state,
-      type = 'text',
+      type = "text",
       startIcon,
       endIcon,
       asChild = false,
-      'aria-invalid': ariaInvalid,
+      "aria-invalid": ariaInvalid,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'input';
-    const inputId = useId('input');
+    const Comp = asChild ? Slot : "input";
+    const inputId = useId("input");
 
     // Automatically set aria-invalid based on state
-    const invalid = ariaInvalid ?? state === 'error';
+    const invalid = ariaInvalid ?? state === "error";
 
     if (startIcon || endIcon) {
       return (
-        <div className={clsx('input-wrapper', inputVariants({ variant, size, state }))}>
+        <div className={clsx("input-wrapper", inputVariants({ variant, size, state }))}>
           {startIcon ? (
-            <span className='input-start-icon' aria-hidden='true' role='presentation'>
+            <span className="input-start-icon" aria-hidden="true" role="presentation">
               {startIcon}
             </span>
           ) : null}
           <Comp
             id={inputId}
             type={type}
-            className={clsx('input-element', className)}
+            className={clsx("input-element", className)}
             ref={ref}
             aria-invalid={invalid}
             {...props}
           />
           {endIcon ? (
-            <span className='input-end-icon' aria-hidden='true' role='presentation'>
+            <span className="input-end-icon" aria-hidden="true" role="presentation">
               {endIcon}
             </span>
           ) : null}
@@ -357,7 +357,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {...props}
       />
     );
-  }
+  },
 );
 
 // Textarea Component
@@ -365,12 +365,12 @@ export interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement>,
     VariantProps<typeof inputVariants> {
   asChild?: boolean;
-  resize?: 'none' | 'vertical' | 'horizontal' | 'both';
+  resize?: "none" | "vertical" | "horizontal" | "both";
 }
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, variant, size, state, resize = 'vertical', asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'textarea';
+  ({ className, variant, size, state, resize = "vertical", asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "textarea";
 
     return (
       <Comp
@@ -379,12 +379,12 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {...props}
       />
     );
-  }
+  },
 );
 
 // Select Component (basic HTML select)
 export interface SelectProps
-  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'size'>,
+  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "size">,
     VariantProps<typeof inputVariants> {
   asChild?: boolean;
   placeholder?: string;
@@ -404,9 +404,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       asChild = false,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'select';
+    const Comp = asChild ? Slot : "select";
 
     return (
       <Comp
@@ -415,7 +415,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {...props}
       >
         {placeholder ? (
-          <option value='' disabled>
+          <option value="" disabled>
             {placeholder}
           </option>
         ) : null}
@@ -427,11 +427,11 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
         {children}
       </Comp>
     );
-  }
+  },
 );
 
 // Checkbox Component
-export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
+export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
   label?: string;
   description?: string;
   indeterminate?: boolean;
@@ -444,25 +444,25 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
     const checkboxId = id || `checkbox-${generatedId}`;
 
     return (
-      <div className={clsx('checkbox-wrapper', className)}>
-        <input type='checkbox' ref={ref} id={checkboxId} className='checkbox-input' {...props} />
+      <div className={clsx("checkbox-wrapper", className)}>
+        <input type="checkbox" ref={ref} id={checkboxId} className="checkbox-input" {...props} />
         {label || description ? (
-          <div className='checkbox-content'>
+          <div className="checkbox-content">
             {label ? (
-              <label htmlFor={checkboxId} className='checkbox-label'>
+              <label htmlFor={checkboxId} className="checkbox-label">
                 {label}
               </label>
             ) : null}
-            {description ? <p className='checkbox-description'>{description}</p> : null}
+            {description ? <p className="checkbox-description">{description}</p> : null}
           </div>
         ) : null}
       </div>
     );
-  }
+  },
 );
 
 // Radio Component
-export interface RadioProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
+export interface RadioProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
   label?: string;
   description?: string;
   id?: string;
@@ -474,21 +474,21 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
     const radioId = id || `radio-${generatedId}`;
 
     return (
-      <div className={clsx('radio-wrapper', className)}>
-        <input type='radio' ref={ref} id={radioId} className='radio-input' {...props} />
+      <div className={clsx("radio-wrapper", className)}>
+        <input type="radio" ref={ref} id={radioId} className="radio-input" {...props} />
         {label || description ? (
-          <div className='radio-content'>
+          <div className="radio-content">
             {label ? (
-              <label htmlFor={radioId} className='radio-label'>
+              <label htmlFor={radioId} className="radio-label">
                 {label}
               </label>
             ) : null}
-            {description ? <p className='radio-description'>{description}</p> : null}
+            {description ? <p className="radio-description">{description}</p> : null}
           </div>
         ) : null}
       </div>
     );
-  }
+  },
 );
 
 // RadioGroup Component
@@ -502,15 +502,15 @@ export interface RadioGroupProps extends React.HTMLAttributes<HTMLDivElement> {
     description?: string;
     disabled?: boolean;
   }>;
-  orientation?: 'horizontal' | 'vertical';
+  orientation?: "horizontal" | "vertical";
 }
 
 export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
-  ({ className, name, value, onValueChange, options, orientation = 'vertical', ...props }, ref) => {
+  ({ className, name, value, onValueChange, options, orientation = "vertical", ...props }, ref) => {
     return (
       <div
         ref={ref}
-        className={clsx('radio-group', `orientation-${orientation}`, className)}
+        className={clsx("radio-group", `orientation-${orientation}`, className)}
         {...props}
       >
         {options.map(({ value: optionValue, label, description, disabled }) => (
@@ -527,7 +527,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
         ))}
       </div>
     );
-  }
+  },
 );
 
 // Validation helpers
@@ -538,7 +538,7 @@ export function createValidationRules(rules: ValidationRule): RegisterOptions {
 
   if (rules.required) {
     validation.required =
-      typeof rules.required === 'string' ? rules.required : 'This field is required';
+      typeof rules.required === "string" ? rules.required : "This field is required";
   }
 
   if (rules.pattern) {
@@ -572,30 +572,30 @@ export function createValidationRules(rules: ValidationRule): RegisterOptions {
 export const validationPatterns = {
   email: {
     value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+.[A-Z]{2,}$/i,
-    message: 'Please enter a valid email address',
+    message: "Please enter a valid email address",
   },
   phone: {
     value: /^[+]?[1-9][\d]{0,15}$/,
-    message: 'Please enter a valid phone number',
+    message: "Please enter a valid phone number",
   },
   url: {
     value:
       /^https?:\/\/(?:[-\w.])+(?::[0-9]+)?(?:\/(?:[\w/_.])*(?:\?(?:[\w&=%.])*)?(?:#(?:[\w.])*)?)?$/,
-    message: 'Please enter a valid URL',
+    message: "Please enter a valid URL",
   },
   ipAddress: {
     value:
       /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?).){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/,
-    message: 'Please enter a valid IP address',
+    message: "Please enter a valid IP address",
   },
 };
 
 // Export all components
-FormItem.displayName = 'FormItem';
-FormLabel.displayName = 'FormLabel';
-FormDescription.displayName = 'FormDescription';
-FormMessage.displayName = 'FormMessage';
-Input.displayName = 'Input';
-Textarea.displayName = 'Textarea';
+FormItem.displayName = "FormItem";
+FormLabel.displayName = "FormLabel";
+FormDescription.displayName = "FormDescription";
+FormMessage.displayName = "FormMessage";
+Input.displayName = "Input";
+Textarea.displayName = "Textarea";
 
 // Components are already exported inline where they are defined

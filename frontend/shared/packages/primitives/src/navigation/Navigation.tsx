@@ -1,69 +1,69 @@
 /**
  * Unstyled, composable Navigation primitives
  */
-'use client';
+"use client";
 
-import { Slot } from '@radix-ui/react-slot';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { clsx } from 'clsx';
-import { ChevronRight } from 'lucide-react';
-import React, { createContext, forwardRef, useContext } from 'react';
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { clsx } from "clsx";
+import { ChevronRight } from "lucide-react";
+import React, { createContext, forwardRef, useContext } from "react";
 
 // Navigation variants
-const navigationVariants = cva('', {
+const navigationVariants = cva("", {
   variants: {
     variant: {
-      default: '',
-      bordered: '',
-      filled: '',
-      minimal: '',
+      default: "",
+      bordered: "",
+      filled: "",
+      minimal: "",
     },
     orientation: {
-      horizontal: '',
-      vertical: '',
+      horizontal: "",
+      vertical: "",
     },
     size: {
-      sm: '',
-      md: '',
-      lg: '',
+      sm: "",
+      md: "",
+      lg: "",
     },
   },
   defaultVariants: {
-    variant: 'default',
-    orientation: 'horizontal',
-    size: 'md',
+    variant: "default",
+    orientation: "horizontal",
+    size: "md",
   },
 });
 
 // Sidebar variants
-const sidebarVariants = cva('', {
+const sidebarVariants = cva("", {
   variants: {
     variant: {
-      default: '',
-      floating: '',
-      bordered: '',
+      default: "",
+      floating: "",
+      bordered: "",
     },
     size: {
-      sm: '',
-      md: '',
-      lg: '',
-      xl: '',
+      sm: "",
+      md: "",
+      lg: "",
+      xl: "",
     },
     position: {
-      left: '',
-      right: '',
+      left: "",
+      right: "",
     },
     behavior: {
-      push: '',
-      overlay: '',
-      squeeze: '',
+      push: "",
+      overlay: "",
+      squeeze: "",
     },
   },
   defaultVariants: {
-    variant: 'default',
-    size: 'md',
-    position: 'left',
-    behavior: 'push',
+    variant: "default",
+    size: "md",
+    position: "left",
+    behavior: "push",
   },
 });
 
@@ -81,37 +81,37 @@ const useNavigation = () => useContext(NavigationContext);
 // Navigation Base Component
 export interface NavigationProps extends React.HTMLAttributes<HTMLElement> {
   asChild?: boolean;
-  variant?: 'default' | 'bordered' | 'filled' | 'minimal';
-  orientation?: 'horizontal' | 'vertical';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "default" | "bordered" | "filled" | "minimal";
+  orientation?: "horizontal" | "vertical";
+  size?: "sm" | "md" | "lg";
 }
 
 export const Navigation = forwardRef<HTMLElement, NavigationProps>(
   (
     {
       className,
-      variant = 'default',
-      orientation = 'horizontal',
-      size = 'md',
+      variant = "default",
+      orientation = "horizontal",
+      size = "md",
       asChild = false,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'nav';
+    const Comp = asChild ? Slot : "nav";
 
     return (
       <Comp
         ref={ref}
         className={clsx(
           navigationVariants({ variant, orientation, size }),
-          'navigation',
-          className
+          "navigation",
+          className,
         )}
         {...props}
       />
     );
-  }
+  },
 );
 
 // Navigation Provider
@@ -146,44 +146,44 @@ export interface NavbarProps
 
 export const Navbar = forwardRef<HTMLElement, NavbarProps>(
   ({ className, variant, size, brand, actions, children, asChild = false, ...props }, _ref) => {
-    const Comp = asChild ? Slot : 'nav';
+    const Comp = asChild ? Slot : "nav";
 
     return (
       <Comp
         ref={ref}
-        className={clsx(navigationVariants({ variant, size }), 'navbar', className)}
+        className={clsx(navigationVariants({ variant, size }), "navbar", className)}
         {...props}
       >
-        <div className='navbar-container'>
-          {brand ? <div className='navbar-brand'>{brand}</div> : null}
+        <div className="navbar-container">
+          {brand ? <div className="navbar-brand">{brand}</div> : null}
 
-          <div className='navbar-content'>{children}</div>
+          <div className="navbar-content">{children}</div>
 
-          {actions ? <div className='navbar-actions'>{actions}</div> : null}
+          {actions ? <div className="navbar-actions">{actions}</div> : null}
         </div>
       </Comp>
     );
-  }
+  },
 );
 
 // Navigation Menu
 export interface NavigationMenuProps extends React.HTMLAttributes<HTMLUListElement> {
   asChild?: boolean;
-  orientation?: 'horizontal' | 'vertical';
+  orientation?: "horizontal" | "vertical";
 }
 
 export const NavigationMenu = forwardRef<HTMLUListElement, NavigationMenuProps>(
-  ({ className, orientation = 'horizontal', asChild = false, ...props }, _ref) => {
-    const Comp = asChild ? Slot : 'ul';
+  ({ className, orientation = "horizontal", asChild = false, ...props }, _ref) => {
+    const Comp = asChild ? Slot : "ul";
 
     return (
       <Comp
         ref={ref}
-        className={clsx('navigation-menu', `orientation-${orientation}`, className)}
+        className={clsx("navigation-menu", `orientation-${orientation}`, className)}
         {...props}
       />
     );
-  }
+  },
 );
 
 // Navigation Item
@@ -212,11 +212,11 @@ export const NavigationItem = forwardRef<HTMLLIElement, NavigationItemProps>(
       asChild = false,
       ...props
     },
-    ref
+    ref,
   ) => {
     const { activeItem, _onNavigate } = useNavigation();
     const isActive = active || (itemKey && activeItem === itemKey);
-    const Comp = asChild ? Slot : 'li';
+    const Comp = asChild ? Slot : "li";
 
     const handleClick = (e: React.MouseEvent<HTMLLIElement>) => {
       if (disabled) {
@@ -235,25 +235,25 @@ export const NavigationItem = forwardRef<HTMLLIElement, NavigationItemProps>(
       <Comp
         ref={ref}
         className={clsx(
-          'navigation-item',
+          "navigation-item",
           {
             active: isActive,
             disabled,
           },
-          className
+          className,
         )}
         onClick={handleClick}
-        onKeyDown={(e) => e.key === 'Enter' && handleClick}
+        onKeyDown={(e) => e.key === "Enter" && handleClick}
         {...props}
       >
-        <div className='navigation-item-content'>
-          {icon ? <span className='navigation-item-icon'>{icon}</span> : null}
-          <span className='navigation-item-text'>{children}</span>
-          {badge ? <span className='navigation-item-badge'>{badge}</span> : null}
+        <div className="navigation-item-content">
+          {icon ? <span className="navigation-item-icon">{icon}</span> : null}
+          <span className="navigation-item-text">{children}</span>
+          {badge ? <span className="navigation-item-badge">{badge}</span> : null}
         </div>
       </Comp>
     );
-  }
+  },
 );
 
 // Navigation Link
@@ -280,11 +280,11 @@ export const NavigationLink = forwardRef<HTMLAnchorElement, NavigationLinkProps>
       asChild = false,
       ...props
     },
-    ref
+    ref,
   ) => {
     const { activeItem, _onNavigate } = useNavigation();
     const isActive = active || (itemKey && activeItem === itemKey);
-    const Comp = asChild ? Slot : 'a';
+    const Comp = asChild ? Slot : "a";
 
     const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
       if (disabled) {
@@ -303,27 +303,27 @@ export const NavigationLink = forwardRef<HTMLAnchorElement, NavigationLinkProps>
       <Comp
         ref={ref}
         className={clsx(
-          'navigation-link',
+          "navigation-link",
           {
             active: isActive,
             disabled,
           },
-          className
+          className,
         )}
         onClick={handleClick}
-        onKeyDown={(e) => e.key === 'Enter' && handleClick}
-        aria-current={isActive ? 'page' : undefined}
-        aria-disabled={disabled ? 'true' : undefined}
+        onKeyDown={(e) => e.key === "Enter" && handleClick}
+        aria-current={isActive ? "page" : undefined}
+        aria-disabled={disabled ? "true" : undefined}
         {...props}
       >
-        <div className='navigation-link-content'>
-          {icon ? <span className='navigation-link-icon'>{icon}</span> : null}
-          <span className='navigation-link-text'>{children}</span>
-          {badge ? <span className='navigation-link-badge'>{badge}</span> : null}
+        <div className="navigation-link-content">
+          {icon ? <span className="navigation-link-icon">{icon}</span> : null}
+          <span className="navigation-link-text">{children}</span>
+          {badge ? <span className="navigation-link-badge">{badge}</span> : null}
         </div>
       </Comp>
     );
-  }
+  },
 );
 
 // Sidebar Component
@@ -355,9 +355,9 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(
       asChild = false,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'aside';
+    const Comp = asChild ? Slot : "aside";
 
     const handleToggle = () => {
       if (collapsible) {
@@ -371,39 +371,39 @@ export const Sidebar = forwardRef<HTMLElement, SidebarProps>(
           ref={ref}
           className={clsx(
             sidebarVariants({ variant, size, position, behavior }),
-            'sidebar',
+            "sidebar",
             {
               collapsed,
               collapsible,
             },
-            className
+            className,
           )}
           {...props}
         >
           {header ? (
-            <div className='sidebar-header'>
+            <div className="sidebar-header">
               {header}
               {collapsible ? (
                 <button
-                  type='button'
-                  className='sidebar-toggle'
+                  type="button"
+                  className="sidebar-toggle"
                   onClick={handleToggle}
-                  onKeyDown={(e) => e.key === 'Enter' && handleToggle}
-                  aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                  onKeyDown={(e) => e.key === "Enter" && handleToggle}
+                  aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                 >
-                  <span className='toggle-icon'>{collapsed ? '→' : '←'}</span>
+                  <span className="toggle-icon">{collapsed ? "→" : "←"}</span>
                 </button>
               ) : null}
             </div>
           ) : null}
 
-          <div className='sidebar-content'>{children}</div>
+          <div className="sidebar-content">{children}</div>
 
-          {footer ? <div className='sidebar-footer'>{footer}</div> : null}
+          {footer ? <div className="sidebar-footer">{footer}</div> : null}
         </Comp>
       </NavigationProvider>
     );
-  }
+  },
 );
 
 // Breadcrumb Component
@@ -419,7 +419,7 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
   (
     {
       className,
-      separator = <ChevronRight className='breadcrumb-separator' />,
+      separator = <ChevronRight className="breadcrumb-separator" />,
       maxItems,
       itemsBeforeCollapse = 1,
       itemsAfterCollapse = 1,
@@ -427,9 +427,9 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
       asChild = false,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'nav';
+    const Comp = asChild ? Slot : "nav";
     const items = React.Children.toArray(children);
 
     let displayItems = items;
@@ -439,17 +439,17 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
       _hasCollapsedItems = true;
       const beforeItems = items.slice(0, itemsBeforeCollapse);
       const afterItems = items.slice(-itemsAfterCollapse);
-      displayItems = [...beforeItems, <BreadcrumbEllipsis key='ellipsis' />, ...afterItems];
+      displayItems = [...beforeItems, <BreadcrumbEllipsis key="ellipsis" />, ...afterItems];
     }
 
     return (
-      <Comp ref={ref} className={clsx('breadcrumb', className)} aria-label='Breadcrumb' {...props}>
-        <ol className='breadcrumb-list'>
+      <Comp ref={ref} className={clsx("breadcrumb", className)} aria-label="Breadcrumb" {...props}>
+        <ol className="breadcrumb-list">
           {displayItems.map((item, index) => (
             <React.Fragment key={`item-${index}`}>
               {item}
               {index < displayItems.length - 1 && (
-                <li className='breadcrumb-separator-item' aria-hidden='true'>
+                <li className="breadcrumb-separator-item" aria-hidden="true">
                   {separator}
                 </li>
               )}
@@ -458,7 +458,7 @@ export const Breadcrumb = forwardRef<HTMLElement, BreadcrumbProps>(
         </ol>
       </Comp>
     );
-  }
+  },
 );
 
 // Breadcrumb Item
@@ -469,23 +469,23 @@ export interface BreadcrumbItemProps extends React.HTMLAttributes<HTMLLIElement>
 
 export const BreadcrumbItem = forwardRef<HTMLLIElement, BreadcrumbItemProps>(
   ({ className, current = false, asChild = false, ...props }, _ref) => {
-    const Comp = asChild ? Slot : 'li';
+    const Comp = asChild ? Slot : "li";
 
     return (
       <Comp
         ref={ref}
         className={clsx(
-          'breadcrumb-item',
+          "breadcrumb-item",
           {
             current,
           },
-          className
+          className,
         )}
-        aria-current={current ? 'page' : undefined}
+        aria-current={current ? "page" : undefined}
         {...props}
       />
     );
-  }
+  },
 );
 
 // Breadcrumb Link
@@ -495,10 +495,10 @@ export interface BreadcrumbLinkProps extends React.AnchorHTMLAttributes<HTMLAnch
 
 export const BreadcrumbLink = forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(
   ({ className, asChild = false, ...props }, _ref) => {
-    const Comp = asChild ? Slot : 'a';
+    const Comp = asChild ? Slot : "a";
 
-    return <Comp ref={ref} className={clsx('breadcrumb-link', className)} {...props} />;
-  }
+    return <Comp ref={ref} className={clsx("breadcrumb-link", className)} {...props} />;
+  },
 );
 
 // Breadcrumb Page (current page, no link)
@@ -508,19 +508,19 @@ export interface BreadcrumbPageProps extends React.HTMLAttributes<HTMLSpanElemen
 
 export const BreadcrumbPage = forwardRef<HTMLSpanElement, BreadcrumbPageProps>(
   ({ className, asChild = false, ...props }, _ref) => {
-    const Comp = asChild ? Slot : 'span';
+    const Comp = asChild ? Slot : "span";
 
     return (
       <Comp
         ref={ref}
-        className={clsx('breadcrumb-page', className)}
-        role='link'
-        aria-disabled='true'
-        aria-current='page'
+        className={clsx("breadcrumb-page", className)}
+        role="link"
+        aria-disabled="true"
+        aria-current="page"
         {...props}
       />
     );
-  }
+  },
 );
 
 // Breadcrumb Ellipsis
@@ -530,29 +530,29 @@ export interface BreadcrumbEllipsisProps extends React.HTMLAttributes<HTMLSpanEl
 
 export const BreadcrumbEllipsis = forwardRef<HTMLSpanElement, BreadcrumbEllipsisProps>(
   ({ className, asChild = false, ...props }, _ref) => {
-    const Comp = asChild ? Slot : 'span';
+    const Comp = asChild ? Slot : "span";
 
     return (
       <BreadcrumbItem>
         <Comp
           ref={ref}
-          className={clsx('breadcrumb-ellipsis', className)}
-          role='presentation'
-          aria-hidden='true'
+          className={clsx("breadcrumb-ellipsis", className)}
+          role="presentation"
+          aria-hidden="true"
           {...props}
         >
           …
         </Comp>
       </BreadcrumbItem>
     );
-  }
+  },
 );
 
 // Tab Navigation
 export interface TabNavigationProps extends React.HTMLAttributes<HTMLDivElement> {
   asChild?: boolean;
-  variant?: 'default' | 'pills' | 'underline' | 'cards';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "default" | "pills" | "underline" | "cards";
+  size?: "sm" | "md" | "lg";
   value?: string;
   onValueChange?: (value: string) => void;
 }
@@ -561,31 +561,31 @@ export const TabNavigation = forwardRef<HTMLDivElement, TabNavigationProps>(
   (
     {
       className,
-      variant = 'default',
-      size = 'md',
+      variant = "default",
+      size = "md",
       value,
       onValueChange,
       children,
       asChild = false,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
 
     return (
       <NavigationProvider activeItem={value} onNavigate={onValueChange}>
         <Comp
           ref={ref}
-          className={clsx('tab-navigation', `variant-${variant}`, `size-${size}`, className)}
-          role='tablist'
+          className={clsx("tab-navigation", `variant-${variant}`, `size-${size}`, className)}
+          role="tablist"
           {...props}
         >
           {children}
         </Comp>
       </NavigationProvider>
     );
-  }
+  },
 );
 
 // Tab Item
@@ -599,7 +599,7 @@ export const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(
   ({ className, value, disabled = false, onClick, asChild = false, ...props }, _ref) => {
     const { activeItem, _onNavigate } = useNavigation();
     const isActive = activeItem === value;
-    const Comp = asChild ? Slot : 'button';
+    const Comp = asChild ? Slot : "button";
 
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       if (!disabled) {
@@ -612,38 +612,38 @@ export const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(
       <Comp
         ref={ref}
         className={clsx(
-          'tab-item',
+          "tab-item",
           {
             active: isActive,
             disabled,
           },
-          className
+          className,
         )}
-        role='tab'
+        role="tab"
         aria-selected={isActive}
         aria-disabled={disabled}
         tabIndex={isActive ? 0 : -1}
         onClick={handleClick}
-        onKeyDown={(e) => e.key === 'Enter' && handleClick}
+        onKeyDown={(e) => e.key === "Enter" && handleClick}
         {...props}
       />
     );
-  }
+  },
 );
 
 // Set display names
-Navigation.displayName = 'Navigation';
-Navbar.displayName = 'Navbar';
-NavigationMenu.displayName = 'NavigationMenu';
-NavigationItem.displayName = 'NavigationItem';
-NavigationLink.displayName = 'NavigationLink';
-Sidebar.displayName = 'Sidebar';
-Breadcrumb.displayName = 'Breadcrumb';
-BreadcrumbItem.displayName = 'BreadcrumbItem';
-BreadcrumbLink.displayName = 'BreadcrumbLink';
-BreadcrumbPage.displayName = 'BreadcrumbPage';
-BreadcrumbEllipsis.displayName = 'BreadcrumbEllipsis';
-TabNavigation.displayName = 'TabNavigation';
-TabItem.displayName = 'TabItem';
+Navigation.displayName = "Navigation";
+Navbar.displayName = "Navbar";
+NavigationMenu.displayName = "NavigationMenu";
+NavigationItem.displayName = "NavigationItem";
+NavigationLink.displayName = "NavigationLink";
+Sidebar.displayName = "Sidebar";
+Breadcrumb.displayName = "Breadcrumb";
+BreadcrumbItem.displayName = "BreadcrumbItem";
+BreadcrumbLink.displayName = "BreadcrumbLink";
+BreadcrumbPage.displayName = "BreadcrumbPage";
+BreadcrumbEllipsis.displayName = "BreadcrumbEllipsis";
+TabNavigation.displayName = "TabNavigation";
+TabItem.displayName = "TabItem";
 
 export { useNavigation };

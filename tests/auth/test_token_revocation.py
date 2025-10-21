@@ -76,7 +76,7 @@ class TestJWTRevocation:
         with patch.object(jwt_service, "_get_redis", return_value=mock_redis):
             # Mock token as revoked
             with patch.object(jwt_service, "is_token_revoked", return_value=True):
-                with pytest.raises(Exception):  # Should raise HTTPException
+                with pytest.raises(Exception):  # Should raise HTTPException  # noqa: B017
                     await jwt_service.verify_token_async(token)
 
     @pytest.mark.asyncio
@@ -129,7 +129,7 @@ class TestJWTRevocation:
         token = jwt_service.create_access_token("user123")
 
         with patch.object(jwt_service, "is_token_revoked_sync", return_value=True):
-            with pytest.raises(Exception):  # Should raise HTTPException
+            with pytest.raises(Exception):  # Should raise HTTPException  # noqa: B017
                 jwt_service.verify_token(token)
 
     def test_verify_token_sync_success(self, jwt_service):
@@ -352,7 +352,7 @@ class TestAuthRouterFixes:
         from dotmac.platform.auth.router import auth_router
 
         app = FastAPI()
-        app.include_router(auth_router, prefix="/auth")
+        app.include_router(auth_router)
 
         return TestClient(app)
 
@@ -384,9 +384,6 @@ class TestAuthRouterFixes:
 
     def test_logout_with_proper_cleanup(self, mock_jwt_service, mock_session_manager, test_client):
         """Test logout properly cleans up tokens and sessions."""
-        from fastapi import FastAPI
-
-        app: FastAPI = test_client.app
 
         # Patch module-level objects
         with patch("dotmac.platform.auth.router.jwt_service", mock_jwt_service):

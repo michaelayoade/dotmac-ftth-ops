@@ -41,7 +41,13 @@ def setup_test_database():
     This fixture ensures all tables exist before tests run.
     """
     from sqlalchemy import create_engine
+
     from dotmac.platform.db import Base
+    # Import required models so metadata is populated
+    from dotmac.platform.tenant.models import Tenant, TenantUsage  # noqa: F401
+    from dotmac.platform.user_management.models import User  # noqa: F401
+    from dotmac.platform.billing.subscriptions.models import Subscription  # noqa: F401
+    from dotmac.platform.contacts.models import Contact  # noqa: F401
 
     # Create in-memory SQLite database
     engine = create_engine("sqlite:///:memory:", echo=False)
@@ -98,7 +104,9 @@ def mock_usage_billing_integration():
 
 
 @pytest.fixture
-async def test_client_with_auth(test_app, async_db_session, mock_usage_billing_integration, setup_test_database):
+async def test_client_with_auth(
+    test_app, async_db_session, mock_usage_billing_integration, setup_test_database
+):
     """Create async test client with mocked authentication and default headers."""
     from dotmac.platform.auth.core import get_current_user
     from dotmac.platform.db import get_async_db
@@ -109,8 +117,15 @@ async def test_client_with_auth(test_app, async_db_session, mock_usage_billing_i
             user_id="test-user-123",
             username="testuser",
             email="test@example.com",
-            permissions=["tenants:read", "tenants:write", "tenants:admin"],
-            tenant_id="test-tenant",
+            permissions=[
+                "tenants:read",
+                "tenants:write",
+                "tenants:admin",
+                "platform:tenants:read",
+                "platform:tenants:write",
+            ],
+            tenant_id=None,
+            is_platform_admin=True,
         )
 
     async def override_get_async_db():

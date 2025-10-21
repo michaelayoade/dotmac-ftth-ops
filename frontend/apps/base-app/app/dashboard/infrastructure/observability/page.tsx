@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import {
   Activity,
   TrendingUp,
@@ -24,7 +24,7 @@ import {
   Timer,
   GitBranch,
   Clock,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   LineChart,
   Line,
@@ -38,20 +38,28 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-} from 'recharts';
-import { useTraces, useMetrics, useServiceMap, usePerformance } from '@/hooks/useObservability';
+} from "recharts";
+import { useTraces, useMetrics, useServiceMap, usePerformance } from "@/hooks/useObservability";
 
 export default function ObservabilityPage() {
-  const [timeRange, setTimeRange] = useState('24h');
-  const [selectedService, setSelectedService] = useState('all');
+  const [timeRange, setTimeRange] = useState("24h");
+  const [selectedService, setSelectedService] = useState("all");
 
   // Use real API hooks
-  const { traces, isLoading: tracesLoading, refetch: refetchTraces } = useTraces({
-    service: selectedService !== 'all' ? selectedService : undefined,
+  const {
+    traces,
+    isLoading: tracesLoading,
+    refetch: refetchTraces,
+  } = useTraces({
+    service: selectedService !== "all" ? selectedService : undefined,
   });
   const { metrics, isLoading: metricsLoading, refetch: refetchMetrics } = useMetrics();
   const { serviceMap, isLoading: serviceMapLoading, refetch: refetchServiceMap } = useServiceMap();
-  const { performance, isLoading: performanceLoading, refetch: refetchPerformance } = usePerformance();
+  const {
+    performance,
+    isLoading: performanceLoading,
+    refetch: refetchPerformance,
+  } = usePerformance();
 
   const isRefreshing = tracesLoading || metricsLoading || serviceMapLoading || performanceLoading;
 
@@ -70,9 +78,11 @@ export default function ObservabilityPage() {
       performance,
       exportedAt: new Date().toISOString(),
     };
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `observability-${new Date().toISOString()}.json`;
     document.body.appendChild(a);
@@ -83,11 +93,15 @@ export default function ObservabilityPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'success':
-        return <Badge variant="default" className="bg-green-500">Success</Badge>;
-      case 'error':
+      case "success":
+        return (
+          <Badge variant="default" className="bg-green-500">
+            Success
+          </Badge>
+        );
+      case "error":
         return <Badge variant="destructive">Error</Badge>;
-      case 'warning':
+      case "warning":
         return <Badge variant="secondary">Warning</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
@@ -96,11 +110,11 @@ export default function ObservabilityPage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'success':
+      case "success":
         return <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />;
-      case 'error':
+      case "error":
         return <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />;
-      case 'warning':
+      case "warning":
         return <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />;
       default:
         return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
@@ -108,18 +122,28 @@ export default function ObservabilityPage() {
   };
 
   // Transform metrics for charts
-  const metricsHistory = metrics && metrics.length > 0 && metrics[0]?.data_points ? metrics[0].data_points.map((dp, index) => ({
-    time: new Date(dp.timestamp).toLocaleTimeString(),
-    requests: metrics.find(m => m.name === 'request_count')?.data_points?.[index]?.value || 0,
-    errors: metrics.find(m => m.name === 'error_count')?.data_points?.[index]?.value || 0,
-    latency: metrics.find(m => m.name === 'latency_ms')?.data_points?.[index]?.value || 0,
-  })) : [];
+  const metricsHistory =
+    metrics && metrics.length > 0 && metrics[0]?.data_points
+      ? metrics[0].data_points.map((dp, index) => ({
+          time: new Date(dp.timestamp).toLocaleTimeString(),
+          requests:
+            metrics.find((m) => m.name === "request_count")?.data_points?.[index]?.value || 0,
+          errors: metrics.find((m) => m.name === "error_count")?.data_points?.[index]?.value || 0,
+          latency: metrics.find((m) => m.name === "latency_ms")?.data_points?.[index]?.value || 0,
+        }))
+      : [];
 
   // Calculate current metrics from data
-  const totalRequests = metrics.find(m => m.name === 'request_count')?.data_points?.reduce((sum, dp) => sum + dp.value, 0) || 0;
-  const totalErrors = metrics.find(m => m.name === 'error_count')?.data_points?.reduce((sum, dp) => sum + dp.value, 0) || 0;
-  const errorRate = totalRequests > 0 ? (totalErrors / totalRequests * 100) : 0;
-  const latencyMetric = metrics.find(m => m.name === 'latency_ms');
+  const totalRequests =
+    metrics
+      .find((m) => m.name === "request_count")
+      ?.data_points?.reduce((sum, dp) => sum + dp.value, 0) || 0;
+  const totalErrors =
+    metrics
+      .find((m) => m.name === "error_count")
+      ?.data_points?.reduce((sum, dp) => sum + dp.value, 0) || 0;
+  const errorRate = totalRequests > 0 ? (totalErrors / totalRequests) * 100 : 0;
+  const latencyMetric = metrics.find((m) => m.name === "latency_ms");
   const latencySum = latencyMetric?.data_points?.reduce((sum, dp) => sum + dp.value, 0) ?? 0;
   const latencyCount = latencyMetric?.data_points?.length ?? 1;
   const avgLatency = latencySum / latencyCount;
@@ -130,7 +154,9 @@ export default function ObservabilityPage() {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold">Observability</h1>
-          <p className="text-muted-foreground mt-2">Monitor traces, metrics, and system performance</p>
+          <p className="text-muted-foreground mt-2">
+            Monitor traces, metrics, and system performance
+          </p>
         </div>
         <div className="flex gap-2">
           <select
@@ -149,7 +175,7 @@ export default function ObservabilityPage() {
             Export
           </Button>
           <Button onClick={handleRefresh} disabled={isRefreshing} size="sm">
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
             Refresh
           </Button>
         </div>
@@ -164,11 +190,17 @@ export default function ObservabilityPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {metricsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : totalRequests >= 1000000 ? `${(totalRequests / 1000000).toFixed(1)}M` : totalRequests >= 1000 ? `${(totalRequests / 1000).toFixed(1)}K` : totalRequests}
+              {metricsLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : totalRequests >= 1000000 ? (
+                `${(totalRequests / 1000000).toFixed(1)}M`
+              ) : totalRequests >= 1000 ? (
+                `${(totalRequests / 1000).toFixed(1)}K`
+              ) : (
+                totalRequests
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {timeRange}
-            </p>
+            <p className="text-xs text-muted-foreground">{timeRange}</p>
           </CardContent>
         </Card>
 
@@ -179,11 +211,13 @@ export default function ObservabilityPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {metricsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : `${errorRate.toFixed(2)}%`}
+              {metricsLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                `${errorRate.toFixed(2)}%`
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {totalErrors} errors
-            </p>
+            <p className="text-xs text-muted-foreground">{totalErrors} errors</p>
           </CardContent>
         </Card>
 
@@ -194,11 +228,13 @@ export default function ObservabilityPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {metricsLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : `${avgLatency.toFixed(0)}ms`}
+              {metricsLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin" />
+              ) : (
+                `${avgLatency.toFixed(0)}ms`
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Average response time
-            </p>
+            <p className="text-xs text-muted-foreground">Average response time</p>
           </CardContent>
         </Card>
 
@@ -239,7 +275,9 @@ export default function ObservabilityPage() {
                 >
                   <option value="all">All Services</option>
                   {serviceMap?.services.map((service) => (
-                    <option key={service} value={service}>{service}</option>
+                    <option key={service} value={service}>
+                      {service}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -291,10 +329,15 @@ export default function ObservabilityPage() {
                         <div className="h-8 bg-muted rounded relative overflow-hidden">
                           <div
                             className={`h-full ${
-                              trace.status === 'success' ? 'bg-green-400 dark:bg-green-600' :
-                              trace.status === 'error' ? 'bg-red-400 dark:bg-red-600' : 'bg-yellow-400 dark:bg-yellow-600'
+                              trace.status === "success"
+                                ? "bg-green-400 dark:bg-green-600"
+                                : trace.status === "error"
+                                  ? "bg-red-400 dark:bg-red-600"
+                                  : "bg-yellow-400 dark:bg-yellow-600"
                             }`}
-                            style={{ width: `${Math.min((trace.duration / 2000) * 100, 100)}%` }}
+                            style={{
+                              width: `${Math.min((trace.duration / 2000) * 100, 100)}%`,
+                            }}
                           />
                         </div>
                       </div>
@@ -411,9 +454,7 @@ export default function ObservabilityPage() {
           <Card>
             <CardHeader>
               <CardTitle>Service Dependency Map</CardTitle>
-              <CardDescription>
-                Visualize service interactions and dependencies
-              </CardDescription>
+              <CardDescription>Visualize service interactions and dependencies</CardDescription>
             </CardHeader>
             <CardContent>
               {serviceMapLoading ? (
@@ -430,7 +471,9 @@ export default function ObservabilityPage() {
                             <Server className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                             <span className="text-sm font-medium">Total Services</span>
                           </div>
-                          <span className="text-2xl font-bold">{serviceMap?.services.length || 0}</span>
+                          <span className="text-2xl font-bold">
+                            {serviceMap?.services.length || 0}
+                          </span>
                         </div>
                       </CardContent>
                     </Card>
@@ -441,7 +484,9 @@ export default function ObservabilityPage() {
                             <Network className="h-4 w-4 text-green-600 dark:text-green-400" />
                             <span className="text-sm font-medium">Active Connections</span>
                           </div>
-                          <span className="text-2xl font-bold">{serviceMap?.dependencies.length || 0}</span>
+                          <span className="text-2xl font-bold">
+                            {serviceMap?.dependencies.length || 0}
+                          </span>
                         </div>
                       </CardContent>
                     </Card>
@@ -453,8 +498,15 @@ export default function ObservabilityPage() {
                             <span className="text-sm font-medium">Avg Error Rate</span>
                           </div>
                           <span className="text-2xl font-bold">
-                            {((serviceMap?.dependencies.reduce((sum, d) => sum + d.error_rate, 0) || 0) /
-                              (serviceMap?.dependencies.length || 1) * 100).toFixed(2)}%
+                            {(
+                              ((serviceMap?.dependencies.reduce(
+                                (sum, d) => sum + d.error_rate,
+                                0,
+                              ) || 0) /
+                                (serviceMap?.dependencies.length || 1)) *
+                              100
+                            ).toFixed(2)}
+                            %
                           </span>
                         </div>
                       </CardContent>
@@ -470,10 +522,11 @@ export default function ObservabilityPage() {
                               {dep.from_service} → {dep.to_service}
                             </div>
                             <div className="text-sm text-muted-foreground mt-1">
-                              {dep.request_count.toLocaleString()} requests • {dep.avg_latency.toFixed(1)}ms avg latency
+                              {dep.request_count.toLocaleString()} requests •{" "}
+                              {dep.avg_latency.toFixed(1)}ms avg latency
                             </div>
                           </div>
-                          <Badge variant={dep.error_rate > 0.05 ? 'destructive' : 'outline'}>
+                          <Badge variant={dep.error_rate > 0.05 ? "destructive" : "outline"}>
                             {(dep.error_rate * 100).toFixed(2)}% errors
                           </Badge>
                         </div>
@@ -491,9 +544,7 @@ export default function ObservabilityPage() {
           <Card>
             <CardHeader>
               <CardTitle>Performance Percentiles</CardTitle>
-              <CardDescription>
-                Response time percentiles compared to SLA targets
-              </CardDescription>
+              <CardDescription>Response time percentiles compared to SLA targets</CardDescription>
             </CardHeader>
             <CardContent>
               {performanceLoading ? (
@@ -526,7 +577,7 @@ export default function ObservabilityPage() {
                   {performance?.slowest_endpoints.map((endpoint, idx) => (
                     <div key={idx} className="flex justify-between items-center">
                       <span className="text-sm">{endpoint.endpoint}</span>
-                      <Badge variant={endpoint.avg_latency > 2000 ? 'destructive' : 'secondary'}>
+                      <Badge variant={endpoint.avg_latency > 2000 ? "destructive" : "secondary"}>
                         {endpoint.avg_latency}ms
                       </Badge>
                     </div>

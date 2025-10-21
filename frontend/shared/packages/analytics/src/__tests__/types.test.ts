@@ -2,75 +2,75 @@
  * @fileoverview Type tests for analytics package
  */
 
-import type { AnalyticsEvent, MetricsData } from '../index';
+import type { AnalyticsEvent, MetricsData } from "../index";
 
-describe('Analytics Types', () => {
-  describe('AnalyticsEvent', () => {
-    it('should accept valid event with name only', () => {
+describe("Analytics Types", () => {
+  describe("AnalyticsEvent", () => {
+    it("should accept valid event with name only", () => {
       const event: AnalyticsEvent = {
-        name: 'page_view',
+        name: "page_view",
       };
 
-      expect(event.name).toBe('page_view');
+      expect(event.name).toBe("page_view");
       expect(event.properties).toBeUndefined();
       expect(event.timestamp).toBeUndefined();
     });
 
-    it('should accept event with properties', () => {
+    it("should accept event with properties", () => {
       const event: AnalyticsEvent = {
-        name: 'button_click',
+        name: "button_click",
         properties: {
-          button_id: 'submit',
-          page: '/checkout',
+          button_id: "submit",
+          page: "/checkout",
         },
       };
 
       expect(event.properties).toEqual({
-        button_id: 'submit',
-        page: '/checkout',
+        button_id: "submit",
+        page: "/checkout",
       });
     });
 
-    it('should accept event with timestamp', () => {
+    it("should accept event with timestamp", () => {
       const timestamp = new Date();
       const event: AnalyticsEvent = {
-        name: 'user_action',
+        name: "user_action",
         timestamp,
       };
 
       expect(event.timestamp).toBe(timestamp);
     });
 
-    it('should accept event with all fields', () => {
+    it("should accept event with all fields", () => {
       const timestamp = new Date();
       const event: AnalyticsEvent = {
-        name: 'purchase',
+        name: "purchase",
         properties: {
           amount: 99.99,
-          currency: 'USD',
+          currency: "USD",
         },
         timestamp,
       };
 
       expect(event).toEqual({
-        name: 'purchase',
+        name: "purchase",
         properties: {
           amount: 99.99,
-          currency: 'USD',
+          currency: "USD",
         },
         timestamp,
       });
     });
 
-    it('should accept various property types', () => {
+    it("should accept various property types", () => {
       const event: AnalyticsEvent = {
-        name: 'complex_event',
+        name: "complex_event",
         properties: {
-          string_prop: 'value',
+          string_prop: "value",
           number_prop: 42,
           boolean_prop: true,
           array_prop: [1, 2, 3],
-          object_prop: { nested: 'value' },
+          object_prop: { nested: "value" },
           null_prop: null,
           undefined_prop: undefined,
         },
@@ -80,8 +80,8 @@ describe('Analytics Types', () => {
     });
   });
 
-  describe('MetricsData', () => {
-    it('should accept metric with value only', () => {
+  describe("MetricsData", () => {
+    it("should accept metric with value only", () => {
       const metric: MetricsData = {
         value: 100,
       };
@@ -91,51 +91,51 @@ describe('Analytics Types', () => {
       expect(metric.tags).toBeUndefined();
     });
 
-    it('should accept metric with unit', () => {
+    it("should accept metric with unit", () => {
       const metric: MetricsData = {
         value: 512,
-        unit: 'MB',
+        unit: "MB",
       };
 
-      expect(metric.unit).toBe('MB');
+      expect(metric.unit).toBe("MB");
     });
 
-    it('should accept metric with tags', () => {
+    it("should accept metric with tags", () => {
       const metric: MetricsData = {
         value: 1,
         tags: {
-          endpoint: '/api/users',
-          method: 'GET',
+          endpoint: "/api/users",
+          method: "GET",
         },
       };
 
       expect(metric.tags).toEqual({
-        endpoint: '/api/users',
-        method: 'GET',
+        endpoint: "/api/users",
+        method: "GET",
       });
     });
 
-    it('should accept metric with all fields', () => {
+    it("should accept metric with all fields", () => {
       const metric: MetricsData = {
         value: 45.5,
-        unit: 'ms',
+        unit: "ms",
         tags: {
-          query_type: 'SELECT',
-          database: 'production',
+          query_type: "SELECT",
+          database: "production",
         },
       };
 
       expect(metric).toEqual({
         value: 45.5,
-        unit: 'ms',
+        unit: "ms",
         tags: {
-          query_type: 'SELECT',
-          database: 'production',
+          query_type: "SELECT",
+          database: "production",
         },
       });
     });
 
-    it('should accept different numeric values', () => {
+    it("should accept different numeric values", () => {
       const metrics: MetricsData[] = [
         { value: 0 },
         { value: -100 },
@@ -145,7 +145,7 @@ describe('Analytics Types', () => {
       ];
 
       metrics.forEach((metric) => {
-        expect(typeof metric.value).toBe('number');
+        expect(typeof metric.value).toBe("number");
       });
     });
   });

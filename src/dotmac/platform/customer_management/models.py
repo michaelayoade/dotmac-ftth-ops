@@ -94,7 +94,7 @@ class ActivityType(str, Enum):
     IMPORT = "import"
 
 
-class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
+class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     Core customer model with comprehensive profile information.
     """
@@ -231,6 +231,92 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
     )
     birthday: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
+    # ISP-Specific Fields (Service Management)
+    service_address_line1: Mapped[str | None] = mapped_column(
+        String(200), nullable=True, comment="Installation/service address"
+    )
+    service_address_line2: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    service_city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    service_state_province: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    service_postal_code: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    service_country: Mapped[str | None] = mapped_column(
+        String(2), nullable=True, comment="ISO 3166-1 alpha-2"
+    )
+    service_coordinates: Mapped[dict[str, Any]] = mapped_column(
+        JSON,
+        default=dict,
+        nullable=False,
+        comment="GPS coordinates: {lat: float, lon: float}",
+    )
+
+    # Installation Tracking
+    installation_status: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        index=True,
+        comment="pending, scheduled, in_progress, completed, failed, canceled",
+    )
+    installation_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, comment="Actual installation date"
+    )
+    scheduled_installation_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, comment="Scheduled installation date"
+    )
+    installation_technician_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="Assigned field technician",
+    )
+    installation_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Service Details
+    connection_type: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        index=True,
+        comment="ftth, wireless, dsl, cable, fiber, hybrid",
+    )
+    last_mile_technology: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="gpon, xgs-pon, docsis3.1, lte, 5g, etc"
+    )
+    service_plan_speed: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="e.g., 100/100 Mbps, 1 Gbps"
+    )
+
+    # Network Device Links (JSON for flexibility)
+    assigned_devices: Mapped[dict[str, Any]] = mapped_column(
+        JSON,
+        default=dict,
+        nullable=False,
+        comment="Device assignments: {onu_serial, cpe_mac, router_id, etc}",
+    )
+
+    # Bandwidth Management
+    current_bandwidth_profile: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="Current speed/QoS profile"
+    )
+    static_ip_assigned: Mapped[str | None] = mapped_column(
+        String(45), nullable=True, comment="Static IPv4 address if assigned"
+    )
+    ipv6_prefix: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="IPv6 prefix if assigned"
+    )
+
+    # Service Quality Metrics
+    avg_uptime_percent: Mapped[Decimal | None] = mapped_column(
+        Numeric(5, 2), nullable=True, comment="Average uptime percentage"
+    )
+    last_outage_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True, comment="Last service outage"
+    )
+    total_outages: Mapped[int] = mapped_column(
+        default=0, nullable=False, comment="Total number of outages"
+    )
+    total_downtime_minutes: Mapped[int] = mapped_column(
+        default=0, nullable=False, comment="Total downtime in minutes"
+    )
+
     # Custom Fields (JSON for flexibility)
     metadata_: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSON, default=dict, nullable=False
@@ -257,6 +343,15 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
         Index("ix_customer_status_tier", "status", "tier"),
         Index("ix_customer_search", "first_name", "last_name", "company_name"),
         Index("ix_customer_location", "country", "state_province", "city"),
+        Index(
+            "ix_customer_service_location",
+            "service_country",
+            "service_state_province",
+            "service_city",
+        ),
+        Index("ix_customer_installation_status", "tenant_id", "installation_status"),
+        Index("ix_customer_connection_type", "tenant_id", "connection_type"),
+        {"extend_existing": True},
     )
 
     @property
@@ -278,7 +373,7 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
         return self.full_name
 
 
-class CustomerSegment(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
+class CustomerSegment(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type: ignore[misc]
     """Customer segmentation for targeted operations."""
 
     __tablename__ = "customer_segments"
@@ -306,10 +401,13 @@ class CustomerSegment(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
     # Relationships
     customers = relationship("Customer", back_populates="segment")
 
-    __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_tenant_segment_name"),)
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "name", name="uq_tenant_segment_name"),
+        {"extend_existing": True},
+    )
 
 
-class CustomerActivity(Base, TimestampMixin, TenantMixin):
+class CustomerActivity(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Track all customer activities and interactions."""
 
     __tablename__ = "customer_activities"
@@ -353,10 +451,13 @@ class CustomerActivity(Base, TimestampMixin, TenantMixin):
     # Relationships
     customer = relationship("Customer", back_populates="activities")
 
-    __table_args__ = (Index("ix_activity_customer_time", "customer_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_activity_customer_time", "customer_id", "created_at"),
+        {"extend_existing": True},
+    )
 
 
-class CustomerNote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
+class CustomerNote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type: ignore[misc]
     """Notes and comments about customers."""
 
     __tablename__ = "customer_notes"
@@ -397,10 +498,13 @@ class CustomerNote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
     # Relationships
     customer = relationship("Customer", back_populates="notes")
 
-    __table_args__ = (Index("ix_note_customer_created", "customer_id", "created_at"),)
+    __table_args__ = (
+        Index("ix_note_customer_created", "customer_id", "created_at"),
+        {"extend_existing": True},
+    )
 
 
-class CustomerTag(Base, TimestampMixin, TenantMixin):
+class CustomerTag(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Many-to-many relationship for customer tags."""
 
     __tablename__ = "customer_tags_association"
@@ -426,6 +530,7 @@ class CustomerTag(Base, TimestampMixin, TenantMixin):
     __table_args__ = (
         UniqueConstraint("customer_id", "tag_name", name="uq_customer_tag"),
         Index("ix_tag_name_category", "tag_name", "tag_category"),
+        {"extend_existing": True},
     )
 
 
@@ -441,7 +546,7 @@ class ContactRole(str, Enum):
     OTHER = "other"
 
 
-class CustomerContactLink(Base, TimestampMixin, TenantMixin):
+class CustomerContactLink(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Join table linking customers to contacts with roles.
 
@@ -493,10 +598,12 @@ class CustomerContactLink(Base, TimestampMixin, TenantMixin):
 
     # Relationships
     customer = relationship("Customer", back_populates="contact_links")
-    contact = relationship("Contact", back_populates="customer_links")
+    # Note: Contact model is in contacts module, relationship commented to avoid circular import
+    # contact = relationship("Contact", back_populates="customer_links")
 
     __table_args__ = (
         UniqueConstraint("customer_id", "contact_id", "role", name="uq_customer_contact_role"),
         Index("ix_customer_contact_customer", "customer_id", "role"),
         Index("ix_customer_contact_contact", "contact_id", "role"),
+        {"extend_existing": True},
     )

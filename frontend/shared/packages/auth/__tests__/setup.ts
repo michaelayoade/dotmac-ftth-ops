@@ -3,7 +3,7 @@
  * Configures testing environment for authentication components and utilities
  */
 
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";
 
 // Mock localStorage for token storage tests
 const localStorageMock = {
@@ -14,7 +14,7 @@ const localStorageMock = {
   length: 0,
   key: jest.fn(),
 };
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+Object.defineProperty(window, "localStorage", { value: localStorageMock });
 
 // Mock sessionStorage for session-based auth tests
 const sessionStorageMock = {
@@ -25,7 +25,7 @@ const sessionStorageMock = {
   length: 0,
   key: jest.fn(),
 };
-Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock });
+Object.defineProperty(window, "sessionStorage", { value: sessionStorageMock });
 
 // Mock crypto for secure token generation
 const cryptoMock = {
@@ -35,9 +35,9 @@ const cryptoMock = {
     }
     return arr;
   }),
-  randomUUID: jest.fn(() => 'mock-uuid-' + Math.random().toString(36).substr(2, 9)),
+  randomUUID: jest.fn(() => "mock-uuid-" + Math.random().toString(36).substr(2, 9)),
 };
-Object.defineProperty(window, 'crypto', { value: cryptoMock });
+Object.defineProperty(window, "crypto", { value: cryptoMock });
 
 // Mock fetch for API calls
 global.fetch = jest.fn();
@@ -68,15 +68,15 @@ global.URL = class URL {
     this.href = base ? new URL(url, base).href : url;
   }
   href: string;
-  origin: string = 'http://localhost:3000';
-  protocol: string = 'http:';
-  host: string = 'localhost:3000';
-  hostname: string = 'localhost';
-  port: string = '3000';
-  pathname: string = '/';
-  search: string = '';
+  origin: string = "http://localhost:3000";
+  protocol: string = "http:";
+  host: string = "localhost:3000";
+  hostname: string = "localhost";
+  port: string = "3000";
+  pathname: string = "/";
+  search: string = "";
   searchParams: URLSearchParams = new URLSearchParams();
-  hash: string = '';
+  hash: string = "";
   toString() {
     return this.href;
   }
@@ -84,26 +84,32 @@ global.URL = class URL {
 
 // Mock location for redirect handling
 const locationMock = {
-  href: 'http://localhost:3000',
-  origin: 'http://localhost:3000',
-  protocol: 'http:',
-  host: 'localhost:3000',
-  hostname: 'localhost',
-  port: '3000',
-  pathname: '/',
-  search: '',
-  hash: '',
+  href: "http://localhost:3000",
+  origin: "http://localhost:3000",
+  protocol: "http:",
+  host: "localhost:3000",
+  hostname: "localhost",
+  port: "3000",
+  pathname: "/",
+  search: "",
+  hash: "",
   replace: jest.fn(),
   assign: jest.fn(),
   reload: jest.fn(),
 };
-Object.defineProperty(window, 'location', { value: locationMock, writable: true });
+Object.defineProperty(window, "location", {
+  value: locationMock,
+  writable: true,
+});
 
 // Mock navigation for programmatic redirects
 const navigationMock = {
   navigate: jest.fn(),
 };
-Object.defineProperty(window, 'navigation', { value: navigationMock, writable: true });
+Object.defineProperty(window, "navigation", {
+  value: navigationMock,
+  writable: true,
+});
 
 // Mock console methods to reduce noise in tests
 const originalError = console.error;
@@ -141,10 +147,10 @@ afterEach(() => {
   jest.clearAllTimers();
 
   // Reset location
-  locationMock.href = 'http://localhost:3000';
-  locationMock.pathname = '/';
-  locationMock.search = '';
-  locationMock.hash = '';
+  locationMock.href = "http://localhost:3000";
+  locationMock.pathname = "/";
+  locationMock.search = "";
+  locationMock.hash = "";
 });
 
 afterAll(() => {
@@ -159,10 +165,10 @@ export const mockFetchResponse = (data: any, status = 200) => {
   (global.fetch as jest.Mock).mockResolvedValueOnce({
     ok: status >= 200 && status < 300,
     status,
-    statusText: status === 200 ? 'OK' : 'Error',
+    statusText: status === 200 ? "OK" : "Error",
     json: jest.fn().mockResolvedValueOnce(data),
     text: jest.fn().mockResolvedValueOnce(JSON.stringify(data)),
-    headers: new Map([['content-type', 'application/json']]),
+    headers: new Map([["content-type", "application/json"]]),
   });
 };
 
@@ -171,22 +177,22 @@ export const mockFetchError = (error: Error) => {
 };
 
 export const createMockUser = (overrides = {}) => ({
-  id: 'user-123',
-  email: 'test@example.com',
-  name: 'Test User',
-  role: 'tenant_admin',
-  permissions: ['users:read', 'customers:read'],
-  tenantId: 'tenant-123',
-  createdAt: new Date('2023-01-01'),
-  updatedAt: new Date('2023-01-01'),
+  id: "user-123",
+  email: "test@example.com",
+  name: "Test User",
+  role: "tenant_admin",
+  permissions: ["users:read", "customers:read"],
+  tenantId: "tenant-123",
+  createdAt: new Date("2023-01-01"),
+  updatedAt: new Date("2023-01-01"),
   ...overrides,
 });
 
 export const createMockTokens = (overrides = {}) => ({
-  accessToken: 'mock-access-token',
-  refreshToken: 'mock-refresh-token',
+  accessToken: "mock-access-token",
+  refreshToken: "mock-refresh-token",
   expiresAt: Date.now() + 3600000, // 1 hour
-  tokenType: 'Bearer',
+  tokenType: "Bearer",
   ...overrides,
 });
 
@@ -200,10 +206,10 @@ export const createMockAuthConfig = (overrides = {}) => ({
   enableAuditLog: true,
   tokenRefreshThreshold: 5 * 60 * 1000, // 5 minutes
   endpoints: {
-    login: '/api/auth/login',
-    logout: '/api/auth/logout',
-    refresh: '/api/auth/refresh',
-    profile: '/api/auth/profile',
+    login: "/api/auth/login",
+    logout: "/api/auth/logout",
+    refresh: "/api/auth/refresh",
+    profile: "/api/auth/profile",
   },
   ...overrides,
 });
@@ -221,14 +227,14 @@ declare global {
 
 expect.extend({
   toBeValidJWT(received: string) {
-    if (typeof received !== 'string') {
+    if (typeof received !== "string") {
       return {
         message: () => `Expected JWT token to be a string, received ${typeof received}`,
         pass: false,
       };
     }
 
-    const parts = received.split('.');
+    const parts = received.split(".");
     const isValid = parts.length === 3 && parts.every((part) => part.length > 0);
 
     return {
@@ -241,8 +247,8 @@ expect.extend({
   },
 
   toHaveStoredToken(received: Storage) {
-    const accessToken = received.getItem('auth.accessToken');
-    const refreshToken = received.getItem('auth.refreshToken');
+    const accessToken = received.getItem("auth.accessToken");
+    const refreshToken = received.getItem("auth.refreshToken");
     const hasTokens = Boolean(accessToken && refreshToken);
 
     return {
@@ -257,12 +263,12 @@ expect.extend({
   toBeAuthenticatedUser(received: any) {
     const hasRequiredFields =
       received &&
-      typeof received.id === 'string' &&
-      typeof received.email === 'string' &&
-      typeof received.name === 'string' &&
-      typeof received.role === 'string' &&
+      typeof received.id === "string" &&
+      typeof received.email === "string" &&
+      typeof received.name === "string" &&
+      typeof received.role === "string" &&
       Array.isArray(received.permissions) &&
-      typeof received.tenantId === 'string';
+      typeof received.tenantId === "string";
 
     return {
       message: () =>

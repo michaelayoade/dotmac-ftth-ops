@@ -46,7 +46,7 @@ class TestDomainEvent:
         )
 
         # Should not be able to modify frozen event
-        with pytest.raises(Exception):  # ValidationError in Pydantic v2
+        with pytest.raises(Exception):  # ValidationError in Pydantic v2  # noqa: B017
             event.invoice_number = "INV-2024-002"
 
     def test_domain_event_to_dict(self):
@@ -273,7 +273,7 @@ class TestValueObjects:
         """Test that Money is immutable."""
         money = Money(amount=100.00, currency="USD")
 
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             money.amount = 200.00
 
     def test_email_value_object(self):
@@ -288,7 +288,7 @@ class TestValueObjects:
         """Test that EmailAddress is immutable."""
         email = EmailAddress(value="user@example.com")
 
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: B017
             email.value = "other@example.com"
 
 

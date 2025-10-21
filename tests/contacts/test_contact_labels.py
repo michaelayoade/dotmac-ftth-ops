@@ -65,7 +65,7 @@ class TestContactLabelService:
             # No slug provided - will be auto-generated
         )
 
-        label = await create_entity_test_helper(
+        await create_entity_test_helper(
             service=service,
             method_name="create_label_definition",
             create_data=label_data,

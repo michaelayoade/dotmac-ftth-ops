@@ -5,8 +5,8 @@
 
 export interface PortalAccount {
   portal_id: string; // 8-character alphanumeric ID (ABC123XY format)
-  account_type: 'CUSTOMER' | 'TECHNICIAN' | 'RESELLER';
-  status: 'ACTIVE' | 'SUSPENDED' | 'LOCKED' | 'PENDING_ACTIVATION' | 'DEACTIVATED';
+  account_type: "CUSTOMER" | "TECHNICIAN" | "RESELLER";
+  status: "ACTIVE" | "SUSPENDED" | "LOCKED" | "PENDING_ACTIVATION" | "DEACTIVATED";
   customer_id?: string; // For CUSTOMER accounts
   technician_id?: string; // For TECHNICIAN accounts
   reseller_id?: string; // For RESELLER accounts
@@ -39,11 +39,11 @@ export interface PortalLoginAttempt {
   user_agent: string;
   success: boolean;
   failure_reason?:
-    | 'INVALID_PORTAL_ID'
-    | 'INVALID_PASSWORD'
-    | 'ACCOUNT_LOCKED'
-    | 'MFA_FAILED'
-    | 'SUSPENDED_ACCOUNT';
+    | "INVALID_PORTAL_ID"
+    | "INVALID_PASSWORD"
+    | "ACCOUNT_LOCKED"
+    | "MFA_FAILED"
+    | "SUSPENDED_ACCOUNT";
   risk_score: number;
   geo_location?: {
     country: string;
@@ -79,8 +79,8 @@ export interface CustomerData {
   name: string;
   email: string;
   phone?: string;
-  customer_type: 'RESIDENTIAL' | 'BUSINESS' | 'ENTERPRISE';
-  status: 'ACTIVE' | 'SUSPENDED' | 'CANCELLED';
+  customer_type: "RESIDENTIAL" | "BUSINESS" | "ENTERPRISE";
+  status: "ACTIVE" | "SUSPENDED" | "CANCELLED";
   billing_address?: Address;
   service_address?: Address;
   payment_method?: PaymentMethod;
@@ -97,7 +97,7 @@ export interface TechnicianData {
   department: string;
   certifications: string[];
   territory: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'ON_LEAVE';
+  status: "ACTIVE" | "INACTIVE" | "ON_LEAVE";
   skills: string[];
   current_location?: [number, number];
 }
@@ -110,7 +110,7 @@ export interface ResellerData {
   phone: string;
   territory: string;
   commission_rate: number;
-  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED";
   license_number?: string;
   payment_terms: string;
   monthly_target?: number;
@@ -125,7 +125,7 @@ export interface Address {
 }
 
 export interface PaymentMethod {
-  type: 'CREDIT_CARD' | 'BANK_ACCOUNT' | 'ACH';
+  type: "CREDIT_CARD" | "BANK_ACCOUNT" | "ACH";
   last_four: string;
   expires?: string;
   is_default: boolean;
@@ -133,9 +133,9 @@ export interface PaymentMethod {
 
 export interface CustomerService {
   id: string;
-  service_type: 'INTERNET' | 'PHONE' | 'TV' | 'BUNDLE';
+  service_type: "INTERNET" | "PHONE" | "TV" | "BUNDLE";
   plan_name: string;
-  status: 'ACTIVE' | 'SUSPENDED' | 'PENDING' | 'CANCELLED';
+  status: "ACTIVE" | "SUSPENDED" | "PENDING" | "CANCELLED";
   monthly_rate: number;
   installation_date: string;
   equipment: ServiceEquipment[];
@@ -143,10 +143,10 @@ export interface CustomerService {
 
 export interface ServiceEquipment {
   id: string;
-  type: 'MODEM' | 'ROUTER' | 'SET_TOP_BOX' | 'PHONE_ADAPTER';
+  type: "MODEM" | "ROUTER" | "SET_TOP_BOX" | "PHONE_ADAPTER";
   model: string;
   serial_number: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'NEEDS_REPLACEMENT';
+  status: "ACTIVE" | "INACTIVE" | "NEEDS_REPLACEMENT";
   installed_date: string;
 }
 
@@ -178,17 +178,17 @@ export interface DeviceFingerprint {
 export const PORTAL_ID_CONFIG = {
   LENGTH: 8,
   // Excludes confusing characters: 0, O, I, 1
-  ALLOWED_CHARS: 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789',
+  ALLOWED_CHARS: "ABCDEFGHJKLMNPQRSTUVWXYZ23456789",
   VALIDATION_REGEX: /^[A-Z2-9]{8}$/,
 } as const;
 
 // Account Status Transitions
 export const ACCOUNT_STATUS_TRANSITIONS = {
-  PENDING_ACTIVATION: ['ACTIVE', 'DEACTIVATED'],
-  ACTIVE: ['SUSPENDED', 'LOCKED', 'DEACTIVATED'],
-  SUSPENDED: ['ACTIVE', 'DEACTIVATED'],
-  LOCKED: ['ACTIVE', 'DEACTIVATED'],
-  DEACTIVATED: ['ACTIVE'],
+  PENDING_ACTIVATION: ["ACTIVE", "DEACTIVATED"],
+  ACTIVE: ["SUSPENDED", "LOCKED", "DEACTIVATED"],
+  SUSPENDED: ["ACTIVE", "DEACTIVATED"],
+  LOCKED: ["ACTIVE", "DEACTIVATED"],
+  DEACTIVATED: ["ACTIVE"],
 } as const;
 
 // Risk Score Thresholds

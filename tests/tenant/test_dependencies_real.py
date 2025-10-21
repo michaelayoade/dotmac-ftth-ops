@@ -423,7 +423,9 @@ class TestRequireTenantAdmin:
         """Test user from different tenant fails."""
         tenant = create_fake_tenant("tenant-123")
         user = create_fake_user(
-            user_id="user-123", tenant_id="tenant-456", roles=["tenant_admin"]  # Different tenant
+            user_id="user-123",
+            tenant_id="tenant-456",
+            roles=["tenant_admin"],  # Different tenant
         )
 
         with pytest.raises(HTTPException) as exc_info:

@@ -18,7 +18,7 @@ export interface LocaleConfig {
 export interface CurrencyConfig {
   primary: string;
   symbol: string;
-  position: 'before' | 'after';
+  position: "before" | "after";
   precision: number;
   thousandsSeparator: string;
   decimalSeparator: string;
@@ -28,21 +28,21 @@ export interface BusinessConfig {
   planTypes: {
     [key: string]: {
       label: string;
-      category: 'residential' | 'business' | 'enterprise';
+      category: "residential" | "business" | "enterprise";
       features: string[];
     };
   };
   statusTypes: {
     [key: string]: {
       label: string;
-      color: 'success' | 'warning' | 'danger' | 'info' | 'default';
+      color: "success" | "warning" | "danger" | "info" | "default";
       description: string;
     };
   };
   partnerTiers: {
     [key: string]: {
       label: string;
-      color: 'primary' | 'secondary' | 'warning' | 'success' | 'danger';
+      color: "primary" | "secondary" | "warning" | "success" | "danger";
       benefits: string[];
       requirements: {
         customers: number;
@@ -51,8 +51,8 @@ export interface BusinessConfig {
     };
   };
   units: {
-    bandwidth: 'mbps' | 'gbps';
-    data: 'gb' | 'tb';
+    bandwidth: "mbps" | "gbps";
+    data: "gb" | "tb";
     currency: string;
   };
 }
@@ -111,139 +111,139 @@ export interface FrameworkConfig {
 // Default configuration
 export const defaultFrameworkConfig: FrameworkConfig = {
   locale: {
-    primary: 'en-US',
-    supported: ['en-US', 'es-ES', 'fr-FR', 'de-DE'],
-    fallback: 'en-US',
+    primary: "en-US",
+    supported: ["en-US", "es-ES", "fr-FR", "de-DE"],
+    fallback: "en-US",
     dateFormat: {
-      short: { year: 'numeric', month: 'short', day: 'numeric' },
-      medium: { year: 'numeric', month: 'long', day: 'numeric' },
-      long: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' },
-      time: { hour: '2-digit', minute: '2-digit' },
+      short: { year: "numeric", month: "short", day: "numeric" },
+      medium: { year: "numeric", month: "long", day: "numeric" },
+      long: { weekday: "long", year: "numeric", month: "long", day: "numeric" },
+      time: { hour: "2-digit", minute: "2-digit" },
     },
   },
   currency: {
-    primary: 'USD',
-    symbol: '$',
-    position: 'before',
+    primary: "USD",
+    symbol: "$",
+    position: "before",
     precision: 2,
-    thousandsSeparator: ',',
-    decimalSeparator: '.',
+    thousandsSeparator: ",",
+    decimalSeparator: ".",
   },
   business: {
     planTypes: {
       residential_basic: {
-        label: 'Residential Basic',
-        category: 'residential',
-        features: ['Basic Internet', '24/7 Support', 'WiFi Included'],
+        label: "Residential Basic",
+        category: "residential",
+        features: ["Basic Internet", "24/7 Support", "WiFi Included"],
       },
       residential_premium: {
-        label: 'Residential Premium',
-        category: 'residential',
-        features: ['High-Speed Internet', 'Priority Support', 'Advanced WiFi', 'Security Suite'],
+        label: "Residential Premium",
+        category: "residential",
+        features: ["High-Speed Internet", "Priority Support", "Advanced WiFi", "Security Suite"],
       },
       business_starter: {
-        label: 'Business Starter',
-        category: 'business',
-        features: ['Business Internet', 'Static IP', 'Business Support', 'SLA'],
+        label: "Business Starter",
+        category: "business",
+        features: ["Business Internet", "Static IP", "Business Support", "SLA"],
       },
       business_pro: {
-        label: 'Business Pro',
-        category: 'business',
-        features: ['High-Speed Business', 'Multiple IPs', 'Priority Support', '99.9% SLA'],
+        label: "Business Pro",
+        category: "business",
+        features: ["High-Speed Business", "Multiple IPs", "Priority Support", "99.9% SLA"],
       },
       enterprise: {
-        label: 'Enterprise',
-        category: 'enterprise',
+        label: "Enterprise",
+        category: "enterprise",
         features: [
-          'Dedicated Connection',
-          'Custom Configuration',
-          'Dedicated Support',
-          '99.99% SLA',
+          "Dedicated Connection",
+          "Custom Configuration",
+          "Dedicated Support",
+          "99.99% SLA",
         ],
       },
     },
     statusTypes: {
       active: {
-        label: 'Active',
-        color: 'success',
-        description: 'Service is active and running',
+        label: "Active",
+        color: "success",
+        description: "Service is active and running",
       },
       pending: {
-        label: 'Pending',
-        color: 'warning',
-        description: 'Service activation in progress',
+        label: "Pending",
+        color: "warning",
+        description: "Service activation in progress",
       },
       suspended: {
-        label: 'Suspended',
-        color: 'danger',
-        description: 'Service temporarily suspended',
+        label: "Suspended",
+        color: "danger",
+        description: "Service temporarily suspended",
       },
       cancelled: {
-        label: 'Cancelled',
-        color: 'default',
-        description: 'Service has been cancelled',
+        label: "Cancelled",
+        color: "default",
+        description: "Service has been cancelled",
       },
       maintenance: {
-        label: 'Maintenance',
-        color: 'info',
-        description: 'Service under maintenance',
+        label: "Maintenance",
+        color: "info",
+        description: "Service under maintenance",
       },
     },
     partnerTiers: {
       bronze: {
-        label: 'Bronze Partner',
-        color: 'secondary',
-        benefits: ['5% Commission', 'Basic Support', 'Marketing Materials'],
+        label: "Bronze Partner",
+        color: "secondary",
+        benefits: ["5% Commission", "Basic Support", "Marketing Materials"],
         requirements: { customers: 10, revenue: 5000 },
       },
       silver: {
-        label: 'Silver Partner',
-        color: 'primary',
-        benefits: ['10% Commission', 'Priority Support', 'Co-marketing'],
+        label: "Silver Partner",
+        color: "primary",
+        benefits: ["10% Commission", "Priority Support", "Co-marketing"],
         requirements: { customers: 25, revenue: 15000 },
       },
       gold: {
-        label: 'Gold Partner',
-        color: 'warning',
-        benefits: ['15% Commission', 'Dedicated Support', 'Custom Materials'],
+        label: "Gold Partner",
+        color: "warning",
+        benefits: ["15% Commission", "Dedicated Support", "Custom Materials"],
         requirements: { customers: 50, revenue: 35000 },
       },
       platinum: {
-        label: 'Platinum Partner',
-        color: 'success',
-        benefits: ['20% Commission', 'Account Manager', 'API Access'],
+        label: "Platinum Partner",
+        color: "success",
+        benefits: ["20% Commission", "Account Manager", "API Access"],
         requirements: { customers: 100, revenue: 75000 },
       },
     },
     units: {
-      bandwidth: 'mbps',
-      data: 'gb',
-      currency: 'USD',
+      bandwidth: "mbps",
+      data: "gb",
+      currency: "USD",
     },
   },
   branding: {
     company: {
-      name: 'DotMac ISP',
-      logo: '/assets/logo.svg',
-      favicon: '/assets/favicon.ico',
+      name: "DotMac ISP",
+      logo: "/assets/logo.svg",
+      favicon: "/assets/favicon.ico",
       colors: {
-        primary: '#3b82f6',
-        secondary: '#64748b',
-        accent: '#10b981',
+        primary: "#3b82f6",
+        secondary: "#64748b",
+        accent: "#10b981",
       },
     },
     portal: {
       admin: {
-        name: 'Admin Portal',
-        theme: 'professional',
+        name: "Admin Portal",
+        theme: "professional",
       },
       customer: {
-        name: 'Customer Portal',
-        theme: 'friendly',
+        name: "Customer Portal",
+        theme: "friendly",
       },
       reseller: {
-        name: 'Partner Portal',
-        theme: 'business',
+        name: "Partner Portal",
+        theme: "business",
       },
     },
   },
@@ -258,8 +258,8 @@ export const defaultFrameworkConfig: FrameworkConfig = {
     mobileApp: false,
   },
   api: {
-    baseUrl: '/api',
-    version: 'v1',
+    baseUrl: "/api",
+    version: "v1",
     timeout: 30000,
     retries: 3,
   },

@@ -3,7 +3,7 @@
  * Provides consistent error handling across all components and hooks
  */
 
-import { useCallback, useState, useRef, useEffect } from 'react';
+import { useCallback, useState, useRef, useEffect } from "react";
 import {
   ISPError,
   classifyError,
@@ -14,9 +14,9 @@ import {
   DEFAULT_ERROR_CONFIG,
   type ErrorHandlingConfig,
   type ErrorSeverity,
-} from '../utils/errorUtils';
-import { useNotifications } from './useNotifications';
-import { useISPTenant } from './useISPTenant';
+} from "../utils/errorUtils";
+import { useNotifications } from "./useNotifications";
+import { useISPTenant } from "./useISPTenant";
 
 export interface UseStandardErrorHandlerOptions {
   context: string;
@@ -44,7 +44,7 @@ export interface UseStandardErrorHandlerReturn {
 }
 
 export function useStandardErrorHandler(
-  options: UseStandardErrorHandlerOptions
+  options: UseStandardErrorHandlerOptions,
 ): UseStandardErrorHandlerReturn {
   const {
     context,
@@ -101,20 +101,20 @@ export function useStandardErrorHandler(
         logError(ispError, {
           tenantId: currentTenant?.id,
           sessionId:
-            typeof window !== 'undefined'
-              ? window.sessionStorage.getItem('sessionId') || undefined
+            typeof window !== "undefined"
+              ? window.sessionStorage.getItem("sessionId") || undefined
               : undefined,
         });
       }
 
       // Show user notification based on severity
       if (enableNotifications) {
-        if (ispError.severity === 'critical' || ispError.severity === 'high') {
+        if (ispError.severity === "critical" || ispError.severity === "high") {
           showError(ispError.userMessage, {
             persistent: true,
-            actions: ispError.retryable ? [{ label: 'Retry', action: () => retry() }] : undefined,
+            actions: ispError.retryable ? [{ label: "Retry", action: () => retry() }] : undefined,
           });
-        } else if (ispError.severity === 'medium') {
+        } else if (ispError.severity === "medium") {
           showWarning(ispError.userMessage);
         }
         // Don't show notifications for 'low' severity errors
@@ -125,7 +125,7 @@ export function useStandardErrorHandler(
 
       return ispError;
     },
-    [context, enableLogging, enableNotifications, currentTenant, showError, showWarning, onError]
+    [context, enableLogging, enableNotifications, currentTenant, showError, showWarning, onError],
   );
 
   const retry = useCallback(async () => {
@@ -220,7 +220,7 @@ export function useStandardErrorHandler(
       onFallback,
       hasReachedMaxRetries,
       clearError,
-    ]
+    ],
   );
 
   return {
@@ -242,7 +242,7 @@ export function useStandardErrorHandler(
 // For API operations
 export function useApiErrorHandler(
   context: string,
-  options: Partial<UseStandardErrorHandlerOptions> = {}
+  options: Partial<UseStandardErrorHandlerOptions> = {},
 ) {
   return useStandardErrorHandler({
     ...options,
@@ -255,7 +255,7 @@ export function useApiErrorHandler(
 // For form operations
 export function useFormErrorHandler(
   formName: string,
-  options: Partial<UseStandardErrorHandlerOptions> = {}
+  options: Partial<UseStandardErrorHandlerOptions> = {},
 ) {
   return useStandardErrorHandler({
     ...options,
@@ -268,7 +268,7 @@ export function useFormErrorHandler(
 // For data loading operations
 export function useDataLoadingErrorHandler(
   dataType: string,
-  options: Partial<UseStandardErrorHandlerOptions> = {}
+  options: Partial<UseStandardErrorHandlerOptions> = {},
 ) {
   return useStandardErrorHandler({
     ...options,
@@ -281,7 +281,7 @@ export function useDataLoadingErrorHandler(
 // For real-time operations (WebSocket, etc.)
 export function useRealtimeErrorHandler(
   connectionType: string,
-  options: Partial<UseStandardErrorHandlerOptions> = {}
+  options: Partial<UseStandardErrorHandlerOptions> = {},
 ) {
   return useStandardErrorHandler({
     ...options,
@@ -295,7 +295,7 @@ export function useRealtimeErrorHandler(
 // For file upload operations
 export function useUploadErrorHandler(
   uploadType: string,
-  options: Partial<UseStandardErrorHandlerOptions> = {}
+  options: Partial<UseStandardErrorHandlerOptions> = {},
 ) {
   return useStandardErrorHandler({
     ...options,

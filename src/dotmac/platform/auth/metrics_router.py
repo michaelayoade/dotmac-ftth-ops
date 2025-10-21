@@ -26,7 +26,7 @@ logger = structlog.get_logger(__name__)
 # Cache TTL (in seconds)
 AUTH_METRICS_CACHE_TTL = 300  # 5 minutes
 
-router = APIRouter(tags=["Auth Metrics"])
+router = APIRouter(prefix="", tags=["Auth Metrics"])
 
 
 # ============================================================================
@@ -69,7 +69,7 @@ class AuthMetricsResponse(BaseModel):
 # ============================================================================
 
 
-@cached_result(
+@cached_result(  # type: ignore[misc]  # Untyped decorator
     ttl=AUTH_METRICS_CACHE_TTL,
     key_prefix="auth:metrics",
     key_params=["period_days", "tenant_id"],

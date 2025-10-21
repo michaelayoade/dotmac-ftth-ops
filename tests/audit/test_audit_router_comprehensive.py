@@ -17,7 +17,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.audit.models import ActivitySeverity, AuditActivity
-from dotmac.platform.audit.router import router as audit_router
+from dotmac.platform.audit.router import ensure_audit_access, router as audit_router
 from dotmac.platform.auth.core import UserInfo, get_current_user, get_current_user_optional
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant import get_current_tenant_id
@@ -29,7 +29,7 @@ SampleActivities = tuple[list[AuditActivity], str]
 def app() -> FastAPI:
     """Create FastAPI app with audit router."""
     app = FastAPI()
-    app.include_router(audit_router, prefix="/api/v1/audit")
+    app.include_router(audit_router, prefix="/api/v1")
     return app
 
 
@@ -42,7 +42,7 @@ def test_user() -> UserInfo:
         email="test@example.com",
         tenant_id="test-tenant",
         roles=["user"],
-        permissions=[],
+        permissions=["security.audit.read"],
     )
 
 
@@ -53,6 +53,7 @@ def client(app: FastAPI, async_db_session: AsyncSession, test_user: UserInfo) ->
     app.dependency_overrides[get_current_user] = lambda: test_user
     app.dependency_overrides[get_current_user_optional] = lambda: test_user
     app.dependency_overrides[get_current_tenant_id] = lambda: "test-tenant"
+    app.dependency_overrides[ensure_audit_access] = lambda: test_user
     return TestClient(app)
 
 
@@ -277,7 +278,7 @@ class TestListActivities:
 
     @pytest.mark.asyncio
     async def test_list_activities_without_user(
-        self, app: FastAPI, async_db_session: AsyncSession
+        self, app: FastAPI, async_db_session: AsyncSession, test_user: UserInfo
     ) -> None:
         """Test listing activities without authenticated user but with tenant context.
 
@@ -289,6 +290,7 @@ class TestListActivities:
         app.dependency_overrides[get_current_user] = lambda: None
         app.dependency_overrides[get_current_user_optional] = lambda: None
         app.dependency_overrides[get_current_tenant_id] = lambda: "test-tenant"
+        app.dependency_overrides[ensure_audit_access] = lambda: test_user
 
         client = TestClient(app)
         response = client.get("/api/v1/audit/activities")
@@ -501,7 +503,7 @@ class TestAuditRouterErrorHandling:
 
     @pytest.mark.asyncio
     async def test_list_activities_database_error(
-        self, test_app: FastAPI, async_db_session: AsyncSession
+        self, test_app: FastAPI, async_db_session: AsyncSession, test_user: UserInfo
     ) -> None:
         """Test handling of database errors during query execution."""
         from unittest.mock import AsyncMock, patch
@@ -514,9 +516,10 @@ class TestAuditRouterErrorHandling:
             mock_service.get_activities = AsyncMock(side_effect=Exception("Database error"))
             MockService.return_value = mock_service
 
-            test_app.dependency_overrides[get_current_user] = lambda: None
-            test_app.dependency_overrides[get_current_user_optional] = lambda: None
+            test_app.dependency_overrides[get_current_user] = lambda: test_user
+            test_app.dependency_overrides[get_current_user_optional] = lambda: test_user
             test_app.dependency_overrides[get_current_tenant_id] = lambda: "test-tenant"
+            test_app.dependency_overrides[ensure_audit_access] = lambda: test_user
 
             transport = ASGITransport(app=test_app)
             async with AsyncClient(
@@ -543,12 +546,14 @@ class TestTenantIsolation:
         app: FastAPI,
         async_db_session: AsyncSession,
         sample_activities: SampleActivities,
+        test_user: UserInfo,
     ) -> None:
         """Test that only activities for current tenant are returned."""
         app.dependency_overrides[get_async_session] = lambda: async_db_session
-        app.dependency_overrides[get_current_user] = lambda: None
-        app.dependency_overrides[get_current_user_optional] = lambda: None
+        app.dependency_overrides[get_current_user] = lambda: test_user
+        app.dependency_overrides[get_current_user_optional] = lambda: test_user
         app.dependency_overrides[get_current_tenant_id] = lambda: "test-tenant"
+        app.dependency_overrides[ensure_audit_access] = lambda: test_user
 
         client = TestClient(app)
         response = client.get("/api/v1/audit/activities")
@@ -566,13 +571,15 @@ class TestTenantIsolation:
         app: FastAPI,
         async_db_session: AsyncSession,
         sample_activities: SampleActivities,
+        test_user: UserInfo,
     ) -> None:
         """Test that activities from different tenant are not visible."""
         # Switch to different tenant
         app.dependency_overrides[get_async_session] = lambda: async_db_session
-        app.dependency_overrides[get_current_user] = lambda: None
-        app.dependency_overrides[get_current_user_optional] = lambda: None
+        app.dependency_overrides[get_current_user] = lambda: test_user
+        app.dependency_overrides[get_current_user_optional] = lambda: test_user
         app.dependency_overrides[get_current_tenant_id] = lambda: "different-tenant"
+        app.dependency_overrides[ensure_audit_access] = lambda: test_user
 
         client = TestClient(app)
         response = client.get("/api/v1/audit/activities")

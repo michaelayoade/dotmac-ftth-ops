@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { platformConfig } from "@/lib/config";
 
-const API_BASE = platformConfig.apiBaseUrl;
+const API_BASE = platformConfig.api.baseUrl;
 
 interface ReferralSubmissionFormProps {
   partnerId: string;
@@ -20,10 +20,7 @@ interface ReferralInput {
   notes?: string;
 }
 
-async function submitReferral(
-  partnerId: string,
-  data: ReferralInput
-): Promise<void> {
+async function submitReferral(partnerId: string, data: ReferralInput): Promise<void> {
   const response = await fetch(`${API_BASE}/api/v1/partners/referrals`, {
     method: "POST",
     credentials: "include",
@@ -59,7 +56,9 @@ export default function ReferralSubmissionForm({
     mutationFn: (data: ReferralInput) => submitReferral(partnerId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["partner", partnerId] });
-      queryClient.invalidateQueries({ queryKey: ["partner-referrals", partnerId] });
+      queryClient.invalidateQueries({
+        queryKey: ["partner-referrals", partnerId],
+      });
       setShowSuccess(true);
       setFormData({
         lead_name: "",
@@ -92,7 +91,8 @@ export default function ReferralSubmissionForm({
         <div className="mb-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
           <div className="text-green-400 font-semibold">Referral Submitted!</div>
           <div className="text-sm text-green-300 mt-1">
-            Your referral has been submitted successfully. We&apos;ll track its progress and notify you of updates.
+            Your referral has been submitted successfully. We&apos;ll track its progress and notify
+            you of updates.
           </div>
         </div>
       )}
@@ -107,9 +107,7 @@ export default function ReferralSubmissionForm({
               type="text"
               required
               value={formData.lead_name}
-              onChange={(e) =>
-                setFormData({ ...formData, lead_name: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, lead_name: e.target.value })}
               className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               placeholder="John Doe"
             />
@@ -123,48 +121,36 @@ export default function ReferralSubmissionForm({
               type="email"
               required
               value={formData.lead_email}
-              onChange={(e) =>
-                setFormData({ ...formData, lead_email: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, lead_email: e.target.value })}
               className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               placeholder="john@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-slate-400 mb-2">
-              Lead Phone
-            </label>
+            <label className="block text-sm text-slate-400 mb-2">Lead Phone</label>
             <input
               type="tel"
               value={formData.lead_phone || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, lead_phone: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, lead_phone: e.target.value })}
               className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               placeholder="+1 (555) 123-4567"
             />
           </div>
 
           <div>
-            <label className="block text-sm text-slate-400 mb-2">
-              Company Name
-            </label>
+            <label className="block text-sm text-slate-400 mb-2">Company Name</label>
             <input
               type="text"
               value={formData.company_name || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, company_name: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
               className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               placeholder="Acme Inc."
             />
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm text-slate-400 mb-2">
-              Estimated Value ($)
-            </label>
+            <label className="block text-sm text-slate-400 mb-2">Estimated Value ($)</label>
             <input
               type="number"
               step="0.01"
@@ -173,26 +159,20 @@ export default function ReferralSubmissionForm({
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  estimated_value: e.target.value
-                    ? parseFloat(e.target.value)
-                    : undefined,
+                  estimated_value: e.target.value ? parseFloat(e.target.value) : undefined,
                 })
               }
               className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               placeholder="5000.00"
             />
-            <p className="text-xs text-slate-500 mt-1">
-              Estimated annual contract value
-            </p>
+            <p className="text-xs text-slate-500 mt-1">Estimated annual contract value</p>
           </div>
 
           <div className="md:col-span-2">
             <label className="block text-sm text-slate-400 mb-2">Notes</label>
             <textarea
               value={formData.notes || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, notes: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={4}
               className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               placeholder="Additional details about this referral, their needs, timeline, etc."
@@ -221,7 +201,9 @@ export default function ReferralSubmissionForm({
       <div className="mt-6 p-4 bg-slate-900 rounded-lg border border-slate-700">
         <h4 className="text-sm font-semibold text-white mb-2">Commission Information</h4>
         <p className="text-xs text-slate-400">
-          You&apos;ll earn commissions based on your partner tier and commission model when this referral converts to a paying customer. Track the status of all your referrals in the Referrals tab.
+          You&apos;ll earn commissions based on your partner tier and commission model when this
+          referral converts to a paying customer. Track the status of all your referrals in the
+          Referrals tab.
         </p>
       </div>
     </div>

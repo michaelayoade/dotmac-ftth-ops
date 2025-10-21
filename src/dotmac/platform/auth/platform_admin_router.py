@@ -28,7 +28,7 @@ from .platform_admin import (
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(tags=["Platform Administration"])
+router = APIRouter(prefix="/admin/platform", tags=["Platform Administration"])
 
 
 # ============================================
@@ -525,9 +525,13 @@ async def list_platform_permissions(
     )
 
 
-@router.post("/search", response_model=CrossTenantSearchResponse)
+@router.get("/search", response_model=CrossTenantSearchResponse)
 async def cross_tenant_search(
-    search_request: CrossTenantSearchRequest,
+    query: str = Query(..., min_length=1, description="Search query"),
+    resource_type: str | None = Query(None, description="Filter by resource type"),
+    tenant_id: str | None = Query(None, description="Filter by specific tenant"),
+    limit: int = Query(20, ge=1, le=100, description="Maximum results"),
+    offset: int | None = Query(None, description="Offset for pagination"),
     admin: UserInfo = Depends(require_platform_admin),
     db: AsyncSession = Depends(get_async_session),
 ) -> CrossTenantSearchResponse:
@@ -536,23 +540,99 @@ async def cross_tenant_search(
     Requires: Platform admin access
 
     Searches across all tenants or specific tenants for resources matching the query.
+    Uses in-memory search backend for development; configure Elasticsearch/MeiliSearch for production.
     """
+    from ..search.factory import get_default_search_backend
+    from ..search.interfaces import SearchQuery, SearchType
+
     await platform_audit.log_action(
         user=admin,
         action="cross_tenant_search",
         details={
-            "query": search_request.query,
-            "resource_type": search_request.resource_type,
-            "tenant_ids": search_request.tenant_ids,
+            "query": query,
+            "resource_type": resource_type,
+            "tenant_id": tenant_id,
         },
     )
 
-    # Placeholder - implement actual cross-tenant search
-    return CrossTenantSearchResponse(
-        results=[],
-        total=0,
-        query=search_request.query,
-    )
+    try:
+        # Get search backend (auto-selects based on configuration)
+        search_backend = get_default_search_backend()
+
+        # Build search query
+        search_query = SearchQuery(
+            query=query,
+            search_type=SearchType.FULL_TEXT,
+            limit=limit,
+            offset=offset or 0,
+            include_score=True,
+        )
+
+        # Determine which indices to search based on resource type
+        indices_to_search = []
+        if resource_type:
+            # Search specific resource type across all tenants (or specific tenant)
+            if tenant_id:
+                indices_to_search.append(f"dotmac_{resource_type}_{tenant_id}")
+            else:
+                # For cross-tenant search, we would need to query all tenant indices
+                # This is a simplified implementation - in production you'd list all tenants
+                logger.warning(
+                    "cross_tenant_search.limited_implementation",
+                    message="Cross-tenant search without specific tenant uses in-memory backend only",
+                )
+                indices_to_search.append(resource_type)
+        else:
+            # Search all resource types
+            indices_to_search = ["customers", "subscribers", "invoices", "tickets", "users"]
+
+        # Aggregate results from all indices
+        all_results = []
+        for index_name in indices_to_search:
+            try:
+                response = await search_backend.search(index_name, search_query)
+                for result in response.results:
+                    all_results.append({
+                        "id": result.id,
+                        "type": result.type,
+                        "tenant_id": result.data.get("tenant_id", "unknown"),
+                        "resource_id": result.id,
+                        "score": result.score,
+                        "data": result.data,
+                    })
+            except Exception as e:
+                logger.warning(
+                    "search.index_error",
+                    index=index_name,
+                    error=str(e),
+                )
+                continue
+
+        # Sort by score descending
+        all_results.sort(key=lambda x: x.get("score", 0), reverse=True)
+
+        # Apply limit
+        limited_results = all_results[:limit]
+
+        return CrossTenantSearchResponse(
+            results=limited_results,
+            total=len(all_results),
+            query=query,
+        )
+
+    except Exception as e:
+        logger.error(
+            "cross_tenant_search.error",
+            query=query,
+            resource_type=resource_type,
+            error=str(e),
+        )
+        # Return empty results on error rather than failing
+        return CrossTenantSearchResponse(
+            results=[],
+            total=0,
+            query=query,
+        )
 
 
 @router.get("/audit/recent", response_model=PlatformAuditResponse)

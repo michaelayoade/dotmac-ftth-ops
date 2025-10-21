@@ -142,7 +142,7 @@ class TestPluginRouterEndpoints:
                 mock_response.return_value = {"schema": schema.model_dump(), "instance_id": None}
 
                 client = TestClient(app_with_router)
-                response = client.get("/api/v1/plugins/TestPlugin/schema")
+                client.get("/api/v1/plugins/TestPlugin/schema")
 
                 # The router should call PluginSchemaResponse with schema and instance_id
                 # This will fail in real code but we're testing the line is executed

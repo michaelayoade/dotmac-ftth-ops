@@ -16,7 +16,7 @@ from .service import WebhookSubscriptionService
 logger = structlog.get_logger(__name__)
 
 
-class EventSchema(BaseModel):
+class EventSchema(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for registering event types."""
 
     model_config = ConfigDict()

@@ -4,26 +4,26 @@
 
 // Status variant types
 export type StatusVariant =
-  | 'online'
-  | 'offline'
-  | 'maintenance'
-  | 'degraded'
-  | 'active'
-  | 'suspended'
-  | 'pending'
-  | 'paid'
-  | 'overdue'
-  | 'processing'
-  | 'critical'
-  | 'high'
-  | 'medium'
-  | 'low';
+  | "online"
+  | "offline"
+  | "maintenance"
+  | "degraded"
+  | "active"
+  | "suspended"
+  | "pending"
+  | "paid"
+  | "overdue"
+  | "processing"
+  | "critical"
+  | "high"
+  | "medium"
+  | "low";
 
-export type StatusSize = 'sm' | 'md' | 'lg';
+export type StatusSize = "sm" | "md" | "lg";
 
-export type ServiceTier = 'basic' | 'standard' | 'premium' | 'enterprise';
+export type ServiceTier = "basic" | "standard" | "premium" | "enterprise";
 
-export type AlertSeverity = 'info' | 'warning' | 'error' | 'critical';
+export type AlertSeverity = "info" | "warning" | "error" | "critical";
 
 // Status badge interfaces
 export interface StatusBadgeProps {
@@ -35,7 +35,7 @@ export interface StatusBadgeProps {
   showDot?: boolean;
   pulse?: boolean;
   onClick?: () => void;
-  'aria-label'?: string;
+  "aria-label"?: string;
 }
 
 // Status dot configuration
@@ -50,11 +50,11 @@ export interface UptimeIndicatorProps {
   uptime: number; // 0-100 percentage
   className?: string;
   showLabel?: boolean;
-  'aria-label'?: string;
+  "aria-label"?: string;
 }
 
 export interface UptimeStatus {
-  status: 'excellent' | 'good' | 'fair' | 'poor';
+  status: "excellent" | "good" | "fair" | "poor";
   color: string;
   bg: string;
   label: string;
@@ -66,23 +66,23 @@ export interface NetworkPerformanceProps {
   packetLoss: number; // percentage 0-100
   bandwidth: number; // percentage 0-100
   className?: string;
-  onMetricClick?: (metric: 'latency' | 'packetLoss' | 'bandwidth') => void;
+  onMetricClick?: (metric: "latency" | "packetLoss" | "bandwidth") => void;
 }
 
 export interface NetworkMetrics {
   latency: {
     value: number;
-    status: 'excellent' | 'good' | 'fair' | 'poor';
+    status: "excellent" | "good" | "fair" | "poor";
     variant: StatusVariant;
   };
   packetLoss: {
     value: number;
-    status: 'excellent' | 'good' | 'fair' | 'poor';
+    status: "excellent" | "good" | "fair" | "poor";
     variant: StatusVariant;
   };
   bandwidth: {
     value: number;
-    status: 'high' | 'medium' | 'low';
+    status: "high" | "medium" | "low";
     variant: StatusVariant;
   };
 }
@@ -92,7 +92,7 @@ export interface ServiceTierProps {
   tier: ServiceTier;
   className?: string;
   onClick?: () => void;
-  'aria-label'?: string;
+  "aria-label"?: string;
 }
 
 export interface ServiceTierConfig {
@@ -109,7 +109,7 @@ export interface AlertSeverityProps {
   timestamp?: Date;
   className?: string;
   onDismiss?: () => void;
-  'aria-label'?: string;
+  "aria-label"?: string;
 }
 
 export interface AlertSeverityConfig {
@@ -123,7 +123,7 @@ export interface AlertSeverityConfig {
 
 // Status configuration maps
 export interface StatusConfigurations {
-  uptime: Record<UptimeStatus['status'], UptimeStatus>;
+  uptime: Record<UptimeStatus["status"], UptimeStatus>;
   networkMetrics: {
     latency: Record<string, { variant: StatusVariant; label: string }>;
     packetLoss: Record<string, { variant: StatusVariant; label: string }>;

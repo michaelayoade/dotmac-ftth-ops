@@ -39,11 +39,16 @@ export function PartnerManagementView() {
     setIsDeleting(true);
     try {
       await deletePartner.mutateAsync(partnerToDelete);
-      logger.info("Partner deleted successfully", { partnerId: partnerToDelete });
+      logger.info("Partner deleted successfully", {
+        partnerId: partnerToDelete,
+      });
       setShowDeleteDialog(false);
       setPartnerToDelete(null);
     } catch (err) {
-      logger.error("Failed to delete partner", { partnerId: partnerToDelete, error: err });
+      logger.error("Failed to delete partner", {
+        partnerId: partnerToDelete,
+        error: err,
+      });
       alert("Failed to delete partner");
     } finally {
       setIsDeleting(false);
@@ -97,7 +102,10 @@ export function PartnerManagementView() {
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center">
         <div className="w-full md:w-64">
-          <label htmlFor="partner-status-filter" className="mb-2 block text-sm text-muted-foreground">
+          <label
+            htmlFor="partner-status-filter"
+            className="mb-2 block text-sm text-muted-foreground"
+          >
             Filter by status
           </label>
           <select

@@ -48,7 +48,7 @@ class TestHealthCheckerEdgeCases:
 
             # Should raise exception during client creation
             with pytest.raises(Exception, match="Client creation failed"):
-                with health_checker._get_redis_client("redis://localhost:6379") as client:
+                with health_checker._get_redis_client("redis://localhost:6379"):
                     pass
 
     def test_check_redis_url_with_different_redis_errors(self, health_checker):
@@ -199,7 +199,7 @@ class TestHealthCheckerEdgeCases:
             ("", "Unknown"),  # Empty URL
         ]
 
-        for broker_url, expected_type in edge_case_urls:
+        for broker_url, _expected_type in edge_case_urls:
             mock_settings.celery.broker_url = broker_url
 
             if "redis" in broker_url.lower():
@@ -300,7 +300,6 @@ class TestHealthCheckerEdgeCases:
             patch.object(health_checker, "check_celery_broker") as mock_celery,
             patch.object(health_checker, "check_observability") as mock_obs,
         ):
-
             # Mock return values
             mock_db.return_value = ServiceHealth("database", ServiceStatus.HEALTHY, required=True)
             mock_redis.return_value = ServiceHealth("redis", ServiceStatus.HEALTHY, required=True)
@@ -339,7 +338,6 @@ class TestHealthCheckerEdgeCases:
             patch.object(health_checker, "check_celery_broker") as mock_celery,
             patch.object(health_checker, "check_observability") as mock_obs,
         ):
-
             # Mock return values
             mock_db.return_value = ServiceHealth("database", ServiceStatus.HEALTHY, required=True)
             mock_redis.return_value = ServiceHealth("redis", ServiceStatus.HEALTHY, required=True)

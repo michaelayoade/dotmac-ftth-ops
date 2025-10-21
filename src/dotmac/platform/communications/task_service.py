@@ -5,7 +5,7 @@ from collections.abc import Callable, Coroutine
 from concurrent.futures import Future
 from datetime import UTC, datetime
 from smtplib import SMTPException
-from typing import Any, Protocol
+from typing import Any, Protocol, TypeVar
 from uuid import uuid4
 
 import structlog
@@ -18,6 +18,8 @@ from .email_service import EmailMessage, EmailResponse, get_email_service
 
 logger = structlog.get_logger(__name__)
 
+T = TypeVar("T")
+
 
 class EmailServiceProtocol(Protocol):
     """Protocol describing the subset of EmailService used by tasks."""
@@ -26,7 +28,7 @@ class EmailServiceProtocol(Protocol):
         """Send an email message."""
 
 
-class BulkEmailJob(BaseModel):
+class BulkEmailJob(BaseModel):  # BaseModel resolves to Any in isolation
     """Bulk email job model."""
 
     id: str = Field(default_factory=lambda: f"bulk_{uuid4().hex[:8]}")
@@ -38,7 +40,7 @@ class BulkEmailJob(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
 
-class BulkEmailResult(BaseModel):
+class BulkEmailResult(BaseModel):  # BaseModel resolves to Any in isolation
     """Bulk email job result."""
 
     model_config = ConfigDict()
@@ -58,7 +60,7 @@ class BulkEmailResult(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-def _run_async[T](coro: Coroutine[Any, Any, T]) -> T:
+def _run_async(coro: Coroutine[Any, Any, T]) -> T:
     """Execute an async coroutine from a synchronous Celery task."""
 
     try:
@@ -160,7 +162,7 @@ def _send_email_sync(email_service: EmailServiceProtocol, message: EmailMessage)
 # ---------------------------------------------------------------------------
 
 
-@celery_app.task(bind=True, name="send_bulk_email")
+@celery_app.task(bind=True, name="send_bulk_email")  # type: ignore[misc]
 def send_bulk_email_task(self: Any, job_data: dict[str, Any]) -> dict[str, Any]:
     """Celery task that delegates to the async bulk email processor."""
 
@@ -233,7 +235,7 @@ def send_bulk_email_task(self: Any, job_data: dict[str, Any]) -> dict[str, Any]:
         ).model_dump()
 
 
-@celery_app.task(name="send_single_email")
+@celery_app.task(name="send_single_email")  # type: ignore[misc]
 def send_single_email_task(message_data: dict[str, Any]) -> dict[str, Any]:
     """Celery task for a single email."""
 

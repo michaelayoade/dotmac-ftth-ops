@@ -150,7 +150,7 @@ async def update_category_settings(
 @router.post("/validate", response_model=SettingsValidationResult)
 async def validate_settings(
     category: SettingsCategory,
-    updates: dict,
+    updates: dict[str, Any],
     current_admin: UserInfo = Depends(require_permission("settings.read")),
 ) -> SettingsValidationResult:
     """
@@ -183,7 +183,7 @@ async def bulk_update_settings(
     request: Request,
     session: AsyncSession = Depends(get_session_dependency),
     current_admin: UserInfo = Depends(require_permission("settings.update")),
-) -> dict:
+) -> dict[str, Any]:
     """
     Update multiple settings categories at once.
 
@@ -284,7 +284,7 @@ async def restore_settings_backup(
     backup_id: str,
     session: AsyncSession = Depends(get_session_dependency),
     current_admin: UserInfo = Depends(require_permission("settings.restore")),
-) -> dict:
+) -> dict[str, Any]:
     """
     Restore settings from a backup.
 
@@ -358,7 +358,7 @@ async def get_audit_logs(
 async def export_settings(
     export_request: SettingsExportRequest,
     current_admin: UserInfo = Depends(require_permission("settings.export")),
-) -> dict:
+) -> dict[str, Any]:
     """
     Export settings to a specific format.
 
@@ -393,7 +393,7 @@ async def import_settings(
     request: Request,
     session: AsyncSession = Depends(get_session_dependency),
     current_admin: UserInfo = Depends(require_permission("settings.import")),
-) -> dict:
+) -> dict[str, Any]:
     """
     Import settings from external data.
 
@@ -502,7 +502,7 @@ async def reset_category_to_defaults(
 async def settings_health_check(
     session: AsyncSession = Depends(get_session_dependency),
     current_admin: UserInfo = Depends(require_permission("settings.read")),
-) -> dict:
+) -> dict[str, Any]:
     """
     Health check for settings management.
 

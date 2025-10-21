@@ -15,7 +15,8 @@ from jinja2 import TemplateSyntaxError, UndefinedError
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
-from dotmac.platform.auth.dependencies import UserInfo, get_current_user_optional
+from dotmac.platform.auth.dependencies import UserInfo
+from dotmac.platform.auth.rbac_dependencies import require_admin
 from dotmac.platform.db import get_async_db
 
 from .email_service import EmailMessage, EmailResponse, get_email_service
@@ -34,14 +35,22 @@ from .template_service import (
 
 logger = structlog.get_logger(__name__)
 
+
+def _safe_user_context(user: Any | None) -> tuple[str | None, str | None]:
+    """Return (user_id, tenant_id) tuples even when dependency injection is bypassed."""
+    if user is None:
+        return None, None
+    return getattr(user, "user_id", None), getattr(user, "tenant_id", None)
+
+
 # Create router
-router = APIRouter(tags=["Communications"])
+router = APIRouter(prefix="/communications", tags=["Communications"])
 
 
 # === Email Endpoints ===
 
 
-class EmailRequest(BaseModel):
+class EmailRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Email request model."""
 
     model_config = ConfigDict()
@@ -57,11 +66,12 @@ class EmailRequest(BaseModel):
 @router.post("/email/send", response_model=EmailResponse)
 async def send_email_endpoint(
     request: EmailRequest,
-    current_user: UserInfo | None = Depends(get_current_user_optional),
+    current_user: UserInfo | None = Depends(require_admin),
 ) -> EmailResponse:
     """Send a single email immediately."""
     try:
         email_service = get_email_service()
+        user_id, tenant_id = _safe_user_context(current_user)
 
         # Try to log communication if database is available
         log_entry = None
@@ -70,17 +80,12 @@ async def send_email_endpoint(
                 from uuid import UUID
 
                 metrics_service = get_metrics_service(db)
-                tenant_id = current_user.tenant_id if current_user else None
 
                 # Convert user_id to UUID if needed
                 user_id_uuid: UUID | None = None
-                if current_user and current_user.user_id:
+                if isinstance(user_id, str):
                     try:
-                        user_id_uuid = (
-                            UUID(current_user.user_id)
-                            if isinstance(current_user.user_id, str)
-                            else current_user.user_id
-                        )
+                        user_id_uuid = UUID(user_id)
                     except (ValueError, AttributeError):
                         user_id_uuid = None
 
@@ -133,6 +138,8 @@ async def send_email_endpoint(
             message_id=response.id,
             recipients=len(request.to),
             status=response.status,
+            user_id=user_id or "unknown",
+            tenant_id=tenant_id,
         )
 
         return response
@@ -149,9 +156,13 @@ async def send_email_endpoint(
 
 
 @router.post("/email/queue")
-async def queue_email_endpoint(request: EmailRequest) -> Any:
+async def queue_email_endpoint(
+    request: EmailRequest,
+    current_user: UserInfo | None = Depends(require_admin),
+) -> Any:
     """Queue an email for background sending."""
     try:
+        user_id, tenant_id = _safe_user_context(current_user)
         task_id = queue_email(
             to=request.to,
             subject=request.subject,
@@ -159,7 +170,13 @@ async def queue_email_endpoint(request: EmailRequest) -> Any:
             html_body=request.html_body,
         )
 
-        logger.info("Email queued", task_id=task_id, recipients=len(request.to))
+        logger.info(
+            "Email queued",
+            task_id=task_id,
+            recipients=len(request.to),
+            user_id=user_id or "unknown",
+            tenant_id=tenant_id,
+        )
 
         return {
             "task_id": task_id,
@@ -181,7 +198,7 @@ async def queue_email_endpoint(request: EmailRequest) -> Any:
 # === Template Endpoints ===
 
 
-class TemplateRequest(BaseModel):
+class TemplateRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Template creation request."""
 
     model_config = ConfigDict()
@@ -192,7 +209,7 @@ class TemplateRequest(BaseModel):
     html_template: str | None = Field(None, description="HTML template")
 
 
-class TemplateResponse(BaseModel):
+class TemplateResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Template response."""
 
     model_config = ConfigDict()
@@ -207,7 +224,9 @@ class TemplateResponse(BaseModel):
 
 
 @router.post("/templates", response_model=TemplateResponse)
-async def create_template_endpoint(request: TemplateRequest) -> Any:
+async def create_template_endpoint(
+    request: TemplateRequest, current_user: UserInfo = Depends(require_admin)
+) -> Any:
     """Create a new template."""
     try:
         template = create_template(
@@ -236,7 +255,9 @@ async def create_template_endpoint(request: TemplateRequest) -> Any:
 
 
 @router.get("/templates", response_model=list[TemplateResponse])
-async def list_templates_endpoint() -> Any:
+async def list_templates_endpoint(
+    current_user: UserInfo = Depends(require_admin),
+) -> Any:
     """List all templates."""
     service = get_template_service()
     templates = service.list_templates()
@@ -256,7 +277,9 @@ async def list_templates_endpoint() -> Any:
 
 
 @router.get("/templates/{template_id}", response_model=TemplateResponse)
-async def get_template_endpoint(template_id: str) -> Any:
+async def get_template_endpoint(
+    template_id: str, current_user: UserInfo = Depends(require_admin)
+) -> Any:
     """Get a specific template."""
     service = get_template_service()
     template = service.get_template(template_id)
@@ -275,7 +298,7 @@ async def get_template_endpoint(template_id: str) -> Any:
     )
 
 
-class RenderRequest(BaseModel):
+class RenderRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Template render request."""
 
     model_config = ConfigDict()
@@ -285,7 +308,9 @@ class RenderRequest(BaseModel):
 
 
 @router.post("/templates/render", response_model=RenderedTemplate)
-async def render_template_endpoint(request: RenderRequest) -> Any:
+async def render_template_endpoint(
+    request: RenderRequest, current_user: UserInfo = Depends(require_admin)
+) -> Any:
     """Render a template with data."""
     try:
         result = render_template(request.template_id, request.data)
@@ -299,7 +324,9 @@ async def render_template_endpoint(request: RenderRequest) -> Any:
 
 
 @router.delete("/templates/{template_id}")
-async def delete_template_endpoint(template_id: str) -> Any:
+async def delete_template_endpoint(
+    template_id: str, current_user: UserInfo = Depends(require_admin)
+) -> Any:
     """Delete a template."""
     service = get_template_service()
     deleted = service.delete_template(template_id)
@@ -313,7 +340,7 @@ async def delete_template_endpoint(template_id: str) -> Any:
 # === Bulk Email Endpoints ===
 
 
-class BulkEmailRequest(BaseModel):
+class BulkEmailRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Bulk email request."""
 
     model_config = ConfigDict()
@@ -323,8 +350,11 @@ class BulkEmailRequest(BaseModel):
 
 
 @router.post("/bulk-email/queue")
-async def queue_bulk_email_job(request: BulkEmailRequest) -> Any:
+async def queue_bulk_email_job(
+    request: BulkEmailRequest, current_user: UserInfo = Depends(require_admin)
+) -> Any:
     """Queue a bulk email job."""
+    user_id, tenant_id = _safe_user_context(current_user)
     try:
         messages = [
             EmailMessage(
@@ -341,11 +371,19 @@ async def queue_bulk_email_job(request: BulkEmailRequest) -> Any:
 
         job_id = queue_bulk_emails(request.job_name, messages)
 
-        return {
+        result = {
             "job_id": job_id,
             "status": "queued",
             "message": f"Bulk email job queued with {len(messages)} messages",
         }
+        logger.info(
+            "Bulk email job queued",
+            job_id=job_id,
+            message_count=len(messages),
+            user_id=user_id or "unknown",
+            tenant_id=tenant_id,
+        )
+        return result
 
     except ValidationError as exc:
         logger.error("Bulk email validation failed", errors=exc.errors())
@@ -359,8 +397,11 @@ async def queue_bulk_email_job(request: BulkEmailRequest) -> Any:
 
 
 @router.get("/bulk-email/status/{job_id}")
-async def get_bulk_email_status(job_id: str) -> Any:
+async def get_bulk_email_status(
+    job_id: str, current_user: UserInfo = Depends(require_admin)
+) -> Any:
     """Get bulk email job status."""
+    user_id, tenant_id = _safe_user_context(current_user)
     try:
         task_service = get_task_service()
         status = task_service.get_task_status(job_id)
@@ -376,8 +417,11 @@ async def get_bulk_email_status(job_id: str) -> Any:
 
 
 @router.post("/bulk-email/cancel/{job_id}")
-async def cancel_bulk_email_job(job_id: str) -> Any:
+async def cancel_bulk_email_job(
+    job_id: str, current_user: UserInfo = Depends(require_admin)
+) -> Any:
     """Cancel a bulk email job."""
+    user_id, tenant_id = _safe_user_context(current_user)
     try:
         task_service = get_task_service()
         cancelled = task_service.cancel_task(job_id)
@@ -393,7 +437,9 @@ async def cancel_bulk_email_job(job_id: str) -> Any:
 
 
 @router.get("/tasks/{task_id}")
-async def get_task_status(task_id: str) -> Any:
+async def get_task_status(
+    task_id: str, current_user: UserInfo = Depends(require_admin)
+) -> Any:
     """Get the status of a background task."""
     task_service = get_task_service()
     return task_service.get_task_status(task_id)
@@ -425,7 +471,7 @@ async def health_check() -> Any:
 # === Quick Utilities ===
 
 
-class QuickRenderRequest(BaseModel):
+class QuickRenderRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Quick template render request."""
 
     model_config = ConfigDict()
@@ -437,7 +483,9 @@ class QuickRenderRequest(BaseModel):
 
 
 @router.post("/quick-render")
-async def quick_render_endpoint(request: QuickRenderRequest) -> Any:
+async def quick_render_endpoint(
+    request: QuickRenderRequest, current_user: UserInfo = Depends(require_admin)
+) -> Any:
     """Quickly render templates from strings."""
     try:
         result = quick_render(
@@ -457,7 +505,7 @@ async def quick_render_endpoint(request: QuickRenderRequest) -> Any:
 # === Stats and Activity Endpoints ===
 
 
-class CommunicationStats(BaseModel):
+class CommunicationStats(BaseModel):  # BaseModel resolves to Any in isolation
     """Communication statistics model."""
 
     model_config = ConfigDict()
@@ -469,7 +517,7 @@ class CommunicationStats(BaseModel):
     last_updated: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
-class CommunicationActivity(BaseModel):
+class CommunicationActivity(BaseModel):  # BaseModel resolves to Any in isolation
     """Communication activity model."""
 
     model_config = ConfigDict()
@@ -480,20 +528,19 @@ class CommunicationActivity(BaseModel):
     subject: str | None = Field(None, description="Subject")
     status: str = Field(..., description="Status (sent/delivered/failed/pending)")
     timestamp: datetime = Field(..., description="Activity timestamp")
-    metadata: dict[str, Any] | None = Field(default_factory=dict)
+    metadata: dict[str, Any] | None = Field(default_factory=lambda: {})
 
 
 @router.get("/stats", response_model=CommunicationStats)
 async def get_communication_stats(
-    current_user: UserInfo | None = Depends(get_current_user_optional),
+    current_user: UserInfo = Depends(require_admin),
 ) -> CommunicationStats:
     """Get communication statistics."""
+    user_id, tenant_id = _safe_user_context(current_user)
     # Try to get real stats from database if available
     try:
         async with get_async_db() as db:
             metrics_service = get_metrics_service(db)
-
-            tenant_id = current_user.tenant_id if current_user else None
 
             stats_data = await metrics_service.get_stats(tenant_id=tenant_id)
 
@@ -516,7 +563,11 @@ async def get_communication_stats(
     # Return mock data when database is not available
     stats = CommunicationStats(sent=1234, delivered=1156, failed=23, pending=55)
 
-    logger.info("Communication stats retrieved (mock data)")
+    logger.info(
+        "Communication stats retrieved (mock data)",
+        user_id=user_id or "unknown",
+        tenant_id=tenant_id,
+    )
     return stats
 
 
@@ -525,15 +576,14 @@ async def get_recent_activity(
     limit: int = 10,
     offset: int = 0,
     type_filter: str | None = None,
-    current_user: UserInfo | None = Depends(get_current_user_optional),
+    current_user: UserInfo = Depends(require_admin),
 ) -> list[CommunicationActivity]:
     """Get recent communication activity."""
+    user_id, tenant_id = _safe_user_context(current_user)
     # Try to get real activity from database if available
     try:
         async with get_async_db() as db:
             metrics_service = get_metrics_service(db)
-
-            tenant_id = current_user.tenant_id if current_user else None
 
             # Parse type filter if provided
             comm_type = None
@@ -610,5 +660,10 @@ async def get_recent_activity(
 
     activities = activities[offset : offset + limit]
 
-    logger.info("Communication activity retrieved (mock data)", count=len(activities))
+    logger.info(
+        "Communication activity retrieved (mock data)",
+        count=len(activities),
+        user_id=user_id or "unknown",
+        tenant_id=tenant_id,
+    )
     return activities

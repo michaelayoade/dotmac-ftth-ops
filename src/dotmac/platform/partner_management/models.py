@@ -101,7 +101,7 @@ class ReferralStatus(str, Enum):
     INVALID = "invalid"  # Invalid/duplicate lead
 
 
-class Partner(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
+class Partner(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     Core partner model for SaaS vendors, agencies, and resellers.
     """
@@ -261,7 +261,7 @@ class Partner(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):
         return (self.converted_referrals / self.total_referrals) * 100
 
 
-class PartnerUser(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
+class PartnerUser(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type: ignore[misc]
     """
     Users within partner organizations with access to partner portal.
     """
@@ -320,7 +320,7 @@ class PartnerUser(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
         return f"{self.first_name} {self.last_name}"
 
 
-class PartnerAccount(Base, TimestampMixin, TenantMixin):
+class PartnerAccount(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Join table linking partners to customers they manage.
     """
@@ -388,7 +388,7 @@ class PartnerAccount(Base, TimestampMixin, TenantMixin):
     )
 
 
-class PartnerCommission(Base, TimestampMixin, TenantMixin):
+class PartnerCommission(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Commission rules and schedules for partners.
     Defines how commissions are calculated for different scenarios.
@@ -454,7 +454,7 @@ class PartnerCommission(Base, TimestampMixin, TenantMixin):
     )
 
 
-class PartnerCommissionEvent(Base, TimestampMixin, TenantMixin):
+class PartnerCommissionEvent(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Individual commission events tracking earnings.
     Created when invoices are finalized or other commission-triggering events occur.
@@ -552,7 +552,7 @@ class PartnerCommissionEvent(Base, TimestampMixin, TenantMixin):
     )
 
 
-class PartnerPayout(Base, TimestampMixin, TenantMixin):
+class PartnerPayout(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Payout batches aggregating multiple commission events.
 
@@ -650,7 +650,7 @@ class PartnerPayout(Base, TimestampMixin, TenantMixin):
     )
 
 
-class ReferralLead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
+class ReferralLead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type: ignore[misc]
     """
     Referral leads submitted by partners before customer conversion.
     """
@@ -673,7 +673,7 @@ class ReferralLead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):
     # Lead information
     company_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     contact_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    contact_email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    contact_email: Mapped[str] = mapped_column(String(255), nullable=False)
     contact_phone: Mapped[str | None] = mapped_column(String(30), nullable=True)
 
     # Referral details

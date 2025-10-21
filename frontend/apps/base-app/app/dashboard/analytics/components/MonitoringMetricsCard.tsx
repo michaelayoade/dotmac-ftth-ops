@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart } from '@/components/charts/LineChart';
-import { useMonitoringMetrics } from '@/lib/graphql/hooks';
-import { Activity, AlertTriangle, Clock, Users } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { LineChart } from "@/components/charts/LineChart";
+import { useMonitoringMetrics } from "@/lib/graphql/hooks";
+import { Activity, AlertTriangle, Clock, Users } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export function MonitoringMetricsCard({ period = '24h' }: { period?: string }) {
-  const { data, isLoading, error } = useMonitoringMetrics(period);
+export function MonitoringMetricsCard({ period = "24h" }: { period?: string }) {
+  const { data, isLoading, error } = useMonitoringMetrics();
 
   if (isLoading) {
     return (
@@ -38,11 +38,11 @@ export function MonitoringMetricsCard({ period = '24h' }: { period?: string }) {
     );
   }
 
-  const metrics = data?.monitoringMetrics;
-
-  if (!metrics) {
+  if (!data) {
     return null;
   }
+
+  const metrics = data;
 
   const formatPercent = (value: number) => {
     return `${(value * 100).toFixed(2)}%`;
@@ -98,9 +98,7 @@ export function MonitoringMetricsCard({ period = '24h' }: { period?: string }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{metrics.criticalErrors}</div>
-            <p className="text-xs text-muted-foreground">
-              {metrics.warningCount} warnings
-            </p>
+            <p className="text-xs text-muted-foreground">{metrics.warningCount} warnings</p>
           </CardContent>
         </Card>
       </div>
@@ -114,7 +112,7 @@ export function MonitoringMetricsCard({ period = '24h' }: { period?: string }) {
           </CardHeader>
           <CardContent>
             <LineChart
-              data={metrics.requestsTimeSeries.map(ts => ({
+              data={metrics.requestsTimeSeries.map((ts) => ({
                 label: ts.label,
                 value: ts.value,
               }))}
@@ -136,7 +134,7 @@ export function MonitoringMetricsCard({ period = '24h' }: { period?: string }) {
           </CardHeader>
           <CardContent>
             <LineChart
-              data={metrics.responseTimeTimeSeries.map(ts => ({
+              data={metrics.responseTimeTimeSeries.map((ts) => ({
                 label: ts.label,
                 value: ts.value,
               }))}
@@ -157,7 +155,7 @@ export function MonitoringMetricsCard({ period = '24h' }: { period?: string }) {
           </CardHeader>
           <CardContent>
             <LineChart
-              data={metrics.errorRateTimeSeries.map(ts => ({
+              data={metrics.errorRateTimeSeries.map((ts) => ({
                 label: ts.label,
                 value: ts.value * 100, // Convert to percentage
               }))}

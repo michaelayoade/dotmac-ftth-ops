@@ -5,9 +5,9 @@
  * ELIMINATES DUPLICATION - Single source of truth for business operations
  */
 
-import { useMemo, useCallback } from 'react';
-import { useApiClient } from './useApiClient';
-import { createISPBusinessService, type ISPBusinessOperations } from '../business/isp-operations';
+import { useMemo, useCallback } from "react";
+import { useApiClient } from "./useApiClient";
+import { createISPBusinessService, type ISPBusinessOperations } from "../business/isp-operations";
 import type {
   CustomerProfile,
   ServiceStatus,
@@ -26,10 +26,10 @@ import type {
   PaymentRequest,
   RevenueParams,
   InvoiceLineItem,
-} from '../business/isp-operations';
+} from "../business/isp-operations";
 
 export interface UseISPBusinessOptions {
-  portal?: 'admin' | 'customer' | 'reseller' | 'management' | 'technician';
+  portal?: "admin" | "customer" | "reseller" | "management" | "technician";
   tenantId?: string;
   resellerId?: string;
 }
@@ -55,7 +55,7 @@ export interface UseISPBusinessReturn extends ISPBusinessOperations {
     getMyCustomers: (resellerId: string) => Promise<CustomerProfile[]>;
     getResellerMetrics: (
       resellerId: string,
-      period: DateRange
+      period: DateRange,
     ) => Promise<{
       totalCustomers: number;
       activeCustomers: number;
@@ -82,7 +82,7 @@ export interface UseISPBusinessReturn extends ISPBusinessOperations {
     }>;
     bulkCustomerOperation: (
       customerIds: string[],
-      operation: 'suspend' | 'reactivate'
+      operation: "suspend" | "reactivate",
     ) => Promise<void>;
   };
 
@@ -95,8 +95,8 @@ export interface UseISPBusinessReturn extends ISPBusinessOperations {
       servicePerformance: any;
     }>;
     generateReports: (
-      type: 'financial' | 'operational' | 'customer',
-      period: DateRange
+      type: "financial" | "operational" | "customer",
+      period: DateRange,
     ) => Promise<any>;
   };
 }
@@ -107,7 +107,10 @@ export interface UseISPBusinessReturn extends ISPBusinessOperations {
  */
 export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusinessReturn {
   const { portal, tenantId, resellerId } = options;
-  const apiClient = useApiClient({ tenantId, metadata: { portal, resellerId } });
+  const apiClient = useApiClient({
+    tenantId,
+    metadata: { portal, resellerId },
+  });
 
   // Create the business service instance
   const businessService = useMemo(() => {
@@ -126,7 +129,9 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
       },
 
       getMyBills: async (customerId: string) => {
-        return businessService.customerService.getBillingHistory(customerId, { limit: 12 });
+        return businessService.customerService.getBillingHistory(customerId, {
+          limit: 12,
+        });
       },
 
       getMyServiceStatus: async (customerId: string) => {
@@ -142,7 +147,9 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
             startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
             endDate: new Date(),
           }),
-          businessService.customerService.getBillingHistory(customerId, { limit: 6 }),
+          businessService.customerService.getBillingHistory(customerId, {
+            limit: 6,
+          }),
         ]);
 
         return { profile, status, usage, bills };
@@ -151,7 +158,7 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
       getMyCustomers: async (resellerId: string) => {
         // This would be implemented to get customers by reseller
         const response = await apiClient.request<{ data: CustomerProfile[] }>(
-          `/resellers/${resellerId}/customers`
+          `/resellers/${resellerId}/customers`,
         );
         return response.data || [];
       },
@@ -159,20 +166,23 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
       getResellerMetrics: async (resellerId: string, period: DateRange) => {
         const [customers, revenue, commissions] = await Promise.all([
           apiClient.request<{ data: CustomerProfile[] }>(`/resellers/${resellerId}/customers`),
-          businessService.billingOperations.calculateRevenue({ ...period, resellerId }),
+          businessService.billingOperations.calculateRevenue({
+            ...period,
+            resellerId,
+          }),
           businessService.billingOperations.generateCommissions(resellerId, period),
         ]);
 
         const customerData = customers.data || [];
         return {
           totalCustomers: customerData.length,
-          activeCustomers: customerData.filter((c) => c.status === 'active').length,
+          activeCustomers: customerData.filter((c) => c.status === "active").length,
           revenue,
           commissions,
         };
       },
     }),
-    [businessService, apiClient]
+    [businessService, apiClient],
   );
 
   // Technician convenience operations
@@ -180,15 +190,18 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
     () => ({
       getWorkOrders: async (technicianId: string) => {
         const response = await apiClient.request<{ data: MaintenanceWindow[] }>(
-          `/technicians/${technicianId}/work-orders`
+          `/technicians/${technicianId}/work-orders`,
         );
         return response.data || [];
       },
 
       completeWorkOrder: async (workOrderId: string, notes: string) => {
         await apiClient.request(`/maintenance/${workOrderId}/complete`, {
-          method: 'POST',
-          body: JSON.stringify({ notes, completedAt: new Date().toISOString() }),
+          method: "POST",
+          body: JSON.stringify({
+            notes,
+            completedAt: new Date().toISOString(),
+          }),
         });
       },
 
@@ -198,13 +211,13 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
 
       getDeviceList: async (regionId?: string) => {
         const params = regionId ? { regionId } : {};
-        const response = await apiClient.request<{ data: DeviceStatus[] }>('/network/devices', {
+        const response = await apiClient.request<{ data: DeviceStatus[] }>("/network/devices", {
           params,
         });
         return response.data || [];
       },
     }),
-    [businessService, apiClient]
+    [businessService, apiClient],
   );
 
   // Admin convenience operations
@@ -213,7 +226,7 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
       getSystemOverview: async () => {
         const [networkHealth, customersResponse, revenue] = await Promise.all([
           businessService.networkOperations.getNetworkHealth(),
-          apiClient.request<{ data: { total: number } }>('/customers/count'),
+          apiClient.request<{ data: { total: number } }>("/customers/count"),
           businessService.billingOperations.calculateRevenue({
             dateRange: {
               startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -230,10 +243,10 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
         };
       },
 
-      bulkCustomerOperation: async (customerIds: string[], operation: 'suspend' | 'reactivate') => {
+      bulkCustomerOperation: async (customerIds: string[], operation: "suspend" | "reactivate") => {
         const promises = customerIds.map((customerId) => {
-          if (operation === 'suspend') {
-            return businessService.customerService.suspendService(customerId, 'Bulk admin action');
+          if (operation === "suspend") {
+            return businessService.customerService.suspendService(customerId, "Bulk admin action");
           } else {
             return businessService.customerService.reactivateService(customerId);
           }
@@ -242,7 +255,7 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
         await Promise.all(promises);
       },
     }),
-    [businessService, apiClient]
+    [businessService, apiClient],
   );
 
   // Management Portal operations
@@ -250,9 +263,11 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
     () => ({
       getDashboardData: async (period: DateRange) => {
         const [revenue, networkHealth, customerGrowthResponse] = await Promise.all([
-          businessService.billingOperations.calculateRevenue({ dateRange: period }),
+          businessService.billingOperations.calculateRevenue({
+            dateRange: period,
+          }),
           businessService.networkOperations.getNetworkHealth(),
-          apiClient.request<{ data: { growth: number } }>('/analytics/customer-growth', {
+          apiClient.request<{ data: { growth: number } }>("/analytics/customer-growth", {
             params: {
               startDate: period.startDate.toISOString(),
               endDate: period.endDate.toISOString(),
@@ -269,8 +284,8 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
       },
 
       generateReports: async (
-        type: 'financial' | 'operational' | 'customer',
-        period: DateRange
+        type: "financial" | "operational" | "customer",
+        period: DateRange,
       ) => {
         const response = await apiClient.request<{ data: any }>(`/reports/${type}`, {
           params: {
@@ -281,7 +296,7 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
         return response.data || {};
       },
     }),
-    [businessService, apiClient]
+    [businessService, apiClient],
   );
 
   return {
@@ -304,34 +319,34 @@ export function useISPBusiness(options: UseISPBusinessOptions = {}): UseISPBusin
  * Customer Portal optimized hook
  */
 export function useCustomerBusiness(customerId: string) {
-  const business = useISPBusiness({ portal: 'customer' });
+  const business = useISPBusiness({ portal: "customer" });
 
   return {
     ...business,
     // Pre-bound methods for customer portal
     getMyProfile: useCallback(
       () => business.customerOperations.getMyProfile(customerId),
-      [business, customerId]
+      [business, customerId],
     ),
     getMyUsage: useCallback(
       (period: DateRange) => business.customerOperations.getMyUsage(customerId, period),
-      [business, customerId]
+      [business, customerId],
     ),
     getMyBills: useCallback(
       () => business.customerOperations.getMyBills(customerId),
-      [business, customerId]
+      [business, customerId],
     ),
     getMyServiceStatus: useCallback(
       () => business.customerOperations.getMyServiceStatus(customerId),
-      [business, customerId]
+      [business, customerId],
     ),
     upgradeMyService: useCallback(
       (planId: string) => business.serviceOperations.upgradeService(customerId, planId),
-      [business, customerId]
+      [business, customerId],
     ),
     payBill: useCallback(
       (paymentRequest: PaymentRequest) => business.billingOperations.processPayment(paymentRequest),
-      [business]
+      [business],
     ),
   };
 }
@@ -340,33 +355,35 @@ export function useCustomerBusiness(customerId: string) {
  * Reseller Portal optimized hook
  */
 export function useResellerBusiness(resellerId: string) {
-  const business = useISPBusiness({ portal: 'reseller', resellerId });
+  const business = useISPBusiness({ portal: "reseller", resellerId });
 
   return {
     ...business,
     // Pre-bound methods for reseller portal
     getMyCustomers: useCallback(
       () => business.customerOperations.getMyCustomers(resellerId),
-      [business, resellerId]
+      [business, resellerId],
     ),
     getMyCommissions: useCallback(
       (period: DateRange) => business.billingOperations.generateCommissions(resellerId, period),
-      [business, resellerId]
+      [business, resellerId],
     ),
     getMyMetrics: useCallback(
       (period: DateRange) => business.customerOperations.getResellerMetrics(resellerId, period),
-      [business, resellerId]
+      [business, resellerId],
     ),
     addNewCustomer: useCallback(
       async (customerData: Partial<CustomerProfile>) => {
         // Implementation would be added
-        const response = await business.apiClient.request<{ data: CustomerProfile }>('/customers', {
-          method: 'POST',
+        const response = await business.apiClient.request<{
+          data: CustomerProfile;
+        }>("/customers", {
+          method: "POST",
           body: JSON.stringify({ ...customerData, resellerId }),
         });
         return response.data!;
       },
-      [business, resellerId]
+      [business, resellerId],
     ),
   };
 }
@@ -375,32 +392,32 @@ export function useResellerBusiness(resellerId: string) {
  * Technician Portal optimized hook
  */
 export function useTechnicianBusiness(technicianId: string) {
-  const business = useISPBusiness({ portal: 'technician' });
+  const business = useISPBusiness({ portal: "technician" });
 
   return {
     ...business,
     // Pre-bound methods for technician portal
     getMyWorkOrders: useCallback(
       () => business.technicianOperations.getWorkOrders(technicianId),
-      [business, technicianId]
+      [business, technicianId],
     ),
     completeWorkOrder: useCallback(
       (workOrderId: string, notes: string) =>
         business.technicianOperations.completeWorkOrder(workOrderId, notes),
-      [business]
+      [business],
     ),
     diagnoseCustomer: useCallback(
       (customerId: string) => business.technicianOperations.runDiagnostics(customerId),
-      [business]
+      [business],
     ),
     getMyDevices: useCallback(
       (regionId?: string) => business.technicianOperations.getDeviceList(regionId),
-      [business]
+      [business],
     ),
     scheduleJob: useCallback(
       (request: MaintenanceRequest) =>
         business.serviceOperations.scheduleMaintenanceWindow(request),
-      [business]
+      [business],
     ),
   };
 }
@@ -409,7 +426,7 @@ export function useTechnicianBusiness(technicianId: string) {
  * Admin Portal optimized hook
  */
 export function useAdminBusiness() {
-  const business = useISPBusiness({ portal: 'admin' });
+  const business = useISPBusiness({ portal: "admin" });
 
   return {
     ...business,
@@ -417,13 +434,13 @@ export function useAdminBusiness() {
     getSystemOverview: useCallback(() => business.adminOperations.getSystemOverview(), [business]),
     bulkSuspendCustomers: useCallback(
       (customerIds: string[]) =>
-        business.adminOperations.bulkCustomerOperation(customerIds, 'suspend'),
-      [business]
+        business.adminOperations.bulkCustomerOperation(customerIds, "suspend"),
+      [business],
     ),
     bulkReactivateCustomers: useCallback(
       (customerIds: string[]) =>
-        business.adminOperations.bulkCustomerOperation(customerIds, 'reactivate'),
-      [business]
+        business.adminOperations.bulkCustomerOperation(customerIds, "reactivate"),
+      [business],
     ),
     getNetworkHealth: useCallback(() => business.networkOperations.getNetworkHealth(), [business]),
     getAllAlerts: useCallback(() => business.networkOperations.getNetworkAlerts(), [business]),
@@ -434,26 +451,26 @@ export function useAdminBusiness() {
  * Management Portal optimized hook
  */
 export function useManagementBusiness() {
-  const business = useISPBusiness({ portal: 'management' });
+  const business = useISPBusiness({ portal: "management" });
 
   return {
     ...business,
     // Pre-bound methods for management portal
     getDashboard: useCallback(
       (period: DateRange) => business.managementOperations.getDashboardData(period),
-      [business]
+      [business],
     ),
     getFinancialReport: useCallback(
-      (period: DateRange) => business.managementOperations.generateReports('financial', period),
-      [business]
+      (period: DateRange) => business.managementOperations.generateReports("financial", period),
+      [business],
     ),
     getOperationalReport: useCallback(
-      (period: DateRange) => business.managementOperations.generateReports('operational', period),
-      [business]
+      (period: DateRange) => business.managementOperations.generateReports("operational", period),
+      [business],
     ),
     getCustomerReport: useCallback(
-      (period: DateRange) => business.managementOperations.generateReports('customer', period),
-      [business]
+      (period: DateRange) => business.managementOperations.generateReports("customer", period),
+      [business],
     ),
   };
 }
@@ -477,4 +494,4 @@ export type {
   PaymentRequest,
   RevenueParams,
   InvoiceLineItem,
-} from '../business/isp-operations';
+} from "../business/isp-operations";

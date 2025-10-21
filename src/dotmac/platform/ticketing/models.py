@@ -48,7 +48,24 @@ class TicketPriority(str, Enum):
     URGENT = "urgent"
 
 
-class Ticket(Base, TimestampMixin, TenantMixin, AuditMixin):
+class TicketType(str, Enum):
+    """ISP-specific ticket types for categorization and routing."""
+
+    GENERAL_INQUIRY = "general_inquiry"
+    BILLING_ISSUE = "billing_issue"
+    TECHNICAL_SUPPORT = "technical_support"
+    INSTALLATION_REQUEST = "installation_request"
+    OUTAGE_REPORT = "outage_report"
+    SERVICE_UPGRADE = "service_upgrade"
+    SERVICE_DOWNGRADE = "service_downgrade"
+    CANCELLATION_REQUEST = "cancellation_request"
+    EQUIPMENT_ISSUE = "equipment_issue"
+    SPEED_ISSUE = "speed_issue"
+    NETWORK_ISSUE = "network_issue"
+    CONNECTIVITY_ISSUE = "connectivity_issue"
+
+
+class Ticket(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]
     """
     Ticket record capturing the high-level support request.
 
@@ -126,6 +143,71 @@ class Ticket(Base, TimestampMixin, TenantMixin, AuditMixin):
         nullable=False,
     )
 
+    # ISP-Specific Fields
+    ticket_type: Mapped[TicketType | None] = mapped_column(
+        SQLEnum(TicketType),
+        nullable=True,
+        index=True,
+        comment="ISP-specific ticket categorization",
+    )
+    service_address: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+        comment="Service location address for field operations",
+    )
+    affected_services: Mapped[list[str]] = mapped_column(
+        JSON,
+        default=list,
+        nullable=False,
+        comment="List of affected services: internet, voip, tv, etc",
+    )
+    device_serial_numbers: Mapped[list[str]] = mapped_column(
+        JSON,
+        default=list,
+        nullable=False,
+        comment="Serial numbers of involved equipment",
+    )
+
+    # SLA Tracking
+    sla_due_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        index=True,
+        comment="SLA deadline for resolution",
+    )
+    sla_breached: Mapped[bool] = mapped_column(
+        default=False,
+        nullable=False,
+        index=True,
+        comment="Whether SLA was breached",
+    )
+    first_response_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Timestamp of first agent response",
+    )
+    resolution_time_minutes: Mapped[int | None] = mapped_column(
+        nullable=True,
+        comment="Total time to resolution in minutes",
+    )
+
+    # Escalation Tracking
+    escalation_level: Mapped[int] = mapped_column(
+        default=0,
+        nullable=False,
+        comment="Escalation tier: 0=L1, 1=L2, 2=L3, etc",
+    )
+    escalated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="When ticket was escalated",
+    )
+    escalated_to_user_id: Mapped[UUID | None] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        nullable=True,
+        comment="User ID ticket was escalated to",
+    )
+
     messages: Mapped[list[TicketMessage]] = relationship(
         "TicketMessage",
         back_populates="ticket",
@@ -136,6 +218,8 @@ class Ticket(Base, TimestampMixin, TenantMixin, AuditMixin):
     __table_args__ = (
         Index("ix_tickets_tenant_status", "tenant_id", "status"),
         Index("ix_tickets_partner_status", "partner_id", "status"),
+        Index("ix_tickets_tenant_type", "tenant_id", "ticket_type"),
+        Index("ix_tickets_sla_breach", "sla_breached", "sla_due_date"),
     )
 
     def __repr__(self) -> str:
@@ -145,7 +229,7 @@ class Ticket(Base, TimestampMixin, TenantMixin, AuditMixin):
         )
 
 
-class TicketMessage(Base, TimestampMixin, TenantMixin, AuditMixin):
+class TicketMessage(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]
     """
     Threaded message within a ticket conversation.
 
@@ -208,4 +292,5 @@ __all__ = [
     "TicketActorType",
     "TicketPriority",
     "TicketStatus",
+    "TicketType",
 ]

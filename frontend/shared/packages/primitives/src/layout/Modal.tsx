@@ -2,39 +2,39 @@
  * Refactored Modal component using composition pattern
  * Simplified interfaces for better testability
  */
-'use client';
+"use client";
 
-import { cva, type VariantProps } from 'class-variance-authority';
-import { clsx } from 'clsx';
-import React, { forwardRef, useCallback, useEffect, useState, useId } from 'react';
+import { cva, type VariantProps } from "class-variance-authority";
+import { clsx } from "clsx";
+import React, { forwardRef, useCallback, useEffect, useState, useId } from "react";
 
 // Modal variants
-const modalVariants = cva('modal-container', {
+const modalVariants = cva("modal-container", {
   variants: {
     size: {
-      sm: 'modal-sm',
-      md: 'modal-md',
-      lg: 'modal-lg',
-      xl: 'modal-xl',
-      full: 'modal-full',
+      sm: "modal-sm",
+      md: "modal-md",
+      lg: "modal-lg",
+      xl: "modal-xl",
+      full: "modal-full",
     },
     variant: {
-      default: 'modal-default',
-      centered: 'modal-centered',
-      drawer: 'modal-drawer',
-      sidebar: 'modal-sidebar',
+      default: "modal-default",
+      centered: "modal-centered",
+      drawer: "modal-drawer",
+      sidebar: "modal-sidebar",
     },
     state: {
-      closed: 'modal-closed',
-      opening: 'modal-opening',
-      open: 'modal-open',
-      closing: 'modal-closing',
+      closed: "modal-closed",
+      opening: "modal-opening",
+      open: "modal-open",
+      closing: "modal-closing",
     },
   },
   defaultVariants: {
-    size: 'md',
-    variant: 'default',
-    state: 'closed',
+    size: "md",
+    variant: "default",
+    state: "closed",
   },
 });
 
@@ -43,19 +43,19 @@ export const ModalFocusUtils = {
   //  // Removed - can't use hooks in objects
   getFocusableElements: (container: HTMLElement): HTMLElement[] => {
     const focusableSelectors = [
-      'button:not([disabled])',
-      'input:not([disabled])',
-      'select:not([disabled])',
-      'textarea:not([disabled])',
-      'a[href]',
+      "button:not([disabled])",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "a[href]",
       '[tabindex]:not([tabindex="-1"])',
-    ].join(',');
+    ].join(",");
 
     return Array.from(container.querySelectorAll(focusableSelectors));
   },
 
   trapFocus: (container: HTMLElement, event: KeyboardEvent) => {
-    if (event.key !== 'Tab') {
+    if (event.key !== "Tab") {
       return;
     }
 
@@ -137,20 +137,20 @@ export const ModalBackdrop = forwardRef<HTMLDivElement, ModalBackdropProps>(
           onClick?.();
         }
       },
-      [closeOnClick, onClick]
+      [closeOnClick, onClick],
     );
 
     return (
       <div
         ref={ref}
-        className={clsx('modal-backdrop', className)}
+        className={clsx("modal-backdrop", className)}
         onClick={handleClick}
-        onKeyDown={(e) => e.key === 'Enter' && handleClick}
+        onKeyDown={(e) => e.key === "Enter" && handleClick}
         data-testid={`${id}-modal-backdrop`}
         {...props}
       />
     );
-  }
+  },
 );
 
 // Modal content container
@@ -176,7 +176,7 @@ export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
       onClose,
       ...props
     },
-    ref
+    ref,
   ) => {
     const id = useId();
     const contentRef = React.useRef<HTMLDivElement>(null);
@@ -192,7 +192,7 @@ export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
       ModalFocusUtils.setInitialFocus(container);
 
       const handleKeyDown = (e: KeyboardEvent) => {
-        if (closeOnEscape && e.key === 'Escape') {
+        if (closeOnEscape && e.key === "Escape") {
           e.preventDefault();
           onClose?.();
           return;
@@ -203,16 +203,16 @@ export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
         }
       };
 
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
     }, [closeOnEscape, trapFocus, onClose, combinedRef]);
 
     return (
       <div
         ref={combinedRef}
-        className={clsx(modalVariants({ size, variant }), 'modal-content', className)}
-        role='dialog'
-        aria-modal='true'
+        className={clsx(modalVariants({ size, variant }), "modal-content", className)}
+        role="dialog"
+        aria-modal="true"
         tabIndex={-1}
         data-testid={`${id}-modal-content`}
         {...props}
@@ -221,19 +221,19 @@ export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
 
         {showClose && (
           <button
-            type='button'
-            className='modal-close'
+            type="button"
+            className="modal-close"
             onClick={onClose}
-            onKeyDown={(e) => e.key === 'Enter' && onClose}
-            aria-label='Close modal'
+            onKeyDown={(e) => e.key === "Enter" && onClose}
+            aria-label="Close modal"
             data-testid={`${id}-modal-close`}
           >
-            <span aria-hidden='true'>×</span>
+            <span aria-hidden="true">×</span>
           </button>
         )}
       </div>
     );
-  }
+  },
 );
 
 // Modal header component
@@ -242,34 +242,34 @@ export interface ModalHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export const ModalHeader = forwardRef<HTMLDivElement, ModalHeaderProps>(
-  ({ className, as: Component = 'div', children, ...props }, ref) => {
+  ({ className, as: Component = "div", children, ...props }, ref) => {
     return (
-      <Component ref={ref} className={clsx('modal-header', className)} {...props}>
+      <Component ref={ref} className={clsx("modal-header", className)} {...props}>
         {children}
       </Component>
     );
-  }
+  },
 );
 
 // Modal title component
 export interface ModalTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
-  as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+  as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 }
 
 export const ModalTitle = forwardRef<HTMLHeadingElement, ModalTitleProps>(
-  ({ className, as: Component = 'h2', children, ...props }, ref) => {
+  ({ className, as: Component = "h2", children, ...props }, ref) => {
     const id = useId();
     return (
       <Component
         ref={ref}
-        className={clsx('modal-title', className)}
+        className={clsx("modal-title", className)}
         data-testid={`${id}-modal-title`}
         {...props}
       >
         {children}
       </Component>
     );
-  }
+  },
 );
 
 // Modal description component
@@ -281,7 +281,7 @@ export const ModalDescription = forwardRef<
   return (
     <p
       ref={ref}
-      className={clsx('modal-description', className)}
+      className={clsx("modal-description", className)}
       data-testid={`${id}-modal-description`}
       {...props}
     >
@@ -297,14 +297,14 @@ export const ModalBody = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
     return (
       <div
         ref={ref}
-        className={clsx('modal-body', className)}
+        className={clsx("modal-body", className)}
         data-testid={`${id}-modal-body`}
         {...props}
       >
         {children}
       </div>
     );
-  }
+  },
 );
 
 // Modal footer component
@@ -314,14 +314,14 @@ export const ModalFooter = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLD
     return (
       <div
         ref={ref}
-        className={clsx('modal-footer', className)}
+        className={clsx("modal-footer", className)}
         data-testid={`${id}-modal-footer`}
         {...props}
       >
         {children}
       </div>
     );
-  }
+  },
 );
 
 // Modal trigger component
@@ -344,18 +344,18 @@ export const ModalTrigger = forwardRef<HTMLButtonElement, ModalTriggerProps>(
 
     return (
       <button
-        type='button'
+        type="button"
         ref={ref}
-        className={clsx('modal-trigger', className)}
+        className={clsx("modal-trigger", className)}
         onClick={onClick}
-        onKeyDown={(e) => e.key === 'Enter' && onClick}
+        onKeyDown={(e) => e.key === "Enter" && onClick}
         data-testid={`${id}-modal-trigger`}
         {...props}
       >
         {children}
       </button>
     );
-  }
+  },
 );
 
 // Main Modal component using composition
@@ -392,17 +392,17 @@ export const Modal: React.FC<ModalProps> = ({
         onOpenChange?.(newOpen);
       }
     },
-    [controlledOpen, onOpenChange, open]
+    [controlledOpen, onOpenChange, open],
   );
 
   useEffect(() => {
     const handleBodyScroll = () => {
-      document.body.style.overflow = isOpen ? 'hidden' : '';
+      document.body.style.overflow = isOpen ? "hidden" : "";
     };
 
     handleBodyScroll();
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     };
   }, [isOpen]);
 
@@ -436,19 +436,19 @@ export const Modal: React.FC<ModalProps> = ({
   });
 
   return (
-    <div className='modal-portal' data-testid={`${id}-modal-portal`}>
+    <div className="modal-portal" data-testid={`${id}-modal-portal`}>
       {childrenWithProps}
     </div>
   );
 };
 
 // Export display names
-ModalBackdrop.displayName = 'ModalBackdrop';
-ModalContent.displayName = 'ModalContent';
-ModalHeader.displayName = 'ModalHeader';
-ModalTitle.displayName = 'ModalTitle';
-ModalDescription.displayName = 'ModalDescription';
-ModalBody.displayName = 'ModalBody';
-ModalFooter.displayName = 'ModalFooter';
-ModalTrigger.displayName = 'ModalTrigger';
-Modal.displayName = 'Modal';
+ModalBackdrop.displayName = "ModalBackdrop";
+ModalContent.displayName = "ModalContent";
+ModalHeader.displayName = "ModalHeader";
+ModalTitle.displayName = "ModalTitle";
+ModalDescription.displayName = "ModalDescription";
+ModalBody.displayName = "ModalBody";
+ModalFooter.displayName = "ModalFooter";
+ModalTrigger.displayName = "ModalTrigger";
+Modal.displayName = "Modal";

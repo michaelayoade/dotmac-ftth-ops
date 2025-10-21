@@ -2,12 +2,12 @@
  * Live chat hook with Socket.IO integration and queue management
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { io, type Socket } from 'socket.io-client';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { io, type Socket } from "socket.io-client";
 
-import { getApiClient } from '@dotmac/headless/api';
-import { useAuthStore } from '@dotmac/headless/auth';
+import { getApiClient } from "@dotmac/headless/api";
+import { useAuthStore } from "@dotmac/headless/auth";
 
 export interface UseLiveChatOptions {
   portalType: PortalType;
@@ -24,7 +24,7 @@ export interface ChatState {
   isTyping: boolean;
   typingUsers: string[];
   unreadCount: number;
-  connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'error';
+  connectionStatus: "connecting" | "connected" | "disconnected" | "error";
 }
 
 export interface UseLiveChatResult extends ChatState {
@@ -65,16 +65,16 @@ export function useLiveChat(options: UseLiveChatOptions): UseLiveChatResult {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [connectionStatus, setConnectionStatus] = useState<
-    'connecting' | 'connected' | 'disconnected' | 'error'
-  >('disconnected');
+    "connecting" | "connected" | "disconnected" | "error"
+  >("disconnected");
 
   // Get active chat session
   const { data: activeSessions } = useQuery({
-    queryKey: ['chat', 'sessions', 'active', portalType, customerId || agentId],
+    queryKey: ["chat", "sessions", "active", portalType, customerId || agentId],
     queryFn: async () => {
       const response = await apiClient.getChatSessions({
         filters: {
-          status: 'active',
+          status: "active",
           ...(customerId && { customerId }),
           ...(agentId && { agentId }),
         },
@@ -100,16 +100,16 @@ export function useLiveChat(options: UseLiveChatOptions): UseLiveChatResult {
       return;
     }
 
-    setConnectionStatus('connecting');
+    setConnectionStatus("connecting");
 
-    const socket = io(process.env.NEXT_PUBLIC_CHAT_URL || 'ws://localhost:3001', {
+    const socket = io(process.env.NEXT_PUBLIC_CHAT_URL || "ws://localhost:3001", {
       auth: {
         token,
         userId: user.id,
         userType: portalType,
         tenantId: user.tenantId,
       },
-      transports: ['websocket'],
+      transports: ["websocket"],
       timeout: 20000,
       reconnectionAttempts: reconnectAttempts,
     });
@@ -117,26 +117,26 @@ export function useLiveChat(options: UseLiveChatOptions): UseLiveChatResult {
     socketRef.current = socket;
 
     // Connection events
-    socket.on('connect', () => {
+    socket.on("connect", () => {
       setIsConnected(true);
-      setConnectionStatus('connected');
+      setConnectionStatus("connected");
 
-      console.log('Chat connected');
+      console.log("Chat connected");
     });
 
-    socket.on('disconnect', (reason) => {
+    socket.on("disconnect", (reason) => {
       setIsConnected(false);
-      setConnectionStatus('disconnected');
+      setConnectionStatus("disconnected");
 
-      console.log('Chat disconnected:', reason);
+      console.log("Chat disconnected:", reason);
     });
 
-    socket.on('connect_error', (_error) => {
-      setConnectionStatus('error');
+    socket.on("connect_error", (_error) => {
+      setConnectionStatus("error");
     });
 
     // Chat events
-    socket.on('message', (message: ChatMessage) => {
+    socket.on("message", (message: ChatMessage) => {
       setMessages((prev) => [...prev, message]);
 
       // Increment unread count if message is not from current user
@@ -145,33 +145,33 @@ export function useLiveChat(options: UseLiveChatOptions): UseLiveChatResult {
       }
 
       // Update React Query cache
-      queryClient.invalidateQueries({ queryKey: ['chat', 'sessions'] });
+      queryClient.invalidateQueries({ queryKey: ["chat", "sessions"] });
     });
 
-    socket.on('typing_start', ({ userId, userName }: { userId: string; userName: string }) => {
+    socket.on("typing_start", ({ userId, userName }: { userId: string; userName: string }) => {
       if (userId !== user.id) {
         setTypingUsers((prev) => [...prev.filter((id) => id !== userId), userName]);
       }
     });
 
-    socket.on('typing_stop', ({ userId }: { userId: string }) => {
+    socket.on("typing_stop", ({ userId }: { userId: string }) => {
       setTypingUsers((prev) => prev.filter((name) => name !== userId));
     });
 
-    socket.on('session_updated', (updatedSession: ChatSession) => {
+    socket.on("session_updated", (updatedSession: ChatSession) => {
       setSession(updatedSession);
-      queryClient.invalidateQueries({ queryKey: ['chat', 'sessions'] });
+      queryClient.invalidateQueries({ queryKey: ["chat", "sessions"] });
     });
 
-    socket.on('session_ended', () => {
+    socket.on("session_ended", () => {
       setSession(null);
       setMessages([]);
-      queryClient.invalidateQueries({ queryKey: ['chat', 'sessions'] });
+      queryClient.invalidateQueries({ queryKey: ["chat", "sessions"] });
     });
 
     // Join appropriate room based on portal type
     if (session) {
-      socket.emit('join_chat', { sessionId: session.id });
+      socket.emit("join_chat", { sessionId: session.id });
     }
   }, [user, portalType, reconnectAttempts, session, queryClient]);
 
@@ -182,7 +182,7 @@ export function useLiveChat(options: UseLiveChatOptions): UseLiveChatResult {
       socketRef.current = null;
     }
     setIsConnected(false);
-    setConnectionStatus('disconnected');
+    setConnectionStatus("disconnected");
   }, []);
 
   // Auto-connect when enabled
@@ -200,14 +200,14 @@ export function useLiveChat(options: UseLiveChatOptions): UseLiveChatResult {
   const sendMessageMutation = useMutation({
     mutationFn: async ({ content, attachments }: { content: string; attachments?: File[] }) => {
       if (!session || !socketRef.current) {
-        throw new Error('No active chat session');
+        throw new Error("No active chat session");
       }
 
       // Upload attachments if any
       const uploadedAttachments = [];
       if (attachments && attachments.length > 0) {
         for (const file of attachments) {
-          const response = await apiClient.uploadFile(file, 'chat_attachment');
+          const response = await apiClient.uploadFile(file, "chat_attachment");
           uploadedAttachments.push({
             filename: file.name,
             fileSize: file.size,
@@ -217,24 +217,24 @@ export function useLiveChat(options: UseLiveChatOptions): UseLiveChatResult {
         }
       }
 
-      const message: Omit<ChatMessage, 'id' | 'timestamp' | 'status'> = {
+      const message: Omit<ChatMessage, "id" | "timestamp" | "status"> = {
         chatId: session.id,
         senderId: user?.id,
         senderName: user?.name,
-        senderType: portalType === 'admin' ? 'agent' : 'customer',
+        senderType: portalType === "admin" ? "agent" : "customer",
         content,
         attachments: uploadedAttachments,
       };
 
-      socketRef.current.emit('send_message', message);
+      socketRef.current.emit("send_message", message);
     },
   });
 
   // Start chat mutation
   const startChatMutation = useMutation({
     mutationFn: async (subject?: string) => {
-      if (!user || portalType === 'admin') {
-        throw new Error('Only customers and resellers can start chats');
+      if (!user || portalType === "admin") {
+        throw new Error("Only customers and resellers can start chats");
       }
 
       const response = await apiClient.createChatSession(user.id, subject);
@@ -243,11 +243,11 @@ export function useLiveChat(options: UseLiveChatOptions): UseLiveChatResult {
     onSuccess: (newSession) => {
       setSession(newSession);
       setMessages([]);
-      queryClient.invalidateQueries({ queryKey: ['chat', 'sessions'] });
+      queryClient.invalidateQueries({ queryKey: ["chat", "sessions"] });
 
       // Join the new chat room
       if (socketRef.current) {
-        socketRef.current.emit('join_chat', { sessionId: newSession.id });
+        socketRef.current.emit("join_chat", { sessionId: newSession.id });
       }
     },
   });
@@ -256,7 +256,7 @@ export function useLiveChat(options: UseLiveChatOptions): UseLiveChatResult {
   const endChatMutation = useMutation({
     mutationFn: async ({ rating, feedback }: { rating?: number; feedback?: string }) => {
       if (!session) {
-        throw new Error('No active chat session');
+        throw new Error("No active chat session");
       }
 
       const response = await apiClient.closeChatSession(session.id, rating, feedback);
@@ -266,11 +266,11 @@ export function useLiveChat(options: UseLiveChatOptions): UseLiveChatResult {
       setSession(null);
       setMessages([]);
       setUnreadCount(0);
-      queryClient.invalidateQueries({ queryKey: ['chat', 'sessions'] });
+      queryClient.invalidateQueries({ queryKey: ["chat", "sessions"] });
 
       // Leave the chat room
       if (socketRef.current && session) {
-        socketRef.current.emit('leave_chat', { sessionId: session.id });
+        socketRef.current.emit("leave_chat", { sessionId: session.id });
       }
     },
   });
@@ -279,38 +279,41 @@ export function useLiveChat(options: UseLiveChatOptions): UseLiveChatResult {
   const startTyping = useCallback(() => {
     if (socketRef.current && session && !isTyping) {
       setIsTyping(true);
-      socketRef.current.emit('typing_start', { sessionId: session.id });
+      socketRef.current.emit("typing_start", { sessionId: session.id });
     }
   }, [session, isTyping]);
 
   const stopTyping = useCallback(() => {
     if (socketRef.current && session && isTyping) {
       setIsTyping(false);
-      socketRef.current.emit('typing_stop', { sessionId: session.id });
+      socketRef.current.emit("typing_stop", { sessionId: session.id });
     }
   }, [session, isTyping]);
 
   // Agent functions
   const acceptChat = useCallback(
     async (sessionId: string) => {
-      if (portalType !== 'admin' || !socketRef.current) {
-        throw new Error('Only agents can accept chats');
+      if (portalType !== "admin" || !socketRef.current) {
+        throw new Error("Only agents can accept chats");
       }
 
-      socketRef.current.emit('accept_chat', { sessionId, agentId: user?.id });
+      socketRef.current.emit("accept_chat", { sessionId, agentId: user?.id });
     },
-    [portalType, user]
+    [portalType, user],
   );
 
   const transferChat = useCallback(
     async (sessionId: string, newAgentId: string) => {
-      if (portalType !== 'admin' || !socketRef.current) {
-        throw new Error('Only agents can transfer chats');
+      if (portalType !== "admin" || !socketRef.current) {
+        throw new Error("Only agents can transfer chats");
       }
 
-      socketRef.current.emit('transfer_chat', { sessionId, agentId: newAgentId });
+      socketRef.current.emit("transfer_chat", {
+        sessionId,
+        agentId: newAgentId,
+      });
     },
-    [portalType]
+    [portalType],
   );
 
   // Utility functions
@@ -318,16 +321,16 @@ export function useLiveChat(options: UseLiveChatOptions): UseLiveChatResult {
     setUnreadCount(0);
 
     if (socketRef.current && session) {
-      socketRef.current.emit('mark_read', { sessionId: session.id });
+      socketRef.current.emit("mark_read", { sessionId: session.id });
     }
   }, [session]);
 
   const uploadFile = useCallback(
     async (file: File): Promise<string> => {
-      const response = await apiClient.uploadFile(file, 'chat_attachment');
+      const response = await apiClient.uploadFile(file, "chat_attachment");
       return response.data.url;
     },
-    [apiClient]
+    [apiClient],
   );
 
   // Exposed functions
@@ -335,21 +338,21 @@ export function useLiveChat(options: UseLiveChatOptions): UseLiveChatResult {
     async (content: string, attachments?: File[]) => {
       await sendMessageMutation.mutateAsync({ content, attachments });
     },
-    [sendMessageMutation]
+    [sendMessageMutation],
   );
 
   const startChat = useCallback(
     async (subject?: string) => {
       await startChatMutation.mutateAsync(subject);
     },
-    [startChatMutation]
+    [startChatMutation],
   );
 
   const endChat = useCallback(
     async (rating?: number, feedback?: string) => {
       await endChatMutation.mutateAsync({ rating, feedback });
     },
-    [endChatMutation]
+    [endChatMutation],
   );
 
   return {

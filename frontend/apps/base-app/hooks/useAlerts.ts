@@ -1,5 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
-import { alertService, Alert, AlertStats, AlertSeverity, AlertCategory } from '@/lib/services/alert-service';
+import { useState, useEffect, useCallback } from "react";
+import {
+  alertService,
+  Alert,
+  AlertStats,
+  AlertSeverity,
+  AlertCategory,
+} from "@/lib/services/alert-service";
 
 export function useAlerts() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -13,8 +19,8 @@ export function useAlerts() {
       billing: 0,
       performance: 0,
       system: 0,
-      compliance: 0
-    }
+      compliance: 0,
+    },
   });
   const [loading, setLoading] = useState(true);
 
@@ -57,21 +63,21 @@ export function useAlerts() {
     dismissAlert,
     refreshAlerts,
     getAlertsBySeverity,
-    getAlertsByCategory
+    getAlertsByCategory,
   };
 }
 
 export function useCriticalAlerts() {
   const { alerts } = useAlerts();
-  return alerts.filter(alert => alert.severity === 'critical');
+  return alerts.filter((alert) => alert.severity === "critical");
 }
 
 export function useSecurityAlerts() {
   const { alerts } = useAlerts();
-  return alerts.filter(alert => alert.category === 'security');
+  return alerts.filter((alert) => alert.category === "security");
 }
 
 export function useBillingAlerts() {
   const { alerts } = useAlerts();
-  return alerts.filter(alert => alert.category === 'billing');
+  return alerts.filter((alert) => alert.category === "billing");
 }

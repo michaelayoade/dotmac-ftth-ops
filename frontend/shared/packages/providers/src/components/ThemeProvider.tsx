@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import type { PortalType } from '@dotmac/auth';
+import React from "react";
+import type { PortalType } from "@dotmac/auth";
 
 interface Props {
   children: React.ReactNode;
@@ -13,13 +13,13 @@ interface Props {
 export function ThemeProvider({ children, portal }: Props) {
   // Map portal to theme variant; keep minimal for now
   const variant =
-    portal === 'admin' || portal === 'management'
-      ? 'management'
-      : portal === 'reseller'
-        ? 'reseller'
-        : portal === 'technician'
-          ? 'technician'
-          : 'customer';
+    portal === "admin" || portal === "management"
+      ? "management"
+      : portal === "reseller"
+        ? "reseller"
+        : portal === "technician"
+          ? "technician"
+          : "customer";
 
   // Stub implementation - theme context would be provided here
   return <>{children}</>;

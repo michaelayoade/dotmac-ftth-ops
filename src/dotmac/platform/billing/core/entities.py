@@ -40,6 +40,8 @@ from .enums import (
     PaymentMethodStatus,
     PaymentMethodType,
     PaymentStatus,
+    ServiceStatus,
+    ServiceType,
     TransactionType,
 )
 
@@ -48,7 +50,7 @@ from .enums import (
 # ============================================================================
 
 
-class InvoiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin):
+class InvoiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin):  # type: ignore[misc]  # Mixin has type Any
     """Invoice database entity"""
 
     __tablename__ = "invoices"
@@ -120,7 +122,7 @@ class InvoiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin):
     )
 
 
-class InvoiceLineItemEntity(Base):
+class InvoiceLineItemEntity(Base):  # type: ignore[misc]  # Base has type Any
     """Invoice line item database entity"""
 
     __tablename__ = "invoice_line_items"
@@ -161,7 +163,7 @@ class InvoiceLineItemEntity(Base):
 # ============================================================================
 
 
-class PaymentEntity(Base, TenantMixin, TimestampMixin):
+class PaymentEntity(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  # Mixin has type Any
     """Payment database entity"""
 
     __tablename__ = "payments"
@@ -217,7 +219,7 @@ class PaymentEntity(Base, TenantMixin, TimestampMixin):
     )
 
 
-class PaymentInvoiceEntity(Base):
+class PaymentInvoiceEntity(Base):  # type: ignore[misc]  # Base has type Any
     """Payment-Invoice association table"""
 
     __tablename__ = "payment_invoices"
@@ -239,7 +241,7 @@ class PaymentInvoiceEntity(Base):
     invoice: Mapped[InvoiceEntity] = relationship(back_populates="payments")
 
 
-class PaymentMethodEntity(Base, TenantMixin, TimestampMixin, SoftDeleteMixin):
+class PaymentMethodEntity(Base, TenantMixin, TimestampMixin, SoftDeleteMixin):  # type: ignore[misc]  # Mixin has type Any
     """Payment method database entity"""
 
     __tablename__ = "payment_methods"
@@ -293,7 +295,7 @@ class PaymentMethodEntity(Base, TenantMixin, TimestampMixin, SoftDeleteMixin):
 # ============================================================================
 
 
-class TransactionEntity(Base, TenantMixin):
+class TransactionEntity(Base, TenantMixin):  # type: ignore[misc]  # Mixin has type Any
     """Transaction ledger database entity"""
 
     __tablename__ = "transactions"
@@ -337,7 +339,7 @@ class TransactionEntity(Base, TenantMixin):
 # ============================================================================
 
 
-class CreditNoteEntity(Base, TenantMixin, TimestampMixin, AuditMixin):
+class CreditNoteEntity(Base, TenantMixin, TimestampMixin, AuditMixin):  # type: ignore[misc]  # Mixin has type Any
     """Credit note database entity"""
 
     __tablename__ = "credit_notes"
@@ -402,7 +404,7 @@ class CreditNoteEntity(Base, TenantMixin, TimestampMixin, AuditMixin):
     )
 
 
-class CreditNoteLineItemEntity(Base):
+class CreditNoteLineItemEntity(Base):  # type: ignore[misc]  # Base has type Any
     """Credit note line item database entity"""
 
     __tablename__ = "credit_note_line_items"
@@ -439,7 +441,7 @@ class CreditNoteLineItemEntity(Base):
     credit_note: Mapped[CreditNoteEntity] = relationship(back_populates="line_items")
 
 
-class CreditApplicationEntity(Base, TenantMixin):
+class CreditApplicationEntity(Base, TenantMixin):  # type: ignore[misc]  # Mixin has type Any
     """Credit application database entity"""
 
     __tablename__ = "credit_applications"
@@ -480,7 +482,7 @@ class CreditApplicationEntity(Base, TenantMixin):
     )
 
 
-class CustomerCreditEntity(Base, TenantMixin, TimestampMixin):
+class CustomerCreditEntity(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  # Mixin has type Any
     """Customer credit balance database entity"""
 
     __tablename__ = "customer_credits"
@@ -506,3 +508,69 @@ class CustomerCreditEntity(Base, TenantMixin, TimestampMixin):
     extra_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
     # Composite primary key handled in __table_args__
+
+
+# ============================================================================
+# Service Entities
+# ============================================================================
+
+
+class ServiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin, SoftDeleteMixin):  # type: ignore[misc]  # Mixin has type Any
+    """Service database entity for tracking subscriber services"""
+
+    __tablename__ = "services"
+
+    service_id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4())
+    )
+
+    # References
+    customer_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    subscriber_id: Mapped[str | None] = mapped_column(String(255), index=True)
+    subscription_id: Mapped[str | None] = mapped_column(String(255), index=True)
+    plan_id: Mapped[str | None] = mapped_column(String(255), index=True)
+
+    # Service details
+    service_type: Mapped[ServiceType] = mapped_column(
+        Enum(ServiceType), nullable=False, default=ServiceType.BROADBAND
+    )
+    service_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    service_description: Mapped[str | None] = mapped_column(Text)
+
+    # Status
+    status: Mapped[ServiceStatus] = mapped_column(
+        Enum(ServiceStatus), nullable=False, default=ServiceStatus.PENDING, index=True
+    )
+
+    # Lifecycle timestamps
+    activated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    suspended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    terminated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    # Suspension details
+    suspension_reason: Mapped[str | None] = mapped_column(Text)
+    suspend_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    # Termination details
+    termination_reason: Mapped[str | None] = mapped_column(Text)
+
+    # Service configuration (flexible JSON for service-specific data)
+    bandwidth_mbps: Mapped[int | None] = mapped_column(Integer)
+    service_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+
+    # Pricing
+    monthly_price: Mapped[int | None] = mapped_column(Integer, comment="Price in minor units")
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="USD")
+
+    # Notes
+    notes: Mapped[str | None] = mapped_column(Text)
+    internal_notes: Mapped[str | None] = mapped_column(Text)
+
+    # Indexes and constraints
+    __table_args__: tuple[Any, ...] = (
+        Index("idx_service_tenant_customer", "tenant_id", "customer_id"),
+        Index("idx_service_tenant_subscriber", "tenant_id", "subscriber_id"),
+        Index("idx_service_tenant_status", "tenant_id", "status"),
+        Index("idx_service_tenant_type", "tenant_id", "service_type"),
+        {"extend_existing": True},
+    )

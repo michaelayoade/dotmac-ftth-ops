@@ -1,4 +1,4 @@
-import * as React from 'react';
+import * as React from "react";
 
 export interface SwitchProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   checked?: boolean;
@@ -6,27 +6,27 @@ export interface SwitchProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
-  ({ className = '', checked = false, onCheckedChange, ...props }, ref) => {
+  ({ className = "", checked = false, onCheckedChange, ...props }, ref) => {
     return (
       <button
         role="switch"
         aria-checked={checked}
         onClick={() => onCheckedChange?.(!checked)}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-          checked ? 'bg-primary' : 'bg-muted'
+          checked ? "bg-primary" : "bg-muted"
         } ${className}`}
         ref={ref}
         {...props}
       >
         <span
           className={`inline-block h-4 w-4 transform rounded-full bg-primary-foreground transition-transform ${
-            checked ? 'translate-x-6' : 'translate-x-1'
+            checked ? "translate-x-6" : "translate-x-1"
           }`}
         />
       </button>
     );
-  }
+  },
 );
-Switch.displayName = 'Switch';
+Switch.displayName = "Switch";
 
 export { Switch };

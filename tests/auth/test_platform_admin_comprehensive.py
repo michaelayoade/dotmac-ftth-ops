@@ -424,7 +424,7 @@ class TestPlatformAdminToken:
             mock_jwt.create_access_token.return_value = "mock-token"
 
             # Don't include platform:admin in permissions
-            token = create_platform_admin_token(
+            create_platform_admin_token(
                 user_id="admin-1",
                 email="admin@platform.com",
                 permissions=["read", "write"],  # No platform:admin here

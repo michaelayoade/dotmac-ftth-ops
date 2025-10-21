@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { platformConfig } from "@/lib/config";
 
-const API_BASE = platformConfig.apiBaseUrl;
+const API_BASE = platformConfig.api.baseUrl;
 
 export interface CreditNoteSummary {
   id: string;

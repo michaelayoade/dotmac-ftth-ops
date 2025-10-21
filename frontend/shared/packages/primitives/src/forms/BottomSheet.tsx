@@ -2,8 +2,8 @@
  * BottomSheet - A modal that slides up from the bottom
  */
 
-import * as React from 'react';
-import { clsx } from 'clsx';
+import * as React from "react";
+import { clsx } from "clsx";
 
 export interface BottomSheetProps {
   children: React.ReactNode;
@@ -19,20 +19,20 @@ export const BottomSheet = React.forwardRef<HTMLDivElement, BottomSheetProps>(
     // Handle escape key
     React.useEffect(() => {
       const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
+        if (e.key === "Escape") {
           onClose();
         }
       };
 
       if (isOpen) {
-        document.addEventListener('keydown', handleEscape);
+        document.addEventListener("keydown", handleEscape);
         // Prevent body scroll
-        document.body.style.overflow = 'hidden';
+        document.body.style.overflow = "hidden";
       }
 
       return () => {
-        document.removeEventListener('keydown', handleEscape);
-        document.body.style.overflow = '';
+        document.removeEventListener("keydown", handleEscape);
+        document.body.style.overflow = "";
       };
     }, [isOpen, onClose]);
 
@@ -48,17 +48,17 @@ export const BottomSheet = React.forwardRef<HTMLDivElement, BottomSheetProps>(
     return (
       <div
         ref={overlayRef}
-        className='fixed inset-0 z-50 bg-black/50 flex items-end'
+        className="fixed inset-0 z-50 bg-black/50 flex items-end"
         onClick={handleBackdropClick}
-        aria-modal='true'
-        role='dialog'
+        aria-modal="true"
+        role="dialog"
       >
         <div
           ref={ref}
           className={clsx(
-            'w-full max-h-[90vh] bg-white rounded-t-lg shadow-lg overflow-auto',
-            'animate-in slide-in-from-bottom duration-200',
-            className
+            "w-full max-h-[90vh] bg-white rounded-t-lg shadow-lg overflow-auto",
+            "animate-in slide-in-from-bottom duration-200",
+            className,
           )}
           onClick={(e) => e.stopPropagation()}
         >
@@ -66,7 +66,7 @@ export const BottomSheet = React.forwardRef<HTMLDivElement, BottomSheetProps>(
         </div>
       </div>
     );
-  }
+  },
 );
 
-BottomSheet.displayName = 'BottomSheet';
+BottomSheet.displayName = "BottomSheet";

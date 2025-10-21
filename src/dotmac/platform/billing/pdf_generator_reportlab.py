@@ -65,7 +65,7 @@ class ReportLabInvoiceGenerator:
         self.logo_path = logo_path
         self.styles = self._create_styles()
 
-    def _create_styles(self) -> dict:
+    def _create_styles(self) -> dict[str, Any]:
         """Create custom paragraph styles."""
         styles = getSampleStyleSheet()
 
@@ -210,7 +210,9 @@ class ReportLabInvoiceGenerator:
 
         return pdf_bytes
 
-    def _create_header(self, invoice: MoneyInvoice, company_info: dict | None) -> list:
+    def _create_header(
+        self, invoice: MoneyInvoice, company_info: dict[str, Any] | None
+    ) -> list[Any]:
         """Create invoice header with company info and invoice title."""
         story = []
 
@@ -266,7 +268,9 @@ class ReportLabInvoiceGenerator:
 
         return story
 
-    def _create_billing_section(self, invoice: MoneyInvoice, customer_info: dict | None) -> list:
+    def _create_billing_section(
+        self, invoice: MoneyInvoice, customer_info: dict[str, Any] | None
+    ) -> list[Any]:
         """Create billing details section."""
         story = []
 
@@ -310,7 +314,7 @@ class ReportLabInvoiceGenerator:
 
         return story
 
-    def _create_dates_section(self, invoice: MoneyInvoice) -> list:
+    def _create_dates_section(self, invoice: MoneyInvoice) -> list[Any]:
         """Create invoice dates section."""
         story = []
 
@@ -351,7 +355,7 @@ class ReportLabInvoiceGenerator:
 
         return story
 
-    def _create_line_items_table(self, invoice: MoneyInvoice, locale: str) -> list:
+    def _create_line_items_table(self, invoice: MoneyInvoice, locale: str) -> list[Any]:
         """Create line items table."""
         story = []
 
@@ -403,7 +407,7 @@ class ReportLabInvoiceGenerator:
 
         return story
 
-    def _create_totals_section(self, invoice: MoneyInvoice, locale: str) -> list:
+    def _create_totals_section(self, invoice: MoneyInvoice, locale: str) -> list[Any]:
         """Create totals section."""
         story = []
 
@@ -457,7 +461,7 @@ class ReportLabInvoiceGenerator:
 
         return story
 
-    def _create_payment_instructions(self, instructions: str) -> list:
+    def _create_payment_instructions(self, instructions: str) -> list[Any]:
         """Create payment instructions section."""
         story = []
 
@@ -484,7 +488,7 @@ class ReportLabInvoiceGenerator:
 
         return story
 
-    def _create_notes_section(self, notes: str) -> list:
+    def _create_notes_section(self, notes: str) -> list[Any]:
         """Create notes section."""
         story = []
 
@@ -511,7 +515,7 @@ class ReportLabInvoiceGenerator:
 
         return story
 
-    def _create_footer(self, company_info: dict | None) -> list:
+    def _create_footer(self, company_info: dict[str, Any] | None) -> list[Any]:
         """Create invoice footer."""
         story = []
 

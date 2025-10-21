@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 interface FeatureFlag {
   id: string;
@@ -19,12 +19,12 @@ interface FeatureFlag {
   lastModifiedBy: string;
   tags: string[];
 }
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -32,7 +32,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -41,22 +41,22 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ToggleLeft,
   ToggleRight,
@@ -77,125 +77,133 @@ import {
   RefreshCw,
   Code,
   Globe,
-} from 'lucide-react';
-import { toast } from '@/components/ui/toast';
-import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+} from "lucide-react";
+import { toast } from "@/components/ui/toast";
+import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 
 // Mock feature flags data
 const mockFeatureFlags = [
   {
-    id: '1',
-    name: 'new-dashboard-ui',
-    displayName: 'New Dashboard UI',
-    description: 'Enable the redesigned dashboard interface',
+    id: "1",
+    name: "new-dashboard-ui",
+    displayName: "New Dashboard UI",
+    description: "Enable the redesigned dashboard interface",
     enabled: true,
-    type: 'boolean',
-    environment: 'production',
-    targeting: 'all',
+    type: "boolean",
+    environment: "production",
+    targeting: "all",
     rolloutPercentage: 100,
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-20T15:30:00Z',
-    lastModifiedBy: 'admin@example.com',
-    tags: ['frontend', 'ui'],
+    createdAt: "2024-01-15T10:00:00Z",
+    updatedAt: "2024-01-20T15:30:00Z",
+    lastModifiedBy: "admin@example.com",
+    tags: ["frontend", "ui"],
   },
   {
-    id: '2',
-    name: 'advanced-analytics',
-    displayName: 'Advanced Analytics',
-    description: 'Enable advanced analytics features for premium users',
+    id: "2",
+    name: "advanced-analytics",
+    displayName: "Advanced Analytics",
+    description: "Enable advanced analytics features for premium users",
     enabled: true,
-    type: 'boolean',
-    environment: 'production',
-    targeting: 'segment',
-    segment: 'premium_users',
+    type: "boolean",
+    environment: "production",
+    targeting: "segment",
+    segment: "premium_users",
     rolloutPercentage: 100,
-    createdAt: '2024-01-10T10:00:00Z',
-    updatedAt: '2024-01-18T10:00:00Z',
-    lastModifiedBy: 'product@example.com',
-    tags: ['analytics', 'premium'],
+    createdAt: "2024-01-10T10:00:00Z",
+    updatedAt: "2024-01-18T10:00:00Z",
+    lastModifiedBy: "product@example.com",
+    tags: ["analytics", "premium"],
   },
   {
-    id: '3',
-    name: 'api-rate-limit',
-    displayName: 'API Rate Limiting',
-    description: 'Configure API rate limits per user tier',
+    id: "3",
+    name: "api-rate-limit",
+    displayName: "API Rate Limiting",
+    description: "Configure API rate limits per user tier",
     enabled: true,
-    type: 'number',
+    type: "number",
     value: 1000,
-    environment: 'production',
-    targeting: 'all',
-    createdAt: '2024-01-05T10:00:00Z',
-    updatedAt: '2024-01-05T10:00:00Z',
-    lastModifiedBy: 'engineering@example.com',
-    tags: ['api', 'performance'],
+    environment: "production",
+    targeting: "all",
+    createdAt: "2024-01-05T10:00:00Z",
+    updatedAt: "2024-01-05T10:00:00Z",
+    lastModifiedBy: "engineering@example.com",
+    tags: ["api", "performance"],
   },
   {
-    id: '4',
-    name: 'beta-features',
-    displayName: 'Beta Features',
-    description: 'Enable beta features for testing',
+    id: "4",
+    name: "beta-features",
+    displayName: "Beta Features",
+    description: "Enable beta features for testing",
     enabled: false,
-    type: 'boolean',
-    environment: 'staging',
-    targeting: 'percentage',
+    type: "boolean",
+    environment: "staging",
+    targeting: "percentage",
     rolloutPercentage: 25,
-    createdAt: '2024-01-20T10:00:00Z',
-    updatedAt: '2024-01-22T10:00:00Z',
-    lastModifiedBy: 'qa@example.com',
-    tags: ['beta', 'experimental'],
+    createdAt: "2024-01-20T10:00:00Z",
+    updatedAt: "2024-01-22T10:00:00Z",
+    lastModifiedBy: "qa@example.com",
+    tags: ["beta", "experimental"],
   },
   {
-    id: '5',
-    name: 'maintenance-mode',
-    displayName: 'Maintenance Mode',
-    description: 'Enable maintenance mode for the application',
+    id: "5",
+    name: "maintenance-mode",
+    displayName: "Maintenance Mode",
+    description: "Enable maintenance mode for the application",
     enabled: false,
-    type: 'boolean',
-    environment: 'production',
-    targeting: 'all',
-    createdAt: '2024-01-01T10:00:00Z',
-    updatedAt: '2024-01-01T10:00:00Z',
-    lastModifiedBy: 'ops@example.com',
-    tags: ['system', 'maintenance'],
+    type: "boolean",
+    environment: "production",
+    targeting: "all",
+    createdAt: "2024-01-01T10:00:00Z",
+    updatedAt: "2024-01-01T10:00:00Z",
+    lastModifiedBy: "ops@example.com",
+    tags: ["system", "maintenance"],
   },
 ];
 
 // Mock audit history
 const mockAuditHistory = [
   {
-    id: '1',
-    flagName: 'new-dashboard-ui',
-    action: 'enabled',
-    user: 'admin@example.com',
-    timestamp: '2024-01-20T15:30:00Z',
+    id: "1",
+    flagName: "new-dashboard-ui",
+    action: "enabled",
+    user: "admin@example.com",
+    timestamp: "2024-01-20T15:30:00Z",
     oldValue: false,
     newValue: true,
   },
   {
-    id: '2',
-    flagName: 'beta-features',
-    action: 'rollout_changed',
-    user: 'qa@example.com',
-    timestamp: '2024-01-22T10:00:00Z',
+    id: "2",
+    flagName: "beta-features",
+    action: "rollout_changed",
+    user: "qa@example.com",
+    timestamp: "2024-01-22T10:00:00Z",
     oldValue: 10,
     newValue: 25,
   },
   {
-    id: '3',
-    flagName: 'api-rate-limit',
-    action: 'value_changed',
-    user: 'engineering@example.com',
-    timestamp: '2024-01-05T10:00:00Z',
+    id: "3",
+    flagName: "api-rate-limit",
+    action: "value_changed",
+    user: "engineering@example.com",
+    timestamp: "2024-01-05T10:00:00Z",
     oldValue: 500,
     newValue: 1000,
   },
 ];
 
 export default function FeatureFlagsPage() {
-  const { flags: backendFlags, status, loading, error, toggleFlag, deleteFlag: deleteBackendFlag, refreshFlags } = useFeatureFlags();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterEnvironment, setFilterEnvironment] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const {
+    flags: backendFlags,
+    status,
+    loading,
+    error,
+    toggleFlag,
+    deleteFlag: deleteBackendFlag,
+    refreshFlags,
+  } = useFeatureFlags();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterEnvironment, setFilterEnvironment] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [selectedFlag, setSelectedFlag] = useState<FeatureFlag | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -203,55 +211,60 @@ export default function FeatureFlagsPage() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // Map backend flags to display format
-  const flags: FeatureFlag[] = backendFlags.map(flag => ({
+  const flags: FeatureFlag[] = backendFlags.map((flag) => ({
     id: flag.name,
     name: flag.name,
-    displayName: flag.name.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-    description: flag.description || 'No description provided',
+    displayName: flag.name.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
+    description: flag.description || "No description provided",
     enabled: flag.enabled,
-    type: 'boolean',
-    environment: 'production',
-    targeting: 'all',
+    type: "boolean",
+    environment: "production",
+    targeting: "all",
     segment: undefined,
     rolloutPercentage: flag.enabled ? 100 : 0,
-    createdAt: flag.created_at ? new Date(flag.created_at * 1000).toISOString() : new Date().toISOString(),
+    createdAt: flag.created_at
+      ? new Date(flag.created_at * 1000).toISOString()
+      : new Date().toISOString(),
     updatedAt: new Date(flag.updated_at * 1000).toISOString(),
-    lastModifiedBy: 'system',
+    lastModifiedBy: "system",
     tags: Object.keys(flag.context || {}),
   }));
 
   // New flag form state
   const [newFlag, setNewFlag] = useState({
-    name: '',
-    displayName: '',
-    description: '',
-    type: 'boolean',
+    name: "",
+    displayName: "",
+    description: "",
+    type: "boolean",
     enabled: false,
-    environment: 'staging',
-    targeting: 'all',
+    environment: "staging",
+    targeting: "all",
     rolloutPercentage: 100,
-    tags: '',
+    tags: "",
   });
 
   // Filter flags
-  const filteredFlags = flags.filter(flag => {
-    const matchesSearch = flag.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         flag.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         flag.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesEnvironment = filterEnvironment === 'all' || flag.environment === filterEnvironment;
-    const matchesStatus = filterStatus === 'all' ||
-                         (filterStatus === 'enabled' && flag.enabled) ||
-                         (filterStatus === 'disabled' && !flag.enabled);
+  const filteredFlags = flags.filter((flag) => {
+    const matchesSearch =
+      flag.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      flag.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      flag.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesEnvironment =
+      filterEnvironment === "all" || flag.environment === filterEnvironment;
+    const matchesStatus =
+      filterStatus === "all" ||
+      (filterStatus === "enabled" && flag.enabled) ||
+      (filterStatus === "disabled" && !flag.enabled);
     return matchesSearch && matchesEnvironment && matchesStatus;
   });
 
   const handleToggleFlag = async (flagId: string) => {
-    const flag = flags.find(f => f.id === flagId);
+    const flag = flags.find((f) => f.id === flagId);
     if (!flag) return;
 
     try {
       await toggleFlag(flagId, !flag.enabled);
-      toast.success(`Feature flag "${flag.displayName}" ${flag.enabled ? 'disabled' : 'enabled'}`);
+      toast.success(`Feature flag "${flag.displayName}" ${flag.enabled ? "disabled" : "enabled"}`);
     } catch (err) {
       toast.error(`Failed to toggle feature flag`);
     }
@@ -270,8 +283,11 @@ export default function FeatureFlagsPage() {
       rolloutPercentage: newFlag.rolloutPercentage,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      lastModifiedBy: 'current@user.com',
-      tags: newFlag.tags.split(',').map(t => t.trim()).filter(Boolean),
+      lastModifiedBy: "current@user.com",
+      tags: newFlag.tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
     };
 
     // Flag creation would happen via API call here
@@ -279,17 +295,17 @@ export default function FeatureFlagsPage() {
     refreshFlags();
     setIsCreateOpen(false);
     setNewFlag({
-      name: '',
-      displayName: '',
-      description: '',
-      type: 'boolean',
+      name: "",
+      displayName: "",
+      description: "",
+      type: "boolean",
       enabled: false,
-      environment: 'staging',
-      targeting: 'all',
+      environment: "staging",
+      targeting: "all",
       rolloutPercentage: 100,
-      tags: '',
+      tags: "",
     });
-    toast.success('Feature flag created successfully');
+    toast.success("Feature flag created successfully");
   };
 
   const handleUpdateFlag = () => {
@@ -299,7 +315,7 @@ export default function FeatureFlagsPage() {
     // Refresh flags to get updated list
     refreshFlags();
     setIsEditOpen(false);
-    toast.success('Feature flag updated successfully');
+    toast.success("Feature flag updated successfully");
   };
 
   const handleDeleteFlag = async () => {
@@ -309,9 +325,9 @@ export default function FeatureFlagsPage() {
       await deleteBackendFlag(selectedFlag.id);
       setIsDeleteOpen(false);
       setSelectedFlag(null);
-      toast.success('Feature flag deleted successfully');
+      toast.success("Feature flag deleted successfully");
     } catch (err) {
-      toast.error('Failed to delete feature flag');
+      toast.error("Failed to delete feature flag");
     }
   };
 
@@ -329,16 +345,16 @@ export default function FeatureFlagsPage() {
     // Flag duplication would happen via API call here
     // Refresh flags to get updated list
     refreshFlags();
-    toast.success('Feature flag duplicated successfully');
+    toast.success("Feature flag duplicated successfully");
   };
 
   const getEnvironmentBadge = (env: string) => {
     switch (env) {
-      case 'production':
+      case "production":
         return <Badge variant="destructive">{env}</Badge>;
-      case 'staging':
+      case "staging":
         return <Badge variant="secondary">{env}</Badge>;
-      case 'development':
+      case "development":
         return <Badge variant="outline">{env}</Badge>;
       default:
         return <Badge variant="outline">{env}</Badge>;
@@ -347,11 +363,11 @@ export default function FeatureFlagsPage() {
 
   const getTargetingIcon = (targeting: string) => {
     switch (targeting) {
-      case 'all':
+      case "all":
         return <Globe className="h-4 w-4" />;
-      case 'segment':
+      case "segment":
         return <Users className="h-4 w-4" />;
-      case 'percentage':
+      case "percentage":
         return <Percent className="h-4 w-4" />;
       default:
         return <Globe className="h-4 w-4" />;
@@ -452,7 +468,7 @@ export default function FeatureFlagsPage() {
                     <option value="percentage">Percentage Rollout</option>
                   </select>
                 </div>
-                {newFlag.targeting === 'percentage' && (
+                {newFlag.targeting === "percentage" && (
                   <div className="space-y-2">
                     <Label htmlFor="flag-percentage">Rollout Percentage</Label>
                     <Input
@@ -461,7 +477,12 @@ export default function FeatureFlagsPage() {
                       min="0"
                       max="100"
                       value={newFlag.rolloutPercentage}
-                      onChange={(e) => setNewFlag({ ...newFlag, rolloutPercentage: parseInt(e.target.value) })}
+                      onChange={(e) =>
+                        setNewFlag({
+                          ...newFlag,
+                          rolloutPercentage: parseInt(e.target.value),
+                        })
+                      }
                     />
                   </div>
                 )}
@@ -505,9 +526,7 @@ export default function FeatureFlagsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{flags.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Across all environments
-            </p>
+            <p className="text-xs text-muted-foreground">Across all environments</p>
           </CardContent>
         </Card>
 
@@ -517,12 +536,8 @@ export default function FeatureFlagsPage() {
             <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {flags.filter(f => f.enabled).length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Currently active
-            </p>
+            <div className="text-2xl font-bold">{flags.filter((f) => f.enabled).length}</div>
+            <p className="text-xs text-muted-foreground">Currently active</p>
           </CardContent>
         </Card>
 
@@ -533,11 +548,9 @@ export default function FeatureFlagsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {flags.filter(f => f.environment === 'production').length}
+              {flags.filter((f) => f.environment === "production").length}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Live in production
-            </p>
+            <p className="text-xs text-muted-foreground">Live in production</p>
           </CardContent>
         </Card>
 
@@ -548,11 +561,12 @@ export default function FeatureFlagsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {flags.filter(f => f.targeting === 'percentage' && f.rolloutPercentage < 100).length}
+              {
+                flags.filter((f) => f.targeting === "percentage" && f.rolloutPercentage < 100)
+                  .length
+              }
             </div>
-            <p className="text-xs text-muted-foreground">
-              Gradual deployments
-            </p>
+            <p className="text-xs text-muted-foreground">Gradual deployments</p>
           </CardContent>
         </Card>
       </div>
@@ -622,7 +636,9 @@ export default function FeatureFlagsPage() {
                         <div>
                           <div className="font-medium">{flag.displayName}</div>
                           <div className="text-sm text-muted-foreground">{flag.name}</div>
-                          <div className="text-xs text-muted-foreground mt-1">{flag.description}</div>
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {flag.description}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>{getEnvironmentBadge(flag.environment)}</TableCell>
@@ -630,9 +646,9 @@ export default function FeatureFlagsPage() {
                         <div className="flex items-center gap-2">
                           {getTargetingIcon(flag.targeting)}
                           <span className="text-sm">
-                            {flag.targeting === 'all' && 'All Users'}
-                            {flag.targeting === 'segment' && flag.segment}
-                            {flag.targeting === 'percentage' && `${flag.rolloutPercentage}%`}
+                            {flag.targeting === "all" && "All Users"}
+                            {flag.targeting === "segment" && flag.segment}
+                            {flag.targeting === "percentage" && `${flag.rolloutPercentage}%`}
                           </span>
                         </div>
                       </TableCell>
@@ -663,8 +679,8 @@ export default function FeatureFlagsPage() {
                             <Button
                               variant="ghost"
                               className="h-8 w-8 p-0"
-                              aria-label={`Open actions for ${flag.name ?? 'feature flag'}`}
-                              title={`Open actions for ${flag.name ?? 'feature flag'}`}
+                              aria-label={`Open actions for ${flag.name ?? "feature flag"}`}
+                              title={`Open actions for ${flag.name ?? "feature flag"}`}
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -680,9 +696,7 @@ export default function FeatureFlagsPage() {
                               <Edit className="h-4 w-4 mr-2" />
                               Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDuplicateFlag(flag)}
-                            >
+                            <DropdownMenuItem onClick={() => handleDuplicateFlag(flag)}>
                               <Copy className="h-4 w-4 mr-2" />
                               Duplicate
                             </DropdownMenuItem>
@@ -737,18 +751,20 @@ export default function FeatureFlagsPage() {
                 <TableBody>
                   {mockAuditHistory.map((entry) => (
                     <TableRow key={entry.id}>
-                      <TableCell>
-                        {new Date(entry.timestamp).toLocaleString()}
-                      </TableCell>
+                      <TableCell>{new Date(entry.timestamp).toLocaleString()}</TableCell>
                       <TableCell className="font-medium">{entry.flagName}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{entry.action}</Badge>
                       </TableCell>
                       <TableCell>{entry.user}</TableCell>
                       <TableCell>
-                        <span className="text-red-600 dark:text-red-400 line-through">{String(entry.oldValue)}</span>
-                        {' → '}
-                        <span className="text-green-600 dark:text-green-400">{String(entry.newValue)}</span>
+                        <span className="text-red-600 dark:text-red-400 line-through">
+                          {String(entry.oldValue)}
+                        </span>
+                        {" → "}
+                        <span className="text-green-600 dark:text-green-400">
+                          {String(entry.newValue)}
+                        </span>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -772,7 +788,7 @@ export default function FeatureFlagsPage() {
                   JavaScript/TypeScript
                 </h4>
                 <pre className="bg-muted p-4 rounded-md overflow-x-auto text-sm">
-{`import { getFeatureFlag } from '@dotmac/feature-flags';
+                  {`import { getFeatureFlag } from '@dotmac/feature-flags';
 
 // Check if a feature is enabled
 if (await getFeatureFlag('new-dashboard-ui')) {
@@ -795,7 +811,7 @@ console.log(\`Rate limit: \${rateLimit}\`);`}
                   Python
                 </h4>
                 <pre className="bg-muted p-4 rounded-md overflow-x-auto text-sm">
-{`from dotmac.feature_flags import get_flag
+                  {`from dotmac.feature_flags import get_flag
 
 # Check boolean flag
 if get_flag('new-dashboard-ui'):
@@ -815,7 +831,7 @@ print(f"Rate limit: {rate_limit}")`}
                   React Hook
                 </h4>
                 <pre className="bg-muted p-4 rounded-md overflow-x-auto text-sm">
-{`import { useFeatureFlag } from '@dotmac/react-feature-flags';
+                  {`import { useFeatureFlag } from '@dotmac/react-feature-flags';
 
 function MyComponent() {
   const { isEnabled, loading } = useFeatureFlag('new-dashboard-ui');

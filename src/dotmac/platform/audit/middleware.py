@@ -28,19 +28,34 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
         # Try to extract user information from the request
         # This needs to be done carefully to avoid circular dependencies
         try:
-            # Check if there's an Authorization header
+            # Check if there's an Authorization header or cookie
             auth_header = request.headers.get("Authorization")
             api_key = request.headers.get("X-API-Key")
 
-            if auth_header or api_key:
+            # Try to get JWT token from Authorization header or cookie
+            jwt_token = None
+            if auth_header and auth_header.startswith("Bearer "):
+                jwt_token = auth_header.split(" ")[1]
+            else:
+                # Fall back to cookie (for GraphQL, real-time, and browser requests)
+                cookie_token = None
+                cookies = getattr(request, "cookies", None)
+                if cookies:
+                    try:
+                        cookie_token = cookies.get("access_token")
+                    except Exception:
+                        cookie_token = None
+                if isinstance(cookie_token, str) and cookie_token:
+                    jwt_token = cookie_token
+
+            if jwt_token or api_key:
                 # Import here to avoid circular dependency
                 from ..auth.core import api_key_service, jwt_service
 
-                # Extract user info from JWT token
-                if auth_header and auth_header.startswith("Bearer "):
-                    token = auth_header.split(" ")[1]
+                # Extract user info from JWT token (header or cookie)
+                if jwt_token:
                     try:
-                        claims = jwt_service.verify_token(token)
+                        claims = jwt_service.verify_token(jwt_token)
                         request.state.user_id = claims.get("sub")
                         request.state.username = claims.get("username")
                         request.state.email = claims.get("email")

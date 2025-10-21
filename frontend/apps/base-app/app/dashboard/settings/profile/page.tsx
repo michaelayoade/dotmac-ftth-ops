@@ -1,22 +1,23 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -24,8 +25,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   User,
   Mail,
@@ -48,9 +49,9 @@ import {
   Trash2,
   Download,
   Clock,
-} from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import {
   useUpdateProfile,
   useChangePassword,
@@ -64,8 +65,8 @@ import {
   useListSessions,
   useRevokeSession,
   useRevokeAllSessions,
-} from '@/hooks/useProfile';
-import { logger } from '@/lib/logger';
+} from "@/hooks/useProfile";
+import { logger } from "@/lib/logger";
 
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:
@@ -84,64 +85,109 @@ export default function ProfileSettingsPage() {
   const verifyPhone = useVerifyPhone();
   const deleteAccount = useDeleteAccount();
   const exportData = useExportData();
+  const enable2FA = useEnable2FA();
+  const verify2FA = useVerify2FA();
+  const disable2FA = useDisable2FA();
   const [isEditing, setIsEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
   const [isSetup2FAOpen, setIsSetup2FAOpen] = useState(false);
+  const [isDisable2FAOpen, setIsDisable2FAOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [mfaEnabled, setMfaEnabled] = useState<boolean>(Boolean(user?.mfa_enabled));
+  const [twoFactorSetup, setTwoFactorSetup] = useState({
+    step: "password" as "password" | "verify",
+    password: "",
+    token: "",
+    qrCode: "",
+    secret: "",
+    backupCodes: [] as string[],
+    provisioningUri: "",
+  });
+  const [disable2FAForm, setDisable2FAForm] = useState({
+    password: "",
+    token: "",
+  });
 
   // Form states
   const [formData, setFormData] = useState({
-    first_name: user?.first_name || '',
-    last_name: user?.last_name || '',
-    email: user?.email || '',
-    username: user?.username || '',
-    phone: '',
-    location: '',
-    timezone: 'America/Los_Angeles',
-    language: 'en-US',
-    bio: '',
-    website: '',
+    first_name: user?.first_name || "",
+    last_name: user?.last_name || "",
+    email: user?.email || "",
+    username: user?.username || "",
+    phone: "",
+    location: "",
+    timezone: "America/Los_Angeles",
+    language: "en-US",
+    bio: "",
+    website: "",
   });
   const [passwordForm, setPasswordForm] = useState({
-    current: '',
-    new: '',
-    confirm: '',
+    current: "",
+    new: "",
+    confirm: "",
   });
 
   // Update formData when user changes
   useEffect(() => {
     if (user) {
       setFormData({
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        email: user.email || '',
-        username: user.username || '',
-        phone: '',
-        location: '',
-        timezone: 'America/Los_Angeles',
-        language: 'en-US',
-        bio: '',
-        website: '',
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+        email: user.email || "",
+        username: user.username || "",
+        phone: "",
+        location: "",
+        timezone: "America/Los_Angeles",
+        language: "en-US",
+        bio: "",
+        website: "",
       });
     }
   }, [user]);
 
+  useEffect(() => {
+    setMfaEnabled(Boolean(user?.mfa_enabled));
+  }, [user?.mfa_enabled]);
+
+  useEffect(() => {
+    if (!isSetup2FAOpen) {
+      setTwoFactorSetup({
+        step: "password",
+        password: "",
+        token: "",
+        qrCode: "",
+        secret: "",
+        backupCodes: [],
+        provisioningUri: "",
+      });
+    }
+  }, [isSetup2FAOpen]);
+
+  useEffect(() => {
+    if (!isDisable2FAOpen) {
+      setDisable2FAForm({ password: "", token: "" });
+    }
+  }, [isDisable2FAOpen]);
+
   const handleSaveProfile = async () => {
     setIsLoading(true);
     try {
-      logger.info('Saving profile', { formData });
+      logger.info("Saving profile", { formData });
       await updateProfile.mutateAsync(formData);
       await refreshUser();
       setIsEditing(false);
-      toast({ title: 'Success', description: 'Profile updated successfully' });
+      toast({ title: "Success", description: "Profile updated successfully" });
     } catch (error) {
-      logger.error('Failed to save profile', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Failed to save profile",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to update profile',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update profile",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -151,16 +197,16 @@ export default function ProfileSettingsPage() {
   const handleCancelEdit = () => {
     if (user) {
       setFormData({
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        email: user.email || '',
-        username: user.username || '',
-        phone: '',
-        location: '',
-        timezone: 'America/Los_Angeles',
-        language: 'en-US',
-        bio: '',
-        website: '',
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+        email: user.email || "",
+        username: user.username || "",
+        phone: "",
+        location: "",
+        timezone: "America/Los_Angeles",
+        language: "en-US",
+        bio: "",
+        website: "",
       });
     }
     setIsEditing(false);
@@ -168,26 +214,33 @@ export default function ProfileSettingsPage() {
 
   const handleChangePassword = async () => {
     if (passwordForm.new !== passwordForm.confirm) {
-      toast({ title: 'Error', description: 'New passwords do not match', variant: 'destructive' });
+      toast({
+        title: "Error",
+        description: "New passwords do not match",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsLoading(true);
     try {
-      logger.info('Changing password');
+      logger.info("Changing password");
       await changePassword.mutateAsync({
         current_password: passwordForm.current,
         new_password: passwordForm.new,
       });
       setIsChangePasswordOpen(false);
-      setPasswordForm({ current: '', new: '', confirm: '' });
-      toast({ title: 'Success', description: 'Password changed successfully' });
+      setPasswordForm({ current: "", new: "", confirm: "" });
+      toast({ title: "Success", description: "Password changed successfully" });
     } catch (error) {
-      logger.error('Failed to change password', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Failed to change password",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to change password',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to change password",
+        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -195,32 +248,175 @@ export default function ProfileSettingsPage() {
   };
 
   const handleEnable2FA = () => {
+    setTwoFactorSetup({
+      step: "password",
+      password: "",
+      token: "",
+      qrCode: "",
+      secret: "",
+      backupCodes: [],
+      provisioningUri: "",
+    });
     setIsSetup2FAOpen(true);
   };
 
-  const handleComplete2FASetup = () => {
-    // TODO: Implement 2FA setup with API
-    setIsSetup2FAOpen(false);
-    toast({ title: 'Success', description: 'Two-factor authentication enabled' });
+  const handleGenerate2FASetup = async () => {
+    const password = twoFactorSetup.password.trim();
+    if (!password) {
+      toast({
+        title: "Password required",
+        description: "Enter your current password to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const data = await enable2FA.mutateAsync({ password });
+      setTwoFactorSetup((prev) => ({
+        ...prev,
+        step: "verify",
+        qrCode: data.qr_code,
+        secret: data.secret,
+        backupCodes: data.backup_codes,
+        provisioningUri: data.provisioning_uri,
+        token: "",
+        password,
+      }));
+      toast({
+        title: "Verification required",
+        description: "Scan the QR code and enter the code from your authenticator app.",
+      });
+    } catch (error) {
+      logger.error(
+        "Failed to initiate 2FA setup",
+        error instanceof Error ? error : new Error(String(error)),
+      );
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Unable to start 2FA setup",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleComplete2FASetup = async () => {
+    if (twoFactorSetup.token.trim().length !== 6) {
+      toast({
+        title: "Invalid code",
+        description: "Enter the 6-digit code from your authenticator app.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await verify2FA.mutateAsync({ token: twoFactorSetup.token.trim() });
+      toast({
+        title: "Success",
+        description: "Two-factor authentication enabled",
+      });
+      setMfaEnabled(true);
+      setIsSetup2FAOpen(false);
+      await refreshUser();
+    } catch (error) {
+      logger.error(
+        "Failed to verify 2FA",
+        error instanceof Error ? error : new Error(String(error)),
+      );
+      toast({
+        title: "Verification failed",
+        description: error instanceof Error ? error.message : "Invalid verification code",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDisable2FA = () => {
-    // TODO: Implement 2FA disable with API
-    toast({ title: 'Success', description: 'Two-factor authentication disabled' });
+    setDisable2FAForm({ password: "", token: "" });
+    setIsDisable2FAOpen(true);
+  };
+
+  const handleConfirmDisable2FA = async () => {
+    if (!disable2FAForm.password || disable2FAForm.token.trim().length !== 6) {
+      toast({
+        title: "Incomplete form",
+        description: "Enter your password and a valid 6-digit code.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await disable2FA.mutateAsync({
+        password: disable2FAForm.password,
+        token: disable2FAForm.token.trim(),
+      });
+      toast({
+        title: "Success",
+        description: "Two-factor authentication disabled",
+      });
+      setMfaEnabled(false);
+      setIsDisable2FAOpen(false);
+      await refreshUser();
+    } catch (error) {
+      logger.error(
+        "Failed to disable 2FA",
+        error instanceof Error ? error : new Error(String(error)),
+      );
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Unable to disable 2FA",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCopyBackupCodes = async () => {
+    if (
+      !twoFactorSetup.backupCodes.length ||
+      typeof navigator === "undefined" ||
+      !navigator.clipboard
+    ) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(twoFactorSetup.backupCodes.join("\n"));
+      toast({
+        title: "Copied",
+        description: "Backup codes copied to clipboard",
+      });
+    } catch (error) {
+      logger.error(
+        "Failed to copy backup codes",
+        error instanceof Error ? error : new Error(String(error)),
+      );
+      toast({
+        title: "Copy failed",
+        description: "Unable to copy backup codes. Copy them manually instead.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleVerifyPhone = async () => {
     try {
-      logger.info('Verifying phone number', { phone: formData.phone });
+      logger.info("Verifying phone number", { phone: formData.phone });
       await verifyPhone.mutateAsync(formData.phone);
       await refreshUser();
-      toast({ title: 'Success', description: 'Phone number verified successfully' });
-    } catch (error) {
-      logger.error('Failed to verify phone', error instanceof Error ? error : new Error(String(error)));
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to verify phone',
-        variant: 'destructive',
+        title: "Success",
+        description: "Phone number verified successfully",
+      });
+    } catch (error) {
+      logger.error(
+        "Failed to verify phone",
+        error instanceof Error ? error : new Error(String(error)),
+      );
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to verify phone",
+        variant: "destructive",
       });
     }
   };
@@ -228,13 +424,16 @@ export default function ProfileSettingsPage() {
   const handleRevokeSession = async (sessionId: string) => {
     try {
       await revokeSession.mutateAsync(sessionId);
-      toast({ title: 'Success', description: 'Session revoked successfully' });
+      toast({ title: "Success", description: "Session revoked successfully" });
     } catch (error) {
-      logger.error('Failed to revoke session', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Failed to revoke session",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to revoke session',
-        variant: 'destructive',
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to revoke session",
+        variant: "destructive",
       });
     }
   };
@@ -242,13 +441,19 @@ export default function ProfileSettingsPage() {
   const handleRevokeAllSessions = async () => {
     try {
       await revokeAllSessions.mutateAsync();
-      toast({ title: 'Success', description: 'All other sessions revoked successfully' });
-    } catch (error) {
-      logger.error('Failed to revoke all sessions', error instanceof Error ? error : new Error(String(error)));
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to revoke sessions',
-        variant: 'destructive',
+        title: "Success",
+        description: "All other sessions revoked successfully",
+      });
+    } catch (error) {
+      logger.error(
+        "Failed to revoke all sessions",
+        error instanceof Error ? error : new Error(String(error)),
+      );
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to revoke sessions",
+        variant: "destructive",
       });
     }
   };
@@ -256,19 +461,25 @@ export default function ProfileSettingsPage() {
   const handleExportData = async () => {
     try {
       await exportData.mutateAsync();
-      toast({ title: 'Success', description: 'Profile data exported successfully' });
-    } catch (error) {
-      logger.error('Failed to export data', error instanceof Error ? error : new Error(String(error)));
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to export data',
-        variant: 'destructive',
+        title: "Success",
+        description: "Profile data exported successfully",
+      });
+    } catch (error) {
+      logger.error(
+        "Failed to export data",
+        error instanceof Error ? error : new Error(String(error)),
+      );
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to export data",
+        variant: "destructive",
       });
     }
   };
 
   const getInitials = (firstName?: string, lastName?: string) => {
-    if (!firstName || !lastName) return 'U';
+    if (!firstName || !lastName) return "U";
     return `${firstName[0]}${lastName[0]}`.toUpperCase();
   };
 
@@ -285,7 +496,9 @@ export default function ProfileSettingsPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Profile Settings</h1>
-        <p className="text-muted-foreground mt-2">Manage your personal information and account settings</p>
+        <p className="text-muted-foreground mt-2">
+          Manage your personal information and account settings
+        </p>
       </div>
 
       <Tabs defaultValue="profile" className="space-y-4">
@@ -518,21 +731,35 @@ export default function ProfileSettingsPage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                  <div className={`p-2 rounded-full bg-muted`}>
-                    <Shield className={`h-5 w-5 text-muted-foreground`} />
+                  <div
+                    className={`p-2 rounded-full ${
+                      mfaEnabled ? "bg-emerald-100 dark:bg-emerald-950/20" : "bg-muted"
+                    }`}
+                  >
+                    <Shield
+                      className={`h-5 w-5 ${
+                        mfaEnabled ? "text-emerald-500" : "text-muted-foreground"
+                      }`}
+                    />
                   </div>
                   <div>
                     <p className="font-medium">
-                      2FA is not enabled
+                      {mfaEnabled ? "2FA is enabled" : "2FA is not enabled"}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Secure your account with two-factor authentication
+                      {mfaEnabled
+                        ? `Backup codes remaining: ${user?.mfa_backup_codes_remaining ?? 0}`
+                        : "Secure your account with two-factor authentication"}
                     </p>
                   </div>
                 </div>
-                <Button onClick={handleEnable2FA}>
-                  Enable 2FA
-                </Button>
+                {mfaEnabled ? (
+                  <Button variant="outline" onClick={handleDisable2FA}>
+                    Disable 2FA
+                  </Button>
+                ) : (
+                  <Button onClick={handleEnable2FA}>Enable 2FA</Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -554,7 +781,9 @@ export default function ProfileSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Require password for sensitive actions</Label>
-                  <p className="text-sm text-muted-foreground">Ask for password when changing critical settings</p>
+                  <p className="text-sm text-muted-foreground">
+                    Ask for password when changing critical settings
+                  </p>
                 </div>
                 <Switch defaultChecked />
               </div>
@@ -575,17 +804,18 @@ export default function ProfileSettingsPage() {
               ) : sessionsData?.sessions && sessionsData.sessions.length > 0 ? (
                 <>
                   {sessionsData.sessions.map((session) => (
-                    <div key={session.session_id} className="flex justify-between items-start p-4 border rounded-lg">
+                    <div
+                      key={session.session_id}
+                      className="flex justify-between items-start p-4 border rounded-lg"
+                    >
                       <div className="flex items-start gap-3">
                         <div className="p-2 bg-muted rounded-full">
                           <Smartphone className="h-4 w-4" />
                         </div>
                         <div>
-                          <p className="font-medium">
-                            {session.user_agent || 'Unknown Device'}
-                          </p>
+                          <p className="font-medium">{session.user_agent || "Unknown Device"}</p>
                           <p className="text-sm text-muted-foreground">
-                            {session.ip_address || 'Unknown IP'}
+                            {session.ip_address || "Unknown IP"}
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
                             <Clock className="h-3 w-3 inline mr-1" />
@@ -641,7 +871,9 @@ export default function ProfileSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Profile visibility</Label>
-                  <p className="text-sm text-muted-foreground">Make your profile visible to others</p>
+                  <p className="text-sm text-muted-foreground">
+                    Make your profile visible to others
+                  </p>
                 </div>
                 <Switch defaultChecked />
               </div>
@@ -657,7 +889,9 @@ export default function ProfileSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Show activity status</Label>
-                  <p className="text-sm text-muted-foreground">Let others see when you&apos;re online</p>
+                  <p className="text-sm text-muted-foreground">
+                    Let others see when you&apos;re online
+                  </p>
                 </div>
                 <Switch defaultChecked />
               </div>
@@ -673,7 +907,9 @@ export default function ProfileSettingsPage() {
               <div className="flex justify-between items-center">
                 <div>
                   <p className="font-medium">Export your data</p>
-                  <p className="text-sm text-muted-foreground">Download all your profile information</p>
+                  <p className="text-sm text-muted-foreground">
+                    Download all your profile information
+                  </p>
                 </div>
                 <Button variant="outline" onClick={handleExportData}>
                   <Download className="h-4 w-4 mr-2" />
@@ -684,12 +920,11 @@ export default function ProfileSettingsPage() {
               <div className="flex justify-between items-center">
                 <div>
                   <p className="font-medium text-red-600 dark:text-red-400">Delete account</p>
-                  <p className="text-sm text-muted-foreground">Permanently delete your account and data</p>
+                  <p className="text-sm text-muted-foreground">
+                    Permanently delete your account and data
+                  </p>
                 </div>
-                <Button
-                  variant="destructive"
-                  onClick={() => setIsDeleteAccountOpen(true)}
-                >
+                <Button variant="destructive" onClick={() => setIsDeleteAccountOpen(true)}>
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </Button>
@@ -726,9 +961,7 @@ export default function ProfileSettingsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Change Password</DialogTitle>
-            <DialogDescription>
-              Enter your current password and choose a new one
-            </DialogDescription>
+            <DialogDescription>Enter your current password and choose a new one</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -736,9 +969,14 @@ export default function ProfileSettingsPage() {
               <div className="relative">
                 <Input
                   id="current-password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   value={passwordForm.current}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                  onChange={(e) =>
+                    setPasswordForm({
+                      ...passwordForm,
+                      current: e.target.value,
+                    })
+                  }
                 />
                 <Button
                   type="button"
@@ -781,37 +1019,193 @@ export default function ProfileSettingsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 2FA Setup Dialog */}
-      <Dialog open={isSetup2FAOpen} onOpenChange={setIsSetup2FAOpen}>
+      {/* Disable 2FA Dialog */}
+      <Dialog open={isDisable2FAOpen} onOpenChange={setIsDisable2FAOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Enable Two-Factor Authentication</DialogTitle>
+            <DialogTitle>Disable Two-Factor Authentication</DialogTitle>
             <DialogDescription>
-              Scan this QR code with your authenticator app
+              Enter your password and a code from your authenticator app to disable 2FA.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="bg-card p-4 rounded-lg flex justify-center">
-              <div className="h-48 w-48 bg-muted rounded flex items-center justify-center">
-                <span className="text-muted-foreground">QR Code</span>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="disable-2fa-password">Current password</Label>
+              <Input
+                id="disable-2fa-password"
+                type="password"
+                placeholder="Enter your password"
+                autoComplete="current-password"
+                value={disable2FAForm.password}
+                onChange={(e) =>
+                  setDisable2FAForm((prev) => ({
+                    ...prev,
+                    password: e.target.value,
+                  }))
+                }
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="2fa-code">Enter verification code</Label>
+              <Label htmlFor="disable-2fa-token">Authenticator code</Label>
               <Input
-                id="2fa-code"
+                id="disable-2fa-token"
                 placeholder="000000"
+                inputMode="numeric"
                 maxLength={6}
+                value={disable2FAForm.token}
+                onChange={(e) =>
+                  setDisable2FAForm((prev) => ({
+                    ...prev,
+                    token: e.target.value.replace(/\D/g, "").slice(0, 6),
+                  }))
+                }
               />
             </div>
           </div>
           <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDisable2FAOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDisable2FA}
+              disabled={
+                disable2FA.isPending ||
+                !disable2FAForm.password ||
+                disable2FAForm.token.length !== 6
+              }
+            >
+              {disable2FA.isPending ? "Disabling…" : "Disable 2FA"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 2FA Setup Dialog */}
+      <Dialog open={isSetup2FAOpen} onOpenChange={setIsSetup2FAOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {twoFactorSetup.step === "password"
+                ? "Enable Two-Factor Authentication"
+                : "Verify Two-Factor Authentication"}
+            </DialogTitle>
+            <DialogDescription>
+              {twoFactorSetup.step === "password"
+                ? "Enter your password to generate a QR code for your authenticator app."
+                : "Scan the QR code and enter the 6-digit code from your authenticator app."}
+            </DialogDescription>
+          </DialogHeader>
+
+          {twoFactorSetup.step === "password" ? (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="2fa-password">Current password</Label>
+                <Input
+                  id="2fa-password"
+                  type="password"
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  value={twoFactorSetup.password}
+                  onChange={(e) =>
+                    setTwoFactorSetup((prev) => ({
+                      ...prev,
+                      password: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              <div className="bg-card p-4 rounded-lg flex justify-center">
+                {twoFactorSetup.qrCode ? (
+                  <Image
+                    unoptimized
+                    src={twoFactorSetup.qrCode}
+                    alt="2FA QR code"
+                    width={192}
+                    height={192}
+                    className="h-48 w-48"
+                  />
+                ) : (
+                  <div className="h-48 w-48 bg-muted rounded flex items-center justify-center">
+                    <span className="text-muted-foreground">QR Code unavailable</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Manual entry key</Label>
+                <code className="block rounded bg-muted px-3 py-2 text-sm">
+                  {twoFactorSetup.secret || "—"}
+                </code>
+                {twoFactorSetup.provisioningUri && (
+                  <p className="text-xs text-muted-foreground break-all">
+                    {twoFactorSetup.provisioningUri}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  If you cannot scan the QR code, enter this key manually in your authenticator app.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Backup codes</Label>
+                <div className="grid grid-cols-2 gap-2 rounded border border-border/60 bg-card/40 p-3 text-sm font-mono">
+                  {twoFactorSetup.backupCodes.map((code) => (
+                    <span key={code}>{code}</span>
+                  ))}
+                </div>
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm" onClick={handleCopyBackupCodes}>
+                    Copy backup codes
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Store these backup codes securely. They will not be shown again.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="2fa-code">Verification code</Label>
+                <Input
+                  id="2fa-code"
+                  placeholder="000000"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={twoFactorSetup.token}
+                  onChange={(e) =>
+                    setTwoFactorSetup((prev) => ({
+                      ...prev,
+                      token: e.target.value.replace(/\D/g, "").slice(0, 6),
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
             <Button variant="outline" onClick={() => setIsSetup2FAOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleComplete2FASetup}>
-              Enable 2FA
-            </Button>
+            {twoFactorSetup.step === "password" ? (
+              <Button
+                onClick={handleGenerate2FASetup}
+                disabled={!twoFactorSetup.password || enable2FA.isPending}
+              >
+                {enable2FA.isPending ? "Generating…" : "Continue"}
+              </Button>
+            ) : (
+              <Button
+                onClick={handleComplete2FASetup}
+                disabled={twoFactorSetup.token.length !== 6 || verify2FA.isPending}
+              >
+                {verify2FA.isPending ? "Enabling…" : "Enable 2FA"}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -847,7 +1241,12 @@ export default function ProfileSettingsPage() {
                   type="password"
                   placeholder="Enter your password"
                   value={passwordForm.current}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                  onChange={(e) =>
+                    setPasswordForm({
+                      ...passwordForm,
+                      current: e.target.value,
+                    })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -858,7 +1257,12 @@ export default function ProfileSettingsPage() {
                   id="confirm-delete"
                   placeholder="Type DELETE"
                   value={passwordForm.confirm}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                  onChange={(e) =>
+                    setPasswordForm({
+                      ...passwordForm,
+                      confirm: e.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -878,9 +1282,10 @@ export default function ProfileSettingsPage() {
                   });
                 } catch (error) {
                   toast({
-                    title: 'Error',
-                    description: error instanceof Error ? error.message : 'Failed to delete account',
-                    variant: 'destructive',
+                    title: "Error",
+                    description:
+                      error instanceof Error ? error.message : "Failed to delete account",
+                    variant: "destructive",
                   });
                 }
               }}

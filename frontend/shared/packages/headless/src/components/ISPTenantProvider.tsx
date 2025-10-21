@@ -3,9 +3,9 @@
  * Provides multi-tenant context to the entire application
  */
 
-import { ReactNode, useEffect } from 'react';
-import { ISPTenantContext, useISPTenantProvider } from '../hooks/useISPTenant';
-import { usePortalIdAuth } from '../hooks/usePortalIdAuth';
+import { ReactNode, useEffect } from "react";
+import { ISPTenantContext, useISPTenantProvider } from "../hooks/useISPTenant";
+import { usePortalIdAuth } from "../hooks/usePortalIdAuth";
 
 interface ISPTenantProviderProps {
   children: ReactNode;
@@ -44,7 +44,7 @@ export function ISPTenantProvider({
 
     if (targetTenantId) {
       tenantHook.loadTenant(targetTenantId).catch((err) => {
-        console.error('Failed to auto-load tenant:', err);
+        console.error("Failed to auto-load tenant:", err);
       });
     }
   }, [

@@ -3,8 +3,8 @@
  * Handles permission checking and feature access
  */
 
-import { useMemo, useCallback } from 'react';
-import { TenantPermissions, TenantSession } from '../../types/tenant';
+import { useMemo, useCallback } from "react";
+import { TenantPermissions, TenantSession } from "../../types/tenant";
 
 export interface UseTenantPermissionsReturn {
   hasPermission: (permission: keyof TenantPermissions) => boolean;
@@ -26,7 +26,7 @@ export function useTenantPermissions(session: TenantSession | null): UseTenantPe
       if (!effectivePermissions) return false;
       return Boolean(effectivePermissions[permission]);
     },
-    [effectivePermissions]
+    [effectivePermissions],
   );
 
   const hasAnyPermission = useCallback(
@@ -34,7 +34,7 @@ export function useTenantPermissions(session: TenantSession | null): UseTenantPe
       if (!effectivePermissions) return false;
       return permissions.some((permission) => effectivePermissions[permission]);
     },
-    [effectivePermissions]
+    [effectivePermissions],
   );
 
   const hasAllPermissions = useCallback(
@@ -42,7 +42,7 @@ export function useTenantPermissions(session: TenantSession | null): UseTenantPe
       if (!effectivePermissions) return false;
       return permissions.every((permission) => effectivePermissions[permission]);
     },
-    [effectivePermissions]
+    [effectivePermissions],
   );
 
   const hasFeature = useCallback(
@@ -50,7 +50,7 @@ export function useTenantPermissions(session: TenantSession | null): UseTenantPe
       if (!session?.tenant?.subscription?.features) return false;
       return session.tenant.subscription.features.includes(feature);
     },
-    [session?.tenant?.subscription?.features]
+    [session?.tenant?.subscription?.features],
   );
 
   const hasModule = useCallback(
@@ -58,7 +58,7 @@ export function useTenantPermissions(session: TenantSession | null): UseTenantPe
       if (!session?.tenant?.subscription?.modules) return false;
       return session.tenant.subscription.modules.includes(module);
     },
-    [session?.tenant?.subscription?.modules]
+    [session?.tenant?.subscription?.modules],
   );
 
   const getEffectivePermissions = useCallback((): TenantPermissions | null => {

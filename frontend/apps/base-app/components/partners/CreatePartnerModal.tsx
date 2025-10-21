@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useCreatePartner, useUpdatePartner, Partner, CreatePartnerInput } from "@/hooks/usePartners";
+import {
+  useCreatePartner,
+  useUpdatePartner,
+  Partner,
+  CreatePartnerInput,
+} from "@/hooks/usePartners";
 
 interface CreatePartnerModalProps {
   partner?: Partner | null;
@@ -78,38 +83,28 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
                 type="text"
                 required
                 value={formData.company_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, company_name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
                 placeholder="Acme Inc."
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-400 mb-2">
-                Legal Name
-              </label>
+              <label className="block text-sm text-slate-400 mb-2">Legal Name</label>
               <input
                 type="text"
                 value={formData.legal_name || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, legal_name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, legal_name: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-400 mb-2">
-                Website
-              </label>
+              <label className="block text-sm text-slate-400 mb-2">Website</label>
               <input
                 type="url"
                 value={formData.website || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, website: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
                 placeholder="https://example.com"
               />
@@ -123,48 +118,36 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
                 type="email"
                 required
                 value={formData.primary_email}
-                onChange={(e) =>
-                  setFormData({ ...formData, primary_email: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, primary_email: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
                 placeholder="contact@partner.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-400 mb-2">
-                Billing Email
-              </label>
+              <label className="block text-sm text-slate-400 mb-2">Billing Email</label>
               <input
                 type="email"
                 value={formData.billing_email || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, billing_email: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, billing_email: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
                 placeholder="billing@partner.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-400 mb-2">
-                Phone
-              </label>
+              <label className="block text-sm text-slate-400 mb-2">Phone</label>
               <input
                 type="tel"
                 value={formData.phone || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
                 placeholder="+1 (555) 123-4567"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-400 mb-2">
-                Partner Tier
-              </label>
+              <label className="block text-sm text-slate-400 mb-2">Partner Tier</label>
               <select
                 value={formData.tier}
                 onChange={(e) =>
@@ -183,9 +166,7 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
             </div>
 
             <div>
-              <label className="block text-sm text-slate-400 mb-2">
-                Commission Model
-              </label>
+              <label className="block text-sm text-slate-400 mb-2">Commission Model</label>
               <select
                 value={formData.commission_model}
                 onChange={(e) =>
@@ -213,9 +194,7 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
                 min="0"
                 max="100"
                 value={
-                  formData.default_commission_rate
-                    ? formData.default_commission_rate * 100
-                    : ""
+                  formData.default_commission_rate ? formData.default_commission_rate * 100 : ""
                 }
                 onChange={(e) =>
                   setFormData({
@@ -247,8 +226,8 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
               {createPartner.isPending || updatePartner.isPending
                 ? "Saving..."
                 : partner
-                ? "Update Partner"
-                : "Create Partner"}
+                  ? "Update Partner"
+                  : "Create Partner"}
             </button>
           </div>
         </form>

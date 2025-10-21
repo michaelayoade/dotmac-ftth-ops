@@ -67,7 +67,7 @@ class TestPartnerUsers:
         mock_db_session.commit = AsyncMock()
         mock_db_session.refresh = AsyncMock()
 
-        user = await service.create_partner_user(user_data)
+        await service.create_partner_user(user_data)
 
         mock_db_session.add.assert_called_once()
         mock_db_session.commit.assert_called_once()
@@ -146,7 +146,7 @@ class TestPartnerAccounts:
         mock_db_session.commit = AsyncMock()
         mock_db_session.refresh = AsyncMock()
 
-        account = await service.create_partner_account(account_data)
+        await service.create_partner_account(account_data)
 
         # Should increment partner's total_customers
         assert mock_partner.total_customers == 6
@@ -168,7 +168,7 @@ class TestPartnerAccounts:
         mock_db_session.commit = AsyncMock()
         mock_db_session.refresh = AsyncMock()
 
-        account = await service.create_partner_account(account_data)
+        await service.create_partner_account(account_data)
 
         # Should still create account even if partner not found
         mock_db_session.add.assert_called_once()
@@ -241,7 +241,7 @@ class TestCommissionEvents:
         mock_db_session.commit = AsyncMock()
         mock_db_session.refresh = AsyncMock()
 
-        event = await service.create_commission_event(event_data)
+        await service.create_commission_event(event_data)
 
         # Should update partner totals
         assert mock_partner.total_commissions_earned == Decimal("650.00")
@@ -275,7 +275,7 @@ class TestCommissionEvents:
         mock_db_session.commit = AsyncMock()
         mock_db_session.refresh = AsyncMock()
 
-        event = await service.create_commission_event(event_data)
+        await service.create_commission_event(event_data)
 
         # Should only update commissions, not revenue
         assert mock_partner.total_commissions_earned == Decimal("600.00")
@@ -353,7 +353,7 @@ class TestReferralLeads:
         mock_db_session.commit = AsyncMock()
         mock_db_session.refresh = AsyncMock()
 
-        referral = await service.create_referral(referral_data)
+        await service.create_referral(referral_data)
 
         # Should increment partner's total_referrals
         assert mock_partner.total_referrals == 11
@@ -443,7 +443,7 @@ class TestReferralLeads:
 
         update_data = ReferralLeadUpdate(status=ReferralStatus.CONVERTED)
 
-        referral = await service.update_referral(referral_id, update_data)
+        await service.update_referral(referral_id, update_data)
 
         # Should set converted_at and increment partner count
         assert mock_referral.status == ReferralStatus.CONVERTED
@@ -475,7 +475,7 @@ class TestReferralLeads:
             "metadata": {"call_date": "2024-01-15"},
         }
 
-        referral = await service.update_referral(referral_id, update_dict)
+        await service.update_referral(referral_id, update_dict)
 
         assert mock_referral.status == ReferralStatus.CONTACTED
         assert mock_referral.notes == "Called customer"
@@ -517,7 +517,7 @@ class TestReferralLeads:
 
         update_data = ReferralLeadUpdate(status=ReferralStatus.QUALIFIED)
 
-        referral = await service.update_referral(referral_id, update_data)
+        await service.update_referral(referral_id, update_data)
 
         # Should not set converted_at
         assert mock_referral.converted_at is None

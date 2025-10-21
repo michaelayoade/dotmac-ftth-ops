@@ -63,6 +63,7 @@ from dotmac.platform.core.exceptions import (
     DotMacError,
     DuplicateEntityError,
     EntityNotFoundError,
+    NotFoundError,
     RepositoryError,
     ValidationError,
 )
@@ -80,7 +81,8 @@ def ensure_pydantic_v2() -> None:
     """
     try:
         from pydantic import VERSION
-        major_version = int(VERSION.split('.')[0])
+
+        major_version = int(VERSION.split(".")[0])
         if major_version < 2:
             raise ImportError(
                 f"Pydantic v2 is required, but v{VERSION} is installed. "
@@ -114,6 +116,7 @@ __all__ = [
     "BusinessRuleError",
     "RepositoryError",
     "EntityNotFoundError",
+    "NotFoundError",
     "DuplicateEntityError",
     # Models
     "BaseModel",

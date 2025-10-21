@@ -3,10 +3,10 @@
  * Consolidated permission checking across all portals
  */
 
-import { useMemo, useCallback } from 'react';
-import { useAuth } from '@dotmac/headless/auth';
-import { useApiClient } from '../api';
-import type { ApiResponse } from '../api/types';
+import { useMemo, useCallback } from "react";
+import { useAuth } from "@dotmac/headless/auth";
+import { useApiClient } from "../api";
+import type { ApiResponse } from "../api/types";
 
 export interface Permission {
   id: string;
@@ -14,7 +14,7 @@ export interface Permission {
   resource: string;
   action: string;
   conditions?: Record<string, any>;
-  scope?: 'global' | 'tenant' | 'customer' | 'reseller';
+  scope?: "global" | "tenant" | "customer" | "reseller";
   inherited?: boolean;
 }
 
@@ -44,57 +44,57 @@ export interface PermissionContext {
 // Pre-defined permission patterns for common operations
 export const COMMON_PERMISSIONS = {
   // User management
-  USERS_VIEW: { resource: 'users', action: 'read' },
-  USERS_CREATE: { resource: 'users', action: 'create' },
-  USERS_UPDATE: { resource: 'users', action: 'update' },
-  USERS_DELETE: { resource: 'users', action: 'delete' },
+  USERS_VIEW: { resource: "users", action: "read" },
+  USERS_CREATE: { resource: "users", action: "create" },
+  USERS_UPDATE: { resource: "users", action: "update" },
+  USERS_DELETE: { resource: "users", action: "delete" },
 
   // Billing operations
-  BILLING_VIEW: { resource: 'billing', action: 'read' },
-  BILLING_MANAGE: { resource: 'billing', action: 'write' },
-  BILLING_REPORTS: { resource: 'billing', action: 'report' },
-  PAYMENTS_PROCESS: { resource: 'payments', action: 'process' },
-  INVOICES_CREATE: { resource: 'invoices', action: 'create' },
-  INVOICES_SEND: { resource: 'invoices', action: 'send' },
+  BILLING_VIEW: { resource: "billing", action: "read" },
+  BILLING_MANAGE: { resource: "billing", action: "write" },
+  BILLING_REPORTS: { resource: "billing", action: "report" },
+  PAYMENTS_PROCESS: { resource: "payments", action: "process" },
+  INVOICES_CREATE: { resource: "invoices", action: "create" },
+  INVOICES_SEND: { resource: "invoices", action: "send" },
 
   // Customer management
-  CUSTOMERS_VIEW: { resource: 'customers', action: 'read' },
-  CUSTOMERS_CREATE: { resource: 'customers', action: 'create' },
-  CUSTOMERS_UPDATE: { resource: 'customers', action: 'update' },
-  CUSTOMERS_DELETE: { resource: 'customers', action: 'delete' },
+  CUSTOMERS_VIEW: { resource: "customers", action: "read" },
+  CUSTOMERS_CREATE: { resource: "customers", action: "create" },
+  CUSTOMERS_UPDATE: { resource: "customers", action: "update" },
+  CUSTOMERS_DELETE: { resource: "customers", action: "delete" },
 
   // Network operations
-  NETWORK_VIEW: { resource: 'network', action: 'read' },
-  NETWORK_CONFIGURE: { resource: 'network', action: 'configure' },
-  NETWORK_MONITOR: { resource: 'network', action: 'monitor' },
-  DEVICES_MANAGE: { resource: 'devices', action: 'manage' },
+  NETWORK_VIEW: { resource: "network", action: "read" },
+  NETWORK_CONFIGURE: { resource: "network", action: "configure" },
+  NETWORK_MONITOR: { resource: "network", action: "monitor" },
+  DEVICES_MANAGE: { resource: "devices", action: "manage" },
 
   // Analytics and reporting
-  ANALYTICS_VIEW: { resource: 'analytics', action: 'read' },
-  REPORTS_VIEW: { resource: 'reports', action: 'read' },
-  REPORTS_EXPORT: { resource: 'reports', action: 'export' },
+  ANALYTICS_VIEW: { resource: "analytics", action: "read" },
+  REPORTS_VIEW: { resource: "reports", action: "read" },
+  REPORTS_EXPORT: { resource: "reports", action: "export" },
 
   // System administration
-  SYSTEM_CONFIG: { resource: 'system', action: 'configure' },
-  SYSTEM_LOGS: { resource: 'logs', action: 'read' },
-  SYSTEM_BACKUP: { resource: 'system', action: 'backup' },
+  SYSTEM_CONFIG: { resource: "system", action: "configure" },
+  SYSTEM_LOGS: { resource: "logs", action: "read" },
+  SYSTEM_BACKUP: { resource: "system", action: "backup" },
 
   // Reseller operations
-  TERRITORIES_MANAGE: { resource: 'territories', action: 'manage' },
-  COMMISSIONS_VIEW: { resource: 'commissions', action: 'read' },
-  PARTNERS_MANAGE: { resource: 'partners', action: 'manage' },
+  TERRITORIES_MANAGE: { resource: "territories", action: "manage" },
+  COMMISSIONS_VIEW: { resource: "commissions", action: "read" },
+  PARTNERS_MANAGE: { resource: "partners", action: "manage" },
 
   // Support operations
-  TICKETS_VIEW: { resource: 'tickets', action: 'read' },
-  TICKETS_CREATE: { resource: 'tickets', action: 'create' },
-  TICKETS_ASSIGN: { resource: 'tickets', action: 'assign' },
-  TICKETS_RESOLVE: { resource: 'tickets', action: 'resolve' },
+  TICKETS_VIEW: { resource: "tickets", action: "read" },
+  TICKETS_CREATE: { resource: "tickets", action: "create" },
+  TICKETS_ASSIGN: { resource: "tickets", action: "assign" },
+  TICKETS_RESOLVE: { resource: "tickets", action: "resolve" },
 } as const;
 
 // Portal-specific permission contexts
 export const PORTAL_CONTEXTS = {
   admin: {
-    scope: 'global',
+    scope: "global",
     defaultPermissions: [
       COMMON_PERMISSIONS.SYSTEM_CONFIG,
       COMMON_PERMISSIONS.USERS_VIEW,
@@ -104,16 +104,16 @@ export const PORTAL_CONTEXTS = {
     ],
   },
   customer: {
-    scope: 'customer',
+    scope: "customer",
     defaultPermissions: [
       COMMON_PERMISSIONS.BILLING_VIEW,
-      { resource: 'profile', action: 'update' },
-      { resource: 'services', action: 'read' },
+      { resource: "profile", action: "update" },
+      { resource: "services", action: "read" },
       COMMON_PERMISSIONS.TICKETS_CREATE,
     ],
   },
   reseller: {
-    scope: 'reseller',
+    scope: "reseller",
     defaultPermissions: [
       COMMON_PERMISSIONS.CUSTOMERS_VIEW,
       COMMON_PERMISSIONS.CUSTOMERS_CREATE,
@@ -123,7 +123,7 @@ export const PORTAL_CONTEXTS = {
     ],
   },
   technician: {
-    scope: 'tenant',
+    scope: "tenant",
     defaultPermissions: [
       COMMON_PERMISSIONS.TICKETS_VIEW,
       COMMON_PERMISSIONS.TICKETS_ASSIGN,
@@ -133,7 +133,7 @@ export const PORTAL_CONTEXTS = {
     ],
   },
   management: {
-    scope: 'global',
+    scope: "global",
     defaultPermissions: [
       COMMON_PERMISSIONS.USERS_VIEW,
       COMMON_PERMISSIONS.BILLING_REPORTS,
@@ -177,7 +177,7 @@ export function usePermissions() {
       }
 
       // System admins have all permissions
-      if (user.isSuperAdmin || user.roles?.some((role) => role.name === 'super_admin')) {
+      if (user.isSuperAdmin || user.roles?.some((role) => role.name === "super_admin")) {
         return true;
       }
 
@@ -191,17 +191,17 @@ export function usePermissions() {
         // Check scope restrictions
         if (permission.scope) {
           switch (permission.scope) {
-            case 'tenant':
+            case "tenant":
               if (!tenantId || (context?.tenantId && context.tenantId !== tenantId)) {
                 return false;
               }
               break;
-            case 'customer':
+            case "customer":
               if (!context?.customerId || context.customerId !== user.customerId) {
                 return false;
               }
               break;
-            case 'reseller':
+            case "reseller":
               if (!context?.resellerId || context.resellerId !== user.resellerId) {
                 return false;
               }
@@ -225,7 +225,7 @@ export function usePermissions() {
 
       return !!matchingPermission;
     },
-    [user, userPermissions, tenantId]
+    [user, userPermissions, tenantId],
   );
 
   // Check multiple permissions (AND logic)
@@ -233,7 +233,7 @@ export function usePermissions() {
     (checks: PermissionCheck[], context?: PermissionContext): boolean => {
       return checks.every((check) => hasPermission(check, context));
     },
-    [hasPermission]
+    [hasPermission],
   );
 
   // Check multiple permissions (OR logic)
@@ -241,7 +241,7 @@ export function usePermissions() {
     (checks: PermissionCheck[], context?: PermissionContext): boolean => {
       return checks.some((check) => hasPermission(check, context));
     },
-    [hasPermission]
+    [hasPermission],
   );
 
   // Get permissions for a specific resource
@@ -249,7 +249,7 @@ export function usePermissions() {
     (resource: string): Permission[] => {
       return userPermissions.filter((permission) => permission.resource === resource);
     },
-    [userPermissions]
+    [userPermissions],
   );
 
   // Check if user can perform any action on a resource
@@ -263,11 +263,11 @@ export function usePermissions() {
             resource: permission.resource,
             action: permission.action,
           },
-          context
+          context,
         );
       });
     },
-    [userPermissions, hasPermission]
+    [userPermissions, hasPermission],
   );
 
   // Portal-specific permission helpers
@@ -338,8 +338,8 @@ export function usePermissions() {
   const refreshPermissions = useCallback(async (): Promise<Permission[]> => {
     try {
       const response = await apiClient.get<{ permissions: Permission[] }>(
-        '/auth/permissions',
-        { cache: true, cacheTTL: 5 * 60 * 1000 } // Cache for 5 minutes
+        "/auth/permissions",
+        { cache: true, cacheTTL: 5 * 60 * 1000 }, // Cache for 5 minutes
       );
 
       if (response.success && response.data) {
@@ -348,7 +348,7 @@ export function usePermissions() {
 
       return [];
     } catch (error) {
-      console.error('Failed to refresh permissions:', error);
+      console.error("Failed to refresh permissions:", error);
       return [];
     }
   }, [apiClient]);
@@ -362,7 +362,7 @@ export function usePermissions() {
 
       // If local check fails, try API for complex permission scenarios
       try {
-        const response = await apiClient.post<{ allowed: boolean }>('/auth/check-permission', {
+        const response = await apiClient.post<{ allowed: boolean }>("/auth/check-permission", {
           resource: check.resource,
           action: check.action,
           context: context || {},
@@ -370,11 +370,11 @@ export function usePermissions() {
 
         return response.success && response.data?.allowed === true;
       } catch (error) {
-        console.error('Permission check API call failed:', error);
+        console.error("Permission check API call failed:", error);
         return false;
       }
     },
-    [hasPermission, apiClient]
+    [hasPermission, apiClient],
   );
 
   // Generate permission-aware menu items
@@ -388,7 +388,7 @@ export function usePermissions() {
         requireAll?: boolean;
         path?: string;
         children?: any[];
-      }>
+      }>,
     ) => {
       return menuItems.filter((item) => {
         if (!item.permission && !item.permissions) return true;
@@ -406,7 +406,7 @@ export function usePermissions() {
         return true;
       });
     },
-    [hasPermission, hasAllPermissions, hasAnyPermission]
+    [hasPermission, hasAllPermissions, hasAnyPermission],
   );
 
   return {

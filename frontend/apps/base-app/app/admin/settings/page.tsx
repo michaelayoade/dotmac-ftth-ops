@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 import { useState } from "react";
 import { Save, Loader2, AlertCircle, Settings as SettingsIcon, Clock } from "lucide-react";
 
@@ -86,12 +89,19 @@ export default function AdminSettingsPage() {
     // Boolean fields - render as Switch
     if (field.type === "bool" || field.type === "boolean") {
       return (
-        <div key={field.name} className="flex items-start justify-between gap-4 rounded-lg border border-border bg-card px-4 py-3">
+        <div
+          key={field.name}
+          className="flex items-start justify-between gap-4 rounded-lg border border-border bg-card px-4 py-3"
+        >
           <div className="flex-1">
             <p className="text-sm font-semibold text-foreground">
               {field.name}
               {field.required && <span className="text-destructive ml-1">*</span>}
-              {field.sensitive && <Badge variant="outline" className="ml-2 text-xs">Sensitive</Badge>}
+              {field.sensitive && (
+                <Badge variant="outline" className="ml-2 text-xs">
+                  Sensitive
+                </Badge>
+              )}
             </p>
             {field.description && (
               <p className="text-xs text-muted-foreground mt-1">{field.description}</p>
@@ -113,7 +123,11 @@ export default function AdminSettingsPage() {
           <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">
             {field.name}
             {field.required && <span className="text-destructive ml-1">*</span>}
-            {field.sensitive && <Badge variant="outline" className="ml-2 text-xs">Sensitive</Badge>}
+            {field.sensitive && (
+              <Badge variant="outline" className="ml-2 text-xs">
+                Sensitive
+              </Badge>
+            )}
           </Label>
           <Input
             id={field.name}
@@ -136,7 +150,11 @@ export default function AdminSettingsPage() {
           <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">
             {field.name}
             {field.required && <span className="text-destructive ml-1">*</span>}
-            {field.sensitive && <Badge variant="outline" className="ml-2 text-xs">Sensitive</Badge>}
+            {field.sensitive && (
+              <Badge variant="outline" className="ml-2 text-xs">
+                Sensitive
+              </Badge>
+            )}
           </Label>
           <Textarea
             id={field.name}
@@ -159,7 +177,11 @@ export default function AdminSettingsPage() {
         <Label htmlFor={field.name} className="text-sm font-semibold text-foreground">
           {field.name}
           {field.required && <span className="text-destructive ml-1">*</span>}
-          {field.sensitive && <Badge variant="outline" className="ml-2 text-xs">Sensitive</Badge>}
+          {field.sensitive && (
+            <Badge variant="outline" className="ml-2 text-xs">
+              Sensitive
+            </Badge>
+          )}
         </Label>
         <Input
           id={field.name}
@@ -168,9 +190,7 @@ export default function AdminSettingsPage() {
           onChange={(e) => handleFieldChange(field.name, e.target.value)}
           placeholder={field.default !== null ? String(field.default) : undefined}
         />
-        {field.description && (
-          <p className="text-xs text-muted-foreground">{field.description}</p>
-        )}
+        {field.description && <p className="text-xs text-muted-foreground">{field.description}</p>}
       </div>
     );
   };
@@ -178,10 +198,13 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-6" data-testid="settings">
       <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Platform controls</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Platform controls
+        </p>
         <h1 className="text-3xl font-semibold text-foreground">System configuration</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Manage platform-wide configuration settings including database, authentication, caching, storage, and more.
+          Manage platform-wide configuration settings including database, authentication, caching,
+          storage, and more.
         </p>
       </header>
 
@@ -190,7 +213,8 @@ export default function AdminSettingsPage() {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Failed to load settings: {categoriesError?.message || settingsError?.message}. Please check your connection and try again.
+            Failed to load settings: {categoriesError?.message || settingsError?.message}. Please
+            check your connection and try again.
           </AlertDescription>
         </Alert>
       )}
@@ -205,14 +229,23 @@ export default function AdminSettingsPage() {
 
       {/* Settings Tabs */}
       {!isLoadingCategories && categories.length > 0 && (
-        <Tabs value={selectedCategory} onValueChange={(value) => handleCategoryChange(value as SettingsCategory)}>
+        <Tabs
+          value={selectedCategory}
+          onValueChange={(value) => handleCategoryChange(value as SettingsCategory)}
+        >
           <TabsList className="w-full flex-wrap h-auto">
             {categories.map((cat) => (
-              <TabsTrigger key={cat.category} value={cat.category} className="flex items-center gap-2">
+              <TabsTrigger
+                key={cat.category}
+                value={cat.category}
+                className="flex items-center gap-2"
+              >
                 <SettingsIcon className="h-3 w-3" />
                 {cat.display_name}
                 {cat.has_sensitive_fields && (
-                  <Badge variant="secondary" className="ml-1 text-xs">Sensitive</Badge>
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    Sensitive
+                  </Badge>
                 )}
               </TabsTrigger>
             ))}
@@ -243,7 +276,9 @@ export default function AdminSettingsPage() {
                   {isLoadingSettings && (
                     <div className="flex items-center justify-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                      <span className="ml-2 text-sm text-muted-foreground">Loading settings...</span>
+                      <span className="ml-2 text-sm text-muted-foreground">
+                        Loading settings...
+                      </span>
                     </div>
                   )}
 
@@ -265,7 +300,8 @@ export default function AdminSettingsPage() {
                             <Alert>
                               <AlertCircle className="h-4 w-4" />
                               <AlertDescription>
-                                Changes to this category may require a service restart to take effect.
+                                Changes to this category may require a service restart to take
+                                effect.
                               </AlertDescription>
                             </Alert>
                           )}
@@ -275,7 +311,9 @@ export default function AdminSettingsPage() {
                             <Button
                               className="gap-2"
                               onClick={handleSave}
-                              disabled={updateSettings.isPending || Object.keys(formData).length === 0}
+                              disabled={
+                                updateSettings.isPending || Object.keys(formData).length === 0
+                              }
                             >
                               {updateSettings.isPending ? (
                                 <>
@@ -315,9 +353,7 @@ export default function AdminSettingsPage() {
       {!isLoadingCategories && categories.length === 0 && !categoriesError && (
         <Card>
           <CardContent className="py-10 text-center">
-            <p className="text-sm text-muted-foreground">
-              No settings categories available.
-            </p>
+            <p className="text-sm text-muted-foreground">No settings categories available.</p>
           </CardContent>
         </Card>
       )}

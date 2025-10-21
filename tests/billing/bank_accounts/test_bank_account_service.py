@@ -108,7 +108,7 @@ class TestCreateBankAccount:
     ):
         """Test successful bank account creation."""
         # Setup
-        created_account = CompanyBankAccount(
+        CompanyBankAccount(
             id="acc-123",
             tenant_id="tenant-1",
             account_name=bank_account_create.account_name,
@@ -275,7 +275,7 @@ class TestUpdateBankAccount:
         )
 
         # Execute
-        result = await bank_service.update_bank_account(123, "tenant-1", update_data, "user-1")
+        await bank_service.update_bank_account(123, "tenant-1", update_data, "user-1")
 
         # Verify
         assert mock_db_session.commit.called
@@ -316,7 +316,7 @@ class TestDeleteBankAccount:
         await bank_service.deactivate_bank_account("tenant-1", 123, "user-1")
 
         # Verify status changed to inactive
-        assert existing_account.is_active == False
+        assert not existing_account.is_active
         assert mock_db_session.commit.called
 
 
@@ -337,7 +337,7 @@ class TestRecordManualPayment:
         )
 
         # Execute
-        result = await payment_service.record_cash_payment("tenant-1", payment_data, "user-1")
+        await payment_service.record_cash_payment("tenant-1", payment_data, "user-1")
 
         # Verify
         assert mock_db_session.add.called
@@ -358,7 +358,7 @@ class TestRecordManualPayment:
         )
 
         # Execute
-        result = await payment_service.record_bank_transfer("tenant-1", payment_data, "user-1")
+        await payment_service.record_bank_transfer("tenant-1", payment_data, "user-1")
 
         # Verify
         assert mock_db_session.add.called
@@ -383,7 +383,7 @@ class TestPaymentSearch:
         mock_db_session.execute.return_value = mock_result
 
         # Execute
-        result = await payment_service.search_payments("tenant-1", filters)
+        await payment_service.search_payments("tenant-1", filters)
 
         # Verify query was executed
         assert mock_db_session.execute.called
@@ -400,7 +400,7 @@ class TestPaymentSearch:
         mock_db_session.execute.return_value = mock_result
 
         # Execute
-        result = await payment_service.search_payments("tenant-1", filters)
+        await payment_service.search_payments("tenant-1", filters)
 
         # Verify
         assert mock_db_session.execute.called

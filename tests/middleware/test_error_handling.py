@@ -534,7 +534,7 @@ class TestMiddlewareAndErrorHandling:
     async def test_rate_limit_middleware_exceeded_limit(self, rate_limit_middleware):
         """Test rate limiting middleware when limit is exceeded"""
         # Make requests up to the limit
-        for i in range(5):
+        for _i in range(5):
             request = MockRequest()
             response = await rate_limit_middleware(request, self.mock_handler_success)
             assert response.status_code == 200
@@ -648,7 +648,7 @@ class TestMiddlewareAndErrorHandling:
     async def test_logging_middleware_metrics(self, logging_middleware):
         """Test request logging middleware metrics collection"""
         # Make several requests
-        for i in range(3):
+        for _i in range(3):
             request = MockRequest()
             await logging_middleware(request, self.mock_handler_success)
 

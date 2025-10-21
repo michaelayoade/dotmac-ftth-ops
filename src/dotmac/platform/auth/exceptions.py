@@ -5,9 +5,23 @@ Comprehensive exception classes for the DotMac authentication system.
 """
 
 from collections.abc import Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from jwt import ExpiredSignatureError
+try:
+    from jwt import ExpiredSignatureError as JWTExpiredSignatureError
+except ImportError:  # pragma: no cover - fallback when PyJWT is unavailable
+    class _FallbackExpiredSignatureError(Exception):
+        """Fallback ExpiredSignatureError used when PyJWT is missing."""
+
+    JWTExpiredSignatureError = _FallbackExpiredSignatureError
+
+if TYPE_CHECKING:
+    class _ExpiredSignatureError(Exception):
+        ...
+
+    ExpiredSignatureErrorBase = _ExpiredSignatureError
+else:  # pragma: no cover - runtime path uses actual implementation
+    ExpiredSignatureErrorBase = JWTExpiredSignatureError
 from pydantic import ValidationError as PydanticValidationError
 
 
@@ -42,7 +56,7 @@ class TokenError(AuthError):
         super().__init__(message, error_code, details)
 
 
-class TokenExpired(TokenError, ExpiredSignatureError):
+class TokenExpired(TokenError, ExpiredSignatureErrorBase):
     """Token has expired"""
 
     def __init__(self, message: str = "Token has expired", expired_at: str | None = None) -> None:
@@ -124,8 +138,8 @@ class InsufficientScope(AuthError):
     def __init__(
         self,
         message: str = "Insufficient permissions",
-        required_scopes: list | None = None,
-        user_scopes: list | None = None,
+        required_scopes: list[str] | None = None,
+        user_scopes: list[str] | None = None,
     ) -> None:
         details = {}
         if required_scopes:
@@ -141,8 +155,8 @@ class InsufficientRole(AuthError):
     def __init__(
         self,
         message: str = "Insufficient role permissions",
-        required_roles: list | None = None,
-        user_roles: list | None = None,
+        required_roles: list[str] | None = None,
+        user_roles: list[str] | None = None,
     ) -> None:
         details = {}
         if required_roles:

@@ -1,23 +1,18 @@
-import * as React from 'react';
+import * as React from "react";
 
 interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'text' | 'circular' | 'rectangular';
+  variant?: "default" | "text" | "circular" | "rectangular";
 }
 
-export function Skeleton({ className = '', variant = 'default', ...props }: SkeletonProps) {
+export function Skeleton({ className = "", variant = "default", ...props }: SkeletonProps) {
   const variants = {
-    default: 'rounded-lg',
-    text: 'rounded h-4',
-    circular: 'rounded-full',
-    rectangular: 'rounded-md',
+    default: "rounded-lg",
+    text: "rounded h-4",
+    circular: "rounded-full",
+    rectangular: "rounded-md",
   };
 
-  return (
-    <div
-      className={`animate-pulse bg-muted ${variants[variant]} ${className}`}
-      {...props}
-    />
-  );
+  return <div className={`animate-pulse bg-muted ${variants[variant]} ${className}`} {...props} />;
 }
 
 export function SkeletonCard() {

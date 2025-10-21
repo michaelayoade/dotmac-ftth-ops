@@ -15,5 +15,5 @@ export {
   useApiPerformanceTracking,
   PerformanceMonitor,
   withPerformanceTracking,
-} from './performance';
-export type { PerformanceMetrics, PerformanceObserverConfig } from './performance';
+} from "./performance";
+export type { PerformanceMetrics, PerformanceObserverConfig } from "./performance";

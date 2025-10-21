@@ -75,7 +75,7 @@ class SecretsManagerFactory:
         if backend == "vault":
             if not settings.features.secrets_vault:
                 raise ValueError(
-                    "Vault secrets backend not enabled. " "Set FEATURES__SECRETS_VAULT=true"
+                    "Vault secrets backend not enabled. Set FEATURES__SECRETS_VAULT=true"
                 )
 
             DependencyChecker.require_feature_dependency("secrets_vault")
@@ -131,7 +131,7 @@ def get_default_secrets_manager(**kwargs: Any) -> SecretsManager:
     return SecretsManagerFactory.create_secrets_manager(**kwargs)
 
 
-@require_dependency("secrets_vault")
+@require_dependency("secrets_vault")  # Untyped decorator
 def create_vault_secrets_manager(**kwargs: Any) -> SecretsManager:
     """Create a Vault secrets manager (requires Vault to be enabled)."""
     return SecretsManagerFactory.create_secrets_manager("vault", **kwargs)

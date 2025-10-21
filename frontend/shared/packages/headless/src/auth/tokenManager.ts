@@ -3,8 +3,8 @@
  * Handles secure token storage and auto-refresh
  */
 
-import type { AuthTokens } from './types';
-import type { SecureStorage } from './storage';
+import type { AuthTokens } from "./types";
+import type { SecureStorage } from "./storage";
 
 export class TokenManager {
   private storage: SecureStorage;
@@ -20,7 +20,7 @@ export class TokenManager {
 
   // Set tokens in secure storage
   setTokens(tokens: AuthTokens): void {
-    this.storage.setObject('tokens', {
+    this.storage.setObject("tokens", {
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       expiresAt: tokens.expiresAt,
@@ -28,30 +28,30 @@ export class TokenManager {
 
     // Store CSRF token separately if provided
     if (tokens.csrfToken) {
-      this.storage.setItem('csrf_token', tokens.csrfToken);
+      this.storage.setItem("csrf_token", tokens.csrfToken);
     }
   }
 
   // Get access token
   getAccessToken(): string | null {
-    const tokens = this.storage.getObject<AuthTokens>('tokens');
+    const tokens = this.storage.getObject<AuthTokens>("tokens");
     return tokens?.accessToken || null;
   }
 
   // Get refresh token
   getRefreshToken(): string | null {
-    const tokens = this.storage.getObject<AuthTokens>('tokens');
+    const tokens = this.storage.getObject<AuthTokens>("tokens");
     return tokens?.refreshToken || null;
   }
 
   // Get CSRF token
   getCSRFToken(): string | null {
-    return this.storage.getItem('csrf_token');
+    return this.storage.getItem("csrf_token");
   }
 
   // Check if token is expired or about to expire
   isTokenExpired(threshold: number = this.refreshThreshold): boolean {
-    const tokens = this.storage.getObject<AuthTokens>('tokens');
+    const tokens = this.storage.getObject<AuthTokens>("tokens");
     if (!tokens?.expiresAt) return true;
 
     return Date.now() >= tokens.expiresAt - threshold;
@@ -59,7 +59,7 @@ export class TokenManager {
 
   // Get time until token expires
   getTimeUntilExpiry(): number {
-    const tokens = this.storage.getObject<AuthTokens>('tokens');
+    const tokens = this.storage.getObject<AuthTokens>("tokens");
     if (!tokens?.expiresAt) return 0;
 
     return Math.max(0, tokens.expiresAt - Date.now());
@@ -67,8 +67,8 @@ export class TokenManager {
 
   // Clear all tokens
   clearTokens(): void {
-    this.storage.removeItem('tokens');
-    this.storage.removeItem('csrf_token');
+    this.storage.removeItem("tokens");
+    this.storage.removeItem("csrf_token");
     this.stopAutoRefresh();
   }
 
@@ -90,7 +90,7 @@ export class TokenManager {
             onError();
           }
         } catch (error) {
-          console.error('Auto-refresh failed:', error);
+          console.error("Auto-refresh failed:", error);
           onError();
         }
       }, refreshTime);

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -8,20 +8,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Upload,
   Download,
@@ -32,7 +26,7 @@ import {
   Clock,
   XCircle,
   FileText,
-} from 'lucide-react';
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -41,8 +35,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { format } from 'date-fns';
+} from "@/components/ui/dialog";
+import { format } from "date-fns";
 
 interface ImportJob {
   id: string;
@@ -81,20 +75,20 @@ export default function ImportsPage() {
   const [showUploadDialog, setShowUploadDialog] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadConfig, setUploadConfig] = useState({
-    entity_type: 'customers',
+    entity_type: "customers",
     batch_size: 100,
     dry_run: false,
     use_async: false,
   });
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
 
   const fetchJobs = useCallback(async () => {
     try {
       const params = new URLSearchParams();
-      if (statusFilter !== 'all') params.append('status', statusFilter);
-      if (typeFilter !== 'all') params.append('job_type', typeFilter);
-      params.append('limit', '50');
+      if (statusFilter !== "all") params.append("status", statusFilter);
+      if (typeFilter !== "all") params.append("job_type", typeFilter);
+      params.append("limit", "50");
 
       const response = await fetch(`/api/v1/import/jobs?${params}`);
       if (response.ok) {
@@ -102,7 +96,7 @@ export default function ImportsPage() {
         setJobs(data.jobs);
       }
     } catch (error) {
-      console.error('Failed to fetch import jobs:', error);
+      console.error("Failed to fetch import jobs:", error);
     }
   }, [statusFilter, typeFilter]);
 
@@ -120,40 +114,37 @@ export default function ImportsPage() {
         setFailures(data);
       }
     } catch (error) {
-      console.error('Failed to fetch failures:', error);
+      console.error("Failed to fetch failures:", error);
     }
   };
 
   const handleUpload = async () => {
     if (!uploadFile) {
       toast({
-        title: 'Error',
-        description: 'Please select a file to upload',
-        variant: 'destructive',
+        title: "Error",
+        description: "Please select a file to upload",
+        variant: "destructive",
       });
       return;
     }
 
     const formData = new FormData();
-    formData.append('file', uploadFile);
-    formData.append('batch_size', String(uploadConfig.batch_size));
-    formData.append('dry_run', String(uploadConfig.dry_run));
-    formData.append('use_async', String(uploadConfig.use_async));
+    formData.append("file", uploadFile);
+    formData.append("batch_size", String(uploadConfig.batch_size));
+    formData.append("dry_run", String(uploadConfig.dry_run));
+    formData.append("use_async", String(uploadConfig.use_async));
 
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/v1/import/upload/${uploadConfig.entity_type}`,
-        {
-          method: 'POST',
-          body: formData,
-        }
-      );
+      const response = await fetch(`/api/v1/import/upload/${uploadConfig.entity_type}`, {
+        method: "POST",
+        body: formData,
+      });
 
       if (response.ok) {
         toast({
-          title: 'Success',
-          description: 'Import job created successfully',
+          title: "Success",
+          description: "Import job created successfully",
         });
         setShowUploadDialog(false);
         setUploadFile(null);
@@ -161,31 +152,29 @@ export default function ImportsPage() {
       } else {
         const error = await response.json();
         toast({
-          title: 'Error',
-          description: error.detail || 'Failed to create import job',
-          variant: 'destructive',
+          title: "Error",
+          description: error.detail || "Failed to create import job",
+          variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to upload file',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to upload file",
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const exportFailures = async (jobId: string, format: 'csv' | 'json') => {
+  const exportFailures = async (jobId: string, format: "csv" | "json") => {
     try {
-      const response = await fetch(
-        `/api/v1/import/jobs/${jobId}/export-failures?format=${format}`
-      );
+      const response = await fetch(`/api/v1/import/jobs/${jobId}/export-failures?format=${format}`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = `import_failures_${jobId}.${format}`;
         document.body.appendChild(a);
@@ -194,22 +183,46 @@ export default function ImportsPage() {
       }
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to export failures',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to export failures",
+        variant: "destructive",
       });
     }
   };
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      pending: { label: 'Pending', variant: 'secondary' as const, icon: Clock },
-      validating: { label: 'Validating', variant: 'secondary' as const, icon: RefreshCw },
-      in_progress: { label: 'In Progress', variant: 'default' as const, icon: RefreshCw },
-      completed: { label: 'Completed', variant: 'success' as const, icon: CheckCircle },
-      failed: { label: 'Failed', variant: 'destructive' as const, icon: XCircle },
-      partially_completed: { label: 'Partial', variant: 'secondary' as const, icon: AlertCircle },
-      cancelled: { label: 'Cancelled', variant: 'secondary' as const, icon: XCircle },
+      pending: { label: "Pending", variant: "secondary" as const, icon: Clock },
+      validating: {
+        label: "Validating",
+        variant: "secondary" as const,
+        icon: RefreshCw,
+      },
+      in_progress: {
+        label: "In Progress",
+        variant: "default" as const,
+        icon: RefreshCw,
+      },
+      completed: {
+        label: "Completed",
+        variant: "success" as const,
+        icon: CheckCircle,
+      },
+      failed: {
+        label: "Failed",
+        variant: "destructive" as const,
+        icon: XCircle,
+      },
+      partially_completed: {
+        label: "Partial",
+        variant: "secondary" as const,
+        icon: AlertCircle,
+      },
+      cancelled: {
+        label: "Cancelled",
+        variant: "secondary" as const,
+        icon: XCircle,
+      },
     };
 
     const config = statusMap[status as keyof typeof statusMap] || statusMap.pending;
@@ -224,11 +237,11 @@ export default function ImportsPage() {
   };
 
   const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
   };
 
   return (
@@ -261,7 +274,7 @@ export default function ImportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {jobs.filter(j => j.status === 'in_progress').length}
+              {jobs.filter((j) => j.status === "in_progress").length}
             </div>
           </CardContent>
         </Card>
@@ -271,7 +284,7 @@ export default function ImportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {jobs.filter(j => j.status === 'completed').length}
+              {jobs.filter((j) => j.status === "completed").length}
             </div>
           </CardContent>
         </Card>
@@ -281,7 +294,7 @@ export default function ImportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-              {jobs.filter(j => j.status === 'failed').length}
+              {jobs.filter((j) => j.status === "failed").length}
             </div>
           </CardContent>
         </Card>
@@ -357,20 +370,20 @@ export default function ImportsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      <div className="text-green-600 dark:text-green-400">✓ {job.successful_records}</div>
+                      <div className="text-green-600 dark:text-green-400">
+                        ✓ {job.successful_records}
+                      </div>
                       {job.failed_records > 0 && (
                         <div className="text-red-600 dark:text-red-400">✗ {job.failed_records}</div>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm">
-                      {job.success_rate.toFixed(1)}%
-                    </div>
+                    <div className="text-sm">{job.success_rate.toFixed(1)}%</div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      {format(new Date(job.created_at), 'MMM d, h:mm a')}
+                      {format(new Date(job.created_at), "MMM d, h:mm a")}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -389,7 +402,7 @@ export default function ImportsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => exportFailures(job.id, 'csv')}
+                          onClick={() => exportFailures(job.id, "csv")}
                         >
                           <Download className="h-4 w-4" />
                         </Button>
@@ -408,9 +421,7 @@ export default function ImportsPage() {
         <DialogContent className="sm:max-w-[525px]">
           <DialogHeader>
             <DialogTitle>Import Data</DialogTitle>
-            <DialogDescription>
-              Upload a CSV or JSON file to import data in bulk
-            </DialogDescription>
+            <DialogDescription>Upload a CSV or JSON file to import data in bulk</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
@@ -421,7 +432,10 @@ export default function ImportsPage() {
                 id="entity-type"
                 value={uploadConfig.entity_type}
                 onChange={(e) =>
-                  setUploadConfig({ ...uploadConfig, entity_type: e.target.value })
+                  setUploadConfig({
+                    ...uploadConfig,
+                    entity_type: e.target.value,
+                  })
                 }
                 className="col-span-3 h-10 rounded-md border border-border bg-card px-3 text-sm text-foreground"
               >
@@ -477,9 +491,7 @@ export default function ImportsPage() {
                       })
                     }
                   />
-                  <Label htmlFor="dry-run">
-                    Dry run (validate without saving)
-                  </Label>
+                  <Label htmlFor="dry-run">Dry run (validate without saving)</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <input
@@ -493,22 +505,17 @@ export default function ImportsPage() {
                       })
                     }
                   />
-                  <Label htmlFor="use-async">
-                    Process in background
-                  </Label>
+                  <Label htmlFor="use-async">Process in background</Label>
                 </div>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowUploadDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowUploadDialog(false)}>
               Cancel
             </Button>
             <Button onClick={handleUpload} disabled={loading || !uploadFile}>
-              {loading ? 'Uploading...' : 'Upload'}
+              {loading ? "Uploading..." : "Upload"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -575,9 +582,7 @@ export default function ImportsPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Failed Records</CardTitle>
-                    <CardDescription>
-                      Showing {failures.length} failed records
-                    </CardDescription>
+                    <CardDescription>Showing {failures.length} failed records</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Table>
@@ -594,9 +599,7 @@ export default function ImportsPage() {
                           <TableRow key={idx}>
                             <TableCell>{failure.row_number}</TableCell>
                             <TableCell>
-                              <Badge variant="outline">
-                                {failure.error_type}
-                              </Badge>
+                              <Badge variant="outline">{failure.error_type}</Badge>
                             </TableCell>
                             <TableCell className="max-w-xs truncate">
                               {failure.error_message}

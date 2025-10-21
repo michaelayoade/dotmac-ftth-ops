@@ -21,7 +21,7 @@ logger = structlog.get_logger(__name__)
 # Cache TTL (in seconds)
 API_KEYS_STATS_CACHE_TTL = 300  # 5 minutes
 
-router = APIRouter(tags=["API Keys Metrics"])
+router = APIRouter(prefix="", tags=["API Keys Metrics"])
 
 
 # ============================================================================
@@ -66,13 +66,13 @@ class APIKeyMetricsResponse(BaseModel):
 # ============================================================================
 
 
-@cached_result(
+@cached_result(  # type: ignore[misc]  # Untyped decorator
     ttl=API_KEYS_STATS_CACHE_TTL,
     key_prefix="api_keys:metrics",
     key_params=["period_days", "tenant_id"],
     tier=CacheTier.L2_REDIS,
 )
-async def _fetch_all_api_keys_metadata(client: Any) -> list[dict]:
+async def _fetch_all_api_keys_metadata(client: Any) -> list[dict[str, Any]]:
     """Fetch all API key metadata from Redis or memory."""
     all_keys_meta = []
 
@@ -92,7 +92,7 @@ async def _fetch_all_api_keys_metadata(client: Any) -> list[dict]:
 
 
 def _parse_api_key_dates(
-    key_data: dict,
+    key_data: dict[str, Any],
 ) -> tuple[datetime | None, datetime | None, datetime | None]:
     """Parse created_at, expires_at, and last_used_at dates."""
     created_at_str = key_data.get("created_at")
@@ -115,7 +115,7 @@ def _parse_api_key_dates(
 
 
 def _calculate_key_status_metrics(
-    key_data: dict,
+    key_data: dict[str, Any],
     now: datetime,
     expires_at: datetime | None,
 ) -> tuple[int, int, int]:

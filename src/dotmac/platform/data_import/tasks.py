@@ -36,7 +36,7 @@ def get_async_session() -> AsyncSession:
     return async_session_maker()
 
 
-@app.task(bind=True, max_retries=3)
+@app.task(bind=True, max_retries=3)  # type: ignore[misc]
 def process_import_job(
     self: Task,
     job_id: str,
@@ -97,7 +97,7 @@ def process_import_job(
         raise self.retry(exc=e, countdown=60)
 
 
-@app.task(bind=True)
+@app.task(bind=True)  # type: ignore[misc]
 def process_import_chunk(
     self: Task,
     job_id: str,
@@ -546,30 +546,50 @@ async def _process_subscription_import(
     """
     Process subscription import job.
 
-    TODO: Implement subscription import processing following the customer import pattern.
+    NOT YET IMPLEMENTED - Placeholder for future feature.
 
-    Implementation steps:
+    Implementation tracked in GitHub issue #TBD.
+
+    When implementing, follow the customer import pattern:
+
     1. Create SubscriptionImportSchema in billing/subscriptions/mappers.py
        - Required fields: customer_id, plan_id
        - Optional fields: status, billing_cycle, start_date, end_date, trial_end_date, quantity
-    2. Create SubscriptionMapper with validate_import_row() and from_import_to_model() methods
-    3. Update _process_data_chunk() to handle ImportJobType.SUBSCRIPTIONS case
-    4. Test with sample CSV/JSON files
+
+    2. Create SubscriptionMapper with methods:
+       - validate_import_row(row_data: dict[str, Any], row_number: int) -> SubscriptionImportSchema | dict
+       - from_import_to_model(schema: SubscriptionImportSchema, tenant_id: str) -> dict[str, Any]
+
+    3. Update _process_data_chunk() to handle ImportJobType.SUBSCRIPTIONS case:
+       ```python
+       elif job_type == ImportJobType.SUBSCRIPTIONS:
+           from dotmac.platform.billing.subscriptions.mappers import SubscriptionMapper
+           from dotmac.platform.billing.subscriptions.service import SubscriptionService
+           service = SubscriptionService(session)
+           mapper = SubscriptionMapper
+       ```
+
+    4. Add tests in tests/billing/subscriptions/test_subscription_import.py
 
     Expected CSV/JSON format:
-    - customer_id: UUID or customer_number (required)
-    - plan_id: UUID or plan code (required)
-    - status: active|trialing|past_due|cancelled|paused (default: active)
-    - billing_cycle: monthly|quarterly|yearly|custom (default: monthly)
-    - start_date: ISO date string (optional, defaults to now)
-    - end_date: ISO date string (optional)
-    - trial_end_date: ISO date string (optional)
-    - quantity: integer (default: 1)
-    - amount: decimal (optional, uses plan amount if not provided)
+        customer_id: UUID or customer_number (required)
+        plan_id: UUID or plan code (required)
+        status: active|trialing|past_due|cancelled|paused (default: active)
+        billing_cycle: monthly|quarterly|yearly|custom (default: monthly)
+        start_date: ISO date string (optional, defaults to now)
+        end_date: ISO date string (optional)
+        trial_end_date: ISO date string (optional)
+        quantity: integer (default: 1)
+        amount: decimal (optional, uses plan amount if not provided)
+
+    Example CSV:
+        customer_id,plan_id,status,billing_cycle,quantity,start_date
+        123e4567-e89b-12d3-a456-426614174000,plan_basic_monthly,active,monthly,1,2025-01-01
+        987fcdeb-51a2-43d1-b234-567890abcdef,plan_pro_yearly,trialing,yearly,1,2025-01-15
     """
     raise NotImplementedError(
-        "Subscription import requires SubscriptionImportSchema and SubscriptionMapper implementation. "
-        "Follow the pattern in customer_management/mappers.py"
+        "Subscription import feature not yet implemented. "
+        "Follow the implementation pattern in _process_customer_import() and customer_management/mappers.py"
     )
 
 
@@ -583,30 +603,50 @@ async def _process_payment_import(
     """
     Process payment import job.
 
-    TODO: Implement payment import processing following the customer import pattern.
+    NOT YET IMPLEMENTED - Placeholder for future feature.
 
-    Implementation steps:
+    Implementation tracked in GitHub issue #TBD.
+
+    When implementing, follow the customer import pattern:
+
     1. Create PaymentImportSchema in billing/payments/mappers.py
        - Required fields: customer_id, amount, currency, payment_method
        - Optional fields: invoice_id, status, payment_date, transaction_id, reference
-    2. Create PaymentMapper with validate_import_row() and from_import_to_model() methods
-    3. Update _process_data_chunk() to handle ImportJobType.PAYMENTS case
-    4. Test with sample CSV/JSON files
+
+    2. Create PaymentMapper with methods:
+       - validate_import_row(row_data: dict[str, Any], row_number: int) -> PaymentImportSchema | dict
+       - from_import_to_model(schema: PaymentImportSchema, tenant_id: str) -> dict[str, Any]
+
+    3. Update _process_data_chunk() to handle ImportJobType.PAYMENTS case:
+       ```python
+       elif job_type == ImportJobType.PAYMENTS:
+           from dotmac.platform.billing.payments.mappers import PaymentMapper
+           from dotmac.platform.billing.payments.service import PaymentService
+           service = PaymentService(session)
+           mapper = PaymentMapper
+       ```
+
+    4. Add tests in tests/billing/payments/test_payment_import.py
 
     Expected CSV/JSON format:
-    - customer_id: UUID or customer_number (required)
-    - amount: decimal (required)
-    - currency: 3-letter code (default: USD)
-    - payment_method: card|bank_transfer|cash|check (required)
-    - invoice_id: UUID (optional, links payment to invoice)
-    - status: pending|completed|failed|refunded (default: completed)
-    - payment_date: ISO date string (optional, defaults to now)
-    - transaction_id: string (optional, external payment system ID)
-    - reference: string (optional, customer reference number)
+        customer_id: UUID or customer_number (required)
+        amount: decimal (required)
+        currency: 3-letter code (default: USD)
+        payment_method: card|bank_transfer|cash|check (required)
+        invoice_id: UUID (optional, links payment to invoice)
+        status: pending|completed|failed|refunded (default: completed)
+        payment_date: ISO date string (optional, defaults to now)
+        transaction_id: string (optional, external payment system ID)
+        reference: string (optional, customer reference number)
+
+    Example CSV:
+        customer_id,amount,currency,payment_method,status,payment_date,transaction_id
+        123e4567-e89b-12d3-a456-426614174000,99.99,USD,card,completed,2025-01-15,txn_abc123
+        987fcdeb-51a2-43d1-b234-567890abcdef,249.00,USD,bank_transfer,completed,2025-01-16,txn_xyz789
     """
     raise NotImplementedError(
-        "Payment import requires PaymentImportSchema and PaymentMapper implementation. "
-        "Follow the pattern in customer_management/mappers.py"
+        "Payment import feature not yet implemented. "
+        "Follow the implementation pattern in _process_customer_import() and customer_management/mappers.py"
     )
 
 
@@ -629,8 +669,8 @@ async def _process_chunk_data(
         return result
 
 
-@app.task
-@idempotent_task(ttl=300)
+@app.task  # type: ignore[misc]  # Celery decorator is untyped
+@idempotent_task(ttl=300)  # type: ignore[misc]  # Custom decorator is untyped
 def check_import_health() -> dict[str, Any]:
     """
     Periodic health check for import system.

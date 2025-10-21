@@ -36,7 +36,7 @@ export interface PaginationParams {
   page?: number;
   pageSize?: number;
   sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 }
 
 export interface SearchParams extends PaginationParams {
@@ -62,18 +62,9 @@ export interface ApiRequestOptions {
 
 // Type guards
 export function isApiError(error: unknown): error is ApiError {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    'message' in error
-  );
+  return typeof error === "object" && error !== null && "code" in error && "message" in error;
 }
 
 export function isApiResponse<T>(response: unknown): response is ApiResponse<T> {
-  return (
-    typeof response === 'object' &&
-    response !== null &&
-    'success' in response
-  );
+  return typeof response === "object" && response !== null && "success" in response;
 }

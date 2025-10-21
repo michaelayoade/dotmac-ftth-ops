@@ -186,7 +186,7 @@ class TestCreatePricingRule:
             )
 
             # Execute
-            result = await cached_pricing_engine.create_pricing_rule(create_request, "tenant-1")
+            await cached_pricing_engine.create_pricing_rule(create_request, "tenant-1")
 
             # Verify cache invalidation
             assert mock_cache.invalidate_pattern.called

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useToast } from '@/components/ui/use-toast';
-import { platformConfig } from '@/lib/config';
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useToast } from "@/components/ui/use-toast";
+import { platformConfig } from "@/lib/config";
 
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:
@@ -9,7 +9,7 @@ import { platformConfig } from '@/lib/config';
 // - sonner: toast.error('msg') -> useToast: toast({ title: 'Error', description: 'msg', variant: 'destructive' })
 // - For complex options, refer to useToast documentation
 
-const API_BASE_URL = platformConfig.apiBaseUrl;
+const API_BASE_URL = platformConfig.api.baseUrl;
 
 export interface SpanData {
   span_id: string;
@@ -26,7 +26,7 @@ export interface TraceData {
   service: string;
   operation: string;
   duration: number;
-  status: 'success' | 'error' | 'warning';
+  status: "success" | "error" | "warning";
   timestamp: string;
   spans: number;
   span_details: SpanData[];
@@ -48,7 +48,7 @@ export interface MetricDataPoint {
 
 export interface MetricSeries {
   name: string;
-  type: 'counter' | 'gauge' | 'histogram';
+  type: "counter" | "gauge" | "histogram";
   data_points: MetricDataPoint[];
   unit: string;
 }
@@ -98,7 +98,7 @@ export interface PerformanceResponse {
 
 export interface TracesFilter {
   service?: string;
-  status?: 'success' | 'error' | 'warning';
+  status?: "success" | "error" | "warning";
   min_duration?: number;
   start_time?: string;
   end_time?: string;
@@ -127,17 +127,18 @@ export function useTraces(filters: TracesFilter = {}) {
       setError(null);
 
       const params = new URLSearchParams();
-      if (activeFilters.service) params.append('service', activeFilters.service);
-      if (activeFilters.status) params.append('status', activeFilters.status);
-      if (activeFilters.min_duration) params.append('min_duration', activeFilters.min_duration.toString());
-      if (activeFilters.start_time) params.append('start_time', activeFilters.start_time);
-      if (activeFilters.end_time) params.append('end_time', activeFilters.end_time);
-      if (activeFilters.page) params.append('page', activeFilters.page.toString());
-      if (activeFilters.page_size) params.append('page_size', activeFilters.page_size.toString());
+      if (activeFilters.service) params.append("service", activeFilters.service);
+      if (activeFilters.status) params.append("status", activeFilters.status);
+      if (activeFilters.min_duration)
+        params.append("min_duration", activeFilters.min_duration.toString());
+      if (activeFilters.start_time) params.append("start_time", activeFilters.start_time);
+      if (activeFilters.end_time) params.append("end_time", activeFilters.end_time);
+      if (activeFilters.page) params.append("page", activeFilters.page.toString());
+      if (activeFilters.page_size) params.append("page_size", activeFilters.page_size.toString());
 
       const response = await axios.get<TracesResponse>(
         `${API_BASE_URL}/api/v1/observability/traces?${params.toString()}`,
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       setTraces(response.data.traces);
@@ -149,10 +150,10 @@ export function useTraces(filters: TracesFilter = {}) {
       });
     } catch (err: unknown) {
       const message = axios.isAxiosError(err)
-        ? err.response?.data?.detail || 'Failed to fetch traces'
-        : 'An error occurred';
+        ? err.response?.data?.detail || "Failed to fetch traces"
+        : "An error occurred";
       setError(message);
-      toast({ title: 'Error', description: message, variant: 'destructive' });
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -162,11 +163,11 @@ export function useTraces(filters: TracesFilter = {}) {
     try {
       const response = await axios.get<TraceData>(
         `${API_BASE_URL}/api/v1/observability/traces/${traceId}`,
-        { withCredentials: true }
+        { withCredentials: true },
       );
       return response.data;
     } catch (err: unknown) {
-      console.error('Failed to fetch trace details:', err);
+      console.error("Failed to fetch trace details:", err);
       return null;
     }
   };
@@ -200,23 +201,23 @@ export function useMetrics(metricNames?: string[]) {
 
       const params = new URLSearchParams();
       if (metricsToFetch && metricsToFetch.length > 0) {
-        params.append('metrics', metricsToFetch.join(','));
+        params.append("metrics", metricsToFetch.join(","));
       }
-      if (startTime) params.append('start_time', startTime);
-      if (endTime) params.append('end_time', endTime);
+      if (startTime) params.append("start_time", startTime);
+      if (endTime) params.append("end_time", endTime);
 
       const response = await axios.get<MetricsResponse>(
         `${API_BASE_URL}/api/v1/observability/metrics?${params.toString()}`,
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       setMetrics(response.data.metrics);
     } catch (err: unknown) {
       const message = axios.isAxiosError(err)
-        ? err.response?.data?.detail || 'Failed to fetch metrics'
-        : 'An error occurred';
+        ? err.response?.data?.detail || "Failed to fetch metrics"
+        : "An error occurred";
       setError(message);
-      toast({ title: 'Error', description: message, variant: 'destructive' });
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -247,16 +248,16 @@ export function useServiceMap() {
 
       const response = await axios.get<ServiceMapResponse>(
         `${API_BASE_URL}/api/v1/observability/service-map`,
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       setServiceMap(response.data);
     } catch (err: unknown) {
       const message = axios.isAxiosError(err)
-        ? err.response?.data?.detail || 'Failed to fetch service map'
-        : 'An error occurred';
+        ? err.response?.data?.detail || "Failed to fetch service map"
+        : "An error occurred";
       setError(message);
-      toast({ title: 'Error', description: message, variant: 'destructive' });
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -287,16 +288,16 @@ export function usePerformance() {
 
       const response = await axios.get<PerformanceResponse>(
         `${API_BASE_URL}/api/v1/observability/performance`,
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       setPerformance(response.data);
     } catch (err: unknown) {
       const message = axios.isAxiosError(err)
-        ? err.response?.data?.detail || 'Failed to fetch performance metrics'
-        : 'An error occurred';
+        ? err.response?.data?.detail || "Failed to fetch performance metrics"
+        : "An error occurred";
       setError(message);
-      toast({ title: 'Error', description: message, variant: 'destructive' });
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }

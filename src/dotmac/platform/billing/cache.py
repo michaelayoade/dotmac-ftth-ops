@@ -579,7 +579,7 @@ def invalidate_on_change(tags: list[str] | None = None, patterns: list[str] | No
 
     Example:
         @invalidate_on_change(patterns=["billing:product:*"])
-        async def update_product(product_id: str, data: dict):
+        async def update_product(product_id: str, data: dict[str, Any]):
             # Update product
             return updated_product
     """

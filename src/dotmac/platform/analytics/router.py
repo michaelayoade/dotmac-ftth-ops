@@ -61,7 +61,7 @@ def _isoformat(value: Any | None) -> str:
 
 
 # Create router
-analytics_router = APIRouter()
+analytics_router = APIRouter(prefix="/analytics", )
 
 # Analytics service instance (lazy initialization)
 _analytics_service = None
@@ -171,7 +171,7 @@ async def get_events(
     event_type: str | None = Query(None, description="Event type filter"),
     user_id: str | None = Query(None, description="User ID filter"),
     limit: int = Query(100, ge=1, le=1000, description="Result limit"),
-) -> dict:
+) -> dict[str, Any]:
     """
     Query analytics events.
 
@@ -209,7 +209,9 @@ async def get_events(
         )
 
 
-def _extract_metrics_from_dict(metrics_summary: dict, metric_name: str | None) -> list[dict]:
+def _extract_metrics_from_dict(
+    metrics_summary: dict[str, Any], metric_name: str | None
+) -> list[dict[str, Any]]:
     """Extract metrics from summary dictionary."""
     metrics_list = []
     for metric_type in ["counters", "gauges", "histograms"]:
@@ -227,7 +229,9 @@ def _extract_metrics_from_dict(metrics_summary: dict, metric_name: str | None) -
     return metrics_list
 
 
-def _convert_to_metrics_list(metrics_summary: dict | list, metric_name: str | None) -> list[dict]:
+def _convert_to_metrics_list(
+    metrics_summary: dict[str, Any] | list[Any], metric_name: str | None
+) -> list[dict[str, Any]]:
     """Convert metrics summary to list format."""
     if isinstance(metrics_summary, dict):
         return _extract_metrics_from_dict(metrics_summary, metric_name)
@@ -235,7 +239,7 @@ def _convert_to_metrics_list(metrics_summary: dict | list, metric_name: str | No
         return metrics_summary if isinstance(metrics_summary, list) else []
 
 
-def _group_metrics_by_name(metrics_list: list[dict]) -> dict:
+def _group_metrics_by_name(metrics_list: list[dict[str, Any]]) -> dict[str, Any]:
     """Group metrics by name for series creation."""
     from collections import defaultdict
 
@@ -250,7 +254,7 @@ def _group_metrics_by_name(metrics_list: list[dict]) -> dict:
     return grouped
 
 
-def _create_metric_series(grouped_metrics: dict, aggregation: str) -> list[MetricSeries]:
+def _create_metric_series(grouped_metrics: dict[str, Any], aggregation: str) -> list[MetricSeries]:
     """Create MetricSeries objects from grouped metrics."""
     metrics = []
     for name, data_points in grouped_metrics.items():
@@ -334,7 +338,7 @@ async def get_metrics(
 @analytics_router.post("/query", response_model=dict)
 async def custom_query(
     request: AnalyticsQueryRequest, current_user: CurrentUser = Depends(get_current_user)
-) -> dict:
+) -> dict[str, Any]:
     """
     Execute a custom analytics query.
 
@@ -445,7 +449,7 @@ async def generate_report(
 async def get_dashboard_data(
     current_user: CurrentUser = Depends(get_current_user),
     period: str = Query("day", description="Dashboard period (hour, day, week, month)"),
-) -> dict:
+) -> dict[str, Any]:
     """
     Get dashboard analytics data.
 

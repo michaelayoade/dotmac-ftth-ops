@@ -114,7 +114,7 @@ class TestPaymentServiceHappyPath:
                             )
 
                             # Create payment
-                            payment = await payment_service.create_payment(
+                            await payment_service.create_payment(
                                 tenant_id="tenant-1",
                                 amount=10000,  # $100.00
                                 currency="usd",
@@ -335,7 +335,7 @@ class TestPaymentServiceProviderFailure:
                     error_message="Insufficient funds",
                 )
 
-                payment = await service.create_payment(
+                await service.create_payment(
                     tenant_id="tenant-1",
                     amount=10000,
                     currency="usd",
@@ -374,7 +374,7 @@ class TestPaymentServiceProviderFailure:
                 # Provider throws exception
                 mock_provider.charge_payment_method.side_effect = Exception("Network error")
 
-                payment = await service.create_payment(
+                await service.create_payment(
                     tenant_id="tenant-1",
                     amount=10000,
                     currency="usd",

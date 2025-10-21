@@ -106,7 +106,7 @@ class TestInvoiceNumberGeneration:
         current_year = datetime.now(UTC).year
         # Mock existing invoice from previous year
         last_invoice = MagicMock()
-        last_invoice.invoice_number = f"INV-{current_year-1}-000999"
+        last_invoice.invoice_number = f"INV-{current_year - 1}-000999"
 
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None  # No invoices for current year
@@ -126,7 +126,7 @@ class TestPaymentStatusUpdate:
         with patch.object(
             invoice_service, "_get_invoice_entity", return_value=sample_invoice_entity
         ):
-            invoice = await invoice_service.update_invoice_payment_status(
+            await invoice_service.update_invoice_payment_status(
                 tenant_id="tenant-1",
                 invoice_id="inv_123",
                 payment_status=PaymentStatus.SUCCEEDED,
@@ -144,7 +144,7 @@ class TestPaymentStatusUpdate:
         with patch.object(
             invoice_service, "_get_invoice_entity", return_value=sample_invoice_entity
         ):
-            invoice = await invoice_service.update_invoice_payment_status(
+            await invoice_service.update_invoice_payment_status(
                 tenant_id="tenant-1",
                 invoice_id="inv_123",
                 payment_status=PaymentStatus.PARTIALLY_REFUNDED,
@@ -243,9 +243,7 @@ class TestInvoiceNotification:
                 mock_email_service.return_value = mock_email_instance
 
                 # Mock audit log_system_activity (not log_api_activity)
-                with patch(
-                    "dotmac.platform.audit.log_system_activity", new_callable=AsyncMock
-                ) as mock_audit:
+                with patch("dotmac.platform.audit.log_system_activity", new_callable=AsyncMock):
                     # Also mock ActivityType import
                     with patch("dotmac.platform.audit.ActivityType"):
                         await invoice_service._send_invoice_notification(sample_invoice_entity)

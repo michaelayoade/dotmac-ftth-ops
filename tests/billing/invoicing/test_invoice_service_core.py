@@ -332,7 +332,7 @@ class TestInvoiceRetrieval:
     ):
         """Test listing invoices filtered by status."""
         # Create draft invoice
-        draft_invoice = await invoice_service.create_invoice(
+        await invoice_service.create_invoice(
             tenant_id=tenant_id,
             customer_id=customer_id,
             billing_email="customer@example.com",
@@ -743,7 +743,7 @@ class TestTenantIsolation:
             mock_dt.now.return_value = future_time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
 
-            invoice2 = await invoice_service.create_invoice(
+            await invoice_service.create_invoice(
                 tenant_id=tenant2_id,
                 customer_id="cust_t2",
                 billing_email="t2@example.com",

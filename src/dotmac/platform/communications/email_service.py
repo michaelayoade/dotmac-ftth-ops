@@ -17,10 +17,12 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.settings import settings
+
 logger = structlog.get_logger(__name__)
 
 
-class EmailMessage(BaseModel):
+class EmailMessage(BaseModel):  # BaseModel resolves to Any in isolation
     """Email message model."""
 
     to: list[EmailStr] = Field(..., description="Recipient email addresses")
@@ -36,7 +38,7 @@ class EmailMessage(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
 
-class EmailResponse(BaseModel):
+class EmailResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Email sending response."""
 
     model_config = ConfigDict()
@@ -229,33 +231,53 @@ class EmailService:
             return f'"{from_name}" <{email}>'
         return email
 
-    def _get_smtp_credentials(self) -> tuple[str | None, str | None]:
-        """Get SMTP credentials from Vault or environment.
+    def _resolve_vault_secret_path(self) -> str:
+        """Normalize configured Vault path relative to the mount path."""
+        path = self.vault_path.strip("/")
+        mount_path = settings.vault.mount_path.strip("/") if settings.vault.mount_path else ""
 
-        Returns:
-            tuple: (smtp_user, smtp_password)
-        """
-        if not self.use_vault:
+        if mount_path and path.startswith(f"{mount_path}/"):
+            return path[len(mount_path) + 1 :]
+        return path
+
+    def _get_smtp_credentials(self) -> tuple[str | None, str | None]:
+        """Get SMTP credentials from Vault or environment."""
+        if not self.use_vault or not settings.vault.enabled:
             return (self.smtp_user, self.smtp_password)
 
-        # Fetch from Vault (cached for performance)
         if self._vault_credentials is None:
+            secret_path = self._resolve_vault_secret_path()
             try:
                 from dotmac.platform.secrets.vault_client import VaultClient, VaultError
 
-                vault = VaultClient()
-                self._vault_credentials = vault.read(self.vault_path)
-                logger.info("SMTP credentials loaded from Vault", path=self.vault_path)
+                vault_client = VaultClient(
+                    url=settings.vault.url,
+                    token=settings.vault.token,
+                    namespace=settings.vault.namespace,
+                    mount_path=settings.vault.mount_path,
+                    kv_version=settings.vault.kv_version,
+                )
+                try:
+                    self._vault_credentials = vault_client.get_secret(secret_path) or {}
+                finally:
+                    vault_client.close()
+
+                if self._vault_credentials:
+                    logger.info("SMTP credentials loaded from Vault", path=secret_path)
             except VaultError as exc:
                 logger.warning(
                     "Failed to load SMTP credentials from Vault, falling back to environment",
                     error=str(exc),
                 )
-                return (self.smtp_user, self.smtp_password)
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.warning(
+                    "Unexpected error loading SMTP credentials from Vault, falling back to environment",
+                    error=str(exc),
+                )
 
         return (
-            self._vault_credentials.get("user") or self.smtp_user,
-            self._vault_credentials.get("password") or self.smtp_password,
+            (self._vault_credentials or {}).get("user") or self.smtp_user,
+            (self._vault_credentials or {}).get("password") or self.smtp_password,
         )
 
     async def _send_smtp(self, msg: MIMEMultipart, message: EmailMessage) -> None:

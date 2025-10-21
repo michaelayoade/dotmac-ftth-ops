@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { JestAxeConfigureOptions } from 'jest-axe';
+import { JestAxeConfigureOptions } from "jest-axe";
 
 declare global {
   namespace jest {

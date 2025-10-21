@@ -96,23 +96,18 @@ export function EmptyState({
       className={cn(
         "flex flex-col items-center justify-center text-center",
         styles.container,
-        className
+        className,
       )}
       role="status"
       aria-label={title}
     >
       {Icon && (
         <div className="mb-4 rounded-full bg-accent p-3">
-          <Icon
-            className={cn(styles.icon, "text-muted-foreground")}
-            aria-hidden="true"
-          />
+          <Icon className={cn(styles.icon, "text-muted-foreground")} aria-hidden="true" />
         </div>
       )}
 
-      <h3 className={cn("font-semibold text-foreground mb-2", styles.title)}>
-        {title}
-      </h3>
+      <h3 className={cn("font-semibold text-foreground mb-2", styles.title)}>{title}</h3>
 
       {description && (
         <p className={cn("text-muted-foreground max-w-md mb-6", styles.description)}>
@@ -137,9 +132,7 @@ export function EmptyState({
               variant="outline"
               size={size === "sm" ? "sm" : "default"}
             >
-              {secondaryAction.icon && (
-                <secondaryAction.icon className="h-4 w-4 mr-2" />
-              )}
+              {secondaryAction.icon && <secondaryAction.icon className="h-4 w-4 mr-2" />}
               {secondaryAction.label}
             </Button>
           )}

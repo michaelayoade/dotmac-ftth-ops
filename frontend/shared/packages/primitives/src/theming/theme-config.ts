@@ -3,7 +3,7 @@
  * Generates theme variants from configuration instead of hardcoding
  */
 
-import type { BrandTheme, PortalVariant } from './theme-provider';
+import type { BrandTheme, PortalVariant } from "./theme-provider";
 
 // Theme generation utilities
 export interface ThemeConfig {
@@ -24,117 +24,117 @@ export function generateThemeFromConfig(config: ThemeConfig): BrandTheme {
   const accentPalette = accentColor ? generateColorPalette(accentColor) : primaryPalette;
 
   return {
-    id: `${brandName.toLowerCase().replace(/\s+/g, '-')}-theme`,
+    id: `${brandName.toLowerCase().replace(/\s+/g, "-")}-theme`,
     name: `${brandName} Theme`,
     colors: {
       primary: primaryPalette,
       secondary: accentPalette,
       accent: accentPalette,
       neutral: {
-        50: '#fafafa',
-        100: '#f5f5f5',
-        200: '#e5e5e5',
-        300: '#d4d4d4',
-        400: '#a3a3a3',
-        500: '#737373',
-        600: '#525252',
-        700: '#404040',
-        800: '#262626',
-        900: '#171717',
-        950: '#0a0a0a',
+        50: "#fafafa",
+        100: "#f5f5f5",
+        200: "#e5e5e5",
+        300: "#d4d4d4",
+        400: "#a3a3a3",
+        500: "#737373",
+        600: "#525252",
+        700: "#404040",
+        800: "#262626",
+        900: "#171717",
+        950: "#0a0a0a",
       },
       success: {
-        50: '#f0fdf4',
-        100: '#dcfce7',
-        200: '#bbf7d0',
-        300: '#86efac',
-        400: '#4ade80',
-        500: '#22c55e',
-        600: '#16a34a',
-        700: '#15803d',
-        800: '#166534',
-        900: '#14532d',
-        950: '#052e16',
+        50: "#f0fdf4",
+        100: "#dcfce7",
+        200: "#bbf7d0",
+        300: "#86efac",
+        400: "#4ade80",
+        500: "#22c55e",
+        600: "#16a34a",
+        700: "#15803d",
+        800: "#166534",
+        900: "#14532d",
+        950: "#052e16",
       },
       warning: {
-        50: '#fefce8',
-        100: '#fef3c7',
-        200: '#fde68a',
-        300: '#fcd34d',
-        400: '#fbbf24',
-        500: '#f59e0b',
-        600: '#d97706',
-        700: '#b45309',
-        800: '#92400e',
-        900: '#78350f',
-        950: '#451a03',
+        50: "#fefce8",
+        100: "#fef3c7",
+        200: "#fde68a",
+        300: "#fcd34d",
+        400: "#fbbf24",
+        500: "#f59e0b",
+        600: "#d97706",
+        700: "#b45309",
+        800: "#92400e",
+        900: "#78350f",
+        950: "#451a03",
       },
       error: {
-        50: '#fef2f2',
-        100: '#fee2e2',
-        200: '#fecaca',
-        300: '#fca5a5',
-        400: '#f87171',
-        500: '#ef4444',
-        600: '#dc2626',
-        700: '#b91c1c',
-        800: '#991b1b',
-        900: '#7f1d1d',
-        950: '#450a0a',
+        50: "#fef2f2",
+        100: "#fee2e2",
+        200: "#fecaca",
+        300: "#fca5a5",
+        400: "#f87171",
+        500: "#ef4444",
+        600: "#dc2626",
+        700: "#b91c1c",
+        800: "#991b1b",
+        900: "#7f1d1d",
+        950: "#450a0a",
       },
     },
     typography: {
       fontFamily: {
         sans: fontFamily
-          ? [fontFamily, 'system-ui', 'sans-serif']
-          : ['Inter', 'system-ui', 'sans-serif'],
-        serif: ['Georgia', 'serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+          ? [fontFamily, "system-ui", "sans-serif"]
+          : ["Inter", "system-ui", "sans-serif"],
+        serif: ["Georgia", "serif"],
+        mono: ["JetBrains Mono", "monospace"],
       },
       fontSize: {
-        xs: ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.05em' }],
-        sm: ['0.875rem', { lineHeight: '1.25rem', letterSpacing: '0.025em' }],
-        base: ['1rem', { lineHeight: '1.5rem', letterSpacing: '0em' }],
-        lg: ['1.125rem', { lineHeight: '1.75rem', letterSpacing: '-0.025em' }],
-        xl: ['1.25rem', { lineHeight: '1.75rem', letterSpacing: '-0.025em' }],
-        '2xl': ['1.5rem', { lineHeight: '2rem', letterSpacing: '-0.05em' }],
-        '3xl': ['1.875rem', { lineHeight: '2.25rem', letterSpacing: '-0.05em' }],
-        '4xl': ['2.25rem', { lineHeight: '2.5rem', letterSpacing: '-0.05em' }],
+        xs: ["0.75rem", { lineHeight: "1rem", letterSpacing: "0.05em" }],
+        sm: ["0.875rem", { lineHeight: "1.25rem", letterSpacing: "0.025em" }],
+        base: ["1rem", { lineHeight: "1.5rem", letterSpacing: "0em" }],
+        lg: ["1.125rem", { lineHeight: "1.75rem", letterSpacing: "-0.025em" }],
+        xl: ["1.25rem", { lineHeight: "1.75rem", letterSpacing: "-0.025em" }],
+        "2xl": ["1.5rem", { lineHeight: "2rem", letterSpacing: "-0.05em" }],
+        "3xl": ["1.875rem", { lineHeight: "2.25rem", letterSpacing: "-0.05em" }],
+        "4xl": ["2.25rem", { lineHeight: "2.5rem", letterSpacing: "-0.05em" }],
       },
       fontWeight: {
-        light: '300',
-        normal: '400',
-        medium: '500',
-        semibold: '600',
-        bold: '700',
-        extrabold: '800',
+        light: "300",
+        normal: "400",
+        medium: "500",
+        semibold: "600",
+        bold: "700",
+        extrabold: "800",
       },
     },
     spacing: {
-      xs: '0.25rem',
-      sm: '0.5rem',
-      md: '1rem',
-      lg: '1.5rem',
-      xl: '2rem',
-      '2xl': '3rem',
-      '3xl': '4rem',
-      '4xl': '6rem',
+      xs: "0.25rem",
+      sm: "0.5rem",
+      md: "1rem",
+      lg: "1.5rem",
+      xl: "2rem",
+      "2xl": "3rem",
+      "3xl": "4rem",
+      "4xl": "6rem",
     },
     borderRadius: {
-      none: '0px',
-      sm: '0.125rem',
-      md: '0.375rem',
-      lg: '0.5rem',
-      xl: '0.75rem',
-      '2xl': '1rem',
-      full: '9999px',
+      none: "0px",
+      sm: "0.125rem",
+      md: "0.375rem",
+      lg: "0.5rem",
+      xl: "0.75rem",
+      "2xl": "1rem",
+      full: "9999px",
     },
     shadows: {
-      sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-      md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-      lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-      xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
-      '2xl': '0 25px 50px -12px rgb(0 0 0 / 0.25)',
+      sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+      md: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+      lg: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+      xl: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+      "2xl": "0 25px 50px -12px rgb(0 0 0 / 0.25)",
     },
     brand: {
       name: brandName,
@@ -239,46 +239,46 @@ function hslToHex(h: number, s: number, l: number): string {
   g = Math.round((g + m) * 255);
   b = Math.round((b + m) * 255);
 
-  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
 
 // Predefined theme configurations for common ISP brands
 export const commonISPThemes: Record<string, ThemeConfig> = {
   // Traditional ISP themes
   blueISP: {
-    brandColor: '#1e40af',
-    accentColor: '#059669',
-    brandName: 'BlueNet ISP',
-    fontFamily: 'Inter',
+    brandColor: "#1e40af",
+    accentColor: "#059669",
+    brandName: "BlueNet ISP",
+    fontFamily: "Inter",
   },
 
   orangeISP: {
-    brandColor: '#ea580c',
-    accentColor: '#0369a1',
-    brandName: 'OrangeTech Communications',
-    fontFamily: 'Inter',
+    brandColor: "#ea580c",
+    accentColor: "#0369a1",
+    brandName: "OrangeTech Communications",
+    fontFamily: "Inter",
   },
 
   greenISP: {
-    brandColor: '#059669',
-    accentColor: '#7c3aed',
-    brandName: 'GreenWave Internet',
-    fontFamily: 'Inter',
+    brandColor: "#059669",
+    accentColor: "#7c3aed",
+    brandName: "GreenWave Internet",
+    fontFamily: "Inter",
   },
 
   purpleISP: {
-    brandColor: '#7c3aed',
-    accentColor: '#dc2626',
-    brandName: 'Purple Fiber Network',
-    fontFamily: 'Inter',
+    brandColor: "#7c3aed",
+    accentColor: "#dc2626",
+    brandName: "Purple Fiber Network",
+    fontFamily: "Inter",
   },
 
   // Modern ISP themes
   darkTechISP: {
-    brandColor: '#374151',
-    accentColor: '#06b6d4',
-    brandName: 'DarkTech Networks',
-    fontFamily: 'Inter',
+    brandColor: "#374151",
+    accentColor: "#06b6d4",
+    brandName: "DarkTech Networks",
+    fontFamily: "Inter",
     customCss: `
       :root {
         --color-neutral-50: #1f2937;
@@ -290,10 +290,10 @@ export const commonISPThemes: Record<string, ThemeConfig> = {
 
   // White-label generic
   genericISP: {
-    brandColor: '#6b7280',
-    accentColor: '#6b7280',
-    brandName: 'Generic ISP',
-    fontFamily: 'Inter',
+    brandColor: "#6b7280",
+    accentColor: "#6b7280",
+    brandName: "Generic ISP",
+    fontFamily: "Inter",
   },
 };
 
@@ -307,7 +307,7 @@ export function generatePortalThemes(baseConfig: ThemeConfig): Record<PortalVari
       ...baseTheme,
       colors: {
         ...baseTheme.colors,
-        primary: generateColorPalette('#1e40af'), // Admin blue
+        primary: generateColorPalette("#1e40af"), // Admin blue
       },
     },
 
@@ -315,7 +315,7 @@ export function generatePortalThemes(baseConfig: ThemeConfig): Record<PortalVari
       ...baseTheme,
       colors: {
         ...baseTheme.colors,
-        primary: generateColorPalette('#059669'), // Customer green
+        primary: generateColorPalette("#059669"), // Customer green
       },
     },
 
@@ -323,7 +323,7 @@ export function generatePortalThemes(baseConfig: ThemeConfig): Record<PortalVari
       ...baseTheme,
       colors: {
         ...baseTheme.colors,
-        primary: generateColorPalette('#7c3aed'), // Reseller purple
+        primary: generateColorPalette("#7c3aed"), // Reseller purple
       },
     },
 
@@ -331,7 +331,7 @@ export function generatePortalThemes(baseConfig: ThemeConfig): Record<PortalVari
       ...baseTheme,
       colors: {
         ...baseTheme.colors,
-        primary: generateColorPalette('#ea580c'), // Technician orange
+        primary: generateColorPalette("#ea580c"), // Technician orange
       },
     },
 
@@ -339,7 +339,7 @@ export function generatePortalThemes(baseConfig: ThemeConfig): Record<PortalVari
       ...baseTheme,
       colors: {
         ...baseTheme.colors,
-        primary: generateColorPalette('#dc2626'), // Management red
+        primary: generateColorPalette("#dc2626"), // Management red
       },
     },
 
@@ -352,15 +352,15 @@ export class ThemeConfigLoader {
   private static cache = new Map<string, BrandTheme>();
 
   static async loadThemeConfig(
-    source: 'api' | 'local' | 'env',
+    source: "api" | "local" | "env",
     options: {
       apiEndpoint?: string;
       tenantId?: string;
       portalVariant?: PortalVariant;
       fallbackConfig?: ThemeConfig;
-    } = {}
+    } = {},
   ): Promise<BrandTheme> {
-    const cacheKey = `${source}-${options.tenantId || 'default'}-${options.portalVariant || 'admin'}`;
+    const cacheKey = `${source}-${options.tenantId || "default"}-${options.portalVariant || "admin"}`;
 
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey)!;
@@ -369,15 +369,15 @@ export class ThemeConfigLoader {
     let theme: BrandTheme;
 
     switch (source) {
-      case 'api':
+      case "api":
         theme = await this.loadFromAPI(options);
         break;
 
-      case 'env':
+      case "env":
         theme = this.loadFromEnvironment(options);
         break;
 
-      case 'local':
+      case "local":
       default:
         theme = this.loadFromLocalConfig(options);
         break;
@@ -389,13 +389,13 @@ export class ThemeConfigLoader {
 
   private static async loadFromAPI(options: any): Promise<BrandTheme> {
     if (!options.apiEndpoint) {
-      throw new Error('API endpoint required for API theme loading');
+      throw new Error("API endpoint required for API theme loading");
     }
 
     try {
       const url = new URL(options.apiEndpoint);
-      if (options.tenantId) url.searchParams.set('tenant', options.tenantId);
-      if (options.portalVariant) url.searchParams.set('portal', options.portalVariant);
+      if (options.tenantId) url.searchParams.set("tenant", options.tenantId);
+      if (options.portalVariant) url.searchParams.set("portal", options.portalVariant);
 
       const response = await fetch(url.toString());
       const data = await response.json();
@@ -406,7 +406,7 @@ export class ThemeConfigLoader {
         return generateThemeFromConfig(data.themeConfig);
       }
     } catch (error) {
-      console.warn('Failed to load theme from API:', error);
+      console.warn("Failed to load theme from API:", error);
     }
 
     // Fallback to default
@@ -415,9 +415,9 @@ export class ThemeConfigLoader {
 
   private static loadFromEnvironment(options: any): BrandTheme {
     const config: ThemeConfig = {
-      brandColor: process.env.REACT_APP_BRAND_COLOR || '#1e40af',
+      brandColor: process.env.REACT_APP_BRAND_COLOR || "#1e40af",
       accentColor: process.env.REACT_APP_ACCENT_COLOR,
-      brandName: process.env.REACT_APP_BRAND_NAME || 'ISP Platform',
+      brandName: process.env.REACT_APP_BRAND_NAME || "ISP Platform",
       logoUrl: process.env.REACT_APP_LOGO_URL,
       fontFamily: process.env.REACT_APP_FONT_FAMILY,
       customCss: process.env.REACT_APP_CUSTOM_CSS,
@@ -428,7 +428,7 @@ export class ThemeConfigLoader {
 
   private static loadFromLocalConfig(options: any): BrandTheme {
     // Try to load from local configuration file or use fallback
-    const configName = options.tenantId || 'default';
+    const configName = options.tenantId || "default";
     const storedConfig = localStorage.getItem(`theme-config-${configName}`);
 
     if (storedConfig) {
@@ -436,7 +436,7 @@ export class ThemeConfigLoader {
         const config = JSON.parse(storedConfig);
         return generateThemeFromConfig(config);
       } catch (error) {
-        console.warn('Failed to parse stored theme config:', error);
+        console.warn("Failed to parse stored theme config:", error);
       }
     }
 

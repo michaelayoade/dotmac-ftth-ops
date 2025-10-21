@@ -5,7 +5,7 @@ Provides REST endpoints for user management operations.
 """
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -21,7 +21,7 @@ from dotmac.platform.user_management.service import UserService
 logger = structlog.get_logger(__name__)
 
 # Create router
-user_router = APIRouter()
+user_router = APIRouter(prefix="/users", )
 
 
 # ========================================
@@ -29,7 +29,7 @@ user_router = APIRouter()
 # ========================================
 
 
-class UserCreateRequest(BaseModel):
+class UserCreateRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """User creation request model."""
 
     model_config = ConfigDict()
@@ -42,7 +42,7 @@ class UserCreateRequest(BaseModel):
     is_active: bool = Field(True, description="Is user active")
 
 
-class UserUpdateRequest(BaseModel):
+class UserUpdateRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """User update request model."""
 
     model_config = ConfigDict()
@@ -53,7 +53,7 @@ class UserUpdateRequest(BaseModel):
     is_active: bool | None = Field(None, description="Is user active")
 
 
-class UserResponse(BaseModel):
+class UserResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """User response model."""
 
     model_config = ConfigDict()
@@ -69,7 +69,7 @@ class UserResponse(BaseModel):
     last_login: datetime | None = Field(None, description="Last login timestamp")
 
 
-class PasswordChangeRequest(BaseModel):
+class PasswordChangeRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Password change request model."""
 
     model_config = ConfigDict()
@@ -79,7 +79,7 @@ class PasswordChangeRequest(BaseModel):
     confirm_password: str = Field(..., description="Confirm new password")
 
 
-class UserListResponse(BaseModel):
+class UserListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """User list response model."""
 
     model_config = ConfigDict()
@@ -96,7 +96,7 @@ class UserListResponse(BaseModel):
 
 
 async def get_user_service(
-    session: Annotated[AsyncSession, Depends(get_session_dependency)]
+    session: Annotated[AsyncSession, Depends(get_session_dependency)],
 ) -> UserService:
     """Get user service with database session."""
     return UserService(session)
@@ -150,7 +150,7 @@ async def change_password(
     request: PasswordChangeRequest,
     current_user: UserInfo = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
-) -> dict:
+) -> dict[str, Any]:
     """
     Change current user's password.
 
@@ -303,7 +303,7 @@ async def disable_user(
     user_id: str,
     admin_user: UserInfo = Depends(require_permission("users.update")),
     user_service: UserService = Depends(get_user_service),
-) -> dict:
+) -> dict[str, Any]:
     """
     Disable a user account.
 
@@ -323,7 +323,7 @@ async def enable_user(
     user_id: str,
     admin_user: UserInfo = Depends(require_permission("users.update")),
     user_service: UserService = Depends(get_user_service),
-) -> dict:
+) -> dict[str, Any]:
     """
     Enable a user account.
 

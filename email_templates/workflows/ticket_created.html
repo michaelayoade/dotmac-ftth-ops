@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Ticket Created - {{ ticket_number }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .ticket-box {
+            background: #f5f3ff;
+            border: 2px solid #8b5cf6;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+        }
+        .ticket-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #7c3aed;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .priority-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .priority-low {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .priority-normal {
+            background: #e0e7ff;
+            color: #4338ca;
+        }
+        .priority-high {
+            background: #fed7aa;
+            color: #9a3412;
+        }
+        .priority-urgent {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .info-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .info-table td:first-child {
+            font-weight: 600;
+            color: #6b7280;
+            width: 35%;
+        }
+        .message-box {
+            background: #f9fafb;
+            border-left: 4px solid #8b5cf6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .message-box h3 {
+            margin-top: 0;
+            color: #7c3aed;
+        }
+        .button {
+            display: inline-block;
+            background: #8b5cf6;
+            color: #ffffff;
+            padding: 14px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background: #7c3aed;
+        }
+        .sla-box {
+            background: #fef9c3;
+            border: 1px solid #facc15;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .timeline {
+            margin: 25px 0;
+        }
+        .timeline-item {
+            display: flex;
+            margin: 15px 0;
+        }
+        .timeline-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #8b5cf6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .timeline-content {
+            flex: 1;
+        }
+        .timeline-content strong {
+            display: block;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+        .timeline-content small {
+            color: #6b7280;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #8b5cf6;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎫 Support Ticket Created</h1>
+        </div>
+
+        <div class="content">
+            <h2>Hi {{ customer_name }},</h2>
+
+            <p>Your support ticket has been successfully created and assigned to our support team. We'll respond as soon as possible.</p>
+
+            <div class="ticket-box">
+                <div style="text-align: center;">
+                    <div style="font-size: 14px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Ticket Number</div>
+                    <div class="ticket-number">{{ ticket_number }}</div>
+                    <div style="margin: 15px 0;">
+                        <span class="priority-badge priority-{{ priority }}">
+                            {{ priority }} Priority
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Ticket Details</h3>
+            <table class="info-table">
+                <tr>
+                    <td>Subject</td>
+                    <td><strong>{{ ticket_subject }}</strong></td>
+                </tr>
+                <tr>
+                    <td>Type</td>
+                    <td>{{ ticket_type }}</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td>{{ ticket_status }}</td>
+                </tr>
+                <tr>
+                    <td>Priority</td>
+                    <td>{{ priority }}</td>
+                </tr>
+                <tr>
+                    <td>Created</td>
+                    <td>{{ created_at }}</td>
+                </tr>
+                {% if assigned_team %}
+                <tr>
+                    <td>Assigned To</td>
+                    <td>{{ assigned_team }}</td>
+                </tr>
+                {% endif %}
+                {% if service_address %}
+                <tr>
+                    <td>Service Address</td>
+                    <td>{{ service_address }}</td>
+                </tr>
+                {% endif %}
+            </table>
+
+            {% if sla_due_date %}
+            <div class="sla-box">
+                <strong>⏰ Response Time Commitment</strong><br>
+                We aim to respond to your ticket by: <strong>{{ sla_due_date }}</strong><br>
+                Average response time for {{ priority }} priority tickets: <strong>{{ estimated_response_time }}</strong>
+            </div>
+            {% endif %}
+
+            <div class="message-box">
+                <h3>Your Message</h3>
+                <p>{{ ticket_description }}</p>
+            </div>
+
+            <center>
+                <a href="{{ ticket_url }}" class="button">View Ticket Details</a>
+            </center>
+
+            <h3>What Happens Next?</h3>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-icon">1</div>
+                    <div class="timeline-content">
+                        <strong>Ticket Received</strong>
+                        <small>Your ticket has been created and logged in our system</small>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-icon">2</div>
+                    <div class="timeline-content">
+                        <strong>Assigned to Support Team</strong>
+                        <small>A support agent will review your ticket and reach out</small>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-icon">3</div>
+                    <div class="timeline-content">
+                        <strong>Investigation & Resolution</strong>
+                        <small>We'll work to resolve your issue as quickly as possible</small>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-icon">4</div>
+                    <div class="timeline-content">
+                        <strong>Ticket Closed</strong>
+                        <small>Once resolved, we'll close the ticket and request your feedback</small>
+                    </div>
+                </div>
+            </div>
+
+            <h3>How to Track Your Ticket</h3>
+            <ul>
+                <li>You'll receive email updates whenever there's activity on your ticket</li>
+                <li>Log in to the <a href="{{ portal_url }}/tickets">customer portal</a> to view real-time status</li>
+                <li>Reply to this email to add comments to your ticket</li>
+                <li>Reference ticket number <strong>{{ ticket_number }}</strong> in all communications</li>
+            </ul>
+
+            <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 25px 0;">
+                <h3 style="margin-top: 0; color: #1e40af;">💡 Quick Tips</h3>
+                <ul style="margin-bottom: 0;">
+                    <li>Keep your ticket number handy for reference</li>
+                    <li>Check your email for updates from our support team</li>
+                    <li>Provide additional details if requested to speed up resolution</li>
+                    <li>You can add attachments through the customer portal</li>
+                </ul>
+            </div>
+
+            {% if related_articles %}
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                <h3 style="margin-top: 0; color: #15803d;">📚 Related Help Articles</h3>
+                <p>While you wait, these articles might help:</p>
+                <ul>
+                    {% for article in related_articles %}
+                    <li><a href="{{ article.url }}">{{ article.title }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div style="background: #f9fafb; padding: 20px; border-radius: 8px;">
+                <strong>Need Urgent Assistance?</strong><br>
+                For urgent issues, you can reach us directly:<br><br>
+                📞 <strong>Support Hotline:</strong> {{ support_phone }}<br>
+                💬 <strong>Live Chat:</strong> <a href="{{ portal_url }}/support">Available 24/7</a><br>
+                📧 <strong>Email:</strong> <a href="mailto:{{ support_email }}">{{ support_email }}</a>
+                <br><br>
+                <small style="color: #6b7280;">Please mention ticket number {{ ticket_number }} when contacting us</small>
+            </div>
+
+            <p>Thank you for reaching out. We're committed to resolving your issue promptly!</p>
+
+            <p>Best regards,<br>
+            <strong>{{ company_name }} Support Team</strong></p>
+        </div>
+
+        <div class="footer">
+            <p>{{ company_name }} | {{ company_address }}</p>
+            <p>
+                <a href="{{ ticket_url }}">View Ticket</a> |
+                <a href="{{ portal_url }}/tickets">All Tickets</a> |
+                <a href="{{ knowledge_base_url }}">Knowledge Base</a>
+            </p>
+            <p>© {{ current_year }} {{ company_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

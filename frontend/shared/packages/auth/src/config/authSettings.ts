@@ -17,7 +17,7 @@ export interface AuthSecurityConfig {
   refreshCookieName: string;
   cookieSecure: boolean;
   cookieHttpOnly: boolean;
-  cookieSameSite: 'strict' | 'lax' | 'none';
+  cookieSameSite: "strict" | "lax" | "none";
   cookieDomain?: string;
   cookieMaxAge: number;
 
@@ -79,7 +79,7 @@ export interface AuthFeaturesConfig {
 }
 
 export interface AuthStorageConfig {
-  storageType: 'localStorage' | 'sessionStorage' | 'secure';
+  storageType: "localStorage" | "sessionStorage" | "secure";
   encryptStorage: boolean;
   storagePrefix: string;
   autoCleanup: boolean;
@@ -107,11 +107,11 @@ export class AuthSettings {
   }
 
   private loadSettings() {
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = process.env.NODE_ENV === "production";
     const isHTTPS =
-      process.env.HTTPS === 'true' ||
-      process.env.NODE_ENV === 'production' ||
-      (typeof window !== 'undefined' && window.location.protocol === 'https:');
+      process.env.HTTPS === "true" ||
+      process.env.NODE_ENV === "production" ||
+      (typeof window !== "undefined" && window.location.protocol === "https:");
 
     return {
       security: this.getSecurityConfig(isProduction, isHTTPS),
@@ -126,77 +126,77 @@ export class AuthSettings {
       // JWT Configuration
       jwtSecret:
         process.env.JWT_SECRET ||
-        (isProduction ? this.throwMissingSecret('JWT_SECRET') : 'dev-secret-change-in-production'),
+        (isProduction ? this.throwMissingSecret("JWT_SECRET") : "dev-secret-change-in-production"),
       jwtRefreshSecret:
         process.env.JWT_REFRESH_SECRET ||
-        (isProduction ? this.throwMissingSecret('JWT_REFRESH_SECRET') : 'dev-refresh-secret'),
-      jwtIssuer: process.env.JWT_ISSUER || 'dotmac-isp-framework',
-      jwtAudience: process.env.JWT_AUDIENCE || 'dotmac-portals',
-      accessTokenExpiry: process.env.ACCESS_TOKEN_EXPIRY || '15m',
-      refreshTokenExpiry: process.env.REFRESH_TOKEN_EXPIRY || '7d',
+        (isProduction ? this.throwMissingSecret("JWT_REFRESH_SECRET") : "dev-refresh-secret"),
+      jwtIssuer: process.env.JWT_ISSUER || "dotmac-isp-framework",
+      jwtAudience: process.env.JWT_AUDIENCE || "dotmac-portals",
+      accessTokenExpiry: process.env.ACCESS_TOKEN_EXPIRY || "15m",
+      refreshTokenExpiry: process.env.REFRESH_TOKEN_EXPIRY || "7d",
 
       // Cookie Configuration
-      cookieName: process.env.AUTH_COOKIE_NAME || 'secure-auth-token',
-      refreshCookieName: process.env.REFRESH_COOKIE_NAME || 'secure-refresh-token',
+      cookieName: process.env.AUTH_COOKIE_NAME || "secure-auth-token",
+      refreshCookieName: process.env.REFRESH_COOKIE_NAME || "secure-refresh-token",
       cookieSecure: isHTTPS, // Only secure in HTTPS environments
       cookieHttpOnly: true,
-      cookieSameSite: (process.env.COOKIE_SAME_SITE as any) || 'strict',
+      cookieSameSite: (process.env.COOKIE_SAME_SITE as any) || "strict",
       cookieDomain: process.env.COOKIE_DOMAIN,
-      cookieMaxAge: parseInt(process.env.COOKIE_MAX_AGE || '3600000'), // 1 hour
+      cookieMaxAge: parseInt(process.env.COOKIE_MAX_AGE || "3600000"), // 1 hour
 
       // CSRF Protection
-      csrfEnabled: process.env.CSRF_ENABLED !== 'false',
-      csrfTokenName: process.env.CSRF_TOKEN_NAME || 'csrf-token',
-      csrfHeaderName: process.env.CSRF_HEADER_NAME || 'x-csrf-token',
-      csrfCookieName: process.env.CSRF_COOKIE_NAME || 'csrf-token',
+      csrfEnabled: process.env.CSRF_ENABLED !== "false",
+      csrfTokenName: process.env.CSRF_TOKEN_NAME || "csrf-token",
+      csrfHeaderName: process.env.CSRF_HEADER_NAME || "x-csrf-token",
+      csrfCookieName: process.env.CSRF_COOKIE_NAME || "csrf-token",
 
       // Rate Limiting
-      rateLimitEnabled: process.env.RATE_LIMIT_ENABLED !== 'false',
-      rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW || '900000'), // 15 minutes
-      rateLimitMaxAttempts: parseInt(process.env.RATE_LIMIT_MAX_ATTEMPTS || '5'),
-      rateLimitBlockDuration: parseInt(process.env.RATE_LIMIT_BLOCK_DURATION || '1800000'), // 30 minutes
+      rateLimitEnabled: process.env.RATE_LIMIT_ENABLED !== "false",
+      rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW || "900000"), // 15 minutes
+      rateLimitMaxAttempts: parseInt(process.env.RATE_LIMIT_MAX_ATTEMPTS || "5"),
+      rateLimitBlockDuration: parseInt(process.env.RATE_LIMIT_BLOCK_DURATION || "1800000"), // 30 minutes
 
       // Security Features
-      bruteForceProtection: process.env.BRUTE_FORCE_PROTECTION !== 'false',
-      sessionTimeout: parseInt(process.env.SESSION_TIMEOUT || '1800000'), // 30 minutes
-      inactivityTimeout: parseInt(process.env.INACTIVITY_TIMEOUT || '900000'), // 15 minutes
-      maxConcurrentSessions: parseInt(process.env.MAX_CONCURRENT_SESSIONS || '3'),
-      ipWhitelist: process.env.IP_WHITELIST ? process.env.IP_WHITELIST.split(',') : undefined,
-      userAgentValidation: process.env.USER_AGENT_VALIDATION !== 'false',
+      bruteForceProtection: process.env.BRUTE_FORCE_PROTECTION !== "false",
+      sessionTimeout: parseInt(process.env.SESSION_TIMEOUT || "1800000"), // 30 minutes
+      inactivityTimeout: parseInt(process.env.INACTIVITY_TIMEOUT || "900000"), // 15 minutes
+      maxConcurrentSessions: parseInt(process.env.MAX_CONCURRENT_SESSIONS || "3"),
+      ipWhitelist: process.env.IP_WHITELIST ? process.env.IP_WHITELIST.split(",") : undefined,
+      userAgentValidation: process.env.USER_AGENT_VALIDATION !== "false",
 
       // Password Policy
-      passwordMinLength: parseInt(process.env.PASSWORD_MIN_LENGTH || '8'),
-      passwordRequireUppercase: process.env.PASSWORD_REQUIRE_UPPERCASE !== 'false',
-      passwordRequireLowercase: process.env.PASSWORD_REQUIRE_LOWERCASE !== 'false',
-      passwordRequireNumbers: process.env.PASSWORD_REQUIRE_NUMBERS !== 'false',
-      passwordRequireSpecialChars: process.env.PASSWORD_REQUIRE_SPECIAL !== 'false',
-      passwordHistory: parseInt(process.env.PASSWORD_HISTORY || '5'),
-      passwordExpiry: parseInt(process.env.PASSWORD_EXPIRY || '7776000000'), // 90 days
+      passwordMinLength: parseInt(process.env.PASSWORD_MIN_LENGTH || "8"),
+      passwordRequireUppercase: process.env.PASSWORD_REQUIRE_UPPERCASE !== "false",
+      passwordRequireLowercase: process.env.PASSWORD_REQUIRE_LOWERCASE !== "false",
+      passwordRequireNumbers: process.env.PASSWORD_REQUIRE_NUMBERS !== "false",
+      passwordRequireSpecialChars: process.env.PASSWORD_REQUIRE_SPECIAL !== "false",
+      passwordHistory: parseInt(process.env.PASSWORD_HISTORY || "5"),
+      passwordExpiry: parseInt(process.env.PASSWORD_EXPIRY || "7776000000"), // 90 days
     };
   }
 
   private getEndpointsConfig(): Record<string, AuthEndpointsConfig> {
     const baseEndpoints = {
-      login: '/api/auth/login',
-      logout: '/api/auth/logout',
-      refresh: '/api/auth/refresh',
-      profile: '/api/auth/me',
-      register: '/api/auth/register',
-      forgotPassword: '/api/auth/forgot-password',
-      resetPassword: '/api/auth/reset-password',
-      verifyEmail: '/api/auth/verify-email',
-      changePassword: '/api/auth/change-password',
-      setupMFA: '/api/auth/setup-mfa',
-      verifyMFA: '/api/auth/verify-mfa',
-      disableMFA: '/api/auth/disable-mfa',
+      login: "/api/auth/login",
+      logout: "/api/auth/logout",
+      refresh: "/api/auth/refresh",
+      profile: "/api/auth/me",
+      register: "/api/auth/register",
+      forgotPassword: "/api/auth/forgot-password",
+      resetPassword: "/api/auth/reset-password",
+      verifyEmail: "/api/auth/verify-email",
+      changePassword: "/api/auth/change-password",
+      setupMFA: "/api/auth/setup-mfa",
+      verifyMFA: "/api/auth/verify-mfa",
+      disableMFA: "/api/auth/disable-mfa",
     };
 
     return {
-      admin: this.prefixEndpoints(baseEndpoints, '/admin'),
-      customer: this.prefixEndpoints(baseEndpoints, '/customer'),
-      reseller: this.prefixEndpoints(baseEndpoints, '/reseller'),
-      technician: this.prefixEndpoints(baseEndpoints, '/technician'),
-      management: this.prefixEndpoints(baseEndpoints, '/management'),
+      admin: this.prefixEndpoints(baseEndpoints, "/admin"),
+      customer: this.prefixEndpoints(baseEndpoints, "/customer"),
+      reseller: this.prefixEndpoints(baseEndpoints, "/reseller"),
+      technician: this.prefixEndpoints(baseEndpoints, "/technician"),
+      management: this.prefixEndpoints(baseEndpoints, "/management"),
     };
   }
 
@@ -215,21 +215,21 @@ export class AuthSettings {
   private getFeaturesConfig(): Record<string, AuthFeaturesConfig> {
     return {
       admin: {
-        enableMFA: process.env.ADMIN_MFA_ENABLED !== 'false',
+        enableMFA: process.env.ADMIN_MFA_ENABLED !== "false",
         enablePasswordReset: true,
         enableEmailVerification: true,
         enableSocialLogin: false,
-        enableSSO: process.env.ADMIN_SSO_ENABLED === 'true',
+        enableSSO: process.env.ADMIN_SSO_ENABLED === "true",
         enableRememberMe: false,
         enableDeviceTracking: true,
         enableAuditLogging: true,
         enableSecurityNotifications: true,
       },
       customer: {
-        enableMFA: process.env.CUSTOMER_MFA_ENABLED === 'true',
+        enableMFA: process.env.CUSTOMER_MFA_ENABLED === "true",
         enablePasswordReset: true,
-        enableEmailVerification: process.env.CUSTOMER_EMAIL_VERIFICATION !== 'false',
-        enableSocialLogin: process.env.CUSTOMER_SOCIAL_LOGIN === 'true',
+        enableEmailVerification: process.env.CUSTOMER_EMAIL_VERIFICATION !== "false",
+        enableSocialLogin: process.env.CUSTOMER_SOCIAL_LOGIN === "true",
         enableSSO: false,
         enableRememberMe: true,
         enableDeviceTracking: false,
@@ -237,18 +237,18 @@ export class AuthSettings {
         enableSecurityNotifications: false,
       },
       reseller: {
-        enableMFA: process.env.RESELLER_MFA_ENABLED !== 'false',
+        enableMFA: process.env.RESELLER_MFA_ENABLED !== "false",
         enablePasswordReset: true,
         enableEmailVerification: true,
         enableSocialLogin: false,
-        enableSSO: process.env.RESELLER_SSO_ENABLED === 'true',
+        enableSSO: process.env.RESELLER_SSO_ENABLED === "true",
         enableRememberMe: true,
         enableDeviceTracking: true,
         enableAuditLogging: true,
         enableSecurityNotifications: true,
       },
       technician: {
-        enableMFA: process.env.TECHNICIAN_MFA_ENABLED === 'true',
+        enableMFA: process.env.TECHNICIAN_MFA_ENABLED === "true",
         enablePasswordReset: true,
         enableEmailVerification: false,
         enableSocialLogin: false,
@@ -259,11 +259,11 @@ export class AuthSettings {
         enableSecurityNotifications: false,
       },
       management: {
-        enableMFA: process.env.MANAGEMENT_MFA_ENABLED !== 'false',
+        enableMFA: process.env.MANAGEMENT_MFA_ENABLED !== "false",
         enablePasswordReset: true,
         enableEmailVerification: true,
         enableSocialLogin: false,
-        enableSSO: process.env.MANAGEMENT_SSO_ENABLED === 'true',
+        enableSSO: process.env.MANAGEMENT_SSO_ENABLED === "true",
         enableRememberMe: false,
         enableDeviceTracking: true,
         enableAuditLogging: true,
@@ -274,18 +274,18 @@ export class AuthSettings {
 
   private getStorageConfig(): AuthStorageConfig {
     return {
-      storageType: (process.env.AUTH_STORAGE_TYPE as any) || 'localStorage',
-      encryptStorage: process.env.AUTH_ENCRYPT_STORAGE === 'true',
-      storagePrefix: process.env.AUTH_STORAGE_PREFIX || 'dotmac_auth',
-      autoCleanup: process.env.AUTH_AUTO_CLEANUP !== 'false',
-      cleanupInterval: parseInt(process.env.AUTH_CLEANUP_INTERVAL || '3600000'), // 1 hour
+      storageType: (process.env.AUTH_STORAGE_TYPE as any) || "localStorage",
+      encryptStorage: process.env.AUTH_ENCRYPT_STORAGE === "true",
+      storagePrefix: process.env.AUTH_STORAGE_PREFIX || "dotmac_auth",
+      autoCleanup: process.env.AUTH_AUTO_CLEANUP !== "false",
+      cleanupInterval: parseInt(process.env.AUTH_CLEANUP_INTERVAL || "3600000"), // 1 hour
     };
   }
 
   private throwMissingSecret(secretName: string): never {
     throw new Error(
       `Missing required environment variable: ${secretName}. ` +
-        `This is required for production security.`
+        `This is required for production security.`,
     );
   }
 
@@ -317,23 +317,23 @@ export class AuthSettings {
 
     // Check critical security settings
     if (
-      this.settings.security.jwtSecret.includes('dev-') &&
-      process.env.NODE_ENV === 'production'
+      this.settings.security.jwtSecret.includes("dev-") &&
+      process.env.NODE_ENV === "production"
     ) {
-      errors.push('JWT_SECRET must be set in production');
+      errors.push("JWT_SECRET must be set in production");
     }
 
     if (this.settings.security.jwtSecret === this.settings.security.jwtRefreshSecret) {
-      errors.push('JWT_SECRET and JWT_REFRESH_SECRET must be different');
+      errors.push("JWT_SECRET and JWT_REFRESH_SECRET must be different");
     }
 
     if (this.settings.security.sessionTimeout < 300000) {
       // 5 minutes minimum
-      errors.push('Session timeout must be at least 5 minutes');
+      errors.push("Session timeout must be at least 5 minutes");
     }
 
     if (this.settings.security.passwordMinLength < 8) {
-      errors.push('Minimum password length should be at least 8 characters');
+      errors.push("Minimum password length should be at least 8 characters");
     }
 
     return {

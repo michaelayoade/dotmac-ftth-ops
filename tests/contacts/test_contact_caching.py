@@ -19,7 +19,9 @@ pytestmark = pytest.mark.asyncio
 class TestContactCaching:
     """Test contact caching behavior."""
 
-    @pytest.mark.skip(reason="Caching disabled due to JSON serialization issues - see service.py line 179")
+    @pytest.mark.skip(
+        reason="Caching disabled due to JSON serialization issues - see service.py line 179"
+    )
     @pytest.mark.asyncio
     async def test_cache_set_on_get(self, tenant_id, sample_contact):
         """Test that cache is set when getting contact."""
@@ -33,7 +35,7 @@ class TestContactCaching:
 
         with patch("dotmac.platform.contacts.service.cache_get", return_value=None):
             with patch("dotmac.platform.contacts.service.cache_set") as mock_cache_set:
-                contact = await service.get_contact(
+                await service.get_contact(
                     contact_id=sample_contact.id,
                     tenant_id=tenant_id,
                     include_methods=False,
@@ -53,7 +55,7 @@ class TestContactCaching:
         # Mock the internal get_contact call
         with patch.object(service, "get_contact", return_value=sample_contact):
             with patch("dotmac.platform.contacts.service.cache_delete") as mock_cache_delete:
-                contact = await service.update_contact(
+                await service.update_contact(
                     contact_id=sample_contact.id, contact_data=update_data, tenant_id=tenant_id
                 )
 
@@ -68,9 +70,7 @@ class TestContactCaching:
         # Mock the internal get_contact call
         with patch.object(service, "get_contact", return_value=sample_contact):
             with patch("dotmac.platform.contacts.service.cache_delete") as mock_cache_delete:
-                result = await service.delete_contact(
-                    contact_id=sample_contact.id, tenant_id=tenant_id
-                )
+                await service.delete_contact(contact_id=sample_contact.id, tenant_id=tenant_id)
 
                 mock_cache_delete.assert_called_once()
 

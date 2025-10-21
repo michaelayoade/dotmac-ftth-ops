@@ -1,12 +1,12 @@
 /**
  * Example: UI Standards Integration
- * 
+ *
  * This file demonstrates how to integrate the @dotmac/ui-standards package
  * into management and ISP portal applications.
  */
 
-import React, { Suspense, useState } from 'react';
-import { 
+import React, { Suspense, useState } from "react";
+import {
   StandardShells,
   ErrorBoundaries,
   PWAFeatures,
@@ -15,8 +15,8 @@ import {
   useInstallPrompt,
   trackComponentRender,
   debounce,
-  preloadResource
-} from '@dotmac/ui-standards';
+  preloadResource,
+} from "@dotmac/ui-standards";
 
 // 1. Basic Loading States Example
 export function CustomersPage() {
@@ -28,7 +28,7 @@ export function CustomersPage() {
     return (
       <StandardShells.ServerError
         onRetry={() => window.location.reload()}
-        onHome={() => window.location.href = '/dashboard'}
+        onHome={() => (window.location.href = "/dashboard")}
       />
     );
   }
@@ -44,11 +44,7 @@ export function CustomersPage() {
     );
   }
 
-  return (
-    <div className="p-6">
-      {/* Your customer content here */}
-    </div>
-  );
+  return <div className="p-6">{/* Your customer content here */}</div>;
 }
 
 // 2. Error Boundary Integration Example
@@ -57,7 +53,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     <ErrorBoundaries.Page
       onError={(error, errorInfo) => {
         // Send to error reporting service
-        console.error('Dashboard error:', error, errorInfo);
+        console.error("Dashboard error:", error, errorInfo);
       }}
     >
       <div className="min-h-screen bg-gray-50">
@@ -66,11 +62,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <NavigationHeader />
           </ErrorBoundaries.Section>
         </header>
-        
+
         <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <ErrorBoundaries.Section>
-            {children}
-          </ErrorBoundaries.Section>
+          <ErrorBoundaries.Section>{children}</ErrorBoundaries.Section>
         </main>
       </div>
     </ErrorBoundaries.Page>
@@ -83,15 +77,12 @@ function NavigationHeader() {
     <nav className="flex items-center justify-between p-4">
       <div className="flex items-center space-x-4">
         <h1 className="text-xl font-semibold">DotMac Portal</h1>
-        
+
         <ErrorBoundaries.Component
           fallback={({ error, resetErrorBoundary }) => (
             <div className="text-sm text-red-600">
               Navigation error: {error.message}
-              <button 
-                onClick={resetErrorBoundary}
-                className="ml-2 text-blue-600 underline"
-              >
+              <button onClick={resetErrorBoundary} className="ml-2 text-blue-600 underline">
                 Retry
               </button>
             </div>
@@ -100,7 +91,7 @@ function NavigationHeader() {
           <NavigationMenu />
         </ErrorBoundaries.Component>
       </div>
-      
+
       <PWAFeatures.OfflineDetector position="top" />
     </nav>
   );
@@ -110,9 +101,15 @@ function NavigationMenu() {
   // This component might fail and will be caught by the error boundary
   return (
     <ul className="flex space-x-4">
-      <li><a href="/dashboard">Dashboard</a></li>
-      <li><a href="/customers">Customers</a></li>
-      <li><a href="/billing">Billing</a></li>
+      <li>
+        <a href="/dashboard">Dashboard</a>
+      </li>
+      <li>
+        <a href="/customers">Customers</a>
+      </li>
+      <li>
+        <a href="/billing">Billing</a>
+      </li>
     </ul>
   );
 }
@@ -121,36 +118,34 @@ function NavigationMenu() {
 export function AppWithPWAFeatures() {
   const isOnline = useOnlineStatus();
   const { isInstallable, install } = useInstallPrompt();
-  
+
   return (
     <div>
-      <PWAFeatures.OfflineDetector 
+      <PWAFeatures.OfflineDetector
         showStatus={true}
         showToast={true}
         onOffline={() => {
           // Handle offline mode
-          console.log('App went offline');
+          console.log("App went offline");
         }}
         onOnline={() => {
           // Handle online mode
-          console.log('App came online');
+          console.log("App came online");
         }}
       />
-      
+
       {isInstallable && (
         <PWAFeatures.InstallPrompt
           appName="DotMac Portal"
           description="Install for a better experience"
           onInstall={() => install()}
-          onDismiss={() => console.log('Install dismissed')}
+          onDismiss={() => console.log("Install dismissed")}
         />
       )}
-      
+
       {!isOnline && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-          <p className="text-yellow-700">
-            You're offline. Some features may not be available.
-          </p>
+          <p className="text-yellow-700">You're offline. Some features may not be available.</p>
         </div>
       )}
     </div>
@@ -159,11 +154,10 @@ export function AppWithPWAFeatures() {
 
 // 5. Performance Monitoring Integration
 export function PerformanceMonitoredApp() {
-  const { metrics, budgetViolations, performanceScore, reportMetrics } = 
-    usePerformanceMonitor({
-      fcp: 1500, // Custom budget: 1.5s for FCP
-      lcp: 2000, // Custom budget: 2s for LCP
-    });
+  const { metrics, budgetViolations, performanceScore, reportMetrics } = usePerformanceMonitor({
+    fcp: 1500, // Custom budget: 1.5s for FCP
+    lcp: 2000, // Custom budget: 2s for LCP
+  });
 
   React.useEffect(() => {
     // Report metrics when component unmounts
@@ -174,26 +168,24 @@ export function PerformanceMonitoredApp() {
 
   React.useEffect(() => {
     // Log performance violations in development
-    if (process.env.NODE_ENV === 'development' && budgetViolations.length > 0) {
-      console.warn('Performance budget violations:', budgetViolations);
+    if (process.env.NODE_ENV === "development" && budgetViolations.length > 0) {
+      console.warn("Performance budget violations:", budgetViolations);
     }
   }, [budgetViolations]);
 
   return (
     <div>
-      {process.env.NODE_ENV === 'development' && (
+      {process.env.NODE_ENV === "development" && (
         <div className="fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg p-3 shadow-lg text-xs">
           <div>Performance Score: {performanceScore}</div>
           <div>FCP: {metrics.fcp}ms</div>
           <div>LCP: {metrics.lcp}ms</div>
           {budgetViolations.length > 0 && (
-            <div className="text-red-600 mt-1">
-              {budgetViolations.length} violations
-            </div>
+            <div className="text-red-600 mt-1">{budgetViolations.length} violations</div>
           )}
         </div>
       )}
-      
+
       {/* Your app content */}
     </div>
   );
@@ -207,10 +199,12 @@ export function DataTableWithSkeletons() {
   // Simulate data loading
   React.useEffect(() => {
     const timer = setTimeout(() => {
-      setData([/* mock data */]);
+      setData([
+        /* mock data */
+      ]);
       setLoading(false);
     }, 2000);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -251,7 +245,7 @@ export function NetworkAwareContent({ children }: { children: React.ReactNode })
     <ErrorBoundaries.Section
       onError={(error) => {
         // Check if it's a network-related error
-        if (error.message.includes('fetch') || error.message.includes('network')) {
+        if (error.message.includes("fetch") || error.message.includes("network")) {
           setNetworkError(true);
         }
       }}
@@ -263,8 +257,8 @@ export function NetworkAwareContent({ children }: { children: React.ReactNode })
 
 // 8. Performance-Optimized Component
 const ExpensiveComponent = React.memo(function ExpensiveComponent({ data }: { data: any }) {
-  const { onRenderStart, onRenderEnd } = trackComponentRender('ExpensiveComponent');
-  
+  const { onRenderStart, onRenderEnd } = trackComponentRender("ExpensiveComponent");
+
   React.useLayoutEffect(() => {
     onRenderStart();
     return onRenderEnd;
@@ -276,30 +270,31 @@ const ExpensiveComponent = React.memo(function ExpensiveComponent({ data }: { da
 
 // 9. Search with Debouncing
 export function SearchComponent() {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const debouncedSearch = React.useMemo(
-    () => debounce(async (searchQuery: string) => {
-      if (!searchQuery.trim()) {
-        setResults([]);
-        return;
-      }
+    () =>
+      debounce(async (searchQuery: string) => {
+        if (!searchQuery.trim()) {
+          setResults([]);
+          return;
+        }
 
-      setLoading(true);
-      try {
-        // Your search API call here
-        const response = await fetch(`/api/search?q=${searchQuery}`);
-        const data = await response.json();
-        setResults(data.results);
-      } catch (error) {
-        console.error('Search failed:', error);
-      } finally {
-        setLoading(false);
-      }
-    }, 300),
-    []
+        setLoading(true);
+        try {
+          // Your search API call here
+          const response = await fetch(`/api/search?q=${searchQuery}`);
+          const data = await response.json();
+          setResults(data.results);
+        } catch (error) {
+          console.error("Search failed:", error);
+        } finally {
+          setLoading(false);
+        }
+      }, 300),
+    [],
   );
 
   React.useEffect(() => {
@@ -315,13 +310,13 @@ export function SearchComponent() {
         onChange={(e) => setQuery(e.target.value)}
         className="border rounded px-3 py-2"
       />
-      
+
       {loading && (
         <div className="mt-4">
           <StandardShells.ListSkeleton items={3} />
         </div>
       )}
-      
+
       {!loading && results.length > 0 && (
         <div className="mt-4">
           {results.map((result: any) => (
@@ -337,31 +332,27 @@ export function SearchComponent() {
 export function OptimizedPage() {
   React.useEffect(() => {
     // Preload critical resources
-    preloadResource('/api/dashboard/stats', 'fetch');
-    preloadResource('/images/hero.webp', 'image');
-    
+    preloadResource("/api/dashboard/stats", "fetch");
+    preloadResource("/images/hero.webp", "image");
+
     // Prefetch next page resources when user hovers
     const prefetchNextPage = () => {
-      preloadResource('/customers', 'document');
+      preloadResource("/customers", "document");
     };
 
     const navLinks = document.querySelectorAll('nav a[href="/customers"]');
-    navLinks.forEach(link => {
-      link.addEventListener('mouseenter', prefetchNextPage);
+    navLinks.forEach((link) => {
+      link.addEventListener("mouseenter", prefetchNextPage);
     });
 
     return () => {
-      navLinks.forEach(link => {
-        link.removeEventListener('mouseenter', prefetchNextPage);
+      navLinks.forEach((link) => {
+        link.removeEventListener("mouseenter", prefetchNextPage);
       });
     };
   }, []);
 
-  return (
-    <div>
-      {/* Your page content */}
-    </div>
-  );
+  return <div>{/* Your page content */}</div>;
 }
 
 // 11. Complete App Integration Example
@@ -371,7 +362,7 @@ export default function AppRoot() {
       <Suspense fallback={<StandardShells.Loading size="lg" />}>
         <AppWithPWAFeatures />
         <PerformanceMonitoredApp />
-        
+
         <DashboardLayout>
           <NetworkAwareContent>
             <OptimizedPage />

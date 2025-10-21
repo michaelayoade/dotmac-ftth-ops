@@ -199,3 +199,23 @@ class DunningAction(str, Enum):
     SUSPEND_SERVICE = "suspend_service"
     CANCEL_SERVICE = "cancel_service"
     COLLECTION_AGENCY = "collection_agency"
+
+
+class ServiceStatus(str, Enum):
+    """Service status states"""
+
+    PENDING = "pending"
+    ACTIVE = "active"
+    SUSPENDED = "suspended"
+    TERMINATED = "terminated"
+
+
+class ServiceType(str, Enum):
+    """Service type categories"""
+
+    BROADBAND = "broadband"
+    VOICE = "voice"
+    VIDEO = "video"
+    BUNDLE = "bundle"
+    ADDON = "addon"
+    CUSTOM = "custom"

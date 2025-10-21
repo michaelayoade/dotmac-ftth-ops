@@ -4,10 +4,10 @@
  * Leverages existing ISPBrandTheme with runtime configuration
  */
 
-'use client';
+"use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { ISPBrandTheme, ISPColors } from './ISPBrandTheme';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { ISPBrandTheme, ISPColors } from "./ISPBrandTheme";
 
 interface WhitelabelConfig {
   brand: {
@@ -76,7 +76,7 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
   partnerId,
   domain,
   fallbackConfig,
-  apiEndpoint = '/api/v1/partners',
+  apiEndpoint = "/api/v1/partners",
 }) => {
   const [config, setConfig] = useState<WhitelabelConfig | null>(fallbackConfig || null);
   const [isWhitelabel, setIsWhitelabel] = useState(!!fallbackConfig);
@@ -134,7 +134,7 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
         setConfig(null);
       }
     } catch (error) {
-      console.error('Failed to load whitelabel configuration:', error);
+      console.error("Failed to load whitelabel configuration:", error);
       setIsWhitelabel(false);
       setConfig(null);
     } finally {
@@ -167,10 +167,10 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
     });
 
     // Reset favicon
-    updateFavicon('/favicon.ico');
+    updateFavicon("/favicon.ico");
 
     // Reset page title
-    document.title = 'DotMac ISP Framework';
+    document.title = "DotMac ISP Framework";
   };
 
   const applyThemeVariables = (themeConfig: WhitelabelConfig) => {
@@ -182,14 +182,14 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
     });
 
     // Apply base colors
-    root.style.setProperty('--color-primary', themeConfig.colors.primary);
-    root.style.setProperty('--color-secondary', themeConfig.colors.secondary);
-    root.style.setProperty('--color-accent', themeConfig.colors.accent);
-    root.style.setProperty('--color-background', themeConfig.colors.background);
-    root.style.setProperty('--color-text', themeConfig.colors.text);
+    root.style.setProperty("--color-primary", themeConfig.colors.primary);
+    root.style.setProperty("--color-secondary", themeConfig.colors.secondary);
+    root.style.setProperty("--color-accent", themeConfig.colors.accent);
+    root.style.setProperty("--color-background", themeConfig.colors.background);
+    root.style.setProperty("--color-text", themeConfig.colors.text);
 
     // Apply typography
-    root.style.setProperty('--font-family', themeConfig.typography.font_family);
+    root.style.setProperty("--font-family", themeConfig.typography.font_family);
 
     // Inject custom CSS if provided
     if (themeConfig.custom_css) {
@@ -203,10 +203,10 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
     if (existingLink) return;
 
     // Create and append font link
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
     link.href = fontUrl;
-    link.crossOrigin = 'anonymous';
+    link.crossOrigin = "anonymous";
     document.head.appendChild(link);
   };
 
@@ -214,8 +214,8 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
     let favicon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
 
     if (!favicon) {
-      favicon = document.createElement('link');
-      favicon.rel = 'icon';
+      favicon = document.createElement("link");
+      favicon.rel = "icon";
       document.head.appendChild(favicon);
     }
 
@@ -224,21 +224,21 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
 
   const updatePageTitle = (brandName: string) => {
     // Only update if not already set by the page
-    if (document.title === 'DotMac ISP Framework' || !document.title) {
+    if (document.title === "DotMac ISP Framework" || !document.title) {
       document.title = brandName;
     }
   };
 
   const injectCustomCSS = (customCSS: string) => {
     // Remove existing custom CSS
-    const existingStyle = document.getElementById('whitelabel-custom-css');
+    const existingStyle = document.getElementById("whitelabel-custom-css");
     if (existingStyle) {
       existingStyle.remove();
     }
 
     // Inject new custom CSS
-    const style = document.createElement('style');
-    style.id = 'whitelabel-custom-css';
+    const style = document.createElement("style");
+    style.id = "whitelabel-custom-css";
     style.textContent = customCSS;
     document.head.appendChild(style);
   };
@@ -267,8 +267,8 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
 
   if (loading) {
     return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600'></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -284,7 +284,7 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
 export const useWhitelabel = () => {
   const context = useContext(WhitelabelContext);
   if (context === undefined) {
-    throw new Error('useWhitelabel must be used within a WhitelabelThemeProvider');
+    throw new Error("useWhitelabel must be used within a WhitelabelThemeProvider");
   }
   return context;
 };
@@ -292,9 +292,9 @@ export const useWhitelabel = () => {
 // Helper component for brand logo
 export const WhitelabelLogo: React.FC<{
   className?: string;
-  variant?: 'light' | 'dark';
+  variant?: "light" | "dark";
   fallbackText?: string;
-}> = ({ className = 'h-8', variant = 'light', fallbackText = 'Logo' }) => {
+}> = ({ className = "h-8", variant = "light", fallbackText = "Logo" }) => {
   const { config, isWhitelabel } = useWhitelabel();
 
   if (!isWhitelabel || !config?.brand.logo) {
@@ -306,7 +306,7 @@ export const WhitelabelLogo: React.FC<{
   }
 
   const logoUrl =
-    variant === 'dark' && config.brand.logo_dark ? config.brand.logo_dark : config.brand.logo;
+    variant === "dark" && config.brand.logo_dark ? config.brand.logo_dark : config.brand.logo;
 
   return (
     <img
@@ -316,9 +316,9 @@ export const WhitelabelLogo: React.FC<{
       onError={(e) => {
         // Fallback to text if image fails to load
         const target = e.target as HTMLElement;
-        target.style.display = 'none';
+        target.style.display = "none";
         if (target.nextSibling) {
-          (target.nextSibling as HTMLElement).style.display = 'block';
+          (target.nextSibling as HTMLElement).style.display = "block";
         }
       }}
     />
@@ -327,7 +327,7 @@ export const WhitelabelLogo: React.FC<{
 
 // Helper component for brand contact info
 export const WhitelabelContact: React.FC<{
-  type: 'email' | 'phone' | 'support';
+  type: "email" | "phone" | "support";
   className?: string;
   fallback?: string;
 }> = ({ type, className, fallback }) => {
@@ -348,7 +348,7 @@ export const WhitelabelContact: React.FC<{
     return fallback ? <span className={className}>{fallback}</span> : null;
   }
 
-  if (type === 'email') {
+  if (type === "email") {
     return (
       <a href={`mailto:${value}`} className={className}>
         {value}
@@ -356,7 +356,7 @@ export const WhitelabelContact: React.FC<{
     );
   }
 
-  if (type === 'phone') {
+  if (type === "phone") {
     return (
       <a href={`tel:${value}`} className={className}>
         {value}
@@ -364,9 +364,9 @@ export const WhitelabelContact: React.FC<{
     );
   }
 
-  if (type === 'support') {
+  if (type === "support") {
     return (
-      <a href={value} className={className} target='_blank' rel='noopener noreferrer'>
+      <a href={value} className={className} target="_blank" rel="noopener noreferrer">
         Support
       </a>
     );
@@ -399,7 +399,7 @@ const lighten = (color: string, amount: number) => {
   const r = Math.min(255, Math.floor((num >> 16) + 255 * amount));
   const g = Math.min(255, Math.floor(((num >> 8) & 0x00ff) + 255 * amount));
   const b = Math.min(255, Math.floor((num & 0x0000ff) + 255 * amount));
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
 };
 
 const darken = (color: string, amount: number) => {
@@ -408,7 +408,7 @@ const darken = (color: string, amount: number) => {
   const r = Math.max(0, Math.floor((num >> 16) * (1 - amount)));
   const g = Math.max(0, Math.floor(((num >> 8) & 0x00ff) * (1 - amount)));
   const b = Math.max(0, Math.floor((num & 0x0000ff) * (1 - amount)));
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
 };
 
 export default WhitelabelThemeProvider;

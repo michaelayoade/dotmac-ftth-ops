@@ -3,6 +3,7 @@ FastAPI router for audit and activity endpoints.
 """
 
 from datetime import UTC
+from typing import Any
 from uuid import UUID
 
 import structlog
@@ -11,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth.core import UserInfo, get_current_user, get_current_user_optional
 from ..auth.platform_admin import is_platform_admin
+from ..auth.rbac_dependencies import require_security_audit_read
 from ..db import get_async_session
 from ..tenant import get_current_tenant_id
 from .models import (
@@ -27,7 +29,31 @@ from .service import AuditService, log_api_activity
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(tags=["Audit"])
+
+async def ensure_audit_access(
+    current_user: UserInfo = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> UserInfo:
+    """Ensure the current user can read audit data."""
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    perms = set(current_user.permissions or [])
+    roles = set(current_user.roles or [])
+
+    if (
+        "security.audit.read" in perms
+        or "audit.read" in perms
+        or "audit:*" in perms
+        or "admin" in roles
+        or is_platform_admin(current_user)
+    ):
+        return current_user
+
+    return await require_security_audit_read(current_user=current_user, db=db)
+
+
+router = APIRouter(prefix="/audit", tags=["Audit"])
 
 
 @router.get("/activities", response_model=AuditActivityList)
@@ -42,7 +68,7 @@ async def list_activities(
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(50, ge=1, le=1000, description="Items per page"),
     session: AsyncSession = Depends(get_async_session),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(ensure_audit_access),
 ) -> AuditActivityList:
     """
     Get paginated list of audit activities.
@@ -111,7 +137,7 @@ async def get_recent_activities(
     limit: int = Query(20, ge=1, le=100, description="Maximum number of activities to return"),
     days: int = Query(7, ge=1, le=90, description="Number of days to look back"),
     session: AsyncSession = Depends(get_async_session),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(ensure_audit_access),
 ) -> list[AuditActivityResponse]:
     """
     Get recent audit activities for dashboard/frontend views.
@@ -170,7 +196,7 @@ async def get_user_activities(
     limit: int = Query(50, ge=1, le=200, description="Maximum number of activities to return"),
     days: int = Query(30, ge=1, le=365, description="Number of days to look back"),
     session: AsyncSession = Depends(get_async_session),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(ensure_audit_access),
 ) -> list[AuditActivityResponse]:
     """
     Get audit activities for a specific user.
@@ -228,8 +254,8 @@ async def get_activity_summary(
     request: Request,
     days: int = Query(7, ge=1, le=90, description="Number of days to look back"),
     session: AsyncSession = Depends(get_async_session),
-    current_user: UserInfo = Depends(get_current_user),
-) -> dict:
+    current_user: UserInfo = Depends(ensure_audit_access),
+) -> dict[str, Any]:
     """
     Get activity summary statistics for the current tenant.
 
@@ -268,7 +294,7 @@ async def get_activity_details(
     activity_id: UUID,
     request: Request,
     session: AsyncSession = Depends(get_async_session),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(ensure_audit_access),
 ) -> AuditActivityResponse:
     """
     Get details for a specific audit activity.

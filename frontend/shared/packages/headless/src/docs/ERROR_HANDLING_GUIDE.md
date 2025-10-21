@@ -19,12 +19,12 @@ The ISP Framework uses a unified error handling system that provides:
 The `ISPError` class is the foundation of our error handling system:
 
 ```typescript
-import { ISPError, ErrorFactory } from '@dotmac/headless/utils/errorUtils';
+import { ISPError, ErrorFactory } from "@dotmac/headless/utils/errorUtils";
 
 // Create specific error types
-const networkError = ErrorFactory.network('Connection failed', 'API Call');
-const validationError = ErrorFactory.validation('Invalid email format', 'User Registration');
-const authError = ErrorFactory.authentication('Login Required');
+const networkError = ErrorFactory.network("Connection failed", "API Call");
+const validationError = ErrorFactory.validation("Invalid email format", "User Registration");
+const authError = ErrorFactory.authentication("Login Required");
 ```
 
 ### 2. Standard Error Handler Hook
@@ -123,7 +123,7 @@ function App() {
 
 ```typescript
 // Automatic retry with exponential backoff
-const errorHandler = useApiErrorHandler('Customer API', {
+const errorHandler = useApiErrorHandler("Customer API", {
   enableRetry: true,
   maxRetries: 3,
   fallbackData: [],
@@ -134,7 +134,7 @@ const errorHandler = useApiErrorHandler('Customer API', {
 
 ```typescript
 // No retry, immediate user feedback
-const errorHandler = useFormErrorHandler('Registration Form', {
+const errorHandler = useFormErrorHandler("Registration Form", {
   enableRetry: false,
   enableNotifications: true,
 });
@@ -145,11 +145,11 @@ const errorHandler = useFormErrorHandler('Registration Form', {
 ```typescript
 // Redirect to login, no retry
 const errorHandler = useStandardErrorHandler({
-  context: 'Protected Resource',
+  context: "Protected Resource",
   enableRetry: false,
   onError: (error) => {
-    if (error.category === 'authentication') {
-      router.push('/login');
+    if (error.category === "authentication") {
+      router.push("/login");
     }
   },
 });
@@ -159,7 +159,7 @@ const errorHandler = useStandardErrorHandler({
 
 ```typescript
 // Retry with fallback data
-const errorHandler = useDataLoadingErrorHandler('Dashboard Data', {
+const errorHandler = useDataLoadingErrorHandler("Dashboard Data", {
   enableRetry: true,
   maxRetries: 2,
   fallbackData: getEmptyDashboardData(),
@@ -172,12 +172,12 @@ const errorHandler = useDataLoadingErrorHandler('Dashboard Data', {
 
 ```typescript
 // ✅ Good - Specific error types
-throw ErrorFactory.validation('Email is required', 'User Registration');
-throw ErrorFactory.authentication('Session expired');
-throw ErrorFactory.authorization('Insufficient permissions', 'Billing Access');
+throw ErrorFactory.validation("Email is required", "User Registration");
+throw ErrorFactory.authentication("Session expired");
+throw ErrorFactory.authorization("Insufficient permissions", "Billing Access");
 
 // ❌ Bad - Generic errors
-throw new Error('Something went wrong');
+throw new Error("Something went wrong");
 ```
 
 ### 2. Provide Context
@@ -185,13 +185,13 @@ throw new Error('Something went wrong');
 ```typescript
 // ✅ Good - Clear context
 const errorHandler = useStandardErrorHandler({
-  context: 'Customer Payment Processing',
+  context: "Customer Payment Processing",
   // ...
 });
 
 // ❌ Bad - Vague context
 const errorHandler = useStandardErrorHandler({
-  context: 'API',
+  context: "API",
   // ...
 });
 ```
@@ -200,18 +200,18 @@ const errorHandler = useStandardErrorHandler({
 
 ```typescript
 // Critical errors - Immediate user notification + logging
-if (error.severity === 'critical') {
+if (error.severity === "critical") {
   showError(error.userMessage, { persistent: true });
   reportToSupport(error);
 }
 
 // Medium errors - User notification
-if (error.severity === 'medium') {
+if (error.severity === "medium") {
   showWarning(error.userMessage);
 }
 
 // Low errors - Silent logging only
-if (error.severity === 'low') {
+if (error.severity === "low") {
   logError(error);
 }
 ```
@@ -220,11 +220,11 @@ if (error.severity === 'low') {
 
 ```typescript
 const errorHandler = useStandardErrorHandler({
-  context: 'Dashboard Widget',
+  context: "Dashboard Widget",
   fallbackData: getEmptyWidgetData(),
   onFallback: (fallbackData) => {
     setWidgetData(fallbackData);
-    showInfo('Using cached data due to connectivity issues');
+    showInfo("Using cached data due to connectivity issues");
   },
 });
 ```
@@ -234,16 +234,16 @@ const errorHandler = useStandardErrorHandler({
 Update your API clients to use standardized error handling:
 
 ```typescript
-import { BaseApiClient } from '@dotmac/headless/api/clients/BaseApiClient';
+import { BaseApiClient } from "@dotmac/headless/api/clients/BaseApiClient";
 
 export class CustomApiClient extends BaseApiClient {
   constructor() {
-    super('/api/custom', {}, 'Custom Service');
+    super("/api/custom", {}, "Custom Service");
   }
 
   async getCustomers(): Promise<Customer[]> {
     // BaseApiClient automatically handles errors and converts to ISPError
-    return this.get('/customers');
+    return this.get("/customers");
   }
 }
 ```
@@ -283,14 +283,14 @@ All errors are automatically logged with:
 ### Custom Error Reporting
 
 ```typescript
-import { useErrorReporting } from '@dotmac/headless/providers/ErrorHandlingProvider';
+import { useErrorReporting } from "@dotmac/headless/providers/ErrorHandlingProvider";
 
 function MyComponent() {
   const { reportError, reportBusinessError } = useErrorReporting();
 
   const handleBusinessLogic = () => {
     if (invalidState) {
-      reportBusinessError('Invalid customer state for payment processing', 'Payment Flow', {
+      reportBusinessError("Invalid customer state for payment processing", "Payment Flow", {
         customerId: customer.id,
         state: customer.state,
       });
@@ -304,15 +304,15 @@ function MyComponent() {
 ### Unit Tests
 
 ```typescript
-import { classifyError, ISPError } from '@dotmac/headless/utils/errorUtils';
+import { classifyError, ISPError } from "@dotmac/headless/utils/errorUtils";
 
-describe('Error Classification', () => {
-  it('should classify network errors correctly', () => {
-    const networkError = new TypeError('fetch failed');
-    const classified = classifyError(networkError, 'Test Context');
+describe("Error Classification", () => {
+  it("should classify network errors correctly", () => {
+    const networkError = new TypeError("fetch failed");
+    const classified = classifyError(networkError, "Test Context");
 
     expect(classified).toBeInstanceOf(ISPError);
-    expect(classified.category).toBe('network');
+    expect(classified.category).toBe("network");
     expect(classified.retryable).toBe(true);
   });
 });
@@ -321,23 +321,23 @@ describe('Error Classification', () => {
 ### Integration Tests
 
 ```typescript
-import { useStandardErrorHandler } from '@dotmac/headless/hooks/useStandardErrorHandler';
+import { useStandardErrorHandler } from "@dotmac/headless/hooks/useStandardErrorHandler";
 
-describe('Error Handler Integration', () => {
-  it('should retry failed operations', async () => {
+describe("Error Handler Integration", () => {
+  it("should retry failed operations", async () => {
     const mockOperation = jest
       .fn()
-      .mockRejectedValueOnce(new Error('Temporary failure'))
-      .mockResolvedValueOnce('Success');
+      .mockRejectedValueOnce(new Error("Temporary failure"))
+      .mockResolvedValueOnce("Success");
 
     const { result } = renderHook(() =>
-      useStandardErrorHandler({ context: 'Test', enableRetry: true })
+      useStandardErrorHandler({ context: "Test", enableRetry: true }),
     );
 
     const operationResult = await result.current.withErrorHandling(mockOperation);
 
     expect(mockOperation).toHaveBeenCalledTimes(2);
-    expect(operationResult).toBe('Success');
+    expect(operationResult).toBe("Success");
   });
 });
 ```
@@ -397,7 +397,7 @@ try {
 }
 
 // After
-const errorHandler = useApiErrorHandler('My API', {
+const errorHandler = useApiErrorHandler("My API", {
   fallbackData: null,
 });
 
@@ -412,7 +412,7 @@ const result = await errorHandler.withErrorHandling(async () => {
 // Before
 export class MyApiClient {
   async getData() {
-    const response = await fetch('/api/data');
+    const response = await fetch("/api/data");
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
@@ -423,11 +423,11 @@ export class MyApiClient {
 // After
 export class MyApiClient extends BaseApiClient {
   constructor() {
-    super('/api', {}, 'My Service');
+    super("/api", {}, "My Service");
   }
 
   async getData() {
-    return this.get('/data');
+    return this.get("/data");
   }
 }
 ```
@@ -466,7 +466,7 @@ const errorConfig = {
 
 ```typescript
 const componentErrorHandler = useStandardErrorHandler({
-  context: 'Component Name',
+  context: "Component Name",
   enableRetry: true,
   enableNotifications: false,
   maxRetries: 2,

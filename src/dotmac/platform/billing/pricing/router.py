@@ -5,6 +5,7 @@ Provides REST endpoints for managing pricing rules and calculating prices.
 """
 
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
@@ -24,7 +25,7 @@ from .models import (
 )
 from .service import PricingEngine as PricingService
 
-router = APIRouter(tags=["Billing - Pricing"])
+router = APIRouter(prefix="/billing/pricing", tags=["Billing - Pricing"])
 
 
 # Pricing Rules Management
@@ -216,7 +217,7 @@ async def get_pricing_rule_usage(
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
     db_session: AsyncSession = Depends(get_async_session),
-) -> dict:
+) -> dict[str, Any]:
     """Get usage statistics for a pricing rule."""
     service = PricingService(db_session)
     try:
@@ -256,7 +257,7 @@ async def test_pricing_rules(
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
     db_session: AsyncSession = Depends(get_async_session),
-) -> dict:
+) -> dict[str, Any]:
     """Test which pricing rules would apply for given conditions."""
     service = PricingService(db_session)
     try:
@@ -286,7 +287,7 @@ async def detect_rule_conflicts(
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
     db_session: AsyncSession = Depends(get_async_session),
-) -> dict:
+) -> dict[str, Any]:
     """Detect potential conflicts between pricing rules."""
     service = PricingService(db_session)
     try:
@@ -309,7 +310,7 @@ async def bulk_activate_rules(
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
     db_session: AsyncSession = Depends(get_async_session),
-) -> dict:
+) -> dict[str, Any]:
     """Activate multiple pricing rules at once."""
     service = PricingService(db_session)
     try:
@@ -330,7 +331,7 @@ async def bulk_deactivate_rules(
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
     db_session: AsyncSession = Depends(get_async_session),
-) -> dict:
+) -> dict[str, Any]:
     """Deactivate multiple pricing rules at once."""
     service = PricingService(db_session)
     try:

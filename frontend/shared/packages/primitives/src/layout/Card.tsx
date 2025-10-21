@@ -5,84 +5,84 @@
  * accessibility features, and flexible composition patterns
  */
 
-import { Slot } from '@radix-ui/react-slot';
-import { cva, type VariantProps } from 'class-variance-authority';
-import { clsx } from 'clsx';
-import { forwardRef } from 'react';
+import { Slot } from "@radix-ui/react-slot";
+import { cva, type VariantProps } from "class-variance-authority";
+import { clsx } from "clsx";
+import { forwardRef } from "react";
 
 const cardVariants = cva(
-  'rounded-lg border bg-card text-card-foreground shadow-sm transition-colors',
+  "rounded-lg border bg-card text-card-foreground shadow-sm transition-colors",
   {
     variants: {
       variant: {
-        default: 'border-border',
-        outline: 'border-border bg-background',
-        filled: 'border-transparent bg-muted',
-        elevated: 'border-border shadow-lg',
-        ghost: 'border-transparent bg-transparent shadow-none',
+        default: "border-border",
+        outline: "border-border bg-background",
+        filled: "border-transparent bg-muted",
+        elevated: "border-border shadow-lg",
+        ghost: "border-transparent bg-transparent shadow-none",
       },
       padding: {
-        none: 'p-0',
-        sm: 'p-3',
-        default: 'p-6',
-        lg: 'p-8',
+        none: "p-0",
+        sm: "p-3",
+        default: "p-6",
+        lg: "p-8",
       },
       interactive: {
-        true: 'cursor-pointer hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-        false: '',
+        true: "cursor-pointer hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+        false: "",
       },
     },
     defaultVariants: {
-      variant: 'default',
-      padding: 'default',
+      variant: "default",
+      padding: "default",
       interactive: false,
     },
-  }
+  },
 );
 
-const cardHeaderVariants = cva('flex flex-col space-y-1.5', {
+const cardHeaderVariants = cva("flex flex-col space-y-1.5", {
   variants: {
     padding: {
-      none: 'p-0',
-      sm: 'p-3',
-      default: 'p-6',
-      lg: 'p-8',
+      none: "p-0",
+      sm: "p-3",
+      default: "p-6",
+      lg: "p-8",
     },
   },
   defaultVariants: {
-    padding: 'default',
+    padding: "default",
   },
 });
 
-const cardTitleVariants = cva('text-2xl font-semibold leading-none tracking-tight');
+const cardTitleVariants = cva("text-2xl font-semibold leading-none tracking-tight");
 
-const cardDescriptionVariants = cva('text-sm text-muted-foreground');
+const cardDescriptionVariants = cva("text-sm text-muted-foreground");
 
-const cardContentVariants = cva('', {
+const cardContentVariants = cva("", {
   variants: {
     padding: {
-      none: 'p-0',
-      sm: 'p-3 pt-0',
-      default: 'p-6 pt-0',
-      lg: 'p-8 pt-0',
+      none: "p-0",
+      sm: "p-3 pt-0",
+      default: "p-6 pt-0",
+      lg: "p-8 pt-0",
     },
   },
   defaultVariants: {
-    padding: 'default',
+    padding: "default",
   },
 });
 
-const cardFooterVariants = cva('flex items-center', {
+const cardFooterVariants = cva("flex items-center", {
   variants: {
     padding: {
-      none: 'p-0',
-      sm: 'p-3 pt-0',
-      default: 'p-6 pt-0',
-      lg: 'p-8 pt-0',
+      none: "p-0",
+      sm: "p-3 pt-0",
+      default: "p-6 pt-0",
+      lg: "p-8 pt-0",
     },
   },
   defaultVariants: {
-    padding: 'default',
+    padding: "default",
   },
 });
 
@@ -147,16 +147,16 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       onKeyDown,
       tabIndex,
       role,
-      'aria-label': ariaLabel,
+      "aria-label": ariaLabel,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
 
     // Handle interactive behavior
     const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (interactive && onClick && (e.key === 'Enter' || e.key === ' ')) {
+      if (interactive && onClick && (e.key === "Enter" || e.key === " ")) {
         e.preventDefault();
         onClick(e as any);
       }
@@ -167,18 +167,18 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     const interactiveProps = interactive
       ? {
           tabIndex: tabIndex ?? 0,
-          role: role ?? 'button',
-          'aria-label': ariaLabel,
+          role: role ?? "button",
+          "aria-label": ariaLabel,
           onKeyDown: handleKeyDown,
         }
       : {
           role,
-          'aria-label': ariaLabel,
+          "aria-label": ariaLabel,
           onKeyDown,
         };
 
     return (
-      <div className='relative'>
+      <div className="relative">
         <Comp
           ref={ref}
           className={clsx(cardVariants({ variant, padding, interactive, className }))}
@@ -192,26 +192,26 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
         {/* Loading Overlay */}
         {isLoading && showLoadingOverlay && (
-          <div className='absolute inset-0 bg-background/50 flex items-center justify-center rounded-lg'>
-            <div className='animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full' />
+          <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-lg">
+            <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
           </div>
         )}
       </div>
     );
-  }
+  },
 );
-Card.displayName = 'Card';
+Card.displayName = "Card";
 
 // Card Header Component
 export const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(
   ({ className, padding, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
     return (
       <Comp ref={ref} className={clsx(cardHeaderVariants({ padding, className }))} {...props} />
     );
-  }
+  },
 );
-CardHeader.displayName = 'CardHeader';
+CardHeader.displayName = "CardHeader";
 
 // Card Title Component
 export const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
@@ -222,40 +222,40 @@ export const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
         {children}
       </Comp>
     );
-  }
+  },
 );
-CardTitle.displayName = 'CardTitle';
+CardTitle.displayName = "CardTitle";
 
 // Card Description Component
 export const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionProps>(
   ({ className, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'p';
+    const Comp = asChild ? Slot : "p";
     return <Comp ref={ref} className={clsx(cardDescriptionVariants({ className }))} {...props} />;
-  }
+  },
 );
-CardDescription.displayName = 'CardDescription';
+CardDescription.displayName = "CardDescription";
 
 // Card Content Component
 export const CardContent = forwardRef<HTMLDivElement, CardContentProps>(
   ({ className, padding, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
     return (
       <Comp ref={ref} className={clsx(cardContentVariants({ padding, className }))} {...props} />
     );
-  }
+  },
 );
-CardContent.displayName = 'CardContent';
+CardContent.displayName = "CardContent";
 
 // Card Footer Component
 export const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
   ({ className, padding, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : "div";
     return (
       <Comp ref={ref} className={clsx(cardFooterVariants({ padding, className }))} {...props} />
     );
-  }
+  },
 );
-CardFooter.displayName = 'CardFooter';
+CardFooter.displayName = "CardFooter";
 
 export {
   cardVariants,

@@ -34,8 +34,15 @@ async def create_test_client_with_mock_tenant_service(
             user_id="test-user-123",
             username="testuser",
             email="test@example.com",
-            permissions=["tenants:read", "tenants:write", "tenants:admin"],
-            tenant_id="test-tenant",
+            permissions=[
+                "tenants:read",
+                "tenants:write",
+                "tenants:admin",
+                "platform:tenants:read",
+                "platform:tenants:write",
+            ],
+            tenant_id=None,
+            is_platform_admin=True,
         )
 
     async def override_get_async_db():

@@ -111,15 +111,15 @@ class CircuitBreaker:
         return True
 
 
-class GatewayResponse(BaseModel):
+class GatewayResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """API Gateway response model."""
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     data: Any = None
     status_code: int = 200
-    headers: dict[str, str] = Field(default_factory=dict)
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    headers: dict[str, str] = Field(default_factory=lambda: {})
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 class APIGateway:
@@ -214,7 +214,7 @@ class APIGateway:
 
     async def aggregate_requests(
         self,
-        requests: list[tuple[str, Any, tuple, dict]],
+        requests: list[tuple[str, Any, tuple[Any, ...], dict[str, Any]]],
     ) -> dict[str, Any]:
         """
         Aggregate multiple service requests in parallel.

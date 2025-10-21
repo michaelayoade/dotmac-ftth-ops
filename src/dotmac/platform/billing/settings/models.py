@@ -11,7 +11,7 @@ from dotmac.platform.billing.core.models import BillingBaseModel
 from dotmac.platform.core.pydantic import AppBaseModel
 
 
-class CompanyInfo(AppBaseModel):
+class CompanyInfo(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Company information settings"""
 
     name: str = Field(..., min_length=1, max_length=200)
@@ -55,7 +55,7 @@ class CompanyInfo(AppBaseModel):
     )
 
 
-class TaxSettings(AppBaseModel):
+class TaxSettings(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Tax calculation settings"""
 
     # Default tax behavior
@@ -72,7 +72,7 @@ class TaxSettings(AppBaseModel):
 
     # Integration settings
     tax_provider: str | None = Field(None, description="External tax service provider")
-    tax_provider_config: dict[str, Any] = Field(default_factory=dict)
+    tax_provider_config: dict[str, Any] = Field(default_factory=lambda: {})
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -89,7 +89,7 @@ class TaxSettings(AppBaseModel):
     )
 
 
-class PaymentSettings(AppBaseModel):
+class PaymentSettings(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Payment processing settings"""
 
     # Supported payment methods
@@ -130,7 +130,7 @@ class PaymentSettings(AppBaseModel):
     )
 
 
-class InvoiceSettings(AppBaseModel):
+class InvoiceSettings(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Invoice generation settings"""
 
     # Numbering
@@ -170,7 +170,7 @@ class InvoiceSettings(AppBaseModel):
     )
 
 
-class NotificationSettings(AppBaseModel):
+class NotificationSettings(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Notification settings"""
 
     # Email settings
@@ -231,7 +231,7 @@ def _default_notification_settings() -> NotificationSettings:
     )
 
 
-class BillingSettings(BillingBaseModel):
+class BillingSettings(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resolves to Any in isolation
     """Complete billing settings for a tenant"""
 
     settings_id: str = Field(default_factory=lambda: str(uuid4()))
@@ -259,7 +259,7 @@ class BillingSettings(BillingBaseModel):
     )
 
     # Custom settings
-    custom_settings: dict[str, Any] = Field(default_factory=dict)
+    custom_settings: dict[str, Any] = Field(default_factory=lambda: {})
 
     # API settings
     api_settings: dict[str, Any] = Field(

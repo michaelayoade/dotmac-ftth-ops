@@ -85,7 +85,7 @@ async def mfa_user(async_db_session: AsyncSession):
 def router_app():
     """Create test app with auth router."""
     app = FastAPI()
-    app.include_router(auth_router, prefix="/auth")
+    app.include_router(auth_router)
     return app
 
 
@@ -124,7 +124,9 @@ async def test_change_password_success(router_app: FastAPI, test_user: User, asy
 
 
 @pytest.mark.asyncio
-async def test_change_password_wrong_current(router_app: FastAPI, test_user: User, async_db_session):
+async def test_change_password_wrong_current(
+    router_app: FastAPI, test_user: User, async_db_session
+):
     """Test password change with wrong current password."""
     from dotmac.platform.auth.router import get_auth_session
 
@@ -416,7 +418,7 @@ async def test_update_profile_email_conflict(router_app: FastAPI, async_db_sessi
         yield async_db_session
 
     router_app = FastAPI()
-    router_app.include_router(auth_router, prefix="/auth")
+    router_app.include_router(auth_router)
     router_app.dependency_overrides[get_auth_session] = override_session
 
     token = create_access_token(
@@ -479,7 +481,7 @@ async def test_update_profile_username_conflict(router_app: FastAPI, async_db_se
         yield async_db_session
 
     router_app = FastAPI()
-    router_app.include_router(auth_router, prefix="/auth")
+    router_app.include_router(auth_router)
     router_app.dependency_overrides[get_auth_session] = override_session
 
     token = create_access_token(
@@ -509,7 +511,6 @@ async def test_update_profile_username_conflict(router_app: FastAPI, async_db_se
 async def test_login_with_2fa_required(router_app: FastAPI, mfa_user: User, async_db_session):
     """Test login with MFA-enabled user returns 2FA challenge."""
     import asyncio
-    from unittest.mock import AsyncMock
 
     from dotmac.platform.auth.router import get_auth_session, session_manager
 
@@ -532,9 +533,11 @@ async def test_login_with_2fa_required(router_app: FastAPI, mfa_user: User, asyn
     mock_redis.aclose = AsyncMock()
     mock_redis.ping = AsyncMock()
 
-    with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"), patch(
-        "dotmac.platform.tenant.get_tenant_config", return_value=None
-    ), patch("redis.asyncio.from_url", return_value=mock_redis):
+    with (
+        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
+        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
+        patch("redis.asyncio.from_url", return_value=mock_redis),
+    ):
         transport = ASGITransport(app=router_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.post(
@@ -632,12 +635,12 @@ async def test_cookie_helper_functions():
 
     # Test setting cookies
     set_auth_cookies(response, "fake_access_token", "fake_refresh_token")
-    assert "Set-Cookie" in str(response.headers) or hasattr(response, 'set_cookie')
+    assert "Set-Cookie" in str(response.headers) or hasattr(response, "set_cookie")
 
     # Test clearing cookies
     response2 = Response()
     clear_auth_cookies(response2)
-    assert "Set-Cookie" in str(response2.headers) or hasattr(response2, 'delete_cookie')
+    assert "Set-Cookie" in str(response2.headers) or hasattr(response2, "delete_cookie")
 
 
 @pytest.mark.asyncio
@@ -712,7 +715,9 @@ async def test_register_with_invalid_email(router_app: FastAPI, async_db_session
 
 
 @pytest.mark.asyncio
-async def test_update_profile_with_valid_data(router_app: FastAPI, test_user: User, async_db_session):
+async def test_update_profile_with_valid_data(
+    router_app: FastAPI, test_user: User, async_db_session
+):
     """Test updating profile with all valid fields."""
     from dotmac.platform.auth.router import get_auth_session
 

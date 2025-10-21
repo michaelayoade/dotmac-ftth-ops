@@ -32,7 +32,7 @@ class RedisRateLimitStorage implements RateLimitStorage {
   private redis: any = null;
   private redisUrl: string;
 
-  constructor(redisUrl: string = 'redis://localhost:6379') {
+  constructor(redisUrl: string = "redis://localhost:6379") {
     this.redisUrl = redisUrl;
     this.initializeRedis();
   }
@@ -41,12 +41,12 @@ class RedisRateLimitStorage implements RateLimitStorage {
     try {
       // In production, use a proper Redis client like ioredis
       // For now, we'll simulate Redis operations
-      if (typeof window === 'undefined') {
+      if (typeof window === "undefined") {
         // Server-side only
         console.log(`Redis rate limiter initialized: ${this.redisUrl}`);
       }
     } catch (error) {
-      console.error('Redis connection failed, falling back to memory storage:', error);
+      console.error("Redis connection failed, falling back to memory storage:", error);
     }
   }
 
@@ -54,7 +54,7 @@ class RedisRateLimitStorage implements RateLimitStorage {
     try {
       // In production, this would be: await this.redis.hmget(key, 'count', 'resetTime')
       // For now, simulate with localStorage in browser or memory in server
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         const stored = localStorage.getItem(`rate_limit_${key}`);
         if (stored) {
           const data = JSON.parse(stored);
@@ -67,7 +67,7 @@ class RedisRateLimitStorage implements RateLimitStorage {
       }
       return null;
     } catch (error) {
-      console.error('Redis get error:', error);
+      console.error("Redis get error:", error);
       return null;
     }
   }
@@ -76,11 +76,11 @@ class RedisRateLimitStorage implements RateLimitStorage {
     try {
       // In production: await this.redis.hmset(key, 'count', value.count, 'resetTime', value.resetTime)
       // await this.redis.expire(key, Math.ceil(ttl / 1000))
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         localStorage.setItem(`rate_limit_${key}`, JSON.stringify(value));
       }
     } catch (error) {
-      console.error('Redis set error:', error);
+      console.error("Redis set error:", error);
     }
   }
 
@@ -109,7 +109,7 @@ class RedisRateLimitStorage implements RateLimitStorage {
         return newValue;
       }
     } catch (error) {
-      console.error('Redis increment error:', error);
+      console.error("Redis increment error:", error);
       // Fallback to allowing the request
       return { count: 1, resetTime: Date.now() + ttl };
     }
@@ -118,11 +118,11 @@ class RedisRateLimitStorage implements RateLimitStorage {
   async delete(key: string): Promise<void> {
     try {
       // In production: await this.redis.del(key)
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         localStorage.removeItem(`rate_limit_${key}`);
       }
     } catch (error) {
-      console.error('Redis delete error:', error);
+      console.error("Redis delete error:", error);
     }
   }
 }
@@ -182,7 +182,7 @@ export class RateLimiter {
 
   constructor(options: RateLimitOptions, storage?: RateLimitStorage) {
     this.options = {
-      keyPrefix: 'rl',
+      keyPrefix: "rl",
       skipSuccessfulRequests: false,
       skipFailedRequests: false,
       ...options,
@@ -190,7 +190,7 @@ export class RateLimiter {
 
     this.storage =
       storage ||
-      (process.env.NODE_ENV === 'production' && process.env.REDIS_URL
+      (process.env.NODE_ENV === "production" && process.env.REDIS_URL
         ? new RedisRateLimitStorage(process.env.REDIS_URL)
         : new MemoryRateLimitStorage());
   }
@@ -214,7 +214,7 @@ export class RateLimiter {
         totalHits: result.count,
       };
     } catch (error) {
-      console.error('Rate limit check error:', error);
+      console.error("Rate limit check error:", error);
       // Fail open - allow request if rate limiter fails
       return {
         allowed: true,
@@ -261,7 +261,7 @@ export class RateLimiter {
         totalHits: result.count,
       };
     } catch (error) {
-      console.error('Rate limit status error:', error);
+      console.error("Rate limit status error:", error);
       return null;
     }
   }
@@ -275,35 +275,35 @@ export const rateLimiters = {
   auth: new RateLimiter({
     windowMs: 15 * 60 * 1000,
     maxRequests: 5,
-    keyPrefix: 'auth',
+    keyPrefix: "auth",
   }),
 
   // API requests: 100 per minute
   api: new RateLimiter({
     windowMs: 60 * 1000,
     maxRequests: 100,
-    keyPrefix: 'api',
+    keyPrefix: "api",
   }),
 
   // General requests: 1000 per hour
   general: new RateLimiter({
     windowMs: 60 * 60 * 1000,
     maxRequests: 1000,
-    keyPrefix: 'general',
+    keyPrefix: "general",
   }),
 
   // Password reset: 3 per hour
   passwordReset: new RateLimiter({
     windowMs: 60 * 60 * 1000,
     maxRequests: 3,
-    keyPrefix: 'pwd_reset',
+    keyPrefix: "pwd_reset",
   }),
 
   // Account registration: 5 per hour
   registration: new RateLimiter({
     windowMs: 60 * 60 * 1000,
     maxRequests: 5,
-    keyPrefix: 'register',
+    keyPrefix: "register",
   }),
 };
 
@@ -315,9 +315,9 @@ export function createRateLimitMiddleware(
   options: {
     keyGenerator?: (req: any) => string;
     onLimitReached?: (req: any, res: any) => void;
-  } = {}
+  } = {},
 ) {
-  const { keyGenerator = (req) => req.ip || 'unknown', onLimitReached } = options;
+  const { keyGenerator = (req) => req.ip || "unknown", onLimitReached } = options;
 
   return async function rateLimitMiddleware(req: any, res: any, next: any) {
     try {
@@ -326,9 +326,9 @@ export function createRateLimitMiddleware(
 
       // Add rate limit headers
       if (res.setHeader) {
-        res.setHeader('X-RateLimit-Limit', limiter.options.maxRequests);
-        res.setHeader('X-RateLimit-Remaining', result.remainingRequests);
-        res.setHeader('X-RateLimit-Reset', new Date(result.resetTime).toISOString());
+        res.setHeader("X-RateLimit-Limit", limiter.options.maxRequests);
+        res.setHeader("X-RateLimit-Remaining", result.remainingRequests);
+        res.setHeader("X-RateLimit-Reset", new Date(result.resetTime).toISOString());
       }
 
       if (!result.allowed) {
@@ -336,7 +336,7 @@ export function createRateLimitMiddleware(
           onLimitReached(req, res);
         } else if (res.status && res.json) {
           res.status(429).json({
-            error: 'Too many requests',
+            error: "Too many requests",
             retryAfter: Math.ceil((result.resetTime - Date.now()) / 1000),
           });
         }
@@ -345,7 +345,7 @@ export function createRateLimitMiddleware(
 
       if (next) next();
     } catch (error) {
-      console.error('Rate limit middleware error:', error);
+      console.error("Rate limit middleware error:", error);
       if (next) next(); // Fail open
     }
   };
@@ -356,19 +356,19 @@ export function createRateLimitMiddleware(
  */
 export function getClientIdentifier(req: any): string {
   // Try to get the most accurate client identifier
-  const forwarded = req.headers['x-forwarded-for'];
-  const realIp = req.headers['x-real-ip'];
+  const forwarded = req.headers["x-forwarded-for"];
+  const realIp = req.headers["x-real-ip"];
   const remoteAddr = req.connection?.remoteAddress || req.socket?.remoteAddress;
 
   if (forwarded) {
-    return forwarded.split(',')[0].trim();
+    return forwarded.split(",")[0].trim();
   }
 
   if (realIp) {
     return realIp;
   }
 
-  return remoteAddr || 'unknown';
+  return remoteAddr || "unknown";
 }
 
 export function calculateRetryAfter(resetTime: number): number {

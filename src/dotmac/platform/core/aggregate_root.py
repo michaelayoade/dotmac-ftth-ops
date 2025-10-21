@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
 
-class AggregateRoot(BaseModel):
+class AggregateRoot(BaseModel):  # BaseModel resolves to Any in isolation
     """
     Base class for aggregate roots in DDD.
 
@@ -118,7 +118,7 @@ class AggregateRoot(BaseModel):
         self.version += 1
 
 
-class Entity(BaseModel):
+class Entity(BaseModel):  # BaseModel resolves to Any in isolation
     """
     Base class for entities within an aggregate.
 
@@ -137,7 +137,7 @@ class Entity(BaseModel):
     )
 
 
-class ValueObject(BaseModel):
+class ValueObject(BaseModel):  # BaseModel resolves to Any in isolation
     """
     Base class for value objects.
 

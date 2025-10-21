@@ -22,7 +22,7 @@ logger = structlog.get_logger(__name__)
 # Cache TTL (in seconds)
 ACTIVITY_CACHE_TTL = 300  # 5 minutes
 
-router = APIRouter(tags=["Analytics Activity"])
+router = APIRouter(prefix="", tags=["Analytics Activity"])
 
 
 # ============================================================================
@@ -30,7 +30,7 @@ router = APIRouter(tags=["Analytics Activity"])
 # ============================================================================
 
 
-class ActivityStatsResponse(BaseModel):
+class ActivityStatsResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Analytics activity statistics response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -64,7 +64,7 @@ class ActivityStatsResponse(BaseModel):
 # ============================================================================
 
 
-@cached_result(
+@cached_result(  # type: ignore[misc]  # Cache decorator is untyped
     ttl=ACTIVITY_CACHE_TTL,
     key_prefix="analytics:activity",
     key_params=["period_days", "tenant_id"],

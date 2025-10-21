@@ -67,7 +67,7 @@ class HTMLReceiptGenerator(ReceiptGenerator):
     <div class="header">
         <h1>Receipt</h1>
         <div class="receipt-number">{receipt.receipt_number}</div>
-        <div>Date: {receipt.issue_date.strftime('%B %d, %Y')}</div>
+        <div>Date: {receipt.issue_date.strftime("%B %d, %Y")}</div>
     </div>
 
     <div class="info-section">
@@ -77,9 +77,9 @@ class HTMLReceiptGenerator(ReceiptGenerator):
         {billing_address_html}
     </div>
 
-    {f'<div class="info-section"><div class="info-title">Payment Information</div><div><strong>Payment ID:</strong> {receipt.payment_id}</div></div>' if receipt.payment_id else ''}
+    {f'<div class="info-section"><div class="info-title">Payment Information</div><div><strong>Payment ID:</strong> {receipt.payment_id}</div></div>' if receipt.payment_id else ""}
 
-    {f'<div class="info-section"><div class="info-title">Invoice Information</div><div><strong>Invoice ID:</strong> {receipt.invoice_id}</div></div>' if receipt.invoice_id else ''}
+    {f'<div class="info-section"><div class="info-title">Invoice Information</div><div><strong>Invoice ID:</strong> {receipt.invoice_id}</div></div>' if receipt.invoice_id else ""}
 
     <table>
         <thead>
@@ -111,11 +111,11 @@ class HTMLReceiptGenerator(ReceiptGenerator):
     </table>
 
     <div class="payment-info">
-        <div><strong>Payment Method:</strong> {receipt.payment_method.replace('_', ' ').title()}</div>
-        <div><strong>Payment Status:</strong> {receipt.payment_status.replace('_', ' ').title()}</div>
+        <div><strong>Payment Method:</strong> {receipt.payment_method.replace("_", " ").title()}</div>
+        <div><strong>Payment Status:</strong> {receipt.payment_status.replace("_", " ").title()}</div>
     </div>
 
-    {f'<div class="info-section"><div class="info-title">Notes</div><div>{receipt.notes}</div></div>' if receipt.notes else ''}
+    {f'<div class="info-section"><div class="info-title">Notes</div><div>{receipt.notes}</div></div>' if receipt.notes else ""}
 
     <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
         <div>Thank you for your business!</div>
@@ -155,7 +155,7 @@ class PDFReceiptGenerator(ReceiptGenerator):
         content = f"""
 RECEIPT
 {receipt.receipt_number}
-Date: {receipt.issue_date.strftime('%B %d, %Y')}
+Date: {receipt.issue_date.strftime("%B %d, %Y")}
 
 CUSTOMER INFORMATION
 Name: {receipt.customer_name}
@@ -175,7 +175,7 @@ Email: {receipt.customer_email}
 
         for item in receipt.line_items:
             content += f"{item.description[:25]:<25} {item.quantity:>3} "
-            content += f"{item.unit_price/100:>10.2f} {item.total_price/100:>10.2f}\n"
+            content += f"{item.unit_price / 100:>10.2f} {item.total_price / 100:>10.2f}\n"
 
         content += "-" * 60 + "\n"
         content += f"Subtotal: ${receipt.subtotal / 100:.2f}\n"

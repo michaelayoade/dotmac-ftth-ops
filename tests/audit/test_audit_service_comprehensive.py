@@ -97,7 +97,7 @@ class TestLogActivity:
     async def test_log_activity_basic(self, audit_service, mock_session):
         """Test basic activity logging."""
         with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant_123"):
-            activity = await audit_service.log_activity(
+            await audit_service.log_activity(
                 activity_type=ActivityType.USER_LOGIN,
                 action="login",
                 description="User logged in",
@@ -111,7 +111,7 @@ class TestLogActivity:
     async def test_log_activity_with_all_fields(self, audit_service, mock_session):
         """Test activity logging with all optional fields."""
         with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant_123"):
-            activity = await audit_service.log_activity(
+            await audit_service.log_activity(
                 activity_type=ActivityType.SECRET_ACCESSED,
                 action="access",
                 description="Secret accessed",
@@ -137,7 +137,7 @@ class TestLogActivity:
     async def test_log_activity_default_severity(self, audit_service, mock_session):
         """Test that default severity is LOW."""
         with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant_123"):
-            activity = await audit_service.log_activity(
+            await audit_service.log_activity(
                 activity_type=ActivityType.API_REQUEST,
                 action="request",
                 description="API request made",
@@ -159,7 +159,7 @@ class TestLogRequestActivity:
     async def test_log_request_activity_basic(self, audit_service, mock_session, mock_request):
         """Test logging activity from request context."""
         with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant_123"):
-            activity = await audit_service.log_request_activity(
+            await audit_service.log_request_activity(
                 request=mock_request,
                 activity_type=ActivityType.API_REQUEST,
                 action="GET /users",
@@ -185,7 +185,7 @@ class TestLogRequestActivity:
         request.state.tenant_id = "tenant_123"
 
         with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant_123"):
-            activity = await audit_service.log_request_activity(
+            await audit_service.log_request_activity(
                 request=request,
                 activity_type=ActivityType.API_REQUEST,
                 action="test",
@@ -201,7 +201,7 @@ class TestLogRequestActivity:
     ):
         """Test overriding user_id and tenant_id from kwargs."""
         with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant_123"):
-            activity = await audit_service.log_request_activity(
+            await audit_service.log_request_activity(
                 request=mock_request,
                 activity_type=ActivityType.API_REQUEST,
                 action="test",
@@ -224,7 +224,7 @@ class TestLogRequestActivity:
         request.state = Mock(spec=[])  # No attributes
 
         with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant_123"):
-            activity = await audit_service.log_request_activity(
+            await audit_service.log_request_activity(
                 request=request,
                 activity_type=ActivityType.API_REQUEST,
                 action="test",
@@ -699,7 +699,7 @@ class TestSessionManagement:
         service = AuditService(session=None)
 
         with patch("dotmac.platform.db.AsyncSessionLocal") as MockSessionLocal:
-            session_context = service._get_session()
+            service._get_session()
 
             # Should call AsyncSessionLocal
             MockSessionLocal.assert_called_once()

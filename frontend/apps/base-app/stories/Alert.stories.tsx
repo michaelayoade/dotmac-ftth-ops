@@ -1,14 +1,14 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert';
-import { AlertCircle, CheckCircle, Info as InfoIcon, AlertTriangle } from 'lucide-react';
+import type { Meta, StoryObj } from "@storybook/react";
+import { Alert, AlertTitle, AlertDescription } from "../components/ui/alert";
+import { AlertCircle, CheckCircle, Info as InfoIcon, AlertTriangle } from "lucide-react";
 
 const meta = {
-  title: 'Components/Alert',
+  title: "Components/Alert",
   component: Alert,
   parameters: {
-    layout: 'centered',
+    layout: "centered",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 } satisfies Meta<typeof Alert>;
 
 export default meta;
@@ -19,9 +19,7 @@ export const Default: Story = {
     <Alert className="w-[400px]">
       <InfoIcon className="h-4 w-4" />
       <AlertTitle>Heads up!</AlertTitle>
-      <AlertDescription>
-        You can add components to your app using the cli.
-      </AlertDescription>
+      <AlertDescription>You can add components to your app using the cli.</AlertDescription>
     </Alert>
   ),
 };
@@ -31,9 +29,7 @@ export const Destructive: Story = {
     <Alert variant="destructive" className="w-[400px]">
       <AlertCircle className="h-4 w-4" />
       <AlertTitle>Error</AlertTitle>
-      <AlertDescription>
-        Your session has expired. Please log in again.
-      </AlertDescription>
+      <AlertDescription>Your session has expired. Please log in again.</AlertDescription>
     </Alert>
   ),
 };
@@ -43,9 +39,7 @@ export const Success: Story = {
     <Alert variant="success" className="w-[400px]">
       <CheckCircle className="h-4 w-4" />
       <AlertTitle>Success</AlertTitle>
-      <AlertDescription>
-        Your changes have been saved successfully.
-      </AlertDescription>
+      <AlertDescription>Your changes have been saved successfully.</AlertDescription>
     </Alert>
   ),
 };
@@ -67,9 +61,7 @@ export const InfoVariant: Story = {
     <Alert variant="info" className="w-[400px]">
       <InfoIcon className="h-4 w-4" />
       <AlertTitle>Information</AlertTitle>
-      <AlertDescription>
-        New features are available. Check out what's new!
-      </AlertDescription>
+      <AlertDescription>New features are available. Check out what's new!</AlertDescription>
     </Alert>
   ),
 };

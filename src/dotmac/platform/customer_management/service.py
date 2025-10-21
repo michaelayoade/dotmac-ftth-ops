@@ -62,6 +62,11 @@ class CustomerService:
     """Core customer management service using standard library patterns."""
 
     def __init__(self, session: AsyncSession) -> None:
+        """Initialize customer service.
+
+        Args:
+            session: Async SQLAlchemy session for database operations
+        """
         self.session = session
         # Initialize collections for efficient analytics
         self._customer_stats_cache: collections.defaultdict[str, int] = collections.defaultdict(int)
@@ -743,7 +748,7 @@ class CustomerService:
 
     async def batch_process_customers(
         self, customer_ids: list[UUID | str], operation: str, batch_size: int = 100
-    ) -> dict[str, list]:
+    ) -> dict[str, list[Any]]:
         """Process customers in batches using itertools for efficiency."""
         results: dict[str, list[UUID | str]] = {"success": [], "failed": []}
 

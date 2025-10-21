@@ -12,8 +12,8 @@
  * - Error handling and retry logic
  */
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useQuery, useQueries, QueryClient } from '@tanstack/react-query';
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useQuery, useQueries, QueryClient } from "@tanstack/react-query";
 
 // Types
 interface AnalyticsMetric {
@@ -23,7 +23,7 @@ interface AnalyticsMetric {
   previousValue?: number;
   change?: number;
   changePercent?: number;
-  trend?: 'up' | 'down' | 'stable';
+  trend?: "up" | "down" | "stable";
   target?: number;
   unit?: string;
 }
@@ -76,7 +76,7 @@ interface AnalyticsFilters {
   segments?: string[];
   regions?: string[];
   services?: string[];
-  granularity: 'hourly' | 'daily' | 'weekly' | 'monthly';
+  granularity: "hourly" | "daily" | "weekly" | "monthly";
 }
 
 interface UseAnalyticsOptions {
@@ -112,13 +112,13 @@ const fetchAnalyticsMetrics = async (filters: AnalyticsFilters): Promise<Analyti
   });
 
   if (filters.segments?.length) {
-    params.append('segments', filters.segments.join(','));
+    params.append("segments", filters.segments.join(","));
   }
   if (filters.regions?.length) {
-    params.append('regions', filters.regions.join(','));
+    params.append("regions", filters.regions.join(","));
   }
   if (filters.services?.length) {
-    params.append('services', filters.services.join(','));
+    params.append("services", filters.services.join(","));
   }
 
   const response = await fetch(`/api/analytics/metrics?${params}`);
@@ -187,11 +187,11 @@ const fetchServiceMetrics = async (filters: AnalyticsFilters): Promise<ServiceMe
 };
 
 // Utility functions
-const calculateTrend = (current: number, previous: number): 'up' | 'down' | 'stable' => {
-  if (!previous) return 'stable';
+const calculateTrend = (current: number, previous: number): "up" | "down" | "stable" => {
+  if (!previous) return "stable";
   const change = ((current - previous) / previous) * 100;
-  if (Math.abs(change) < 1) return 'stable';
-  return change > 0 ? 'up' : 'down';
+  if (Math.abs(change) < 1) return "stable";
+  return change > 0 ? "up" : "down";
 };
 
 const calculatePercentageChange = (current: number, previous: number): number => {
@@ -226,27 +226,27 @@ export const useAnalytics = (options: UseAnalyticsOptions) => {
   const queries = useQueries({
     queries: [
       {
-        queryKey: ['analytics', 'metrics', filters],
+        queryKey: ["analytics", "metrics", filters],
         queryFn: () => fetchAnalyticsMetrics(filters),
         ...queryConfig,
       },
       {
-        queryKey: ['analytics', 'timeseries', filters],
+        queryKey: ["analytics", "timeseries", filters],
         queryFn: () => fetchTimeSeriesData(filters),
         ...queryConfig,
       },
       {
-        queryKey: ['analytics', 'customer-segments', filters],
+        queryKey: ["analytics", "customer-segments", filters],
         queryFn: () => fetchCustomerSegments(filters),
         ...queryConfig,
       },
       {
-        queryKey: ['analytics', 'geographic', filters],
+        queryKey: ["analytics", "geographic", filters],
         queryFn: () => fetchGeographicData(filters),
         ...queryConfig,
       },
       {
-        queryKey: ['analytics', 'services', filters],
+        queryKey: ["analytics", "services", filters],
         queryFn: () => fetchServiceMetrics(filters),
         ...queryConfig,
       },
@@ -265,17 +265,17 @@ export const useAnalytics = (options: UseAnalyticsOptions) => {
   useEffect(() => {
     if (!isRealTimeActive) return;
 
-    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001'}/analytics`;
+    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001"}/analytics`;
     websocketRef.current = new WebSocket(wsUrl);
 
     websocketRef.current.onopen = () => {
-      console.log('Analytics WebSocket connected');
+      console.log("Analytics WebSocket connected");
       // Subscribe to analytics updates
       websocketRef.current?.send(
         JSON.stringify({
-          type: 'subscribe',
+          type: "subscribe",
           filters,
-        })
+        }),
       );
     };
 
@@ -287,16 +287,16 @@ export const useAnalytics = (options: UseAnalyticsOptions) => {
           [update.type]: update.data,
         }));
       } catch (error) {
-        console.error('Failed to parse WebSocket message:', error);
+        console.error("Failed to parse WebSocket message:", error);
       }
     };
 
     websocketRef.current.onerror = (error) => {
-      console.error('Analytics WebSocket error:', error);
+      console.error("Analytics WebSocket error:", error);
     };
 
     websocketRef.current.onclose = () => {
-      console.log('Analytics WebSocket disconnected');
+      console.log("Analytics WebSocket disconnected");
     };
 
     return () => {
@@ -359,7 +359,7 @@ export const useAnalytics = (options: UseAnalyticsOptions) => {
         const currentValue = latestData[metric.id as keyof TimeSeriesData] as number;
         const previousValue = previousData[metric.id as keyof TimeSeriesData] as number;
 
-        if (typeof currentValue === 'number' && typeof previousValue === 'number') {
+        if (typeof currentValue === "number" && typeof previousValue === "number") {
           enhancedMetric.previousValue = previousValue;
           enhancedMetric.change = currentValue - previousValue;
           enhancedMetric.changePercent = calculatePercentageChange(currentValue, previousValue);
@@ -407,14 +407,14 @@ export const useAnalytics = (options: UseAnalyticsOptions) => {
   }, [queries]);
 
   const exportData = useCallback(
-    async (format: 'csv' | 'excel' | 'pdf') => {
+    async (format: "csv" | "excel" | "pdf") => {
       if (!combinedData) return;
 
       try {
-        const response = await fetch('/api/analytics/export', {
-          method: 'POST',
+        const response = await fetch("/api/analytics/export", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             data: combinedData,
@@ -429,19 +429,19 @@ export const useAnalytics = (options: UseAnalyticsOptions) => {
 
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = `analytics-${new Date().toISOString().split('T')[0]}.${format}`;
+        a.download = `analytics-${new Date().toISOString().split("T")[0]}.${format}`;
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } catch (error) {
-        console.error('Export failed:', error);
+        console.error("Export failed:", error);
         throw error;
       }
     },
-    [combinedData, filters]
+    [combinedData, filters],
   );
 
   // Return hook interface
@@ -494,7 +494,7 @@ export const useRevenueAnalytics = (filters: AnalyticsFilters) => {
     const trend =
       revenueData.length > 1
         ? calculateTrend(revenueData[revenueData.length - 1], revenueData[0])
-        : 'stable';
+        : "stable";
 
     return {
       total: totalRevenue,

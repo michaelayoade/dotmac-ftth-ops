@@ -46,7 +46,7 @@ class TestGetMetricsDateDefaults:
             "dotmac.platform.analytics.router.get_analytics_service", return_value=mock_service
         ):
             # Call with no dates - should trigger lines 227-230
-            result = await get_metrics(
+            await get_metrics(
                 current_user=mock_user,
                 metric_name=None,
                 start_date=None,
@@ -184,7 +184,7 @@ class TestCustomQueryBranches:
     async def test_custom_query_invalid_type(self, mock_user):
         """Test custom_query with invalid type raises error (line 335)."""
         # This should fail Pydantic validation before reaching the router
-        with pytest.raises(Exception):  # Pydantic ValidationError
+        with pytest.raises((ValueError, TypeError)):  # Pydantic ValidationError
             AnalyticsQueryRequest(query_type="invalid_type", filters={})
 
     @pytest.mark.asyncio

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { createContext, useContext } from 'react';
-import type { PlatformConfig } from '@/lib/config';
-import { platformConfig } from '@/lib/config';
+import { createContext, useContext } from "react";
+import type { PlatformConfig } from "@/lib/config";
+import { platformConfig } from "@/lib/config";
 
 const AppConfigContext = createContext<PlatformConfig>(platformConfig);
 

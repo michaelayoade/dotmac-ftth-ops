@@ -655,7 +655,7 @@ class TestWebhookDeliveryHistory:
         await db_session.commit()
 
         response = await async_client.get(
-            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}/deliveries" f"?status=failed"
+            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}/deliveries?status=failed"
         )
 
         assert response.status_code == 200

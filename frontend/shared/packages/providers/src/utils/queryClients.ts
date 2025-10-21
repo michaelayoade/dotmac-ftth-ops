@@ -1,5 +1,5 @@
-import { QueryClient } from '@tanstack/react-query';
-import type { PortalType } from '@dotmac/auth';
+import { QueryClient } from "@tanstack/react-query";
+import type { PortalType } from "@dotmac/auth";
 
 export function createPortalQueryClient(_portal: PortalType): QueryClient {
   // Lightweight defaults; tune per-portal later if needed

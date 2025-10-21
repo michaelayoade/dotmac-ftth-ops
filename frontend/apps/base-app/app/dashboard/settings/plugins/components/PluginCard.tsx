@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Puzzle,
   Plus,
@@ -17,9 +17,9 @@ import {
   Zap,
   Search,
   TrendingUp,
-} from 'lucide-react';
+} from "lucide-react";
 
-import type { PluginConfig, PluginInstance, PluginStatus, PluginType } from '@/hooks/usePlugins';
+import type { PluginConfig, PluginInstance, PluginStatus, PluginType } from "@/hooks/usePlugins";
 
 interface PluginCardProps {
   plugin: PluginConfig;
@@ -29,21 +29,21 @@ interface PluginCardProps {
 
 const getTypeIcon = (type: PluginType) => {
   switch (type) {
-    case 'notification':
+    case "notification":
       return <Activity className="h-5 w-5 text-sky-400" />;
-    case 'integration':
+    case "integration":
       return <Zap className="h-5 w-5 text-amber-400" />;
-    case 'payment':
+    case "payment":
       return <Shield className="h-5 w-5 text-emerald-400" />;
-    case 'storage':
+    case "storage":
       return <Settings className="h-5 w-5 text-purple-400" />;
-    case 'search':
+    case "search":
       return <Search className="h-5 w-5 text-teal-400" />;
-    case 'analytics':
+    case "analytics":
       return <TrendingUp className="h-5 w-5 text-emerald-400" />;
-    case 'authentication':
+    case "authentication":
       return <Users className="h-5 w-5 text-indigo-400" />;
-    case 'workflow':
+    case "workflow":
       return <Clock className="h-5 w-5 text-orange-400" />;
     default:
       return <Puzzle className="h-5 w-5 text-muted-foreground" />;
@@ -52,75 +52,85 @@ const getTypeIcon = (type: PluginType) => {
 
 const getTypeColor = (type: PluginType) => {
   switch (type) {
-    case 'notification':
-      return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
-    case 'integration':
-      return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
-    case 'payment':
-      return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-    case 'storage':
-      return 'bg-purple-500/10 text-purple-400 border-purple-500/20';
-    case 'search':
-      return 'bg-teal-500/10 text-teal-400 border-teal-500/20';
-    case 'analytics':
-      return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-    case 'authentication':
-      return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-    case 'workflow':
-      return 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+    case "notification":
+      return "bg-sky-500/10 text-sky-400 border-sky-500/20";
+    case "integration":
+      return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+    case "payment":
+      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+    case "storage":
+      return "bg-purple-500/10 text-purple-400 border-purple-500/20";
+    case "search":
+      return "bg-teal-500/10 text-teal-400 border-teal-500/20";
+    case "analytics":
+      return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+    case "authentication":
+      return "bg-indigo-500/10 text-indigo-400 border-indigo-500/20";
+    case "workflow":
+      return "bg-orange-500/10 text-orange-400 border-orange-500/20";
     default:
-      return 'bg-muted/10 text-muted-foreground border-border';
+      return "bg-muted/10 text-muted-foreground border-border";
   }
 };
 
 const getStatusColor = (status: PluginStatus) => {
   switch (status) {
-    case 'active':
-      return 'bg-emerald-500/10 text-emerald-400';
-    case 'inactive':
-      return 'bg-card0/10 text-muted-foreground';
-    case 'error':
-      return 'bg-rose-500/10 text-rose-400';
-    case 'configured':
-      return 'bg-sky-500/10 text-sky-400';
-    case 'registered':
-      return 'bg-muted/10 text-muted-foreground';
+    case "active":
+      return "bg-emerald-500/10 text-emerald-400";
+    case "inactive":
+      return "bg-card0/10 text-muted-foreground";
+    case "error":
+      return "bg-rose-500/10 text-rose-400";
+    case "configured":
+      return "bg-sky-500/10 text-sky-400";
+    case "registered":
+      return "bg-muted/10 text-muted-foreground";
     default:
-      return 'bg-card0/10 text-muted-foreground';
+      return "bg-card0/10 text-muted-foreground";
   }
 };
 
 export const PluginCard = ({ plugin, instances, onInstall }: PluginCardProps) => {
   const [showDetails, setShowDetails] = useState(false);
 
-  const activeInstances = instances.filter(i => i.status === 'active');
-  const errorInstances = instances.filter(i => i.status === 'error');
+  const activeInstances = instances.filter((i) => i.status === "active");
+  const errorInstances = instances.filter((i) => i.status === "error");
   const totalInstances = instances.length;
 
-  const fieldGroups = plugin.fields.reduce((groups, field) => {
-    const group = field.group || 'Configuration';
-    groups[group] = (groups[group] || 0) + 1;
-    return groups;
-  }, {} as Record<string, number>);
+  const fieldGroups = plugin.fields.reduce(
+    (groups, field) => {
+      const group = field.group || "Configuration";
+      groups[group] = (groups[group] || 0) + 1;
+      return groups;
+    },
+    {} as Record<string, number>,
+  );
 
-  const requiredFields = plugin.fields.filter(f => f.required).length;
-  const secretFields = plugin.fields.filter(f => f.is_secret).length;
+  const requiredFields = plugin.fields.filter((f) => f.required).length;
+  const secretFields = plugin.fields.filter((f) => f.is_secret).length;
 
   return (
-    <div className="bg-card/50 border border-border rounded-lg hover:border-border transition-colors" data-testid="plugin-card">
+    <div
+      className="bg-card/50 border border-border rounded-lg hover:border-border transition-colors"
+      data-testid="plugin-card"
+    >
       {/* Card Header */}
       <div className="p-4 border-b border-border">
         <div className="flex items-start gap-3">
-          <div className="flex-shrink-0">
-            {getTypeIcon(plugin.type)}
-          </div>
+          <div className="flex-shrink-0">{getTypeIcon(plugin.type)}</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-medium text-foreground truncate" data-testid="plugin-name">{plugin.name}</h3>
-                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{plugin.description}</p>
+                <h3 className="font-medium text-foreground truncate" data-testid="plugin-name">
+                  {plugin.name}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                  {plugin.description}
+                </p>
               </div>
-              <div className={`px-2 py-1 rounded-full text-xs font-medium border ${getTypeColor(plugin.type)}`}>
+              <div
+                className={`px-2 py-1 rounded-full text-xs font-medium border ${getTypeColor(plugin.type)}`}
+              >
                 {plugin.type}
               </div>
             </div>
@@ -137,8 +147,11 @@ export const PluginCard = ({ plugin, instances, onInstall }: PluginCardProps) =>
         {/* Tags */}
         {plugin.tags && plugin.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
-            {plugin.tags.slice(0, 3).map(tag => (
-              <span key={tag} className="px-2 py-0.5 bg-accent text-xs rounded-full text-muted-foreground">
+            {plugin.tags.slice(0, 3).map((tag) => (
+              <span
+                key={tag}
+                className="px-2 py-0.5 bg-accent text-xs rounded-full text-muted-foreground"
+              >
                 {tag}
               </span>
             ))}
@@ -175,7 +188,7 @@ export const PluginCard = ({ plugin, instances, onInstall }: PluginCardProps) =>
 
           {/* Recent Instances */}
           <div className="mt-2 space-y-1">
-            {instances.slice(0, 2).map(instance => (
+            {instances.slice(0, 2).map((instance) => (
               <div key={instance.id} className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground truncate">{instance.instance_name}</span>
                 <span className={`px-2 py-0.5 rounded-full ${getStatusColor(instance.status)}`}>
@@ -263,8 +276,11 @@ export const PluginCard = ({ plugin, instances, onInstall }: PluginCardProps) =>
             <div>
               <h4 className="text-sm font-medium text-foreground mb-2">Dependencies</h4>
               <div className="flex flex-wrap gap-1">
-                {plugin.dependencies.slice(0, 4).map(dep => (
-                  <span key={dep} className="px-2 py-0.5 bg-accent text-xs rounded text-muted-foreground">
+                {plugin.dependencies.slice(0, 4).map((dep) => (
+                  <span
+                    key={dep}
+                    className="px-2 py-0.5 bg-accent text-xs rounded text-muted-foreground"
+                  >
                     {dep}
                   </span>
                 ))}
@@ -287,7 +303,7 @@ export const PluginCard = ({ plugin, instances, onInstall }: PluginCardProps) =>
               onClick={() => setShowDetails(!showDetails)}
               className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              {showDetails ? 'Hide Details' : 'Show Details'}
+              {showDetails ? "Hide Details" : "Show Details"}
             </button>
             {plugin.homepage && (
               <a

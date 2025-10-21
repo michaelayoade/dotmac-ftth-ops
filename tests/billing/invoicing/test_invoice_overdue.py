@@ -35,7 +35,7 @@ class TestInvoiceServiceOverdueManagement:
                     setattr(entity, attr, getattr(mock_invoice_entity, attr))
             # Set overdue-specific fields
             entity.invoice_id = str(uuid4())
-            entity.invoice_number = f"INV-2024-OVERDUE-{i+1}"
+            entity.invoice_number = f"INV-2024-OVERDUE-{i + 1}"
             entity.status = InvoiceStatus.OPEN
             entity.due_date = datetime.now(UTC) - timedelta(days=10)
             entity.payment_status = PaymentStatus.PENDING

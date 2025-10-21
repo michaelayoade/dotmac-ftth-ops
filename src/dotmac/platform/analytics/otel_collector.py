@@ -124,7 +124,7 @@ class OTelConfig:
     service_name: str = "dotmac-business-services"
     environment: str = "development"
     insecure: bool = True
-    headers: dict[str, str] | None = None
+    headers: dict[str, str] | str | None = None
     export_interval_millis: int = 5000
     max_export_batch_size: int = 512
     max_queue_size: int = 2048
@@ -209,7 +209,7 @@ class OpenTelemetryCollector(BaseAnalyticsCollector):
         self._gauges: dict[str, Any] = {}
         self._histograms: dict[str, Any] = {}
         self._updown_counters: dict[str, Any] = {}
-        self._gauge_values: dict[str, dict[tuple, float]] = {}
+        self._gauge_values: dict[str, dict[tuple[Any, ...], float]] = {}
 
         # Lightweight in-memory summary for quick aggregation in tests and admin endpoints
         self._metrics_summary: dict[str, dict[str, Any]] = {

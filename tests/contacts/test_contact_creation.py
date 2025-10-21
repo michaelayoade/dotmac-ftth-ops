@@ -74,7 +74,7 @@ class TestContactCreation:
             # No display_name provided - will be auto-generated
         )
 
-        contact = await create_entity_test_helper(
+        await create_entity_test_helper(
             service=service,
             method_name="create_contact",
             create_data=contact_data,
@@ -98,7 +98,7 @@ class TestContactCreation:
             # No first_name, last_name - company name used
         )
 
-        contact = await create_entity_test_helper(
+        await create_entity_test_helper(
             service=service,
             method_name="create_contact",
             create_data=contact_data,
@@ -136,7 +136,7 @@ class TestContactCreation:
             ],
         )
 
-        contact = await create_entity_test_helper(
+        await create_entity_test_helper(
             service=service,
             method_name="create_contact",
             create_data=contact_data,
@@ -174,7 +174,7 @@ class TestContactCreation:
             ],
         )
 
-        contact = await create_entity_test_helper(
+        await create_entity_test_helper(
             service=service,
             method_name="create_contact",
             create_data=contact_data,
@@ -210,7 +210,7 @@ class TestContactCreation:
         mock_db.commit = AsyncMock()
         mock_db.refresh = AsyncMock()
 
-        contact = await service.create_contact(contact_data=contact_data, tenant_id=tenant_id)
+        await service.create_contact(contact_data=contact_data, tenant_id=tenant_id)
 
         # Verify label query was made
         mock_db.execute.assert_called_once()

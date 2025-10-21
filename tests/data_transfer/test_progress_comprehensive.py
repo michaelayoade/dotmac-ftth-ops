@@ -836,7 +836,7 @@ class TestIntegration:
         for i, tracker in enumerate(operations):
 
             async def update_progress(t, op_id):
-                for j in range(10):
+                for _j in range(10):
                     t.update(processed=10)
                     await asyncio.sleep(0.01)  # Small delay
                 await t.complete()

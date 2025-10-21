@@ -1,155 +1,79 @@
-version: '3.8'
+version: '3.9'
 
 services:
-  # PostgreSQL Database
   postgres:
-    image: postgres:15-alpine
-    container_name: dotmac-postgres
-    environment:
-      POSTGRES_DB: dotmac
-      POSTGRES_USER: dotmac_user
-      POSTGRES_PASSWORD: change-me-in-production
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dotmac_user -d dotmac"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    extends:
+      file: docker-compose.base.yml
+      service: postgres
 
-  # Redis Cache & Sessions
   redis:
-    image: redis:7-alpine
-    container_name: dotmac-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    extends:
+      file: docker-compose.base.yml
+      service: redis
 
-  # OpenBao (Vault alternative)
-  openbao:
-    image: quay.io/openbao/openbao:latest
-    container_name: dotmac-openbao
-    cap_add:
-      - IPC_LOCK
-    environment:
-      VAULT_DEV_ROOT_TOKEN_ID: dev-token-12345
-      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
-    ports:
-      - "8200:8200"
-    volumes:
-      - openbao_data:/vault/data
-    command: server -dev
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8200/v1/sys/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  vault:
+    extends:
+      file: docker-compose.base.yml
+      service: vault
 
-  # Celery Worker (optional)
+  minio:
+    extends:
+      file: docker-compose.base.yml
+      service: minio
+    profiles:
+      - storage
+
   celery-worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: dotmac-celery-worker
-    command: celery -A dotmac.platform.celery_app worker --loglevel=info
-    environment:
-      CELERY__BROKER_URL: redis://redis:6379/0
-      CELERY__RESULT_BACKEND: redis://redis:6379/1
-      DATABASE__HOST: postgres
-      REDIS__HOST: redis
-    depends_on:
-      - redis
-      - postgres
+    extends:
+      file: docker-compose.base.yml
+      service: celery-worker
     profiles:
       - celery
 
-  # Celery Beat Scheduler (optional)
   celery-beat:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: dotmac-celery-beat
-    command: celery -A dotmac.platform.celery_app beat --loglevel=info
-    environment:
-      CELERY__BROKER_URL: redis://redis:6379/0
-      CELERY__RESULT_BACKEND: redis://redis:6379/1
-      DATABASE__HOST: postgres
-      REDIS__HOST: redis
-    depends_on:
-      - redis
-      - postgres
+    extends:
+      file: docker-compose.base.yml
+      service: celery-beat
     profiles:
       - celery
 
-  # Flower - Celery monitoring (optional)
   flower:
-    image: mher/flower:latest
-    container_name: dotmac-flower
-    command: celery flower --broker=redis://redis:6379/0
-    environment:
-      CELERY_BROKER_URL: redis://redis:6379/0
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-    ports:
-      - "5555:5555"
-    depends_on:
-      - redis
+    extends:
+      file: docker-compose.base.yml
+      service: flower
     profiles:
       - celery
 
-  # Jaeger - Distributed tracing (optional)
-  jaeger:
-    image: jaegertracing/all-in-one:latest
-    container_name: dotmac-jaeger
-    environment:
-      COLLECTOR_OTLP_ENABLED: "true"
-    ports:
-      - "6831:6831/udp"  # Compact thrift protocol
-      - "6832:6832/udp"  # Binary thrift protocol
-      - "5778:5778"      # Config HTTP
-      - "16686:16686"    # Jaeger UI
-      - "4317:4317"      # OTLP gRPC
-      - "4318:4318"      # OTLP HTTP
-      - "14268:14268"    # Jaeger collector HTTP
-      - "14250:14250"    # Jaeger collector gRPC
-      - "9411:9411"      # Zipkin
+  control-workers:
+    extends:
+      file: docker-compose.base.yml
+      service: control-workers
+    profiles:
+      - workers
+
+  otel-collector:
+    extends:
+      file: docker-compose.base.yml
+      service: otel-collector
     profiles:
       - observability
 
-  # MinIO - S3-compatible storage (optional)
-  minio:
-    image: minio/minio:latest
-    container_name: dotmac-minio
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
-    ports:
-      - "9000:9000"  # API
-      - "9001:9001"  # Console
-    volumes:
-      - minio_data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+  jaeger:
+    extends:
+      file: docker-compose.base.yml
+      service: jaeger
     profiles:
-      - storage
+      - observability
 
 volumes:
   postgres_data:
   redis_data:
-  openbao_data:
+  vault_data:
   minio_data:
+  app_logs:
+  prometheus_data:
+  grafana_data:
 
 networks:
   default:
-    name: dotmac-network
+    name: ${COMPOSE_PROJECT_NAME:-dotmac}-network

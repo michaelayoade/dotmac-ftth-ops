@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Bell,
   Mail,
@@ -38,8 +38,8 @@ import {
   Settings,
   Save,
   RotateCcw,
-} from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:
@@ -51,7 +51,7 @@ import { useToast } from '@/components/ui/use-toast';
 const mockPreferences = {
   email: {
     enabled: true,
-    digest: 'daily',
+    digest: "daily",
     categories: {
       security: true,
       billing: true,
@@ -100,7 +100,7 @@ const mockPreferences = {
   },
   slack: {
     enabled: true,
-    channel: '#notifications',
+    channel: "#notifications",
     categories: {
       security: true,
       billing: true,
@@ -112,9 +112,9 @@ const mockPreferences = {
   },
   quietHours: {
     enabled: true,
-    start: '22:00',
-    end: '08:00',
-    timezone: 'America/Los_Angeles',
+    start: "22:00",
+    end: "08:00",
+    timezone: "America/Los_Angeles",
     allowUrgent: true,
   },
 };
@@ -122,46 +122,46 @@ const mockPreferences = {
 // Notification categories with descriptions
 const notificationCategories = [
   {
-    id: 'security',
-    name: 'Security Alerts',
-    description: 'Login attempts, password changes, 2FA updates',
+    id: "security",
+    name: "Security Alerts",
+    description: "Login attempts, password changes, 2FA updates",
     icon: ShieldAlert,
-    color: 'text-red-600 dark:text-red-400',
+    color: "text-red-600 dark:text-red-400",
   },
   {
-    id: 'billing',
-    name: 'Billing & Payments',
-    description: 'Invoices, payment confirmations, subscription changes',
+    id: "billing",
+    name: "Billing & Payments",
+    description: "Invoices, payment confirmations, subscription changes",
     icon: CreditCard,
-    color: 'text-green-600 dark:text-green-400',
+    color: "text-green-600 dark:text-green-400",
   },
   {
-    id: 'updates',
-    name: 'Product Updates',
-    description: 'New features, improvements, maintenance notices',
+    id: "updates",
+    name: "Product Updates",
+    description: "New features, improvements, maintenance notices",
     icon: TrendingUp,
-    color: 'text-blue-600 dark:text-blue-400',
+    color: "text-blue-600 dark:text-blue-400",
   },
   {
-    id: 'marketing',
-    name: 'Marketing',
-    description: 'Promotions, newsletters, tips and tricks',
+    id: "marketing",
+    name: "Marketing",
+    description: "Promotions, newsletters, tips and tricks",
     icon: Mail,
-    color: 'text-purple-600 dark:text-purple-400',
+    color: "text-purple-600 dark:text-purple-400",
   },
   {
-    id: 'team',
-    name: 'Team Activity',
-    description: 'Member invites, role changes, collaborations',
+    id: "team",
+    name: "Team Activity",
+    description: "Member invites, role changes, collaborations",
     icon: Users,
-    color: 'text-yellow-600 dark:text-yellow-400',
+    color: "text-yellow-600 dark:text-yellow-400",
   },
   {
-    id: 'system',
-    name: 'System Notifications',
-    description: 'Errors, warnings, system status updates',
+    id: "system",
+    name: "System Notifications",
+    description: "Errors, warnings, system status updates",
     icon: AlertCircle,
-    color: 'text-muted-foreground',
+    color: "text-muted-foreground",
   },
 ];
 
@@ -187,7 +187,7 @@ export default function NotificationSettingsPage() {
     const channelPrefs = preferences[channel as keyof typeof preferences];
 
     // Type guard to check if channel has categories
-    if (channelPrefs && typeof channelPrefs === 'object' && 'categories' in channelPrefs) {
+    if (channelPrefs && typeof channelPrefs === "object" && "categories" in channelPrefs) {
       setPreferences({
         ...preferences,
         [channel]: {
@@ -219,18 +219,24 @@ export default function NotificationSettingsPage() {
     setTimeout(() => {
       setIsLoading(false);
       setHasChanges(false);
-      toast({ title: 'Success', description: 'Notification preferences saved' });
+      toast({
+        title: "Success",
+        description: "Notification preferences saved",
+      });
     }, 1000);
   };
 
   const handleResetDefaults = () => {
     setPreferences(mockPreferences);
     setHasChanges(false);
-    toast({ title: 'Success', description: 'Reset to default preferences' });
+    toast({ title: "Success", description: "Reset to default preferences" });
   };
 
   const handleTestNotification = (channel: string) => {
-    toast({ title: 'Success', description: `Test ${channel} notification sent` });
+    toast({
+      title: "Success",
+      description: `Test ${channel} notification sent`,
+    });
   };
 
   return (
@@ -239,7 +245,9 @@ export default function NotificationSettingsPage() {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold">Notification Settings</h1>
-          <p className="text-muted-foreground mt-2">Manage how and when you receive notifications</p>
+          <p className="text-muted-foreground mt-2">
+            Manage how and when you receive notifications
+          </p>
         </div>
         {hasChanges && (
           <div className="flex gap-2">
@@ -309,13 +317,13 @@ export default function NotificationSettingsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleTestNotification('email')}
+                    onClick={() => handleTestNotification("email")}
                   >
                     Test
                   </Button>
                   <Switch
                     checked={preferences.email.enabled}
-                    onCheckedChange={(checked) => handleChannelToggle('email', checked)}
+                    onCheckedChange={(checked) => handleChannelToggle("email", checked)}
                   />
                 </div>
               </div>
@@ -330,12 +338,15 @@ export default function NotificationSettingsPage() {
                         value="instant"
                         id="instant"
                         name="email-digest"
-                        checked={preferences.email.digest === 'instant'}
+                        checked={preferences.email.digest === "instant"}
                         onChange={(e) => {
                           if (e.target.checked) {
                             setPreferences({
                               ...preferences,
-                              email: { ...preferences.email, digest: 'instant' },
+                              email: {
+                                ...preferences.email,
+                                digest: "instant",
+                              },
                             });
                             setHasChanges(true);
                           }
@@ -348,12 +359,12 @@ export default function NotificationSettingsPage() {
                         value="daily"
                         id="daily"
                         name="email-digest"
-                        checked={preferences.email.digest === 'daily'}
+                        checked={preferences.email.digest === "daily"}
                         onChange={(e) => {
                           if (e.target.checked) {
                             setPreferences({
                               ...preferences,
-                              email: { ...preferences.email, digest: 'daily' },
+                              email: { ...preferences.email, digest: "daily" },
                             });
                             setHasChanges(true);
                           }
@@ -366,12 +377,12 @@ export default function NotificationSettingsPage() {
                         value="weekly"
                         id="weekly"
                         name="email-digest"
-                        checked={preferences.email.digest === 'weekly'}
+                        checked={preferences.email.digest === "weekly"}
                         onChange={(e) => {
                           if (e.target.checked) {
                             setPreferences({
                               ...preferences,
-                              email: { ...preferences.email, digest: 'weekly' },
+                              email: { ...preferences.email, digest: "weekly" },
                             });
                             setHasChanges(true);
                           }
@@ -400,13 +411,13 @@ export default function NotificationSettingsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleTestNotification('push')}
+                    onClick={() => handleTestNotification("push")}
                   >
                     Test
                   </Button>
                   <Switch
                     checked={preferences.push.enabled}
-                    onCheckedChange={(checked) => handleChannelToggle('push', checked)}
+                    onCheckedChange={(checked) => handleChannelToggle("push", checked)}
                   />
                 </div>
               </div>
@@ -456,7 +467,7 @@ export default function NotificationSettingsPage() {
                 </div>
                 <Switch
                   checked={preferences.inApp.enabled}
-                  onCheckedChange={(checked) => handleChannelToggle('inApp', checked)}
+                  onCheckedChange={(checked) => handleChannelToggle("inApp", checked)}
                 />
               </div>
             </CardHeader>
@@ -492,7 +503,7 @@ export default function NotificationSettingsPage() {
                 </div>
                 <Switch
                   checked={preferences.sms.enabled}
-                  onCheckedChange={(checked) => handleChannelToggle('sms', checked)}
+                  onCheckedChange={(checked) => handleChannelToggle("sms", checked)}
                 />
               </div>
             </CardHeader>
@@ -532,7 +543,7 @@ export default function NotificationSettingsPage() {
                   )}
                   <Switch
                     checked={preferences.slack.enabled}
-                    onCheckedChange={(checked) => handleChannelToggle('slack', checked)}
+                    onCheckedChange={(checked) => handleChannelToggle("slack", checked)}
                   />
                 </div>
               </div>
@@ -565,9 +576,13 @@ export default function NotificationSettingsPage() {
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 ml-8">
                         <div className="flex items-center gap-2">
                           <Switch
-                            checked={preferences.email.categories[category.id as keyof typeof preferences.email.categories]}
+                            checked={
+                              preferences.email.categories[
+                                category.id as keyof typeof preferences.email.categories
+                              ]
+                            }
                             onCheckedChange={(checked) =>
-                              handleCategoryToggle('email', category.id, checked)
+                              handleCategoryToggle("email", category.id, checked)
                             }
                             disabled={!preferences.email.enabled}
                           />
@@ -575,9 +590,13 @@ export default function NotificationSettingsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Switch
-                            checked={preferences.push.categories[category.id as keyof typeof preferences.push.categories]}
+                            checked={
+                              preferences.push.categories[
+                                category.id as keyof typeof preferences.push.categories
+                              ]
+                            }
                             onCheckedChange={(checked) =>
-                              handleCategoryToggle('push', category.id, checked)
+                              handleCategoryToggle("push", category.id, checked)
                             }
                             disabled={!preferences.push.enabled}
                           />
@@ -585,9 +604,13 @@ export default function NotificationSettingsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Switch
-                            checked={preferences.inApp.categories[category.id as keyof typeof preferences.inApp.categories]}
+                            checked={
+                              preferences.inApp.categories[
+                                category.id as keyof typeof preferences.inApp.categories
+                              ]
+                            }
                             onCheckedChange={(checked) =>
-                              handleCategoryToggle('inApp', category.id, checked)
+                              handleCategoryToggle("inApp", category.id, checked)
                             }
                             disabled={!preferences.inApp.enabled}
                           />
@@ -595,9 +618,13 @@ export default function NotificationSettingsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Switch
-                            checked={preferences.sms.categories[category.id as keyof typeof preferences.sms.categories]}
+                            checked={
+                              preferences.sms.categories[
+                                category.id as keyof typeof preferences.sms.categories
+                              ]
+                            }
                             onCheckedChange={(checked) =>
-                              handleCategoryToggle('sms', category.id, checked)
+                              handleCategoryToggle("sms", category.id, checked)
                             }
                             disabled={!preferences.sms.enabled}
                           />
@@ -605,16 +632,20 @@ export default function NotificationSettingsPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Switch
-                            checked={preferences.slack.categories[category.id as keyof typeof preferences.slack.categories]}
+                            checked={
+                              preferences.slack.categories[
+                                category.id as keyof typeof preferences.slack.categories
+                              ]
+                            }
                             onCheckedChange={(checked) =>
-                              handleCategoryToggle('slack', category.id, checked)
+                              handleCategoryToggle("slack", category.id, checked)
                             }
                             disabled={!preferences.slack.enabled}
                           />
                           <Label className="text-sm">Slack</Label>
                         </div>
                       </div>
-                      {category.id !== 'system' && <Separator className="mt-6" />}
+                      {category.id !== "system" && <Separator className="mt-6" />}
                     </div>
                   );
                 })}
@@ -636,7 +667,9 @@ export default function NotificationSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Enable Quiet Hours</Label>
-                  <p className="text-sm text-muted-foreground">Pause non-urgent notifications during set hours</p>
+                  <p className="text-sm text-muted-foreground">
+                    Pause non-urgent notifications during set hours
+                  </p>
                 </div>
                 <Switch
                   checked={preferences.quietHours.enabled}
@@ -656,7 +689,10 @@ export default function NotificationSettingsPage() {
                         onChange={(e) => {
                           setPreferences({
                             ...preferences,
-                            quietHours: { ...preferences.quietHours, start: e.target.value },
+                            quietHours: {
+                              ...preferences.quietHours,
+                              start: e.target.value,
+                            },
                           });
                           setHasChanges(true);
                         }}
@@ -676,7 +712,10 @@ export default function NotificationSettingsPage() {
                         onChange={(e) => {
                           setPreferences({
                             ...preferences,
-                            quietHours: { ...preferences.quietHours, end: e.target.value },
+                            quietHours: {
+                              ...preferences.quietHours,
+                              end: e.target.value,
+                            },
                           });
                           setHasChanges(true);
                         }}
@@ -701,7 +740,10 @@ export default function NotificationSettingsPage() {
                       onCheckedChange={(checked) => {
                         setPreferences({
                           ...preferences,
-                          quietHours: { ...preferences.quietHours, allowUrgent: checked },
+                          quietHours: {
+                            ...preferences.quietHours,
+                            allowUrgent: checked,
+                          },
                         });
                         setHasChanges(true);
                       }}
@@ -723,7 +765,9 @@ export default function NotificationSettingsPage() {
               <div className="text-center text-muted-foreground py-8">
                 <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                 <p className="text-sm">Weekly scheduling coming soon</p>
-                <p className="text-xs mt-2">Set different notification rules for weekdays and weekends</p>
+                <p className="text-xs mt-2">
+                  Set different notification rules for weekdays and weekends
+                </p>
               </div>
             </CardContent>
           </Card>

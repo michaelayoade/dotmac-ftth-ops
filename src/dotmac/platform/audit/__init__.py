@@ -56,7 +56,6 @@ from .models import (
     AuditActivityResponse,
     AuditFilterParams,
 )
-from .router import router as audit_router
 from .service import (
     AuditService,
     log_api_activity,
@@ -78,8 +77,6 @@ __all__ = [
     "log_user_activity",
     "log_api_activity",
     "log_system_activity",
-    # Router
-    "audit_router",
     # Middleware
     "AuditContextMiddleware",
     "create_audit_aware_dependency",

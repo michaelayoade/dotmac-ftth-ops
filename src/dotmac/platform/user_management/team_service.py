@@ -505,7 +505,7 @@ class TeamService:
                 and_(
                     TeamMemberModel.team_id == team_id,
                     TeamMemberModel.tenant_id == tenant_id,
-                    TeamMemberModel.is_active == True,
+                    TeamMemberModel.is_active,
                 )
             )
         )

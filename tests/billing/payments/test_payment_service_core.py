@@ -356,7 +356,7 @@ class TestPaymentCreation:
             error_message="Card declined",
         )
 
-        payment = await payment_service.create_payment(
+        await payment_service.create_payment(
             tenant_id=tenant_id,
             amount=10000,
             currency="USD",

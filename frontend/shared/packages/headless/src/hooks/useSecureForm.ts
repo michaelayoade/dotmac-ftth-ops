@@ -2,8 +2,8 @@
  * Secure form validation hook with XSS prevention and input sanitization
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { z } from 'zod';
+import { useState, useCallback, useRef, useEffect } from "react";
+import { z } from "zod";
 
 interface FormError {
   field: string;
@@ -34,10 +34,10 @@ interface UseSecureFormReturn<T> {
   validateForm: () => Promise<boolean>;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   handleChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => void;
   handleBlur: (
-    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => void;
   reset: () => void;
   getFieldError: (field: keyof T) => string | undefined;
@@ -62,27 +62,27 @@ const sanitizeHtml = (input: string): string => {
 
   // Remove potentially dangerous patterns
   xssPatterns.forEach((pattern) => {
-    sanitized = sanitized.replace(pattern, '');
+    sanitized = sanitized.replace(pattern, "");
   });
 
   // Escape remaining HTML entities
   return sanitized
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#x27;")
+    .replace(/\//g, "&#x2F;");
 };
 
 const preventXSS = (input: any): any => {
-  if (typeof input === 'string') {
+  if (typeof input === "string") {
     // Remove or escape dangerous characters
     return input
-      .replace(/[<>]/g, '') // Remove angle brackets
-      .replace(/javascript:/gi, '') // Remove javascript: protocol
-      .replace(/vbscript:/gi, '') // Remove vbscript: protocol
-      .replace(/data:text\/html/gi, '') // Remove data URIs that could contain HTML
+      .replace(/[<>]/g, "") // Remove angle brackets
+      .replace(/javascript:/gi, "") // Remove javascript: protocol
+      .replace(/vbscript:/gi, "") // Remove vbscript: protocol
+      .replace(/data:text\/html/gi, "") // Remove data URIs that could contain HTML
       .trim();
   }
 
@@ -90,7 +90,7 @@ const preventXSS = (input: any): any => {
     return input.map(preventXSS);
   }
 
-  if (typeof input === 'object' && input !== null) {
+  if (typeof input === "object" && input !== null) {
     const sanitized: any = {};
     for (const [key, value] of Object.entries(input)) {
       sanitized[key] = preventXSS(value);
@@ -103,10 +103,10 @@ const preventXSS = (input: any): any => {
 
 // Generate CSRF token
 const generateCSRFToken = (): string => {
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
-    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
   }
 
   // Fallback for environments without crypto.getRandomValues
@@ -127,7 +127,7 @@ export function useSecureForm<T extends Record<string, any>>({
   const [errors, setErrors] = useState<FormError[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
-  const [csrfToken] = useState<string>(() => (enableCSRFProtection ? generateCSRFToken() : ''));
+  const [csrfToken] = useState<string>(() => (enableCSRFProtection ? generateCSRFToken() : ""));
 
   const initialValuesRef = useRef(initialValues);
   const formRef = useRef<HTMLFormElement>(null);
@@ -135,12 +135,12 @@ export function useSecureForm<T extends Record<string, any>>({
   // Security: Store CSRF token in session storage
   useEffect(() => {
     if (enableCSRFProtection && csrfToken) {
-      sessionStorage.setItem('csrf-token', csrfToken);
+      sessionStorage.setItem("csrf-token", csrfToken);
     }
 
     return () => {
       if (enableCSRFProtection) {
-        sessionStorage.removeItem('csrf-token');
+        sessionStorage.removeItem("csrf-token");
       }
     };
   }, [csrfToken, enableCSRFProtection]);
@@ -151,13 +151,13 @@ export function useSecureForm<T extends Record<string, any>>({
         value = preventXSS(value);
       }
 
-      if (shouldSanitizeHtml && typeof value === 'string') {
+      if (shouldSanitizeHtml && typeof value === "string") {
         value = sanitizeHtml(value);
       }
 
       return value;
     },
-    [shouldPreventXSS, shouldSanitizeHtml]
+    [shouldPreventXSS, shouldSanitizeHtml],
   );
 
   const validateField = useCallback(
@@ -188,7 +188,7 @@ export function useSecureForm<T extends Record<string, any>>({
         return false;
       }
     },
-    [values, schema]
+    [values, schema],
   );
 
   const validateForm = useCallback(async (): Promise<boolean> => {
@@ -224,7 +224,7 @@ export function useSecureForm<T extends Record<string, any>>({
         validateField(field);
       }
     },
-    [sanitizeInput, validateOnChange, validateField]
+    [sanitizeInput, validateOnChange, validateField],
   );
 
   const setValues = useCallback(
@@ -233,17 +233,17 @@ export function useSecureForm<T extends Record<string, any>>({
       setValuesState(sanitizedValues);
       setIsDirty(true);
     },
-    [sanitizeInput]
+    [sanitizeInput],
   );
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const { name, value, type } = e.target;
-      const finalValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+      const finalValue = type === "checkbox" ? (e.target as HTMLInputElement).checked : value;
 
       setValue(name as keyof T, finalValue);
     },
-    [setValue]
+    [setValue],
   );
 
   const handleBlur = useCallback(
@@ -254,7 +254,7 @@ export function useSecureForm<T extends Record<string, any>>({
         validateField(name as keyof T);
       }
     },
-    [validateOnBlur, validateField]
+    [validateOnBlur, validateField],
   );
 
   const handleSubmit = useCallback(
@@ -264,9 +264,9 @@ export function useSecureForm<T extends Record<string, any>>({
 
       // Security check: Verify CSRF token if enabled
       if (enableCSRFProtection) {
-        const storedToken = sessionStorage.getItem('csrf-token');
+        const storedToken = sessionStorage.getItem("csrf-token");
         if (storedToken !== csrfToken) {
-          console.error('CSRF token mismatch');
+          console.error("CSRF token mismatch");
           return;
         }
       }
@@ -283,13 +283,13 @@ export function useSecureForm<T extends Record<string, any>>({
         const sanitizedValues = sanitizeInput(values);
         await onSubmit(sanitizedValues as T);
       } catch (error) {
-        console.error('Form submission error:', error);
+        console.error("Form submission error:", error);
         // Could add error handling here
       } finally {
         setIsSubmitting(false);
       }
     },
-    [values, onSubmit, validateForm, sanitizeInput, enableCSRFProtection, csrfToken]
+    [values, onSubmit, validateForm, sanitizeInput, enableCSRFProtection, csrfToken],
   );
 
   const reset = useCallback(() => {
@@ -303,14 +303,14 @@ export function useSecureForm<T extends Record<string, any>>({
     (field: keyof T): string | undefined => {
       return errors.find((error) => error.field === (field as string))?.message;
     },
-    [errors]
+    [errors],
   );
 
   const hasFieldError = useCallback(
     (field: keyof T): boolean => {
       return errors.some((error) => error.field === (field as string));
     },
-    [errors]
+    [errors],
   );
 
   const isValid = errors.length === 0;

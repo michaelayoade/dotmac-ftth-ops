@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useToast } from '@/components/ui/use-toast';
-import { platformConfig } from '@/lib/config';
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useToast } from "@/components/ui/use-toast";
+import { platformConfig } from "@/lib/config";
 
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:
@@ -9,7 +9,7 @@ import { platformConfig } from '@/lib/config';
 // - sonner: toast.error('msg') -> useToast: toast({ title: 'Error', description: 'msg', variant: 'destructive' })
 // - For complex options, refer to useToast documentation
 
-const API_BASE_URL = platformConfig.apiBaseUrl;
+const API_BASE_URL = platformConfig.api.baseUrl;
 
 export interface LogMetadata {
   request_id?: string;
@@ -23,7 +23,7 @@ export interface LogMetadata {
 export interface LogEntry {
   id: string;
   timestamp: string;
-  level: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
+  level: "DEBUG" | "INFO" | "WARNING" | "ERROR" | "CRITICAL";
   service: string;
   message: string;
   metadata: LogMetadata;
@@ -80,17 +80,17 @@ export function useLogs(filters: LogsFilter = {}) {
       setError(null);
 
       const params = new URLSearchParams();
-      if (activeFilters.level) params.append('level', activeFilters.level);
-      if (activeFilters.service) params.append('service', activeFilters.service);
-      if (activeFilters.search) params.append('search', activeFilters.search);
-      if (activeFilters.start_time) params.append('start_time', activeFilters.start_time);
-      if (activeFilters.end_time) params.append('end_time', activeFilters.end_time);
-      if (activeFilters.page) params.append('page', activeFilters.page.toString());
-      if (activeFilters.page_size) params.append('page_size', activeFilters.page_size.toString());
+      if (activeFilters.level) params.append("level", activeFilters.level);
+      if (activeFilters.service) params.append("service", activeFilters.service);
+      if (activeFilters.search) params.append("search", activeFilters.search);
+      if (activeFilters.start_time) params.append("start_time", activeFilters.start_time);
+      if (activeFilters.end_time) params.append("end_time", activeFilters.end_time);
+      if (activeFilters.page) params.append("page", activeFilters.page.toString());
+      if (activeFilters.page_size) params.append("page_size", activeFilters.page_size.toString());
 
       const response = await axios.get<LogsResponse>(
         `${API_BASE_URL}/api/v1/monitoring/logs?${params.toString()}`,
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       setLogs(response.data.logs);
@@ -102,10 +102,10 @@ export function useLogs(filters: LogsFilter = {}) {
       });
     } catch (err: unknown) {
       const message = axios.isAxiosError(err)
-        ? err.response?.data?.detail || 'Failed to fetch logs'
-        : 'An error occurred';
+        ? err.response?.data?.detail || "Failed to fetch logs"
+        : "An error occurred";
       setError(message);
-      toast({ title: 'Error', description: message, variant: 'destructive' });
+      toast({ title: "Error", description: message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -113,13 +113,12 @@ export function useLogs(filters: LogsFilter = {}) {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get<LogStats>(
-        `${API_BASE_URL}/api/v1/monitoring/logs/stats`,
-        { withCredentials: true }
-      );
+      const response = await axios.get<LogStats>(`${API_BASE_URL}/api/v1/monitoring/logs/stats`, {
+        withCredentials: true,
+      });
       setStats(response.data);
     } catch (err: unknown) {
-      console.error('Failed to fetch log stats:', err);
+      console.error("Failed to fetch log stats:", err);
     }
   };
 
@@ -127,11 +126,11 @@ export function useLogs(filters: LogsFilter = {}) {
     try {
       const response = await axios.get<string[]>(
         `${API_BASE_URL}/api/v1/monitoring/logs/services`,
-        { withCredentials: true }
+        { withCredentials: true },
       );
       setServices(response.data);
     } catch (err: unknown) {
-      console.error('Failed to fetch services:', err);
+      console.error("Failed to fetch services:", err);
     }
   };
 

@@ -147,7 +147,9 @@ def upgrade() -> None:
     op.create_index("ix_partners_tenant_id", "partners", ["tenant_id"])
     op.create_index("ix_partners_tier", "partners", ["tier"])
     op.create_index("ix_partner_status_tier", "partners", ["status", "tier"])
-    op.create_index("ix_partner_dates", "partners", ["partnership_start_date", "partnership_end_date"])
+    op.create_index(
+        "ix_partner_dates", "partners", ["partnership_start_date", "partnership_end_date"]
+    )
     op.create_index(op.f("ix_partners_created_at"), "partners", ["created_at"])
 
     op.create_table(
@@ -179,9 +181,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("partner_id", "email", name="uq_partner_user_email"),
     )
-    op.create_index(
-        op.f("ix_partner_users_email"), "partner_users", ["email"], unique=False
-    )
+    op.create_index(op.f("ix_partner_users_email"), "partner_users", ["email"], unique=False)
     op.create_index(
         "ix_partner_user_partner", "partner_users", ["partner_id", "is_active"], unique=False
     )

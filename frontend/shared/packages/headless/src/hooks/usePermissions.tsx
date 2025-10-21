@@ -2,17 +2,17 @@
  * Role-based permissions hook and utilities
  */
 
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
-import { useAuthStore } from '../stores/authStore';
-import { useTenantStore } from '../stores/tenantStore';
+import { useAuthStore } from "../stores/authStore";
+import { useTenantStore } from "../stores/tenantStore";
 
 export interface PermissionRule {
   resource: string;
   action: string;
   conditions?: Array<{
     field: string;
-    operator: 'equals' | 'not_equals' | 'in' | 'not_in' | 'contains';
+    operator: "equals" | "not_equals" | "in" | "not_in" | "contains";
     value: unknown;
   }>;
 }
@@ -36,132 +36,132 @@ export interface RoleDefinition {
 
 // Standard ISP roles
 export const STANDARD_ROLES: Record<string, RoleDefinition> = {
-  'super-admin': {
-    id: 'super-admin',
-    name: 'Super Administrator',
-    description: 'Full platform access across all tenants',
-    permissions: ['*'], // Wildcard for all permissions
+  "super-admin": {
+    id: "super-admin",
+    name: "Super Administrator",
+    description: "Full platform access across all tenants",
+    permissions: ["*"], // Wildcard for all permissions
   },
 
-  'tenant-admin': {
-    id: 'tenant-admin',
-    name: 'Tenant Administrator',
-    description: 'Full access within tenant',
+  "tenant-admin": {
+    id: "tenant-admin",
+    name: "Tenant Administrator",
+    description: "Full access within tenant",
     permissions: [
-      'users:*',
-      'billing:*',
-      'network:*',
-      'support:*',
-      'analytics:read',
-      'settings:*',
-      'audit:read',
+      "users:*",
+      "billing:*",
+      "network:*",
+      "support:*",
+      "analytics:read",
+      "settings:*",
+      "audit:read",
     ],
   },
 
-  'network-engineer': {
-    id: 'network-engineer',
-    name: 'Network Engineer',
-    description: 'Network infrastructure management',
+  "network-engineer": {
+    id: "network-engineer",
+    name: "Network Engineer",
+    description: "Network infrastructure management",
     permissions: [
-      'network:*',
-      'devices:*',
-      'monitoring:*',
-      'alerts:*',
-      'users:read',
-      'analytics:read',
+      "network:*",
+      "devices:*",
+      "monitoring:*",
+      "alerts:*",
+      "users:read",
+      "analytics:read",
     ],
   },
 
-  'billing-manager': {
-    id: 'billing-manager',
-    name: 'Billing Manager',
-    description: 'Billing and financial operations',
+  "billing-manager": {
+    id: "billing-manager",
+    name: "Billing Manager",
+    description: "Billing and financial operations",
     permissions: [
-      'billing:*',
-      'invoices:*',
-      'payments:*',
-      'customers:read',
-      'customers:update',
-      'analytics:read',
-      'reports:read',
+      "billing:*",
+      "invoices:*",
+      "payments:*",
+      "customers:read",
+      "customers:update",
+      "analytics:read",
+      "reports:read",
     ],
   },
 
-  'support-agent': {
-    id: 'support-agent',
-    name: 'Support Agent',
-    description: 'Customer support operations',
+  "support-agent": {
+    id: "support-agent",
+    name: "Support Agent",
+    description: "Customer support operations",
     permissions: [
-      'support:*',
-      'tickets:*',
-      'customers:read',
-      'customers:update',
-      'network:read',
-      'billing:read',
-      'chat:*',
+      "support:*",
+      "tickets:*",
+      "customers:read",
+      "customers:update",
+      "network:read",
+      "billing:read",
+      "chat:*",
     ],
   },
 
-  'support-manager': {
-    id: 'support-manager',
-    name: 'Support Manager',
-    description: 'Support team management',
-    inherits: ['support-agent'],
-    permissions: ['support:manage', 'users:read', 'analytics:read', 'reports:read'],
+  "support-manager": {
+    id: "support-manager",
+    name: "Support Manager",
+    description: "Support team management",
+    inherits: ["support-agent"],
+    permissions: ["support:manage", "users:read", "analytics:read", "reports:read"],
   },
 
-  'customer-service': {
-    id: 'customer-service',
-    name: 'Customer Service',
-    description: 'Customer account management',
+  "customer-service": {
+    id: "customer-service",
+    name: "Customer Service",
+    description: "Customer account management",
     permissions: [
-      'customers:read',
-      'customers:update',
-      'billing:read',
-      'support:read',
-      'support:create',
-      'network:read',
+      "customers:read",
+      "customers:update",
+      "billing:read",
+      "support:read",
+      "support:create",
+      "network:read",
     ],
   },
 
   viewer: {
-    id: 'viewer',
-    name: 'Viewer',
-    description: 'Read-only access',
+    id: "viewer",
+    name: "Viewer",
+    description: "Read-only access",
     permissions: [
-      'dashboard:read',
-      'analytics:read',
-      'network:read',
-      'customers:read',
-      'billing:read',
+      "dashboard:read",
+      "analytics:read",
+      "network:read",
+      "customers:read",
+      "billing:read",
     ],
   },
 
-  'reseller-admin': {
-    id: 'reseller-admin',
-    name: 'Reseller Administrator',
-    description: 'Reseller portal administration',
+  "reseller-admin": {
+    id: "reseller-admin",
+    name: "Reseller Administrator",
+    description: "Reseller portal administration",
     permissions: [
-      'reseller:*',
-      'customers:*',
-      'billing:read',
-      'support:read',
-      'analytics:read',
-      'commissions:read',
+      "reseller:*",
+      "customers:*",
+      "billing:read",
+      "support:read",
+      "analytics:read",
+      "commissions:read",
     ],
   },
 
-  'reseller-agent': {
-    id: 'reseller-agent',
-    name: 'Reseller Agent',
-    description: 'Reseller sales agent',
+  "reseller-agent": {
+    id: "reseller-agent",
+    name: "Reseller Agent",
+    description: "Reseller sales agent",
     permissions: [
-      'customers:create',
-      'customers:read',
-      'customers:update',
-      'billing:read',
-      'support:read',
-      'commissions:read',
+      "customers:create",
+      "customers:read",
+      "customers:update",
+      "billing:read",
+      "support:read",
+      "commissions:read",
     ],
   },
 };
@@ -170,19 +170,19 @@ export const STANDARD_ROLES: Record<string, RoleDefinition> = {
 export class PermissionEngine {
   static expandPermissions(
     permissions: string[],
-    _roles: Record<string, RoleDefinition> = STANDARD_ROLES
+    _roles: Record<string, RoleDefinition> = STANDARD_ROLES,
   ): string[] {
     const expanded = new Set<string>();
 
     const processPermissions = (perms: string[], _processedRoles = new Set<string>()) => {
       for (const perm of perms) {
-        if (perm === '*') {
+        if (perm === "*") {
           // Wildcard permission
-          expanded.add('*');
+          expanded.add("*");
           continue;
         }
 
-        if (perm.endsWith(':*')) {
+        if (perm.endsWith(":*")) {
           // Resource wildcard
           expanded.add(perm);
           continue;
@@ -198,7 +198,7 @@ export class PermissionEngine {
 
   static checkPermission(userPermissions: string[], requiredPermission: string): boolean {
     // Check for wildcard permission
-    if (userPermissions.includes('*')) {
+    if (userPermissions.includes("*")) {
       return true;
     }
 
@@ -208,7 +208,7 @@ export class PermissionEngine {
     }
 
     // Check for resource wildcard
-    const [resource] = requiredPermission.split(':');
+    const [resource] = requiredPermission.split(":");
     if (userPermissions.includes(`${resource}:*`)) {
       return true;
     }
@@ -217,8 +217,8 @@ export class PermissionEngine {
   }
 
   static evaluateConditions(
-    conditions: PermissionRule['conditions'],
-    context: Record<string, unknown>
+    conditions: PermissionRule["conditions"],
+    context: Record<string, unknown>,
   ): boolean {
     if (!conditions || conditions.length === 0) {
       return true;
@@ -228,15 +228,15 @@ export class PermissionEngine {
       const contextValue = context[condition.field];
 
       switch (condition.operator) {
-        case 'equals':
+        case "equals":
           return contextValue === condition.value;
-        case 'not_equals':
+        case "not_equals":
           return contextValue !== condition.value;
-        case 'in':
+        case "in":
           return Array.isArray(condition.value) && condition.value.includes(contextValue);
-        case 'not_in':
+        case "not_in":
           return Array.isArray(condition.value) && !condition.value.includes(contextValue);
-        case 'contains':
+        case "contains":
           return String(contextValue).includes(String(condition.value));
         default:
           return false;
@@ -290,8 +290,8 @@ export function usePermissions() {
 
   const canAccessResource = (
     resource: string,
-    action: string = 'read',
-    context?: Record<string, unknown>
+    action: string = "read",
+    context?: Record<string, unknown>,
   ) => {
     const permission = `${resource}:${action}`;
     return checkPermission(permission, context);
@@ -300,17 +300,17 @@ export function usePermissions() {
   const canAccessPage = (page: string) => {
     // Map pages to required permissions
     const pagePermissions: Record<string, string[]> = {
-      '/admin/users': ['users:read'],
-      '/admin/billing': ['billing:read'],
-      '/admin/network': ['network:read'],
-      '/admin/support': ['support:read'],
-      '/admin/analytics': ['analytics:read'],
-      '/admin/settings': ['settings:read'],
-      '/customer/dashboard': ['dashboard:read'],
-      '/customer/billing': ['billing:read'],
-      '/customer/support': ['support:read'],
-      '/reseller/dashboard': ['reseller:read'],
-      '/reseller/customers': ['customers:read'],
+      "/admin/users": ["users:read"],
+      "/admin/billing": ["billing:read"],
+      "/admin/network": ["network:read"],
+      "/admin/support": ["support:read"],
+      "/admin/analytics": ["analytics:read"],
+      "/admin/settings": ["settings:read"],
+      "/customer/dashboard": ["dashboard:read"],
+      "/customer/billing": ["billing:read"],
+      "/customer/support": ["support:read"],
+      "/reseller/dashboard": ["reseller:read"],
+      "/reseller/customers": ["customers:read"],
     };
 
     const requiredPermissions = pagePermissions[page];
@@ -327,7 +327,7 @@ export function usePermissions() {
       requiredPermissions?: string[];
       requiredRoles?: string[];
       requiredFeatures?: string[];
-    }>
+    }>,
   ) => {
     return menuItems.filter((item) => {
       if (item.requiredPermissions && !hasAnyPermission(item.requiredPermissions)) {
@@ -347,15 +347,15 @@ export function usePermissions() {
   };
 
   const isAdmin = () => {
-    return checkRole('super-admin') || checkRole('tenant-admin');
+    return checkRole("super-admin") || checkRole("tenant-admin");
   };
 
   const isSuperAdmin = () => {
-    return checkRole('super-admin');
+    return checkRole("super-admin");
   };
 
   const canImpersonate = () => {
-    return checkPermission('users:impersonate') || isSuperAdmin();
+    return checkPermission("users:impersonate") || isSuperAdmin();
   };
 
   return {

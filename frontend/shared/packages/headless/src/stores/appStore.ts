@@ -3,16 +3,16 @@
  * Centralizes common UI and application state patterns
  */
 
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
-import { secureStorage } from '../utils/secureStorage';
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { secureStorage } from "../utils/secureStorage";
 
 // Common UI state interfaces
 export interface FilterState {
   searchTerm: string;
   statusFilter: string;
   sortBy: string;
-  sortOrder: 'asc' | 'desc';
+  sortOrder: "asc" | "desc";
   dateRange?: {
     start: Date | null;
     end: Date | null;
@@ -48,7 +48,7 @@ export interface UIState {
   showBulkActions: boolean;
   notifications: {
     id: string;
-    type: 'success' | 'error' | 'warning' | 'info';
+    type: "success" | "error" | "warning" | "info";
     message: string;
     timestamp: Date;
     dismissed: boolean;
@@ -68,7 +68,7 @@ interface AppState {
 
   // App-level preferences
   preferences: {
-    theme: 'light' | 'dark' | 'auto';
+    theme: "light" | "dark" | "auto";
     language: string;
     timezone: string;
     dataRefreshInterval: number;
@@ -87,7 +87,7 @@ interface AppActions {
 
   // Notification Actions
   addNotification: (
-    notification: Omit<UIState['notifications'][0], 'id' | 'timestamp' | 'dismissed'>
+    notification: Omit<UIState["notifications"][0], "id" | "timestamp" | "dismissed">,
   ) => void;
   dismissNotification: (id: string) => void;
   clearNotifications: () => void;
@@ -97,7 +97,7 @@ interface AppActions {
   resetFilters: (context: string) => void;
   setSearchTerm: (context: string, term: string) => void;
   setStatusFilter: (context: string, status: string) => void;
-  setSorting: (context: string, sortBy: string, sortOrder?: 'asc' | 'desc') => void;
+  setSorting: (context: string, sortBy: string, sortOrder?: "asc" | "desc") => void;
   setDateRange: (context: string, start: Date | null, end: Date | null) => void;
 
   // Pagination Actions
@@ -120,8 +120,8 @@ interface AppActions {
   setLastUpdated: (context: string, timestamp?: Date) => void;
 
   // Preference Actions
-  updatePreferences: (updates: Partial<AppState['preferences']>) => void;
-  setTheme: (theme: 'light' | 'dark' | 'auto') => void;
+  updatePreferences: (updates: Partial<AppState["preferences"]>) => void;
+  setTheme: (theme: "light" | "dark" | "auto") => void;
   setLanguage: (language: string) => void;
   setTimezone: (timezone: string) => void;
   toggleCompactMode: () => void;
@@ -140,10 +140,10 @@ type AppStore = AppState & AppActions;
 
 // Default state values
 const defaultFilterState: FilterState = {
-  searchTerm: '',
-  statusFilter: 'all',
-  sortBy: 'name',
-  sortOrder: 'asc',
+  searchTerm: "",
+  statusFilter: "all",
+  sortBy: "name",
+  sortOrder: "asc",
   dateRange: { start: null, end: null },
   customFilters: {},
 };
@@ -170,16 +170,16 @@ const defaultLoadingState: LoadingState = {
 
 const defaultUIState: UIState = {
   sidebarOpen: true,
-  activeTab: '',
-  activeView: 'list',
+  activeTab: "",
+  activeView: "list",
   showFilters: false,
   showBulkActions: false,
   notifications: [],
 };
 
-const defaultPreferences: AppState['preferences'] = {
-  theme: 'light',
-  language: 'en',
+const defaultPreferences: AppState["preferences"] = {
+  theme: "light",
+  language: "en",
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   dataRefreshInterval: 30000, // 30 seconds
   compactMode: false,
@@ -266,7 +266,7 @@ export const useAppStore = create<AppStore>()(
           ui: {
             ...state.ui,
             notifications: state.ui.notifications.map((n) =>
-              n.id === id ? { ...n, dismissed: true } : n
+              n.id === id ? { ...n, dismissed: true } : n,
             ),
           },
         }));
@@ -305,7 +305,7 @@ export const useAppStore = create<AppStore>()(
         get().updateFilters(context, { statusFilter: status });
       },
 
-      setSorting: (context, sortBy, sortOrder = 'asc') => {
+      setSorting: (context, sortBy, sortOrder = "asc") => {
         get().updateFilters(context, { sortBy, sortOrder });
       },
 
@@ -320,9 +320,9 @@ export const useAppStore = create<AppStore>()(
           const newPagination = { ...currentPagination, ...updates };
 
           // Auto-calculate totalPages when totalItems or itemsPerPage changes
-          if ('totalItems' in updates || 'itemsPerPage' in updates) {
+          if ("totalItems" in updates || "itemsPerPage" in updates) {
             newPagination.totalPages = Math.ceil(
-              newPagination.totalItems / newPagination.itemsPerPage
+              newPagination.totalItems / newPagination.itemsPerPage,
             );
           }
 
@@ -456,7 +456,9 @@ export const useAppStore = create<AppStore>()(
 
       toggleAdvancedFeatures: () => {
         const { preferences } = get();
-        get().updatePreferences({ showAdvancedFeatures: !preferences.showAdvancedFeatures });
+        get().updatePreferences({
+          showAdvancedFeatures: !preferences.showAdvancedFeatures,
+        });
       },
 
       // Utility Actions
@@ -483,7 +485,10 @@ export const useAppStore = create<AppStore>()(
       resetContext: (context) => {
         set((state) => ({
           filters: { ...state.filters, [context]: defaultFilterState },
-          pagination: { ...state.pagination, [context]: defaultPaginationState },
+          pagination: {
+            ...state.pagination,
+            [context]: defaultPaginationState,
+          },
           selections: { ...state.selections, [context]: defaultSelectionState },
           loading: { ...state.loading, [context]: defaultLoadingState },
         }));
@@ -499,7 +504,7 @@ export const useAppStore = create<AppStore>()(
       },
     }),
     {
-      name: 'dotmac-app-state',
+      name: "dotmac-app-state",
       storage: createJSONStorage(() => ({
         getItem: (name) => secureStorage.getItem(name),
         setItem: (name, value) => secureStorage.setItem(name, value),
@@ -516,6 +521,6 @@ export const useAppStore = create<AppStore>()(
         preferences: state.preferences,
         // Don't persist filters, selections, or loading state - these should reset on page load
       }),
-    }
-  )
+    },
+  ),
 );

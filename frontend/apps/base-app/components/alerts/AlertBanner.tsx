@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   X,
   AlertTriangle,
@@ -10,10 +10,10 @@ import {
   CheckCircle,
   ChevronRight,
   Bell,
-  RefreshCw
-} from 'lucide-react';
-import { useAlerts } from '@/hooks/useAlerts';
-import { Alert, AlertSeverity } from '@/lib/services/alert-service';
+  RefreshCw,
+} from "lucide-react";
+import { useAlerts } from "@/hooks/useAlerts";
+import { Alert, AlertSeverity } from "@/lib/services/alert-service";
 
 interface AlertBannerProps {
   category?: string;
@@ -24,31 +24,31 @@ interface AlertBannerProps {
 const severityConfig = {
   critical: {
     icon: AlertTriangle,
-    bgColor: 'bg-red-950/20',
-    borderColor: 'border-red-900/20',
-    iconColor: 'text-red-400',
-    textColor: 'text-red-400',
+    bgColor: "bg-red-950/20",
+    borderColor: "border-red-900/20",
+    iconColor: "text-red-400",
+    textColor: "text-red-400",
   },
   warning: {
     icon: AlertCircle,
-    bgColor: 'bg-orange-950/20',
-    borderColor: 'border-orange-900/20',
-    iconColor: 'text-orange-400',
-    textColor: 'text-orange-400',
+    bgColor: "bg-orange-950/20",
+    borderColor: "border-orange-900/20",
+    iconColor: "text-orange-400",
+    textColor: "text-orange-400",
   },
   info: {
     icon: Info,
-    bgColor: 'bg-blue-950/20',
-    borderColor: 'border-blue-900/20',
-    iconColor: 'text-blue-400',
-    textColor: 'text-blue-400',
+    bgColor: "bg-blue-950/20",
+    borderColor: "border-blue-900/20",
+    iconColor: "text-blue-400",
+    textColor: "text-blue-400",
   },
   success: {
     icon: CheckCircle,
-    bgColor: 'bg-green-950/20',
-    borderColor: 'border-green-900/20',
-    iconColor: 'text-green-400',
-    textColor: 'text-green-400',
+    bgColor: "bg-green-950/20",
+    borderColor: "border-green-900/20",
+    iconColor: "text-green-400",
+    textColor: "text-green-400",
   },
 };
 
@@ -68,7 +68,7 @@ function AlertItem({ alert, onDismiss }: { alert: Alert; onDismiss: (id: string)
               href={alert.actionUrl}
               className={`inline-flex items-center gap-1 mt-2 text-sm ${config.textColor} hover:underline`}
             >
-              {alert.actionText || 'View Details'}
+              {alert.actionText || "View Details"}
               <ChevronRight className="h-3 w-3" />
             </Link>
           )}
@@ -91,9 +91,7 @@ export function AlertBanner({ category, maxAlerts = 3, collapsible = true }: Ale
   const [refreshing, setRefreshing] = useState(false);
 
   // Filter alerts by category if specified
-  const filteredAlerts = category
-    ? alerts.filter(alert => alert.category === category)
-    : alerts;
+  const filteredAlerts = category ? alerts.filter((alert) => alert.category === category) : alerts;
 
   // Sort by severity (critical first) and timestamp
   const sortedAlerts = [...filteredAlerts].sort((a, b) => {
@@ -140,7 +138,7 @@ export function AlertBanner({ category, maxAlerts = 3, collapsible = true }: Ale
             <Bell className="h-4 w-4" />
             <span>
               {collapsed
-                ? `Show ${sortedAlerts.length} alert${sortedAlerts.length !== 1 ? 's' : ''}`
+                ? `Show ${sortedAlerts.length} alert${sortedAlerts.length !== 1 ? "s" : ""}`
                 : `Hide alerts`}
             </span>
           </button>
@@ -150,14 +148,14 @@ export function AlertBanner({ category, maxAlerts = 3, collapsible = true }: Ale
             className="text-slate-400 hover:text-slate-300 transition-colors"
             aria-label="Refresh alerts"
           >
-            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
           </button>
         </div>
       )}
 
       {!collapsed && (
         <div className="space-y-3">
-          {visibleAlerts.map(alert => (
+          {visibleAlerts.map((alert) => (
             <AlertItem key={alert.id} alert={alert} onDismiss={dismissAlert} />
           ))}
 
@@ -167,7 +165,7 @@ export function AlertBanner({ category, maxAlerts = 3, collapsible = true }: Ale
                 onClick={() => setCollapsed(false)}
                 className="text-sm text-slate-400 hover:text-slate-300 transition-colors"
               >
-                +{hiddenCount} more alert{hiddenCount !== 1 ? 's' : ''}
+                +{hiddenCount} more alert{hiddenCount !== 1 ? "s" : ""}
               </button>
             </div>
           )}
@@ -210,25 +208,19 @@ export function AlertSummaryWidget() {
         {stats.critical > 0 && (
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-red-400" />
-            <span className="text-sm text-slate-300">
-              {stats.critical} Critical
-            </span>
+            <span className="text-sm text-slate-300">{stats.critical} Critical</span>
           </div>
         )}
         {stats.warning > 0 && (
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-orange-400" />
-            <span className="text-sm text-slate-300">
-              {stats.warning} Warning
-            </span>
+            <span className="text-sm text-slate-300">{stats.warning} Warning</span>
           </div>
         )}
         {stats.info > 0 && (
           <div className="flex items-center gap-2">
             <Info className="h-4 w-4 text-blue-400" />
-            <span className="text-sm text-slate-300">
-              {stats.info} Info
-            </span>
+            <span className="text-sm text-slate-300">{stats.info} Info</span>
           </div>
         )}
       </div>

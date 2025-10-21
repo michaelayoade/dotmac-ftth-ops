@@ -6,9 +6,12 @@ helpful error messages when they're missing.
 """
 
 import importlib
-from typing import Any
+from collections.abc import Callable
+from typing import Any, TypeVar, cast
 
 from .settings import settings
+
+F = TypeVar("F", bound=Callable[..., Any])
 
 
 class DependencyError(ImportError):
@@ -203,7 +206,7 @@ class DependencyChecker:
                 cls.require_feature_dependency(feature_flag)
 
 
-def require_dependency(feature_flag: str) -> Any:
+def require_dependency(feature_flag: str) -> Callable[[F], F]:
     """
     Decorator to require dependencies for a function/class.
 
@@ -217,7 +220,7 @@ def require_dependency(feature_flag: str) -> Any:
             return Minio(...)
     """
 
-    def decorator(func: Any) -> Any:
+    def decorator(func: F) -> F:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             # Check if feature is enabled
             if not getattr(settings.features, feature_flag, False):
@@ -227,7 +230,7 @@ def require_dependency(feature_flag: str) -> Any:
             DependencyChecker.require_feature_dependency(feature_flag)
             return func(*args, **kwargs)
 
-        return wrapper
+        return cast(F, wrapper)
 
     return decorator
 
@@ -313,3 +316,73 @@ def require_cryptography() -> Any:
         return Fernet
     else:
         raise ValueError("Fernet encryption is not enabled. Set FEATURES__ENCRYPTION_FERNET=true")
+
+
+# Re-export common FastAPI dependencies for routers
+from .auth.core import get_current_user  # noqa: E402, F401
+
+# Re-export service factory dependencies
+from .communications.email_service import get_email_service  # noqa: E402, F401
+from .db import get_async_session, get_db  # noqa: E402, F401
+from .events.dependencies import get_event_bus_dependency as get_event_bus  # noqa: E402, F401
+from .tenant.dependencies import get_tenant_service  # noqa: E402, F401
+
+
+# Deployment service factory
+def get_deployment_service(db=None):
+    """
+    Get deployment service instance.
+
+    This is a re-export wrapper for the deployment service factory.
+    Import the actual factory from deployment.router for full functionality.
+    """
+
+    from .deployment.service import DeploymentService
+
+    if db is None:
+        # If no db provided, this is being used as a factory reference
+        # Return a lambda that creates the service when called with db
+        return lambda session: DeploymentService(session)
+
+    return DeploymentService(db)
+
+
+# Notification service factory
+def get_notification_service(db=None):
+    """
+    Get notification service instance.
+
+    Args:
+        db: AsyncSession instance (optional)
+
+    Returns:
+        NotificationService instance or factory function
+    """
+    from .notifications.service import NotificationService
+
+    if db is None:
+        # Return factory function
+        return lambda session: NotificationService(session)
+
+    return NotificationService(db)
+
+
+__all__ = [
+    "DependencyChecker",
+    "DependencyError",
+    "require_dependency",
+    "safe_import",
+    "require_minio",
+    "require_meilisearch",
+    "require_cryptography",
+    # FastAPI dependencies
+    "get_db",
+    "get_async_session",
+    "get_current_user",
+    # Service factories
+    "get_deployment_service",
+    "get_email_service",
+    "get_event_bus",
+    "get_notification_service",
+    "get_tenant_service",
+]

@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Search,
   Download,
@@ -21,23 +21,23 @@ import {
   Maximize2,
   Minimize2,
   Loader2,
-} from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { useLogs } from '@/hooks/useLogs';
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useLogs } from "@/hooks/useLogs";
 
 export default function LogsPage() {
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [levelFilter, setLevelFilter] = useState('all');
-  const [serviceFilter, setServiceFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [levelFilter, setLevelFilter] = useState("all");
+  const [serviceFilter, setServiceFilter] = useState("all");
   const [autoScroll, setAutoScroll] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Use the real API hook
   const { logs, stats, services, isLoading, error, pagination, refetch } = useLogs({
-    level: levelFilter !== 'all' ? levelFilter : undefined,
-    service: serviceFilter !== 'all' ? serviceFilter : undefined,
+    level: levelFilter !== "all" ? levelFilter : undefined,
+    service: serviceFilter !== "all" ? serviceFilter : undefined,
     search: searchTerm || undefined,
     page: 1,
     page_size: 100,
@@ -54,8 +54,8 @@ export default function LogsPage() {
   useEffect(() => {
     const timer = setTimeout(() => {
       refetch({
-        level: levelFilter !== 'all' ? levelFilter : undefined,
-        service: serviceFilter !== 'all' ? serviceFilter : undefined,
+        level: levelFilter !== "all" ? levelFilter : undefined,
+        service: serviceFilter !== "all" ? serviceFilter : undefined,
         search: searchTerm || undefined,
       });
     }, 500);
@@ -65,99 +65,101 @@ export default function LogsPage() {
 
   const handleExport = () => {
     const exportData = JSON.stringify(logs, null, 2);
-    const blob = new Blob([exportData], { type: 'application/json' });
+    const blob = new Blob([exportData], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `logs-${new Date().toISOString()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    toast({ title: 'Success', description: 'Logs exported successfully' });
+    toast({ title: "Success", description: "Logs exported successfully" });
   };
 
   const handleCopyLog = (log: unknown) => {
     navigator.clipboard.writeText(JSON.stringify(log, null, 2));
-    toast({ title: 'Success', description: 'Log entry copied to clipboard' });
+    toast({ title: "Success", description: "Log entry copied to clipboard" });
   };
 
   const handleRefresh = () => {
     refetch();
-    toast({ title: 'Success', description: 'Logs refreshed' });
+    toast({ title: "Success", description: "Logs refreshed" });
   };
 
   const getLevelIcon = (level: string) => {
     switch (level) {
-      case 'INFO': return <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />;
-      case 'DEBUG': return <Terminal className="h-4 w-4 text-muted-foreground" />;
-      case 'WARNING': return <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />;
-      case 'ERROR': return <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />;
-      case 'CRITICAL': return <AlertCircle className="h-4 w-4 text-red-700 dark:text-red-300" />;
-      default: return <Info className="h-4 w-4 text-muted-foreground" />;
+      case "INFO":
+        return <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />;
+      case "DEBUG":
+        return <Terminal className="h-4 w-4 text-muted-foreground" />;
+      case "WARNING":
+        return <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />;
+      case "ERROR":
+        return <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />;
+      case "CRITICAL":
+        return <AlertCircle className="h-4 w-4 text-red-700 dark:text-red-300" />;
+      default:
+        return <Info className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getLevelBadgeVariant = (level: string) => {
     switch (level) {
-      case 'INFO': return 'outline' as const;
-      case 'DEBUG': return 'secondary' as const;
-      case 'WARNING': return 'secondary' as const;
-      case 'ERROR': return 'destructive' as const;
-      case 'CRITICAL': return 'destructive' as const;
-      default: return 'outline' as const;
+      case "INFO":
+        return "outline" as const;
+      case "DEBUG":
+        return "secondary" as const;
+      case "WARNING":
+        return "secondary" as const;
+      case "ERROR":
+        return "destructive" as const;
+      case "CRITICAL":
+        return "destructive" as const;
+      default:
+        return "outline" as const;
     }
   };
 
   // Log statistics from API
-  const logStats = stats ? {
-    total: stats.by_level ? Object.values(stats.by_level).reduce((a, b) => a + b, 0) : 0,
-    info: stats.by_level?.INFO || 0,
-    debug: stats.by_level?.DEBUG || 0,
-    warning: stats.by_level?.WARNING || 0,
-    error: stats.by_level?.ERROR || 0,
-    critical: stats.by_level?.CRITICAL || 0,
-  } : {
-    total: logs.length,
-    info: 0,
-    debug: 0,
-    warning: 0,
-    error: 0,
-    critical: 0,
-  };
+  const logStats = stats
+    ? {
+        total: stats.by_level ? Object.values(stats.by_level).reduce((a, b) => a + b, 0) : 0,
+        info: stats.by_level?.INFO || 0,
+        debug: stats.by_level?.DEBUG || 0,
+        warning: stats.by_level?.WARNING || 0,
+        error: stats.by_level?.ERROR || 0,
+        critical: stats.by_level?.CRITICAL || 0,
+      }
+    : {
+        total: logs.length,
+        info: 0,
+        debug: 0,
+        warning: 0,
+        error: 0,
+        critical: 0,
+      };
 
   return (
-    <div className={`space-y-6 ${isFullscreen ? 'fixed inset-0 z-50 bg-background p-6' : ''}`}>
+    <div className={`space-y-6 ${isFullscreen ? "fixed inset-0 z-50 bg-background p-6" : ""}`}>
       {/* Header */}
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold">System Logs</h1>
-          <p className="text-muted-foreground mt-2">View and analyze application logs in real-time</p>
+          <p className="text-muted-foreground mt-2">
+            View and analyze application logs in real-time
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-          >
+          <Button variant="outline" size="sm" onClick={() => setIsFullscreen(!isFullscreen)}>
             {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExport}
-            disabled={logs.length === 0}
-          >
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={logs.length === 0}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isLoading}
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          <Button variant="default" size="sm" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
         </div>
@@ -246,11 +248,7 @@ export default function LogsPage() {
               ))}
             </select>
             <div className="flex items-center space-x-2">
-              <Switch
-                id="auto-scroll"
-                checked={autoScroll}
-                onCheckedChange={setAutoScroll}
-              />
+              <Switch id="auto-scroll" checked={autoScroll} onCheckedChange={setAutoScroll} />
               <Label htmlFor="auto-scroll">Auto-scroll</Label>
             </div>
           </div>
@@ -258,7 +256,7 @@ export default function LogsPage() {
       </Card>
 
       {/* Log Viewer */}
-      <Card className={isFullscreen ? 'h-full' : ''}>
+      <Card className={isFullscreen ? "h-full" : ""}>
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Log Stream</CardTitle>
@@ -288,7 +286,7 @@ export default function LogsPage() {
           ) : (
             <ScrollArea
               ref={scrollRef}
-              className={`${isFullscreen ? 'h-[calc(100vh-400px)]' : 'h-[600px]'} font-mono text-sm`}
+              className={`${isFullscreen ? "h-[calc(100vh-400px)]" : "h-[600px]"} font-mono text-sm`}
             >
               <div className="space-y-1">
                 {logs.map((log) => (
@@ -296,9 +294,7 @@ export default function LogsPage() {
                     key={log.id}
                     className="group flex items-start gap-2 p-2 hover:bg-muted rounded"
                   >
-                    <div className="flex-shrink-0 mt-0.5">
-                      {getLevelIcon(log.level)}
-                    </div>
+                    <div className="flex-shrink-0 mt-0.5">{getLevelIcon(log.level)}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs text-muted-foreground">
@@ -322,7 +318,9 @@ export default function LogsPage() {
                       {(log.metadata.user_id || log.metadata.duration) && (
                         <div className="mt-1 flex gap-4 text-xs text-muted-foreground">
                           {log.metadata.user_id && <span>User: {log.metadata.user_id}</span>}
-                          {log.metadata.duration && <span>Duration: {log.metadata.duration}ms</span>}
+                          {log.metadata.duration && (
+                            <span>Duration: {log.metadata.duration}ms</span>
+                          )}
                           {log.metadata.ip && <span>IP: {log.metadata.ip}</span>}
                         </div>
                       )}

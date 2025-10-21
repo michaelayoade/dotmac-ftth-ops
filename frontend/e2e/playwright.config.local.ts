@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * E2E test configuration for local development
@@ -7,38 +7,35 @@ import { defineConfig, devices } from '@playwright/test';
  * Usage: pnpm exec playwright test --config=playwright.config.local.ts
  */
 export default defineConfig({
-  testDir: './tests',
+  testDir: "./tests",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 0, // No retries for local dev
   workers: 1, // Single worker for local dev
 
-  reporter: [
-    ['list'],
-    ['html', { open: 'never' }],
-  ],
+  reporter: [["list"], ["html", { open: "never" }]],
 
   use: {
-    baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    baseURL: "http://localhost:3000",
+    trace: "on-first-retry",
+    screenshot: "only-on-failure",
+    video: "retain-on-failure",
     extraHTTPHeaders: {
-      'Accept': 'application/json',
+      Accept: "application/json",
     },
   },
 
   /* Only test chromium for local dev speed */
   projects: [
     {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
     },
   ],
 
   /* Global setup and teardown */
-  globalSetup: require.resolve('./global-setup'),
-  globalTeardown: require.resolve('./global-teardown'),
+  globalSetup: require.resolve("./global-setup"),
+  globalTeardown: require.resolve("./global-teardown"),
 
   /* NO WEB SERVER - assumes services are already running */
   // webServer: undefined,
@@ -50,5 +47,5 @@ export default defineConfig({
   },
 
   /* Output folder for test artifacts */
-  outputDir: 'test-results/',
+  outputDir: "test-results/",
 });

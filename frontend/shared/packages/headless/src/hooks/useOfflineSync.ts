@@ -2,14 +2,14 @@
  * Offline support and caching hook for ISP platform
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { useAuthStore } from '@dotmac/headless/auth';
-import { useTenantStore } from '@dotmac/headless/stores';
+import { useAuthStore } from "@dotmac/headless/auth";
+import { useTenantStore } from "@dotmac/headless/stores";
 
 export interface OfflineEntry {
   id: string;
-  operation: 'create' | 'update' | 'delete';
+  operation: "create" | "update" | "delete";
   resource: string;
   data: unknown;
   timestamp: number;
@@ -17,7 +17,7 @@ export interface OfflineEntry {
   userId: string;
   retryCount: number;
   maxRetries: number;
-  status: 'pending' | 'syncing' | 'synced' | 'failed';
+  status: "pending" | "syncing" | "synced" | "failed";
   error?: string;
 }
 
@@ -49,21 +49,21 @@ export interface SyncStatus {
 }
 
 // Storage keys
-const OFFLINE_QUEUE_KEY = 'dotmac-offline-queue';
-const CACHE_PREFIX = 'dotmac-cache';
-const METADATA_KEY = 'dotmac-cache-metadata';
+const OFFLINE_QUEUE_KEY = "dotmac-offline-queue";
+const CACHE_PREFIX = "dotmac-cache";
+const METADATA_KEY = "dotmac-cache-metadata";
 
 // Cache utilities
 class CacheManager {
   private static getKey(resource: string, params?: Record<string, unknown>): string {
-    const paramString = params ? JSON.stringify(params) : '';
+    const paramString = params ? JSON.stringify(params) : "";
     return `${CACHE_PREFIX}:${resource}:${btoa(paramString)}`;
   }
 
   static get<T>(
     resource: string,
     params?: Record<string, unknown>,
-    tenantId?: string
+    tenantId?: string,
   ): CacheEntry<T> | null {
     try {
       const key = CacheManager.getKey(resource, params);
@@ -96,9 +96,13 @@ class CacheManager {
     data: T,
     ttl: number,
     tenantId: string,
-    options: { params?: Record<string, unknown>; etag?: string; version?: number } = {
+    options: {
+      params?: Record<string, unknown>;
+      etag?: string;
+      version?: number;
+    } = {
       // Implementation pending
-    }
+    },
   ): void {
     const { params, etag, _version } = options;
     try {
@@ -186,7 +190,7 @@ class OfflineManager {
     }
   }
 
-  static addToQueue(entry: Omit<OfflineEntry, 'id' | 'timestamp' | 'retryCount' | 'status'>): void {
+  static addToQueue(entry: Omit<OfflineEntry, "id" | "timestamp" | "retryCount" | "status">): void {
     try {
       const queue = OfflineManager.getQueue();
       const newEntry: OfflineEntry = {
@@ -194,7 +198,7 @@ class OfflineManager {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         timestamp: Date.now(),
         retryCount: 0,
-        status: 'pending',
+        status: "pending",
       };
 
       queue.push(newEntry);
@@ -216,7 +220,7 @@ class OfflineManager {
   static updateQueueEntry(entryId: string, updates: Partial<OfflineEntry>): void {
     try {
       const queue = OfflineManager.getQueue().map((entry) =>
-        entry.id === entryId ? { ...entry, ...updates } : entry
+        entry.id === entryId ? { ...entry, ...updates } : entry,
       );
       localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue));
     } catch (_error) {
@@ -244,13 +248,13 @@ const SyncOperations = {
     enableOffline && user && tenant?.tenant,
 
   createQueueEntry: (params: {
-    operation: 'create' | 'update' | 'delete';
+    operation: "create" | "update" | "delete";
     resource: string;
     data: unknown;
     tenantId: string;
     userId: string;
     maxRetries: number;
-  }): Omit<OfflineEntry, 'id' | 'timestamp' | 'retryCount' | 'status'> => ({
+  }): Omit<OfflineEntry, "id" | "timestamp" | "retryCount" | "status"> => ({
     operation: params.operation,
     resource: params.resource,
     data: params.data,
@@ -262,31 +266,31 @@ const SyncOperations = {
   filterPendingQueue: (queue: OfflineEntry[], tenantId: string) =>
     queue
       .filter((entry) => entry.tenantId === tenantId)
-      .filter((entry) => entry.status === 'pending' || entry.status === 'failed'),
+      .filter((entry) => entry.status === "pending" || entry.status === "failed"),
 
   processQueueEntry: async (
     entry: OfflineEntry,
-    syncFunction: (entry: OfflineEntry) => Promise<void>
+    syncFunction: (entry: OfflineEntry) => Promise<void>,
   ) => {
-    OfflineManager.updateQueueEntry(entry.id, { status: 'syncing' });
+    OfflineManager.updateQueueEntry(entry.id, { status: "syncing" });
     await syncFunction(entry);
     OfflineManager.removeFromQueue(entry.id);
   },
 
   handleEntryError: (entry: OfflineEntry, error: unknown): string | null => {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     const retryCount = entry.retryCount + 1;
 
     if (retryCount >= entry.maxRetries) {
       OfflineManager.updateQueueEntry(entry.id, {
-        status: 'failed',
+        status: "failed",
         error: errorMessage,
         retryCount,
       });
       return `${entry.resource}: ${errorMessage}`;
     }
     OfflineManager.updateQueueEntry(entry.id, {
-      status: 'pending',
+      status: "pending",
       retryCount,
     });
     return null;
@@ -299,7 +303,7 @@ const CacheOperations = {
   getCacheEntry: <T>(
     resource: string,
     params: Record<string, unknown> | undefined,
-    tenantId: string
+    tenantId: string,
   ) => {
     const entry = CacheManager.get<T>(resource, params, tenantId);
     return entry?.data || null;
@@ -310,9 +314,13 @@ const CacheOperations = {
     data: T,
     ttl: number,
     tenantId: string,
-    options: { params?: Record<string, unknown>; etag?: string; version?: number } = {
+    options: {
+      params?: Record<string, unknown>;
+      etag?: string;
+      version?: number;
+    } = {
       // Implementation pending
-    }
+    },
   ) => {
     CacheManager.set(resource, data, ttl, tenantId, options);
   },
@@ -323,7 +331,7 @@ type QueueEntry = OfflineEntry;
 export function useOfflineSync(
   options: OfflineSyncOptions = {
     // Implementation pending
-  }
+  },
 ) {
   const {
     enableOffline = true,
@@ -353,7 +361,7 @@ export function useOfflineSync(
         console.log(`[OfflineSync] ${message}`, ...args);
       }
     },
-    [debug]
+    [debug],
   );
 
   // Get pending operations count
@@ -367,7 +375,7 @@ export function useOfflineSync(
   // Network status monitoring
   useEffect(() => {
     const handleOnline = () => {
-      log('Network online');
+      log("Network online");
       setIsOnline(true);
       if (syncOnReconnect) {
         syncPendingOperations();
@@ -375,16 +383,16 @@ export function useOfflineSync(
     };
 
     const handleOffline = () => {
-      log('Network offline');
+      log("Network offline");
       setIsOnline(false);
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, [syncOnReconnect, syncPendingOperations, log]);
 
@@ -396,10 +404,10 @@ export function useOfflineSync(
       }
 
       const data = CacheOperations.getCacheEntry<T>(resource, params, currentTenant?.tenant.id);
-      log('Cache get:', resource, data ? 'HIT' : 'MISS');
+      log("Cache get:", resource, data ? "HIT" : "MISS");
       return data;
     },
-    [enableCache, currentTenant?.tenant?.id, log]
+    [enableCache, currentTenant?.tenant?.id, log],
   );
 
   const cacheSet = useCallback(
@@ -409,20 +417,20 @@ export function useOfflineSync(
       ttl?: number,
       params?: Record<string, unknown>,
       etag?: string,
-      version?: number
+      version?: number,
     ): void => {
       if (!CacheOperations.validateCacheAccess(enableCache, currentTenant?.tenant?.id)) {
         return;
       }
 
-      log('Cache set:', resource);
+      log("Cache set:", resource);
       CacheOperations.setCacheEntry(resource, data, ttl || defaultTTL, currentTenant?.tenant.id, {
         params,
         etag,
         version,
       });
     },
-    [enableCache, currentTenant?.tenant?.id, defaultTTL, log]
+    [enableCache, currentTenant?.tenant?.id, defaultTTL, log],
   );
 
   const cacheDelete = useCallback(
@@ -431,10 +439,10 @@ export function useOfflineSync(
         return;
       }
 
-      log('Cache delete:', resource);
+      log("Cache delete:", resource);
       CacheManager.delete(resource, params);
     },
-    [enableCache, log]
+    [enableCache, log],
   );
 
   const cacheClear = useCallback(
@@ -443,25 +451,25 @@ export function useOfflineSync(
         return;
       }
 
-      log('Cache clear:', tenantOnly ? 'tenant-only' : 'all');
+      log("Cache clear:", tenantOnly ? "tenant-only" : "all");
       CacheManager.clear(tenantOnly ? currentTenant?.tenant?.id : undefined);
     },
-    [enableCache, currentTenant?.tenant?.id, log]
+    [enableCache, currentTenant?.tenant?.id, log],
   );
 
   // Offline operations
   const queueOperation = useCallback(
     (
-      operation: 'create' | 'update' | 'delete',
+      operation: "create" | "update" | "delete",
       resource: string,
       data: unknown,
-      operationMaxRetries?: number
+      operationMaxRetries?: number,
     ): void => {
       if (!SyncOperations.validatePrerequisites(enableOffline, user, currentTenant)) {
         return;
       }
 
-      log('Queueing offline operation:', operation, resource);
+      log("Queueing offline operation:", operation, resource);
       const queueEntry = SyncOperations.createQueueEntry({
         operation,
         resource,
@@ -472,7 +480,7 @@ export function useOfflineSync(
       });
       OfflineManager.addToQueue(queueEntry);
     },
-    [enableOffline, user, currentTenant?.tenant, maxRetries, log, currentTenant]
+    [enableOffline, user, currentTenant?.tenant, maxRetries, log, currentTenant],
   );
 
   // Helper to get pending operations for current tenant
@@ -487,7 +495,7 @@ export function useOfflineSync(
   // Helper to sync a single operation
   const syncSingleOperation = useCallback(
     async (entry: QueueEntry): Promise<void> => {
-      OfflineManager.updateQueueEntry(entry.id, { status: 'syncing' });
+      OfflineManager.updateQueueEntry(entry.id, { status: "syncing" });
 
       // This would call your actual API
       // For now, simulating API call
@@ -495,26 +503,26 @@ export function useOfflineSync(
 
       // Simulate some failures for testing
       if (Math.random() < 0.1) {
-        throw new Error('Simulated network error');
+        throw new Error("Simulated network error");
       }
 
-      log('Synced operation:', entry.id);
+      log("Synced operation:", entry.id);
       OfflineManager.removeFromQueue(entry.id);
     },
-    [log]
+    [log],
   );
 
   // Helper to handle sync error
   const handleSyncError = useCallback(
     (entry: QueueEntry, error: unknown): string | null => {
       log(
-        'Failed to sync operation:',
+        "Failed to sync operation:",
         entry.id,
-        error instanceof Error ? error.message : 'Unknown error'
+        error instanceof Error ? error.message : "Unknown error",
       );
       return SyncOperations.handleEntryError(entry, error);
     },
-    [log]
+    [log],
   );
 
   // Helper to schedule retry
@@ -526,7 +534,7 @@ export function useOfflineSync(
         }, retryInterval);
       }
     },
-    [retryInterval, syncPendingOperations]
+    [retryInterval, syncPendingOperations],
   );
 
   // Sync pending operations
@@ -540,7 +548,7 @@ export function useOfflineSync(
       return;
     }
 
-    log('Syncing pending operations:', queue.length);
+    log("Syncing pending operations:", queue.length);
     setIsSyncing(true);
     setSyncErrors([]);
 
@@ -603,17 +611,17 @@ export function useOfflineSync(
 
   // Clear data when tenant changes
   useEffect(() => {
-    const prevTenantId = localStorage.getItem('last-tenant-id');
+    const prevTenantId = localStorage.getItem("last-tenant-id");
     const currentTenantId = currentTenant?.tenant?.id;
 
     if (prevTenantId && currentTenantId && prevTenantId !== currentTenantId) {
-      log('Tenant changed, clearing cache and offline queue');
+      log("Tenant changed, clearing cache and offline queue");
       cacheClear(true);
       // Keep offline queue for old tenant for now
     }
 
     if (currentTenantId) {
-      localStorage.setItem('last-tenant-id', currentTenantId);
+      localStorage.setItem("last-tenant-id", currentTenantId);
     }
   }, [currentTenant?.tenant?.id, cacheClear, log]);
 
@@ -657,7 +665,7 @@ export function useCachedData<T>(
     enabled?: boolean;
   } = {
     // Implementation pending
-  }
+  },
 ) {
   const { params, ttl, staleWhileRevalidate = true, enabled = true } = options;
 
@@ -698,10 +706,10 @@ export function useCachedData<T>(
           setIsStale(false);
           cacheSet(resource, freshData, ttl, params);
         } else if (!data) {
-          throw new Error('No cached data available offline');
+          throw new Error("No cached data available offline");
         }
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        const errorMessage = err instanceof Error ? err.message : "Unknown error";
         setError(errorMessage);
         if (!data) {
           setData(null);
@@ -710,7 +718,7 @@ export function useCachedData<T>(
 
       setIsLoading(false);
     },
-    [enabled, resource, params, fetcher, cacheGet, cacheSet, staleWhileRevalidate, ttl, data]
+    [enabled, resource, params, fetcher, cacheGet, cacheSet, staleWhileRevalidate, ttl, data],
   );
 
   // Initial fetch
@@ -733,13 +741,13 @@ export function useCachedData<T>(
 
 // ISP-specific offline utilities
 export const ISP_CACHE_KEYS = {
-  CUSTOMERS: 'customers',
-  NETWORK_DEVICES: 'network:devices',
-  BILLING_INVOICES: 'billing:invoices',
-  SUPPORT_TICKETS: 'support:tickets',
-  ANALYTICS_METRICS: 'analytics:metrics',
-  USER_PERMISSIONS: 'user:permissions',
-  TENANT_SETTINGS: 'tenant:settings',
+  CUSTOMERS: "customers",
+  NETWORK_DEVICES: "network:devices",
+  BILLING_INVOICES: "billing:invoices",
+  SUPPORT_TICKETS: "support:tickets",
+  ANALYTICS_METRICS: "analytics:metrics",
+  USER_PERMISSIONS: "user:permissions",
+  TENANT_SETTINGS: "tenant:settings",
 } as const;
 
 export const ISP_CACHE_TTLS = {

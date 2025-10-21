@@ -1,60 +1,69 @@
-"use client"
+"use client";
 
-import { useCallback, useEffect, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Users, Database, TrendingUp, Activity } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
-import { platformAdminService, type PlatformStats } from "@/lib/services/platform-admin-service"
+import { useCallback, useEffect, useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Building2, Users, Database, TrendingUp, Activity } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { platformAdminService, type PlatformStats } from "@/lib/services/platform-admin-service";
 
 export function PlatformStatsOverview() {
-  const [stats, setStats] = useState<PlatformStats | null>(null)
-  const [loading, setLoading] = useState(true)
-  const { toast } = useToast()
+  const [stats, setStats] = useState<PlatformStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   const updateStats = useCallback(
     async (showSpinner: boolean) => {
       if (showSpinner) {
-        setLoading(true)
+        setLoading(true);
       }
       try {
-        const data = await platformAdminService.getStats()
-        setStats(data)
+        const data = await platformAdminService.getStats();
+        setStats(data);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load platform statistics"
-        toast({ title: "Unable to load stats", description: message, variant: "destructive" })
+        const message =
+          error instanceof Error ? error.message : "Failed to load platform statistics";
+        toast({
+          title: "Unable to load stats",
+          description: message,
+          variant: "destructive",
+        });
       } finally {
         if (showSpinner) {
-          setLoading(false)
+          setLoading(false);
         }
       }
     },
-    [toast]
-  )
+    [toast],
+  );
 
   useEffect(() => {
-    void updateStats(true)
+    void updateStats(true);
     const interval = setInterval(() => {
-      void updateStats(false)
-    }, 30000)
-    return () => clearInterval(interval)
-  }, [updateStats])
+      void updateStats(false);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [updateStats]);
 
   const handleClearCache = useCallback(async () => {
     try {
-      const result = await platformAdminService.clearCache()
+      const result = await platformAdminService.clearCache();
       toast({
         title: "Cache cleared",
         description:
           typeof result.cache_type === "string"
             ? `${result.cache_type} cache cleared successfully`
             : "Platform cache cleared successfully",
-      })
-      void updateStats(false)
+      });
+      void updateStats(false);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to clear cache"
-      toast({ title: "Unable to clear cache", description: message, variant: "destructive" })
+      const message = error instanceof Error ? error.message : "Failed to clear cache";
+      toast({
+        title: "Unable to clear cache",
+        description: message,
+        variant: "destructive",
+      });
     }
-  }, [toast, updateStats])
+  }, [toast, updateStats]);
 
   if (loading) {
     return (
@@ -70,11 +79,11 @@ export function PlatformStatsOverview() {
           </Card>
         ))}
       </div>
-    )
+    );
   }
 
   if (!stats) {
-    return null
+    return null;
   }
 
   const statCards = [
@@ -106,7 +115,7 @@ export function PlatformStatsOverview() {
       icon: Activity,
       isHealth: true,
     },
-  ]
+  ];
 
   return (
     <div className="space-y-4">
@@ -144,7 +153,7 @@ export function PlatformStatsOverview() {
             <button
               type="button"
               onClick={() => {
-                window.location.hash = "#tenants"
+                window.location.hash = "#tenants";
               }}
               className="flex items-center gap-2 p-4 border rounded-lg hover:bg-accent transition-colors"
             >
@@ -158,7 +167,7 @@ export function PlatformStatsOverview() {
             <button
               type="button"
               onClick={() => {
-                void handleClearCache()
+                void handleClearCache();
               }}
               className="flex items-center gap-2 p-4 border rounded-lg hover:bg-accent transition-colors"
             >
@@ -172,7 +181,7 @@ export function PlatformStatsOverview() {
             <button
               type="button"
               onClick={() => {
-                window.location.hash = "#audit"
+                window.location.hash = "#audit";
               }}
               className="flex items-center gap-2 p-4 border rounded-lg hover:bg-accent transition-colors"
             >
@@ -186,5 +195,5 @@ export function PlatformStatsOverview() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

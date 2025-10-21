@@ -3,19 +3,19 @@
  * Manages WebSocket connections and real-time data distribution
  */
 
-import { ReactNode, createContext, useContext } from 'react';
+import { ReactNode, createContext, useContext } from "react";
 import {
   useWebSocket,
   useNetworkMonitoring,
   useCustomerActivity,
   useFieldOperations,
-} from '../hooks/useWebSocket';
+} from "../hooks/useWebSocket";
 
 interface RealTimeContextValue {
   // WebSocket connection
   isConnected: boolean;
   isConnecting: boolean;
-  connectionQuality: 'excellent' | 'good' | 'poor' | 'offline';
+  connectionQuality: "excellent" | "good" | "poor" | "offline";
   error: string | null;
 
   // Network monitoring
@@ -40,7 +40,7 @@ const RealTimeContext = createContext<RealTimeContextValue | null>(null);
 export function useRealTime(): RealTimeContextValue {
   const context = useContext(RealTimeContext);
   if (!context) {
-    throw new Error('useRealTime must be used within a RealTimeProvider');
+    throw new Error("useRealTime must be used within a RealTimeProvider");
   }
   return context;
 }
@@ -61,7 +61,7 @@ export function RealTimeProvider({ children, enabled = true }: RealTimeProviderP
     const mockContext: RealTimeContextValue = {
       isConnected: false,
       isConnecting: false,
-      connectionQuality: 'offline',
+      connectionQuality: "offline",
       error: null,
       deviceUpdates: [],
       networkAlerts: [],

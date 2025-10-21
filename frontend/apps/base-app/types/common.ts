@@ -1,7 +1,7 @@
 // Common shared types across the application
 
 // Status types
-export type Status = 'idle' | 'loading' | 'success' | 'error';
+export type Status = "idle" | "loading" | "success" | "error";
 
 // Date/Time utilities
 export type DateString = string; // ISO 8601 format
@@ -45,7 +45,7 @@ export interface WithMetadata<T = Record<string, unknown>> {
 
 // Custom fields pattern
 export interface WithCustomFields<T = Record<string, unknown>> {
-  custom_fields?: T;  // Using snake_case to match API
+  custom_fields?: T; // Using snake_case to match API
 }
 
 // Tags pattern
@@ -83,9 +83,7 @@ export interface Money {
 }
 
 // Generic result type for operations
-export type Result<T, E = Error> =
-  | { success: true; data: T }
-  | { success: false; error: E };
+export type Result<T, E = Error> = { success: true; data: T } | { success: false; error: E };
 
 // Form state management
 export interface FormState<T> {
@@ -100,7 +98,7 @@ export interface FormState<T> {
 export interface FileUpload {
   file: File;
   progress?: number;
-  status: 'pending' | 'uploading' | 'completed' | 'error';
+  status: "pending" | "uploading" | "completed" | "error";
   error?: string;
   url?: string;
 }
@@ -108,7 +106,7 @@ export interface FileUpload {
 // Notification types
 export interface Notification {
   id: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: "info" | "success" | "warning" | "error";
   title: string;
   message?: string;
   duration?: number;

@@ -90,7 +90,7 @@ class MoneyHandler:
         total = sum(money_objects, self.create_money(0, first_currency.code))
         return total
 
-    def multiply_money(self, money: Money, multiplier: int | float | Decimal) -> Money:
+    def multiply_money(self, money: Money, multiplier: int | float | Decimal | str) -> Money:
         """Multiply Money by a number with proper precision."""
         if isinstance(multiplier, str):
             multiplier = Decimal(multiplier)
@@ -156,7 +156,7 @@ def add_money(*money_objects: Money) -> Money:
     return money_handler.add_money(*money_objects)
 
 
-def multiply_money(money: Money, multiplier: int | float | Decimal) -> Money:
+def multiply_money(money: Money, multiplier: int | float | Decimal | str) -> Money:
     """Multiply Money with default handler."""
     return money_handler.multiply_money(money, multiplier)
 

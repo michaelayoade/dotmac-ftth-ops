@@ -3,8 +3,8 @@
  * Handles technician dispatch, work orders, and field service management
  */
 
-import { BaseApiClient } from './BaseApiClient';
-import type { PaginatedResponse, QueryParams, AddressData } from '../types/api';
+import { BaseApiClient } from "./BaseApiClient";
+import type { PaginatedResponse, QueryParams, AddressData } from "../types/api";
 
 export interface Technician {
   id: string;
@@ -12,7 +12,7 @@ export interface Technician {
   name: string;
   email: string;
   phone: string;
-  status: 'AVAILABLE' | 'BUSY' | 'ON_BREAK' | 'OFF_DUTY' | 'UNAVAILABLE';
+  status: "AVAILABLE" | "BUSY" | "ON_BREAK" | "OFF_DUTY" | "UNAVAILABLE";
   skills: TechnicianSkill[];
   certifications: Certification[];
   territories: string[];
@@ -27,7 +27,7 @@ export interface Technician {
 export interface TechnicianSkill {
   skill_id: string;
   skill_name: string;
-  proficiency_level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
+  proficiency_level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED" | "EXPERT";
   certified: boolean;
   certification_date?: string;
 }
@@ -38,7 +38,7 @@ export interface Certification {
   issuing_authority: string;
   issue_date: string;
   expiry_date?: string;
-  status: 'VALID' | 'EXPIRED' | 'SUSPENDED';
+  status: "VALID" | "EXPIRED" | "SUSPENDED";
 }
 
 export interface GeoLocation {
@@ -53,23 +53,23 @@ export interface FieldWorkOrder {
   id: string;
   work_order_number: string;
   type:
-    | 'INSTALLATION'
-    | 'MAINTENANCE'
-    | 'REPAIR'
-    | 'UPGRADE'
-    | 'DISCONNECT'
-    | 'SURVEY'
-    | 'EMERGENCY';
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | 'EMERGENCY';
+    | "INSTALLATION"
+    | "MAINTENANCE"
+    | "REPAIR"
+    | "UPGRADE"
+    | "DISCONNECT"
+    | "SURVEY"
+    | "EMERGENCY";
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT" | "EMERGENCY";
   status:
-    | 'CREATED'
-    | 'SCHEDULED'
-    | 'ASSIGNED'
-    | 'EN_ROUTE'
-    | 'ON_SITE'
-    | 'IN_PROGRESS'
-    | 'COMPLETED'
-    | 'CANCELLED';
+    | "CREATED"
+    | "SCHEDULED"
+    | "ASSIGNED"
+    | "EN_ROUTE"
+    | "ON_SITE"
+    | "IN_PROGRESS"
+    | "COMPLETED"
+    | "CANCELLED";
   customer_id: string;
   customer_name: string;
   customer_phone: string;
@@ -112,7 +112,7 @@ export interface WorkOrderPhoto {
   id: string;
   url: string;
   caption?: string;
-  photo_type: 'BEFORE' | 'AFTER' | 'PROBLEM' | 'SOLUTION' | 'DOCUMENTATION';
+  photo_type: "BEFORE" | "AFTER" | "PROBLEM" | "SOLUTION" | "DOCUMENTATION";
   uploaded_at: string;
 }
 
@@ -124,7 +124,7 @@ export interface Route {
   optimized: boolean;
   total_distance: number;
   estimated_duration: number;
-  status: 'PLANNED' | 'ACTIVE' | 'COMPLETED';
+  status: "PLANNED" | "ACTIVE" | "COMPLETED";
   created_at: string;
 }
 
@@ -143,7 +143,7 @@ export interface TimeEntry {
   id: string;
   technician_id: string;
   work_order_id?: string;
-  entry_type: 'WORK' | 'TRAVEL' | 'BREAK' | 'TRAINING' | 'ADMIN' | 'OVERTIME';
+  entry_type: "WORK" | "TRAVEL" | "BREAK" | "TRAINING" | "ADMIN" | "OVERTIME";
   start_time: string;
   end_time?: string;
   duration?: number;
@@ -158,13 +158,13 @@ export interface ServiceCall {
   call_number: string;
   customer_id: string;
   customer_name: string;
-  call_type: 'TECHNICAL_SUPPORT' | 'SERVICE_REQUEST' | 'COMPLAINT' | 'EMERGENCY';
-  urgency: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  call_type: "TECHNICAL_SUPPORT" | "SERVICE_REQUEST" | "COMPLAINT" | "EMERGENCY";
+  urgency: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   description: string;
   resolution_required: boolean;
   estimated_resolution_time?: number;
   assigned_technician?: string;
-  status: 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+  status: "OPEN" | "ASSIGNED" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
   created_at: string;
   resolved_at?: string;
 }
@@ -176,7 +176,7 @@ export class FieldOpsApiClient extends BaseApiClient {
 
   // Technicians
   async getTechnicians(params?: QueryParams): Promise<PaginatedResponse<Technician>> {
-    return this.get('/api/field-ops/technicians', { params });
+    return this.get("/api/field-ops/technicians", { params });
   }
 
   async getTechnician(technicianId: string): Promise<{ data: Technician }> {
@@ -184,28 +184,30 @@ export class FieldOpsApiClient extends BaseApiClient {
   }
 
   async createTechnician(
-    data: Omit<Technician, 'id' | 'created_at' | 'updated_at'>
+    data: Omit<Technician, "id" | "created_at" | "updated_at">,
   ): Promise<{ data: Technician }> {
-    return this.post('/api/field-ops/technicians', data);
+    return this.post("/api/field-ops/technicians", data);
   }
 
   async updateTechnician(
     technicianId: string,
-    data: Partial<Technician>
+    data: Partial<Technician>,
   ): Promise<{ data: Technician }> {
     return this.put(`/api/field-ops/technicians/${technicianId}`, data);
   }
 
   async updateTechnicianStatus(
     technicianId: string,
-    status: Technician['status']
+    status: Technician["status"],
   ): Promise<{ data: Technician }> {
-    return this.put(`/api/field-ops/technicians/${technicianId}/status`, { status });
+    return this.put(`/api/field-ops/technicians/${technicianId}/status`, {
+      status,
+    });
   }
 
   async updateTechnicianLocation(
     technicianId: string,
-    location: GeoLocation
+    location: GeoLocation,
   ): Promise<{ data: Technician }> {
     return this.put(`/api/field-ops/technicians/${technicianId}/location`, location);
   }
@@ -216,12 +218,12 @@ export class FieldOpsApiClient extends BaseApiClient {
     date?: string;
     time_range?: { start: string; end: string };
   }): Promise<{ data: Technician[] }> {
-    return this.get('/api/field-ops/technicians/available', { params });
+    return this.get("/api/field-ops/technicians/available", { params });
   }
 
   // Work Orders
   async getWorkOrders(params?: QueryParams): Promise<PaginatedResponse<FieldWorkOrder>> {
-    return this.get('/api/field-ops/work-orders', { params });
+    return this.get("/api/field-ops/work-orders", { params });
   }
 
   async getWorkOrder(workOrderId: string): Promise<{ data: FieldWorkOrder }> {
@@ -229,14 +231,14 @@ export class FieldOpsApiClient extends BaseApiClient {
   }
 
   async createWorkOrder(
-    data: Omit<FieldWorkOrder, 'id' | 'work_order_number' | 'status' | 'created_at' | 'updated_at'>
+    data: Omit<FieldWorkOrder, "id" | "work_order_number" | "status" | "created_at" | "updated_at">,
   ): Promise<{ data: FieldWorkOrder }> {
-    return this.post('/api/field-ops/work-orders', data);
+    return this.post("/api/field-ops/work-orders", data);
   }
 
   async updateWorkOrder(
     workOrderId: string,
-    data: Partial<FieldWorkOrder>
+    data: Partial<FieldWorkOrder>,
   ): Promise<{ data: FieldWorkOrder }> {
     return this.put(`/api/field-ops/work-orders/${workOrderId}`, data);
   }
@@ -244,7 +246,7 @@ export class FieldOpsApiClient extends BaseApiClient {
   async assignWorkOrder(
     workOrderId: string,
     technicianId: string,
-    notes?: string
+    notes?: string,
   ): Promise<{ data: FieldWorkOrder }> {
     return this.post(`/api/field-ops/work-orders/${workOrderId}/assign`, {
       technician_id: technicianId,
@@ -254,7 +256,7 @@ export class FieldOpsApiClient extends BaseApiClient {
 
   async acceptWorkOrder(
     workOrderId: string,
-    technicianId: string
+    technicianId: string,
   ): Promise<{ data: FieldWorkOrder }> {
     return this.post(`/api/field-ops/work-orders/${workOrderId}/accept`, {
       technician_id: technicianId,
@@ -263,9 +265,11 @@ export class FieldOpsApiClient extends BaseApiClient {
 
   async startWorkOrder(
     workOrderId: string,
-    location?: GeoLocation
+    location?: GeoLocation,
   ): Promise<{ data: FieldWorkOrder }> {
-    return this.post(`/api/field-ops/work-orders/${workOrderId}/start`, { location });
+    return this.post(`/api/field-ops/work-orders/${workOrderId}/start`, {
+      location,
+    });
   }
 
   async completeWorkOrder(
@@ -276,34 +280,36 @@ export class FieldOpsApiClient extends BaseApiClient {
       equipment_used?: string[];
       time_spent: number;
       location?: GeoLocation;
-    }
+    },
   ): Promise<{ data: FieldWorkOrder }> {
     return this.post(`/api/field-ops/work-orders/${workOrderId}/complete`, data);
   }
 
   async cancelWorkOrder(workOrderId: string, reason: string): Promise<{ data: FieldWorkOrder }> {
-    return this.post(`/api/field-ops/work-orders/${workOrderId}/cancel`, { reason });
+    return this.post(`/api/field-ops/work-orders/${workOrderId}/cancel`, {
+      reason,
+    });
   }
 
   // Work Order Photos
   async uploadWorkOrderPhoto(
     workOrderId: string,
     file: File,
-    photoType: WorkOrderPhoto['photo_type'],
-    caption?: string
+    photoType: WorkOrderPhoto["photo_type"],
+    caption?: string,
   ): Promise<{ data: WorkOrderPhoto }> {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('photo_type', photoType);
-    if (caption) formData.append('caption', caption);
+    formData.append("file", file);
+    formData.append("photo_type", photoType);
+    if (caption) formData.append("caption", caption);
 
     const response = await fetch(
       `${this.baseURL}/api/field-ops/work-orders/${workOrderId}/photos`,
       {
-        method: 'POST',
+        method: "POST",
         headers: this.defaultHeaders,
         body: formData,
-      }
+      },
     );
 
     if (!response.ok) {
@@ -321,9 +327,9 @@ export class FieldOpsApiClient extends BaseApiClient {
   async createRoute(
     technicianId: string,
     date: string,
-    workOrderIds: string[]
+    workOrderIds: string[],
   ): Promise<{ data: Route }> {
-    return this.post('/api/field-ops/routes', {
+    return this.post("/api/field-ops/routes", {
       technician_id: technicianId,
       date,
       work_order_ids: workOrderIds,
@@ -343,22 +349,22 @@ export class FieldOpsApiClient extends BaseApiClient {
   async updateRouteStop(
     routeId: string,
     stopId: string,
-    data: Partial<RouteStop>
+    data: Partial<RouteStop>,
   ): Promise<{ data: RouteStop }> {
     return this.put(`/api/field-ops/routes/${routeId}/stops/${stopId}`, data);
   }
 
   // Time Tracking
   async startTimeEntry(
-    data: Omit<TimeEntry, 'id' | 'end_time' | 'duration'>
+    data: Omit<TimeEntry, "id" | "end_time" | "duration">,
   ): Promise<{ data: TimeEntry }> {
-    return this.post('/api/field-ops/time-entries', data);
+    return this.post("/api/field-ops/time-entries", data);
   }
 
   async endTimeEntry(
     timeEntryId: string,
     endTime: string,
-    location?: GeoLocation
+    location?: GeoLocation,
   ): Promise<{ data: TimeEntry }> {
     return this.put(`/api/field-ops/time-entries/${timeEntryId}/end`, {
       end_time: endTime,
@@ -372,26 +378,30 @@ export class FieldOpsApiClient extends BaseApiClient {
       start_date?: string;
       end_date?: string;
       entry_type?: string;
-    }
+    },
   ): Promise<PaginatedResponse<TimeEntry>> {
-    return this.get(`/api/field-ops/technicians/${technicianId}/time-entries`, { params });
+    return this.get(`/api/field-ops/technicians/${technicianId}/time-entries`, {
+      params,
+    });
   }
 
   async approveTimeEntries(
-    timeEntryIds: string[]
+    timeEntryIds: string[],
   ): Promise<{ data: { approved: number; rejected: number } }> {
-    return this.post('/api/field-ops/time-entries/approve', { time_entry_ids: timeEntryIds });
+    return this.post("/api/field-ops/time-entries/approve", {
+      time_entry_ids: timeEntryIds,
+    });
   }
 
   // Service Calls
   async getServiceCalls(params?: QueryParams): Promise<PaginatedResponse<ServiceCall>> {
-    return this.get('/api/field-ops/service-calls', { params });
+    return this.get("/api/field-ops/service-calls", { params });
   }
 
   async createServiceCall(
-    data: Omit<ServiceCall, 'id' | 'call_number' | 'status' | 'created_at'>
+    data: Omit<ServiceCall, "id" | "call_number" | "status" | "created_at">,
   ): Promise<{ data: ServiceCall }> {
-    return this.post('/api/field-ops/service-calls', data);
+    return this.post("/api/field-ops/service-calls", data);
   }
 
   async assignServiceCall(callId: string, technicianId: string): Promise<{ data: ServiceCall }> {
@@ -403,7 +413,7 @@ export class FieldOpsApiClient extends BaseApiClient {
   async escalateServiceCall(
     callId: string,
     reason: string,
-    escalateTo: string
+    escalateTo: string,
   ): Promise<{ data: ServiceCall }> {
     return this.post(`/api/field-ops/service-calls/${callId}/escalate`, {
       reason,
@@ -412,7 +422,9 @@ export class FieldOpsApiClient extends BaseApiClient {
   }
 
   async resolveServiceCall(callId: string, resolution: string): Promise<{ data: ServiceCall }> {
-    return this.post(`/api/field-ops/service-calls/${callId}/resolve`, { resolution });
+    return this.post(`/api/field-ops/service-calls/${callId}/resolve`, {
+      resolution,
+    });
   }
 
   // Analytics & Reporting
@@ -421,7 +433,7 @@ export class FieldOpsApiClient extends BaseApiClient {
     params?: {
       start_date?: string;
       end_date?: string;
-    }
+    },
   ): Promise<{
     data: {
       work_orders_completed: number;
@@ -431,7 +443,9 @@ export class FieldOpsApiClient extends BaseApiClient {
       on_time_percentage: number;
     };
   }> {
-    return this.get(`/api/field-ops/technicians/${technicianId}/performance`, { params });
+    return this.get(`/api/field-ops/technicians/${technicianId}/performance`, {
+      params,
+    });
   }
 
   async getFieldOpsMetrics(params?: {
@@ -448,7 +462,7 @@ export class FieldOpsApiClient extends BaseApiClient {
       customer_satisfaction: number;
     };
   }> {
-    return this.get('/api/field-ops/metrics', { params });
+    return this.get("/api/field-ops/metrics", { params });
   }
 
   async getDispatchMetrics(date: string): Promise<{
@@ -461,7 +475,7 @@ export class FieldOpsApiClient extends BaseApiClient {
       average_travel_time: number;
     };
   }> {
-    return this.get('/api/field-ops/dispatch/metrics', { params: { date } });
+    return this.get("/api/field-ops/dispatch/metrics", { params: { date } });
   }
 
   // Emergency & Priority Services
@@ -470,14 +484,14 @@ export class FieldOpsApiClient extends BaseApiClient {
     description: string;
     location: AddressData;
     contact_phone: string;
-    severity: 'MINOR' | 'MAJOR' | 'CRITICAL';
+    severity: "MINOR" | "MAJOR" | "CRITICAL";
   }): Promise<{ data: FieldWorkOrder }> {
-    return this.post('/api/field-ops/emergency/work-order', data);
+    return this.post("/api/field-ops/emergency/work-order", data);
   }
 
   async dispatchNearestTechnician(
     location: GeoLocation,
-    skills?: string[]
+    skills?: string[],
   ): Promise<{
     data: {
       technician: Technician;
@@ -485,7 +499,7 @@ export class FieldOpsApiClient extends BaseApiClient {
       distance: number;
     };
   }> {
-    return this.post('/api/field-ops/dispatch/nearest', { location, skills });
+    return this.post("/api/field-ops/dispatch/nearest", { location, skills });
   }
 
   async broadcastUrgentCall(data: {
@@ -494,6 +508,6 @@ export class FieldOpsApiClient extends BaseApiClient {
     skills_required?: string[];
     max_distance?: number;
   }): Promise<{ data: { technicians_notified: number } }> {
-    return this.post('/api/field-ops/broadcast/urgent', data);
+    return this.post("/api/field-ops/broadcast/urgent", data);
   }
 }

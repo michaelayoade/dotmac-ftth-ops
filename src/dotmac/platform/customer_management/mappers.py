@@ -20,7 +20,7 @@ from dotmac.platform.customer_management.models import (
 )
 
 
-class CustomerImportSchema(BaseModel):
+class CustomerImportSchema(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for importing customer data from CSV/JSON."""
 
     # Required fields
@@ -74,9 +74,9 @@ class CustomerImportSchema(BaseModel):
     average_order_value: float | None = Field(default=0, ge=0)
 
     # Custom fields and tags
-    tags: list[str] | None = Field(default_factory=list)
-    custom_fields: dict[str, Any] | None = Field(default_factory=dict)
-    metadata: dict[str, Any] | None = Field(default_factory=dict)
+    tags: list[str] | None = Field(default_factory=lambda: [])
+    custom_fields: dict[str, Any] | None = Field(default_factory=lambda: {})
+    metadata: dict[str, Any] | None = Field(default_factory=lambda: {})
 
     # Import metadata
     source_system: str | None = Field(None, max_length=50)
@@ -105,7 +105,7 @@ class CustomerImportSchema(BaseModel):
         return v.upper() if v else None
 
 
-class CustomerExportSchema(BaseModel):
+class CustomerExportSchema(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for exporting customer data to frontend format."""
 
     id: str
@@ -146,9 +146,9 @@ class CustomerExportSchema(BaseModel):
     first_purchase_date: datetime | None = None
 
     # Metadata
-    tags: list[str] = Field(default_factory=list)
-    metadata: dict[str, Any] = Field(default_factory=dict)
-    custom_fields: dict[str, Any] = Field(default_factory=dict)
+    tags: list[str] = Field(default_factory=lambda: [])
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
+    custom_fields: dict[str, Any] = Field(default_factory=lambda: {})
 
     # Timestamps
     created_at: datetime
@@ -330,7 +330,7 @@ class CustomerMapper:
 
     @staticmethod
     def batch_validate(
-        rows: list[dict[str, Any]]
+        rows: list[dict[str, Any]],
     ) -> tuple[list[CustomerImportSchema], list[dict[str, Any]]]:
         """
         Validate multiple rows of import data.

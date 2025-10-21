@@ -3,9 +3,9 @@
  * Handles security-related operations for payments
  */
 
-import { useCallback } from 'react';
-import { useISPTenant } from '../useISPTenant';
-import { ispApiClient } from '../../api/isp-client';
+import { useCallback } from "react";
+import { useISPTenant } from "../useISPTenant";
+import { ispApiClient } from "../../api/isp-client";
 
 export interface UsePaymentSecurityReturn {
   tokenizeCard: (cardData: any, processorId: string) => Promise<string>;
@@ -20,11 +20,11 @@ export function usePaymentSecurity(): UsePaymentSecurityReturn {
   const tokenizeCard = useCallback(
     async (cardData: any, processorId: string): Promise<string> => {
       if (!processorId) {
-        throw new Error('Processor ID is required for tokenization');
+        throw new Error("Processor ID is required for tokenization");
       }
 
-      if (!hasPermission('billing:write')) {
-        throw new Error('Insufficient permissions for tokenization');
+      if (!hasPermission("billing:write")) {
+        throw new Error("Insufficient permissions for tokenization");
       }
 
       try {
@@ -37,21 +37,21 @@ export function usePaymentSecurity(): UsePaymentSecurityReturn {
         return response.data.token;
       } catch (error) {
         throw new Error(
-          'Tokenization failed: ' + (error instanceof Error ? error.message : 'Unknown error')
+          "Tokenization failed: " + (error instanceof Error ? error.message : "Unknown error"),
         );
       }
     },
-    [hasPermission, tenant]
+    [hasPermission, tenant],
   );
 
   const encryptSensitiveData = useCallback(
     async (data: any): Promise<string> => {
       if (!data) {
-        throw new Error('Data is required for encryption');
+        throw new Error("Data is required for encryption");
       }
 
-      if (!hasPermission('billing:write')) {
-        throw new Error('Insufficient permissions for encryption');
+      if (!hasPermission("billing:write")) {
+        throw new Error("Insufficient permissions for encryption");
       }
 
       try {
@@ -63,40 +63,40 @@ export function usePaymentSecurity(): UsePaymentSecurityReturn {
         return response.data.encrypted_data;
       } catch (error) {
         throw new Error(
-          'Encryption failed: ' + (error instanceof Error ? error.message : 'Unknown error')
+          "Encryption failed: " + (error instanceof Error ? error.message : "Unknown error"),
         );
       }
     },
-    [hasPermission, tenant]
+    [hasPermission, tenant],
   );
 
   const validateProcessorAccess = useCallback(
     (processorId: string): boolean => {
       if (!processorId || !tenant) return false;
-      return hasPermission('billing:read');
+      return hasPermission("billing:read");
     },
-    [hasPermission, tenant]
+    [hasPermission, tenant],
   );
 
   const sanitizePaymentData = useCallback((data: any): any => {
-    if (!data || typeof data !== 'object') return data;
+    if (!data || typeof data !== "object") return data;
 
     const sanitized = { ...data };
 
     // Remove sensitive fields that should never be logged or cached
     const sensitiveFields = [
-      'card_number',
-      'number',
-      'cvv',
-      'cvc',
-      'cvv2',
-      'secret_key',
-      'private_key',
-      'api_key',
-      'password',
-      'ssn',
-      'tax_id',
-      'account_number',
+      "card_number",
+      "number",
+      "cvv",
+      "cvc",
+      "cvv2",
+      "secret_key",
+      "private_key",
+      "api_key",
+      "password",
+      "ssn",
+      "tax_id",
+      "account_number",
     ];
 
     sensitiveFields.forEach((field) => {

@@ -3,16 +3,16 @@
  * Production-level test generation leveraging existing patterns
  */
 
-import { renderHook, act } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import React, { type ReactNode } from 'react';
+import { renderHook, act } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React, { type ReactNode } from "react";
 import type {
   AuthProviderConfig,
   LoginCredentials,
   User,
   AuthError,
   PortalConfig,
-} from '@dotmac/headless/auth/types';
+} from "@dotmac/headless/auth/types";
 
 // DRY Test Configuration Factory
 export class BusinessLogicTestFactory {
@@ -31,9 +31,9 @@ export class BusinessLogicTestFactory {
   static createPortalConfig(type: string, overrides: Partial<PortalConfig> = {}): PortalConfig {
     const baseConfigs = {
       admin: {
-        type: 'admin',
-        id: 'admin_portal',
-        tenantId: 'tenant_test',
+        type: "admin",
+        id: "admin_portal",
+        tenantId: "tenant_test",
         security: {
           requireDeviceVerification: true,
           maxSessionDuration: 8 * 60 * 60 * 1000, // 8 hours
@@ -49,9 +49,9 @@ export class BusinessLogicTestFactory {
         },
       },
       customer: {
-        type: 'customer',
-        id: 'customer_portal',
-        tenantId: 'tenant_test',
+        type: "customer",
+        id: "customer_portal",
+        tenantId: "tenant_test",
         security: {
           requireDeviceVerification: false,
           maxSessionDuration: 2 * 60 * 60 * 1000, // 2 hours
@@ -67,9 +67,9 @@ export class BusinessLogicTestFactory {
         },
       },
       technician: {
-        type: 'technician',
-        id: 'technician_portal',
-        tenantId: 'tenant_test',
+        type: "technician",
+        id: "technician_portal",
+        tenantId: "tenant_test",
         security: {
           requireDeviceVerification: true,
           maxSessionDuration: 12 * 60 * 60 * 1000, // 12 hours (field work)
@@ -85,9 +85,9 @@ export class BusinessLogicTestFactory {
         },
       },
       reseller: {
-        type: 'reseller',
-        id: 'reseller_portal',
-        tenantId: 'tenant_test',
+        type: "reseller",
+        id: "reseller_portal",
+        tenantId: "tenant_test",
         security: {
           requireDeviceVerification: false,
           maxSessionDuration: 4 * 60 * 60 * 1000, // 4 hours
@@ -113,7 +113,7 @@ export class BusinessLogicTestFactory {
   // DRY Auth Configuration Generator
   static createAuthConfig(
     portalType: string,
-    overrides: Partial<AuthProviderConfig> = {}
+    overrides: Partial<AuthProviderConfig> = {},
   ): AuthProviderConfig {
     return {
       portal: this.createPortalConfig(portalType),
@@ -130,58 +130,58 @@ export class BusinessLogicTestFactory {
   static createUser(role: string, overrides: Partial<User> = {}): User {
     const baseUsers = {
       admin: {
-        id: 'user_admin_001',
-        email: 'admin@test-isp.com',
-        name: 'Admin User',
-        role: 'admin',
-        tenantId: 'tenant_test',
-        permissions: ['all'],
+        id: "user_admin_001",
+        email: "admin@test-isp.com",
+        name: "Admin User",
+        role: "admin",
+        tenantId: "tenant_test",
+        permissions: ["all"],
         mfaEnabled: true,
         avatar: null,
         preferences: {
-          theme: 'light',
+          theme: "light",
           compactMode: false,
         },
       },
       customer: {
-        id: 'user_customer_001',
-        email: 'customer@example.com',
-        name: 'Customer User',
-        role: 'customer',
-        tenantId: 'tenant_test',
-        permissions: ['billing', 'services', 'support'],
+        id: "user_customer_001",
+        email: "customer@example.com",
+        name: "Customer User",
+        role: "customer",
+        tenantId: "tenant_test",
+        permissions: ["billing", "services", "support"],
         mfaEnabled: false,
         avatar: null,
         preferences: {
-          theme: 'light',
+          theme: "light",
           compactMode: false,
         },
       },
       technician: {
-        id: 'user_tech_001',
-        email: 'tech@test-isp.com',
-        name: 'Field Technician',
-        role: 'technician',
-        tenantId: 'tenant_test',
-        permissions: ['field_ops', 'customer_sites', 'work_orders'],
+        id: "user_tech_001",
+        email: "tech@test-isp.com",
+        name: "Field Technician",
+        role: "technician",
+        tenantId: "tenant_test",
+        permissions: ["field_ops", "customer_sites", "work_orders"],
         mfaEnabled: true,
         avatar: null,
         preferences: {
-          theme: 'light',
+          theme: "light",
           compactMode: true,
         },
       },
       reseller: {
-        id: 'user_reseller_001',
-        email: 'partner@reseller.com',
-        name: 'Reseller Partner',
-        role: 'reseller',
-        tenantId: 'tenant_test',
-        permissions: ['territory', 'customers', 'commission'],
+        id: "user_reseller_001",
+        email: "partner@reseller.com",
+        name: "Reseller Partner",
+        role: "reseller",
+        tenantId: "tenant_test",
+        permissions: ["territory", "customers", "commission"],
         mfaEnabled: false,
         avatar: null,
         preferences: {
-          theme: 'light',
+          theme: "light",
           compactMode: false,
         },
       },
@@ -195,29 +195,29 @@ export class BusinessLogicTestFactory {
 
   // DRY Credentials Generator
   static createCredentials(
-    type: 'valid' | 'invalid' | 'expired' | 'mfa_required' | 'password_expired',
-    overrides: Partial<LoginCredentials> = {}
+    type: "valid" | "invalid" | "expired" | "mfa_required" | "password_expired",
+    overrides: Partial<LoginCredentials> = {},
   ): LoginCredentials {
     const baseCredentials = {
       valid: {
-        email: 'admin@test-isp.com',
-        password: 'SecurePassword123!',
+        email: "admin@test-isp.com",
+        password: "SecurePassword123!",
       },
       invalid: {
-        email: 'admin@test-isp.com',
-        password: 'wrongpassword',
+        email: "admin@test-isp.com",
+        password: "wrongpassword",
       },
       expired: {
-        email: 'expired@test-isp.com',
-        password: 'ExpiredPassword123!',
+        email: "expired@test-isp.com",
+        password: "ExpiredPassword123!",
       },
       mfa_required: {
-        email: 'mfa@test-isp.com',
-        password: 'MfaPassword123!',
+        email: "mfa@test-isp.com",
+        password: "MfaPassword123!",
       },
       password_expired: {
-        email: 'pwdexp@test-isp.com',
-        password: 'ExpiredPwd123!',
+        email: "pwdexp@test-isp.com",
+        password: "ExpiredPwd123!",
       },
     };
 
@@ -231,36 +231,36 @@ export class BusinessLogicTestFactory {
   static createAuthError(type: string): AuthError {
     const errors = {
       INVALID_CREDENTIALS: {
-        code: 'INVALID_CREDENTIALS',
-        message: 'Invalid email or password',
+        code: "INVALID_CREDENTIALS",
+        message: "Invalid email or password",
       },
       ACCOUNT_LOCKED: {
-        code: 'ACCOUNT_LOCKED',
-        message: 'Account temporarily locked due to too many failed attempts',
+        code: "ACCOUNT_LOCKED",
+        message: "Account temporarily locked due to too many failed attempts",
         retryAfter: 300,
       },
       MFA_REQUIRED: {
-        code: 'MFA_REQUIRED',
-        message: 'Multi-factor authentication required',
+        code: "MFA_REQUIRED",
+        message: "Multi-factor authentication required",
         requires_2fa: true,
       },
       PASSWORD_EXPIRED: {
-        code: 'PASSWORD_EXPIRED',
-        message: 'Password has expired and must be changed',
+        code: "PASSWORD_EXPIRED",
+        message: "Password has expired and must be changed",
         password_expired: true,
       },
       RATE_LIMITED: {
-        code: 'RATE_LIMITED',
-        message: 'Too many login attempts. Try again in 60s',
+        code: "RATE_LIMITED",
+        message: "Too many login attempts. Try again in 60s",
         retryAfter: 60,
       },
       SESSION_EXPIRED: {
-        code: 'SESSION_EXPIRED',
-        message: 'Session has expired',
+        code: "SESSION_EXPIRED",
+        message: "Session has expired",
       },
       NETWORK_ERROR: {
-        code: 'NETWORK_ERROR',
-        message: 'Network connection failed',
+        code: "NETWORK_ERROR",
+        message: "Network connection failed",
       },
     };
 
@@ -272,7 +272,7 @@ export class BusinessLogicTestFactory {
     config?: Partial<{
       queryClient?: QueryClient;
       mockWebSocket?: boolean;
-    }>
+    }>,
   ) {
     const client = config?.queryClient || this.queryClient;
 
@@ -284,7 +284,7 @@ export class BusinessLogicTestFactory {
   // DRY API Mock Factory
   static createMockFetch(scenarios: Record<string, any>) {
     return jest.fn().mockImplementation(async (url: string, options: any = {}) => {
-      const method = options.method || 'GET';
+      const method = options.method || "GET";
       const key = `${method} ${url}`;
 
       if (scenarios[key]) {
@@ -309,7 +309,7 @@ export class BusinessLogicTestFactory {
       return {
         ok: false,
         status: 404,
-        json: async () => ({ error: 'Not found' }),
+        json: async () => ({ error: "Not found" }),
       };
     });
   }
@@ -318,7 +318,7 @@ export class BusinessLogicTestFactory {
   static createBusinessLogicTestSuite<T>(
     hookName: string,
     hookImplementation: () => T,
-    testDefinition: BusinessLogicTestDefinition<T>
+    testDefinition: BusinessLogicTestDefinition<T>,
   ) {
     describe(`${hookName} Business Logic`, () => {
       beforeEach(() => {
@@ -332,7 +332,7 @@ export class BusinessLogicTestFactory {
       });
 
       // Test initial state
-      it('should initialize with correct default state', () => {
+      it("should initialize with correct default state", () => {
         const { result } = renderHook(hookImplementation, {
           wrapper: this.createTestWrapper(),
         });
@@ -443,28 +443,28 @@ export class ISPTestDataFactory {
   static createNetworkDevice(type: string, overrides = {}) {
     const devices = {
       router: {
-        id: 'router_001',
-        name: 'Core Router 1',
-        type: 'router',
-        status: 'online',
+        id: "router_001",
+        name: "Core Router 1",
+        type: "router",
+        status: "online",
         uptime: 99.98,
         load: 34.2,
         location: { lat: 40.7128, lng: -74.006 },
       },
       switch: {
-        id: 'switch_001',
-        name: 'Access Switch 1',
-        type: 'switch',
-        status: 'online',
+        id: "switch_001",
+        name: "Access Switch 1",
+        type: "switch",
+        status: "online",
         uptime: 99.95,
         load: 12.8,
         location: { lat: 40.713, lng: -74.0065 },
       },
       ap: {
-        id: 'ap_001',
-        name: 'Wireless AP 1',
-        type: 'access_point',
-        status: 'online',
+        id: "ap_001",
+        name: "Wireless AP 1",
+        type: "access_point",
+        status: "online",
         uptime: 99.92,
         connectedDevices: 23,
         location: { lat: 40.7125, lng: -74.007 },
@@ -480,37 +480,37 @@ export class ISPTestDataFactory {
   static createCustomer(type: string, overrides = {}) {
     const customers = {
       residential: {
-        id: 'cust_res_001',
-        name: 'John Doe',
-        email: 'john.doe@email.com',
-        phone: '555-0123',
-        type: 'residential',
-        plan: 'Home Premium 100',
-        status: 'active',
+        id: "cust_res_001",
+        name: "John Doe",
+        email: "john.doe@email.com",
+        phone: "555-0123",
+        type: "residential",
+        plan: "Home Premium 100",
+        status: "active",
         monthlyRevenue: 79.99,
-        installDate: '2023-03-15',
+        installDate: "2023-03-15",
         address: {
-          street: '123 Main St',
-          city: 'Anytown',
-          state: 'NY',
-          zip: '12345',
+          street: "123 Main St",
+          city: "Anytown",
+          state: "NY",
+          zip: "12345",
         },
       },
       business: {
-        id: 'cust_bus_001',
-        name: 'Acme Corp',
-        email: 'it@acmecorp.com',
-        phone: '555-9999',
-        type: 'business',
-        plan: 'Business Pro 500',
-        status: 'active',
+        id: "cust_bus_001",
+        name: "Acme Corp",
+        email: "it@acmecorp.com",
+        phone: "555-9999",
+        type: "business",
+        plan: "Business Pro 500",
+        status: "active",
         monthlyRevenue: 299.99,
-        installDate: '2023-01-10',
+        installDate: "2023-01-10",
         address: {
-          street: '456 Business Ave',
-          city: 'Commerce City',
-          state: 'NY',
-          zip: '12346',
+          street: "456 Business Ave",
+          city: "Commerce City",
+          state: "NY",
+          zip: "12346",
         },
       },
     };
@@ -524,25 +524,25 @@ export class ISPTestDataFactory {
   static createServicePlan(tier: string, overrides = {}) {
     const plans = {
       basic: {
-        id: 'plan_basic',
-        name: 'Basic Internet',
-        speed: '25 Mbps',
+        id: "plan_basic",
+        name: "Basic Internet",
+        speed: "25 Mbps",
         price: 39.99,
-        features: ['Standard Support', 'Basic WiFi'],
+        features: ["Standard Support", "Basic WiFi"],
       },
       premium: {
-        id: 'plan_premium',
-        name: 'Premium Internet',
-        speed: '100 Mbps',
+        id: "plan_premium",
+        name: "Premium Internet",
+        speed: "100 Mbps",
         price: 69.99,
-        features: ['Priority Support', 'Advanced WiFi', 'Static IP'],
+        features: ["Priority Support", "Advanced WiFi", "Static IP"],
       },
       enterprise: {
-        id: 'plan_enterprise',
-        name: 'Enterprise Internet',
-        speed: '1 Gbps',
+        id: "plan_enterprise",
+        name: "Enterprise Internet",
+        speed: "1 Gbps",
         price: 299.99,
-        features: ['24/7 Support', 'Managed WiFi', 'Multiple IPs', 'SLA'],
+        features: ["24/7 Support", "Managed WiFi", "Multiple IPs", "SLA"],
       },
     };
 
@@ -555,23 +555,23 @@ export class ISPTestDataFactory {
   static createBillingData(scenario: string, overrides = {}) {
     const scenarios = {
       current: {
-        invoiceId: 'INV-2024-001',
-        customerId: 'cust_001',
+        invoiceId: "INV-2024-001",
+        customerId: "cust_001",
         amount: 79.99,
-        dueDate: '2024-02-15',
-        status: 'paid',
-        items: [{ description: 'Internet Service - Premium 100', amount: 79.99 }],
+        dueDate: "2024-02-15",
+        status: "paid",
+        items: [{ description: "Internet Service - Premium 100", amount: 79.99 }],
       },
       overdue: {
-        invoiceId: 'INV-2024-002',
-        customerId: 'cust_002',
+        invoiceId: "INV-2024-002",
+        customerId: "cust_002",
         amount: 159.98,
-        dueDate: '2024-01-15',
-        status: 'overdue',
+        dueDate: "2024-01-15",
+        status: "overdue",
         daysPastDue: 30,
         items: [
-          { description: 'Internet Service - Premium 100', amount: 79.99 },
-          { description: 'Late Fee', amount: 79.99 },
+          { description: "Internet Service - Premium 100", amount: 79.99 },
+          { description: "Late Fee", amount: 79.99 },
         ],
       },
     };

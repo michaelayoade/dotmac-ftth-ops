@@ -3,13 +3,13 @@
  * Example implementation with optimistic updates
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Customer, CustomerCreateInput, CustomerUpdateInput } from '@/types';
-import { apiClient } from '@/lib/api/client';
-import { queryKeys, optimisticHelpers, invalidateHelpers } from '@/lib/query-client';
-import { logger } from '@/lib/logger';
-import { handleError } from '@/lib/utils/error-handler';
-import { useToast } from '@/components/ui/use-toast';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Customer, CustomerCreateInput, CustomerUpdateInput } from "@/types";
+import { apiClient } from "@/lib/api/client";
+import { queryKeys, optimisticHelpers, invalidateHelpers } from "@/lib/query-client";
+import { logger } from "@/lib/logger";
+import { handleError } from "@/lib/utils/error-handler";
+import { useToast } from "@/components/ui/use-toast";
 
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:
@@ -30,11 +30,11 @@ const customerApi = {
     limit?: number;
   }): Promise<Customer[]> => {
     const params = new URLSearchParams();
-    if (filters?.query) params.append('q', filters.query);
-    if (filters?.status && filters.status !== 'all') params.append('status', filters.status);
-    if (filters?.tier && filters.tier !== 'all') params.append('tier', filters.tier);
-    if (filters?.page) params.append('page', filters.page.toString());
-    if (filters?.limit) params.append('limit', filters.limit.toString());
+    if (filters?.query) params.append("q", filters.query);
+    if (filters?.status && filters.status !== "all") params.append("status", filters.status);
+    if (filters?.tier && filters.tier !== "all") params.append("tier", filters.tier);
+    if (filters?.page) params.append("page", filters.page.toString());
+    if (filters?.limit) params.append("limit", filters.limit.toString());
 
     const response = await apiClient.get(`/customers?${params.toString()}`);
     return response.data as Customer[];
@@ -48,12 +48,15 @@ const customerApi = {
 
   // Create customer
   createCustomer: async (data: CustomerCreateInput): Promise<Customer> => {
-    const response = await apiClient.post('/customers', data);
+    const response = await apiClient.post("/customers", data);
     return response.data as Customer;
   },
 
   // Update customer
-  updateCustomer: async ({ id, ...data }: CustomerUpdateInput & { id: string }): Promise<Customer> => {
+  updateCustomer: async ({
+    id,
+    ...data
+  }: CustomerUpdateInput & { id: string }): Promise<Customer> => {
     const response = await apiClient.put(`/customers/${id}`, data);
     return response.data as Customer;
   },
@@ -77,7 +80,9 @@ const customerApi = {
 
   // Add customer note
   addCustomerNote: async (customerId: string, note: string) => {
-    const response = await apiClient.post(`/customers/${customerId}/notes`, { note });
+    const response = await apiClient.post(`/customers/${customerId}/notes`, {
+      note,
+    });
     return response.data;
   },
 };
@@ -127,7 +132,9 @@ export function useCreateCustomer() {
     mutationFn: customerApi.createCustomer,
     onMutate: async (newCustomer) => {
       // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.customers.lists() });
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.customers.lists(),
+      });
 
       // Snapshot previous value
       const previousCustomers = queryClient.getQueryData(queryKeys.customers.lists());
@@ -138,19 +145,18 @@ export function useCreateCustomer() {
         ...newCustomer,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        status: 'active',
+        status: "active",
         lifetime_value: 0,
         last_interaction: undefined,
       } as Customer;
 
-      optimisticHelpers.addToList(
-        queryClient,
-        queryKeys.customers.lists(),
-        optimisticCustomer,
-        { position: 'start' }
-      );
+      optimisticHelpers.addToList(queryClient, queryKeys.customers.lists(), optimisticCustomer, {
+        position: "start",
+      });
 
-      logger.info('Creating customer optimistically', { customer: optimisticCustomer });
+      logger.info("Creating customer optimistically", {
+        customer: optimisticCustomer,
+      });
 
       // Return context with snapshot
       return { previousCustomers, optimisticCustomer };
@@ -158,15 +164,9 @@ export function useCreateCustomer() {
     onError: (error, newCustomer, context) => {
       // Roll back on error
       if (context?.previousCustomers) {
-        queryClient.setQueryData(
-          queryKeys.customers.lists(),
-          context.previousCustomers
-        );
+        queryClient.setQueryData(queryKeys.customers.lists(), context.previousCustomers);
       }
-      handleError(error, {
-        showToast: true,
-        toastMessage: 'Failed to create customer',
-      });
+      handleError(error, "Failed to create customer", true);
     },
     onSuccess: (data, variables, context) => {
       // Replace optimistic customer with real one
@@ -175,18 +175,18 @@ export function useCreateCustomer() {
           queryClient,
           queryKeys.customers.lists(),
           context.optimisticCustomer.id,
-          data
+          data,
         );
       }
-      toast({ title: 'Success', description: 'Customer created successfully' });
-      logger.info('Customer created', { customer: data });
+      toast({ title: "Success", description: "Customer created successfully" });
+      logger.info("Customer created", { customer: data });
     },
     onSettled: () => {
       // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: queryKeys.customers.lists() });
     },
     meta: {
-      successMessage: 'Customer created successfully',
+      successMessage: "Customer created successfully",
     },
   });
 }
@@ -202,28 +202,23 @@ export function useUpdateCustomer() {
     mutationFn: customerApi.updateCustomer,
     onMutate: async ({ id, ...updates }) => {
       // Cancel queries
-      await queryClient.cancelQueries({ queryKey: queryKeys.customers.detail(id) });
-      await queryClient.cancelQueries({ queryKey: queryKeys.customers.lists() });
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.customers.detail(id),
+      });
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.customers.lists(),
+      });
 
       // Snapshot previous values
       const previousCustomer = queryClient.getQueryData(queryKeys.customers.detail(id));
       const previousCustomers = queryClient.getQueryData(queryKeys.customers.lists());
 
       // Optimistically update
-      optimisticHelpers.updateItem(
-        queryClient,
-        queryKeys.customers.detail(id),
-        updates
-      );
+      optimisticHelpers.updateItem(queryClient, queryKeys.customers.detail(id), updates);
 
-      optimisticHelpers.updateInList(
-        queryClient,
-        queryKeys.customers.lists(),
-        id,
-        updates
-      );
+      optimisticHelpers.updateInList(queryClient, queryKeys.customers.lists(), id, updates);
 
-      logger.info('Updating customer optimistically', { id, updates });
+      logger.info("Updating customer optimistically", { id, updates });
 
       return { previousCustomer, previousCustomers, id };
     },
@@ -233,24 +228,18 @@ export function useUpdateCustomer() {
         if (context.previousCustomer) {
           queryClient.setQueryData(
             queryKeys.customers.detail(context.id),
-            context.previousCustomer
+            context.previousCustomer,
           );
         }
         if (context.previousCustomers) {
-          queryClient.setQueryData(
-            queryKeys.customers.lists(),
-            context.previousCustomers
-          );
+          queryClient.setQueryData(queryKeys.customers.lists(), context.previousCustomers);
         }
       }
-      handleError(error, {
-        showToast: true,
-        toastMessage: 'Failed to update customer',
-      });
+      handleError(error, "Failed to update customer", true);
     },
     onSuccess: (data) => {
-      toast({ title: 'Success', description: 'Customer updated successfully' });
-      logger.info('Customer updated', { customer: data });
+      toast({ title: "Success", description: "Customer updated successfully" });
+      logger.info("Customer updated", { customer: data });
     },
     onSettled: (data, error, variables) => {
       // Refetch to ensure consistency
@@ -273,42 +262,34 @@ export function useDeleteCustomer() {
     mutationFn: customerApi.deleteCustomer,
     onMutate: async (customerId) => {
       // Cancel queries
-      await queryClient.cancelQueries({ queryKey: queryKeys.customers.lists() });
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.customers.lists(),
+      });
 
       // Snapshot previous value
       const previousCustomers = queryClient.getQueryData(queryKeys.customers.lists());
 
       // Optimistically remove from list
-      optimisticHelpers.removeFromList(
-        queryClient,
-        queryKeys.customers.lists(),
-        customerId
-      );
+      optimisticHelpers.removeFromList(queryClient, queryKeys.customers.lists(), customerId);
 
-      logger.info('Deleting customer optimistically', { customerId });
+      logger.info("Deleting customer optimistically", { customerId });
 
       return { previousCustomers };
     },
     onError: (error, customerId, context) => {
       // Roll back on error
       if (context?.previousCustomers) {
-        queryClient.setQueryData(
-          queryKeys.customers.lists(),
-          context.previousCustomers
-        );
+        queryClient.setQueryData(queryKeys.customers.lists(), context.previousCustomers);
       }
-      handleError(error, {
-        showToast: true,
-        toastMessage: 'Failed to delete customer',
-      });
+      handleError(error, "Failed to delete customer", true);
     },
     onSuccess: (data, customerId) => {
       // Remove from cache
       queryClient.removeQueries({
         queryKey: queryKeys.customers.detail(customerId),
       });
-      toast({ title: 'Success', description: 'Customer deleted successfully' });
-      logger.info('Customer deleted', { customerId });
+      toast({ title: "Success", description: "Customer deleted successfully" });
+      logger.info("Customer deleted", { customerId });
     },
     onSettled: () => {
       // Refetch list to ensure consistency
@@ -357,23 +338,21 @@ export function useAddCustomerNote(customerId: string) {
       });
 
       // Snapshot previous value
-      const previousNotes = queryClient.getQueryData(
-        queryKeys.customers.notes(customerId)
-      );
+      const previousNotes = queryClient.getQueryData(queryKeys.customers.notes(customerId));
 
       // Optimistically add note
       const optimisticNote = {
         id: `temp-${Date.now()}`,
         note,
         created_at: new Date().toISOString(),
-        created_by: 'Current User', // This would come from auth context
+        created_by: "Current User", // This would come from auth context
       };
 
       optimisticHelpers.addToList(
         queryClient,
         queryKeys.customers.notes(customerId),
         optimisticNote,
-        { position: 'start' }
+        { position: "start" },
       );
 
       return { previousNotes, optimisticNote };
@@ -381,15 +360,9 @@ export function useAddCustomerNote(customerId: string) {
     onError: (error, note, context) => {
       // Roll back on error
       if (context?.previousNotes) {
-        queryClient.setQueryData(
-          queryKeys.customers.notes(customerId),
-          context.previousNotes
-        );
+        queryClient.setQueryData(queryKeys.customers.notes(customerId), context.previousNotes);
       }
-      handleError(error, {
-        showToast: true,
-        toastMessage: 'Failed to add note',
-      });
+      handleError(error, "Failed to add note", true);
     },
     onSuccess: (data, note, context) => {
       // Replace optimistic note with real one
@@ -398,10 +371,10 @@ export function useAddCustomerNote(customerId: string) {
           queryClient,
           queryKeys.customers.notes(customerId),
           context.optimisticNote.id,
-          data as Partial<unknown>
+          data as Partial<unknown>,
         );
       }
-      toast({ title: 'Success', description: 'Note added successfully' });
+      toast({ title: "Success", description: "Note added successfully" });
     },
     onSettled: () => {
       // Refetch notes and activities
@@ -417,11 +390,7 @@ export function useAddCustomerNote(customerId: string) {
  * Combined hook for customer management
  * Provides all customer-related operations
  */
-export function useCustomersQuery(filters?: {
-  query?: string;
-  status?: string;
-  tier?: string;
-}) {
+export function useCustomersQuery(filters?: { query?: string; status?: string; tier?: string }) {
   const customersQuery = useCustomersList(filters);
   const createMutation = useCreateCustomer();
   const updateMutation = useUpdateCustomer();
@@ -458,13 +427,15 @@ export function useCustomersQuery(filters?: {
     // Metrics (computed from data)
     metrics: {
       totalCustomers: customersQuery.data?.length || 0,
-      activeCustomers: customersQuery.data?.filter(c => c.status === 'active').length || 0,
-      newThisMonth: customersQuery.data?.filter(c => {
-        const created = new Date(c.created_at);
-        const now = new Date();
-        return created.getMonth() === now.getMonth() &&
-               created.getFullYear() === now.getFullYear();
-      }).length || 0,
+      activeCustomers: customersQuery.data?.filter((c) => c.status === "active").length || 0,
+      newThisMonth:
+        customersQuery.data?.filter((c) => {
+          const created = new Date(c.created_at);
+          const now = new Date();
+          return (
+            created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear()
+          );
+        }).length || 0,
       totalRevenue: customersQuery.data?.reduce((sum, c) => sum + (c.lifetime_value || 0), 0) || 0,
     },
   };

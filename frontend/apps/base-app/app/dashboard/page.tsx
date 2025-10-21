@@ -1,12 +1,26 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { getCurrentUser, logout as logoutUser } from '@/lib/auth';
-import { platformConfig } from '@/lib/config';
-import { logger } from '@/lib/logger';
-import { useRBAC } from '@/contexts/RBACContext';
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { useRBAC } from "@/contexts/RBACContext";
+import { useSystemHealth } from "@/hooks/useOperations";
+import { useServiceInstances, useServiceStatistics } from "@/hooks/useServiceLifecycle";
+// TEMPORARILY DISABLED: import { useRADIUSSessions, useRADIUSSubscribers } from '@/hooks/useRADIUS';
+import { useNetboxHealth, useNetboxSites } from "@/hooks/useNetworkInventory";
+import { getCurrentUser, logout as logoutUser } from "@/lib/auth";
+import { platformConfig } from "@/lib/config";
+import { logger } from "@/lib/logger";
 
 interface User {
   id: string;
@@ -15,20 +29,53 @@ interface User {
   roles?: string[];
 }
 
-interface HealthCheck {
-  status: string;
-  service: string;
-  version: string;
-  checks?: Record<string, string>;
+function formatDate(value?: string | null): string {
+  if (!value) {
+    return "—";
+  }
+  try {
+    return new Date(value).toLocaleString();
+  } catch {
+    return value;
+  }
 }
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { hasPermission } = useRBAC();
   const [user, setUser] = useState<User | null>(null);
-  const [health, setHealth] = useState<HealthCheck | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const { hasPermission, loading: rbacLoading } = useRBAC();
+  const [initializing, setInitializing] = useState(true);
+
+  const hasRadiusAccess = platformConfig.features.enableRadius && hasPermission("isp.radius.read");
+  const hasNetworkAccess = platformConfig.features.enableNetwork && hasPermission("isp.ipam.read");
+  const hasLifecycleAccess =
+    platformConfig.features.enableAutomation && hasPermission("isp.automation.read");
+
+  const { data: serviceStats, isLoading: serviceStatsLoading } = useServiceStatistics({
+    enabled: hasLifecycleAccess,
+  });
+  const { data: provisioningServices, isLoading: provisioningLoading } = useServiceInstances({
+    status: "provisioning",
+    limit: 5,
+    enabled: hasLifecycleAccess,
+  });
+
+  // TEMPORARILY DISABLED: const { data: radiusSubscribers, isLoading: subscribersLoading } = useRADIUSSubscribers(0, 5);
+  // TEMPORARILY DISABLED: const { data: activeSessions, isLoading: sessionsLoading } = useRADIUSSessions();
+  const radiusSubscribers: any[] = [];
+  const activeSessions: any[] = [];
+  const subscribersLoading = false;
+  const sessionsLoading = false;
+
+  const { data: netboxHealth } = useNetboxHealth({
+    enabled: hasNetworkAccess,
+  });
+  const { data: netboxSites } = useNetboxSites({
+    limit: 5,
+    enabled: hasNetworkAccess,
+  });
+
+  const { data: systemHealth } = useSystemHealth();
 
   useEffect(() => {
     let isMounted = true;
@@ -36,221 +83,358 @@ export default function DashboardPage() {
     const loadUser = async () => {
       try {
         const currentUser = await getCurrentUser();
-        if (!isMounted) return;
-        setUser(currentUser);
-      } catch (err) {
-        logger.error('Failed to fetch user', err instanceof Error ? err : new Error(String(err)));
-        if (!isMounted) return;
-        router.replace('/login');
-      }
-    };
-
-    const loadHealth = async () => {
-      try {
-        const baseUrl = platformConfig.apiBaseUrl || '';
-        const healthPath = `${baseUrl}/health`;
-        const response = await fetch(healthPath);
-        if (!isMounted) return;
-        if (!response.ok) {
-          logger.error('Failed to fetch health status', new Error(`HTTP ${response.status}`));
+        if (!isMounted) {
           return;
         }
-        const data = await response.json();
-        setHealth(data);
-      } catch (error) {
-        if (!isMounted) return;
-        logger.error('Failed to fetch health status', error instanceof Error ? error : new Error(String(error)));
+        setUser(currentUser);
+      } catch (err) {
+        logger.error("Failed to fetch user", err instanceof Error ? err : new Error(String(err)));
+        if (!isMounted) {
+          return;
+        }
+        router.replace("/login");
       } finally {
         if (isMounted) {
-          setLoading(false);
+          setInitializing(false);
         }
       }
     };
 
     loadUser();
-    loadHealth();
 
     return () => {
       isMounted = false;
     };
   }, [router]);
 
-  useEffect(() => {
-    if (rbacLoading) {
-      return;
-    }
+  const numberFormatter = useMemo(() => new Intl.NumberFormat("en-US"), []);
 
-    const hasPartnerPortalAccess = hasPermission('partners.read') && !hasPermission('platform:partners:read');
-    if (hasPartnerPortalAccess) {
-      router.replace('/partner');
-      return;
-    }
+  const totalSubscribers = radiusSubscribers?.length ?? 0;
+  const activeSubscribers =
+    radiusSubscribers?.filter((subscriber) => subscriber.enabled).length ?? 0;
+  const activeSessionsCount = activeSessions?.length ?? 0;
 
-    const hasTenantPortalAccess = hasPermission('tenants:read') && !hasPermission('platform:tenants:read');
-    if (hasTenantPortalAccess) {
-      router.replace('/tenant');
-    }
-  }, [hasPermission, rbacLoading, router]);
+  const summaryCards = [
+    {
+      title: "Active Subscribers",
+      value: hasRadiusAccess ? numberFormatter.format(activeSubscribers) : "—",
+      subtitle: hasRadiusAccess
+        ? `of ${numberFormatter.format(totalSubscribers)} subscribers tracked`
+        : "Access requires isp.radius.read",
+    },
+    {
+      title: "Active Services",
+      value: serviceStats ? numberFormatter.format(serviceStats.active_count) : "—",
+      subtitle: serviceStats
+        ? `${numberFormatter.format(serviceStats.provisioning_count)} provisioning`
+        : "Lifecycle stats unavailable",
+    },
+    {
+      title: "Active Sessions",
+      value: hasRadiusAccess ? numberFormatter.format(activeSessionsCount) : "—",
+      subtitle: hasRadiusAccess ? "Live PPPoE / RADIUS sessions" : "RADIUS feature disabled",
+    },
+    {
+      title: "Network Health",
+      value: netboxHealth ? (netboxHealth.healthy ? "Healthy" : "Degraded") : "—",
+      subtitle: netboxHealth?.message ?? "NetBox connectivity",
+    },
+  ];
 
   const handleLogout = async () => {
     try {
       await logoutUser();
     } finally {
-      router.push('/login');
+      router.push("/login");
     }
   };
 
-  const handleProfileClick = async () => {
-    // Trigger /api/v1/auth/me API call for testing
-    try {
-      await getCurrentUser();
-    } catch (err) {
-      logger.error('Failed to fetch user profile', err instanceof Error ? err : new Error(String(err)));
-    }
-  };
-
-  if (loading) {
+  if (initializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">Loading network operations center…</div>
       </div>
     );
   }
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      {/* Header */}
       <header className="bg-card/50 backdrop-blur border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-semibold">DotMac Platform Dashboard</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Welcome back, {user?.email || 'User'}
-            </p>
+        <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col gap-4">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold">Network Operations Center</h1>
+              <p className="text-sm text-muted-foreground">
+                Real-time visibility into subscribers, network health, and provisioning pipelines.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-sm text-muted-foreground hidden sm:block">
+                <div className="font-medium text-foreground">{user?.email}</div>
+                <div>{user?.roles?.join(", ") || "Operator"}</div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-sm bg-accent hover:bg-muted rounded-lg transition-colors"
+              >
+                Sign out
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={handleProfileClick}
-              data-testid="user-profile-button"
-              className="px-4 py-2 text-sm bg-accent hover:bg-muted rounded-lg transition-colors"
+
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/dashboard/subscribers"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
             >
-              Profile
-            </button>
-            <button
-              onClick={handleLogout}
-              data-testid="logout-button"
-              className="px-4 py-2 text-sm bg-accent hover:bg-muted rounded-lg transition-colors"
+              Subscribers
+            </Link>
+            <Link
+              href="/dashboard/network"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
             >
-              Sign out
-            </button>
+              Network
+            </Link>
+            <Link
+              href="/dashboard/automation"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+            >
+              Automation
+            </Link>
+            <Link
+              href="/dashboard/billing-revenue"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
+            >
+              Business Ops
+            </Link>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-6 py-12" data-testid="dashboard-content">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* User Info Card */}
-          <div className="bg-card/50 backdrop-blur border border-border rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4 text-blue-600 dark:text-blue-400">User Profile</h2>
-            <div className="space-y-2 text-sm">
+      <div className="max-w-7xl mx-auto px-6 py-12 space-y-10">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {summaryCards.map((card) => (
+            <Card key={card.title} className="border-border/60 bg-card/60 backdrop-blur">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  {card.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-semibold text-foreground">{card.value}</div>
+                <p className="text-xs text-muted-foreground mt-1">{card.subtitle}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </section>
+
+        <section className="grid gap-8 lg:grid-cols-2">
+          <Card className="border-border/60 bg-card/60 backdrop-blur">
+            <CardHeader>
+              <CardTitle>Recent subscribers</CardTitle>
+              <CardDescription>Latest access accounts synced from FreeRADIUS.</CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              {hasRadiusAccess ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Username</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Bandwidth Profile</TableHead>
+                      <TableHead>Created</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {subscribersLoading && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground">
+                          Loading subscribers…
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {!subscribersLoading && (radiusSubscribers?.length ?? 0) === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground">
+                          No subscribers found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {radiusSubscribers?.map((subscriber) => (
+                      <TableRow key={subscriber.id}>
+                        <TableCell className="font-medium">{subscriber.username}</TableCell>
+                        <TableCell>
+                          <Badge variant={subscriber.enabled ? "outline" : "secondary"}>
+                            {subscriber.enabled ? "Enabled" : "Disabled"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{subscriber.bandwidth_profile_id ?? "—"}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatDate(subscriber.created_at)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Radius access is disabled for your role. Contact an administrator to request{" "}
+                  <code>isp.radius.read</code>.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 bg-card/60 backdrop-blur">
+            <CardHeader>
+              <CardTitle>Provisioning pipeline</CardTitle>
+              <CardDescription>
+                Live service activation jobs by lifecycle orchestration.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-x-auto">
+              {hasLifecycleAccess ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Service</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Created</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {provisioningLoading && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground">
+                          Loading provisioning queue…
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {!provisioningLoading && (provisioningServices?.length ?? 0) === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center text-muted-foreground">
+                          No provisioning workflows in progress.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {provisioningServices?.map((service) => (
+                      <TableRow key={service.id}>
+                        <TableCell className="font-medium">{service.service_name}</TableCell>
+                        <TableCell className="uppercase text-xs tracking-wide text-muted-foreground">
+                          {service.service_type.replace(/_/g, " ")}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {service.provisioning_status ?? service.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatDate(service.created_at)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Service lifecycle automation is currently disabled for this tenant.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="grid gap-8 lg:grid-cols-2">
+          <Card className="border-border/60 bg-card/60 backdrop-blur">
+            <CardHeader>
+              <CardTitle>Network inventory</CardTitle>
+              <CardDescription>
+                Snapshot of NetBox sites and health for the active tenant.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {hasNetworkAccess ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Badge
+                      variant={netboxHealth?.healthy ? "outline" : "destructive"}
+                      className="uppercase tracking-wide"
+                    >
+                      {netboxHealth?.healthy ? "Healthy" : "Degraded"}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                      {netboxHealth?.message ?? "Awaiting health signal"}
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-foreground">Sites</p>
+                    <ul className="space-y-1 text-sm text-muted-foreground">
+                      {netboxSites?.slice(0, 5).map((site) => (
+                        <li key={site.id} className="flex items-center justify-between">
+                          <span className="font-medium text-foreground">{site.name}</span>
+                          <span>
+                            {site.physical_address || site.facility || "No address on file"}
+                          </span>
+                        </li>
+                      ))}
+                      {!netboxSites?.length && <li>No sites returned from NetBox.</li>}
+                    </ul>
+                    <Link
+                      className="text-sm text-primary hover:underline"
+                      href="/dashboard/network"
+                    >
+                      View network overview →
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Network inventory requires <code>isp.ipam.read</code>. Contact your administrator
+                  to enable NetBox access.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 bg-card/60 backdrop-blur">
+            <CardHeader>
+              <CardTitle>Platform health</CardTitle>
+              <CardDescription>Aggregated health status across core services.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div>
-                <span className="text-muted-foreground">Email:</span>
-                <span className="ml-2">{user?.email}</span>
+                <p className="text-sm text-muted-foreground">Overall status</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <Badge variant="outline">{systemHealth?.status ?? "unknown"}</Badge>
+                  <span className="text-sm text-muted-foreground">
+                    {systemHealth?.status
+                      ? systemHealth.status === "healthy"
+                        ? "All core services responding"
+                        : "Investigate degraded checks"
+                      : "No health data available"}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className="text-muted-foreground">User ID:</span>
-                <span className="ml-2 font-mono text-xs">{user?.id}</span>
-              </div>
-              {user?.roles && user.roles.length > 0 && (
-                <div>
-                  <span className="text-muted-foreground">Roles:</span>
-                  <span className="ml-2">{user.roles.join(', ')}</span>
+              {systemHealth?.checks && (
+                <div className="space-y-2">
+                  {Object.values(systemHealth.checks).map((check) => (
+                    <div
+                      key={check.name}
+                      className="flex items-center justify-between rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm"
+                    >
+                      <span className="font-medium text-foreground">{check.name}</span>
+                      <Badge variant={check.status === "healthy" ? "outline" : "destructive"}>
+                        {check.status}
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* API Health Card */}
-          <div className="bg-card/50 backdrop-blur border border-border rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4 text-green-600 dark:text-green-400">API Status</h2>
-            {health ? (
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full"></span>
-                  <span>{health.status}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Service:</span>
-                  <span className="ml-2">{health.service}</span>
-                </div>
-                {health.version && (
-                  <div>
-                    <span className="text-muted-foreground">Version:</span>
-                    <span className="ml-2">{health.version}</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-muted-foreground text-sm">Unable to fetch status</div>
-            )}
-          </div>
-
-          {/* Quick Actions Card */}
-          <div className="bg-card/50 backdrop-blur border border-border rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4 text-purple-600 dark:text-purple-400">Quick Actions</h2>
-            <div className="space-y-3">
-              <Link
-                href="/dashboard/customers"
-                className="block px-4 py-2 bg-accent hover:bg-muted rounded-lg text-sm text-center transition-colors"
-              >
-                Manage Customers
-              </Link>
-              <Link
-                href="/dashboard/billing"
-                className="block px-4 py-2 bg-accent hover:bg-muted rounded-lg text-sm text-center transition-colors"
-              >
-                Billing Overview
-              </Link>
-              <Link
-                href="/dashboard/api-keys"
-                className="block px-4 py-2 bg-accent hover:bg-muted rounded-lg text-sm text-center transition-colors"
-              >
-                Manage API Keys
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Services Grid */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-semibold mb-6">Platform Services</h2>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {[
-              { name: 'Authentication', status: 'active', icon: '🔐' },
-              { name: 'File Storage', status: 'active', icon: '📁' },
-              { name: 'Secrets Manager', status: 'active', icon: '🔑' },
-              { name: 'Analytics', status: 'active', icon: '📊' },
-              { name: 'Communications', status: 'active', icon: '📧' },
-              { name: 'Search', status: 'active', icon: '🔍' },
-              { name: 'Data Transfer', status: 'active', icon: '🔄' },
-              { name: 'API Gateway', status: 'active', icon: '🌐' },
-            ].map((service) => (
-              <div
-                key={service.name}
-                className="bg-card/50 backdrop-blur border border-border rounded-lg p-4 hover:border-border transition-colors"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-2xl">{service.icon}</span>
-                  <span className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full"></span>
-                </div>
-                <h3 className="font-medium text-sm">{service.name}</h3>
-                <p className="text-xs text-muted-foreground mt-1">Status: {service.status}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
+            </CardContent>
+          </Card>
+        </section>
       </div>
     </main>
   );

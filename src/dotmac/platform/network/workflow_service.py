@@ -1,0 +1,271 @@
+"""
+Network Workflow Service
+
+Provides workflow-compatible methods for network resource allocation (ISP).
+"""
+
+import logging
+from typing import Any
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
+
+
+class NetworkService:
+    """
+    Network service for workflow integration.
+
+    Provides IP allocation, VLAN assignment, and network resource management
+    for ISP workflows.
+    """
+
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def allocate_resources(
+        self,
+        customer_id: int | str,
+        service_location: str,
+        bandwidth_plan: str,
+        tenant_id: str | None = None,
+        prefix_id: int | None = None,
+        vlan_id: int | None = None,
+        static_ip: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Allocate network resources for an ISP customer.
+
+        This method allocates IP addresses from NetBox IPAM, assigns VLANs,
+        and generates RADIUS credentials for ISP customer provisioning.
+
+        Args:
+            customer_id: Customer ID
+            service_location: Service installation location/address
+            bandwidth_plan: Bandwidth plan identifier (e.g., "100mbps", "fiber_1gbps")
+            tenant_id: Tenant ID for multi-tenancy
+            prefix_id: NetBox prefix ID to allocate from (optional, uses default pool)
+            vlan_id: Specific VLAN ID to assign (optional, auto-assigned)
+            static_ip: Static IP to assign instead of auto-allocation (optional)
+            description: Description for the IP allocation
+
+        Returns:
+            Dict with network allocation details:
+            {
+                "service_id": str,
+                "customer_id": str,
+                "ip_address": str,
+                "subnet": str,
+                "vlan_id": int,
+                "username": str,
+                "bandwidth_plan": str,
+                "service_location": str,
+                "netbox_ip_id": int | None,
+                "dns_name": str | None,
+                "gateway": str | None,
+                "status": "allocated"
+            }
+
+        Raises:
+            ValueError: If IP allocation fails or NetBox is not available
+        """
+        import ipaddress
+        import random
+        import secrets
+
+        from sqlalchemy import select
+
+        from ..customer_management.models import Customer
+
+        logger.info(
+            f"Allocating network resources for customer {customer_id}, "
+            f"location {service_location}, plan {bandwidth_plan}"
+        )
+
+        customer_id_str = str(customer_id)
+
+        # Get tenant_id if not provided
+        if not tenant_id:
+            stmt = select(Customer).where(Customer.id == customer_id_str)
+            result = await self.db.execute(stmt)
+            customer = result.scalar_one_or_none()
+            if customer:
+                tenant_id = customer.tenant_id
+
+        # Generate username for RADIUS (unique identifier)
+        # Use format: customer email prefix or customer_<id>
+        username = None
+        if not tenant_id:
+            username = f"customer_{customer_id_str}"
+        else:
+            stmt = select(Customer).where(
+                Customer.id == customer_id_str,
+                Customer.tenant_id == tenant_id
+            )
+            result = await self.db.execute(stmt)
+            customer = result.scalar_one_or_none()
+            if customer and customer.email:
+                # Use email prefix as username (before @)
+                username = customer.email.split("@")[0]
+            else:
+                username = f"customer_{customer_id_str}"
+
+        # Generate service ID
+        service_id = f"svc-{secrets.token_hex(8)}"
+
+        # Try to allocate IP from NetBox if configured
+        netbox_ip_id = None
+        ip_address = None
+        subnet = None
+        gateway = None
+        dns_name = None
+        allocation_method = "fallback"
+
+        try:
+            from ..netbox.client import NetBoxClient
+
+            netbox_client = NetBoxClient(tenant_id=tenant_id)
+
+            # Check if NetBox is available
+            ping = await netbox_client.ping()
+            if ping:
+                allocation_method = "netbox"
+
+                # Use static IP if provided
+                if static_ip:
+                    # Create IP address in NetBox
+                    ip_data = {
+                        "address": static_ip,
+                        "status": "active",
+                        "description": description or f"Customer {customer_id_str} - {service_location}",
+                        "tenant": tenant_id if tenant_id else None,
+                        "tags": [
+                            {"name": f"customer-{customer_id_str}"},
+                            {"name": bandwidth_plan},
+                        ],
+                    }
+
+                    netbox_ip = await netbox_client.create_ip_address(ip_data)
+                    ip_address = netbox_ip["address"].split("/")[0]  # Remove CIDR
+                    subnet = netbox_ip["address"]
+                    netbox_ip_id = netbox_ip["id"]
+                    dns_name = netbox_ip.get("dns_name")
+
+                # Auto-allocate from prefix
+                elif prefix_id:
+                    # Allocate next available IP from specified prefix
+                    ip_data = {
+                        "status": "active",
+                        "description": description or f"Customer {customer_id_str} - {service_location}",
+                        "tenant": tenant_id if tenant_id else None,
+                        "tags": [
+                            {"name": f"customer-{customer_id_str}"},
+                            {"name": bandwidth_plan},
+                        ],
+                    }
+
+                    netbox_ip = await netbox_client.allocate_ip(prefix_id, ip_data)
+                    ip_address = netbox_ip["address"].split("/")[0]  # Remove CIDR
+                    subnet = netbox_ip["address"]
+                    netbox_ip_id = netbox_ip["id"]
+                    dns_name = netbox_ip.get("dns_name")
+
+                    # Try to get gateway from prefix
+                    try:
+                        prefix = await netbox_client.get_prefix(prefix_id)
+                        # First usable IP in subnet is typically the gateway
+                        network = ipaddress.ip_network(prefix["prefix"])
+                        gateway = str(network.network_address + 1)
+                    except Exception:
+                        pass
+
+                else:
+                    # Find available prefixes for this tenant
+                    prefixes_response = await netbox_client.get_prefixes(
+                        tenant=tenant_id,
+                        limit=10
+                    )
+                    prefixes = prefixes_response.get("results", [])
+
+                    if prefixes:
+                        # Use first available prefix
+                        first_prefix = prefixes[0]
+                        prefix_id = first_prefix["id"]
+
+                        ip_data = {
+                            "status": "active",
+                            "description": description or f"Customer {customer_id_str} - {service_location}",
+                            "tenant": tenant_id if tenant_id else None,
+                            "tags": [
+                                {"name": f"customer-{customer_id_str}"},
+                                {"name": bandwidth_plan},
+                            ],
+                        }
+
+                        netbox_ip = await netbox_client.allocate_ip(prefix_id, ip_data)
+                        ip_address = netbox_ip["address"].split("/")[0]
+                        subnet = netbox_ip["address"]
+                        netbox_ip_id = netbox_ip["id"]
+                        dns_name = netbox_ip.get("dns_name")
+
+                        # Get gateway
+                        network = ipaddress.ip_network(first_prefix["prefix"])
+                        gateway = str(network.network_address + 1)
+
+                logger.info(
+                    f"Allocated IP from NetBox: {ip_address}, netbox_id={netbox_ip_id}"
+                )
+
+        except ImportError:
+            logger.info("NetBox client not available, using fallback IP allocation")
+        except Exception as e:
+            logger.warning(f"NetBox allocation failed: {e}, using fallback IP allocation")
+
+        # Fallback: Generate IP from private range if NetBox unavailable
+        if not ip_address:
+            allocation_method = "fallback"
+            # Generate a random IP from 10.x.x.x range
+            ip_int = random.randint(
+                int(ipaddress.IPv4Address("10.100.0.1")),
+                int(ipaddress.IPv4Address("10.255.255.254")),
+            )
+            ip_address = str(ipaddress.IPv4Address(ip_int))
+            subnet = f"{ip_address}/24"
+            gateway = ".".join(ip_address.split(".")[:-1]) + ".1"
+
+        # Assign VLAN (use provided or auto-assign based on bandwidth plan)
+        if not vlan_id:
+            # Auto-assign VLAN based on bandwidth plan
+            # This is a simple mapping; in production, this would query from database
+            vlan_mapping = {
+                "fiber_1gbps": 100,
+                "fiber_500mbps": 101,
+                "fiber_100mbps": 102,
+                "100mbps": 102,
+                "50mbps": 103,
+                "25mbps": 104,
+                "default": 110,
+            }
+            vlan_id = vlan_mapping.get(bandwidth_plan.lower(), vlan_mapping["default"])
+
+        logger.info(
+            f"Network resources allocated successfully: "
+            f"ip={ip_address}, vlan={vlan_id}, username={username}, method={allocation_method}"
+        )
+
+        return {
+            "service_id": service_id,
+            "customer_id": customer_id_str,
+            "ip_address": ip_address,
+            "subnet": subnet,
+            "gateway": gateway,
+            "vlan_id": vlan_id,
+            "username": username,
+            "bandwidth_plan": bandwidth_plan,
+            "service_location": service_location,
+            "netbox_ip_id": netbox_ip_id,
+            "dns_name": dns_name,
+            "allocation_method": allocation_method,
+            "status": "allocated",
+        }

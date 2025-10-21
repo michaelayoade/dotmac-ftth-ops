@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 import { useState } from "react";
 import {
   Plug,
@@ -74,7 +77,12 @@ export default function IntegrationsPage() {
               Manage external service connections for email, SMS, storage, and more
             </p>
           </div>
-          <Button onClick={() => refetch()} disabled={isLoading} variant="outline" className="gap-2">
+          <Button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            variant="outline"
+            className="gap-2"
+          >
             <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
@@ -85,9 +93,7 @@ export default function IntegrationsPage() {
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to load integrations: {error.message}
-          </AlertDescription>
+          <AlertDescription>Failed to load integrations: {error.message}</AlertDescription>
         </Alert>
       )}
 
@@ -104,9 +110,7 @@ export default function IntegrationsPage() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.total}</div>
@@ -144,9 +148,7 @@ export default function IntegrationsPage() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Disabled
-              </CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Disabled</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-400">{stats.disabled}</div>
@@ -179,7 +181,8 @@ export default function IntegrationsPage() {
           <option value="all">All Types ({total})</option>
           {Object.keys(groupedIntegrations).map((type) => (
             <option key={type} value={type}>
-              {type.charAt(0).toUpperCase() + type.slice(1)} ({groupedIntegrations[type as IntegrationType].length})
+              {type.charAt(0).toUpperCase() + type.slice(1)} (
+              {groupedIntegrations[type as IntegrationType].length})
             </option>
           ))}
         </select>
@@ -224,7 +227,7 @@ export default function IntegrationsPage() {
                   <span className="text-sm text-muted-foreground">Status</span>
                   <span
                     className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded border ${getStatusColor(
-                      integration.status
+                      integration.status,
                     )}`}
                   >
                     {getStatusIcon(integration.status)} {integration.status}
@@ -251,7 +254,9 @@ export default function IntegrationsPage() {
                 <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
                   <div className="flex items-center gap-1 text-xs">
                     <Settings className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-muted-foreground">{integration.settings_count} settings</span>
+                    <span className="text-muted-foreground">
+                      {integration.settings_count} settings
+                    </span>
                   </div>
                   <div className="flex items-center gap-1 text-xs">
                     <Key className="h-3 w-3 text-muted-foreground" />

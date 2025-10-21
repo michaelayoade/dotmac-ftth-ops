@@ -2,13 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,15 +27,8 @@ import { useToast } from "@/components/ui/use-toast";
 import { platformAdminTenantService } from "@/lib/services/platform-admin-tenant-service";
 import { usePlatformTenants } from "@/hooks/usePlatformTenants";
 import { tenantService, Tenant } from "@/lib/services/tenant-service";
-import {
-  Building2,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  Key,
-  Search,
-  Users,
-} from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, Eye, Key, Plus, Search, Users } from "lucide-react";
+import { TenantOnboardingWizard } from "@/components/tenant/TenantOnboardingWizard";
 
 interface PaginationState {
   page: number;
@@ -73,12 +60,20 @@ const PLAN_FILTERS = [
 ];
 
 export function TenantManagement() {
-  const [pagination, setPagination] = useState<PaginationState>({ page: 1, pageSize: 10 });
-  const [filters, setFilters] = useState<FiltersState>({ search: "", status: "", plan: "" });
+  const [pagination, setPagination] = useState<PaginationState>({
+    page: 1,
+    pageSize: 10,
+  });
+  const [filters, setFilters] = useState<FiltersState>({
+    search: "",
+    status: "",
+    plan: "",
+  });
   const [impersonateTenantId, setImpersonateTenantId] = useState<string | null>(null);
   const [impersonationDuration, setImpersonationDuration] = useState(60);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailTenant, setDetailTenant] = useState<Tenant | null>(null);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   const { toast } = useToast();
   const queryParams = useMemo(
@@ -89,7 +84,7 @@ export function TenantManagement() {
       status: filters.status || undefined,
       plan: filters.plan || undefined,
     }),
-    [pagination.page, pagination.pageSize, filters.search, filters.status, filters.plan]
+    [pagination.page, pagination.pageSize, filters.search, filters.status, filters.plan],
   );
 
   const { data, isLoading, isFetching } = usePlatformTenants(queryParams);
@@ -113,7 +108,8 @@ export function TenantManagement() {
       setImpersonateTenantId(null);
     },
     onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : "Could not create impersonation token";
+      const message =
+        error instanceof Error ? error.message : "Could not create impersonation token";
       toast({
         title: "Impersonation Failed",
         description: message,
@@ -126,7 +122,7 @@ export function TenantManagement() {
     try {
       setIsDetailOpen(true);
       setDetailTenant(null);
-      const tenant = await platformAdminTenantService.getTenantDetail(tenantId);
+      const tenant = await platformAdminTenantService.getTenantDetails(tenantId);
       setDetailTenant(tenant);
     } catch (error) {
       setIsDetailOpen(false);
@@ -170,14 +166,22 @@ export function TenantManagement() {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="space-y-2 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <CardTitle>Tenant Management</CardTitle>
-            <CardDescription>
-              Search, filter, and act on tenants across the platform.
-            </CardDescription>
+        <CardHeader className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Tenant Management</CardTitle>
+              <CardDescription>
+                Search, filter, and act on tenants across the platform.
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">{total} tenants</Badge>
+              <Button onClick={() => setIsOnboardingOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Tenant
+              </Button>
+            </div>
           </div>
-          <Badge variant="outline">{total} tenants</Badge>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -232,9 +236,7 @@ export function TenantManagement() {
                       Users
                     </div>
                   </TableHead>
-                  <TableHead className="hidden md:table-cell text-right">
-                    Resources
-                  </TableHead>
+                  <TableHead className="hidden md:table-cell text-right">Resources</TableHead>
                   <TableHead className="hidden md:table-cell">Created</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -256,7 +258,7 @@ export function TenantManagement() {
                   </TableRow>
                 ) : (
                   tenants.map((tenant) => (
-                    <TableRow key={tenant.tenant_id}>
+                    <TableRow key={tenant.id}>
                       <TableCell>
                         <div className="flex flex-col gap-1">
                           <span className="font-medium">{tenant.name}</span>
@@ -266,40 +268,34 @@ export function TenantManagement() {
                         </div>
                       </TableCell>
                       <TableCell className="hidden font-mono text-xs xl:table-cell">
-                        {tenant.tenant_id}
+                        {tenant.id}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={tenant.is_active ? "default" : "outline"}>
-                          {tenant.status?.toString() ?? "unknown"}
+                        <Badge variant={tenant.status === "active" ? "default" : "outline"}>
+                          {tenant.status ?? "unknown"}
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden capitalize lg:table-cell">
-                        {tenant.plan_type ?? "—"}
+                        {tenant.subscription?.plan ?? "—"}
                       </TableCell>
                       <TableCell className="hidden text-right sm:table-cell">
-                        <Badge variant="secondary">{tenant.user_count ?? 0}</Badge>
+                        <Badge variant="secondary">{tenant.usage?.users ?? 0}</Badge>
                       </TableCell>
                       <TableCell className="hidden text-right md:table-cell">
-                        <Badge variant="secondary">{tenant.resource_count ?? 0}</Badge>
+                        <Badge variant="secondary">{tenant.usage?.storage_gb ?? 0}</Badge>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {tenant.created_at
-                          ? new Date(tenant.created_at).toLocaleDateString()
-                          : "—"}
+                        {tenant.created_at ? new Date(tenant.created_at).toLocaleDateString() : "—"}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openDetail(tenant.tenant_id)}
-                          >
+                          <Button variant="ghost" size="sm" onClick={() => openDetail(tenant.id)}>
                             <Eye className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setImpersonateTenantId(tenant.tenant_id)}
+                            onClick={() => setImpersonateTenantId(tenant.id)}
                           >
                             <Key className="h-4 w-4" />
                           </Button>
@@ -318,7 +314,7 @@ export function TenantManagement() {
                 Showing{" "}
                 {`${(pagination.page - 1) * pagination.pageSize + 1}-${Math.min(
                   pagination.page * pagination.pageSize,
-                  total
+                  total,
                 )}`}{" "}
                 of {total}
               </p>
@@ -339,11 +335,7 @@ export function TenantManagement() {
                   variant="outline"
                   size="sm"
                   onClick={() => handlePageChange("next")}
-                  disabled={
-                    pagination.page >= pageCount ||
-                    tenants.length === 0 ||
-                    isFetching
-                  }
+                  disabled={pagination.page >= pageCount || tenants.length === 0 || isFetching}
                 >
                   Next
                   <ChevronRight className="h-4 w-4" />
@@ -494,6 +486,18 @@ export function TenantManagement() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Tenant Onboarding Wizard */}
+      <TenantOnboardingWizard
+        open={isOnboardingOpen}
+        onOpenChange={setIsOnboardingOpen}
+        onSuccess={() => {
+          toast({
+            title: "Success",
+            description: "Tenant has been onboarded successfully",
+          });
+        }}
+      />
     </div>
   );
 }

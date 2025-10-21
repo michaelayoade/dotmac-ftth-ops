@@ -6,15 +6,16 @@ Production-ready user models using SQLAlchemy 2.0.
 
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
-from sqlalchemy import JSON, Boolean, String, Text, UniqueConstraint
+from sqlalchemy import JSON, Boolean, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from dotmac.platform.db import Base, TenantMixin, TimestampMixin
 
 
-class User(Base, TimestampMixin, TenantMixin):
+class User(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """User model for authentication and authorization."""
 
     __tablename__ = "users"
@@ -57,8 +58,8 @@ class User(Base, TimestampMixin, TenantMixin):
     is_platform_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Security fields
-    roles: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
-    permissions: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    roles: Mapped[list[Any]] = mapped_column(JSON, default=list, nullable=False)
+    permissions: Mapped[list[Any]] = mapped_column(JSON, default=list, nullable=False)
 
     # MFA fields
     mfa_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -71,12 +72,14 @@ class User(Base, TimestampMixin, TenantMixin):
     locked_until: Mapped[datetime | None] = mapped_column(nullable=True)
 
     # Additional metadata
-    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict, nullable=False)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, username={self.username}, email={self.email})>"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert user to dictionary for API responses."""
         return {
             "user_id": str(self.id),
@@ -97,7 +100,7 @@ class User(Base, TimestampMixin, TenantMixin):
         }
 
 
-class BackupCode(Base, TimestampMixin, TenantMixin):
+class BackupCode(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     MFA Backup codes for account recovery.
 
@@ -126,7 +129,7 @@ class BackupCode(Base, TimestampMixin, TenantMixin):
         return f"<BackupCode(id={self.id}, user_id={self.user_id}, used={self.used})>"
 
 
-class EmailVerificationToken(Base, TimestampMixin, TenantMixin):
+class EmailVerificationToken(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Email verification tokens for confirming email addresses.
 
@@ -166,7 +169,7 @@ class EmailVerificationToken(Base, TimestampMixin, TenantMixin):
         return f"<EmailVerificationToken(id={self.id}, user_id={self.user_id}, email={self.email}, used={self.used})>"
 
 
-class ProfileChangeHistory(Base, TimestampMixin, TenantMixin):
+class ProfileChangeHistory(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Track changes to user profile fields for audit purposes.
 
@@ -202,7 +205,7 @@ class ProfileChangeHistory(Base, TimestampMixin, TenantMixin):
         )
 
 
-class Team(Base, TimestampMixin, TenantMixin):
+class Team(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Team model for organizing users within a tenant.
 
@@ -241,12 +244,14 @@ class Team(Base, TimestampMixin, TenantMixin):
     # Team metadata
     color: Mapped[str | None] = mapped_column(String(7), nullable=True)  # Hex color for UI
     icon: Mapped[str | None] = mapped_column(String(50), nullable=True)  # Icon identifier
-    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict, nullable=False)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
 
     def __repr__(self) -> str:
         return f"<Team(id={self.id}, name={self.name}, tenant_id={self.tenant_id})>"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert team to dictionary for API responses."""
         return {
             "id": str(self.id),
@@ -264,7 +269,7 @@ class Team(Base, TimestampMixin, TenantMixin):
         }
 
 
-class TeamMember(Base, TimestampMixin, TenantMixin):
+class TeamMember(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Many-to-many relationship between users and teams.
 
@@ -299,12 +304,14 @@ class TeamMember(Base, TimestampMixin, TenantMixin):
 
     # Metadata
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict, nullable=False)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
 
     def __repr__(self) -> str:
         return f"<TeamMember(id={self.id}, team_id={self.team_id}, user_id={self.user_id}, role={self.role})>"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert team member to dictionary for API responses."""
         return {
             "id": str(self.id),
@@ -315,6 +322,74 @@ class TeamMember(Base, TimestampMixin, TenantMixin):
             "is_active": self.is_active,
             "joined_at": self.joined_at.isoformat() if self.joined_at else None,
             "left_at": self.left_at.isoformat() if self.left_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class UserDevice(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+    """User device registration for push notifications."""
+
+    __tablename__ = "user_devices"
+    __table_args__ = (
+        # Unique device token per user
+        UniqueConstraint("user_id", "device_token", name="uq_user_devices_user_token"),
+    )
+
+    # Primary key
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False
+    )
+
+    # User reference
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+
+    # Device information
+    device_token: Mapped[str] = mapped_column(String(512), nullable=False, index=True)
+    device_type: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # ios, android, web
+    device_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    device_model: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    os_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    app_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+    # Push notification provider
+    push_provider: Mapped[str] = mapped_column(
+        String(50), nullable=False
+    )  # fcm, apns, onesignal, etc.
+
+    # Status
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    # Tracking
+    last_used_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    registered_ip: Mapped[str | None] = mapped_column(String(45), nullable=True)
+
+    # Metadata
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
+
+    def __repr__(self) -> str:
+        return f"<UserDevice(id={self.id}, user_id={self.user_id}, device_type={self.device_type})>"
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert device to dictionary for API responses."""
+        return {
+            "id": str(self.id),
+            "tenant_id": self.tenant_id,
+            "user_id": str(self.user_id),
+            "device_type": self.device_type,
+            "device_name": self.device_name,
+            "device_model": self.device_model,
+            "os_version": self.os_version,
+            "app_version": self.app_version,
+            "push_provider": self.push_provider,
+            "is_active": self.is_active,
+            "last_used_at": self.last_used_at.isoformat() if self.last_used_at else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

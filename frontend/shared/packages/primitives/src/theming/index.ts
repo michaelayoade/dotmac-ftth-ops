@@ -33,72 +33,72 @@ export interface PortalThemeConfig {
 }
 
 export const defaultTheme: PortalThemeConfig = {
-  name: 'default',
+  name: "default",
   colors: {
-    primary: '#3b82f6',
-    secondary: '#64748b',
-    background: '#ffffff',
-    foreground: '#0f172a',
-    muted: '#f1f5f9',
-    accent: '#f59e0b',
-    destructive: '#dc2626',
+    primary: "#3b82f6",
+    secondary: "#64748b",
+    background: "#ffffff",
+    foreground: "#0f172a",
+    muted: "#f1f5f9",
+    accent: "#f59e0b",
+    destructive: "#dc2626",
   },
   spacing: {
-    xs: '0.25rem',
-    sm: '0.5rem',
-    md: '1rem',
-    lg: '1.5rem',
-    xl: '2rem',
+    xs: "0.25rem",
+    sm: "0.5rem",
+    md: "1rem",
+    lg: "1.5rem",
+    xl: "2rem",
   },
   typography: {
-    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+    fontFamily: "Inter, -apple-system, BlinkMacSystemFont, sans-serif",
     fontSize: {
-      xs: '0.75rem',
-      sm: '0.875rem',
-      md: '1rem',
-      lg: '1.125rem',
-      xl: '1.25rem',
+      xs: "0.75rem",
+      sm: "0.875rem",
+      md: "1rem",
+      lg: "1.125rem",
+      xl: "1.25rem",
     },
   },
 };
 
 export const adminTheme: PortalThemeConfig = {
   ...defaultTheme,
-  name: 'admin',
+  name: "admin",
   colors: {
     ...defaultTheme.colors,
-    primary: '#1e40af',
-    accent: '#059669',
+    primary: "#1e40af",
+    accent: "#059669",
   },
 };
 
 export const customerTheme: PortalThemeConfig = {
   ...defaultTheme,
-  name: 'customer',
+  name: "customer",
   colors: {
     ...defaultTheme.colors,
-    primary: '#7c3aed',
-    accent: '#db2777',
+    primary: "#7c3aed",
+    accent: "#db2777",
   },
 };
 
 export const resellerTheme: PortalThemeConfig = {
   ...defaultTheme,
-  name: 'reseller',
+  name: "reseller",
   colors: {
     ...defaultTheme.colors,
-    primary: '#dc2626',
-    accent: '#ea580c',
+    primary: "#dc2626",
+    accent: "#ea580c",
   },
 };
 
-export function createPortalTheme(portal: 'admin' | 'customer' | 'reseller'): PortalThemeConfig {
+export function createPortalTheme(portal: "admin" | "customer" | "reseller"): PortalThemeConfig {
   switch (portal) {
-    case 'admin':
+    case "admin":
       return adminTheme;
-    case 'customer':
+    case "customer":
       return customerTheme;
-    case 'reseller':
+    case "reseller":
       return resellerTheme;
     default:
       return defaultTheme;
@@ -106,7 +106,7 @@ export function createPortalTheme(portal: 'admin' | 'customer' | 'reseller'): Po
 }
 
 export function applyTheme(theme: PortalThemeConfig) {
-  if (typeof document === 'undefined') {
+  if (typeof document === "undefined") {
     return;
   }
 
@@ -125,7 +125,7 @@ export function applyTheme(theme: PortalThemeConfig) {
     root.style.setProperty(`--font-size-${key}`, value);
   });
 
-  root.style.setProperty('--font-family', theme.typography.fontFamily);
+  root.style.setProperty("--font-family", theme.typography.fontFamily);
 }
 
 export const themes = {

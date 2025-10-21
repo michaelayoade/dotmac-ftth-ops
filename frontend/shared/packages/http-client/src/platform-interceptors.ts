@@ -2,8 +2,8 @@
  * Platform-specific interceptors for DotMac Platform Services integration
  */
 
-import type { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { v4 as uuidv4 } from 'uuid';
+import type { AxiosRequestConfig, AxiosResponse } from "axios";
+import { v4 as uuidv4 } from "uuid";
 
 export interface PlatformInterceptorConfig {
   enableAuditLogging?: boolean;
@@ -20,7 +20,7 @@ export class PlatformInterceptors {
       enableAuditLogging: true,
       enableCorrelationId: true,
       enableServiceRegistry: false,
-      platformApiPrefix: '/api',
+      platformApiPrefix: "/api",
       ...config,
     };
   }
@@ -34,7 +34,7 @@ export class PlatformInterceptors {
     // Add correlation ID for request tracing
     if (this.config.enableCorrelationId) {
       const correlationId = uuidv4();
-      config.headers['X-Correlation-ID'] = correlationId;
+      config.headers["X-Correlation-ID"] = correlationId;
 
       // Store correlation ID for potential error reporting
       (config as any).__correlationId = correlationId;
@@ -42,8 +42,8 @@ export class PlatformInterceptors {
 
     // Add audit context for backend audit trail
     if (this.config.enableAuditLogging) {
-      config.headers['X-Audit-Context'] = JSON.stringify({
-        component: 'frontend',
+      config.headers["X-Audit-Context"] = JSON.stringify({
+        component: "frontend",
         user_agent: navigator.userAgent,
         timestamp: new Date().toISOString(),
         url: window.location.href,
@@ -54,9 +54,9 @@ export class PlatformInterceptors {
 
     // Add service registry headers for service discovery
     if (this.config.enableServiceRegistry && this.isPlatformServiceRequest(config.url)) {
-      config.headers['X-Service-Discovery'] = 'enabled';
-      config.headers['X-Client-Type'] = 'web-frontend';
-      config.headers['X-Client-Version'] = process.env.VITE_APP_VERSION || '1.0.0';
+      config.headers["X-Service-Discovery"] = "enabled";
+      config.headers["X-Client-Type"] = "web-frontend";
+      config.headers["X-Client-Version"] = process.env.VITE_APP_VERSION || "1.0.0";
     }
 
     // Add request timing for performance monitoring
@@ -76,10 +76,11 @@ export class PlatformInterceptors {
         const responseTime = Date.now() - startTime;
 
         // Add to response for potential monitoring
-        response.headers['x-response-time'] = responseTime.toString();
+        response.headers["x-response-time"] = responseTime.toString();
 
         // Log slow requests for monitoring
-        if (responseTime > 5000) { // 5 seconds
+        if (responseTime > 5000) {
+          // 5 seconds
           console.warn(`Slow request detected: ${response.config.url} took ${responseTime}ms`);
         }
       }
@@ -111,18 +112,20 @@ export class PlatformInterceptors {
       }
 
       // Handle distributed lock conflicts
-      if (error.response?.status === 423) { // Locked
+      if (error.response?.status === 423) {
+        // Locked
         error.isLockConflict = true;
         error.lockInfo = error.response.data?.lock_info;
       }
 
       // Handle rate limiting
-      if (error.response?.status === 429) { // Too Many Requests
+      if (error.response?.status === 429) {
+        // Too Many Requests
         error.rateLimitInfo = {
-          retryAfter: error.response.headers['retry-after'],
-          limit: error.response.headers['x-ratelimit-limit'],
-          remaining: error.response.headers['x-ratelimit-remaining'],
-          reset: error.response.headers['x-ratelimit-reset'],
+          retryAfter: error.response.headers["retry-after"],
+          limit: error.response.headers["x-ratelimit-limit"],
+          remaining: error.response.headers["x-ratelimit-remaining"],
+          reset: error.response.headers["x-ratelimit-reset"],
         };
       }
 
@@ -134,36 +137,36 @@ export class PlatformInterceptors {
     if (!url) return false;
 
     const platformEndpoints = [
-      '/service-registry',
-      '/audit-trail',
-      '/distributed-locks',
-      '/auth',
-      '/tenant',
+      "/service-registry",
+      "/audit-trail",
+      "/distributed-locks",
+      "/auth",
+      "/tenant",
     ];
 
-    return platformEndpoints.some(endpoint =>
-      url.includes(`${this.config.platformApiPrefix}${endpoint}`)
+    return platformEndpoints.some((endpoint) =>
+      url.includes(`${this.config.platformApiPrefix}${endpoint}`),
     );
   }
 
   private isServiceRegistryResponse(response: AxiosResponse): boolean {
-    return response.config.url?.includes('/service-registry') ?? false;
+    return response.config.url?.includes("/service-registry") ?? false;
   }
 
   private handleServiceRegistryResponse(response: AxiosResponse): void {
     // Extract service health information for client-side caching
     if (response.data?.services) {
       const healthyServices = response.data.services.filter(
-        (service: any) => service.status === 'healthy'
+        (service: any) => service.status === "healthy",
       );
 
       // Store healthy services in sessionStorage for client-side load balancing
       sessionStorage.setItem(
-        'dotmac:healthy-services',
+        "dotmac:healthy-services",
         JSON.stringify({
           services: healthyServices,
           updatedAt: Date.now(),
-        })
+        }),
       );
     }
   }
@@ -172,28 +175,26 @@ export class PlatformInterceptors {
 /**
  * Factory function to create platform interceptors
  */
-export function createPlatformInterceptors(config?: PlatformInterceptorConfig): PlatformInterceptors {
+export function createPlatformInterceptors(
+  config?: PlatformInterceptorConfig,
+): PlatformInterceptors {
   return new PlatformInterceptors(config);
 }
 
 /**
  * Utility to add platform interceptors to an existing HTTP client
  */
-export function addPlatformInterceptors(
-  httpClient: any,
-  config?: PlatformInterceptorConfig
-): void {
+export function addPlatformInterceptors(httpClient: any, config?: PlatformInterceptorConfig): void {
   const interceptors = createPlatformInterceptors(config);
 
   // Add request interceptor
-  httpClient.axiosInstance.interceptors.request.use(
-    interceptors.requestInterceptor,
-    (error: any) => Promise.reject(error)
+  httpClient.axiosInstance.interceptors.request.use(interceptors.requestInterceptor, (error: any) =>
+    Promise.reject(error),
   );
 
   // Add response interceptor
   httpClient.axiosInstance.interceptors.response.use(
     interceptors.responseInterceptor.onFulfilled,
-    interceptors.responseInterceptor.onRejected
+    interceptors.responseInterceptor.onRejected,
   );
 }

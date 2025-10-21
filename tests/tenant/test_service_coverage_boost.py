@@ -545,9 +545,7 @@ class TestInvitationManagement:
         inv1_data = TenantInvitationCreate(email="inv1@example.com", role="member")
         inv2_data = TenantInvitationCreate(email="inv2@example.com", role="admin")
 
-        inv1 = await tenant_service.create_invitation(
-            sample_tenant.id, inv1_data, invited_by="admin"
-        )
+        await tenant_service.create_invitation(sample_tenant.id, inv1_data, invited_by="admin")
         inv2 = await tenant_service.create_invitation(
             sample_tenant.id, inv2_data, invited_by="admin"
         )

@@ -4,7 +4,7 @@
  * Tests accessibility, security, performance, and functionality
  */
 
-import React from 'react';
+import React from "react";
 import {
   render,
   renderA11y,
@@ -14,156 +14,156 @@ import {
   screen,
   fireEvent,
   userEvent,
-} from '@dotmac/testing';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../Card';
+} from "@dotmac/testing";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../Card";
 
-describe('Card Component', () => {
+describe("Card Component", () => {
   // Basic functionality tests
-  describe('Basic Functionality', () => {
-    it('renders correctly with default props', () => {
+  describe("Basic Functionality", () => {
+    it("renders correctly with default props", () => {
       render(<Card>Card content</Card>);
-      expect(screen.getByText('Card content')).toBeInTheDocument();
+      expect(screen.getByText("Card content")).toBeInTheDocument();
     });
 
-    it('applies custom className', () => {
-      const { container } = render(<Card className='custom-class'>Content</Card>);
+    it("applies custom className", () => {
+      const { container } = render(<Card className="custom-class">Content</Card>);
       const card = container.firstChild;
-      expect(card).toHaveClass('custom-class');
+      expect(card).toHaveClass("custom-class");
     });
 
-    it('renders as child component when asChild is true', () => {
+    it("renders as child component when asChild is true", () => {
       render(
         <Card asChild>
-          <article data-testid='article-card'>Content</article>
-        </Card>
+          <article data-testid="article-card">Content</article>
+        </Card>,
       );
 
-      const article = screen.getByTestId('article-card');
-      expect(article.tagName).toBe('ARTICLE');
-      expect(article).toHaveTextContent('Content');
+      const article = screen.getByTestId("article-card");
+      expect(article.tagName).toBe("ARTICLE");
+      expect(article).toHaveTextContent("Content");
     });
   });
 
   // Variant tests
-  describe('Variants', () => {
-    it('applies default variant styling', () => {
+  describe("Variants", () => {
+    it("applies default variant styling", () => {
       const { container } = render(<Card>Content</Card>);
       const card = container.firstChild;
-      expect(card).toHaveClass('border-border');
+      expect(card).toHaveClass("border-border");
     });
 
-    it('applies outline variant styling', () => {
-      const { container } = render(<Card variant='outline'>Content</Card>);
+    it("applies outline variant styling", () => {
+      const { container } = render(<Card variant="outline">Content</Card>);
       const card = container.firstChild;
-      expect(card).toHaveClass('bg-background');
+      expect(card).toHaveClass("bg-background");
     });
 
-    it('applies filled variant styling', () => {
-      const { container } = render(<Card variant='filled'>Content</Card>);
+    it("applies filled variant styling", () => {
+      const { container } = render(<Card variant="filled">Content</Card>);
       const card = container.firstChild;
-      expect(card).toHaveClass('bg-muted');
+      expect(card).toHaveClass("bg-muted");
     });
 
-    it('applies elevated variant styling', () => {
-      const { container } = render(<Card variant='elevated'>Content</Card>);
+    it("applies elevated variant styling", () => {
+      const { container } = render(<Card variant="elevated">Content</Card>);
       const card = container.firstChild;
-      expect(card).toHaveClass('shadow-lg');
+      expect(card).toHaveClass("shadow-lg");
     });
 
-    it('applies ghost variant styling', () => {
-      const { container } = render(<Card variant='ghost'>Content</Card>);
+    it("applies ghost variant styling", () => {
+      const { container } = render(<Card variant="ghost">Content</Card>);
       const card = container.firstChild;
-      expect(card).toHaveClass('border-transparent', 'bg-transparent', 'shadow-none');
+      expect(card).toHaveClass("border-transparent", "bg-transparent", "shadow-none");
     });
   });
 
   // Padding tests
-  describe('Padding', () => {
-    it('applies default padding', () => {
+  describe("Padding", () => {
+    it("applies default padding", () => {
       const { container } = render(<Card>Content</Card>);
       const card = container.firstChild;
-      expect(card).toHaveClass('p-6');
+      expect(card).toHaveClass("p-6");
     });
 
-    it('applies small padding', () => {
-      const { container } = render(<Card padding='sm'>Content</Card>);
+    it("applies small padding", () => {
+      const { container } = render(<Card padding="sm">Content</Card>);
       const card = container.firstChild;
-      expect(card).toHaveClass('p-3');
+      expect(card).toHaveClass("p-3");
     });
 
-    it('applies large padding', () => {
-      const { container } = render(<Card padding='lg'>Content</Card>);
+    it("applies large padding", () => {
+      const { container } = render(<Card padding="lg">Content</Card>);
       const card = container.firstChild;
-      expect(card).toHaveClass('p-8');
+      expect(card).toHaveClass("p-8");
     });
 
-    it('applies no padding', () => {
-      const { container } = render(<Card padding='none'>Content</Card>);
+    it("applies no padding", () => {
+      const { container } = render(<Card padding="none">Content</Card>);
       const card = container.firstChild;
-      expect(card).toHaveClass('p-0');
+      expect(card).toHaveClass("p-0");
     });
   });
 
   // Interactive behavior tests
-  describe('Interactive Behavior', () => {
-    it('becomes interactive when interactive prop is true', () => {
+  describe("Interactive Behavior", () => {
+    it("becomes interactive when interactive prop is true", () => {
       const handleClick = jest.fn();
       const { container } = render(
         <Card interactive onClick={handleClick}>
           Interactive card
-        </Card>
+        </Card>,
       );
 
       const card = container.firstChild as HTMLElement;
-      expect(card).toHaveClass('cursor-pointer');
-      expect(card).toHaveAttribute('tabindex', '0');
-      expect(card).toHaveAttribute('role', 'button');
+      expect(card).toHaveClass("cursor-pointer");
+      expect(card).toHaveAttribute("tabindex", "0");
+      expect(card).toHaveAttribute("role", "button");
     });
 
-    it('handles click events when interactive', async () => {
+    it("handles click events when interactive", async () => {
       const handleClick = jest.fn();
       const { user } = render(
         <Card interactive onClick={handleClick}>
           Click me
-        </Card>
+        </Card>,
       );
 
-      const card = screen.getByText('Click me');
+      const card = screen.getByText("Click me");
       await user.click(card);
 
       expect(handleClick).toHaveBeenCalledTimes(1);
     });
 
-    it('handles keyboard navigation when interactive', () => {
+    it("handles keyboard navigation when interactive", () => {
       const handleClick = jest.fn();
       render(
         <Card interactive onClick={handleClick}>
           Interactive card
-        </Card>
+        </Card>,
       );
 
-      const card = screen.getByText('Interactive card');
+      const card = screen.getByText("Interactive card");
 
       // Test Enter key
-      fireEvent.keyDown(card, { key: 'Enter' });
+      fireEvent.keyDown(card, { key: "Enter" });
       expect(handleClick).toHaveBeenCalledTimes(1);
 
       // Test Space key
-      fireEvent.keyDown(card, { key: ' ' });
+      fireEvent.keyDown(card, { key: " " });
       expect(handleClick).toHaveBeenCalledTimes(2);
     });
 
-    it('does not interfere with regular keydown events when interactive', () => {
+    it("does not interfere with regular keydown events when interactive", () => {
       const handleClick = jest.fn();
       const handleKeyDown = jest.fn();
       render(
         <Card interactive onClick={handleClick} onKeyDown={handleKeyDown}>
           Interactive card
-        </Card>
+        </Card>,
       );
 
-      const card = screen.getByText('Interactive card');
-      fireEvent.keyDown(card, { key: 'Escape' });
+      const card = screen.getByText("Interactive card");
+      fireEvent.keyDown(card, { key: "Escape" });
 
       expect(handleKeyDown).toHaveBeenCalledTimes(1);
       expect(handleClick).not.toHaveBeenCalled();
@@ -171,28 +171,28 @@ describe('Card Component', () => {
   });
 
   // Loading state tests
-  describe('Loading State', () => {
-    it('shows loading component when loading', () => {
-      const LoadingComponent = () => <div data-testid='loading'>Loading...</div>;
+  describe("Loading State", () => {
+    it("shows loading component when loading", () => {
+      const LoadingComponent = () => <div data-testid="loading">Loading...</div>;
       render(
         <Card isLoading loadingComponent={<LoadingComponent />}>
           Original content
-        </Card>
+        </Card>,
       );
 
-      expect(screen.getByTestId('loading')).toBeInTheDocument();
-      expect(screen.queryByText('Original content')).not.toBeInTheDocument();
+      expect(screen.getByTestId("loading")).toBeInTheDocument();
+      expect(screen.queryByText("Original content")).not.toBeInTheDocument();
     });
 
-    it('shows loading overlay when showLoadingOverlay is true', () => {
+    it("shows loading overlay when showLoadingOverlay is true", () => {
       const { container } = render(
         <Card isLoading showLoadingOverlay>
           Content
-        </Card>
+        </Card>,
       );
 
-      const overlay = container.querySelector('.absolute.inset-0');
-      const spinner = container.querySelector('.animate-spin');
+      const overlay = container.querySelector(".absolute.inset-0");
+      const spinner = container.querySelector(".animate-spin");
 
       expect(overlay).toBeInTheDocument();
       expect(spinner).toBeInTheDocument();
@@ -200,84 +200,84 @@ describe('Card Component', () => {
   });
 });
 
-describe('Card Sub-components', () => {
-  describe('CardHeader', () => {
-    it('renders correctly', () => {
+describe("Card Sub-components", () => {
+  describe("CardHeader", () => {
+    it("renders correctly", () => {
       render(<CardHeader>Header content</CardHeader>);
-      expect(screen.getByText('Header content')).toBeInTheDocument();
+      expect(screen.getByText("Header content")).toBeInTheDocument();
     });
 
-    it('applies padding variants', () => {
-      const { container } = render(<CardHeader padding='sm'>Header</CardHeader>);
+    it("applies padding variants", () => {
+      const { container } = render(<CardHeader padding="sm">Header</CardHeader>);
       const header = container.firstChild;
-      expect(header).toHaveClass('p-3');
+      expect(header).toHaveClass("p-3");
     });
   });
 
-  describe('CardTitle', () => {
-    it('renders with default heading level', () => {
+  describe("CardTitle", () => {
+    it("renders with default heading level", () => {
       render(<CardTitle>Title</CardTitle>);
-      const title = screen.getByRole('heading', { level: 3 });
+      const title = screen.getByRole("heading", { level: 3 });
       expect(title).toBeInTheDocument();
-      expect(title).toHaveTextContent('Title');
+      expect(title).toHaveTextContent("Title");
     });
 
-    it('renders with custom heading level', () => {
+    it("renders with custom heading level", () => {
       render(<CardTitle level={1}>Main Title</CardTitle>);
-      const title = screen.getByRole('heading', { level: 1 });
+      const title = screen.getByRole("heading", { level: 1 });
       expect(title).toBeInTheDocument();
-      expect(title.tagName).toBe('H1');
+      expect(title.tagName).toBe("H1");
     });
 
-    it('applies title styling', () => {
+    it("applies title styling", () => {
       render(<CardTitle>Styled Title</CardTitle>);
-      const title = screen.getByRole('heading');
-      expect(title).toHaveClass('text-2xl', 'font-semibold', 'leading-none', 'tracking-tight');
+      const title = screen.getByRole("heading");
+      expect(title).toHaveClass("text-2xl", "font-semibold", "leading-none", "tracking-tight");
     });
   });
 
-  describe('CardDescription', () => {
-    it('renders correctly', () => {
+  describe("CardDescription", () => {
+    it("renders correctly", () => {
       render(<CardDescription>Description text</CardDescription>);
-      expect(screen.getByText('Description text')).toBeInTheDocument();
+      expect(screen.getByText("Description text")).toBeInTheDocument();
     });
 
-    it('applies description styling', () => {
+    it("applies description styling", () => {
       render(<CardDescription>Styled description</CardDescription>);
-      const description = screen.getByText('Styled description');
-      expect(description).toHaveClass('text-sm', 'text-muted-foreground');
+      const description = screen.getByText("Styled description");
+      expect(description).toHaveClass("text-sm", "text-muted-foreground");
     });
   });
 
-  describe('CardContent', () => {
-    it('renders correctly', () => {
+  describe("CardContent", () => {
+    it("renders correctly", () => {
       render(<CardContent>Content area</CardContent>);
-      expect(screen.getByText('Content area')).toBeInTheDocument();
+      expect(screen.getByText("Content area")).toBeInTheDocument();
     });
 
-    it('applies content padding', () => {
-      const { container } = render(<CardContent padding='lg'>Large padding content</CardContent>);
+    it("applies content padding", () => {
+      const { container } = render(<CardContent padding="lg">Large padding content</CardContent>);
       const content = container.firstChild;
-      expect(content).toHaveClass('p-8', 'pt-0');
+      expect(content).toHaveClass("p-8", "pt-0");
     });
   });
 
-  describe('CardFooter', () => {
-    it('renders correctly', () => {
+  describe("CardFooter", () => {
+    it("renders correctly", () => {
       render(<CardFooter>Footer content</CardFooter>);
-      expect(screen.getByText('Footer content')).toBeInTheDocument();
+      expect(screen.getByText("Footer content")).toBeInTheDocument();
     });
 
-    it('applies footer styling', () => {
+    it("applies footer styling", () => {
       render(<CardFooter>Footer</CardFooter>);
-      const footer = screen.getByText('Footer');
-      expect(footer).toHaveClass('flex', 'items-center');
+      const footer = screen.getByText("Footer");
+      expect(footer).toHaveClass("flex", "items-center");
     });
   });
 });
 
-describe('Card Composition', () => {
-  it('renders complete card composition', () => {
+describe("Card Composition", () => {
+  it("renders complete card composition", () => {
     render(
       <Card>
         <CardHeader>
@@ -288,19 +288,19 @@ describe('Card Composition', () => {
         <CardFooter>
           <button>Action</button>
         </CardFooter>
-      </Card>
+      </Card>,
     );
 
-    expect(screen.getByRole('heading', { name: 'Card Title' })).toBeInTheDocument();
-    expect(screen.getByText('Card description')).toBeInTheDocument();
-    expect(screen.getByText('Main card content goes here.')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Action' })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Card Title" })).toBeInTheDocument();
+    expect(screen.getByText("Card description")).toBeInTheDocument();
+    expect(screen.getByText("Main card content goes here.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Action" })).toBeInTheDocument();
   });
 });
 
 // Security tests
-describe('Card Security', () => {
-  it('passes security validation', async () => {
+describe("Card Security", () => {
+  it("passes security validation", async () => {
     const result = await renderSecurity(
       <Card>
         <CardHeader>
@@ -308,18 +308,18 @@ describe('Card Security', () => {
           <CardDescription>Safe description</CardDescription>
         </CardHeader>
         <CardContent>Safe content</CardContent>
-      </Card>
+      </Card>,
     );
 
     expect(result.container).toHaveNoSecurityViolations();
   });
 
-  it('does not render dangerous content', async () => {
+  it("does not render dangerous content", async () => {
     // This test ensures the Card component itself doesn't introduce security vulnerabilities
     const result = await renderSecurity(
       <Card interactive onClick={() => {}}>
         Normal card content
-      </Card>
+      </Card>,
     );
 
     expect(result.container).toHaveNoSecurityViolations();
@@ -327,8 +327,8 @@ describe('Card Security', () => {
 });
 
 // Accessibility tests
-describe('Card Accessibility', () => {
-  it('is accessible by default', async () => {
+describe("Card Accessibility", () => {
+  it("is accessible by default", async () => {
     await renderA11y(
       <Card>
         <CardHeader>
@@ -336,19 +336,19 @@ describe('Card Accessibility', () => {
           <CardDescription>Accessible description</CardDescription>
         </CardHeader>
         <CardContent>Accessible content</CardContent>
-      </Card>
+      </Card>,
     );
   });
 
-  it('is accessible when interactive', async () => {
+  it("is accessible when interactive", async () => {
     await renderA11y(
-      <Card interactive aria-label='Interactive card'>
+      <Card interactive aria-label="Interactive card">
         Card content
-      </Card>
+      </Card>,
     );
   });
 
-  it('has proper heading hierarchy', () => {
+  it("has proper heading hierarchy", () => {
     render(
       <Card>
         <CardHeader>
@@ -357,31 +357,31 @@ describe('Card Accessibility', () => {
         <CardContent>
           <CardTitle level={3}>Subsection Title</CardTitle>
         </CardContent>
-      </Card>
+      </Card>,
     );
 
-    const mainTitle = screen.getByRole('heading', { level: 2 });
-    const subTitle = screen.getByRole('heading', { level: 3 });
+    const mainTitle = screen.getByRole("heading", { level: 2 });
+    const subTitle = screen.getByRole("heading", { level: 3 });
 
     expect(mainTitle).toBeInTheDocument();
     expect(subTitle).toBeInTheDocument();
   });
 
-  it('is keyboard navigable when interactive', () => {
+  it("is keyboard navigable when interactive", () => {
     render(
-      <Card interactive aria-label='Interactive card'>
+      <Card interactive aria-label="Interactive card">
         Focusable card
-      </Card>
+      </Card>,
     );
 
-    const card = screen.getByLabelText('Interactive card');
-    expect(card).toHaveAttribute('tabindex', '0');
+    const card = screen.getByLabelText("Interactive card");
+    expect(card).toHaveAttribute("tabindex", "0");
   });
 });
 
 // Performance tests
-describe('Card Performance', () => {
-  it('renders within performance threshold', () => {
+describe("Card Performance", () => {
+  it("renders within performance threshold", () => {
     const result = renderPerformance(
       <Card>
         <CardHeader>
@@ -389,14 +389,14 @@ describe('Card Performance', () => {
           <CardDescription>Testing render performance</CardDescription>
         </CardHeader>
         <CardContent>Card content</CardContent>
-      </Card>
+      </Card>,
     );
 
     const metrics = result.measurePerformance();
     expect(metrics).toBePerformant();
   });
 
-  it('handles complex content efficiently', () => {
+  it("handles complex content efficiently", () => {
     const ComplexContent = () => (
       <>
         {Array.from({ length: 50 }, (_, i) => (
@@ -410,7 +410,7 @@ describe('Card Performance', () => {
         <CardContent>
           <ComplexContent />
         </CardContent>
-      </Card>
+      </Card>,
     );
 
     const metrics = result.measurePerformance();
@@ -419,10 +419,10 @@ describe('Card Performance', () => {
 });
 
 // Comprehensive test
-describe('Card Comprehensive Testing', () => {
-  it('passes all comprehensive tests', async () => {
+describe("Card Comprehensive Testing", () => {
+  it("passes all comprehensive tests", async () => {
     const { result, metrics } = await renderComprehensive(
-      <Card interactive aria-label='Complete card example'>
+      <Card interactive aria-label="Complete card example">
         <CardHeader>
           <CardTitle>Complete Card</CardTitle>
           <CardDescription>This card tests all functionality</CardDescription>
@@ -431,7 +431,7 @@ describe('Card Comprehensive Testing', () => {
         <CardFooter>
           <button>Complete</button>
         </CardFooter>
-      </Card>
+      </Card>,
     );
 
     // All tests should pass

@@ -5,7 +5,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class IntegrationResponse(BaseModel):
+class IntegrationResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Integration response model."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -25,7 +25,7 @@ class IntegrationResponse(BaseModel):
     metadata: dict[str, Any] | None = Field(None, description="Additional metadata")
 
 
-class IntegrationListResponse(BaseModel):
+class IntegrationListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """List of integrations response."""
 
     model_config = ConfigDict(from_attributes=True)

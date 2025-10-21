@@ -31,21 +31,21 @@ export class RateLimiter {
 
   constructor() {
     // Default configurations
-    this.configs.set('login', {
+    this.configs.set("login", {
       maxAttempts: 5,
       windowMs: 15 * 60 * 1000, // 15 minutes
       blockDurationMs: 30 * 60 * 1000, // 30 minutes
       cleanup: true,
     });
 
-    this.configs.set('password-reset', {
+    this.configs.set("password-reset", {
       maxAttempts: 3,
       windowMs: 60 * 60 * 1000, // 1 hour
       blockDurationMs: 60 * 60 * 1000, // 1 hour
       cleanup: true,
     });
 
-    this.configs.set('api', {
+    this.configs.set("api", {
       maxAttempts: 100,
       windowMs: 60 * 1000, // 1 minute
       blockDurationMs: 5 * 60 * 1000, // 5 minutes
@@ -197,7 +197,11 @@ export class RateLimiter {
   }
 
   // Get statistics for monitoring
-  getStats(): { totalEntries: number; blockedEntries: number; configs: string[] } {
+  getStats(): {
+    totalEntries: number;
+    blockedEntries: number;
+    configs: string[];
+  } {
     const now = Date.now();
     let blockedEntries = 0;
 
@@ -234,8 +238,8 @@ export class RateLimiter {
     // - Session ID
     // - Device fingerprint
 
-    if (typeof window === 'undefined') {
-      return 'server';
+    if (typeof window === "undefined") {
+      return "server";
     }
 
     // Simple browser fingerprint
@@ -245,7 +249,7 @@ export class RateLimiter {
       screen.width,
       screen.height,
       Intl.DateTimeFormat().resolvedOptions().timeZone,
-    ].join('|');
+    ].join("|");
 
     return btoa(fingerprint).slice(0, 16);
   }
@@ -260,7 +264,7 @@ export class RateLimiter {
         const keysToDelete: string[] = [];
 
         for (const [key, entry] of this.attempts.entries()) {
-          const action = key.split(':')[0];
+          const action = key.split(":")[0];
           const config = this.configs.get(action);
 
           if (!config?.cleanup) continue;
@@ -276,7 +280,7 @@ export class RateLimiter {
 
         keysToDelete.forEach((key) => this.attempts.delete(key));
       },
-      5 * 60 * 1000
+      5 * 60 * 1000,
     ); // Cleanup every 5 minutes
   }
 

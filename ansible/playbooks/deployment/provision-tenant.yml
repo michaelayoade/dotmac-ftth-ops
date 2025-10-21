@@ -1,0 +1,144 @@
+---
+# Ansible Playbook: Provision Tenant Deployment
+#
+# This playbook provisions a complete DotMac ISP Operations deployment
+# for a tenant on on-premises infrastructure.
+#
+# Variables required:
+#   - tenant_id: Tenant identifier
+#   - instance_id: Deployment instance ID
+#   - environment: Environment name (production, staging, dev)
+#   - version: Platform version to deploy
+#   - config: Deployment configuration dictionary
+#   - resources: Resource allocation (cpu_cores, memory_gb, storage_gb)
+
+- name: Provision Tenant Deployment
+  hosts: app_servers
+  become: yes
+  vars:
+    install_dir: "/opt/dotmac/tenant-{{ tenant_id }}"
+    data_dir: "/var/lib/dotmac/tenant-{{ tenant_id }}"
+    venv_dir: "{{ install_dir }}/venv"
+    app_user: "dotmac-{{ tenant_id }}"
+    app_group: "dotmac"
+
+  tasks:
+    - name: Create application user
+      user:
+        name: "{{ app_user }}"
+        group: "{{ app_group }}"
+        system: yes
+        create_home: no
+        shell: /bin/false
+
+    - name: Create installation directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+      loop:
+        - "{{ install_dir }}"
+        - "{{ data_dir }}"
+        - "{{ data_dir }}/logs"
+        - "{{ data_dir }}/uploads"
+
+    - name: Install Python virtual environment
+      command: python3 -m venv "{{ venv_dir }}"
+      args:
+        creates: "{{ venv_dir }}/bin/python"
+      become_user: "{{ app_user }}"
+
+    - name: Install DotMac platform
+      pip:
+        name: "dotmac-platform=={{ version }}"
+        virtualenv: "{{ venv_dir }}"
+      become_user: "{{ app_user }}"
+
+    - name: Create database
+      postgresql_db:
+        name: "tenant_{{ tenant_id }}"
+        encoding: UTF-8
+        template: template0
+      become_user: postgres
+      delegate_to: "{{ groups['db_servers'][0] }}"
+
+    - name: Create database user
+      postgresql_user:
+        name: "tenant_{{ tenant_id }}_user"
+        password: "{{ db_password }}"
+        db: "tenant_{{ tenant_id }}"
+        priv: ALL
+      become_user: postgres
+      delegate_to: "{{ groups['db_servers'][0] }}"
+
+    - name: Deploy configuration file
+      template:
+        src: config.env.j2
+        dest: "{{ install_dir }}/.env"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0600'
+
+    - name: Run database migrations
+      command: "{{ venv_dir }}/bin/alembic upgrade head"
+      args:
+        chdir: "{{ install_dir }}"
+      environment:
+        DATABASE_URL: "postgresql://tenant_{{ tenant_id }}_user:{{ db_password }}@{{ db_host }}/tenant_{{ tenant_id }}"
+      become_user: "{{ app_user }}"
+
+    - name: Deploy systemd service file
+      template:
+        src: tenant-service.service.j2
+        dest: "/etc/systemd/system/dotmac-tenant-{{ tenant_id }}.service"
+        mode: '0644'
+      notify: Reload systemd
+
+    - name: Enable and start service
+      systemd:
+        name: "dotmac-tenant-{{ tenant_id }}"
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    - name: Configure nginx reverse proxy
+      template:
+        src: nginx-site.conf.j2
+        dest: "/etc/nginx/sites-available/tenant-{{ tenant_id }}.conf"
+        mode: '0644'
+      notify: Reload nginx
+
+    - name: Enable nginx site
+      file:
+        src: "/etc/nginx/sites-available/tenant-{{ tenant_id }}.conf"
+        dest: "/etc/nginx/sites-enabled/tenant-{{ tenant_id }}.conf"
+        state: link
+      notify: Reload nginx
+
+    - name: Wait for application to be ready
+      uri:
+        url: "http://localhost:{{ app_port }}/health"
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: 30
+      delay: 5
+
+    - name: Set endpoint facts
+      set_fact:
+        endpoints:
+          api: "https://{{ tenant_subdomain }}.{{ domain }}/api/v1"
+          ui: "https://{{ tenant_subdomain }}.{{ domain }}"
+          health: "https://{{ tenant_subdomain }}.{{ domain }}/health"
+
+  handlers:
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Reload nginx
+      service:
+        name: nginx
+        state: reloaded

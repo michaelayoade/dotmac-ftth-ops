@@ -3,8 +3,8 @@
  * Provides consistent error boundary handling with ISP Framework patterns
  */
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { ISPError, classifyError, logError } from '../utils/errorUtils';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { ISPError, classifyError, logError } from "../utils/errorUtils";
 
 export interface ErrorBoundaryState {
   hasError: boolean;
@@ -20,7 +20,7 @@ export interface ErrorBoundaryProps {
   enableRetry?: boolean;
   maxRetries?: number;
   context?: string;
-  level?: 'application' | 'component' | 'widget';
+  level?: "application" | "component" | "widget";
 }
 
 export interface ErrorFallbackProps {
@@ -29,7 +29,7 @@ export interface ErrorFallbackProps {
   retryCount: number;
   onRetry: () => void;
   onClearError: () => void;
-  level: 'application' | 'component' | 'widget';
+  level: "application" | "component" | "widget";
   hasReachedMaxRetries: boolean;
 }
 
@@ -47,7 +47,7 @@ export class StandardErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
   }
 
   static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
-    const ispError = classifyError(error, 'Error Boundary');
+    const ispError = classifyError(error, "Error Boundary");
     return {
       hasError: true,
       error: ispError,
@@ -57,12 +57,12 @@ export class StandardErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     const { onError, context } = this.props;
-    const ispError = classifyError(error, context || 'Error Boundary');
+    const ispError = classifyError(error, context || "Error Boundary");
 
     // Log the error with component stack
     logError(ispError, {
-      url: typeof window !== 'undefined' ? window.location.href : 'Unknown',
-      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',
+      url: typeof window !== "undefined" ? window.location.href : "Unknown",
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "Unknown",
     });
 
     // Call custom error handler
@@ -119,7 +119,7 @@ export class StandardErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
       fallback: CustomFallback,
       enableRetry = true,
       maxRetries = 3,
-      level = 'component',
+      level = "component",
     } = this.props;
 
     if (hasError && error && errorId) {
@@ -140,9 +140,9 @@ export class StandardErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
 
       // Default fallback based on level
       switch (level) {
-        case 'application':
+        case "application":
           return <ApplicationErrorFallback {...fallbackProps} />;
-        case 'widget':
+        case "widget":
           return <WidgetErrorFallback {...fallbackProps} />;
         default:
           return <ComponentErrorFallback {...fallbackProps} />;
@@ -163,36 +163,36 @@ const ApplicationErrorFallback: React.FC<ErrorFallbackProps> = ({
   onRetry,
   hasReachedMaxRetries,
 }) => (
-  <div className='min-h-screen flex items-center justify-center bg-gray-50 p-4'>
-    <div className='max-w-md w-full bg-white rounded-lg shadow-lg p-6'>
-      <div className='text-center'>
-        <div className='mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4'>
+  <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
+      <div className="text-center">
+        <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
           <svg
-            className='h-6 w-6 text-red-600'
-            fill='none'
-            viewBox='0 0 24 24'
-            stroke='currentColor'
+            className="h-6 w-6 text-red-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
             <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
+              strokeLinecap="round"
+              strokeLinejoin="round"
               strokeWidth={2}
-              d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z'
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"
             />
           </svg>
         </div>
 
-        <h1 className='text-xl font-semibold text-gray-900 mb-2'>Application Error</h1>
+        <h1 className="text-xl font-semibold text-gray-900 mb-2">Application Error</h1>
 
-        <p className='text-gray-600 mb-4'>{error.userMessage}</p>
+        <p className="text-gray-600 mb-4">{error.userMessage}</p>
 
-        <div className='text-sm text-gray-500 mb-6'>Error ID: {errorId}</div>
+        <div className="text-sm text-gray-500 mb-6">Error ID: {errorId}</div>
 
-        <div className='flex flex-col sm:flex-row gap-3 justify-center'>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
           {!hasReachedMaxRetries && (
             <button
               onClick={onRetry}
-              className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Try Again
             </button>
@@ -200,7 +200,7 @@ const ApplicationErrorFallback: React.FC<ErrorFallbackProps> = ({
 
           <button
             onClick={() => window.location.reload()}
-            className='px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500'
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
           >
             Reload Page
           </button>
@@ -217,31 +217,31 @@ const ComponentErrorFallback: React.FC<ErrorFallbackProps> = ({
   onClearError,
   hasReachedMaxRetries,
 }) => (
-  <div className='border border-red-200 rounded-md bg-red-50 p-4'>
-    <div className='flex'>
-      <div className='flex-shrink-0'>
-        <svg className='h-5 w-5 text-red-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+  <div className="border border-red-200 rounded-md bg-red-50 p-4">
+    <div className="flex">
+      <div className="flex-shrink-0">
+        <svg className="h-5 w-5 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path
-            strokeLinecap='round'
-            strokeLinejoin='round'
+            strokeLinecap="round"
+            strokeLinejoin="round"
             strokeWidth={2}
-            d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z'
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"
           />
         </svg>
       </div>
 
-      <div className='ml-3'>
-        <h3 className='text-sm font-medium text-red-800'>Component Error</h3>
+      <div className="ml-3">
+        <h3 className="text-sm font-medium text-red-800">Component Error</h3>
 
-        <p className='text-sm text-red-700 mt-1'>{error.userMessage}</p>
+        <p className="text-sm text-red-700 mt-1">{error.userMessage}</p>
 
-        <div className='text-xs text-red-600 mt-1'>ID: {errorId}</div>
+        <div className="text-xs text-red-600 mt-1">ID: {errorId}</div>
 
-        <div className='mt-3 flex gap-2'>
+        <div className="mt-3 flex gap-2">
           {!hasReachedMaxRetries && (
             <button
               onClick={onRetry}
-              className='text-xs bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200 focus:outline-none focus:ring-1 focus:ring-red-500'
+              className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200 focus:outline-none focus:ring-1 focus:ring-red-500"
             >
               Retry
             </button>
@@ -249,7 +249,7 @@ const ComponentErrorFallback: React.FC<ErrorFallbackProps> = ({
 
           <button
             onClick={onClearError}
-            className='text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-500'
+            className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded hover:bg-gray-200 focus:outline-none focus:ring-1 focus:ring-gray-500"
           >
             Dismiss
           </button>
@@ -264,27 +264,27 @@ const WidgetErrorFallback: React.FC<ErrorFallbackProps> = ({
   onRetry,
   hasReachedMaxRetries,
 }) => (
-  <div className='flex items-center justify-center p-2 text-sm text-gray-500 bg-gray-50 border rounded'>
+  <div className="flex items-center justify-center p-2 text-sm text-gray-500 bg-gray-50 border rounded">
     <svg
-      className='h-4 w-4 mr-2 text-gray-400'
-      fill='none'
-      viewBox='0 0 24 24'
-      stroke='currentColor'
+      className="h-4 w-4 mr-2 text-gray-400"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
     >
       <path
-        strokeLinecap='round'
-        strokeLinejoin='round'
+        strokeLinecap="round"
+        strokeLinejoin="round"
         strokeWidth={2}
-        d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z'
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"
       />
     </svg>
 
-    <span className='flex-1'>Unable to load</span>
+    <span className="flex-1">Unable to load</span>
 
     {!hasReachedMaxRetries && (
       <button
         onClick={onRetry}
-        className='ml-2 text-blue-600 hover:text-blue-800 focus:outline-none'
+        className="ml-2 text-blue-600 hover:text-blue-800 focus:outline-none"
       >
         Retry
       </button>
@@ -297,7 +297,7 @@ const WidgetErrorFallback: React.FC<ErrorFallbackProps> = ({
  */
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
+  errorBoundaryProps?: Omit<ErrorBoundaryProps, "children">,
 ) {
   const WrappedComponent = (props: P) => (
     <StandardErrorBoundary {...errorBoundaryProps}>

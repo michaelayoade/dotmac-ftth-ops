@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNotifications } from './useNotifications';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNotifications } from "./useNotifications";
 
 export interface ServiceTemplate {
   id: string;
   name: string;
-  category: 'internet' | 'phone' | 'tv' | 'bundle';
+  category: "internet" | "phone" | "tv" | "bundle";
   speed?: string;
   features: string[];
   pricing: {
@@ -30,14 +30,14 @@ export interface ProvisioningRequest {
   customerId: string;
   serviceTemplateId: string;
   status:
-    | 'pending'
-    | 'approved'
-    | 'provisioning'
-    | 'installing'
-    | 'active'
-    | 'failed'
-    | 'cancelled';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+    | "pending"
+    | "approved"
+    | "provisioning"
+    | "installing"
+    | "active"
+    | "failed"
+    | "cancelled";
+  priority: "low" | "medium" | "high" | "urgent";
   requestedAt: Date;
   scheduledAt?: Date;
   completedAt?: Date;
@@ -67,10 +67,10 @@ export interface ProvisioningRequest {
 export interface EquipmentOrder {
   id: string;
   name: string;
-  type: 'modem' | 'router' | 'cable' | 'dish' | 'stb' | 'other';
+  type: "modem" | "router" | "cable" | "dish" | "stb" | "other";
   quantity: number;
   serialNumbers?: string[];
-  status: 'ordered' | 'shipped' | 'delivered' | 'installed';
+  status: "ordered" | "shipped" | "delivered" | "installed";
   trackingNumber?: string;
   vendor?: string;
   model?: string;
@@ -79,8 +79,8 @@ export interface EquipmentOrder {
 export interface ProvisioningTask {
   id: string;
   name: string;
-  type: 'automated' | 'manual' | 'technician';
-  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'skipped';
+  type: "automated" | "manual" | "technician";
+  status: "pending" | "in_progress" | "completed" | "failed" | "skipped";
   assignedTo?: string;
   estimatedDuration: number; // minutes
   dependencies?: string[];
@@ -94,7 +94,7 @@ export interface ProvisioningWorkflow {
   id: string;
   name: string;
   serviceCategory: string;
-  tasks: Omit<ProvisioningTask, 'id' | 'status' | 'completedAt' | 'result'>[];
+  tasks: Omit<ProvisioningTask, "id" | "status" | "completedAt" | "result">[];
   conditions: {
     requiresTechnician: boolean;
     requiresEquipment: boolean;
@@ -168,7 +168,7 @@ const initialState: ProvisioningState = {
 
 export function useProvisioning(options: UseProvisioningOptions = {}) {
   const {
-    apiEndpoint = '/api/provisioning',
+    apiEndpoint = "/api/provisioning",
     websocketEndpoint,
     apiKey,
     tenantId,
@@ -188,20 +188,20 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
   const apiCall = useCallback(
     async (endpoint: string, options: RequestInit = {}) => {
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...(options.headers as Record<string, string>),
       };
 
       if (apiKey) {
-        headers['Authorization'] = `Bearer ${apiKey}`;
+        headers["Authorization"] = `Bearer ${apiKey}`;
       }
 
       if (tenantId) {
-        headers['X-Tenant-ID'] = tenantId;
+        headers["X-Tenant-ID"] = tenantId;
       }
 
       if (resellerId) {
-        headers['X-Reseller-ID'] = resellerId;
+        headers["X-Reseller-ID"] = resellerId;
       }
 
       const response = await fetch(`${apiEndpoint}${endpoint}`, {
@@ -216,7 +216,7 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
 
       return response.json();
     },
-    [apiEndpoint, apiKey, tenantId, resellerId]
+    [apiEndpoint, apiKey, tenantId, resellerId],
   );
 
   // WebSocket Connection
@@ -227,9 +227,9 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
       if (websocketRef.current?.readyState === WebSocket.OPEN) return;
 
       const wsUrl = new URL(websocketEndpoint);
-      if (apiKey) wsUrl.searchParams.set('apiKey', apiKey);
-      if (tenantId) wsUrl.searchParams.set('tenantId', tenantId);
-      if (resellerId) wsUrl.searchParams.set('resellerId', resellerId);
+      if (apiKey) wsUrl.searchParams.set("apiKey", apiKey);
+      if (tenantId) wsUrl.searchParams.set("tenantId", tenantId);
+      if (resellerId) wsUrl.searchParams.set("resellerId", resellerId);
 
       const ws = new WebSocket(wsUrl.toString());
       websocketRef.current = ws;
@@ -239,11 +239,11 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
         retryCountRef.current = 0;
 
         addNotification({
-          type: 'system',
-          priority: 'low',
-          title: 'Provisioning System',
-          message: 'Real-time provisioning updates connected',
-          channel: ['browser'],
+          type: "system",
+          priority: "low",
+          title: "Provisioning System",
+          message: "Real-time provisioning updates connected",
+          channel: ["browser"],
           persistent: false,
         });
       };
@@ -253,44 +253,44 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
           const data = JSON.parse(event.data);
 
           switch (data.type) {
-            case 'request_status_update':
+            case "request_status_update":
               setState((prev) => ({
                 ...prev,
                 requests: prev.requests.map((req) =>
-                  req.id === data.requestId ? { ...req, ...data.updates } : req
+                  req.id === data.requestId ? { ...req, ...data.updates } : req,
                 ),
               }));
 
               // Show notification for important status changes
-              if (['approved', 'active', 'failed'].includes(data.updates.status)) {
+              if (["approved", "active", "failed"].includes(data.updates.status)) {
                 addNotification({
-                  type: data.updates.status === 'failed' ? 'error' : 'success',
-                  priority: data.updates.status === 'failed' ? 'high' : 'medium',
-                  title: 'Service Request Update',
+                  type: data.updates.status === "failed" ? "error" : "success",
+                  priority: data.updates.status === "failed" ? "high" : "medium",
+                  title: "Service Request Update",
                   message: `Request ${data.requestId} is now ${data.updates.status}`,
-                  channel: ['browser'],
+                  channel: ["browser"],
                   persistent: false,
                 });
               }
               break;
 
-            case 'new_request':
+            case "new_request":
               setState((prev) => ({
                 ...prev,
                 requests: [data.request, ...prev.requests],
               }));
 
               addNotification({
-                type: 'info',
-                priority: 'medium',
-                title: 'New Service Request',
+                type: "info",
+                priority: "medium",
+                title: "New Service Request",
                 message: `New ${data.request.serviceTemplateId} request received`,
-                channel: ['browser'],
+                channel: ["browser"],
                 persistent: false,
               });
               break;
 
-            case 'task_completed':
+            case "task_completed":
               setState((prev) => ({
                 ...prev,
                 requests: prev.requests.map((req) =>
@@ -301,38 +301,38 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
                           task.id === data.taskId
                             ? {
                                 ...task,
-                                status: 'completed',
+                                status: "completed",
                                 completedAt: new Date(data.completedAt),
                               }
-                            : task
+                            : task,
                         ),
                       }
-                    : req
+                    : req,
                 ),
               }));
               break;
 
-            case 'technician_assigned':
+            case "technician_assigned":
               setState((prev) => ({
                 ...prev,
                 requests: prev.requests.map((req) =>
                   req.id === data.requestId
                     ? { ...req, assignedTechnician: data.technicianId }
-                    : req
+                    : req,
                 ),
               }));
 
               addNotification({
-                type: 'info',
-                priority: 'low',
-                title: 'Technician Assigned',
+                type: "info",
+                priority: "low",
+                title: "Technician Assigned",
                 message: `Technician assigned to request ${data.requestId}`,
-                channel: ['browser'],
+                channel: ["browser"],
                 persistent: false,
               });
               break;
 
-            case 'stats_update':
+            case "stats_update":
               setState((prev) => ({
                 ...prev,
                 stats: data.stats,
@@ -340,7 +340,7 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
               break;
           }
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
+          console.error("Failed to parse WebSocket message:", error);
         }
       };
 
@@ -358,19 +358,19 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error("WebSocket error:", error);
         setState((prev) => ({
           ...prev,
           isConnected: false,
-          error: 'WebSocket connection failed',
+          error: "WebSocket connection failed",
         }));
       };
     } catch (error) {
-      console.error('Failed to establish WebSocket connection:', error);
+      console.error("Failed to establish WebSocket connection:", error);
       setState((prev) => ({
         ...prev,
         isConnected: false,
-        error: error instanceof Error ? error.message : 'Connection failed',
+        error: error instanceof Error ? error.message : "Connection failed",
       }));
     }
   }, [
@@ -387,7 +387,7 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
   const loadTemplates = useCallback(async () => {
     try {
       setState((prev) => ({ ...prev, isLoading: true, error: null }));
-      const data = await apiCall('/templates');
+      const data = await apiCall("/templates");
       setState((prev) => ({
         ...prev,
         templates: data.templates || [],
@@ -396,7 +396,7 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
     } catch (error) {
       setState((prev) => ({
         ...prev,
-        error: error instanceof Error ? error.message : 'Failed to load templates',
+        error: error instanceof Error ? error.message : "Failed to load templates",
         isLoading: false,
       }));
     }
@@ -412,7 +412,7 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
         dateFrom?: Date;
         dateTo?: Date;
         limit?: number;
-      } = {}
+      } = {},
     ) => {
       try {
         setState((prev) => ({ ...prev, isLoading: true }));
@@ -433,17 +433,17 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
       } catch (error) {
         setState((prev) => ({
           ...prev,
-          error: error instanceof Error ? error.message : 'Failed to load requests',
+          error: error instanceof Error ? error.message : "Failed to load requests",
           isLoading: false,
         }));
       }
     },
-    [apiCall]
+    [apiCall],
   );
 
   // Load Statistics
   const loadStats = useCallback(
-    async (timeRange: '24h' | '7d' | '30d' = '24h') => {
+    async (timeRange: "24h" | "7d" | "30d" = "24h") => {
       try {
         const data = await apiCall(`/stats?range=${timeRange}`);
         setState((prev) => ({
@@ -453,11 +453,11 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
       } catch (error) {
         setState((prev) => ({
           ...prev,
-          error: error instanceof Error ? error.message : 'Failed to load statistics',
+          error: error instanceof Error ? error.message : "Failed to load statistics",
         }));
       }
     },
-    [apiCall]
+    [apiCall],
   );
 
   // Create Service Request
@@ -465,18 +465,18 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
     async (requestData: {
       customerId: string;
       serviceTemplateId: string;
-      priority?: 'low' | 'medium' | 'high' | 'urgent';
+      priority?: "low" | "medium" | "high" | "urgent";
       scheduledAt?: Date;
-      installationAddress: ProvisioningRequest['installationAddress'];
-      customerInfo: ProvisioningRequest['customerInfo'];
+      installationAddress: ProvisioningRequest["installationAddress"];
+      customerInfo: ProvisioningRequest["customerInfo"];
       notes?: string;
       metadata?: Record<string, any>;
     }) => {
       try {
         setState((prev) => ({ ...prev, isLoading: true }));
 
-        const data = await apiCall('/requests', {
-          method: 'POST',
+        const data = await apiCall("/requests", {
+          method: "POST",
           body: JSON.stringify({
             ...requestData,
             scheduledAt: requestData.scheduledAt?.toISOString(),
@@ -491,11 +491,11 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
         }));
 
         addNotification({
-          type: 'success',
-          priority: 'medium',
-          title: 'Service Request Created',
+          type: "success",
+          priority: "medium",
+          title: "Service Request Created",
           message: `Service request for ${requestData.customerInfo.name} has been submitted`,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
@@ -504,29 +504,29 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
         setState((prev) => ({ ...prev, isLoading: false }));
 
         const errorMessage =
-          error instanceof Error ? error.message : 'Failed to create service request';
+          error instanceof Error ? error.message : "Failed to create service request";
 
         addNotification({
-          type: 'error',
-          priority: 'high',
-          title: 'Request Creation Failed',
+          type: "error",
+          priority: "high",
+          title: "Request Creation Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Update Request Status
   const updateRequestStatus = useCallback(
-    async (requestId: string, status: ProvisioningRequest['status'], notes?: string) => {
+    async (requestId: string, status: ProvisioningRequest["status"], notes?: string) => {
       try {
         const data = await apiCall(`/requests/${requestId}/status`, {
-          method: 'PUT',
+          method: "PUT",
           body: JSON.stringify({ status, notes }),
         });
 
@@ -537,31 +537,31 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
         }));
 
         addNotification({
-          type: 'success',
-          priority: 'low',
-          title: 'Status Updated',
+          type: "success",
+          priority: "low",
+          title: "Status Updated",
           message: `Request ${requestId} status updated to ${status}`,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         return updatedRequest;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to update status';
+        const errorMessage = error instanceof Error ? error.message : "Failed to update status";
 
         addNotification({
-          type: 'error',
-          priority: 'medium',
-          title: 'Update Failed',
+          type: "error",
+          priority: "medium",
+          title: "Update Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Schedule Installation
@@ -569,7 +569,7 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
     async (requestId: string, scheduledAt: Date, technicianId?: string) => {
       try {
         const data = await apiCall(`/requests/${requestId}/schedule`, {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({
             scheduledAt: scheduledAt.toISOString(),
             technicianId,
@@ -583,32 +583,32 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
         }));
 
         addNotification({
-          type: 'success',
-          priority: 'medium',
-          title: 'Installation Scheduled',
+          type: "success",
+          priority: "medium",
+          title: "Installation Scheduled",
           message: `Installation scheduled for ${scheduledAt.toLocaleDateString()}`,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         return updatedRequest;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : 'Failed to schedule installation';
+          error instanceof Error ? error.message : "Failed to schedule installation";
 
         addNotification({
-          type: 'error',
-          priority: 'medium',
-          title: 'Scheduling Failed',
+          type: "error",
+          priority: "medium",
+          title: "Scheduling Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Execute Task
@@ -616,7 +616,7 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
     async (requestId: string, taskId: string, result?: any, notes?: string) => {
       try {
         const data = await apiCall(`/requests/${requestId}/tasks/${taskId}/execute`, {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({ result, notes }),
         });
 
@@ -628,21 +628,21 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
 
         return updatedRequest;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to execute task';
+        const errorMessage = error instanceof Error ? error.message : "Failed to execute task";
 
         addNotification({
-          type: 'error',
-          priority: 'medium',
-          title: 'Task Execution Failed',
+          type: "error",
+          priority: "medium",
+          title: "Task Execution Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Cancel Request
@@ -650,51 +650,51 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
     async (requestId: string, reason: string) => {
       try {
         await apiCall(`/requests/${requestId}/cancel`, {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({ reason }),
         });
 
         setState((prev) => ({
           ...prev,
           requests: prev.requests.map((req) =>
-            req.id === requestId ? { ...req, status: 'cancelled', notes: reason } : req
+            req.id === requestId ? { ...req, status: "cancelled", notes: reason } : req,
           ),
         }));
 
         addNotification({
-          type: 'info',
-          priority: 'low',
-          title: 'Request Cancelled',
+          type: "info",
+          priority: "low",
+          title: "Request Cancelled",
           message: `Service request ${requestId} has been cancelled`,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to cancel request';
+        const errorMessage = error instanceof Error ? error.message : "Failed to cancel request";
 
         addNotification({
-          type: 'error',
-          priority: 'medium',
-          title: 'Cancellation Failed',
+          type: "error",
+          priority: "medium",
+          title: "Cancellation Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Bulk Operations
   const bulkUpdateStatus = useCallback(
-    async (requestIds: string[], status: ProvisioningRequest['status'], notes?: string) => {
+    async (requestIds: string[], status: ProvisioningRequest["status"], notes?: string) => {
       try {
         setState((prev) => ({ ...prev, isLoading: true }));
 
-        const data = await apiCall('/requests/bulk-update', {
-          method: 'POST',
+        const data = await apiCall("/requests/bulk-update", {
+          method: "POST",
           body: JSON.stringify({ requestIds, status, notes }),
         });
 
@@ -704,17 +704,17 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
           requests: prev.requests.map((req) =>
             requestIds.includes(req.id)
               ? updatedRequests.find((ur) => ur.id === req.id) || req
-              : req
+              : req,
           ),
           isLoading: false,
         }));
 
         addNotification({
-          type: 'success',
-          priority: 'medium',
-          title: 'Bulk Update Complete',
+          type: "success",
+          priority: "medium",
+          title: "Bulk Update Complete",
           message: `${requestIds.length} requests updated to ${status}`,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
@@ -723,21 +723,21 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
         setState((prev) => ({ ...prev, isLoading: false }));
 
         const errorMessage =
-          error instanceof Error ? error.message : 'Failed to bulk update requests';
+          error instanceof Error ? error.message : "Failed to bulk update requests";
 
         addNotification({
-          type: 'error',
-          priority: 'high',
-          title: 'Bulk Update Failed',
+          type: "error",
+          priority: "high",
+          title: "Bulk Update Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Equipment Management
@@ -745,13 +745,13 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
     async (
       requestId: string,
       equipmentId: string,
-      status: EquipmentOrder['status'],
+      status: EquipmentOrder["status"],
       serialNumbers?: string[],
-      trackingNumber?: string
+      trackingNumber?: string,
     ) => {
       try {
         const data = await apiCall(`/requests/${requestId}/equipment/${equipmentId}`, {
-          method: 'PUT',
+          method: "PUT",
           body: JSON.stringify({ status, serialNumbers, trackingNumber }),
         });
 
@@ -763,21 +763,21 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
 
         return updatedRequest;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to update equipment';
+        const errorMessage = error instanceof Error ? error.message : "Failed to update equipment";
 
         addNotification({
-          type: 'error',
-          priority: 'medium',
-          title: 'Equipment Update Failed',
+          type: "error",
+          priority: "medium",
+          title: "Equipment Update Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Initialize
@@ -856,14 +856,14 @@ export function useProvisioning(options: UseProvisioningOptions = {}) {
     }, []),
 
     // Computed values
-    pendingRequests: state.requests.filter((req) => req.status === 'pending'),
+    pendingRequests: state.requests.filter((req) => req.status === "pending"),
     activeRequests: state.requests.filter((req) =>
-      ['approved', 'provisioning', 'installing'].includes(req.status)
+      ["approved", "provisioning", "installing"].includes(req.status),
     ),
-    urgentRequests: state.requests.filter((req) => req.priority === 'urgent'),
+    urgentRequests: state.requests.filter((req) => req.priority === "urgent"),
     todayInstallations: state.requests.filter(
       (req) =>
-        req.scheduledAt && new Date(req.scheduledAt).toDateString() === new Date().toDateString()
+        req.scheduledAt && new Date(req.scheduledAt).toDateString() === new Date().toDateString(),
     ),
   };
 }

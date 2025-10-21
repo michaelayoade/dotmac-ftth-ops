@@ -26,6 +26,7 @@ from dotmac.platform.billing.models import (
 from dotmac.platform.billing.subscriptions.models import (
     BillingCycle,
     ProrationBehavior,
+    ProrationPreview,
     ProrationResult,
     Subscription,
     SubscriptionCreateRequest,
@@ -33,6 +34,7 @@ from dotmac.platform.billing.subscriptions.models import (
     SubscriptionPlan,
     SubscriptionPlanChangeRequest,
     SubscriptionPlanCreateRequest,
+    SubscriptionPlanResponse,
     SubscriptionStatus,
     SubscriptionUpdateRequest,
     UsageRecordRequest,
@@ -615,6 +617,232 @@ class SubscriptionService:
 
         return [self._db_to_pydantic_subscription(db_sub) for db_sub in db_subscriptions]
 
+    async def check_renewal_eligibility(
+        self, subscription_id: str, tenant_id: str
+    ) -> dict[str, Any]:
+        """
+        Check if a subscription is eligible for renewal.
+
+        Returns eligibility status with details about why renewal may be blocked.
+        """
+        subscription = await self.get_subscription(subscription_id, tenant_id)
+        plan = await self.get_plan(subscription.plan_id, tenant_id)
+
+        # Check various eligibility conditions
+        is_eligible = True
+        reasons = []
+
+        # 1. Check subscription status
+        if not subscription.is_active():
+            is_eligible = False
+            reasons.append(f"Subscription status is {subscription.status.value}, not active")
+
+        # 2. Check if subscription is set to cancel
+        if subscription.cancel_at_period_end:
+            is_eligible = False
+            reasons.append("Subscription is set to cancel at period end")
+
+        # 3. Check if subscription has already ended
+        if subscription.ended_at:
+            is_eligible = False
+            reasons.append("Subscription has already ended")
+
+        # 4. Check if plan is still active
+        if not plan.is_active:
+            is_eligible = False
+            reasons.append(f"Subscription plan '{plan.name}' is no longer active")
+
+        # 5. Check how close we are to renewal date
+        days_until_renewal = subscription.days_until_renewal()
+        renewal_window_days = 30  # Allow renewals within 30 days of expiry
+
+        if days_until_renewal > renewal_window_days:
+            is_eligible = False
+            reasons.append(f"Too early to renew - {days_until_renewal} days remaining (renewal window: {renewal_window_days} days)")
+
+        # 6. Check if customer is past due
+        if subscription.is_past_due():
+            is_eligible = False
+            reasons.append("Customer has past due payments")
+
+        # Calculate renewal price
+        renewal_price = subscription.custom_price if subscription.custom_price else plan.price
+
+        logger.info(
+            "Renewal eligibility checked",
+            subscription_id=subscription_id,
+            is_eligible=is_eligible,
+            reasons=reasons,
+            days_until_renewal=days_until_renewal,
+            tenant_id=tenant_id,
+        )
+
+        return {
+            "is_eligible": is_eligible,
+            "subscription_id": subscription_id,
+            "customer_id": subscription.customer_id,
+            "plan_id": plan.plan_id,
+            "plan_name": plan.name,
+            "current_period_end": subscription.current_period_end,
+            "days_until_renewal": days_until_renewal,
+            "renewal_price": renewal_price,
+            "currency": plan.currency,
+            "billing_cycle": plan.billing_cycle,
+            "reasons": reasons,
+            "trial_active": subscription.is_in_trial(),
+        }
+
+    async def extend_subscription(
+        self,
+        subscription_id: str,
+        tenant_id: str,
+        payment_id: str | None = None,
+        user_id: str | None = None,
+    ) -> Subscription:
+        """
+        Extend subscription to the next billing period.
+
+        This method:
+        1. Validates the subscription can be renewed
+        2. Extends current_period_end by one billing cycle
+        3. Resets usage counters for the new period
+        4. Creates a renewal event
+        """
+        subscription = await self.get_subscription(subscription_id, tenant_id)
+        plan = await self.get_plan(subscription.plan_id, tenant_id)
+
+        # Validate subscription can be extended
+        if not subscription.is_active():
+            raise SubscriptionError(
+                f"Cannot extend subscription with status {subscription.status.value}"
+            )
+
+        if subscription.ended_at:
+            raise SubscriptionError("Cannot extend ended subscription")
+
+        # Calculate new period dates
+        new_period_start = subscription.current_period_end
+        new_period_end = self._calculate_period_end(new_period_start, plan.billing_cycle)
+
+        # Update subscription in database
+        stmt = select(BillingSubscriptionTable).where(
+            and_(
+                BillingSubscriptionTable.subscription_id == subscription_id,
+                BillingSubscriptionTable.tenant_id == tenant_id,
+            )
+        )
+        result = await self.db.execute(stmt)
+        db_subscription = result.scalar_one_or_none()
+
+        if db_subscription is None:
+            raise SubscriptionNotFoundError(f"Subscription {subscription_id} not found")
+
+        # Update period dates
+        db_subscription.current_period_start = new_period_start
+        db_subscription.current_period_end = new_period_end
+
+        # Reset usage counters for new period
+        db_subscription.usage_records = {}
+
+        # If subscription was trialing and trial has ended, activate it
+        if subscription.status == SubscriptionStatus.TRIALING:
+            if subscription.trial_end and datetime.now(UTC) >= subscription.trial_end:
+                db_subscription.status = SubscriptionStatus.ACTIVE.value
+
+        await self.db.commit()
+        await self.db.refresh(db_subscription)
+
+        renewed_subscription = self._db_to_pydantic_subscription(db_subscription)
+
+        # Create renewal event
+        await self._create_event(
+            subscription_id,
+            SubscriptionEventType.RENEWED,
+            {
+                "previous_period_end": subscription.current_period_end.isoformat(),
+                "new_period_start": new_period_start.isoformat(),
+                "new_period_end": new_period_end.isoformat(),
+                "payment_id": payment_id,
+                "plan_id": plan.plan_id,
+                "billing_cycle": plan.billing_cycle.value,
+            },
+            tenant_id,
+            user_id,
+        )
+
+        logger.info(
+            "Subscription extended",
+            subscription_id=subscription_id,
+            new_period_start=new_period_start,
+            new_period_end=new_period_end,
+            payment_id=payment_id,
+            tenant_id=tenant_id,
+        )
+
+        return renewed_subscription
+
+    async def process_renewal_payment(
+        self,
+        subscription_id: str,
+        tenant_id: str,
+        payment_method_id: str,
+        idempotency_key: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Process payment for subscription renewal.
+
+        This method:
+        1. Validates renewal eligibility
+        2. Calculates renewal amount
+        3. Creates payment record
+        4. Returns payment details for processing
+
+        Note: Actual payment provider integration should be handled separately.
+        """
+        # Check eligibility
+        eligibility = await self.check_renewal_eligibility(subscription_id, tenant_id)
+
+        if not eligibility["is_eligible"]:
+            raise SubscriptionError(
+                f"Subscription not eligible for renewal: {', '.join(eligibility['reasons'])}"
+            )
+
+        subscription = await self.get_subscription(subscription_id, tenant_id)
+        plan = await self.get_plan(subscription.plan_id, tenant_id)
+
+        # Calculate renewal amount
+        renewal_amount = subscription.custom_price if subscription.custom_price else plan.price
+
+        # Prepare payment details
+        payment_details = {
+            "subscription_id": subscription_id,
+            "customer_id": subscription.customer_id,
+            "amount": renewal_amount,
+            "currency": plan.currency,
+            "payment_method_id": payment_method_id,
+            "description": f"Subscription renewal for {plan.name}",
+            "billing_cycle": plan.billing_cycle.value,
+            "period_start": subscription.current_period_end,
+            "period_end": self._calculate_period_end(subscription.current_period_end, plan.billing_cycle),
+            "idempotency_key": idempotency_key or f"renewal_{subscription_id}_{datetime.now(UTC).timestamp()}",
+            "metadata": {
+                "renewal": True,
+                "subscription_id": subscription_id,
+                "plan_id": plan.plan_id,
+                "billing_cycle": plan.billing_cycle.value,
+            },
+        }
+
+        logger.info(
+            "Renewal payment prepared",
+            subscription_id=subscription_id,
+            amount=str(renewal_amount),
+            currency=plan.currency,
+            tenant_id=tenant_id,
+        )
+
+        return payment_details
+
     # ========================================
     # Private Helper Methods
     # ========================================
@@ -926,3 +1154,237 @@ class SubscriptionService:
             return None
 
         return self._calculate_proration(subscription, old_plan, new_plan)
+
+    # ========================================
+    # Tenant Self-Service Methods
+    # ========================================
+
+    async def get_tenant_subscription(self, tenant_id: str) -> Subscription | None:
+        """Get tenant's current active subscription."""
+
+        stmt = select(BillingSubscriptionTable).where(
+            and_(
+                BillingSubscriptionTable.tenant_id == tenant_id,
+                BillingSubscriptionTable.status.in_(["active", "trialing", "past_due"]),
+            )
+        ).order_by(BillingSubscriptionTable.created_at.desc())
+
+        result = await self.db.execute(stmt)
+        db_subscription = result.scalar_one_or_none()
+
+        if not db_subscription:
+            return None
+
+        return self._db_to_pydantic_subscription(db_subscription)
+
+    async def get_available_plans(self, tenant_id: str) -> list["SubscriptionPlan"]:
+        """Get all active plans available for tenant."""
+        return await self.list_plans(tenant_id=tenant_id, active_only=True)
+
+    async def preview_plan_change(
+        self,
+        tenant_id: str,
+        new_plan_id: str,
+        effective_date: datetime | None,
+        proration_behavior: ProrationBehavior,
+    ) -> ProrationPreview:
+        """Preview costs/credits for changing plan."""
+
+        # Get current subscription
+        subscription = await self.get_tenant_subscription(tenant_id)
+        if not subscription:
+            raise SubscriptionNotFoundError("No active subscription found")
+
+        # Get plans
+        current_plan = await self.get_plan(subscription.plan_id, tenant_id)
+        new_plan = await self.get_plan(new_plan_id, tenant_id)
+
+        # Calculate proration
+        proration = self._calculate_proration(subscription, current_plan, new_plan)
+
+        # Determine effective date
+        if effective_date is None:
+            effective_date = datetime.now(UTC)
+
+        # Calculate estimated next invoice
+        # This is simplified - in production, would query pending invoices
+        estimated_invoice = new_plan.price + proration.proration_amount
+
+        return ProrationPreview(
+            current_plan=self._plan_to_response(current_plan),
+            new_plan=self._plan_to_response(new_plan),
+            proration=proration,
+            estimated_invoice_amount=estimated_invoice,
+            effective_date=effective_date,
+            next_billing_date=subscription.current_period_end,
+        )
+
+    async def change_tenant_subscription_plan(
+        self,
+        tenant_id: str,
+        new_plan_id: str,
+        effective_date: datetime | None,
+        proration_behavior: "ProrationBehavior",
+        changed_by_user_id: str,
+        change_reason: str | None = None,
+    ) -> Subscription:
+        """Execute plan change for tenant subscription."""
+        # Get current subscription
+        subscription = await self.get_tenant_subscription(tenant_id)
+        if not subscription:
+            raise SubscriptionNotFoundError("No active subscription found")
+
+        # Validate new plan exists
+        await self.get_plan(new_plan_id, tenant_id)
+
+        # Use existing change_plan method
+        await self.change_subscription_plan(
+            subscription_id=subscription.subscription_id,
+            new_plan_id=new_plan_id,
+            tenant_id=tenant_id,
+            proration_behavior=proration_behavior,
+        )
+
+        # Record event
+        await self._create_event(
+            subscription_id=subscription.subscription_id,
+            event_type=SubscriptionEventType.PLAN_CHANGED,
+            event_data={
+                "old_plan_id": subscription.plan_id,
+                "new_plan_id": new_plan_id,
+                "reason": change_reason,
+                "changed_by": changed_by_user_id,
+            },
+            tenant_id=tenant_id,
+            user_id=changed_by_user_id,
+        )
+
+        # Return updated subscription
+        updated_subscription = await self.get_tenant_subscription(tenant_id)
+        if not updated_subscription:
+            raise SubscriptionError("Failed to retrieve updated subscription")
+
+        return updated_subscription
+
+    async def cancel_tenant_subscription(
+        self,
+        tenant_id: str,
+        cancel_at_period_end: bool,
+        cancelled_by_user_id: str,
+        cancellation_reason: str | None = None,
+        feedback: str | None = None,
+    ) -> Subscription:
+        """Cancel tenant subscription."""
+        # Get current subscription
+        subscription = await self.get_tenant_subscription(tenant_id)
+        if not subscription:
+            raise SubscriptionNotFoundError("No active subscription found")
+
+        # Cannot cancel if already ended
+        if subscription.status == SubscriptionStatus.ENDED:
+            raise ValueError("Subscription has already ended")
+
+        # Use existing cancel method
+        await self.cancel_subscription_method(
+            subscription_id=subscription.subscription_id,
+            tenant_id=tenant_id,
+            cancel_at_period_end=cancel_at_period_end,
+        )
+
+        # Record cancellation event with reason
+        await self._create_event(
+            subscription_id=subscription.subscription_id,
+            event_type=SubscriptionEventType.CANCELED,
+            event_data={
+                "cancel_at_period_end": cancel_at_period_end,
+                "reason": cancellation_reason,
+                "feedback": feedback,
+                "cancelled_by": cancelled_by_user_id,
+            },
+            tenant_id=tenant_id,
+            user_id=cancelled_by_user_id,
+        )
+
+        # Return updated subscription
+        updated_subscription = await self.get_tenant_subscription(tenant_id)
+        if not updated_subscription:
+            raise SubscriptionError("Failed to retrieve updated subscription")
+
+        return updated_subscription
+
+    async def reactivate_tenant_subscription(
+        self,
+        tenant_id: str,
+        reactivated_by_user_id: str,
+    ) -> Subscription:
+        """Reactivate a cancelled subscription before period end."""
+        # Get current subscription
+        subscription = await self.get_tenant_subscription(tenant_id)
+        if not subscription:
+            raise SubscriptionNotFoundError("No subscription found")
+
+        # Validate can reactivate
+        if subscription.status != SubscriptionStatus.CANCELED:
+            raise ValueError("Can only reactivate canceled subscriptions")
+
+        if not subscription.cancel_at_period_end:
+            raise ValueError("Cannot reactivate immediately cancelled subscription")
+
+        # Check not already ended
+        if datetime.now(UTC) >= subscription.current_period_end:
+            raise ValueError("Billing period has ended, subscription cannot be reactivated")
+
+        # Reactivate by removing cancellation flag
+        stmt = select(BillingSubscriptionTable).where(
+            and_(
+                BillingSubscriptionTable.subscription_id == subscription.subscription_id,
+                BillingSubscriptionTable.tenant_id == tenant_id,
+            )
+        )
+        result = await self.db.execute(stmt)
+        db_subscription = result.scalar_one_or_none()
+
+        if not db_subscription:
+            raise SubscriptionNotFoundError("Subscription not found")
+
+        # Update status and remove cancellation
+        db_subscription.status = SubscriptionStatus.ACTIVE.value
+        db_subscription.cancel_at_period_end = False
+        db_subscription.canceled_at = None
+
+        await self.db.commit()
+        await self.db.refresh(db_subscription)
+
+        # Record reactivation event
+        await self._create_event(
+            subscription_id=subscription.subscription_id,
+            event_type=SubscriptionEventType.RESUMED,
+            event_data={
+                "reactivated_by": reactivated_by_user_id,
+            },
+            tenant_id=tenant_id,
+            user_id=reactivated_by_user_id,
+        )
+
+        return self._db_to_pydantic_subscription(db_subscription)
+
+    def _plan_to_response(self, plan: SubscriptionPlan) -> SubscriptionPlanResponse:
+        """Convert SubscriptionPlan to SubscriptionPlanResponse."""
+        return SubscriptionPlanResponse(
+            plan_id=plan.plan_id,
+            tenant_id=plan.tenant_id,
+            product_id=plan.product_id,
+            name=plan.name,
+            description=plan.description,
+            billing_cycle=plan.billing_cycle,
+            price=plan.price,
+            currency=plan.currency,
+            setup_fee=plan.setup_fee,
+            trial_days=plan.trial_days,
+            included_usage=plan.included_usage,
+            overage_rates=plan.overage_rates,
+            is_active=plan.is_active,
+            metadata=plan.metadata,
+            created_at=plan.created_at,
+            updated_at=plan.updated_at,
+        )

@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from '@/lib/api/client';
+import { useState, useEffect, useCallback } from "react";
+import { apiClient } from "@/lib/api/client";
 
 export interface APIKey {
   id: string;
@@ -56,67 +56,73 @@ export function useApiKeys() {
 
     try {
       const params = new URLSearchParams();
-      params.append('page', page.toString());
-      params.append('limit', limit.toString());
+      params.append("page", page.toString());
+      params.append("limit", limit.toString());
 
-      const response = await apiClient.get(`/api/v1/auth/api-keys?${params.toString()}`);
+      const response = await apiClient.get(`/auth/api-keys?${params.toString()}`);
       const data = response.data as { api_keys?: APIKey[] };
       setApiKeys(data.api_keys || []);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch API keys';
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch API keys";
       setError(errorMessage);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const createApiKey = useCallback(async (data: APIKeyCreateRequest): Promise<APIKeyCreateResponse> => {
-    setLoading(true);
-    setError(null);
+  const createApiKey = useCallback(
+    async (data: APIKeyCreateRequest): Promise<APIKeyCreateResponse> => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const response = await apiClient.post('/api/v1/auth/api-keys', data);
-      const newApiKey = response.data as APIKeyCreateResponse;
+      try {
+        const response = await apiClient.post("/auth/api-keys", data);
+        const newApiKey = response.data as APIKeyCreateResponse;
 
-      setApiKeys(prev => [newApiKey, ...prev]);
-      return newApiKey;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create API key';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        setApiKeys((prev) => [newApiKey, ...prev]);
+        return newApiKey;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Failed to create API key";
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
-  const updateApiKey = useCallback(async (id: string, data: APIKeyUpdateRequest): Promise<APIKey> => {
-    setLoading(true);
-    setError(null);
+  const updateApiKey = useCallback(
+    async (id: string, data: APIKeyUpdateRequest): Promise<APIKey> => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const response = await apiClient.patch(`/api/v1/auth/api-keys/${id}`, data);
-      const updatedKey = response.data as APIKey;
+      try {
+        const response = await apiClient.patch(`/auth/api-keys/${id}`, data);
+        const updatedKey = response.data as APIKey;
 
-      setApiKeys(prev => prev.map(key => key.id === id ? updatedKey : key));
-      return updatedKey;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update API key';
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        setApiKeys((prev) => prev.map((key) => (key.id === id ? updatedKey : key)));
+        return updatedKey;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Failed to update API key";
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   const revokeApiKey = useCallback(async (id: string): Promise<void> => {
     setLoading(true);
     setError(null);
 
     try {
-      await apiClient.delete(`/api/v1/auth/api-keys/${id}`);
-      setApiKeys(prev => prev.filter(key => key.id !== id));
+      await apiClient.delete(`/auth/api-keys/${id}`);
+      setApiKeys((prev) => prev.filter((key) => key.id !== id));
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to revoke API key';
+      const errorMessage = err instanceof Error ? err.message : "Failed to revoke API key";
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -126,10 +132,10 @@ export function useApiKeys() {
 
   const getAvailableScopes = useCallback(async (): Promise<AvailableScopes> => {
     try {
-      const response = await apiClient.get('/api/v1/auth/api-keys/scopes/available');
-      return (response.data as AvailableScopes) || {} as AvailableScopes;
+      const response = await apiClient.get("/auth/api-keys/scopes/available");
+      return (response.data as AvailableScopes) || ({} as AvailableScopes);
     } catch (err) {
-      console.error('Failed to fetch available scopes:', err);
+      console.error("Failed to fetch available scopes:", err);
       return {} as AvailableScopes;
     }
   }, []);

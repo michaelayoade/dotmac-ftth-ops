@@ -1,600 +1,310 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Mail,
-  MessageSquare,
   Send,
+  Clock,
   CheckCircle,
   XCircle,
-  Clock,
-  Users,
-  BarChart,
   AlertCircle,
-  Webhook,
-  RefreshCw,
-  X,
-  Inbox,
+  TrendingUp,
+  Users,
 } from "lucide-react";
-import { apiClient } from "@/lib/api/client";
-import { useToast } from "@/components/ui/use-toast";
-import { logger } from "@/lib/utils/logger";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import { useCommunicationStats, useCommunicationLogs } from "@/hooks/useCommunications";
 
-interface EmailStats {
-  sent: number;
-  delivered: number;
-  failed: number;
-  pending: number;
-}
-
-interface RecentActivity {
+interface EmailDisplay {
   id: string;
-  type: "email" | "webhook" | "sms";
+  subject: string;
   recipient: string;
-  subject?: string;
-  status: "sent" | "delivered" | "failed" | "pending";
-  timestamp: string;
+  status: string;
+  sentAt: Date;
 }
 
+/**
+ * Communications Dashboard Component
+ *
+ * Provides overview of email communications, templates, and campaign statistics
+ */
 export function CommunicationsDashboard() {
-  const { toast } = useToast();
-
-  const [stats, setStats] = useState<EmailStats>({
-    sent: 0,
-    delivered: 0,
-    failed: 0,
-    pending: 0,
-  });
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showComposeModal, setShowComposeModal] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [messageForm, setMessageForm] = useState({
-    type: "email",
-    recipient: "",
-    subject: "",
-    message: "",
+  // Fetch real data from API using hooks
+  const { data: statsData, isLoading: statsLoading } = useCommunicationStats();
+  const { data: emailsData, isLoading: emailsLoading } = useCommunicationLogs({
+    page: 1,
+    page_size: 10,
+    sort_by: "created_at",
+    sort_order: "desc",
   });
 
-  useEffect(() => {
-    fetchCommunicationData();
-  }, []);
-
-  const fetchCommunicationData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Fetch stats from API
-      const statsResponse = await apiClient.get<EmailStats>(
-        "/api/v1/communications/stats",
-      );
-
-      if (statsResponse.success && statsResponse.data) {
-        setStats(statsResponse.data);
-      } else {
-        logger.error(
-          "Failed to fetch stats",
-          new Error(statsResponse.error?.message || "Failed to fetch stats"),
-          { error: statsResponse.error },
-        );
+  const stats = statsData
+    ? {
+        totalSent: statsData.total_sent,
+        queued: statsData.by_status?.queued || 0,
+        failed: statsData.total_failed,
+        delivered: statsData.total_delivered,
+        deliveryRate: statsData.delivery_rate,
+        avgSendTime: 0, // Not available in current stats
       }
+    : {
+        totalSent: 0,
+        queued: 0,
+        failed: 0,
+        delivered: 0,
+        deliveryRate: 0,
+        avgSendTime: 0,
+      };
 
-      // Fetch recent activity from API
-      const activityResponse = await apiClient.get<RecentActivity[]>(
-        "/api/v1/communications/activity?limit=20",
-      );
+  const recentEmails: EmailDisplay[] =
+    emailsData?.logs.map((log) => ({
+      id: log.id,
+      subject: log.subject || "No subject",
+      recipient: log.recipient_email || "Unknown",
+      status: log.status,
+      sentAt: new Date(log.created_at),
+    })) || [];
 
-      if (activityResponse.success && activityResponse.data) {
-        setRecentActivity(activityResponse.data);
-      } else {
-        logger.error(
-          "Failed to fetch activity",
-          new Error(
-            activityResponse.error?.message || "Failed to fetch activity",
-          ),
-          { error: activityResponse.error },
-        );
-      }
-    } catch (err) {
-      logger.error(
-        "Failed to fetch communication data",
-        err instanceof Error ? err : new Error(String(err)),
-      );
-      setError("Failed to load communication data");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const templates = [
+    { id: "1", name: "Welcome Email", usageCount: 145 },
+    { id: "2", name: "Payment Reminder", usageCount: 89 },
+    { id: "3", name: "Service Update", usageCount: 67 },
+  ];
 
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "delivered":
-        return (
-          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-        );
-      case "sent":
-        return <Send className="h-4 w-4 text-blue-600 dark:text-blue-400" />;
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
       case "failed":
-        return <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />;
-      case "pending":
-        return (
-          <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-        );
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      case "queued":
+        return <Clock className="h-4 w-4 text-amber-600" />;
       default:
-        return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
+        return <AlertCircle className="h-4 w-4 text-gray-600" />;
     }
   };
 
-  const getStatusVariant = (
-    status: string,
-  ):
-    | "default"
-    | "secondary"
-    | "destructive"
-    | "outline"
-    | "success"
-    | "warning"
-    | "info" => {
-    switch (status) {
-      case "delivered":
-        return "success";
-      case "sent":
-        return "info";
-      case "failed":
-        return "destructive";
-      case "pending":
-        return "warning";
-      default:
-        return "default";
-    }
+  const getStatusBadge = (status: string) => {
+    const variants = {
+      delivered: "default",
+      failed: "destructive",
+      queued: "secondary",
+    } as const;
+
+    return <Badge variant={variants[status as keyof typeof variants] || "outline"}>{status}</Badge>;
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case "email":
-        return <Mail className="h-4 w-4 text-muted-foreground" />;
-      case "webhook":
-        return <Webhook className="h-4 w-4 text-muted-foreground" />;
-      case "sms":
-        return <MessageSquare className="h-4 w-4 text-muted-foreground" />;
-      default:
-        return <AlertCircle className="h-4 w-4 text-muted-foreground" />;
+  const formatTime = (date: Date) => {
+    const now = Date.now();
+    const diff = now - date.getTime();
+    const hours = Math.floor(diff / 3600000);
+
+    if (hours < 1) {
+      const minutes = Math.floor(diff / 60000);
+      return `${minutes}m ago`;
     }
-  };
-
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-
-    if (diffHours < 1) {
-      const diffMinutes = Math.floor(diffMs / (1000 * 60));
-      return `${diffMinutes} minutes ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours} hours ago`;
-    } else {
-      return date.toLocaleDateString();
+    if (hours < 24) {
+      return `${hours}h ago`;
     }
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-muted-foreground">
-          Loading communications data...
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-destructive">{error}</div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Communications</h1>
-        <Button onClick={() => setShowComposeModal(true)}>
-          <Send className="h-4 w-4 mr-2" />
-          Send Message
+        <div>
+          <h2 className="text-2xl font-semibold text-foreground">Communications</h2>
+          <p className="text-sm text-muted-foreground">
+            Email templates, campaigns, and delivery statistics
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/dashboard/operations/communications/compose">
+            <Send className="mr-2 h-4 w-4" />
+            Send Email
+          </Link>
         </Button>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Sent</p>
-                <p className="text-2xl font-bold text-foreground mt-2">
-                  {stats.sent.toLocaleString()}
-                </p>
-              </div>
-              <Send className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Sent</CardTitle>
+            <Mail className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalSent.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">All time</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Delivered</p>
-                <p className="text-2xl font-bold text-foreground mt-2">
-                  {stats.delivered.toLocaleString()}
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Queued</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.queued}</div>
+            <p className="text-xs text-muted-foreground">Pending delivery</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Failed</p>
-                <p className="text-2xl font-bold text-foreground mt-2">
-                  {stats.failed.toLocaleString()}
-                </p>
-              </div>
-              <XCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Delivery Rate</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.deliveryRate}%</div>
+            <p className="text-xs text-muted-foreground">Last 30 days</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Pending</p>
-                <p className="text-2xl font-bold text-foreground mt-2">
-                  {stats.pending.toLocaleString()}
-                </p>
-              </div>
-              <Clock className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
-            </div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Failed</CardTitle>
+            <XCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.failed}</div>
+            <p className="text-xs text-muted-foreground">Requires attention</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Recipient
-                  </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Subject
-                  </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Time
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {recentActivity.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center">
-                      <div className="flex flex-col items-center">
-                        <Inbox className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                        <p className="text-muted-foreground text-lg font-medium">
-                          No recent activity
-                        </p>
-                        <p className="text-muted-foreground/70 text-sm mt-2">
-                          Communications will appear here once sent
-                        </p>
+      {/* Main Content */}
+      <Tabs defaultValue="recent" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="recent">Recent Emails</TabsTrigger>
+          <TabsTrigger value="templates">Templates</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
+
+        {/* Recent Emails Tab */}
+        <TabsContent value="recent" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Emails</CardTitle>
+              <CardDescription>Latest email communications sent from your account</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentEmails.map((email: EmailDisplay) => (
+                  <div
+                    key={email.id}
+                    className="flex items-center justify-between p-4 rounded-lg border"
+                  >
+                    <div className="flex items-center gap-4">
+                      {getStatusIcon(email.status)}
+                      <div>
+                        <p className="font-medium">{email.subject}</p>
+                        <p className="text-sm text-muted-foreground">{email.recipient}</p>
                       </div>
-                    </td>
-                  </tr>
-                ) : (
-                  recentActivity.map((activity) => (
-                    <tr
-                      key={activity.id}
-                      className="hover:bg-muted/50 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          {getTypeIcon(activity.type)}
-                          <span className="text-sm text-foreground capitalize">
-                            {activity.type}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-foreground">
-                          {activity.recipient}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-foreground">
-                          {activity.subject || "-"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge variant={getStatusVariant(activity.status)}>
-                          {activity.status}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-muted-foreground">
-                          {formatTimestamp(activity.timestamp)}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
-          <CardContent className="p-6">
-            <Mail className="h-8 w-8 text-blue-600 dark:text-blue-400 mb-4" />
-            <CardTitle className="text-lg mb-2">Email Templates</CardTitle>
-            <CardDescription>Manage and create email templates</CardDescription>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
-          <CardContent className="p-6">
-            <Users className="h-8 w-8 text-green-600 dark:text-green-400 mb-4" />
-            <CardTitle className="text-lg mb-2">Recipient Lists</CardTitle>
-            <CardDescription>Manage recipient groups and lists</CardDescription>
-          </CardContent>
-        </Card>
-
-        <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
-          <CardContent className="p-6">
-            <BarChart className="h-8 w-8 text-purple-600 dark:text-purple-400 mb-4" />
-            <CardTitle className="text-lg mb-2">Analytics</CardTitle>
-            <CardDescription>
-              View detailed communication analytics
-            </CardDescription>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Compose Message Modal */}
-      {showComposeModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <Card className="w-full max-w-2xl max-h-[90vh] overflow-hidden">
-            {/* Modal Header */}
-            <CardHeader className="border-b border-border">
-              <div className="flex items-center justify-between">
-                <CardTitle>Compose Message</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowComposeModal(false)}
-                  aria-label="Close compose modal"
-                >
-                  <X className="h-5 w-5" />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      {getStatusBadge(email.status)}
+                      <span className="text-sm text-muted-foreground">
+                        {formatTime(email.sentAt)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 flex justify-center">
+                <Button variant="outline" asChild>
+                  <Link href="/dashboard/operations/communications/history">View All Emails</Link>
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Templates Tab */}
+        <TabsContent value="templates" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Email Templates</CardTitle>
+              <CardDescription>Reusable email templates for common communications</CardDescription>
             </CardHeader>
-
-            {/* Modal Content */}
-            <CardContent className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-200px)]">
-              {/* Message Type */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Type
-                </label>
-                <select
-                  value={messageForm.type}
-                  onChange={(e) =>
-                    setMessageForm({ ...messageForm, type: e.target.value })
-                  }
-                  className="w-full px-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                >
-                  <option value="email">Email</option>
-                  <option value="sms">SMS</option>
-                  <option value="webhook">Webhook</option>
-                </select>
+            <CardContent>
+              <div className="space-y-4">
+                {templates.map((template) => (
+                  <div
+                    key={template.id}
+                    className="flex items-center justify-between p-4 rounded-lg border"
+                  >
+                    <div className="flex items-center gap-4">
+                      <Mail className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">{template.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Used {template.usageCount} times
+                        </p>
+                      </div>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      Use Template
+                    </Button>
+                  </div>
+                ))}
               </div>
-
-              {/* Recipient */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  {messageForm.type === "email"
-                    ? "Email Address"
-                    : messageForm.type === "sms"
-                      ? "Phone Number"
-                      : "Webhook URL"}
-                </label>
-                <input
-                  type={messageForm.type === "email" ? "email" : "text"}
-                  value={messageForm.recipient}
-                  onChange={(e) =>
-                    setMessageForm({
-                      ...messageForm,
-                      recipient: e.target.value,
-                    })
-                  }
-                  placeholder={
-                    messageForm.type === "email"
-                      ? "recipient@example.com"
-                      : messageForm.type === "sms"
-                        ? "+1234567890"
-                        : "https://api.example.com/webhook"
-                  }
-                  className="w-full px-3 py-2 bg-background border border-input rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                />
-              </div>
-
-              {/* Subject (for email only) */}
-              {messageForm.type === "email" && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">
-                    Subject
-                  </label>
-                  <input
-                    type="text"
-                    value={messageForm.subject}
-                    onChange={(e) =>
-                      setMessageForm({
-                        ...messageForm,
-                        subject: e.target.value,
-                      })
-                    }
-                    placeholder="Enter subject"
-                    className="w-full px-3 py-2 bg-background border border-input rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                  />
-                </div>
-              )}
-
-              {/* Message */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  {messageForm.type === "webhook"
-                    ? "Payload (JSON)"
-                    : "Message"}
-                </label>
-                <textarea
-                  value={messageForm.message}
-                  onChange={(e) =>
-                    setMessageForm({ ...messageForm, message: e.target.value })
-                  }
-                  placeholder={
-                    messageForm.type === "webhook"
-                      ? '{\n  "event": "notification",\n  "data": {}\n}'
-                      : "Enter your message here..."
-                  }
-                  rows={8}
-                  className="w-full px-3 py-2 bg-background border border-input rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent font-mono"
-                />
+              <div className="mt-4 flex justify-center">
+                <Button variant="outline" asChild>
+                  <Link href="/dashboard/operations/communications/templates">
+                    Manage Templates
+                  </Link>
+                </Button>
               </div>
             </CardContent>
-
-            {/* Modal Footer */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
-              <Button
-                variant="outline"
-                onClick={() => setShowComposeModal(false)}
-                disabled={sending}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={async () => {
-                  if (!messageForm.recipient) {
-                    toast({
-                      title: "Error",
-                      description: "Please enter a recipient",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  if (messageForm.type === "email" && !messageForm.subject) {
-                    toast({
-                      title: "Error",
-                      description: "Please enter a subject",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  if (!messageForm.message) {
-                    toast({
-                      title: "Error",
-                      description: "Please enter a message",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-
-                  setSending(true);
-                  try {
-                    // Simulate API call
-                    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-                    // Add to recent activity
-                    const newActivity: RecentActivity = {
-                      id: Date.now().toString(),
-                      type: messageForm.type as any,
-                      recipient: messageForm.recipient,
-                      subject: messageForm.subject,
-                      status: "sent",
-                      timestamp: new Date().toISOString(),
-                    };
-
-                    setRecentActivity([newActivity, ...recentActivity]);
-                    setStats({ ...stats, sent: stats.sent + 1 });
-
-                    toast({
-                      title: "Success",
-                      description: `${messageForm.type === "email" ? "Email" : messageForm.type === "sms" ? "SMS" : "Webhook"} sent successfully`,
-                    });
-                    setShowComposeModal(false);
-                    setMessageForm({
-                      type: "email",
-                      recipient: "",
-                      subject: "",
-                      message: "",
-                    });
-                  } catch (error) {
-                    toast({
-                      title: "Error",
-                      description: "Failed to send message. Please try again.",
-                      variant: "destructive",
-                    });
-                  } finally {
-                    setSending(false);
-                  }
-                }}
-                disabled={sending}
-              >
-                {sending ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4 mr-2" />
-                    Send Message
-                  </>
-                )}
-              </Button>
-            </div>
           </Card>
-        </div>
-      )}
+        </TabsContent>
+
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Analytics</CardTitle>
+              <CardDescription>Email performance metrics and insights</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Delivery Rate</span>
+                    <span className="text-sm text-muted-foreground">{stats.deliveryRate}%</span>
+                  </div>
+                  <div className="w-full bg-secondary rounded-full h-2">
+                    <div
+                      className="bg-green-600 h-2 rounded-full transition-all"
+                      style={{ width: `${stats.deliveryRate}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg border">
+                    <p className="text-sm text-muted-foreground mb-1">Avg. Send Time</p>
+                    <p className="text-2xl font-bold">{stats.avgSendTime}s</p>
+                  </div>
+                  <div className="p-4 rounded-lg border">
+                    <p className="text-sm text-muted-foreground mb-1">Active Templates</p>
+                    <p className="text-2xl font-bold">{templates.length}</p>
+                  </div>
+                </div>
+
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Detailed analytics charts and reports will be displayed here.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

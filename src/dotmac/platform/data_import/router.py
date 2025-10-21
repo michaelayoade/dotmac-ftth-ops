@@ -9,12 +9,13 @@ import json
 from typing import Any
 from uuid import UUID
 
+import structlog
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
-from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.auth.rbac_dependencies import require_admin
 from dotmac.platform.billing.dependencies import get_tenant_id
 from dotmac.platform.data_import import (
     DataImportService,
@@ -29,7 +30,9 @@ from dotmac.platform.data_import.schemas import (
 )
 from dotmac.platform.database import get_async_session as get_db
 
-router = APIRouter(tags=["Data Import"])
+logger = structlog.get_logger(__name__)
+
+router = APIRouter(prefix="/data-import", tags=["Data Import"])
 
 
 @router.post("/upload/{entity_type}")
@@ -40,7 +43,7 @@ async def upload_import_file(
     dry_run: bool = Form(default=False),
     use_async: bool = Form(default=False),
     db: AsyncSession = Depends(get_db),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_admin),
     tenant_id: str = Depends(get_tenant_id),
 ) -> ImportJobResponse:
     """
@@ -141,11 +144,16 @@ async def upload_import_file(
         response: ImportJobResponse = ImportJobResponse.from_model(job, result)
         return response
 
-    except Exception as e:
+    except Exception as exc:
+        logger.exception(
+            "data_import.upload_failed",
+            entity_type=entity_type,
+            tenant_id=tenant_id,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Import failed: {str(e)}",
-        )
+            detail="Import failed. Please try again later.",
+        ) from exc
 
 
 @router.get("/jobs")
@@ -155,7 +163,7 @@ async def list_import_jobs(
     limit: int = Query(default=20, le=100),
     offset: int = Query(default=0, ge=0),
     db: AsyncSession = Depends(get_db),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_admin),
     tenant_id: str = Depends(get_tenant_id),
 ) -> ImportJobListResponse:
     """
@@ -192,7 +200,7 @@ async def list_import_jobs(
 async def get_import_job(
     job_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_admin),
     tenant_id: str = Depends(get_tenant_id),
 ) -> ImportJobResponse:
     """
@@ -222,7 +230,7 @@ async def get_import_job(
 async def get_import_job_status(
     job_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_admin),
     tenant_id: str = Depends(get_tenant_id),
 ) -> ImportStatusResponse:
     """
@@ -279,7 +287,7 @@ async def get_import_failures(
     job_id: UUID,
     limit: int = Query(default=100, le=1000),
     db: AsyncSession = Depends(get_db),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_admin),
     tenant_id: str = Depends(get_tenant_id),
 ) -> list[ImportFailureResponse]:
     """
@@ -317,7 +325,7 @@ async def export_import_failures(
     job_id: UUID,
     format: str = Query(default="csv", pattern="^(csv|json)$"),
     db: AsyncSession = Depends(get_db),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_admin),
     tenant_id: str = Depends(get_tenant_id),
 ) -> StreamingResponse:
     """
@@ -398,7 +406,7 @@ async def export_import_failures(
 async def cancel_import_job(
     job_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_admin),
     tenant_id: str = Depends(get_tenant_id),
 ) -> dict[str, Any]:
     """

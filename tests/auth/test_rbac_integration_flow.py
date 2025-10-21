@@ -33,7 +33,7 @@ def app():
         tenant_header_name="X-Tenant-ID",
     )
     app.add_middleware(TenantMiddleware, config=tenant_config)
-    app.include_router(auth_router, prefix="/auth")
+    app.include_router(auth_router)
     app.include_router(rbac_router, prefix="/rbac")
     return app
 

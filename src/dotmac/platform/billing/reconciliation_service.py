@@ -265,7 +265,8 @@ class ReconciliationService:
                     ManualPayment.payment_date >= reconciliation.period_start,
                     ManualPayment.payment_date <= reconciliation.period_end,
                     or_(
-                        ManualPayment.reconciled == False, ManualPayment.reconciled.is_(None)
+                        ManualPayment.reconciled.is_(False),
+                        ManualPayment.reconciled.is_(None),
                     ),  # noqa: E712
                 )
             )
@@ -506,7 +507,7 @@ class ReconciliationService:
                 return await self.circuit_breaker.call(self._process_payment_internal, payment)
 
             # Use retry manager
-            payment = await self.retry_manager.execute(process_payment)
+            await self.retry_manager.execute(process_payment)
 
             # Log successful recovery
             await self.audit_service.log_activity(
@@ -555,7 +556,7 @@ class ReconciliationService:
             Result from operation_func
         """
         result = await self.idempotency_manager.ensure_idempotent(
-            key=idempotency_key, func=operation_func, *args, **kwargs
+            idempotency_key, operation_func, *args, **kwargs
         )
 
         # Log idempotent operation

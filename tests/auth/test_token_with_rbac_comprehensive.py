@@ -165,7 +165,7 @@ class TestAccessTokenCreation:
         db_session = Mock()
         additional = {"custom_claim": "custom_value", "another": 123}
 
-        token = await rbac_token_service.create_access_token(
+        await rbac_token_service.create_access_token(
             test_user, db_session, additional_claims=additional
         )
 
@@ -209,7 +209,7 @@ class TestAccessTokenCreation:
 
         db_session = Mock()
 
-        token = await rbac_token_service.create_access_token(user, db_session)
+        await rbac_token_service.create_access_token(user, db_session)
 
         claims = jwt_service._create_token.call_args[0][0]
         assert claims["tenant_id"] is None

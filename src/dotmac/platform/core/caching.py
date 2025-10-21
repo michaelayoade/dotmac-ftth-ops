@@ -8,11 +8,11 @@ arbitrary code execution vulnerabilities.
 import json
 from datetime import datetime
 from functools import wraps
-from typing import Any
+from typing import Any, cast
 
-import redis
 from cachetools import LRUCache, TTLCache, cached  # noqa: PGH003
 
+import redis
 from dotmac.platform.settings import settings
 
 
@@ -26,7 +26,7 @@ class DateTimeEncoder(json.JSONEncoder):
 
 
 # Redis client for distributed caching (lazy initialisation)
-redis_client: redis.Redis | None = None
+redis_client: Any = None  # redis.Redis - generic syntax incompatible with Python 3.13
 _redis_init_attempted = False
 
 # In-memory caches for local caching
@@ -35,7 +35,7 @@ memory_cache: TTLCache[str, Any] = TTLCache(maxsize=1000, ttl=300)  # 5 min TTL
 lru_cache: LRUCache[str, Any] = LRUCache(maxsize=500)
 
 
-def get_redis() -> redis.Redis | None:
+def get_redis() -> Any:
     """Get Redis client if available."""
     global redis_client, _redis_init_attempted
 
@@ -47,10 +47,13 @@ def get_redis() -> redis.Redis | None:
 
     _redis_init_attempted = True
     try:
-        redis_client = redis.Redis.from_url(
-            settings.redis.cache_url,
-            decode_responses=False,
-            max_connections=settings.redis.max_connections,
+        redis_client = cast(
+            Any,  # redis.Redis - generic syntax incompatible with Python 3.13
+            redis.Redis.from_url(
+                settings.redis.cache_url,
+                decode_responses=False,
+                max_connections=settings.redis.max_connections,
+            ),
         )
     except Exception:
         redis_client = None
@@ -58,7 +61,7 @@ def get_redis() -> redis.Redis | None:
     return redis_client
 
 
-def set_redis_client(client: redis.Redis | None) -> None:
+def set_redis_client(client: Any) -> None:
     """Override the global Redis client (useful for testing)."""
     global redis_client, _redis_init_attempted
     redis_client = client

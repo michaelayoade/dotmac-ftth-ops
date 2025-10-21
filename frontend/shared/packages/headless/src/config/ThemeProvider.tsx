@@ -3,11 +3,11 @@
  * Provides configurable theming across the application
  */
 
-'use client';
+"use client";
 
-import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 
-import { defaultTheme, type ThemeConfig, type ThemeName, themes } from './theme.config';
+import { defaultTheme, type ThemeConfig, type ThemeName, themes } from "./theme.config";
 
 interface ThemeContextType {
   theme: ThemeConfig;
@@ -22,13 +22,13 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 interface ThemeProviderProps {
   children: ReactNode;
   defaultThemeName?: ThemeName;
-  portalType?: 'admin' | 'customer' | 'reseller';
+  portalType?: "admin" | "customer" | "reseller";
   allowCustomization?: boolean;
 }
 
 export function ThemeProvider({
   children,
-  defaultThemeName = 'default',
+  defaultThemeName = "default",
   portalType,
   allowCustomization = true,
 }: ThemeProviderProps) {
@@ -84,9 +84,9 @@ export function ThemeProvider({
 
     // Apply typography
     if (finalTheme.typography?.fontFamily) {
-      root.style.setProperty('--font-sans', finalTheme.typography.fontFamily.sans.join(', '));
-      root.style.setProperty('--font-serif', finalTheme.typography.fontFamily.serif.join(', '));
-      root.style.setProperty('--font-mono', finalTheme.typography.fontFamily.mono.join(', '));
+      root.style.setProperty("--font-sans", finalTheme.typography.fontFamily.sans.join(", "));
+      root.style.setProperty("--font-serif", finalTheme.typography.fontFamily.serif.join(", "));
+      root.style.setProperty("--font-mono", finalTheme.typography.fontFamily.mono.join(", "));
     }
 
     // Apply spacing
@@ -172,7 +172,7 @@ export function ThemeProvider({
 export function useTheme(): ThemeContextType {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error("useTheme must be used within a ThemeProvider");
   }
   return context;
 }

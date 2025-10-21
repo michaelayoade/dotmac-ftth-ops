@@ -4,8 +4,8 @@
  * Follows DRY principles by centralizing audit logic across all frontend apps
  */
 
-import { useCallback, useRef, useEffect } from 'react';
-import { AuditApiClient } from '../api/clients/AuditApiClient';
+import { useCallback, useRef, useEffect } from "react";
+import { AuditApiClient } from "../api/clients/AuditApiClient";
 import {
   AuditEvent,
   AuditEventType,
@@ -13,9 +13,9 @@ import {
   AuditSeverity,
   AuditOutcome,
   CreateFrontendAuditEvent,
-} from '../api/types/audit';
-import { useISPTenant } from './useISPTenant';
-import { useAuth } from '../auth/useAuth';
+} from "../api/types/audit";
+import { useISPTenant } from "./useISPTenant";
+import { useAuth } from "../auth/useAuth";
 
 interface AuditLoggerConfig {
   serviceName: string;
@@ -35,26 +35,26 @@ interface UseAuditLoggerReturn {
     type: AuditEventType,
     outcome: AuditOutcome,
     message: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ) => Promise<void>;
   logDataAccess: (
     operation: string,
     resourceType: string,
     resourceId: string,
     outcome: AuditOutcome,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ) => Promise<void>;
   logUIEvent: (
     type: FrontendAuditEventType,
     element: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ) => Promise<void>;
   logError: (error: Error, context: string, metadata?: Record<string, any>) => Promise<void>;
   logBusinessEvent: (
     type: AuditEventType,
     workflow: string,
     outcome: AuditOutcome,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ) => Promise<void>;
 
   // Batch management
@@ -84,11 +84,11 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
 
   // Initialize audit client
   useEffect(() => {
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || '/api';
+    const baseURL = process.env.NEXT_PUBLIC_API_URL || "/api";
     const headers: Record<string, string> = {};
 
     if (user?.token) {
-      headers['Authorization'] = `Bearer ${user.token}`;
+      headers["Authorization"] = `Bearer ${user.token}`;
     }
 
     auditClientRef.current = new AuditApiClient(baseURL, headers);
@@ -120,13 +120,13 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
   // Create actor information from current user context
   const createActor = useCallback(() => {
     const actor = {
-      id: user?.id || 'anonymous',
-      type: user?.id ? ('user' as const) : ('anonymous' as const),
+      id: user?.id || "anonymous",
+      type: user?.id ? ("user" as const) : ("anonymous" as const),
       name: user?.name,
       email: user?.email,
       session_id: sessionId,
       ip_address: undefined, // Will be filled by backend
-      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
     };
 
     return actor;
@@ -137,25 +137,25 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
     (additionalContext?: Record<string, any>) => {
       return {
         source: serviceName,
-        environment: process.env.NODE_ENV || 'development',
+        environment: process.env.NODE_ENV || "development",
         correlation_id: sessionId,
         request_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         additional: {
-          url: typeof window !== 'undefined' ? window.location.href : undefined,
+          url: typeof window !== "undefined" ? window.location.href : undefined,
           ...additionalContext,
         },
       };
     },
-    [serviceName, sessionId]
+    [serviceName, sessionId],
   );
 
   // Store event locally for offline support
   const storeLocally = useCallback(
     (event: CreateFrontendAuditEvent) => {
-      if (!enableLocalStorage || typeof window === 'undefined') return;
+      if (!enableLocalStorage || typeof window === "undefined") return;
 
       try {
-        const stored = localStorage.getItem('audit_events') || '[]';
+        const stored = localStorage.getItem("audit_events") || "[]";
         const events = JSON.parse(stored);
         events.push({
           ...event,
@@ -165,12 +165,12 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
 
         // Keep only last 100 events locally
         const recentEvents = events.slice(-100);
-        localStorage.setItem('audit_events', JSON.stringify(recentEvents));
+        localStorage.setItem("audit_events", JSON.stringify(recentEvents));
       } catch (error) {
-        console.warn('Failed to store audit event locally:', error);
+        console.warn("Failed to store audit event locally:", error);
       }
     },
-    [enableLocalStorage]
+    [enableLocalStorage],
   );
 
   // Console logging for development
@@ -180,10 +180,10 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
 
       const logLevel =
         event.severity === AuditSeverity.CRITICAL || event.severity === AuditSeverity.HIGH
-          ? 'error'
+          ? "error"
           : event.severity === AuditSeverity.MEDIUM
-            ? 'warn'
-            : 'info';
+            ? "warn"
+            : "info";
 
       console[logLevel](`[AUDIT] ${event.event_type}: ${event.message}`, {
         actor: event.actor?.id,
@@ -191,7 +191,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
         metadata: event.metadata,
       });
     },
-    [enableConsoleLogging]
+    [enableConsoleLogging],
   );
 
   // Core event logging function
@@ -219,11 +219,11 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
           await flushBatch();
         }
       } catch (error) {
-        console.error('Failed to log audit event:', error);
+        console.error("Failed to log audit event:", error);
         isHealthyRef.current = false;
       }
     },
-    [createActor, createContext, tenantId, storeLocally, consoleLog, batchSize]
+    [createActor, createContext, tenantId, storeLocally, consoleLog, batchSize],
   );
 
   // Flush the batch queue
@@ -237,7 +237,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
       await auditClientRef.current.logEventsBatch(eventsToSend);
       isHealthyRef.current = true;
     } catch (error) {
-      console.error('Failed to send audit batch:', error);
+      console.error("Failed to send audit batch:", error);
       isHealthyRef.current = false;
 
       // Re-add events to queue for retry
@@ -252,7 +252,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
         await logEvent(event);
       }
     },
-    [logEvent]
+    [logEvent],
   );
 
   // Convenience method for auth events
@@ -261,7 +261,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
       type: AuditEventType,
       outcome: AuditOutcome,
       message: string,
-      metadata?: Record<string, any>
+      metadata?: Record<string, any>,
     ) => {
       await logEvent({
         event_type: type,
@@ -273,7 +273,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
         metadata,
       });
     },
-    [logEvent, createActor, createContext]
+    [logEvent, createActor, createContext],
   );
 
   // Convenience method for data access events
@@ -283,16 +283,16 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
       resourceType: string,
       resourceId: string,
       outcome: AuditOutcome,
-      metadata?: Record<string, any>
+      metadata?: Record<string, any>,
     ) => {
       const eventType =
-        operation === 'create'
+        operation === "create"
           ? AuditEventType.DATA_CREATE
-          : operation === 'read'
+          : operation === "read"
             ? AuditEventType.DATA_READ
-            : operation === 'update'
+            : operation === "update"
               ? AuditEventType.DATA_UPDATE
-              : operation === 'delete'
+              : operation === "delete"
                 ? AuditEventType.DATA_DELETE
                 : AuditEventType.DATA_READ;
 
@@ -301,7 +301,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
         message: `${operation} operation on ${resourceType} ${resourceId}`,
         outcome,
         severity:
-          operation === 'delete' && outcome === AuditOutcome.SUCCESS
+          operation === "delete" && outcome === AuditOutcome.SUCCESS
             ? AuditSeverity.MEDIUM
             : AuditSeverity.LOW,
         actor: createActor(),
@@ -313,7 +313,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
         metadata,
       });
     },
-    [logEvent, createActor, createContext]
+    [logEvent, createActor, createContext],
   );
 
   // Convenience method for UI events
@@ -329,7 +329,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
         metadata,
       });
     },
-    [logEvent, createActor, createContext]
+    [logEvent, createActor, createContext],
   );
 
   // Convenience method for error events
@@ -350,7 +350,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
         },
       });
     },
-    [logEvent, createActor, createContext]
+    [logEvent, createActor, createContext],
   );
 
   // Convenience method for business events
@@ -359,7 +359,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
       type: AuditEventType,
       workflow: string,
       outcome: AuditOutcome,
-      metadata?: Record<string, any>
+      metadata?: Record<string, any>,
     ) => {
       await logEvent({
         event_type: type,
@@ -371,7 +371,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
         metadata,
       });
     },
-    [logEvent, createActor, createContext]
+    [logEvent, createActor, createContext],
   );
 
   return {

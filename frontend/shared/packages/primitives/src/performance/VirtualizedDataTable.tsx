@@ -3,10 +3,10 @@
  * High-performance table for large datasets with lazy loading
  */
 
-import React, { useMemo, useCallback, useState, useEffect, useRef } from 'react';
-import { FixedSizeList as List, VariableSizeList } from 'react-window';
-import { Card, Button, Input, Select, Checkbox, Skeleton } from '@dotmac/primitives';
-import { Search, ChevronUp, ChevronDown, MoreHorizontal } from 'lucide-react';
+import React, { useMemo, useCallback, useState, useEffect, useRef } from "react";
+import { FixedSizeList as List, VariableSizeList } from "react-window";
+import { Card, Button, Input, Select, Checkbox, Skeleton } from "@dotmac/primitives";
+import { Search, ChevronUp, ChevronDown, MoreHorizontal } from "lucide-react";
 
 export interface VirtualizedColumn {
   key: string;
@@ -25,7 +25,7 @@ export interface VirtualizedDataTableProps {
   columns: VirtualizedColumn[];
   height?: number;
   rowHeight?: number | ((index: number) => number);
-  onSort?: (columnKey: string, direction: 'asc' | 'desc') => void;
+  onSort?: (columnKey: string, direction: "asc" | "desc") => void;
   onRowClick?: (row: any, index: number) => void;
   onSelectionChange?: (selectedRows: any[]) => void;
   loading?: boolean;
@@ -66,19 +66,19 @@ function VirtualizedRow({ index, style, data }: RowProps) {
     (checked: boolean) => {
       onRowSelect?.(row, checked);
     },
-    [row, onRowSelect]
+    [row, onRowSelect],
   );
 
   return (
     <div
       style={style}
       className={`flex items-center border-b hover:bg-gray-50 transition-colors ${
-        isSelected ? 'bg-blue-50' : ''
+        isSelected ? "bg-blue-50" : ""
       }`}
       onClick={handleRowClick}
     >
       {selectable && (
-        <div className='flex items-center justify-center w-12 px-2'>
+        <div className="flex items-center justify-center w-12 px-2">
           <Checkbox
             checked={isSelected}
             onChange={(e) => {
@@ -93,7 +93,7 @@ function VirtualizedRow({ index, style, data }: RowProps) {
         <div
           key={column.key}
           className={`flex items-center px-3 py-2 text-sm ${
-            column.sticky ? 'sticky left-0 bg-white border-r' : ''
+            column.sticky ? "sticky left-0 bg-white border-r" : ""
           }`}
           style={{
             width: column.width,
@@ -123,7 +123,7 @@ function TableHeader({
   onSelectAll,
 }: {
   columns: VirtualizedColumn[];
-  sortConfig?: { key: string; direction: 'asc' | 'desc' };
+  sortConfig?: { key: string; direction: "asc" | "desc" };
   onSort?: (key: string) => void;
   selectable?: boolean;
   selectedCount: number;
@@ -131,9 +131,9 @@ function TableHeader({
   onSelectAll?: (checked: boolean) => void;
 }) {
   return (
-    <div className='flex items-center bg-gray-50 border-b border-gray-200 sticky top-0 z-10'>
+    <div className="flex items-center bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
       {selectable && (
-        <div className='flex items-center justify-center w-12 px-2'>
+        <div className="flex items-center justify-center w-12 px-2">
           <Checkbox
             checked={selectedCount > 0}
             indeterminate={selectedCount > 0 && selectedCount < totalCount}
@@ -146,8 +146,8 @@ function TableHeader({
         <div
           key={column.key}
           className={`flex items-center px-3 py-3 text-sm font-medium text-gray-700 ${
-            column.sticky ? 'sticky left-0 bg-gray-50 border-r' : ''
-          } ${column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''}`}
+            column.sticky ? "sticky left-0 bg-gray-50 border-r" : ""
+          } ${column.sortable ? "cursor-pointer hover:bg-gray-100" : ""}`}
           style={{
             width: column.width,
             minWidth: column.minWidth || column.width,
@@ -157,11 +157,11 @@ function TableHeader({
         >
           <span>{column.label}</span>
           {column.sortable && sortConfig?.key === column.key && (
-            <span className='ml-1'>
-              {sortConfig.direction === 'asc' ? (
-                <ChevronUp className='w-4 h-4' />
+            <span className="ml-1">
+              {sortConfig.direction === "asc" ? (
+                <ChevronUp className="w-4 h-4" />
               ) : (
-                <ChevronDown className='w-4 h-4' />
+                <ChevronDown className="w-4 h-4" />
               )}
             </span>
           )}
@@ -182,15 +182,15 @@ export function VirtualizedDataTable({
   loading = false,
   loadMore,
   hasNextPage = false,
-  searchValue = '',
+  searchValue = "",
   onSearchChange,
   selectable = false,
   stickyHeader = true,
   overscan = 5,
-  className = '',
+  className = "",
 }: VirtualizedDataTableProps) {
   const [sortConfig, setSortConfig] = useState<
-    { key: string; direction: 'asc' | 'desc' } | undefined
+    { key: string; direction: "asc" | "desc" } | undefined
   >();
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const listRef = useRef<List>(null);
@@ -205,12 +205,12 @@ export function VirtualizedDataTable({
   const handleSort = useCallback(
     (columnKey: string) => {
       const newDirection =
-        sortConfig?.key === columnKey && sortConfig.direction === 'asc' ? 'desc' : 'asc';
+        sortConfig?.key === columnKey && sortConfig.direction === "asc" ? "desc" : "asc";
 
       setSortConfig({ key: columnKey, direction: newDirection });
       onSort?.(columnKey, newDirection);
     },
-    [sortConfig, onSort]
+    [sortConfig, onSort],
   );
 
   // Handle row selection
@@ -229,7 +229,7 @@ export function VirtualizedDataTable({
       const selectedRowsData = data.filter((r) => newSelected.has(r.id));
       onSelectionChange?.(selectedRowsData);
     },
-    [selectedRows, data, onSelectionChange]
+    [selectedRows, data, onSelectionChange],
   );
 
   // Handle select all
@@ -244,21 +244,21 @@ export function VirtualizedDataTable({
         onSelectionChange?.([]);
       }
     },
-    [data, onSelectionChange]
+    [data, onSelectionChange],
   );
 
   // Load more data when scrolling near end
   const handleScroll = useCallback(
     (scrollOffset: number, scrollDirection: string) => {
-      if (hasNextPage && loadMore && scrollDirection === 'forward') {
+      if (hasNextPage && loadMore && scrollDirection === "forward") {
         const scrollPercentage =
-          scrollOffset / (data.length * (typeof rowHeight === 'number' ? rowHeight : 48));
+          scrollOffset / (data.length * (typeof rowHeight === "number" ? rowHeight : 48));
         if (scrollPercentage > 0.8) {
           loadMore();
         }
       }
     },
-    [hasNextPage, loadMore, data.length, rowHeight]
+    [hasNextPage, loadMore, data.length, rowHeight],
   );
 
   // Reset selection when data changes
@@ -275,17 +275,17 @@ export function VirtualizedDataTable({
       onRowSelect: handleRowSelect,
       selectable,
     }),
-    [data, columns, selectedRows, onRowClick, handleRowSelect, selectable]
+    [data, columns, selectedRows, onRowClick, handleRowSelect, selectable],
   );
 
   if (loading && data.length === 0) {
     return (
       <Card className={`p-6 ${className}`}>
-        <div className='space-y-4'>
-          <Skeleton className='h-12 w-full' />
-          <Skeleton className='h-8 w-full' />
-          <Skeleton className='h-8 w-full' />
-          <Skeleton className='h-8 w-full' />
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-8 w-full" />
         </div>
       </Card>
     );
@@ -295,20 +295,20 @@ export function VirtualizedDataTable({
     <Card className={`overflow-hidden ${className}`}>
       {/* Search and Controls */}
       {onSearchChange && (
-        <div className='p-4 border-b'>
-          <div className='flex items-center gap-4'>
-            <div className='flex-1 relative'>
-              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
+        <div className="p-4 border-b">
+          <div className="flex items-center gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
-                placeholder='Search...'
+                placeholder="Search..."
                 value={searchValue}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className='pl-10'
+                className="pl-10"
               />
             </div>
 
             {selectable && selectedRows.size > 0 && (
-              <div className='text-sm text-gray-600'>
+              <div className="text-sm text-gray-600">
                 {selectedRows.size} of {data.length} selected
               </div>
             )}
@@ -337,7 +337,7 @@ export function VirtualizedDataTable({
           width={totalWidth}
           height={stickyHeader ? height - 56 : height} // Account for header
           itemCount={data.length}
-          itemSize={typeof rowHeight === 'number' ? rowHeight : 48}
+          itemSize={typeof rowHeight === "number" ? rowHeight : 48}
           itemData={itemData}
           overscanCount={overscan}
           onScroll={({ scrollOffset, scrollDirection }) => {
@@ -349,15 +349,15 @@ export function VirtualizedDataTable({
 
         {/* Loading indicator for additional data */}
         {loading && data.length > 0 && (
-          <div className='p-4 text-center border-t'>
-            <div className='text-sm text-gray-500'>Loading more...</div>
+          <div className="p-4 text-center border-t">
+            <div className="text-sm text-gray-500">Loading more...</div>
           </div>
         )}
 
         {/* Load more button */}
         {hasNextPage && loadMore && !loading && (
-          <div className='p-4 text-center border-t'>
-            <Button onClick={loadMore} variant='outline'>
+          <div className="p-4 text-center border-t">
+            <Button onClick={loadMore} variant="outline">
               Load More
             </Button>
           </div>

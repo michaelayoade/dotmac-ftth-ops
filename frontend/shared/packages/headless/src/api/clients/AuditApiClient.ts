@@ -3,33 +3,35 @@
  * Provides comprehensive audit logging integration with backend audit system
  */
 
-import { BaseApiClient, RequestConfig } from './BaseApiClient';
+import { BaseApiClient, RequestConfig } from "./BaseApiClient";
 import {
   AuditEvent,
   AuditEventQuery,
   AuditEventResponse,
   AuditHealthResponse,
-} from '../types/audit';
+} from "../types/audit";
 
 export class AuditApiClient extends BaseApiClient {
   constructor(baseURL: string, headers: Record<string, string> = {}) {
-    super(baseURL, headers, 'AuditAPI');
+    super(baseURL, headers, "AuditAPI");
   }
 
   /**
    * Log an audit event to the backend
    */
-  async logEvent(event: Omit<AuditEvent, 'event_id' | 'timestamp'>): Promise<{ event_id: string }> {
-    return this.post<{ event_id: string }>('/audit/events', event);
+  async logEvent(event: Omit<AuditEvent, "event_id" | "timestamp">): Promise<{ event_id: string }> {
+    return this.post<{ event_id: string }>("/audit/events", event);
   }
 
   /**
    * Log multiple audit events in a batch
    */
   async logEventsBatch(
-    events: Omit<AuditEvent, 'event_id' | 'timestamp'>[]
+    events: Omit<AuditEvent, "event_id" | "timestamp">[],
   ): Promise<{ event_ids: string[] }> {
-    return this.post<{ event_ids: string[] }>('/audit/events/batch', { events });
+    return this.post<{ event_ids: string[] }>("/audit/events/batch", {
+      events,
+    });
   }
 
   /**
@@ -37,7 +39,7 @@ export class AuditApiClient extends BaseApiClient {
    */
   async queryEvents(query: AuditEventQuery = {}): Promise<AuditEventResponse> {
     const config: RequestConfig = { params: query };
-    return this.get<AuditEventResponse>('/audit/events', config);
+    return this.get<AuditEventResponse>("/audit/events", config);
   }
 
   /**
@@ -58,26 +60,26 @@ export class AuditApiClient extends BaseApiClient {
   /**
    * Export audit events
    */
-  async exportEvents(format: 'json' | 'csv', query: AuditEventQuery = {}): Promise<Blob> {
+  async exportEvents(format: "json" | "csv", query: AuditEventQuery = {}): Promise<Blob> {
     const config: RequestConfig = {
       params: { ...query, format },
-      headers: { Accept: format === 'csv' ? 'text/csv' : 'application/json' },
+      headers: { Accept: format === "csv" ? "text/csv" : "application/json" },
     };
-    return this.get<Blob>('/audit/events/export', config);
+    return this.get<Blob>("/audit/events/export", config);
   }
 
   /**
    * Get audit system health
    */
   async getHealth(): Promise<AuditHealthResponse> {
-    return this.get<AuditHealthResponse>('/audit/health');
+    return this.get<AuditHealthResponse>("/audit/health");
   }
 
   /**
    * Get audit metrics
    */
   async getMetrics(): Promise<Record<string, any>> {
-    return this.get<Record<string, any>>('/audit/metrics');
+    return this.get<Record<string, any>>("/audit/metrics");
   }
 
   /**
@@ -85,6 +87,6 @@ export class AuditApiClient extends BaseApiClient {
    */
   async getComplianceReport(framework?: string): Promise<Record<string, any>> {
     const config: RequestConfig = framework ? { params: { framework } } : {};
-    return this.get<Record<string, any>>('/audit/compliance/report', config);
+    return this.get<Record<string, any>>("/audit/compliance/report", config);
   }
 }

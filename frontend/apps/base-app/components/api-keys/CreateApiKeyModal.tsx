@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { logger } from '@/lib/logger';
+import { useState, useEffect } from "react";
+import { logger } from "@/lib/logger";
 import {
   X,
   Key,
@@ -12,8 +12,8 @@ import {
   EyeOff,
   Loader2,
   Plus,
-} from 'lucide-react';
-import { useApiKeys, APIKey, APIKeyCreateRequest, AvailableScopes } from '@/hooks/useApiKeys';
+} from "lucide-react";
+import { useApiKeys, APIKey, APIKeyCreateRequest, AvailableScopes } from "@/hooks/useApiKeys";
 
 interface CreateApiKeyModalProps {
   onClose: () => void;
@@ -24,7 +24,7 @@ interface CreateApiKeyModalProps {
 export function CreateApiKeyModal({
   onClose,
   onApiKeyCreated,
-  editingApiKey
+  editingApiKey,
 }: CreateApiKeyModalProps) {
   const { createApiKey, updateApiKey, getAvailableScopes } = useApiKeys();
   const [loading, setLoading] = useState(false);
@@ -34,10 +34,10 @@ export function CreateApiKeyModal({
   const [copied, setCopied] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     scopes: [] as string[],
-    expires_at: '',
+    expires_at: "",
     never_expires: true,
   });
 
@@ -49,7 +49,10 @@ export function CreateApiKeyModal({
         const scopes = await getAvailableScopes();
         setAvailableScopes(scopes);
       } catch (error) {
-        logger.error('Failed to load available scopes', error instanceof Error ? error : new Error(String(error)));
+        logger.error(
+          "Failed to load available scopes",
+          error instanceof Error ? error : new Error(String(error)),
+        );
       }
     };
 
@@ -59,9 +62,11 @@ export function CreateApiKeyModal({
     if (editingApiKey) {
       setFormData({
         name: editingApiKey.name,
-        description: editingApiKey.description || '',
+        description: editingApiKey.description || "",
         scopes: editingApiKey.scopes,
-        expires_at: editingApiKey.expires_at ? (new Date(editingApiKey.expires_at).toISOString().split('T')[0] ?? '') : '',
+        expires_at: editingApiKey.expires_at
+          ? (new Date(editingApiKey.expires_at).toISOString().split("T")[0] ?? "")
+          : "",
         never_expires: !editingApiKey.expires_at,
       });
     }
@@ -71,21 +76,21 @@ export function CreateApiKeyModal({
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
+      newErrors.name = "Name is required";
     }
 
     if (formData.scopes.length === 0) {
-      newErrors.scopes = 'At least one scope is required';
+      newErrors.scopes = "At least one scope is required";
     }
 
     if (!formData.never_expires && !formData.expires_at) {
-      newErrors.expires_at = 'Expiration date is required';
+      newErrors.expires_at = "Expiration date is required";
     }
 
     if (!formData.never_expires && formData.expires_at) {
       const expirationDate = new Date(formData.expires_at);
       if (expirationDate <= new Date()) {
-        newErrors.expires_at = 'Expiration date must be in the future';
+        newErrors.expires_at = "Expiration date must be in the future";
       }
     }
 
@@ -120,23 +125,28 @@ export function CreateApiKeyModal({
         setCreatedApiKey(response.api_key);
       }
     } catch (error) {
-      logger.error('Failed to save API key', error instanceof Error ? error : new Error(String(error)));
-      setErrors({ submit: error instanceof Error ? error.message : 'Failed to save API key' });
+      logger.error(
+        "Failed to save API key",
+        error instanceof Error ? error : new Error(String(error)),
+      );
+      setErrors({
+        submit: error instanceof Error ? error.message : "Failed to save API key",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleScopeToggle = (scope: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       scopes: prev.scopes.includes(scope)
-        ? prev.scopes.filter(s => s !== scope)
+        ? prev.scopes.filter((s) => s !== scope)
         : [...prev.scopes, scope],
     }));
     // Clear scope errors when user selects scopes
     if (errors.scopes) {
-      setErrors(prev => ({ ...prev, scopes: '' }));
+      setErrors((prev) => ({ ...prev, scopes: "" }));
     }
   };
 
@@ -146,7 +156,10 @@ export function CreateApiKeyModal({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      logger.error('Failed to copy to clipboard', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Failed to copy to clipboard",
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   };
 
@@ -171,7 +184,9 @@ export function CreateApiKeyModal({
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-white">API Key Created!</h3>
-                <p className="text-slate-400 text-sm">Save this key securely - you won&apos;t see it again</p>
+                <p className="text-slate-400 text-sm">
+                  Save this key securely - you won&apos;t see it again
+                </p>
               </div>
             </div>
           </div>
@@ -183,20 +198,19 @@ export function CreateApiKeyModal({
                 <div>
                   <h4 className="font-medium text-yellow-400">Important Security Notice</h4>
                   <p className="text-sm text-slate-300 mt-1">
-                    This is the only time you&apos;ll see your API key. Store it securely and never share it publicly.
+                    This is the only time you&apos;ll see your API key. Store it securely and never
+                    share it publicly.
                   </p>
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Your API Key
-              </label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Your API Key</label>
               <div className="flex items-center gap-2">
                 <div className="flex-1 relative">
                   <input
-                    type={showApiKey ? 'text' : 'password'}
+                    type={showApiKey ? "text" : "password"}
                     value={createdApiKey}
                     readOnly
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white font-mono text-sm pr-20 focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -213,7 +227,7 @@ export function CreateApiKeyModal({
                   className="flex items-center gap-2 px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-lg transition-colors"
                 >
                   {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  {copied ? 'Copied!' : 'Copy'}
+                  {copied ? "Copied!" : "Copy"}
                 </button>
               </div>
             </div>
@@ -254,19 +268,19 @@ export function CreateApiKeyModal({
             <div className="flex items-center gap-3">
               <Key className="h-6 w-6 text-sky-400" />
               <h3 className="text-lg font-semibold text-white">
-                {editingApiKey ? 'Edit API Key' : 'Create API Key'}
+                {editingApiKey ? "Edit API Key" : "Create API Key"}
               </h3>
             </div>
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-white transition-colors"
-            >
+            <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
               <X className="h-6 w-6" />
             </button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-120px)]"
+        >
           {errors.submit && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
               <div className="flex items-center gap-3">
@@ -277,33 +291,32 @@ export function CreateApiKeyModal({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Name *
-            </label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Name *</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => {
-                setFormData(prev => ({ ...prev, name: e.target.value }));
-                if (errors.name) setErrors(prev => ({ ...prev, name: '' }));
+                setFormData((prev) => ({ ...prev, name: e.target.value }));
+                if (errors.name) setErrors((prev) => ({ ...prev, name: "" }));
               }}
               className={`w-full px-3 py-2 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                errors.name ? 'border-red-500' : 'border-slate-700'
+                errors.name ? "border-red-500" : "border-slate-700"
               }`}
               placeholder="e.g., Production API Key"
             />
-            {errors.name && (
-              <p className="text-red-400 text-sm mt-1">{errors.name}</p>
-            )}
+            {errors.name && <p className="text-red-400 text-sm mt-1">{errors.name}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Description
-            </label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
               rows={3}
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
               placeholder="Optional description of what this API key will be used for"
@@ -311,9 +324,7 @@ export function CreateApiKeyModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Scopes *
-            </label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Scopes *</label>
             <p className="text-sm text-slate-400 mb-3">
               Select the permissions this API key should have
             </p>
@@ -337,21 +348,23 @@ export function CreateApiKeyModal({
                 </label>
               ))}
             </div>
-            {errors.scopes && (
-              <p className="text-red-400 text-sm mt-1">{errors.scopes}</p>
-            )}
+            {errors.scopes && <p className="text-red-400 text-sm mt-1">{errors.scopes}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-3">
-              Expiration
-            </label>
+            <label className="block text-sm font-medium text-slate-300 mb-3">Expiration</label>
             <div className="space-y-3">
               <label className="flex items-center gap-2">
                 <input
                   type="radio"
                   checked={formData.never_expires}
-                  onChange={() => setFormData(prev => ({ ...prev, never_expires: true, expires_at: '' }))}
+                  onChange={() =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      never_expires: true,
+                      expires_at: "",
+                    }))
+                  }
                   className="h-4 w-4 text-sky-600 bg-slate-700 border-slate-600 focus:ring-sky-500"
                 />
                 <span className="text-white">Never expires</span>
@@ -360,7 +373,7 @@ export function CreateApiKeyModal({
                 <input
                   type="radio"
                   checked={!formData.never_expires}
-                  onChange={() => setFormData(prev => ({ ...prev, never_expires: false }))}
+                  onChange={() => setFormData((prev) => ({ ...prev, never_expires: false }))}
                   className="h-4 w-4 text-sky-600 bg-slate-700 border-slate-600 focus:ring-sky-500"
                 />
                 <span className="text-white">Set expiration date</span>
@@ -375,12 +388,15 @@ export function CreateApiKeyModal({
                     type="date"
                     value={formData.expires_at}
                     onChange={(e) => {
-                      setFormData(prev => ({ ...prev, expires_at: e.target.value }));
-                      if (errors.expires_at) setErrors(prev => ({ ...prev, expires_at: '' }));
+                      setFormData((prev) => ({
+                        ...prev,
+                        expires_at: e.target.value,
+                      }));
+                      if (errors.expires_at) setErrors((prev) => ({ ...prev, expires_at: "" }));
                     }}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={new Date().toISOString().split("T")[0]}
                     className={`flex-1 px-3 py-2 bg-slate-800 border rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                      errors.expires_at ? 'border-red-500' : 'border-slate-700'
+                      errors.expires_at ? "border-red-500" : "border-slate-700"
                     }`}
                   />
                 </div>
@@ -407,12 +423,12 @@ export function CreateApiKeyModal({
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  {editingApiKey ? 'Updating...' : 'Creating...'}
+                  {editingApiKey ? "Updating..." : "Creating..."}
                 </>
               ) : (
                 <>
                   {editingApiKey ? <Shield className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-                  {editingApiKey ? 'Update API Key' : 'Create API Key'}
+                  {editingApiKey ? "Update API Key" : "Create API Key"}
                 </>
               )}
             </button>

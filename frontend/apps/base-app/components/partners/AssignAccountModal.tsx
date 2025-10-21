@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { platformConfig } from "@/lib/config";
 
-const API_BASE = platformConfig.apiBaseUrl;
+const API_BASE = platformConfig.api.baseUrl;
 
 interface AssignAccountModalProps {
   partnerId: string;
@@ -20,10 +20,7 @@ interface AssignAccountInput {
   notes?: string;
 }
 
-async function assignAccount(
-  partnerId: string,
-  data: AssignAccountInput
-): Promise<void> {
+async function assignAccount(partnerId: string, data: AssignAccountInput): Promise<void> {
   const response = await fetch(`${API_BASE}/api/v1/partners/accounts`, {
     method: "POST",
     credentials: "include",
@@ -44,10 +41,7 @@ async function assignAccount(
   return response.json();
 }
 
-export default function AssignAccountModal({
-  partnerId,
-  onClose,
-}: AssignAccountModalProps) {
+export default function AssignAccountModal({ partnerId, onClose }: AssignAccountModalProps) {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<AssignAccountInput>({
     customer_id: "",
@@ -58,7 +52,9 @@ export default function AssignAccountModal({
     mutationFn: (data: AssignAccountInput) => assignAccount(partnerId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["partner", partnerId] });
-      queryClient.invalidateQueries({ queryKey: ["partner-accounts", partnerId] });
+      queryClient.invalidateQueries({
+        queryKey: ["partner-accounts", partnerId],
+      });
       onClose();
     },
   });
@@ -79,9 +75,7 @@ export default function AssignAccountModal({
       <div className="bg-slate-800 rounded-lg max-w-xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-slate-700">
           <h2 className="text-2xl font-bold text-white">Assign Customer Account</h2>
-          <p className="text-slate-400 text-sm mt-1">
-            Link a customer account to this partner
-          </p>
+          <p className="text-slate-400 text-sm mt-1">Link a customer account to this partner</p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -93,9 +87,7 @@ export default function AssignAccountModal({
               type="text"
               required
               value={formData.customer_id}
-              onChange={(e) =>
-                setFormData({ ...formData, customer_id: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, customer_id: e.target.value })}
               className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               placeholder="Enter customer UUID"
             />
@@ -105,9 +97,7 @@ export default function AssignAccountModal({
           </div>
 
           <div>
-            <label className="block text-sm text-slate-400 mb-2">
-              Engagement Type
-            </label>
+            <label className="block text-sm text-slate-400 mb-2">Engagement Type</label>
             <select
               value={formData.engagement_type}
               onChange={(e) =>
@@ -126,19 +116,13 @@ export default function AssignAccountModal({
           </div>
 
           <div>
-            <label className="block text-sm text-slate-400 mb-2">
-              Custom Commission Rate (%)
-            </label>
+            <label className="block text-sm text-slate-400 mb-2">Custom Commission Rate (%)</label>
             <input
               type="number"
               step="0.01"
               min="0"
               max="100"
-              value={
-                formData.custom_commission_rate
-                  ? formData.custom_commission_rate * 100
-                  : ""
-              }
+              value={formData.custom_commission_rate ? formData.custom_commission_rate * 100 : ""}
               onChange={(e) =>
                 setFormData({
                   ...formData,
@@ -157,29 +141,21 @@ export default function AssignAccountModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-slate-400 mb-2">
-                Start Date
-              </label>
+              <label className="block text-sm text-slate-400 mb-2">Start Date</label>
               <input
                 type="date"
                 value={formData.start_date || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, start_date: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-400 mb-2">
-                End Date
-              </label>
+              <label className="block text-sm text-slate-400 mb-2">End Date</label>
               <input
                 type="date"
                 value={formData.end_date || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, end_date: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               />
             </div>
@@ -189,9 +165,7 @@ export default function AssignAccountModal({
             <label className="block text-sm text-slate-400 mb-2">Notes</label>
             <textarea
               value={formData.notes || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, notes: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={3}
               className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               placeholder="Optional notes about this assignment"

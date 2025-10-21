@@ -2,6 +2,8 @@
 Receipt API router
 """
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, ConfigDict, Field
@@ -36,7 +38,7 @@ class GenerateReceiptForInvoiceRequest(BaseModel):
     model_config = ConfigDict()
 
     invoice_id: str = Field(..., description="Invoice ID to generate receipt for")
-    payment_details: dict = Field(..., description="Payment details")
+    payment_details: dict[str, Any] = Field(..., description="Payment details")
     include_pdf: bool = Field(True, description="Include PDF generation")
     include_html: bool = Field(True, description="Include HTML generation")
 

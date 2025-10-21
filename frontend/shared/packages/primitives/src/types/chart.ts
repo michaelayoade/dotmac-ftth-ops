@@ -60,7 +60,7 @@ export interface NetworkUsageChartProps {
 export interface ServiceStatusData {
   name: string;
   value: number;
-  status: 'online' | 'maintenance' | 'offline';
+  status: "online" | "maintenance" | "offline";
 }
 
 export interface ServiceStatusChartProps {

@@ -51,7 +51,7 @@ class TestInvoiceServiceCreation:
         mock_db.refresh = AsyncMock(side_effect=mock_refresh_entity)
 
         # Create invoice
-        result = await service.create_invoice(
+        await service.create_invoice(
             tenant_id=sample_tenant_id,
             customer_id=sample_customer_id,
             billing_email="customer@example.com",
@@ -157,7 +157,7 @@ class TestInvoiceServiceCreation:
         mock_db.refresh = AsyncMock(side_effect=mock_refresh_entity)
 
         # Create invoice with subscription
-        result = await service.create_invoice(
+        await service.create_invoice(
             tenant_id=sample_tenant_id,
             customer_id=sample_customer_id,
             billing_email="customer@example.com",
@@ -198,7 +198,7 @@ class TestInvoiceServiceCreation:
         mock_db.refresh = AsyncMock(side_effect=mock_refresh_entity)
 
         # Create invoice with custom due date
-        result = await service.create_invoice(
+        await service.create_invoice(
             tenant_id=sample_tenant_id,
             customer_id=sample_customer_id,
             billing_email="customer@example.com",

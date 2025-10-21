@@ -3,7 +3,7 @@ Basic tests for main auth router endpoints to improve coverage.
 """
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.auth.core import UserInfo, create_access_token
+from dotmac.platform.auth.core import create_access_token
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import User
 
@@ -20,7 +20,7 @@ from dotmac.platform.user_management.models import User
 def auth_test_app():
     """Create test app with auth router."""
     app = FastAPI()
-    app.include_router(auth_router, prefix="/auth")
+    app.include_router(auth_router)
 
     return app
 

@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import {
   platformAdminTenantService,
   PlatformTenantListParams,
   PlatformTenantListResponse,
-} from '@/lib/services/platform-admin-tenant-service';
+} from "@/lib/services/platform-admin-tenant-service";
 
 export const platformTenantsQueryKey = (params: PlatformTenantListParams) => [
-  'platform-tenants',
+  "platform-tenants",
   params,
 ];
 
 type PlatformTenantsQueryKey = ReturnType<typeof platformTenantsQueryKey>;
 
 export function usePlatformTenants(
-  params: PlatformTenantListParams
+  params: PlatformTenantListParams,
 ): UseQueryResult<PlatformTenantListResponse, Error> {
   return useQuery<
     PlatformTenantListResponse,
@@ -26,7 +26,7 @@ export function usePlatformTenants(
     queryKey: platformTenantsQueryKey(params),
     queryFn: () => platformAdminTenantService.listTenants(params),
     meta: {
-      feature: 'platform-tenants',
+      feature: "platform-tenants",
     },
   });
 }

@@ -1,3 +1,5 @@
+"use client";
+
 /**
  * DotMac Headless UI Package
  *
@@ -5,18 +7,18 @@
  */
 
 // Re-export query client utilities
-export { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+export { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // API Client and Configuration
-export * from './api';
-export { partnerApiClient } from './api/partner-client';
+export * from "./api";
+export { partnerApiClient } from "./api/partner-client";
 // Components
-export * from './components';
-export * from './config/ConfigProvider';
+export * from "./components";
+export * from "./config/ConfigProvider";
 // Configuration and Theming
-export * from './config/framework.config';
-export * from './config/ThemeProvider';
-export * from './config/theme.config';
+export * from "./config/framework.config";
+export * from "./config/ThemeProvider";
+export * from "./config/theme.config";
 // Hooks (excluding conflict-prone exports)
 export {
   useApiData,
@@ -49,7 +51,7 @@ export {
   usePreferences,
   useDataTable,
   useFormState,
-} from './hooks';
+} from "./hooks";
 
 // Partner Portal hooks
 export {
@@ -63,31 +65,31 @@ export {
   useValidateTerritory,
   usePartnerDataWithErrorBoundary,
   partnerQueryKeys,
-} from './hooks/usePartnerData';
+} from "./hooks/usePartnerData";
 
 // Security hooks
-export { useSecureForm } from './hooks/useSecureForm';
-export { useMFAGuard } from './hooks/useMFA';
+export { useSecureForm } from "./hooks/useSecureForm";
+export { useMFAGuard } from "./hooks/useMFA";
 
 // Additional WebSocket hooks
 export {
   useNetworkMonitoring,
   useCustomerActivity,
   useFieldOperations,
-} from './hooks/useWebSocket';
+} from "./hooks/useWebSocket";
 
 // Real-time event hooks
-export { useRealTimeEvent, useRealTimeData } from './hooks/useRealTimeSync';
+export { useRealTimeEvent, useRealTimeData } from "./hooks/useRealTimeSync";
 
 // Business validation hooks
-export { useBusinessValidation } from './hooks/useBusinessValidation';
+export { useBusinessValidation } from "./hooks/useBusinessValidation";
 
 // Form handling hooks
 export {
   useFormValidation,
   useFormSubmission,
   useAsyncValidation,
-} from './hooks/useFormValidation';
+} from "./hooks/useFormValidation";
 
 // Customer data hooks
 export {
@@ -97,11 +99,11 @@ export {
   useCustomerUsage,
   useCustomerDocuments,
   useCustomerSupportTickets,
-} from '@dotmac/headless/hooks';
+} from "@dotmac/headless/hooks";
 
 // Business logic engines
-export { commissionEngine, DEFAULT_COMMISSION_TIERS } from './business/commission-engine';
-export { territoryValidator } from './business/territory-validator';
+export { commissionEngine, DEFAULT_COMMISSION_TIERS } from "./business/commission-engine";
+export { territoryValidator } from "./business/territory-validator";
 
 // ISP Business Operations (DRY-compliant centralized business logic)
 export {
@@ -109,7 +111,7 @@ export {
   useISPBusiness,
   ISPBusinessService,
   type ISPBusinessOperations,
-} from './business/isp-operations';
+} from "./business/isp-operations";
 
 // Portal-optimized business hooks
 export {
@@ -118,7 +120,7 @@ export {
   useTechnicianBusiness,
   useAdminBusiness,
   useManagementBusiness,
-} from './hooks/useISPBusiness';
+} from "./hooks/useISPBusiness";
 
 // Notification hooks
 export {
@@ -129,7 +131,7 @@ export {
   useNotificationStore,
   type NotificationType,
   type Notification,
-} from '@dotmac/headless/hooks';
+} from "@dotmac/headless/hooks";
 
 // Standard error handling (preferred)
 export {
@@ -143,7 +145,7 @@ export {
   getGlobalErrorConfig,
   type UseStandardErrorHandlerOptions,
   type UseStandardErrorHandlerReturn,
-} from './hooks/useStandardErrorHandler';
+} from "./hooks/useStandardErrorHandler";
 
 // Legacy error handling (for backward compatibility)
 export {
@@ -154,14 +156,14 @@ export {
   type ErrorInfo as LegacyErrorInfo,
   type ErrorHandlerOptions as LegacyErrorHandlerOptions,
   type UseErrorHandlerResult as LegacyUseErrorHandlerResult,
-} from './hooks/useErrorHandler';
+} from "./hooks/useErrorHandler";
 // Stores
-export * from './stores';
+export * from "./stores";
 
 // Explicitly export store hooks for clarity
-export { useAuthStore } from '@dotmac/headless/auth';
-export { useTenantStore } from '@dotmac/headless/stores';
-export { useAppStore } from '@dotmac/headless/stores';
+export { useAuthStore } from "@dotmac/headless/auth";
+export { useTenantStore } from "@dotmac/headless/stores";
+export { useAppStore } from "@dotmac/headless/stores";
 // Types (exclude conflicting types that are exported from hooks)
 export type {
   Address,
@@ -207,12 +209,12 @@ export type {
   RouteProtectionResult,
   RouteConfig,
   RouteGuardProps,
-} from './types';
+} from "./types";
 // Security utilities
-export * from './utils';
+export * from "./utils";
 // CSP utilities and nonce provider
-export * from './utils/csp';
-export * from './components/NonceProvider';
+export * from "./utils/csp";
+export * from "./components/NonceProvider";
 // Error handling utilities (specific exports to avoid conflicts)
 export {
   ISPError,
@@ -227,15 +229,15 @@ export {
   type ErrorSeverity,
   type ErrorCategory,
   type ErrorMetadata,
-} from './utils/errorUtils';
+} from "./utils/errorUtils";
 
 // Error handling components - export specific components to avoid conflicts
 export {
   StandardErrorBoundary,
   useErrorBoundary,
   withErrorBoundary as withStandardErrorBoundary,
-} from './components/StandardErrorBoundary';
-export * from './providers/ErrorHandlingProvider';
+} from "./components/StandardErrorBoundary";
+export * from "./providers/ErrorHandlingProvider";
 
 // Route Guard components and utilities
 export {
@@ -248,10 +250,13 @@ export {
   SupportAgentGuard,
   PermissionGuard,
   FeatureGuard,
-} from './components/RouteGuard';
+} from "./components/RouteGuard";
 
 // Production Data Guard utilities
-export * from './utils/production-data-guard';
+export * from "./utils/production-data-guard";
 
 // Unified Management Operations (High-Impact DRY Solution)
-export * from './management';
+export * from "./management";
+
+// Telemetry and OpenTelemetry utilities
+export { initializeOTEL, createSpan, recordMetric, performance } from "./utils/telemetry";

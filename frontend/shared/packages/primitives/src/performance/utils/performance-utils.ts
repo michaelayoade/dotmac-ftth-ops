@@ -1,7 +1,7 @@
 /**
  * Performance measurement and optimization utilities
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 export interface PerformanceMeasurement {
   name: string;
@@ -17,7 +17,7 @@ export interface PerformanceMeasurement {
 export function measurePerformance<T>(
   name: string,
   fn: () => T,
-  metadata?: Record<string, any>
+  metadata?: Record<string, any>,
 ): { result: T; measurement: PerformanceMeasurement } {
   const startTime = performance.now();
   const result = fn();
@@ -32,7 +32,7 @@ export function measurePerformance<T>(
   };
 
   // Log to console in development
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     console.log(`[Performance] ${name}: ${measurement.duration.toFixed(2)}ms`, measurement);
   }
 
@@ -45,7 +45,7 @@ export function measurePerformance<T>(
 export async function measureAsyncPerformance<T>(
   name: string,
   fn: () => Promise<T>,
-  metadata?: Record<string, any>
+  metadata?: Record<string, any>,
 ): Promise<{ result: T; measurement: PerformanceMeasurement }> {
   const startTime = performance.now();
   const result = await fn();
@@ -59,7 +59,7 @@ export async function measureAsyncPerformance<T>(
     metadata,
   };
 
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     console.log(`[Performance] ${name}: ${measurement.duration.toFixed(2)}ms`, measurement);
   }
 
@@ -71,10 +71,10 @@ export async function measureAsyncPerformance<T>(
  */
 export function withPerformanceTracking<P extends Record<string, any>>(
   WrappedComponent: React.ComponentType<P>,
-  componentName?: string
+  componentName?: string,
 ) {
   const displayName =
-    componentName || WrappedComponent.displayName || WrappedComponent.name || 'Component';
+    componentName || WrappedComponent.displayName || WrappedComponent.name || "Component";
 
   const PerformanceTrackedComponent: React.FC<P> = (props) => {
     const renderStartTime = useRef<number>();
@@ -97,9 +97,9 @@ export function withPerformanceTracking<P extends Record<string, any>>(
 
         setMeasurements((prev) => [...prev.slice(-9), measurement]); // Keep last 10 measurements
 
-        if (process.env.NODE_ENV === 'development' && measurement.duration > 16) {
+        if (process.env.NODE_ENV === "development" && measurement.duration > 16) {
           console.warn(
-            `[Performance] Slow render detected for ${displayName}: ${measurement.duration.toFixed(2)}ms`
+            `[Performance] Slow render detected for ${displayName}: ${measurement.duration.toFixed(2)}ms`,
           );
         }
       }
@@ -156,14 +156,14 @@ export function usePerformanceMetrics(componentName: string) {
         lastRenderTime: renderTime,
       });
 
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env.NODE_ENV === "development") {
         if (renderTime > 16) {
           console.warn(`[Performance] Slow render in ${componentName}: ${renderTime.toFixed(2)}ms`);
         }
 
         if (slowRenders > renderTimes.current.length * 0.2) {
           console.warn(
-            `[Performance] High slow render ratio in ${componentName}: ${slowRenders}/${renderTimes.current.length}`
+            `[Performance] High slow render ratio in ${componentName}: ${slowRenders}/${renderTimes.current.length}`,
           );
         }
       }
@@ -182,7 +182,7 @@ export const optimizeBundle = {
    */
   lazyLoad: <T extends React.ComponentType<any>>(
     importFn: () => Promise<{ default: T }>,
-    fallback?: React.ComponentType
+    fallback?: React.ComponentType,
   ) => {
     const LazyComponent = React.lazy(importFn);
 
@@ -192,9 +192,9 @@ export const optimizeBundle = {
         {
           fallback: fallback
             ? React.createElement(fallback)
-            : React.createElement('div', null, 'Loading...'),
+            : React.createElement("div", null, "Loading..."),
         },
-        React.createElement(LazyComponent, props)
+        React.createElement(LazyComponent, props),
       );
   },
 
@@ -205,18 +205,18 @@ export const optimizeBundle = {
     try {
       await importFn();
     } catch (error) {
-      console.warn('[Performance] Failed to preload module:', error);
+      console.warn("[Performance] Failed to preload module:", error);
     }
   },
 
   /**
    * Create a resource hint for prefetching
    */
-  prefetch: (href: string, as?: 'script' | 'style' | 'image') => {
-    if (typeof window === 'undefined') return;
+  prefetch: (href: string, as?: "script" | "style" | "image") => {
+    if (typeof window === "undefined") return;
 
-    const link = document.createElement('link');
-    link.rel = 'prefetch';
+    const link = document.createElement("link");
+    link.rel = "prefetch";
     link.href = href;
     if (as) link.as = as;
 
@@ -226,18 +226,18 @@ export const optimizeBundle = {
   /**
    * Create a resource hint for preloading
    */
-  preloadResource: (href: string, as: 'script' | 'style' | 'image' | 'font', type?: string) => {
-    if (typeof window === 'undefined') return;
+  preloadResource: (href: string, as: "script" | "style" | "image" | "font", type?: string) => {
+    if (typeof window === "undefined") return;
 
-    const link = document.createElement('link');
-    link.rel = 'preload';
+    const link = document.createElement("link");
+    link.rel = "preload";
     link.href = href;
     link.as = as;
     if (type) link.type = type;
 
     // Add crossorigin for fonts
-    if (as === 'font') {
-      link.crossOrigin = 'anonymous';
+    if (as === "font") {
+      link.crossOrigin = "anonymous";
     }
 
     document.head.appendChild(link);
@@ -265,7 +265,7 @@ export const memoryUtils = {
    * Monitor memory leaks by tracking object references
    */
   trackMemoryLeaks: (objectName: string, obj: any) => {
-    if (process.env.NODE_ENV !== 'development') return;
+    if (process.env.NODE_ENV !== "development") return;
 
     const refs = new Set();
     const trackRef = (ref: any) => refs.add(ref);
@@ -306,7 +306,7 @@ export const networkUtils = {
    */
   measureRequest: async (
     url: string,
-    options?: RequestInit
+    options?: RequestInit,
   ): Promise<{
     response: Response;
     timing: {
@@ -323,7 +323,7 @@ export const networkUtils = {
     const observer = new PerformanceObserver((list) => {
       const entry = list.getEntries().find((e) => e.name === url);
       if (entry) {
-        console.log('[Network] Request timing:', {
+        console.log("[Network] Request timing:", {
           dns: entry.domainLookupEnd - entry.domainLookupStart,
           connect: entry.connectEnd - entry.connectStart,
           request: entry.requestStart - entry.connectEnd,
@@ -333,7 +333,7 @@ export const networkUtils = {
       }
     });
 
-    observer.observe({ entryTypes: ['resource'] });
+    observer.observe({ entryTypes: ["resource"] });
 
     const response = await fetch(url, options);
     const endTime = performance.now();
@@ -354,4 +354,4 @@ export const networkUtils = {
 };
 
 // React import for lazy loading
-import React from 'react';
+import React from "react";

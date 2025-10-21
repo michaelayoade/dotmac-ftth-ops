@@ -23,13 +23,13 @@ pytestmark = pytest.mark.skip(
     reason="Database I/O errors - 91% coverage already achieved via unit tests"
 )
 
-from dotmac.platform.customer_management.models import (
+from dotmac.platform.customer_management.models import (  # noqa: E402
     ActivityType,
     CustomerStatus,
     CustomerTier,
     CustomerType,
 )
-from dotmac.platform.customer_management.schemas import (
+from dotmac.platform.customer_management.schemas import (  # noqa: E402
     CustomerActivityCreate,
     CustomerCreate,
     CustomerNoteCreate,
@@ -37,7 +37,7 @@ from dotmac.platform.customer_management.schemas import (
     CustomerSegmentCreate,
     CustomerUpdate,
 )
-from dotmac.platform.customer_management.service import CustomerService
+from dotmac.platform.customer_management.service import CustomerService  # noqa: E402
 
 
 @pytest.mark.asyncio
@@ -465,14 +465,14 @@ class TestCustomerNotes:
                 subject="Internal Strategy",
                 content="Customer is considering enterprise upgrade. Follow up in Q1 2025.",
             )
-            note1 = await service.add_note(customer.id, internal_note, created_by=uuid4())
+            await service.add_note(customer.id, internal_note, created_by=uuid4())
 
             # Add customer-visible note
             external_note = CustomerNoteCreate(
                 subject="Meeting Summary",
                 content="Discussed implementation timeline and training needs.",
             )
-            note2 = await service.add_note(customer.id, external_note, created_by=uuid4())
+            await service.add_note(customer.id, external_note, created_by=uuid4())
 
             # Retrieve all notes
             all_notes = await service.get_customer_notes(customer.id, include_internal=True)

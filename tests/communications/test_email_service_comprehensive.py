@@ -266,7 +266,7 @@ class TestEmailServiceBulk:
 
                 assert len(responses) == 15
                 # Should log at message 10
-                info_calls = [call for call in mock_logger.info.call_args_list]
+                info_calls = list(mock_logger.info.call_args_list)
                 assert any("Bulk email progress: 10/15" in str(call) for call in info_calls)
 
 

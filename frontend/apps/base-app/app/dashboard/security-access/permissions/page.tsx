@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
+import React, { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -13,8 +13,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Shield,
   Key,
@@ -30,15 +30,15 @@ import {
   BarChart3,
   FileText,
   Globe,
-} from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+} from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import {
   useRBAC,
   PermissionCategory,
   PermissionAction,
-  type Permission
-} from '@/contexts/RBACContext';
-import { LoadingState, LoadingTable, LoadingSpinner } from '@/components/ui/loading-states';
+  type Permission,
+} from "@/contexts/RBACContext";
+import { LoadingState, LoadingTable, LoadingSpinner } from "@/components/ui/loading-states";
 
 // Helper function to get category icon
 function getCategoryIcon(category: PermissionCategory) {
@@ -60,15 +60,15 @@ function getCategoryIcon(category: PermissionCategory) {
 // Helper function to get category display name
 function getCategoryDisplayName(category: PermissionCategory): string {
   const categoryNames = {
-    [PermissionCategory.USERS]: 'User Management',
-    [PermissionCategory.BILLING]: 'Billing',
-    [PermissionCategory.ANALYTICS]: 'Analytics',
-    [PermissionCategory.COMMUNICATIONS]: 'Communications',
-    [PermissionCategory.INFRASTRUCTURE]: 'Infrastructure',
-    [PermissionCategory.SECRETS]: 'Secrets',
-    [PermissionCategory.CUSTOMERS]: 'Customers',
-    [PermissionCategory.SETTINGS]: 'Settings',
-    [PermissionCategory.SYSTEM]: 'System Administration',
+    [PermissionCategory.USERS]: "User Management",
+    [PermissionCategory.BILLING]: "Billing",
+    [PermissionCategory.ANALYTICS]: "Analytics",
+    [PermissionCategory.COMMUNICATIONS]: "Communications",
+    [PermissionCategory.INFRASTRUCTURE]: "Infrastructure",
+    [PermissionCategory.SECRETS]: "Secrets",
+    [PermissionCategory.CUSTOMERS]: "Customers",
+    [PermissionCategory.SETTINGS]: "Settings",
+    [PermissionCategory.SYSTEM]: "System Administration",
   };
 
   return categoryNames[category] || category;
@@ -77,25 +77,25 @@ function getCategoryDisplayName(category: PermissionCategory): string {
 // Helper function to get category color
 function getCategoryColor(category: PermissionCategory): string {
   const colors = {
-    [PermissionCategory.USERS]: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    [PermissionCategory.BILLING]: 'bg-green-500/10 text-green-400 border-green-500/20',
-    [PermissionCategory.ANALYTICS]: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-    [PermissionCategory.COMMUNICATIONS]: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-    [PermissionCategory.INFRASTRUCTURE]: 'bg-muted text-muted-foreground border-border',
-    [PermissionCategory.SECRETS]: 'bg-red-500/10 text-red-400 border-red-500/20',
-    [PermissionCategory.CUSTOMERS]: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-    [PermissionCategory.SETTINGS]: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-    [PermissionCategory.SYSTEM]: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+    [PermissionCategory.USERS]: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    [PermissionCategory.BILLING]: "bg-green-500/10 text-green-400 border-green-500/20",
+    [PermissionCategory.ANALYTICS]: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+    [PermissionCategory.COMMUNICATIONS]: "bg-orange-500/10 text-orange-400 border-orange-500/20",
+    [PermissionCategory.INFRASTRUCTURE]: "bg-muted text-muted-foreground border-border",
+    [PermissionCategory.SECRETS]: "bg-red-500/10 text-red-400 border-red-500/20",
+    [PermissionCategory.CUSTOMERS]: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+    [PermissionCategory.SETTINGS]: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+    [PermissionCategory.SYSTEM]: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
   };
 
-  return colors[category] || 'bg-muted text-muted-foreground border-border';
+  return colors[category] || "bg-muted text-muted-foreground border-border";
 }
 
 // Group permissions by category
 function groupPermissionsByCategory(permissions: Permission[]): Record<string, Permission[]> {
   const grouped: Record<string, Permission[]> = {};
 
-  permissions.forEach(permission => {
+  permissions.forEach((permission) => {
     const categoryName = getCategoryDisplayName(permission.category);
     if (!grouped[categoryName]) {
       grouped[categoryName] = [];
@@ -108,18 +108,12 @@ function groupPermissionsByCategory(permissions: Permission[]): Record<string, P
 
 export default function PermissionsPage() {
   const { toast } = useToast();
-  const {
-    loading,
-    error,
-    getAllPermissions,
-    canAccess,
-    roles,
-  } = useRBAC();
+  const { loading, error, getAllPermissions, canAccess, roles } = useRBAC();
 
   const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [filterSystemPermissions, setFilterSystemPermissions] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
+  const [filterSystemPermissions, setFilterSystemPermissions] = useState<string>("all");
   const [permissionsLoading, setPermissionsLoading] = useState(false);
 
   // Check if user can view permissions
@@ -133,11 +127,11 @@ export default function PermissionsPage() {
         const permissions = await getAllPermissions();
         setAllPermissions(permissions);
       } catch (error) {
-        console.error('Failed to load permissions:', error);
+        console.error("Failed to load permissions:", error);
         toast({
-          title: 'Error',
-          description: 'Failed to load permissions',
-          variant: 'destructive'
+          title: "Error",
+          description: "Failed to load permissions",
+          variant: "destructive",
         });
       } finally {
         setPermissionsLoading(false);
@@ -150,16 +144,19 @@ export default function PermissionsPage() {
   }, [getAllPermissions, canViewPermissions, toast]);
 
   // Filter permissions
-  const filteredPermissions = allPermissions.filter(permission => {
-    const matchesSearch = permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         permission.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (permission.description && permission.description.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredPermissions = allPermissions.filter((permission) => {
+    const matchesSearch =
+      permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      permission.display_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (permission.description &&
+        permission.description.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesCategory = filterCategory === 'all' || permission.category === filterCategory;
+    const matchesCategory = filterCategory === "all" || permission.category === filterCategory;
 
-    const matchesSystemFilter = filterSystemPermissions === 'all' ||
-                               (filterSystemPermissions === 'system' && permission.is_system) ||
-                               (filterSystemPermissions === 'custom' && !permission.is_system);
+    const matchesSystemFilter =
+      filterSystemPermissions === "all" ||
+      (filterSystemPermissions === "system" && permission.is_system) ||
+      (filterSystemPermissions === "custom" && !permission.is_system);
 
     return matchesSearch && matchesCategory && matchesSystemFilter;
   });
@@ -168,26 +165,26 @@ export default function PermissionsPage() {
   const groupedPermissions = groupPermissionsByCategory(filteredPermissions);
 
   // Get category statistics
-  const categoryStats = Object.values(PermissionCategory).map(category => {
-    const categoryPermissions = allPermissions.filter(p => p.category === category);
-    const Icon = getCategoryIcon(category);
+  const categoryStats = Object.values(PermissionCategory)
+    .map((category) => {
+      const categoryPermissions = allPermissions.filter((p) => p.category === category);
+      const Icon = getCategoryIcon(category);
 
-    return {
-      category,
-      name: getCategoryDisplayName(category),
-      count: categoryPermissions.length,
-      systemCount: categoryPermissions.filter(p => p.is_system).length,
-      customCount: categoryPermissions.filter(p => !p.is_system).length,
-      icon: Icon,
-      color: getCategoryColor(category),
-    };
-  }).filter(stat => stat.count > 0);
+      return {
+        category,
+        name: getCategoryDisplayName(category),
+        count: categoryPermissions.length,
+        systemCount: categoryPermissions.filter((p) => p.is_system).length,
+        customCount: categoryPermissions.filter((p) => !p.is_system).length,
+        icon: Icon,
+        color: getCategoryColor(category),
+      };
+    })
+    .filter((stat) => stat.count > 0);
 
   // Get permission usage in roles
   const getPermissionUsage = (permissionName: string): number => {
-    return roles.filter(role =>
-      role.permissions.some(p => p.name === permissionName)
-    ).length;
+    return roles.filter((role) => role.permissions.some((p) => p.name === permissionName)).length;
   };
 
   // Show access denied if user doesn't have permission
@@ -205,7 +202,9 @@ export default function PermissionsPage() {
             <div className="flex flex-col items-center justify-center text-center">
               <AlertCircle className="h-12 w-12 text-red-600 dark:text-red-400 mb-4" />
               <p className="text-muted-foreground mb-2">Access Denied</p>
-              <p className="text-foreground text-sm">You do not have permission to view system permissions.</p>
+              <p className="text-foreground text-sm">
+                You do not have permission to view system permissions.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -219,7 +218,9 @@ export default function PermissionsPage() {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold">Permissions</h1>
-          <p className="text-muted-foreground mt-2">View and understand system permissions and their usage</p>
+          <p className="text-muted-foreground mt-2">
+            View and understand system permissions and their usage
+          </p>
         </div>
       </div>
 
@@ -232,9 +233,7 @@ export default function PermissionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{allPermissions.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Across all categories
-            </p>
+            <p className="text-xs text-muted-foreground">Across all categories</p>
           </CardContent>
         </Card>
 
@@ -245,9 +244,7 @@ export default function PermissionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{categoryStats.length}</div>
-            <p className="text-xs text-muted-foreground">
-              Permission categories
-            </p>
+            <p className="text-xs text-muted-foreground">Permission categories</p>
           </CardContent>
         </Card>
 
@@ -258,11 +255,9 @@ export default function PermissionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {allPermissions.filter(p => p.is_system).length}
+              {allPermissions.filter((p) => p.is_system).length}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Built-in permissions
-            </p>
+            <p className="text-xs text-muted-foreground">Built-in permissions</p>
           </CardContent>
         </Card>
 
@@ -273,11 +268,9 @@ export default function PermissionsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {allPermissions.filter(p => !p.is_system).length}
+              {allPermissions.filter((p) => !p.is_system).length}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Custom permissions
-            </p>
+            <p className="text-xs text-muted-foreground">Custom permissions</p>
           </CardContent>
         </Card>
       </div>
@@ -310,7 +303,7 @@ export default function PermissionsPage() {
                     className="h-10 w-[180px] rounded-md border border-border bg-card px-3 text-sm text-foreground"
                   >
                     <option value="all">All Categories</option>
-                    {Object.values(PermissionCategory).map(category => (
+                    {Object.values(PermissionCategory).map((category) => (
                       <option key={category} value={category}>
                         {getCategoryDisplayName(category)}
                       </option>
@@ -358,33 +351,38 @@ export default function PermissionsPage() {
                               <div className="font-medium">{permission.display_name}</div>
                               <div className="text-sm text-muted-foreground">{permission.name}</div>
                               {permission.description && (
-                                <div className="text-xs text-muted-foreground mt-1">{permission.description}</div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {permission.description}
+                                </div>
                               )}
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Icon className="h-4 w-4" />
-                              <Badge variant="outline" className={getCategoryColor(permission.category)}>
+                              <Badge
+                                variant="outline"
+                                className={getCategoryColor(permission.category)}
+                              >
                                 {getCategoryDisplayName(permission.category)}
                               </Badge>
                             </div>
                           </TableCell>
                           <TableCell>
                             <code className="text-sm bg-muted px-2 py-1 rounded">
-                              {permission.resource || 'N/A'}
+                              {permission.resource || "N/A"}
                             </code>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={permission.is_system ? 'secondary' : 'outline'}>
-                              {permission.is_system ? 'System' : 'Custom'}
+                            <Badge variant={permission.is_system ? "secondary" : "outline"}>
+                              {permission.is_system ? "System" : "Custom"}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <span className="text-sm">{usage}</span>
                               <span className="text-xs text-muted-foreground">
-                                {usage === 1 ? 'role' : 'roles'}
+                                {usage === 1 ? "role" : "roles"}
                               </span>
                             </div>
                           </TableCell>
@@ -424,16 +422,20 @@ export default function PermissionsPage() {
                     {/* List permissions in this category */}
                     <div className="space-y-1 max-h-32 overflow-y-auto">
                       {allPermissions
-                        .filter(p => p.category === stat.category)
+                        .filter((p) => p.category === stat.category)
                         .slice(0, 5)
-                        .map(permission => (
-                          <div key={permission.name} className="text-xs text-muted-foreground truncate">
+                        .map((permission) => (
+                          <div
+                            key={permission.name}
+                            className="text-xs text-muted-foreground truncate"
+                          >
                             {permission.display_name}
                           </div>
                         ))}
-                      {allPermissions.filter(p => p.category === stat.category).length > 5 && (
+                      {allPermissions.filter((p) => p.category === stat.category).length > 5 && (
                         <div className="text-xs text-muted-foreground">
-                          +{allPermissions.filter(p => p.category === stat.category).length - 5} more
+                          +{allPermissions.filter((p) => p.category === stat.category).length - 5}{" "}
+                          more
                         </div>
                       )}
                     </div>

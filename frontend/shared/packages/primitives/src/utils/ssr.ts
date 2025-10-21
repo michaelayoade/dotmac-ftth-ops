@@ -6,7 +6,7 @@
  * Safely checks if we're running in a browser environment
  * @returns true if window is available (client-side), false if server-side
  */
-export const isBrowser = typeof window !== 'undefined';
+export const isBrowser = typeof window !== "undefined";
 
 /**
  * Safely checks if we're running on the server
@@ -101,7 +101,7 @@ export function useLocalStorage<T>(key: string, defaultValue: T) {
         // Silently fail if localStorage is not available
       }
     },
-    [key, value]
+    [key, value],
   );
 
   return [value, setStoredValue] as const;
@@ -140,7 +140,7 @@ export function useSessionStorage<T>(key: string, defaultValue: T) {
         // Silently fail if sessionStorage is not available
       }
     },
-    [key, value]
+    [key, value],
   );
 
   return [value, setStoredValue] as const;
@@ -163,9 +163,9 @@ export function useMediaQuery(breakpoint: string): boolean {
     setMatches(mediaQuery.matches);
 
     const listener = (e: MediaQueryListEvent) => setMatches(e.matches);
-    mediaQuery.addEventListener('change', listener);
+    mediaQuery.addEventListener("change", listener);
 
-    return () => mediaQuery.removeEventListener('change', listener);
+    return () => mediaQuery.removeEventListener("change", listener);
   }, [breakpoint]);
 
   return matches;
@@ -189,9 +189,9 @@ export function useUserPreferences() {
 
     const updatePreferences = () => {
       setPreferences({
-        prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-        prefersHighContrast: window.matchMedia('(prefers-contrast: high)').matches,
-        prefersDarkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
+        prefersReducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+        prefersHighContrast: window.matchMedia("(prefers-contrast: high)").matches,
+        prefersDarkMode: window.matchMedia("(prefers-color-scheme: dark)").matches,
       });
     };
 
@@ -199,19 +199,19 @@ export function useUserPreferences() {
 
     // Listen for changes
     const mediaQueries = [
-      window.matchMedia('(prefers-reduced-motion: reduce)'),
-      window.matchMedia('(prefers-contrast: high)'),
-      window.matchMedia('(prefers-color-scheme: dark)'),
+      window.matchMedia("(prefers-reduced-motion: reduce)"),
+      window.matchMedia("(prefers-contrast: high)"),
+      window.matchMedia("(prefers-color-scheme: dark)"),
     ];
 
-    mediaQueries.forEach((mq) => mq.addEventListener('change', updatePreferences));
+    mediaQueries.forEach((mq) => mq.addEventListener("change", updatePreferences));
 
     return () => {
-      mediaQueries.forEach((mq) => mq.removeEventListener('change', updatePreferences));
+      mediaQueries.forEach((mq) => mq.removeEventListener("change", updatePreferences));
     };
   }, []);
 
   return preferences;
 }
 
-import React from 'react';
+import React from "react";

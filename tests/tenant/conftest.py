@@ -9,12 +9,13 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from httpx import AsyncClient
 
-from src.dotmac.platform.billing.subscriptions.service import SubscriptionService
-from src.dotmac.platform.tenant.models import TenantPlanType, TenantStatus
-from src.dotmac.platform.tenant.service import TenantService
-from src.dotmac.platform.tenant.usage_billing_integration import (
+from dotmac.platform.billing.subscriptions.service import SubscriptionService
+from dotmac.platform.tenant.models import TenantInvitationStatus, TenantPlanType, TenantStatus
+from dotmac.platform.tenant.service import TenantNotFoundError, TenantService
+from dotmac.platform.tenant.usage_billing_integration import (
     TenantUsageBillingIntegration,
 )
+from tests.shared_fixtures import mock_user_service as shared_mock_user_service
 
 
 @pytest.fixture
@@ -33,8 +34,6 @@ def mock_tenant_service() -> AsyncMock:
 
     # Mock record_usage method
     async def mock_record_usage(tenant_id, usage_data):
-        from src.dotmac.platform.tenant.service import TenantNotFoundError
-
         # Validate tenant exists
         if tenant_id in ["nonexistent", "invalid", "nonexistent-tenant"]:
             raise TenantNotFoundError(f"Tenant {tenant_id} not found")
@@ -70,8 +69,6 @@ def mock_tenant_service() -> AsyncMock:
     # Mock get_tenant method
     async def mock_get_tenant(tenant_id, include_deleted=False):
         from decimal import Decimal
-
-        from src.dotmac.platform.tenant.service import TenantNotFoundError
 
         # Raise error for invalid tenant IDs
         if tenant_id in ["nonexistent", "invalid", "nonexistent-tenant", "nonexistent-id"]:
@@ -130,8 +127,6 @@ def mock_tenant_service() -> AsyncMock:
             max_users = 1
 
         # Determine plan type based on tenant_id
-        from src.dotmac.platform.tenant.models import TenantStatus
-
         plan_type = TenantPlanType.PROFESSIONAL
         if "free" in str(tenant_id).lower():
             plan_type = TenantPlanType.FREE
@@ -220,8 +215,6 @@ def mock_tenant_service() -> AsyncMock:
         for tenant in created_tenants.values():
             if tenant.slug == slug:
                 return tenant
-        from src.dotmac.platform.tenant.service import TenantNotFoundError
-
         raise TenantNotFoundError(f"Tenant with slug {slug} not found")
 
     async def mock_delete_tenant(tenant_id, permanent=False, deleted_by=None):
@@ -460,8 +453,6 @@ def mock_tenant_service() -> AsyncMock:
         """Mock create invitation."""
         from uuid import uuid4
 
-        from src.dotmac.platform.tenant.models import TenantInvitationStatus
-
         invitation_id = str(uuid4())
         invitation = SimpleNamespace(
             id=invitation_id,
@@ -490,27 +481,19 @@ def mock_tenant_service() -> AsyncMock:
 
     async def mock_accept_invitation(token):
         """Mock accept invitation."""
-        from src.dotmac.platform.tenant.models import TenantInvitationStatus
-
         for inv in invitations:
             if inv.token == token:
                 inv.status = TenantInvitationStatus.ACCEPTED
                 inv.accepted_at = datetime.now(UTC)
                 return inv
-        from src.dotmac.platform.tenant.service import TenantNotFoundError
-
         raise TenantNotFoundError("Invitation not found")
 
     async def mock_revoke_invitation(invitation_id):
         """Mock revoke invitation."""
-        from src.dotmac.platform.tenant.models import TenantInvitationStatus
-
         for inv in invitations:
             if inv.id == invitation_id:
                 inv.status = TenantInvitationStatus.REVOKED
                 return inv
-        from src.dotmac.platform.tenant.service import TenantNotFoundError
-
         raise TenantNotFoundError("Invitation not found")
 
     service.create_invitation = AsyncMock(side_effect=mock_create_invitation)
@@ -670,8 +653,6 @@ def sample_tenant() -> Mock:
     """Create a sample mock tenant for testing."""
     from decimal import Decimal
 
-    from src.dotmac.platform.tenant.models import TenantStatus
-
     return SimpleNamespace(
         id="tenant-123",
         name="Test Organization",
@@ -712,8 +693,8 @@ async def client(
     app = FastAPI()
 
     # Import and setup dependencies
-    from src.dotmac.platform.database import get_async_session
-    from src.dotmac.platform.tenant.usage_billing_router import (
+    from dotmac.platform.database import get_async_session
+    from dotmac.platform.tenant.usage_billing_router import (
         get_subscription_service,
         get_tenant_service,
         get_usage_billing_integration,
@@ -744,6 +725,7 @@ async def authenticated_client(
     mock_tenant_service: AsyncMock,
     mock_subscription_service: AsyncMock,
     usage_billing_integration: TenantUsageBillingIntegration,
+    mock_user_service: AsyncMock,
 ):
     """Create authenticated async HTTP client with dependency overrides."""
     from fastapi import FastAPI
@@ -753,18 +735,25 @@ async def authenticated_client(
     app = FastAPI()
 
     # Import and setup dependencies - use auth.core since that's what the router imports
-    from src.dotmac.platform.auth.core import UserInfo, get_current_user
-    from src.dotmac.platform.database import get_async_session
-    from src.dotmac.platform.tenant import router as tenant_router
-    from src.dotmac.platform.tenant.router import get_tenant_service as get_tenant_service_main
-    from src.dotmac.platform.tenant.usage_billing_router import (
+    from dotmac.platform.auth.core import UserInfo, get_current_user
+    from dotmac.platform.database import get_async_session
+    from dotmac.platform.tenant import router as tenant_router
+    from dotmac.platform.tenant.dependencies import (
+        get_tenant_service as get_tenant_service_dependency,
+    )
+    from dotmac.platform.tenant.onboarding_router import (
+        get_user_service_dependency,
+    )
+    from dotmac.platform.tenant.onboarding_router import router as onboarding_router
+    from dotmac.platform.tenant.router import get_tenant_service as get_tenant_service_main
+    from dotmac.platform.tenant.usage_billing_router import (
         get_subscription_service,
         get_usage_billing_integration,
     )
-    from src.dotmac.platform.tenant.usage_billing_router import (
+    from dotmac.platform.tenant.usage_billing_router import (
         get_tenant_service as get_tenant_service_usage,
     )
-    from src.dotmac.platform.tenant.usage_billing_router import router as usage_billing_router
+    from dotmac.platform.tenant.usage_billing_router import router as usage_billing_router
 
     # Override dependencies with mocks
     async def mock_get_current_user():
@@ -774,8 +763,19 @@ async def authenticated_client(
             email="test@example.com",
             username="testuser",
             roles=["admin"],
-            permissions=["read", "write", "admin"],
-            tenant_id="tenant-123",
+            permissions=[
+                "read",
+                "write",
+                "admin",
+                "platform:tenants:write",
+                "platform:tenants:read",
+                "tenants:write",
+                "tenants:read",
+                "isp.oss.read",
+                "isp.oss.configure",
+            ],
+            tenant_id=None,
+            is_platform_admin=True,
         )
 
     async def mock_get_session():
@@ -787,12 +787,15 @@ async def authenticated_client(
     app.dependency_overrides[get_async_session] = mock_get_session
     # Override get_tenant_service from both routers
     app.dependency_overrides[get_tenant_service_main] = lambda: mock_tenant_service
+    app.dependency_overrides[get_tenant_service_dependency] = lambda: mock_tenant_service
     app.dependency_overrides[get_tenant_service_usage] = lambda: mock_tenant_service
     app.dependency_overrides[get_subscription_service] = lambda: mock_subscription_service
     app.dependency_overrides[get_usage_billing_integration] = lambda: usage_billing_integration
+    app.dependency_overrides[get_user_service_dependency] = lambda: mock_user_service
 
     # Include the routers
     app.include_router(tenant_router.router, prefix="/api/v1/tenants")
+    app.include_router(onboarding_router, prefix="/api/v1")
     app.include_router(
         usage_billing_router, prefix="/api/v1/tenants", tags=["Tenant Usage Billing"]
     )
@@ -807,3 +810,7 @@ async def authenticated_client(
 async def async_client(authenticated_client: AsyncClient) -> AsyncClient:
     """Alias for authenticated_client for backwards compatibility."""
     return authenticated_client
+@pytest.fixture
+def mock_user_service(shared_mock_user_service: AsyncMock) -> AsyncMock:
+    """Re-export shared mock user service for tenant tests."""
+    return shared_mock_user_service

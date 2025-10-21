@@ -1,4 +1,4 @@
-import { defineConfig } from 'tsup';
+import { defineConfig } from "tsup";
 
 export function createTsupConfig(options) {
   return defineConfig({
@@ -6,9 +6,9 @@ export function createTsupConfig(options) {
     splitting: false,
     sourcemap: true,
     clean: true,
-    tsconfig: 'tsconfig.json',
+    tsconfig: "tsconfig.json",
     esbuildOptions(esb) {
-      esb.target = 'es2020';
+      esb.target = "es2020";
     },
     ...options,
   });

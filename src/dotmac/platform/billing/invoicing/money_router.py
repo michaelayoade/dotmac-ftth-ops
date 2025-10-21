@@ -95,7 +95,7 @@ class InvoiceDiscountRequest(BaseModel):
 # Router Definition
 # ============================================================================
 
-router = APIRouter(prefix="/money", tags=["Billing - Money Invoices"])
+router = APIRouter(prefix="/money")
 
 
 def get_tenant_id_from_request(request: Request) -> str:

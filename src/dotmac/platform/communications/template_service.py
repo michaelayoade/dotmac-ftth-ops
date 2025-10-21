@@ -6,7 +6,7 @@ Provides template functionality using Jinja2.
 
 import os
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Mapping
 from uuid import uuid4
 
 import structlog
@@ -25,7 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field
 logger = structlog.get_logger(__name__)
 
 
-class TemplateData(BaseModel):
+class TemplateData(BaseModel):  # BaseModel resolves to Any in isolation
     """Template data model."""
 
     id: str = Field(default_factory=lambda: f"tpl_{uuid4().hex[:8]}")
@@ -39,7 +39,7 @@ class TemplateData(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
 
 
-class RenderedTemplate(BaseModel):
+class RenderedTemplate(BaseModel):  # BaseModel resolves to Any in isolation
     """Rendered template result."""
 
     model_config = ConfigDict()
@@ -152,7 +152,7 @@ class TemplateService:
             return True
         return False
 
-    def render_template(self, template_id: str, data: dict[str, Any]) -> RenderedTemplate:
+    def render_template(self, template_id: str, data: Mapping[str, Any]) -> RenderedTemplate:
         """Render a template with data."""
         template_data = self.get_template(template_id)
         if not template_data:

@@ -188,7 +188,9 @@ class TestSecretsInventoryAPI:
             },
         ]
 
-        response = await list_secrets(vault=mock_vault_client, current_user=mock_user, prefix="app/")
+        response = await list_secrets(
+            vault=mock_vault_client, current_user=mock_user, prefix="app/"
+        )
 
         assert isinstance(response, SecretListResponse)
         assert len(response.secrets) == 2
@@ -283,7 +285,9 @@ class TestSecretsInventoryAPI:
             }
         ]
 
-        response = await list_secrets(vault=mock_vault_client, current_user=mock_user, prefix="test/")
+        response = await list_secrets(
+            vault=mock_vault_client, current_user=mock_user, prefix="test/"
+        )
 
         assert len(response.secrets) == 1
         secret = response.secrets[0]

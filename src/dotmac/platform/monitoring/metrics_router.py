@@ -25,7 +25,7 @@ logger = structlog.get_logger(__name__)
 # Cache TTL (in seconds)
 MONITORING_STATS_CACHE_TTL = 300  # 5 minutes
 
-router = APIRouter(tags=["Monitoring Metrics"])
+router = APIRouter(prefix="", tags=["Monitoring Metrics"])
 
 
 # ============================================================================
@@ -33,7 +33,7 @@ router = APIRouter(tags=["Monitoring Metrics"])
 # ============================================================================
 
 
-class MonitoringMetricsResponse(BaseModel):
+class MonitoringMetricsResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Monitoring metrics overview response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -70,7 +70,7 @@ class MonitoringMetricsResponse(BaseModel):
     timestamp: datetime = Field(description="Metrics generation timestamp")
 
 
-class LogStatsResponse(BaseModel):
+class LogStatsResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Log statistics response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -112,7 +112,7 @@ class LogStatsResponse(BaseModel):
 # ============================================================================
 
 
-@cached_result(
+@cached_result(  # type: ignore[misc]  # Cache decorator is untyped
     ttl=MONITORING_STATS_CACHE_TTL,
     key_prefix="monitoring:metrics",
     key_params=["period_days", "tenant_id"],
@@ -235,7 +235,7 @@ async def _get_monitoring_metrics_cached(
     }
 
 
-@cached_result(
+@cached_result(  # type: ignore[misc]  # Cache decorator is untyped
     ttl=MONITORING_STATS_CACHE_TTL,
     key_prefix="monitoring:logs:stats",
     key_params=["period_days", "tenant_id"],

@@ -5,11 +5,11 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
-} from '@tanstack/react-query';
+} from "@tanstack/react-query";
 
-import { httpClient } from './index';
-import type { ApiError, HttpClientConfig } from './types';
-import { HttpClient } from './http-client';
+import { httpClient } from "./index";
+import type { ApiError, HttpClientConfig } from "./types";
+import { HttpClient } from "./http-client";
 
 interface RequestDescriptor<TResponse> {
   execute: () => Promise<TResponse>;
@@ -26,7 +26,7 @@ export function createApiQuery<TResponse>(
 export function useApiQuery<TResponse>(
   key: QueryKey,
   descriptor: RequestDescriptor<TResponse>,
-  options?: Omit<UseQueryOptions<TResponse, ApiError>, 'queryKey' | 'queryFn'>,
+  options?: Omit<UseQueryOptions<TResponse, ApiError>, "queryKey" | "queryFn">,
 ) {
   return useQuery<TResponse, ApiError>({
     queryKey: key,
@@ -37,7 +37,7 @@ export function useApiQuery<TResponse>(
 
 export function useApiMutation<TResponse, TVariables = void>(
   descriptor: (variables: TVariables) => Promise<TResponse>,
-  options?: Omit<UseMutationOptions<TResponse, ApiError, TVariables>, 'mutationFn'>,
+  options?: Omit<UseMutationOptions<TResponse, ApiError, TVariables>, "mutationFn">,
 ) {
   const queryClient = useQueryClient();
 

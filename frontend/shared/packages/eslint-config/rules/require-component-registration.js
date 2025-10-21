@@ -7,37 +7,37 @@
 
 module.exports = {
   meta: {
-    type: 'suggestion',
+    type: "suggestion",
     docs: {
-      description: 'Require React components to be registered with the component registry',
-      category: 'Best Practices',
+      description: "Require React components to be registered with the component registry",
+      category: "Best Practices",
       recommended: false,
     },
-    fixable: 'code',
+    fixable: "code",
     schema: [
       {
-        type: 'object',
+        type: "object",
         properties: {
           enforceRegistration: {
-            type: 'boolean',
-            description: 'Whether to enforce component registration (default: false)',
+            type: "boolean",
+            description: "Whether to enforce component registration (default: false)",
             default: false,
           },
           componentPatterns: {
-            type: 'array',
+            type: "array",
             items: {
-              type: 'string',
+              type: "string",
             },
-            description: 'File patterns that should have registered components',
-            default: ['**/*.component.tsx', '**/components/**/*.tsx'],
+            description: "File patterns that should have registered components",
+            default: ["**/*.component.tsx", "**/components/**/*.tsx"],
           },
           excludePatterns: {
-            type: 'array',
+            type: "array",
             items: {
-              type: 'string',
+              type: "string",
             },
-            description: 'File patterns to exclude from registration requirement',
-            default: ['**/*.test.tsx', '**/*.stories.tsx', '**/*.spec.tsx'],
+            description: "File patterns to exclude from registration requirement",
+            default: ["**/*.test.tsx", "**/*.stories.tsx", "**/*.spec.tsx"],
           },
         },
         additionalProperties: false,
@@ -46,8 +46,8 @@ module.exports = {
     messages: {
       missingRegistration:
         'Component "{{componentName}}" should be registered with the component registry using @registerComponent or withComponentRegistration.',
-      suggestionAddRegistration: 'Add component registration decorator',
-      missingMetadata: 'Component registration is missing required metadata',
+      suggestionAddRegistration: "Add component registration decorator",
+      missingMetadata: "Component registration is missing required metadata",
     },
   },
 
@@ -55,13 +55,13 @@ module.exports = {
     const options = context.options[0] || {};
     const enforceRegistration = options.enforceRegistration || false;
     const componentPatterns = options.componentPatterns || [
-      '**/*.component.tsx',
-      '**/components/**/*.tsx',
+      "**/*.component.tsx",
+      "**/components/**/*.tsx",
     ];
     const excludePatterns = options.excludePatterns || [
-      '**/*.test.tsx',
-      '**/*.stories.tsx',
-      '**/*.spec.tsx',
+      "**/*.test.tsx",
+      "**/*.stories.tsx",
+      "**/*.spec.tsx",
     ];
 
     const filename = context.getFilename();
@@ -69,8 +69,8 @@ module.exports = {
 
     // Check if file should be processed
     function shouldProcessFile() {
-      const path = require('path');
-      const minimatch = require('minimatch');
+      const path = require("path");
+      const minimatch = require("minimatch");
       const relativePath = path.relative(process.cwd(), filename);
 
       // Check exclude patterns first
@@ -82,15 +82,64 @@ module.exports = {
       return componentPatterns.some((pattern) => minimatch(relativePath, pattern));
     }
 
+    // Infer category and portal from file path
+    function inferMetadata() {
+      const path = require("path");
+      const relativePath = path.relative(process.cwd(), filename);
+
+      let category = "component";
+      let portal = "shared";
+
+      // Infer category based on path structure
+      if (
+        relativePath.includes("/atoms/") ||
+        relativePath.includes("Button") ||
+        relativePath.includes("Input")
+      ) {
+        category = "atomic";
+      } else if (
+        relativePath.includes("/molecules/") ||
+        relativePath.includes("Form") ||
+        relativePath.includes("Card")
+      ) {
+        category = "molecule";
+      } else if (
+        relativePath.includes("/organisms/") ||
+        relativePath.includes("Header") ||
+        relativePath.includes("Footer")
+      ) {
+        category = "organism";
+      } else if (relativePath.includes("/templates/") || relativePath.includes("Layout")) {
+        category = "template";
+      } else if (
+        relativePath.includes("/pages/") ||
+        relativePath.includes("View") ||
+        relativePath.includes("Page")
+      ) {
+        category = "page";
+      }
+
+      // Infer portal based on path structure
+      if (relativePath.includes("/tenant/") || relativePath.includes("/customer/")) {
+        portal = "tenant";
+      } else if (relativePath.includes("/admin/") || relativePath.includes("/dashboard/")) {
+        portal = "admin";
+      } else if (relativePath.includes("/shared/") || relativePath.includes("/common/")) {
+        portal = "shared";
+      }
+
+      return { category, portal };
+    }
+
     // Check if component is registered
     function hasRegistrationDecorator(node) {
       if (!node.decorators) return false;
 
       return node.decorators.some((decorator) => {
-        if (decorator.expression.type === 'CallExpression') {
-          return decorator.expression.callee.name === 'registerComponent';
+        if (decorator.expression.type === "CallExpression") {
+          return decorator.expression.callee.name === "registerComponent";
         }
-        return decorator.expression.name === 'registerComponent';
+        return decorator.expression.name === "registerComponent";
       });
     }
 
@@ -98,9 +147,9 @@ module.exports = {
     function hasRegistrationHOC(node) {
       const parent = node.parent;
 
-      if (parent && parent.type === 'CallExpression') {
+      if (parent && parent.type === "CallExpression") {
         const callee = parent.callee;
-        return callee.name === 'withComponentRegistration';
+        return callee.name === "withComponentRegistration";
       }
 
       return false;
@@ -109,37 +158,37 @@ module.exports = {
     // Check if file imports registration utilities
     function hasRegistrationImports() {
       const imports = sourceCode.ast.body
-        .filter((node) => node.type === 'ImportDeclaration')
+        .filter((node) => node.type === "ImportDeclaration")
         .map((node) => ({
           source: node.source.value,
           specifiers: node.specifiers.map((spec) =>
-            spec.imported ? spec.imported.name : spec.local.name
+            spec.imported ? spec.imported.name : spec.local.name,
           ),
         }));
 
       return imports.some(
         (imp) =>
-          imp.source === '@dotmac/registry' &&
-          (imp.specifiers.includes('registerComponent') ||
-            imp.specifiers.includes('withComponentRegistration'))
+          imp.source === "@dotmac/registry" &&
+          (imp.specifiers.includes("registerComponent") ||
+            imp.specifiers.includes("withComponentRegistration")),
       );
     }
 
     // Extract component name
     function getComponentName(node) {
-      if (node.type === 'FunctionDeclaration') {
+      if (node.type === "FunctionDeclaration") {
         return node.id ? node.id.name : null;
       }
 
-      if (node.type === 'VariableDeclarator') {
+      if (node.type === "VariableDeclarator") {
         return node.id.name;
       }
 
-      if (node.type === 'ExportDefaultDeclaration') {
-        if (node.declaration.type === 'FunctionDeclaration') {
-          return node.declaration.id ? node.declaration.id.name : 'DefaultExport';
+      if (node.type === "ExportDefaultDeclaration") {
+        if (node.declaration.type === "FunctionDeclaration") {
+          return node.declaration.id ? node.declaration.id.name : "DefaultExport";
         }
-        if (node.declaration.type === 'Identifier') {
+        if (node.declaration.type === "Identifier") {
           return node.declaration.name;
         }
       }
@@ -151,10 +200,10 @@ module.exports = {
     function isReactComponent(node) {
       // Function components
       if (
-        node.type === 'FunctionDeclaration' ||
-        (node.type === 'VariableDeclarator' &&
+        node.type === "FunctionDeclaration" ||
+        (node.type === "VariableDeclarator" &&
           node.init &&
-          (node.init.type === 'ArrowFunctionExpression' || node.init.type === 'FunctionExpression'))
+          (node.init.type === "ArrowFunctionExpression" || node.init.type === "FunctionExpression"))
       ) {
         const componentName = getComponentName(node);
 
@@ -164,26 +213,26 @@ module.exports = {
         }
 
         // Check if it returns JSX
-        const functionNode = node.type === 'FunctionDeclaration' ? node : node.init;
+        const functionNode = node.type === "FunctionDeclaration" ? node : node.init;
 
         // Simple heuristic: if it has JSX in return statements
         let hasJSX = false;
 
         function checkForJSX(n) {
-          if (n.type === 'JSXElement' || n.type === 'JSXFragment') {
+          if (n.type === "JSXElement" || n.type === "JSXFragment") {
             hasJSX = true;
             return;
           }
 
-          if (n.type === 'ReturnStatement' && n.argument) {
-            if (n.argument.type === 'JSXElement' || n.argument.type === 'JSXFragment') {
+          if (n.type === "ReturnStatement" && n.argument) {
+            if (n.argument.type === "JSXElement" || n.argument.type === "JSXFragment") {
               hasJSX = true;
             }
           }
 
           // Recursively check child nodes
           for (const key in n) {
-            if (key !== 'parent' && n[key] && typeof n[key] === 'object') {
+            if (key !== "parent" && n[key] && typeof n[key] === "object") {
               if (Array.isArray(n[key])) {
                 n[key].forEach(checkForJSX);
               } else if (n[key].type) {
@@ -238,7 +287,7 @@ module.exports = {
         }
       },
 
-      'Program:exit'() {
+      "Program:exit"() {
         // Only report if enforcement is enabled or if registration utils are imported
         if (!enforceRegistration && !hasRegistrationUtils) {
           return;
@@ -247,17 +296,17 @@ module.exports = {
         componentsFound.forEach(({ node, name }) => {
           context.report({
             node,
-            messageId: 'missingRegistration',
+            messageId: "missingRegistration",
             data: {
               componentName: name,
             },
             suggest: [
               {
-                desc: 'Add @registerComponent decorator',
+                desc: "Add @registerComponent decorator",
                 fix(fixer) {
                   const sourceCode = context.getSourceCode();
                   const imports = sourceCode.ast.body.find(
-                    (n) => n.type === 'ImportDeclaration' && n.source.value === '@dotmac/registry'
+                    (n) => n.type === "ImportDeclaration" && n.source.value === "@dotmac/registry",
                   );
 
                   const fixes = [];
@@ -265,35 +314,36 @@ module.exports = {
                   // Add import if missing
                   if (!imports) {
                     const firstImport = sourceCode.ast.body.find(
-                      (n) => n.type === 'ImportDeclaration'
+                      (n) => n.type === "ImportDeclaration",
                     );
                     const insertAfter = firstImport || sourceCode.ast.body[0];
 
                     fixes.push(
                       fixer.insertTextAfter(
                         insertAfter,
-                        "\nimport { registerComponent } from '@dotmac/registry';"
-                      )
+                        "\nimport { registerComponent } from '@dotmac/registry';",
+                      ),
                     );
                   } else {
                     // Check if registerComponent is already imported
                     const hasRegisterComponent = imports.specifiers.some(
-                      (spec) => spec.imported && spec.imported.name === 'registerComponent'
+                      (spec) => spec.imported && spec.imported.name === "registerComponent",
                     );
 
                     if (!hasRegisterComponent) {
                       // Add to existing import
                       const lastSpecifier = imports.specifiers[imports.specifiers.length - 1];
-                      fixes.push(fixer.insertTextAfter(lastSpecifier, ', registerComponent'));
+                      fixes.push(fixer.insertTextAfter(lastSpecifier, ", registerComponent"));
                     }
                   }
 
-                  // Add decorator
+                  // Add decorator with inferred metadata
+                  const metadata = inferMetadata();
                   fixes.push(
                     fixer.insertTextBefore(
                       node,
-                      `@registerComponent({\n  name: '${name}',\n  category: 'atomic', // TODO: Update category\n  portal: 'shared', // TODO: Update portal\n  version: '1.0.0'\n})\n`
-                    )
+                      `@registerComponent({\n  name: '${name}',\n  category: '${metadata.category}',\n  portal: '${metadata.portal}',\n  version: '1.0.0'\n})\n`,
+                    ),
                   );
 
                   return fixes;

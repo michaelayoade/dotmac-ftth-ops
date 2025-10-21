@@ -10,7 +10,7 @@ Focuses on:
 """
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
@@ -54,7 +54,7 @@ async def test_user_extended(async_db_session: AsyncSession):
 def extended_app():
     """Create test app for extended tests."""
     app = FastAPI()
-    app.include_router(auth_router, prefix="/auth")
+    app.include_router(auth_router)
     return app
 
 
@@ -113,7 +113,9 @@ async def test_enable_2fa_already_enabled(extended_app: FastAPI, async_db_sessio
 
 
 @pytest.mark.asyncio
-async def test_enable_2fa_wrong_password(extended_app: FastAPI, test_user_extended: User, async_db_session):
+async def test_enable_2fa_wrong_password(
+    extended_app: FastAPI, test_user_extended: User, async_db_session
+):
     """Test enabling 2FA with wrong password."""
     from dotmac.platform.auth.router import get_auth_session
 
@@ -145,7 +147,9 @@ async def test_enable_2fa_wrong_password(extended_app: FastAPI, test_user_extend
 
 
 @pytest.mark.asyncio
-async def test_disable_2fa_not_enabled(extended_app: FastAPI, test_user_extended: User, async_db_session):
+async def test_disable_2fa_not_enabled(
+    extended_app: FastAPI, test_user_extended: User, async_db_session
+):
     """Test disabling 2FA when it's not enabled."""
     from dotmac.platform.auth.router import get_auth_session
 
@@ -231,7 +235,9 @@ async def test_verify_2fa_wrong_token(extended_app: FastAPI, async_db_session):
 
 
 @pytest.mark.asyncio
-async def test_phone_verification_request(extended_app: FastAPI, test_user_extended: User, async_db_session):
+async def test_phone_verification_request(
+    extended_app: FastAPI, test_user_extended: User, async_db_session
+):
     """Test requesting phone verification."""
     from dotmac.platform.auth.router import get_auth_session
 
@@ -262,7 +268,9 @@ async def test_phone_verification_request(extended_app: FastAPI, test_user_exten
 
 
 @pytest.mark.asyncio
-async def test_phone_verification_confirm(extended_app: FastAPI, test_user_extended: User, async_db_session):
+async def test_phone_verification_confirm(
+    extended_app: FastAPI, test_user_extended: User, async_db_session
+):
     """Test confirming phone verification."""
     from dotmac.platform.auth.router import get_auth_session
 
@@ -374,7 +382,9 @@ async def test_register_with_full_name(extended_app: FastAPI, async_db_session):
 
 
 @pytest.mark.asyncio
-async def test_update_profile_minimal_fields(extended_app: FastAPI, test_user_extended: User, async_db_session):
+async def test_update_profile_minimal_fields(
+    extended_app: FastAPI, test_user_extended: User, async_db_session
+):
     """Test updating profile with minimal fields."""
     from dotmac.platform.auth.router import get_auth_session
 
@@ -479,7 +489,9 @@ async def test_refresh_token_with_expired_token(extended_app: FastAPI, async_db_
 
 
 @pytest.mark.asyncio
-async def test_change_password_same_as_current(extended_app: FastAPI, test_user_extended: User, async_db_session):
+async def test_change_password_same_as_current(
+    extended_app: FastAPI, test_user_extended: User, async_db_session
+):
     """Test changing password to the same password."""
     from dotmac.platform.auth.router import get_auth_session
 
@@ -513,7 +525,9 @@ async def test_change_password_same_as_current(extended_app: FastAPI, test_user_
 
 
 @pytest.mark.asyncio
-async def test_login_with_username_and_spaces(extended_app: FastAPI, test_user_extended: User, async_db_session):
+async def test_login_with_username_and_spaces(
+    extended_app: FastAPI, test_user_extended: User, async_db_session
+):
     """Test login with username that has leading/trailing spaces."""
     from dotmac.platform.auth.router import get_auth_session
 
@@ -522,8 +536,9 @@ async def test_login_with_username_and_spaces(extended_app: FastAPI, test_user_e
 
     extended_app.dependency_overrides[get_auth_session] = override_session
 
-    with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"), patch(
-        "dotmac.platform.tenant.get_tenant_config", return_value=None
+    with (
+        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
+        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
     ):
         transport = ASGITransport(app=extended_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:

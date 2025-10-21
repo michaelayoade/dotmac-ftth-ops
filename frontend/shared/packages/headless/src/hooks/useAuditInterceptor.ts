@@ -4,14 +4,14 @@
  * Implements DRY principle by providing centralized audit interception across all components
  */
 
-import { useEffect, useCallback, useRef } from 'react';
-import { useAudit } from '../components/AuditProvider';
+import { useEffect, useCallback, useRef } from "react";
+import { useAudit } from "../components/AuditProvider";
 import {
   AuditEventType,
   AuditOutcome,
   FrontendAuditEventType,
   AuditSeverity,
-} from '../api/types/audit';
+} from "../api/types/audit";
 
 interface AuditInterceptorConfig {
   interceptFetch?: boolean;
@@ -31,7 +31,7 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
     interceptNavigation = true,
     interceptErrors = true,
     excludeUrls = [],
-    excludeElements = ['.audit-ignore'],
+    excludeElements = [".audit-ignore"],
   } = config;
 
   const { logEvent, logDataAccess, logUIEvent, logError, isEnabled } = useAudit();
@@ -43,7 +43,7 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
     (url: string): boolean => {
       return excludeUrls.some((pattern) => pattern.test(url));
     },
-    [excludeUrls]
+    [excludeUrls],
   );
 
   // Check if element should be excluded from auditing
@@ -51,24 +51,24 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
     (element: Element): boolean => {
       return excludeElements.some((selector) => element.matches(selector));
     },
-    [excludeElements]
+    [excludeElements],
   );
 
   // Intercept fetch API calls
   useEffect(() => {
-    if (!interceptFetch || !isEnabled || typeof window === 'undefined') return;
+    if (!interceptFetch || !isEnabled || typeof window === "undefined") return;
 
     if (!originalFetchRef.current) {
       originalFetchRef.current = window.fetch;
     }
 
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = typeof input === 'string' ? input : input.toString();
-      const method = init?.method || 'GET';
+      const url = typeof input === "string" ? input : input.toString();
+      const method = init?.method || "GET";
       const startTime = performance.now();
 
       // Skip audit URLs and excluded URLs
-      if (url.includes('/audit/') || shouldExcludeUrl(url)) {
+      if (url.includes("/audit/") || shouldExcludeUrl(url)) {
         return originalFetchRef.current!(input, init);
       }
 
@@ -79,15 +79,15 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
         // Log successful API call
         await logDataAccess(
           method.toLowerCase(),
-          'api_endpoint',
+          "api_endpoint",
           url,
           response.ok ? AuditOutcome.SUCCESS : AuditOutcome.FAILURE,
           {
             method,
             status_code: response.status,
             duration_ms: Math.round(duration),
-            response_size: response.headers.get('content-length'),
-          }
+            response_size: response.headers.get("content-length"),
+          },
         );
 
         return response;
@@ -95,7 +95,7 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
         const duration = performance.now() - startTime;
 
         // Log failed API call
-        await logDataAccess(method.toLowerCase(), 'api_endpoint', url, AuditOutcome.FAILURE, {
+        await logDataAccess(method.toLowerCase(), "api_endpoint", url, AuditOutcome.FAILURE, {
           method,
           duration_ms: Math.round(duration),
           error_message: (error as Error).message,
@@ -114,7 +114,7 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
 
   // Intercept click events
   useEffect(() => {
-    if (!interceptClicks || !isEnabled || typeof document === 'undefined') return;
+    if (!interceptClicks || !isEnabled || typeof document === "undefined") return;
 
     const handleClick = async (event: MouseEvent) => {
       const target = event.target as Element;
@@ -125,8 +125,8 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
         id: target.id,
         className: target.className,
         text: target.textContent?.slice(0, 100),
-        href: target.getAttribute('href'),
-        type: target.getAttribute('type'),
+        href: target.getAttribute("href"),
+        type: target.getAttribute("type"),
       };
 
       await logUIEvent(FrontendAuditEventType.UI_BUTTON_CLICK, elementInfo.tag, {
@@ -135,13 +135,13 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
       });
     };
 
-    document.addEventListener('click', handleClick, { capture: true });
-    return () => document.removeEventListener('click', handleClick, { capture: true });
+    document.addEventListener("click", handleClick, { capture: true });
+    return () => document.removeEventListener("click", handleClick, { capture: true });
   }, [interceptClicks, isEnabled, logUIEvent, shouldExcludeElement]);
 
   // Intercept form submissions
   useEffect(() => {
-    if (!interceptForms || !isEnabled || typeof document === 'undefined') return;
+    if (!interceptForms || !isEnabled || typeof document === "undefined") return;
 
     const handleSubmit = async (event: SubmitEvent) => {
       const form = event.target as HTMLFormElement;
@@ -150,36 +150,36 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
       const formData = new FormData(form);
       const fields = Array.from(formData.keys());
       const sensitiveFields = fields.filter((field) =>
-        /password|secret|token|key|ssn|credit/i.test(field)
+        /password|secret|token|key|ssn|credit/i.test(field),
       );
 
       await logUIEvent(
         FrontendAuditEventType.UI_FORM_SUBMIT,
-        form.id || form.className || 'unnamed_form',
+        form.id || form.className || "unnamed_form",
         {
           form_id: form.id,
           form_action: form.action,
           form_method: form.method,
           field_count: fields.length,
-          sensitive_fields: sensitiveFields.length > 0 ? ['[REDACTED]'] : [],
+          sensitive_fields: sensitiveFields.length > 0 ? ["[REDACTED]"] : [],
           fields: fields.filter((field) => !sensitiveFields.includes(field)),
-        }
+        },
       );
     };
 
-    document.addEventListener('submit', handleSubmit, { capture: true });
-    return () => document.removeEventListener('submit', handleSubmit, { capture: true });
+    document.addEventListener("submit", handleSubmit, { capture: true });
+    return () => document.removeEventListener("submit", handleSubmit, { capture: true });
   }, [interceptForms, isEnabled, logUIEvent, shouldExcludeElement]);
 
   // Intercept navigation events
   useEffect(() => {
-    if (!interceptNavigation || !isEnabled || typeof window === 'undefined') return;
+    if (!interceptNavigation || !isEnabled || typeof window === "undefined") return;
 
     const handlePopState = async () => {
-      await logUIEvent(FrontendAuditEventType.UI_PAGE_VIEW, 'navigation', {
+      await logUIEvent(FrontendAuditEventType.UI_PAGE_VIEW, "navigation", {
         url: window.location.href,
         referrer: document.referrer,
-        navigation_type: 'popstate',
+        navigation_type: "popstate",
       });
     };
 
@@ -188,42 +188,42 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
 
     history.pushState = function (state, title, url) {
       originalPushState.apply(history, arguments as any);
-      logUIEvent(FrontendAuditEventType.UI_PAGE_VIEW, 'navigation', {
+      logUIEvent(FrontendAuditEventType.UI_PAGE_VIEW, "navigation", {
         url: url?.toString() || window.location.href,
-        navigation_type: 'pushstate',
+        navigation_type: "pushstate",
         state,
       });
     };
 
     history.replaceState = function (state, title, url) {
       originalReplaceState.apply(history, arguments as any);
-      logUIEvent(FrontendAuditEventType.UI_PAGE_VIEW, 'navigation', {
+      logUIEvent(FrontendAuditEventType.UI_PAGE_VIEW, "navigation", {
         url: url?.toString() || window.location.href,
-        navigation_type: 'replacestate',
+        navigation_type: "replacestate",
         state,
       });
     };
 
-    window.addEventListener('popstate', handlePopState);
+    window.addEventListener("popstate", handlePopState);
 
     return () => {
       history.pushState = originalPushState;
       history.replaceState = originalReplaceState;
-      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener("popstate", handlePopState);
     };
   }, [interceptNavigation, isEnabled, logUIEvent]);
 
   // Intercept console errors
   useEffect(() => {
-    if (!interceptErrors || !isEnabled || typeof console === 'undefined') return;
+    if (!interceptErrors || !isEnabled || typeof console === "undefined") return;
 
     const originalConsoleError = console.error;
     console.error = (...args) => {
       const message = args
-        .map((arg) => (typeof arg === 'object' ? JSON.stringify(arg) : String(arg)))
-        .join(' ');
+        .map((arg) => (typeof arg === "object" ? JSON.stringify(arg) : String(arg)))
+        .join(" ");
 
-      logError(new Error(message), 'console_error', { console_args: args });
+      logError(new Error(message), "console_error", { console_args: args });
 
       originalConsoleError.apply(console, args);
     };
@@ -243,9 +243,9 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
     manualLog: {
       logAPICall: useCallback(
         async (method: string, url: string, outcome: AuditOutcome, metadata?: any) => {
-          await logDataAccess(method.toLowerCase(), 'api_endpoint', url, outcome, metadata);
+          await logDataAccess(method.toLowerCase(), "api_endpoint", url, outcome, metadata);
         },
-        [logDataAccess]
+        [logDataAccess],
       ),
 
       logUserAction: useCallback(
@@ -255,7 +255,7 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
             ...metadata,
           });
         },
-        [logUIEvent]
+        [logUIEvent],
       ),
 
       logBusinessProcess: useCallback(
@@ -265,12 +265,12 @@ export function useAuditInterceptor(config: AuditInterceptorConfig = {}) {
             message: `Business process: ${process}`,
             outcome,
             severity: AuditSeverity.LOW,
-            actor: { id: 'system', type: 'system' },
-            context: { source: 'business_process' },
+            actor: { id: "system", type: "system" },
+            context: { source: "business_process" },
             metadata,
           });
         },
-        [logEvent]
+        [logEvent],
       ),
     },
   };

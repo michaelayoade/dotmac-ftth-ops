@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { logger } from '@/lib/logger';
+import { useState, useEffect } from "react";
+import { logger } from "@/lib/logger";
 import {
   X,
   Edit,
@@ -15,12 +15,22 @@ import {
   Building,
   User,
   Clock,
-  Tag
-} from 'lucide-react';
-import { Customer } from '@/types';
-import { useCustomer, useCustomerActivities, useCustomerNotes } from '@/hooks/useCustomers';
-import { CustomerActivities } from './CustomerActivities';
-import { CustomerNotes } from './CustomerNotes';
+  Tag,
+  Wifi,
+  Globe,
+  Router,
+  Ticket,
+  FileText,
+} from "lucide-react";
+import { Customer } from "@/types";
+import { useCustomer, useCustomerActivities, useCustomerNotes } from "@/hooks/useCustomers";
+import { CustomerActivities } from "./CustomerActivities";
+import { CustomerNotes } from "./CustomerNotes";
+import { CustomerSubscriptions } from "./CustomerSubscriptions";
+import { CustomerNetwork } from "./CustomerNetwork";
+import { CustomerDevices } from "./CustomerDevices";
+import { CustomerTickets } from "./CustomerTickets";
+import { CustomerBilling } from "./CustomerBilling";
 
 interface CustomerDetailModalProps {
   customer: Customer;
@@ -34,65 +44,103 @@ interface TabProps {
   setActiveTab: (tab: string) => void;
 }
 
-function StatusBadge({ status }: { status: Customer['status'] }) {
+function StatusBadge({ status }: { status: Customer["status"] }) {
   const statusConfig = {
-    prospect: { label: 'Prospect', className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-    active: { label: 'Active', className: 'bg-green-500/20 text-green-400 border-green-500/30' },
-    inactive: { label: 'Inactive', className: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
-    suspended: { label: 'Suspended', className: 'bg-orange-500/20 text-orange-400 border-orange-500/30' },
-    churned: { label: 'Churned', className: 'bg-red-500/20 text-red-400 border-red-500/30' },
-    archived: { label: 'Archived', className: 'bg-slate-500/20 text-slate-400 border-slate-500/30' },
+    prospect: {
+      label: "Prospect",
+      className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    },
+    active: {
+      label: "Active",
+      className: "bg-green-500/20 text-green-400 border-green-500/30",
+    },
+    inactive: {
+      label: "Inactive",
+      className: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+    },
+    suspended: {
+      label: "Suspended",
+      className: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+    },
+    churned: {
+      label: "Churned",
+      className: "bg-red-500/20 text-red-400 border-red-500/30",
+    },
+    archived: {
+      label: "Archived",
+      className: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+    },
   };
 
   const config = statusConfig[status] || statusConfig.prospect;
 
   return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${config.className}`}>
+    <span
+      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${config.className}`}
+    >
       {config.label}
     </span>
   );
 }
 
-function TierBadge({ tier }: { tier: Customer['tier'] }) {
+function TierBadge({ tier }: { tier: Customer["tier"] }) {
   const tierConfig = {
-    free: { label: 'Free', className: 'bg-slate-500/20 text-slate-400 border-slate-500/30' },
-    basic: { label: 'Basic', className: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-    standard: { label: 'Standard', className: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
-    premium: { label: 'Premium', className: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-    enterprise: { label: 'Enterprise', className: 'bg-green-500/20 text-green-400 border-green-500/30' },
+    free: {
+      label: "Free",
+      className: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+    },
+    basic: {
+      label: "Basic",
+      className: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    },
+    standard: {
+      label: "Standard",
+      className: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+    },
+    premium: {
+      label: "Premium",
+      className: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    },
+    enterprise: {
+      label: "Enterprise",
+      className: "bg-green-500/20 text-green-400 border-green-500/30",
+    },
   };
 
   const config = tierConfig[tier] || tierConfig.free;
 
   return (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${config.className}`}>
+    <span
+      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${config.className}`}
+    >
       {config.label}
     </span>
   );
 }
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
 }
 
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
 function CustomerOverview({ customer }: { customer: Customer }) {
-  const customerName = customer.display_name ||
-    `${customer.first_name}${customer.middle_name ? ` ${customer.middle_name}` : ''} ${customer.last_name}`;
+  const customerName =
+    customer.display_name ||
+    `${customer.first_name}${customer.middle_name ? ` ${customer.middle_name}` : ""} ${customer.last_name}`;
 
-  const customerIcon = customer.customer_type === 'individual' ? User : Building;
+  const customerIcon = customer.customer_type === "individual" ? User : Building;
   const IconComponent = customerIcon;
 
   return (
@@ -108,9 +156,7 @@ function CustomerOverview({ customer }: { customer: Customer }) {
             </div>
             <div className="ml-4">
               <h3 className="text-xl font-semibold text-white">{customerName}</h3>
-              {customer.company_name && (
-                <p className="text-slate-400">{customer.company_name}</p>
-              )}
+              {customer.company_name && <p className="text-slate-400">{customer.company_name}</p>}
               <p className="text-sm text-slate-500">#{customer.customer_number}</p>
             </div>
           </div>
@@ -125,9 +171,7 @@ function CustomerOverview({ customer }: { customer: Customer }) {
             <Mail className="h-4 w-4 mr-3" />
             <div>
               <div>{customer.email}</div>
-              {!customer.email && (
-                <span className="text-xs text-slate-500">Not verified</span>
-              )}
+              {!customer.email && <span className="text-xs text-slate-500">Not verified</span>}
             </div>
           </div>
 
@@ -141,7 +185,9 @@ function CustomerOverview({ customer }: { customer: Customer }) {
           {(customer.city || customer.country) && (
             <div className="flex items-center text-slate-300">
               <MapPin className="h-4 w-4 mr-3" />
-              {[customer.city, customer.state_province, customer.country].filter(Boolean).join(', ')}
+              {[customer.city, customer.state_province, customer.country]
+                .filter(Boolean)
+                .join(", ")}
             </div>
           )}
 
@@ -177,7 +223,9 @@ function CustomerOverview({ customer }: { customer: Customer }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">Lifetime Value</p>
-              <p className="text-2xl font-bold text-white">{formatCurrency(customer.lifetime_value)}</p>
+              <p className="text-2xl font-bold text-white">
+                {formatCurrency(customer.lifetime_value)}
+              </p>
             </div>
             <DollarSign className="h-8 w-8 text-green-400" />
           </div>
@@ -197,7 +245,9 @@ function CustomerOverview({ customer }: { customer: Customer }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-slate-400">Avg Order Value</p>
-              <p className="text-2xl font-bold text-white">{formatCurrency(customer.average_order_value)}</p>
+              <p className="text-2xl font-bold text-white">
+                {formatCurrency(customer.average_order_value)}
+              </p>
             </div>
             <DollarSign className="h-8 w-8 text-purple-400" />
           </div>
@@ -238,7 +288,9 @@ function CustomerOverview({ customer }: { customer: Customer }) {
               {customer.address_line_2 && <p>{customer.address_line_2}</p>}
               {(customer.city || customer.state_province || customer.postal_code) && (
                 <p>
-                  {[customer.city, customer.state_province, customer.postal_code].filter(Boolean).join(', ')}
+                  {[customer.city, customer.state_province, customer.postal_code]
+                    .filter(Boolean)
+                    .join(", ")}
                 </p>
               )}
               {customer.country && <p>{customer.country}</p>}
@@ -274,7 +326,9 @@ function CustomerOverview({ customer }: { customer: Customer }) {
             <div className="space-y-3">
               {Object.entries(customer.metadata).map(([key, value]) => (
                 <div key={key}>
-                  <label className="text-sm text-slate-400 capitalize">{key.replace(/_/g, ' ')}</label>
+                  <label className="text-sm text-slate-400 capitalize">
+                    {key.replace(/_/g, " ")}
+                  </label>
                   <p className="text-white">{String(value)}</p>
                 </div>
               ))}
@@ -286,8 +340,13 @@ function CustomerOverview({ customer }: { customer: Customer }) {
   );
 }
 
-export function CustomerDetailModal({ customer, onClose, onEdit, onDelete }: CustomerDetailModalProps) {
-  const [activeTab, setActiveTab] = useState('overview');
+export function CustomerDetailModal({
+  customer,
+  onClose,
+  onEdit,
+  onDelete,
+}: CustomerDetailModalProps) {
+  const [activeTab, setActiveTab] = useState("overview");
   const { getCustomer, loading } = useCustomer();
   const [detailedCustomer, setDetailedCustomer] = useState<Customer>(customer);
 
@@ -298,7 +357,10 @@ export function CustomerDetailModal({ customer, onClose, onEdit, onDelete }: Cus
         const detailed = await getCustomer(customer.id, true, true);
         setDetailedCustomer(detailed as Customer);
       } catch (error) {
-        logger.error('Failed to load detailed customer', error instanceof Error ? error : new Error(String(error)));
+        logger.error(
+          "Failed to load detailed customer",
+          error instanceof Error ? error : new Error(String(error)),
+        );
       }
     };
 
@@ -312,9 +374,14 @@ export function CustomerDetailModal({ customer, onClose, onEdit, onDelete }: Cus
   };
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: User },
-    { id: 'activities', label: 'Activities', icon: Activity },
-    { id: 'notes', label: 'Notes', icon: MessageSquare },
+    { id: "overview", label: "Overview", icon: User },
+    { id: "subscriptions", label: "Subscriptions", icon: Wifi },
+    { id: "network", label: "Network", icon: Globe },
+    { id: "devices", label: "Devices", icon: Router },
+    { id: "tickets", label: "Tickets", icon: Ticket },
+    { id: "billing", label: "Billing", icon: FileText },
+    { id: "activities", label: "Activities", icon: Activity },
+    { id: "notes", label: "Notes", icon: MessageSquare },
   ];
 
   return (
@@ -367,8 +434,8 @@ export function CustomerDetailModal({ customer, onClose, onEdit, onDelete }: Cus
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === tab.id
-                      ? 'border-sky-500 text-sky-400'
-                      : 'border-transparent text-slate-400 hover:text-slate-300'
+                      ? "border-sky-500 text-sky-400"
+                      : "border-transparent text-slate-400 hover:text-slate-300"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -381,9 +448,16 @@ export function CustomerDetailModal({ customer, onClose, onEdit, onDelete }: Cus
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
-          {activeTab === 'overview' && <CustomerOverview customer={detailedCustomer} />}
-          {activeTab === 'activities' && <CustomerActivities customerId={detailedCustomer.id} />}
-          {activeTab === 'notes' && <CustomerNotes customerId={detailedCustomer.id} />}
+          {activeTab === "overview" && <CustomerOverview customer={detailedCustomer} />}
+          {activeTab === "subscriptions" && (
+            <CustomerSubscriptions customerId={detailedCustomer.id} />
+          )}
+          {activeTab === "network" && <CustomerNetwork customerId={detailedCustomer.id} />}
+          {activeTab === "devices" && <CustomerDevices customerId={detailedCustomer.id} />}
+          {activeTab === "tickets" && <CustomerTickets customerId={detailedCustomer.id} />}
+          {activeTab === "billing" && <CustomerBilling customerId={detailedCustomer.id} />}
+          {activeTab === "activities" && <CustomerActivities customerId={detailedCustomer.id} />}
+          {activeTab === "notes" && <CustomerNotes customerId={detailedCustomer.id} />}
         </div>
       </div>
     </div>

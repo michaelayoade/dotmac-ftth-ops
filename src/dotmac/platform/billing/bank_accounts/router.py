@@ -38,7 +38,7 @@ from dotmac.platform.file_storage.service import FileStorageService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["Billing - Bank Accounts"])
+router = APIRouter(prefix="/billing/bank-accounts", tags=["Billing - Bank Accounts"])
 
 # ============================================================================
 # Company Bank Account Endpoints

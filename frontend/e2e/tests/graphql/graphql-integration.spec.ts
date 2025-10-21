@@ -2,12 +2,12 @@
  * E2E tests for GraphQL integration
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('GraphQL Integration', () => {
-  const GRAPHQL_ENDPOINT = 'http://localhost:8000/graphql';
+test.describe("GraphQL Integration", () => {
+  const GRAPHQL_ENDPOINT = "http://localhost:8000/graphql";
 
-  test('GraphQL health check works', async ({ request }) => {
+  test("GraphQL health check works", async ({ request }) => {
     const response = await request.post(GRAPHQL_ENDPOINT, {
       data: {
         query: `
@@ -22,7 +22,7 @@ test.describe('GraphQL Integration', () => {
         `,
       },
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -32,12 +32,12 @@ test.describe('GraphQL Integration', () => {
     expect(data.errors).toBeUndefined();
     expect(data.data).toBeDefined();
     expect(data.data.health).toBeDefined();
-    expect(data.data.health.status).toBe('ok');
+    expect(data.data.health.status).toBe("ok");
     expect(data.data.health.version).toBeDefined();
     expect(Array.isArray(data.data.health.services)).toBeTruthy();
   });
 
-  test('GraphQL introspection works', async ({ request }) => {
+  test("GraphQL introspection works", async ({ request }) => {
     const response = await request.post(GRAPHQL_ENDPOINT, {
       data: {
         query: `
@@ -58,7 +58,7 @@ test.describe('GraphQL Integration', () => {
         `,
       },
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -67,17 +67,17 @@ test.describe('GraphQL Integration', () => {
     const data = await response.json();
     expect(data.errors).toBeUndefined();
     expect(data.data.__schema).toBeDefined();
-    expect(data.data.__schema.queryType.name).toBe('Query');
-    expect(data.data.__schema.mutationType.name).toBe('Mutation');
+    expect(data.data.__schema.queryType.name).toBe("Query");
+    expect(data.data.__schema.mutationType.name).toBe("Mutation");
 
     const typeNames = data.data.__schema.types.map((type: any) => type.name);
-    expect(typeNames).toContain('User');
-    expect(typeNames).toContain('FeatureFlag');
-    expect(typeNames).toContain('AuditEvent');
-    expect(typeNames).toContain('ServiceInstance');
+    expect(typeNames).toContain("User");
+    expect(typeNames).toContain("FeatureFlag");
+    expect(typeNames).toContain("AuditEvent");
+    expect(typeNames).toContain("ServiceInstance");
   });
 
-  test('Authentication required for protected queries', async ({ request }) => {
+  test("Authentication required for protected queries", async ({ request }) => {
     const response = await request.post(GRAPHQL_ENDPOINT, {
       data: {
         query: `
@@ -91,7 +91,7 @@ test.describe('GraphQL Integration', () => {
         `,
       },
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -102,7 +102,7 @@ test.describe('GraphQL Integration', () => {
     expect(data.data.currentUser).toBeNull();
   });
 
-  test('GraphQL error handling', async ({ request }) => {
+  test("GraphQL error handling", async ({ request }) => {
     const response = await request.post(GRAPHQL_ENDPOINT, {
       data: {
         query: `
@@ -114,7 +114,7 @@ test.describe('GraphQL Integration', () => {
         `,
       },
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -123,10 +123,10 @@ test.describe('GraphQL Integration', () => {
     const data = await response.json();
     expect(data.errors).toBeDefined();
     expect(data.errors.length).toBeGreaterThan(0);
-    expect(data.errors[0].message).toContain('Cannot query field');
+    expect(data.errors[0].message).toContain("Cannot query field");
   });
 
-  test('Feature flags query structure', async ({ request }) => {
+  test("Feature flags query structure", async ({ request }) => {
     const response = await request.post(GRAPHQL_ENDPOINT, {
       data: {
         query: `
@@ -147,7 +147,7 @@ test.describe('GraphQL Integration', () => {
         `,
       },
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -161,7 +161,7 @@ test.describe('GraphQL Integration', () => {
     expect(Array.isArray(data.data.featureFlags.nodes)).toBeTruthy();
   });
 
-  test('Audit events query structure', async ({ request }) => {
+  test("Audit events query structure", async ({ request }) => {
     const response = await request.post(GRAPHQL_ENDPOINT, {
       data: {
         query: `
@@ -185,7 +185,7 @@ test.describe('GraphQL Integration', () => {
         `,
       },
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -199,7 +199,7 @@ test.describe('GraphQL Integration', () => {
     expect(Array.isArray(data.data.auditEvents.nodes)).toBeTruthy();
   });
 
-  test('Services query structure', async ({ request }) => {
+  test("Services query structure", async ({ request }) => {
     const response = await request.post(GRAPHQL_ENDPOINT, {
       data: {
         query: `
@@ -222,7 +222,7 @@ test.describe('GraphQL Integration', () => {
         `,
       },
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -236,7 +236,7 @@ test.describe('GraphQL Integration', () => {
     expect(Array.isArray(data.data.services.nodes)).toBeTruthy();
   });
 
-  test('Metrics query structure', async ({ request }) => {
+  test("Metrics query structure", async ({ request }) => {
     const response = await request.post(GRAPHQL_ENDPOINT, {
       data: {
         query: `
@@ -256,7 +256,7 @@ test.describe('GraphQL Integration', () => {
         `,
       },
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -268,7 +268,7 @@ test.describe('GraphQL Integration', () => {
     expect(Array.isArray(data.data.metrics)).toBeTruthy();
   });
 
-  test('Health checks query structure', async ({ request }) => {
+  test("Health checks query structure", async ({ request }) => {
     const response = await request.post(GRAPHQL_ENDPOINT, {
       data: {
         query: `
@@ -284,7 +284,7 @@ test.describe('GraphQL Integration', () => {
         `,
       },
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -296,7 +296,7 @@ test.describe('GraphQL Integration', () => {
     expect(Array.isArray(data.data.healthChecks)).toBeTruthy();
   });
 
-  test('Secrets metadata query structure', async ({ request }) => {
+  test("Secrets metadata query structure", async ({ request }) => {
     const response = await request.post(GRAPHQL_ENDPOINT, {
       data: {
         query: `
@@ -313,7 +313,7 @@ test.describe('GraphQL Integration', () => {
         `,
       },
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -325,7 +325,7 @@ test.describe('GraphQL Integration', () => {
     expect(Array.isArray(data.data.secrets)).toBeTruthy();
   });
 
-  test('GraphQL variables handling', async ({ request }) => {
+  test("GraphQL variables handling", async ({ request }) => {
     const response = await request.post(GRAPHQL_ENDPOINT, {
       data: {
         query: `
@@ -347,7 +347,7 @@ test.describe('GraphQL Integration', () => {
         },
       },
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -358,7 +358,7 @@ test.describe('GraphQL Integration', () => {
     expect(data.data.featureFlags).toBeDefined();
   });
 
-  test('GraphQL enum validation', async ({ request }) => {
+  test("GraphQL enum validation", async ({ request }) => {
     const response = await request.post(GRAPHQL_ENDPOINT, {
       data: {
         query: `
@@ -373,13 +373,13 @@ test.describe('GraphQL Integration', () => {
         `,
         variables: {
           filter: {
-            category: 'AUTHENTICATION',
-            level: 'INFO',
+            category: "AUTHENTICATION",
+            level: "INFO",
           },
         },
       },
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
@@ -390,7 +390,7 @@ test.describe('GraphQL Integration', () => {
     expect(data.data.auditEvents).toBeDefined();
   });
 
-  test('GraphQL concurrent queries', async ({ request }) => {
+  test("GraphQL concurrent queries", async ({ request }) => {
     const queries = [
       request.post(GRAPHQL_ENDPOINT, {
         data: {

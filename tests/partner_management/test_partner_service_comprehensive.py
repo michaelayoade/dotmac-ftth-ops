@@ -98,7 +98,7 @@ class TestPartnerServiceCRUD:
             PartnerCreate(company_name="Active Partner", primary_email="active@test.com"),
         )
 
-        partner2 = await service.create_partner(
+        await service.create_partner(
             PartnerCreate(company_name="Pending Partner", primary_email="pending@test.com"),
         )
 
@@ -156,7 +156,7 @@ class TestPartnerAccounts:
         )
 
         # Create multiple accounts
-        for i in range(3):
+        for _i in range(3):
             await service.create_partner_account(
                 PartnerAccountCreate(
                     partner_id=partner.id,

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   createDebouncedValidator,
@@ -6,7 +6,7 @@ import {
   FormValidator,
   type ValidationError,
   type ValidationResult,
-} from '../utils/formValidation';
+} from "../utils/formValidation";
 
 export interface UseFormValidationOptions {
   validationConfig: FormValidationConfig;
@@ -33,25 +33,25 @@ export interface UseFormValidationResult {
   setTouched: (field: string, isTouched?: boolean) => void;
   getFieldProps: (field: string) => FieldProps;
   handleSubmit: (
-    onSubmit: (data: Record<string, unknown>) => void | Promise<void>
+    onSubmit: (data: Record<string, unknown>) => void | Promise<void>,
   ) => (e?: React.FormEvent) => Promise<void>;
 }
 
 export interface FieldProps {
   value: unknown;
   onChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => void;
   onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   error?: string;
   required?: boolean;
-  'aria-invalid'?: boolean;
-  'aria-describedby'?: string;
+  "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
 }
 
 export function useFormValidation(
   initialValues: Record<string, unknown>,
-  options: UseFormValidationOptions
+  options: UseFormValidationOptions,
 ): UseFormValidationResult {
   const {
     validationConfig,
@@ -68,7 +68,7 @@ export function useFormValidation(
 
   const validatorRef = useRef(new FormValidator(validationConfig));
   const debouncedValidatorRef = useRef(
-    createDebouncedValidator(validatorRef.current, debounceTime)
+    createDebouncedValidator(validatorRef.current, debounceTime),
   );
 
   // Update validator when config changes
@@ -95,7 +95,7 @@ export function useFormValidation(
         });
       }
     },
-    [validateOnChange, touched]
+    [validateOnChange, touched],
   );
 
   const setValues = useCallback((values: Record<string, unknown>) => {
@@ -137,7 +137,7 @@ export function useFormValidation(
         });
       }
     },
-    [formData]
+    [formData],
   );
 
   const validateForm = useCallback(async (): Promise<ValidationResult> => {
@@ -164,7 +164,7 @@ export function useFormValidation(
       setErrors({});
       setTouchedState({});
     },
-    [initialValues]
+    [initialValues],
   );
 
   const getFieldProps = useCallback(
@@ -173,9 +173,9 @@ export function useFormValidation(
       const hasError = !!errors[field];
 
       return {
-        value: formData[field] || '',
+        value: formData[field] || "",
         onChange: (e) => {
-          const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+          const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
           setValue(field, value);
         },
         onBlur: (_e) => {
@@ -186,11 +186,11 @@ export function useFormValidation(
         },
         error: errors[field],
         required: isRequired,
-        'aria-invalid': hasError,
-        'aria-describedby': hasError ? `${field}-error` : undefined,
+        "aria-invalid": hasError,
+        "aria-describedby": hasError ? `${field}-error` : undefined,
       };
     },
-    [formData, errors, setValue, setTouched, validateField, validateOnBlur]
+    [formData, errors, setValue, setTouched, validateField, validateOnBlur],
   );
 
   const handleSubmit = useCallback(
@@ -203,7 +203,7 @@ export function useFormValidation(
         // Mark all fields as touched
         const allTouched = Object.keys(validationConfig).reduce(
           (acc, field) => ({ ...acc, [field]: true }),
-          {} as Record<string, boolean>
+          {} as Record<string, boolean>,
         );
         setTouchedState(allTouched);
 
@@ -213,7 +213,7 @@ export function useFormValidation(
           await onSubmit(formData);
         }
       },
-    [formData, validationConfig, validateForm]
+    [formData, validationConfig, validateForm],
   );
 
   const isValid = Object.keys(errors).length === 0;
@@ -279,7 +279,7 @@ export function useFormSubmission(options: UseFormSubmissionOptions = {}): UseFo
         }
       } catch (error: unknown) {
         const errorMessage =
-          error instanceof Error ? error.message : 'An error occurred during submission';
+          error instanceof Error ? error.message : "An error occurred during submission";
         setSubmitError(errorMessage);
 
         if (onError) {
@@ -289,7 +289,7 @@ export function useFormSubmission(options: UseFormSubmissionOptions = {}): UseFo
         setIsSubmitting(false);
       }
     },
-    [onSuccess, onError, resetOnSuccess]
+    [onSuccess, onError, resetOnSuccess],
   );
 
   const reset = useCallback(() => {
@@ -317,7 +317,7 @@ export interface UseAsyncValidationOptions {
 export function useAsyncValidation(
   field: string,
   value: unknown,
-  options: UseAsyncValidationOptions
+  options: UseAsyncValidationOptions,
 ) {
   const { validator, debounceTime = 500, dependencies = [] } = options;
 
@@ -339,7 +339,7 @@ export function useAsyncValidation(
       setErrors([
         {
           field,
-          message: 'Validation failed',
+          message: "Validation failed",
         },
       ]);
     } finally {

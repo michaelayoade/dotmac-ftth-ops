@@ -1,4 +1,4 @@
-import { HttpClient } from '../../src/http-client';
+import { HttpClient } from "../../src/http-client";
 
 // Minimal custom adapter to intercept axios request config
 function createCaptureAdapter(capture: (config: any) => void) {
@@ -7,7 +7,7 @@ function createCaptureAdapter(capture: (config: any) => void) {
     return {
       data: {},
       status: 200,
-      statusText: 'OK',
+      statusText: "OK",
       headers: {},
       config,
       request: {},
@@ -15,7 +15,7 @@ function createCaptureAdapter(capture: (config: any) => void) {
   };
 }
 
-describe('HttpClient tenant header injection', () => {
+describe("HttpClient tenant header injection", () => {
   const originalLocation = global.location;
 
   beforeAll(() => {
@@ -23,7 +23,7 @@ describe('HttpClient tenant header injection', () => {
     // @ts-ignore
     delete (global as any).location;
     // @ts-ignore
-    (global as any).location = { hostname: 'acme.isp.dotmac.local' };
+    (global as any).location = { hostname: "acme.isp.dotmac.local" };
   });
 
   afterAll(() => {
@@ -31,20 +31,19 @@ describe('HttpClient tenant header injection', () => {
     (global as any).location = originalLocation;
   });
 
-  it('adds X-Tenant-ID header from hostname', async () => {
+  it("adds X-Tenant-ID header from hostname", async () => {
     let captured: any = null;
     const client = HttpClient.createFromHostname();
     // @ts-ignore override adapter
-    client['axiosInstance'].defaults.adapter = createCaptureAdapter((cfg) => {
+    client["axiosInstance"].defaults.adapter = createCaptureAdapter((cfg) => {
       captured = cfg;
     });
 
-    await client.get('/api/test');
+    await client.get("/api/test");
 
     expect(captured).toBeTruthy();
     expect(captured.headers).toBeTruthy();
     // Expect header present with derived tenant id `acme`
-    expect(captured.headers['X-Tenant-ID']).toBe('acme');
+    expect(captured.headers["X-Tenant-ID"]).toBe("acme");
   });
 });
-

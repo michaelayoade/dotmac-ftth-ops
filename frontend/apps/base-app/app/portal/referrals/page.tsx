@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 import { useState } from "react";
 import { usePartnerReferrals, useSubmitReferral } from "@/hooks/usePartnerPortal";
 import { UserPlus, CheckCircle, Clock, XCircle, AlertCircle } from "lucide-react";
@@ -92,9 +95,7 @@ export default function PartnerReferralsPage() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Referrals</h1>
-          <p className="text-muted-foreground mt-1">
-            Submit and track your customer referrals
-          </p>
+          <p className="text-muted-foreground mt-1">Submit and track your customer referrals</p>
         </div>
         <button
           onClick={() => setShowForm(!showForm)}
@@ -107,9 +108,7 @@ export default function PartnerReferralsPage() {
       {/* Referral Form */}
       {showForm && (
         <div className="bg-card p-6 rounded-lg border border-border mb-6">
-          <h2 className="text-xl font-semibold text-foreground mb-4">
-            Submit New Referral
-          </h2>
+          <h2 className="text-xl font-semibold text-foreground mb-4">Submit New Referral</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
@@ -120,9 +119,7 @@ export default function PartnerReferralsPage() {
                   type="text"
                   required
                   value={formData.lead_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, lead_name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, lead_name: e.target.value })}
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-500"
                   placeholder="John Doe"
                 />
@@ -136,39 +133,29 @@ export default function PartnerReferralsPage() {
                   type="email"
                   required
                   value={formData.lead_email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, lead_email: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, lead_email: e.target.value })}
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-500"
                   placeholder="john@example.com"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-muted-foreground mb-2">
-                  Lead Phone
-                </label>
+                <label className="block text-sm text-muted-foreground mb-2">Lead Phone</label>
                 <input
                   type="tel"
                   value={formData.lead_phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, lead_phone: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, lead_phone: e.target.value })}
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-500"
                   placeholder="+1 (555) 123-4567"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-muted-foreground mb-2">
-                  Company Name
-                </label>
+                <label className="block text-sm text-muted-foreground mb-2">Company Name</label>
                 <input
                   type="text"
                   value={formData.company_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, company_name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-500"
                   placeholder="Acme Inc."
                 />
@@ -198,9 +185,7 @@ export default function PartnerReferralsPage() {
               <label className="block text-sm text-muted-foreground mb-2">Notes</label>
               <textarea
                 value={formData.notes}
-                onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 rows={3}
                 className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:border-blue-500"
                 placeholder="Additional details about this referral..."
@@ -242,10 +227,7 @@ export default function PartnerReferralsPage() {
             const StatusIcon = STATUS_ICONS[referral.status];
 
             return (
-              <div
-                key={referral.id}
-                className="bg-card p-4 rounded-lg border border-border"
-              >
+              <div key={referral.id} className="bg-card p-4 rounded-lg border border-border">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
@@ -265,23 +247,17 @@ export default function PartnerReferralsPage() {
                     <div className="grid md:grid-cols-3 gap-4 text-sm">
                       <div>
                         <span className="text-muted-foreground">Email:</span>
-                        <span className="ml-2 text-foreground">
-                          {referral.lead_email}
-                        </span>
+                        <span className="ml-2 text-foreground">{referral.lead_email}</span>
                       </div>
                       {referral.company_name && (
                         <div>
                           <span className="text-muted-foreground">Company:</span>
-                          <span className="ml-2 text-foreground">
-                            {referral.company_name}
-                          </span>
+                          <span className="ml-2 text-foreground">{referral.company_name}</span>
                         </div>
                       )}
                       {referral.estimated_value && (
                         <div>
-                          <span className="text-muted-foreground">
-                            Estimated Value:
-                          </span>
+                          <span className="text-muted-foreground">Estimated Value:</span>
                           <span className="ml-2 text-foreground">
                             ${referral.estimated_value.toLocaleString()}
                           </span>
@@ -290,9 +266,7 @@ export default function PartnerReferralsPage() {
                     </div>
 
                     {referral.notes && (
-                      <div className="mt-2 text-sm text-muted-foreground">
-                        {referral.notes}
-                      </div>
+                      <div className="mt-2 text-sm text-muted-foreground">{referral.notes}</div>
                     )}
 
                     <div className="mt-2 text-xs text-foreground0">

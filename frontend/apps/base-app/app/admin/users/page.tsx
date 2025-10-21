@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Search, Shield, UserMinus, UserPlus, Loader2 } from "lucide-react";
@@ -8,7 +11,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   useUsers,
@@ -24,7 +34,14 @@ import {
 
 type UserStatus = "Active" | "Invited" | "Suspended";
 
-const ROLE_FILTERS = ["All roles", "Admin", "User", "Guest", "Platform Admin", "Superuser"] as const;
+const ROLE_FILTERS = [
+  "All roles",
+  "Admin",
+  "User",
+  "Guest",
+  "Platform Admin",
+  "Superuser",
+] as const;
 const STATUS_COLORS: Record<UserStatus, string> = {
   Active: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30",
   Invited: "bg-blue-500/10 text-blue-200 border border-blue-500/20",
@@ -78,8 +95,12 @@ export default function AdminUsersPage() {
       <header className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">User management</p>
-            <h1 className="text-3xl font-semibold text-foreground">Administrators & elevated users</h1>
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              User management
+            </p>
+            <h1 className="text-3xl font-semibold text-foreground">
+              Administrators & elevated users
+            </h1>
             <p className="text-sm text-muted-foreground">
               Invite new platform administrators, adjust roles and review account security status.
             </p>
@@ -121,7 +142,9 @@ export default function AdminUsersPage() {
             </div>
             <select
               value={roleFilter}
-              onChange={(event) => setRoleFilter(event.target.value as (typeof ROLE_FILTERS)[number])}
+              onChange={(event) =>
+                setRoleFilter(event.target.value as (typeof ROLE_FILTERS)[number])
+              }
               className="h-10 w-full max-w-xs rounded-md border border-border bg-card px-3 text-sm text-foreground focus:border-primary focus:outline-none"
               disabled={isLoading}
             >
@@ -161,13 +184,27 @@ export default function AdminUsersPage() {
             <Table data-testid="user-list">
               <TableHeader>
                 <TableRow className="border-border/40">
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">User</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Email</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Role</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Status</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">MFA</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Last seen</TableHead>
-                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">Actions</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                    User
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Email
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Role
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Status
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                    MFA
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Last seen
+                  </TableHead>
+                  <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -182,7 +219,9 @@ export default function AdminUsersPage() {
                       <TableCell>
                         <div className="space-y-1">
                           <p className="text-sm font-semibold text-foreground">{displayName}</p>
-                          <p className="text-xs font-mono text-muted-foreground">@{user.username}</p>
+                          <p className="text-xs font-mono text-muted-foreground">
+                            @{user.username}
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{user.email}</TableCell>
@@ -192,7 +231,9 @@ export default function AdminUsersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${STATUS_COLORS[status]}`}>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${STATUS_COLORS[status]}`}
+                        >
                           {status}
                         </span>
                       </TableCell>
@@ -216,7 +257,7 @@ export default function AdminUsersPage() {
                             onClick={() => handleToggleUserStatus(user)}
                             disabled={disableUser.isPending || enableUser.isPending}
                           >
-                            {user.is_active ? 'Disable' : 'Enable'}
+                            {user.is_active ? "Disable" : "Enable"}
                           </Button>
                           <Button
                             size="sm"
@@ -234,7 +275,10 @@ export default function AdminUsersPage() {
                 })}
                 {filtered.length === 0 && !isLoading && (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
+                    <TableCell
+                      colSpan={7}
+                      className="py-10 text-center text-sm text-muted-foreground"
+                    >
                       {users.length === 0
                         ? "No users found. Register your first user to get started."
                         : "No users match the current filters."}

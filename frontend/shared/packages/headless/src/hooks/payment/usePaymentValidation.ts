@@ -3,7 +3,7 @@
  * Handles validation of payment-related data
  */
 
-import { useCallback } from 'react';
+import { useCallback } from "react";
 
 export interface ValidationResult {
   isValid: boolean;
@@ -18,7 +18,7 @@ export interface UsePaymentValidationReturn {
   validateCardData: (cardData: any) => ValidationResult;
 }
 
-const SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
+const SUPPORTED_CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY"];
 const CARD_NUMBER_REGEX = /^\d{13,19}$/;
 const CVV_REGEX = /^\d{3,4}$/;
 
@@ -26,12 +26,12 @@ export function usePaymentValidation(): UsePaymentValidationReturn {
   const validateAmount = useCallback((amount: number): ValidationResult => {
     const errors: string[] = [];
 
-    if (typeof amount !== 'number') {
-      errors.push('Amount must be a number');
+    if (typeof amount !== "number") {
+      errors.push("Amount must be a number");
     } else if (amount <= 0) {
-      errors.push('Amount must be greater than 0');
+      errors.push("Amount must be greater than 0");
     } else if (amount > 999999999) {
-      errors.push('Amount exceeds maximum limit');
+      errors.push("Amount exceeds maximum limit");
     }
 
     return { isValid: errors.length === 0, errors };
@@ -41,7 +41,7 @@ export function usePaymentValidation(): UsePaymentValidationReturn {
     const errors: string[] = [];
 
     if (!currency) {
-      errors.push('Currency is required');
+      errors.push("Currency is required");
     } else if (!SUPPORTED_CURRENCIES.includes(currency.toUpperCase())) {
       errors.push(`Unsupported currency: ${currency}`);
     }
@@ -53,11 +53,11 @@ export function usePaymentValidation(): UsePaymentValidationReturn {
     const errors: string[] = [];
 
     if (!customerId) {
-      errors.push('Customer ID is required');
-    } else if (typeof customerId !== 'string') {
-      errors.push('Customer ID must be a string');
+      errors.push("Customer ID is required");
+    } else if (typeof customerId !== "string") {
+      errors.push("Customer ID must be a string");
     } else if (customerId.length < 1) {
-      errors.push('Customer ID cannot be empty');
+      errors.push("Customer ID cannot be empty");
     }
 
     return { isValid: errors.length === 0, errors };
@@ -67,24 +67,24 @@ export function usePaymentValidation(): UsePaymentValidationReturn {
     const errors: string[] = [];
 
     if (!cardData) {
-      errors.push('Card data is required');
+      errors.push("Card data is required");
       return { isValid: false, errors };
     }
 
-    if (!cardData.number || !CARD_NUMBER_REGEX.test(cardData.number.replace(/\s/g, ''))) {
-      errors.push('Invalid card number');
+    if (!cardData.number || !CARD_NUMBER_REGEX.test(cardData.number.replace(/\s/g, ""))) {
+      errors.push("Invalid card number");
     }
 
     if (!cardData.exp_month || cardData.exp_month < 1 || cardData.exp_month > 12) {
-      errors.push('Invalid expiration month');
+      errors.push("Invalid expiration month");
     }
 
     if (!cardData.exp_year || cardData.exp_year < new Date().getFullYear()) {
-      errors.push('Invalid expiration year');
+      errors.push("Invalid expiration year");
     }
 
     if (!cardData.cvc || !CVV_REGEX.test(cardData.cvc)) {
-      errors.push('Invalid CVV');
+      errors.push("Invalid CVV");
     }
 
     return { isValid: errors.length === 0, errors };
@@ -95,7 +95,7 @@ export function usePaymentValidation(): UsePaymentValidationReturn {
       const allErrors: string[] = [];
 
       if (!data) {
-        return { isValid: false, errors: ['Payment data is required'] };
+        return { isValid: false, errors: ["Payment data is required"] };
       }
 
       const amountValidation = validateAmount(data.amount);
@@ -109,7 +109,7 @@ export function usePaymentValidation(): UsePaymentValidationReturn {
 
       return { isValid: allErrors.length === 0, errors: allErrors };
     },
-    [validateAmount, validateCurrency, validateCustomerId]
+    [validateAmount, validateCurrency, validateCustomerId],
   );
 
   return {

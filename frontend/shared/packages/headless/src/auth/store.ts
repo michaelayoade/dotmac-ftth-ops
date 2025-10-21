@@ -3,9 +3,9 @@
  * Consolidates all auth patterns from individual portals
  */
 
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
 import type {
   AuthStore,
@@ -17,11 +17,11 @@ import type {
   AuthError,
   DeviceFingerprint,
   AuthProviderConfig,
-} from './types';
-import { SecureStorage } from './storage';
-import { TokenManager } from './tokenManager';
-import { CSRFProtection } from './csrfProtection';
-import { RateLimiter } from './rateLimiter';
+} from "./types";
+import { SecureStorage } from "./storage";
+import { TokenManager } from "./tokenManager";
+import { CSRFProtection } from "./csrfProtection";
+import { RateLimiter } from "./rateLimiter";
 
 const initialState: AuthState = {
   user: null,
@@ -38,7 +38,7 @@ const initialState: AuthState = {
 
 export function useAuth(config: AuthProviderConfig) {
   const storage = new SecureStorage({
-    backend: config.secureStorage ? 'cookies' : 'localStorage',
+    backend: config.secureStorage ? "cookies" : "localStorage",
     encrypt: config.secureStorage || false,
     prefix: `auth_${config.portal.type}_`,
   });
@@ -62,10 +62,10 @@ export function useAuth(config: AuthProviderConfig) {
           try {
             // Rate limiting check
             if (rateLimiter) {
-              const rateLimitCheck = rateLimiter.checkLimit('login');
+              const rateLimitCheck = rateLimiter.checkLimit("login");
               if (!rateLimitCheck.allowed) {
                 throw {
-                  code: 'RATE_LIMITED',
+                  code: "RATE_LIMITED",
                   message: `Too many login attempts. Try again in ${rateLimitCheck.retryAfter}s`,
                   retryAfter: rateLimitCheck.retryAfter,
                 };
@@ -91,12 +91,12 @@ export function useAuth(config: AuthProviderConfig) {
             };
 
             // Make login request
-            const response = await fetch('/api/auth/login', {
-              method: 'POST',
-              credentials: 'include',
+            const response = await fetch("/api/auth/login", {
+              method: "POST",
+              credentials: "include",
               headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': csrfProtection.getToken() || '',
+                "Content-Type": "application/json",
+                "X-CSRF-Token": csrfProtection.getToken() || "",
               },
               body: JSON.stringify(loginPayload),
             });
@@ -118,8 +118,8 @@ export function useAuth(config: AuthProviderConfig) {
               }
 
               throw {
-                code: errorData.code || 'LOGIN_FAILED',
-                message: errorData.message || 'Authentication failed',
+                code: errorData.code || "LOGIN_FAILED",
+                message: errorData.message || "Authentication failed",
                 ...errorData,
               };
             }
@@ -161,22 +161,22 @@ export function useAuth(config: AuthProviderConfig) {
 
             // Record successful login
             if (rateLimiter) {
-              rateLimiter.recordAttempt('login', true);
+              rateLimiter.recordAttempt("login", true);
             }
 
             // Setup auto-refresh
             if (config.autoRefresh) {
               tokenManager.setupAutoRefresh(
                 () => get().refreshToken(),
-                () => get().logout()
+                () => get().logout(),
               );
             }
 
             return true;
           } catch (error: any) {
             // Record failed attempt
-            if (rateLimiter && error.code !== 'RATE_LIMITED') {
-              rateLimiter.recordAttempt('login', false);
+            if (rateLimiter && error.code !== "RATE_LIMITED") {
+              rateLimiter.recordAttempt("login", false);
             }
 
             set((state) => {
@@ -197,15 +197,15 @@ export function useAuth(config: AuthProviderConfig) {
 
           try {
             // Notify server
-            await fetch('/api/auth/logout', {
-              method: 'POST',
-              credentials: 'include',
+            await fetch("/api/auth/logout", {
+              method: "POST",
+              credentials: "include",
               headers: {
                 Authorization: `Bearer ${tokenManager.getAccessToken()}`,
               },
             });
           } catch (error) {
-            console.warn('Logout request failed:', error);
+            console.warn("Logout request failed:", error);
           }
 
           // Clear all auth data
@@ -219,7 +219,7 @@ export function useAuth(config: AuthProviderConfig) {
           }));
 
           // Redirect if configured
-          if (config.redirectOnLogout && typeof window !== 'undefined') {
+          if (config.redirectOnLogout && typeof window !== "undefined") {
             window.location.href = config.redirectOnLogout;
           }
         },
@@ -230,11 +230,11 @@ export function useAuth(config: AuthProviderConfig) {
           if (!refreshToken) return false;
 
           try {
-            const response = await fetch('/api/auth/refresh', {
-              method: 'POST',
-              credentials: 'include',
+            const response = await fetch("/api/auth/refresh", {
+              method: "POST",
+              credentials: "include",
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
               body: JSON.stringify({ refreshToken }),
             });
@@ -268,7 +268,7 @@ export function useAuth(config: AuthProviderConfig) {
 
             return true;
           } catch (error) {
-            console.error('Token refresh failed:', error);
+            console.error("Token refresh failed:", error);
             await get().logout();
             return false;
           }
@@ -280,9 +280,9 @@ export function useAuth(config: AuthProviderConfig) {
           if (!accessToken) return false;
 
           try {
-            const response = await fetch('/api/auth/validate', {
-              method: 'GET',
-              credentials: 'include',
+            const response = await fetch("/api/auth/validate", {
+              method: "GET",
+              credentials: "include",
               headers: {
                 Authorization: `Bearer ${accessToken}`,
               },
@@ -307,7 +307,7 @@ export function useAuth(config: AuthProviderConfig) {
               return false;
             }
           } catch (error) {
-            console.error('Session validation failed:', error);
+            console.error("Session validation failed:", error);
             set((state) => {
               state.sessionValid = false;
             });
@@ -333,13 +333,13 @@ export function useAuth(config: AuthProviderConfig) {
           if (!accessToken) return false;
 
           try {
-            const response = await fetch('/api/auth/password/update', {
-              method: 'POST',
-              credentials: 'include',
+            const response = await fetch("/api/auth/password/update", {
+              method: "POST",
+              credentials: "include",
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
                 Authorization: `Bearer ${accessToken}`,
-                'X-CSRF-Token': csrfProtection.getToken() || '',
+                "X-CSRF-Token": csrfProtection.getToken() || "",
               },
               body: JSON.stringify({
                 currentPassword,
@@ -356,7 +356,7 @@ export function useAuth(config: AuthProviderConfig) {
 
             return false;
           } catch (error) {
-            console.error('Password update failed:', error);
+            console.error("Password update failed:", error);
             return false;
           }
         },
@@ -367,13 +367,13 @@ export function useAuth(config: AuthProviderConfig) {
           if (!accessToken) return false;
 
           try {
-            const response = await fetch('/api/auth/mfa/setup', {
-              method: 'POST',
-              credentials: 'include',
+            const response = await fetch("/api/auth/mfa/setup", {
+              method: "POST",
+              credentials: "include",
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
                 Authorization: `Bearer ${accessToken}`,
-                'X-CSRF-Token': csrfProtection.getToken() || '',
+                "X-CSRF-Token": csrfProtection.getToken() || "",
               },
               body: JSON.stringify({ secret, code }),
             });
@@ -390,7 +390,7 @@ export function useAuth(config: AuthProviderConfig) {
 
             return false;
           } catch (error) {
-            console.error('MFA setup failed:', error);
+            console.error("MFA setup failed:", error);
             return false;
           }
         },
@@ -437,19 +437,19 @@ export function useAuth(config: AuthProviderConfig) {
             state.validateSession();
           }
         },
-      }
-    )
+      },
+    ),
   );
 }
 
 // Device fingerprinting utility
 function generateDeviceFingerprint(): DeviceFingerprint {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
   if (ctx) {
-    ctx.textBaseline = 'top';
-    ctx.font = '14px Arial';
-    ctx.fillText('DotMac fingerprint', 2, 2);
+    ctx.textBaseline = "top";
+    ctx.font = "14px Arial";
+    ctx.fillText("DotMac fingerprint", 2, 2);
   }
 
   return {

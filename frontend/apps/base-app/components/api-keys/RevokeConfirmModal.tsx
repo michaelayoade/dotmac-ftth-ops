@@ -1,11 +1,6 @@
-import { useState } from 'react';
-import {
-  X,
-  AlertTriangle,
-  Trash2,
-  Loader2,
-} from 'lucide-react';
-import { APIKey } from '@/hooks/useApiKeys';
+import { useState } from "react";
+import { X, AlertTriangle, Trash2, Loader2 } from "lucide-react";
+import { APIKey } from "@/hooks/useApiKeys";
 
 interface RevokeConfirmModalProps {
   apiKey: APIKey;
@@ -13,22 +8,18 @@ interface RevokeConfirmModalProps {
   onConfirm: () => Promise<void>;
 }
 
-export function RevokeConfirmModal({
-  apiKey,
-  onClose,
-  onConfirm
-}: RevokeConfirmModalProps) {
+export function RevokeConfirmModal({ apiKey, onClose, onConfirm }: RevokeConfirmModalProps) {
   const [loading, setLoading] = useState(false);
-  const [confirmText, setConfirmText] = useState('');
+  const [confirmText, setConfirmText] = useState("");
 
   const handleConfirm = async () => {
-    if (confirmText !== 'REVOKE') return;
+    if (confirmText !== "REVOKE") return;
 
     setLoading(true);
     try {
       await onConfirm();
     } catch (error) {
-      console.error('Failed to revoke API key:', error);
+      console.error("Failed to revoke API key:", error);
     } finally {
       setLoading(false);
     }
@@ -40,7 +31,7 @@ export function RevokeConfirmModal({
     }
   };
 
-  const isConfirmValid = confirmText === 'REVOKE';
+  const isConfirmValid = confirmText === "REVOKE";
 
   return (
     <div
@@ -57,10 +48,7 @@ export function RevokeConfirmModal({
               </div>
               <h3 className="text-lg font-semibold text-white">Revoke API Key</h3>
             </div>
-            <button
-              onClick={onClose}
-              className="text-slate-400 hover:text-white transition-colors"
-            >
+            <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
               <X className="h-6 w-6" />
             </button>
           </div>
@@ -74,7 +62,8 @@ export function RevokeConfirmModal({
               <div>
                 <h4 className="font-medium text-red-400">Permanent Action</h4>
                 <p className="text-sm text-slate-300 mt-1">
-                  This action cannot be undone. The API key will be immediately invalidated and any applications using it will lose access.
+                  This action cannot be undone. The API key will be immediately invalidated and any
+                  applications using it will lose access.
                 </p>
               </div>
             </div>
@@ -111,7 +100,8 @@ export function RevokeConfirmModal({
 
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              Type <code className="px-1 py-0.5 bg-slate-800 rounded text-red-400">REVOKE</code> to confirm
+              Type <code className="px-1 py-0.5 bg-slate-800 rounded text-red-400">REVOKE</code> to
+              confirm
             </label>
             <input
               type="text"

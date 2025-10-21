@@ -32,11 +32,11 @@ from typing import Any, TypeVar
 from pydantic import BaseModel, ConfigDict, Field
 
 # Type aliases
-DomainEventHandler = Callable[["DomainEvent"], Awaitable[None]]
+DomainEventHandler = Callable[[Any], Awaitable[None]]
 T = TypeVar("T", bound="DomainEvent")
 
 
-class DomainEvent(BaseModel):
+class DomainEvent(BaseModel):  # BaseModel resolves to Any in isolation
     """
     Base class for domain events.
 
@@ -127,7 +127,7 @@ class DomainEvent(BaseModel):
         )
 
 
-class DomainEventMetadata(BaseModel):
+class DomainEventMetadata(BaseModel):  # BaseModel resolves to Any in isolation
     """Metadata for domain events (correlation, causation, etc.)."""
 
     model_config = ConfigDict(extra="allow")

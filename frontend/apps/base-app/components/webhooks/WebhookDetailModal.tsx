@@ -1,4 +1,4 @@
-import { WebhookSubscription } from '@/hooks/useWebhooks';
+import { WebhookSubscription } from "@/hooks/useWebhooks";
 
 interface WebhookDetailModalProps {
   webhook: WebhookSubscription;
@@ -8,6 +8,12 @@ interface WebhookDetailModalProps {
   onTest: () => void;
 }
 
-export function WebhookDetailModal({ webhook, onClose, onEdit, onDelete, onTest }: WebhookDetailModalProps) {
+export function WebhookDetailModal({
+  webhook,
+  onClose,
+  onEdit,
+  onDelete,
+  onTest,
+}: WebhookDetailModalProps) {
   return <div>WebhookDetailModal Placeholder</div>;
 }

@@ -3,7 +3,7 @@
  * Captures IP address, user agent, and device information for security tracking
  */
 
-import type { SecurityContext } from '../types';
+import type { SecurityContext } from "../types";
 
 export class SecurityContextManager {
   private static cachedContext: SecurityContext | null = null;
@@ -39,20 +39,20 @@ export class SecurityContextManager {
    * Get user agent string
    */
   private static getUserAgent(): string {
-    return typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown';
+    return typeof navigator !== "undefined" ? navigator.userAgent : "unknown";
   }
 
   /**
    * Get or create session ID for tracking
    */
   private static getOrCreateSessionId(): string {
-    if (typeof window === 'undefined') return 'server-side';
+    if (typeof window === "undefined") return "server-side";
 
-    let sessionId = sessionStorage.getItem('auth-session-id');
+    let sessionId = sessionStorage.getItem("auth-session-id");
 
     if (!sessionId) {
       sessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      sessionStorage.setItem('auth-session-id', sessionId);
+      sessionStorage.setItem("auth-session-id", sessionId);
     }
 
     return sessionId;
@@ -61,33 +61,33 @@ export class SecurityContextManager {
   /**
    * Extract device information from user agent
    */
-  private static getDeviceInfo(): SecurityContext['device'] {
-    if (typeof navigator === 'undefined') {
-      return { type: 'server', os: 'unknown', browser: 'unknown' };
+  private static getDeviceInfo(): SecurityContext["device"] {
+    if (typeof navigator === "undefined") {
+      return { type: "server", os: "unknown", browser: "unknown" };
     }
 
     const userAgent = navigator.userAgent;
 
     // Detect device type
-    let deviceType = 'desktop';
+    let deviceType = "desktop";
     if (/Mobile|Android|iPhone|iPad/.test(userAgent)) {
-      deviceType = /iPad/.test(userAgent) ? 'tablet' : 'mobile';
+      deviceType = /iPad/.test(userAgent) ? "tablet" : "mobile";
     }
 
     // Detect OS
-    let os = 'unknown';
-    if (/Windows/.test(userAgent)) os = 'Windows';
-    else if (/Mac OS/.test(userAgent)) os = 'macOS';
-    else if (/Linux/.test(userAgent)) os = 'Linux';
-    else if (/Android/.test(userAgent)) os = 'Android';
-    else if (/iOS/.test(userAgent)) os = 'iOS';
+    let os = "unknown";
+    if (/Windows/.test(userAgent)) os = "Windows";
+    else if (/Mac OS/.test(userAgent)) os = "macOS";
+    else if (/Linux/.test(userAgent)) os = "Linux";
+    else if (/Android/.test(userAgent)) os = "Android";
+    else if (/iOS/.test(userAgent)) os = "iOS";
 
     // Detect browser
-    let browser = 'unknown';
-    if (/Chrome/.test(userAgent) && !/Edg/.test(userAgent)) browser = 'Chrome';
-    else if (/Firefox/.test(userAgent)) browser = 'Firefox';
-    else if (/Safari/.test(userAgent) && !/Chrome/.test(userAgent)) browser = 'Safari';
-    else if (/Edg/.test(userAgent)) browser = 'Edge';
+    let browser = "unknown";
+    if (/Chrome/.test(userAgent) && !/Edg/.test(userAgent)) browser = "Chrome";
+    else if (/Firefox/.test(userAgent)) browser = "Firefox";
+    else if (/Safari/.test(userAgent) && !/Chrome/.test(userAgent)) browser = "Safari";
+    else if (/Edg/.test(userAgent)) browser = "Edge";
 
     return { type: deviceType, os, browser };
   }
@@ -96,44 +96,44 @@ export class SecurityContextManager {
    * Get client IP address (requires backend support)
    */
   private static async getClientIP(): Promise<string> {
-    if (typeof window === 'undefined') return 'unknown';
+    if (typeof window === "undefined") return "unknown";
 
     try {
       // Try to get IP from a privacy-friendly service
-      const response = await fetch('/api/security/client-info', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/security/client-info", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
       });
 
       if (response.ok) {
         const data = await response.json();
-        return data.ipAddress || 'unknown';
+        return data.ipAddress || "unknown";
       }
     } catch (error) {
-      console.warn('Could not determine client IP:', error);
+      console.warn("Could not determine client IP:", error);
     }
 
-    return 'unknown';
+    return "unknown";
   }
 
   /**
    * Get approximate location information (respects privacy)
    */
-  private static async getLocationInfo(): Promise<SecurityContext['location']> {
-    if (typeof window === 'undefined') return undefined;
+  private static async getLocationInfo(): Promise<SecurityContext["location"]> {
+    if (typeof window === "undefined") return undefined;
 
     try {
       // Use browser's timezone to get general location (privacy-friendly)
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
       // Extract general region from timezone (e.g., "America/New_York" -> "Americas")
-      const region = timeZone.split('/')[0];
+      const region = timeZone.split("/")[0];
 
       return {
         region: this.mapTimezoneToRegion(region),
       };
     } catch (error) {
-      console.warn('Could not determine location info:', error);
+      console.warn("Could not determine location info:", error);
       return undefined;
     }
   }
@@ -143,12 +143,12 @@ export class SecurityContextManager {
    */
   private static mapTimezoneToRegion(region: string): string {
     const regionMap: Record<string, string> = {
-      America: 'Americas',
-      Europe: 'Europe',
-      Asia: 'Asia',
-      Africa: 'Africa',
-      Australia: 'Oceania',
-      Pacific: 'Pacific',
+      America: "Americas",
+      Europe: "Europe",
+      Asia: "Asia",
+      Africa: "Africa",
+      Australia: "Oceania",
+      Pacific: "Pacific",
     };
 
     return regionMap[region] || region;
@@ -169,8 +169,8 @@ export class SecurityContextManager {
 
     return {
       timestamp: Date.now(),
-      userAgent: 'unknown',
-      sessionId: 'unknown',
+      userAgent: "unknown",
+      sessionId: "unknown",
       ...updates,
     };
   }
@@ -182,8 +182,8 @@ export class SecurityContextManager {
     this.cachedContext = null;
     this.lastUpdate = 0;
 
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('auth-session-id');
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("auth-session-id");
     }
   }
 
@@ -197,17 +197,17 @@ export class SecurityContextManager {
     const warnings: string[] = [];
 
     // Check for missing critical fields
-    if (!context.userAgent || context.userAgent === 'unknown') {
-      warnings.push('Missing or invalid user agent');
+    if (!context.userAgent || context.userAgent === "unknown") {
+      warnings.push("Missing or invalid user agent");
     }
 
     if (!context.sessionId) {
-      warnings.push('Missing session ID');
+      warnings.push("Missing session ID");
     }
 
     // Check for suspicious user agents
     if (context.userAgent && /bot|crawler|spider|scraper/i.test(context.userAgent)) {
-      warnings.push('Suspicious user agent detected');
+      warnings.push("Suspicious user agent detected");
     }
 
     // Check timestamp validity (not too old, not in future)
@@ -216,7 +216,7 @@ export class SecurityContextManager {
 
     if (timeDiff > 10 * 60 * 1000) {
       // More than 10 minutes
-      warnings.push('Context timestamp is stale or invalid');
+      warnings.push("Context timestamp is stale or invalid");
     }
 
     return {

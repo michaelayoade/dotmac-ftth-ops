@@ -3,8 +3,8 @@
  * Configures testing environment for UI components
  */
 
-import '@testing-library/jest-dom';
-import './mocks';
+import "@testing-library/jest-dom";
+import "./mocks";
 
 // Mock ResizeObserver which might be used by components
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
@@ -21,7 +21,7 @@ global.IntersectionObserver = jest.fn().mockImplementation(() => ({
 }));
 
 // Mock window.matchMedia for responsive components
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: jest.fn().mockImplementation((query) => ({
     matches: false,
@@ -62,19 +62,19 @@ afterEach(() => {
 });
 
 // Mock Radix UI primitives portal behavior for testing
-const mockPortalContainer = document.createElement('div');
-mockPortalContainer.setAttribute('id', 'radix-portal-container');
+const mockPortalContainer = document.createElement("div");
+mockPortalContainer.setAttribute("id", "radix-portal-container");
 document.body.appendChild(mockPortalContainer);
 
 // Add custom jest matchers if needed
 expect.extend({
   toHaveValidPortalVariant(received: Element, variant: string) {
     const variantClasses = {
-      admin: ['border-blue', 'bg-blue', 'text-blue'],
-      customer: ['border-green', 'bg-green', 'text-green'],
-      reseller: ['border-purple', 'bg-purple', 'text-purple'],
-      technician: ['border-orange', 'bg-orange', 'text-orange'],
-      management: ['border-slate', 'bg-slate', 'text-slate'],
+      admin: ["border-blue", "bg-blue", "text-blue"],
+      customer: ["border-green", "bg-green", "text-green"],
+      reseller: ["border-purple", "bg-purple", "text-purple"],
+      technician: ["border-orange", "bg-orange", "text-orange"],
+      management: ["border-slate", "bg-slate", "text-slate"],
     };
 
     const expectedClasses = variantClasses[variant as keyof typeof variantClasses];
@@ -86,7 +86,7 @@ expect.extend({
     }
 
     const hasVariantClasses = expectedClasses.some((className) =>
-      Array.from(received.classList).some((cls) => cls.includes(className))
+      Array.from(received.classList).some((cls) => cls.includes(className)),
     );
 
     return {

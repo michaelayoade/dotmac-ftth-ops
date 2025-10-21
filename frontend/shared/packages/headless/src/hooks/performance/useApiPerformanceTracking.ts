@@ -2,8 +2,8 @@
  * API Performance Tracking Hook
  */
 
-import { useCallback } from 'react';
-import { usePerformanceMonitoring } from './usePerformanceMonitoring';
+import { useCallback } from "react";
+import { usePerformanceMonitoring } from "./usePerformanceMonitoring";
 
 export function useApiPerformanceTracking() {
   const { trackApiCall } = usePerformanceMonitoring();
@@ -25,7 +25,7 @@ export function useApiPerformanceTracking() {
         trackApiCall(endpoint, duration, success);
       }
     },
-    [trackApiCall]
+    [trackApiCall],
   );
 
   return { trackApiRequest };

@@ -24,6 +24,8 @@ class ActivityType(str, Enum):
     USER_CREATED = "user.created"
     USER_UPDATED = "user.updated"
     USER_DELETED = "user.deleted"
+    USER_IMPERSONATION = "user.impersonation"
+    PASSWORD_RESET_ADMIN = "user.password_reset_admin"
 
     # RBAC activities
     ROLE_CREATED = "rbac.role.created"
@@ -47,6 +49,9 @@ class ActivityType(str, Enum):
     FILE_UPLOADED = "file.uploaded"
     FILE_DOWNLOADED = "file.downloaded"
     FILE_DELETED = "file.deleted"
+
+    # Customer activities
+    CUSTOMER_STATUS_CHANGE = "customer.status_change"
 
     # API activities
     API_REQUEST = "api.request"
@@ -74,16 +79,30 @@ class AuditActivity(Base, TimestampMixin, StrictTenantMixin):
 
     __tablename__ = "audit_activities"
 
+    def __init__(self, **kwargs: Any) -> None:
+        tenant_id = kwargs.get("tenant_id")
+        action = kwargs.get("action")
+        description = kwargs.get("description")
+
+        if not tenant_id:
+            raise ValueError("tenant_id is required for audit activities.")
+        if not action:
+            raise ValueError("action is required for audit activities.")
+        if not description:
+            raise ValueError("description is required for audit activities.")
+
+        super().__init__(**kwargs)
+
     id: Mapped[UUID] = mapped_column(
         PostgresUUID(as_uuid=True), primary_key=True, default=uuid4, index=True
     )
 
     # Activity identification
-    activity_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    severity: Mapped[str] = mapped_column(String(20), default=ActivitySeverity.LOW, index=True)
+    activity_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(String(20), default=ActivitySeverity.LOW)
 
     # Who and when
-    user_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    user_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     # tenant_id is inherited from StrictTenantMixin and is NOT NULL
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
@@ -115,7 +134,7 @@ class AuditActivity(Base, TimestampMixin, StrictTenantMixin):
 # Pydantic models for API
 
 
-class AuditActivityCreate(BaseModel):
+class AuditActivityCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Model for creating audit activities."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
@@ -160,7 +179,7 @@ class AuditActivityCreate(BaseModel):
     request_id: str | None = None
 
 
-class AuditActivityResponse(BaseModel):
+class AuditActivityResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Model for audit activity responses."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -181,7 +200,7 @@ class AuditActivityResponse(BaseModel):
     request_id: str | None
 
 
-class AuditActivityList(BaseModel):
+class AuditActivityList(BaseModel):  # BaseModel resolves to Any in isolation
     """Model for paginated audit activity lists."""
 
     model_config = ConfigDict()
@@ -194,7 +213,7 @@ class AuditActivityList(BaseModel):
     has_prev: bool
 
 
-class AuditFilterParams(BaseModel):
+class AuditFilterParams(BaseModel):  # BaseModel resolves to Any in isolation
     """Model for audit activity filtering parameters."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True, extra="forbid")
@@ -223,7 +242,7 @@ class FrontendLogLevel(str, Enum):
     DEBUG = "DEBUG"
 
 
-class FrontendLogEntry(BaseModel):
+class FrontendLogEntry(BaseModel):  # BaseModel resolves to Any in isolation
     """Single frontend log entry from the client."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -231,10 +250,10 @@ class FrontendLogEntry(BaseModel):
     level: FrontendLogLevel
     message: str = Field(min_length=1, max_length=1000)
     service: str = Field(default="frontend")
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
-class FrontendLogsRequest(BaseModel):
+class FrontendLogsRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Batch of frontend logs from the client."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -242,7 +261,7 @@ class FrontendLogsRequest(BaseModel):
     logs: list[FrontendLogEntry] = Field(min_length=1, max_length=100)
 
 
-class FrontendLogsResponse(BaseModel):
+class FrontendLogsResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for frontend log ingestion."""
 
     model_config = ConfigDict()

@@ -3,11 +3,11 @@
  * Consolidates all auth functionality from individual portals
  */
 
-import { useCallback, useEffect, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import type { AuthStore, LoginCredentials, User, PortalConfig, AuthProviderConfig } from './types';
-import { createAuthStore } from './store';
+import type { AuthStore, LoginCredentials, User, PortalConfig, AuthProviderConfig } from "./types";
+import { createAuthStore } from "./store";
 
 // Global store instances by portal
 const authStores = new Map<string, ReturnType<typeof createAuthStore>>();
@@ -58,7 +58,7 @@ export function useAuth(options: UseAuthOptions): UseAuthResult {
     autoRefresh = true,
     refreshThreshold = 5 * 60 * 1000,
     sessionTimeout = 30 * 60 * 1000,
-    redirectOnLogout = '/login',
+    redirectOnLogout = "/login",
     secureStorage = true,
     rateLimiting = true,
   } = options;
@@ -119,7 +119,7 @@ export function useAuth(options: UseAuthOptions): UseAuthResult {
 
   // Validate session on mount and periodically
   const { data: sessionData } = useQuery({
-    queryKey: ['auth', 'session', portal.type, portal.id],
+    queryKey: ["auth", "session", portal.type, portal.id],
     queryFn: authActions.validateSession,
     enabled: authState.isAuthenticated,
     staleTime: 60 * 1000, // 1 minute
@@ -131,7 +131,7 @@ export function useAuth(options: UseAuthOptions): UseAuthResult {
   const loginMutation = useMutation({
     mutationFn: authActions.login,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['auth'] });
+      queryClient.invalidateQueries({ queryKey: ["auth"] });
     },
   });
 
@@ -147,7 +147,7 @@ export function useAuth(options: UseAuthOptions): UseAuthResult {
   useEffect(() => {
     if (!authState.isAuthenticated) return;
 
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    const events = ["mousedown", "mousemove", "keypress", "scroll", "touchstart", "click"];
     const activityHandler = () => authActions.updateActivity();
 
     events.forEach((event) => {
@@ -166,21 +166,21 @@ export function useAuth(options: UseAuthOptions): UseAuthResult {
     (permission: string): boolean => {
       return authState.user?.permissions?.includes(permission) ?? false;
     },
-    [authState.user?.permissions]
+    [authState.user?.permissions],
   );
 
   const hasRole = useCallback(
     (role: string): boolean => {
       return authState.user?.role === role;
     },
-    [authState.user?.role]
+    [authState.user?.role],
   );
 
   const hasAnyRole = useCallback(
     (roles: string[]): boolean => {
       return authState.user?.role ? roles.includes(authState.user.role) : false;
     },
-    [authState.user?.role]
+    [authState.user?.role],
   );
 
   const hasAnyPermission = useCallback(
@@ -188,7 +188,7 @@ export function useAuth(options: UseAuthOptions): UseAuthResult {
       if (!authState.user?.permissions) return false;
       return permissions.some((permission) => authState.user!.permissions.includes(permission));
     },
-    [authState.user?.permissions]
+    [authState.user?.permissions],
   );
 
   const hasAllPermissions = useCallback(
@@ -196,7 +196,7 @@ export function useAuth(options: UseAuthOptions): UseAuthResult {
       if (!authState.user?.permissions) return false;
       return permissions.every((permission) => authState.user!.permissions.includes(permission));
     },
-    [authState.user?.permissions]
+    [authState.user?.permissions],
   );
 
   // Session helpers

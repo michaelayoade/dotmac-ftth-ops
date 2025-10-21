@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { register as registerUser } from '@/lib/auth';
-import { registerSchema, type RegisterFormData } from '@/lib/validations/auth';
-import { useBranding } from '@/hooks/useBranding';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { register as registerUser } from "@/lib/auth";
+import { registerSchema, type RegisterFormData } from "@/lib/validations/auth";
+import { useBranding } from "@/hooks/useBranding";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { branding } = useBranding();
 
@@ -24,21 +24,22 @@ export default function RegisterPage() {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       // Register the user; backend issues HttpOnly auth cookies
       await registerUser({
+        username: data.username,
         email: data.email,
         password: data.password,
-        name: data.full_name,
+        full_name: data.name, // Map 'name' to 'full_name' for backend
       });
 
       // Server sets HttpOnly cookies; navigate once ready
-      router.push('/dashboard');
+      router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(err instanceof Error ? err.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -48,11 +49,20 @@ export default function RegisterPage() {
     <main className="min-h-screen flex items-center justify-center px-6 py-12 bg-background">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Create your account</h1>
-          <p className="text-muted-foreground">Join the {branding.productName}</p>
+          <div className="flex items-center justify-center mb-4">
+            <span className="text-3xl">🌐</span>
+          </div>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Create Operator Account</h1>
+          <p className="text-muted-foreground">Join the {branding.productName} platform</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Get started managing your fiber network operations
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="bg-card/50 backdrop-blur border border-border rounded-lg p-8 space-y-6">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="bg-card/50 backdrop-blur border border-border rounded-lg p-8 space-y-6"
+        >
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg text-sm">
               {error}
@@ -60,22 +70,46 @@ export default function RegisterPage() {
           )}
 
           <div>
-            <label htmlFor="full_name" className="block text-sm font-medium text-muted-foreground mb-2">
-              Full Name (optional)
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-muted-foreground mb-2"
+            >
+              Username
             </label>
             <input
-              id="full_name"
+              id="username"
               type="text"
-              {...register('full_name')}
+              autoComplete="username"
+              {...register("username")}
               className={`w-full px-3 py-2 bg-accent border ${
-                errors.full_name ? 'border-red-500' : 'border-border'
+                errors.username ? "border-red-500" : "border-border"
+              } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
+              placeholder="johndoe"
+              data-testid="username-input"
+            />
+            {errors.username && (
+              <p className="mt-1 text-sm text-red-400">{errors.username.message}</p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Letters, numbers, hyphens and underscores only
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-muted-foreground mb-2">
+              Full Name
+            </label>
+            <input
+              id="name"
+              type="text"
+              {...register("name")}
+              className={`w-full px-3 py-2 bg-accent border ${
+                errors.name ? "border-red-500" : "border-border"
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
               placeholder="John Doe"
-              data-testid="full-name-input"
+              data-testid="name-input"
             />
-            {errors.full_name && (
-              <p className="mt-1 text-sm text-red-400">{errors.full_name.message}</p>
-            )}
+            {errors.name && <p className="mt-1 text-sm text-red-400">{errors.name.message}</p>}
           </div>
 
           <div>
@@ -86,30 +120,31 @@ export default function RegisterPage() {
               id="email"
               type="email"
               autoComplete="email"
-              {...register('email')}
+              {...register("email")}
               required
               className={`w-full px-3 py-2 bg-accent border ${
-                errors.email ? 'border-red-500' : 'border-border'
+                errors.email ? "border-red-500" : "border-border"
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
               placeholder="you@example.com"
               data-testid="email-input"
             />
-            {errors.email && (
-              <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
-            )}
+            {errors.email && <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>}
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-muted-foreground mb-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-muted-foreground mb-2"
+            >
               Password
             </label>
             <input
               id="password"
               type="password"
               autoComplete="new-password"
-              {...register('password')}
+              {...register("password")}
               className={`w-full px-3 py-2 bg-accent border ${
-                errors.password ? 'border-red-500' : 'border-border'
+                errors.password ? "border-red-500" : "border-border"
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
               placeholder="••••••••"
               data-testid="password-input"
@@ -123,16 +158,19 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-muted-foreground mb-2">
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-muted-foreground mb-2"
+            >
               Confirm Password
             </label>
             <input
               id="confirmPassword"
               type="password"
               autoComplete="new-password"
-              {...register('confirmPassword')}
+              {...register("confirmPassword")}
               className={`w-full px-3 py-2 bg-accent border ${
-                errors.confirmPassword ? 'border-red-500' : 'border-border'
+                errors.confirmPassword ? "border-red-500" : "border-border"
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
               placeholder="••••••••"
               data-testid="confirm-password-input"
@@ -148,11 +186,11 @@ export default function RegisterPage() {
             className="w-full py-3 px-4 disabled:bg-muted disabled:cursor-not-allowed font-medium rounded-lg transition-colors btn-brand"
             data-testid="submit-button"
           >
-            {loading ? 'Creating account...' : 'Sign up'}
+            {loading ? "Creating account..." : "Sign up"}
           </button>
 
           <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <Link href="/login" className="text-brand hover:text-[var(--brand-primary-hover)]">
               Sign in
             </Link>

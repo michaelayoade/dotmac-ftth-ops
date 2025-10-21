@@ -45,7 +45,7 @@ const { data: dashboard } = useCustomerDashboard();
     },
   },
   tags: ['autodocs', 'headless', 'api', 'hooks'],
-} satisfies Meta;
+};
 
 export default meta;
 

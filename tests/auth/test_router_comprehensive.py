@@ -11,7 +11,7 @@ Targets uncovered lines in router.py focusing on:
 """
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
@@ -51,7 +51,7 @@ async def test_user(async_db_session: AsyncSession):
 def router_app():
     """Create test app with auth router."""
     app = FastAPI()
-    app.include_router(auth_router, prefix="/auth")
+    app.include_router(auth_router)
     return app
 
 
@@ -66,8 +66,9 @@ async def test_successful_login(router_app: FastAPI, test_user: User, async_db_s
     router_app.dependency_overrides[get_auth_session] = override_session
 
     # Mock tenant context to match test user's tenant
-    with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"), patch(
-        "dotmac.platform.tenant.get_tenant_config", return_value=None
+    with (
+        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
+        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
     ):
         transport = ASGITransport(app=router_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
@@ -96,8 +97,9 @@ async def test_login_with_email(router_app: FastAPI, test_user: User, async_db_s
 
     router_app.dependency_overrides[get_auth_session] = override_session
 
-    with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"), patch(
-        "dotmac.platform.tenant.get_tenant_config", return_value=None
+    with (
+        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
+        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
     ):
         transport = ASGITransport(app=router_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
@@ -139,8 +141,9 @@ async def test_login_inactive_user(router_app: FastAPI, async_db_session):
 
     router_app.dependency_overrides[get_auth_session] = override_session
 
-    with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"), patch(
-        "dotmac.platform.tenant.get_tenant_config", return_value=None
+    with (
+        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
+        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
     ):
         transport = ASGITransport(app=router_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
@@ -346,8 +349,9 @@ async def test_cookie_based_login(router_app: FastAPI, test_user: User, async_db
 
     router_app.dependency_overrides[get_auth_session] = override_session
 
-    with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"), patch(
-        "dotmac.platform.tenant.get_tenant_config", return_value=None
+    with (
+        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
+        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
     ):
         transport = ASGITransport(app=router_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
@@ -366,6 +370,35 @@ async def test_cookie_based_login(router_app: FastAPI, test_user: User, async_db
 
 
 @pytest.mark.asyncio
+async def test_cookie_login_requires_2fa(router_app: FastAPI, test_user: User, async_db_session):
+    """Cookie login should prompt for 2FA when enabled."""
+    from dotmac.platform.auth.router import get_auth_session
+
+    async def override_session():
+        yield async_db_session
+
+    router_app.dependency_overrides[get_auth_session] = override_session
+
+    test_user.mfa_enabled = True
+    test_user.mfa_secret = "JBSWY3DPEHPK3PXP"  # dummy secret
+    await async_db_session.commit()
+
+    with (
+        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
+        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
+    ):
+        transport = ASGITransport(app=router_app)
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            response = await client.post(
+                "/auth/login/cookie",
+                json={"username": "testuser", "password": "TestPassword123!"},
+            )
+
+    assert response.status_code == 403
+    assert response.headers.get("X-2FA-Required") == "true"
+
+
+@pytest.mark.asyncio
 async def test_oauth2_token_endpoint(router_app: FastAPI, test_user: User, async_db_session):
     """Test OAuth2 password grant token endpoint."""
     from dotmac.platform.auth.router import get_auth_session
@@ -375,8 +408,9 @@ async def test_oauth2_token_endpoint(router_app: FastAPI, test_user: User, async
 
     router_app.dependency_overrides[get_auth_session] = override_session
 
-    with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"), patch(
-        "dotmac.platform.tenant.get_tenant_config", return_value=None
+    with (
+        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
+        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
     ):
         transport = ASGITransport(app=router_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
@@ -456,7 +490,9 @@ async def test_revoke_all_sessions(router_app: FastAPI, test_user: User, async_d
 
 
 @pytest.mark.asyncio
-async def test_password_reset_confirm_with_token(router_app: FastAPI, test_user: User, async_db_session):
+async def test_password_reset_confirm_with_token(
+    router_app: FastAPI, test_user: User, async_db_session
+):
     """Test password reset confirmation."""
     from dotmac.platform.auth.router import get_auth_session
 

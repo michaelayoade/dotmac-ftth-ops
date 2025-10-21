@@ -58,7 +58,7 @@ class PaymentMethodType(str, Enum):
     OTHER = "other"
 
 
-class CompanyBankAccount(Base, TenantMixin, TimestampMixin, AuditMixin):
+class CompanyBankAccount(Base, TenantMixin, TimestampMixin, AuditMixin):  # type: ignore[misc]  # Mixin has type Any
     """Company bank accounts for receiving payments"""
 
     __tablename__ = "company_bank_accounts"
@@ -120,7 +120,7 @@ class CompanyBankAccount(Base, TenantMixin, TimestampMixin, AuditMixin):
     )
 
 
-class ManualPayment(Base, TenantMixin, TimestampMixin, AuditMixin):
+class ManualPayment(Base, TenantMixin, TimestampMixin, AuditMixin):  # type: ignore[misc]  # Mixin has type Any
     """Manual payment records for cash and non-integrated bank payments"""
 
     __tablename__ = "manual_payments"
@@ -169,7 +169,9 @@ class ManualPayment(Base, TenantMixin, TimestampMixin, AuditMixin):
 
     # Status
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="pending"  # pending, verified, reconciled, failed
+        String(20),
+        nullable=False,
+        default="pending",  # pending, verified, reconciled, failed
     )
     reconciled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     reconciled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -208,7 +210,7 @@ class ManualPayment(Base, TenantMixin, TimestampMixin, AuditMixin):
     )
 
 
-class CashRegister(Base, TenantMixin, TimestampMixin):
+class CashRegister(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  # Mixin has type Any
     """Cash registers/points for tracking cash payments"""
 
     __tablename__ = "cash_registers"
@@ -240,7 +242,7 @@ class CashRegister(Base, TenantMixin, TimestampMixin):
     )
 
 
-class CashReconciliation(Base, TenantMixin):
+class CashReconciliation(Base, TenantMixin):  # type: ignore[misc]  # Mixin has type Any
     """
     Cash reconciliation records for cash registers.
     """
@@ -269,7 +271,7 @@ class CashReconciliation(Base, TenantMixin):
     meta_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
 
-class CashTransaction(Base, TenantMixin):
+class CashTransaction(Base, TenantMixin):  # type: ignore[misc]  # Mixin has type Any
     """
     Individual cash transactions for a register.
     """
@@ -296,7 +298,7 @@ class CashTransaction(Base, TenantMixin):
     meta_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
 
-class PaymentReconciliation(Base, TenantMixin, TimestampMixin):
+class PaymentReconciliation(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  # Mixin has type Any
     """Payment reconciliation records for matching bank statements"""
 
     __tablename__ = "payment_reconciliations"
@@ -326,7 +328,9 @@ class PaymentReconciliation(Base, TenantMixin, TimestampMixin):
 
     # Status
     status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="in_progress"  # in_progress, completed, approved
+        String(20),
+        nullable=False,
+        default="in_progress",  # in_progress, completed, approved
     )
 
     # Approval
@@ -340,7 +344,7 @@ class PaymentReconciliation(Base, TenantMixin, TimestampMixin):
     statement_file_url: Mapped[str | None] = mapped_column(String(500))
 
     # Metadata
-    reconciled_items: Mapped[list[dict]] = mapped_column(JSON, default=list)
+    reconciled_items: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     meta_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
     # Indexes with extend_existing

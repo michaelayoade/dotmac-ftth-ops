@@ -1,7 +1,7 @@
 """Initial schema from models
 
 Revision ID: 51aa0da58b97
-Revises: 
+Revises:
 Create Date: 2025-10-07 08:06:36.558765
 
 """
@@ -193,7 +193,9 @@ def upgrade() -> None:
         sa.Column("metadata", sa.JSON(), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
-        sa.PrimaryKeyConstraint("product_id", "id"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("product_id", name="uq_billing_products_product_id"),
+        sa.UniqueConstraint("tenant_id", "product_id", name="uq_billing_products_tenant_product"),
     )
     op.create_index(
         "ix_billing_products_tenant_active",

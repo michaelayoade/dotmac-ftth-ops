@@ -34,7 +34,7 @@ class TestSessionFallbackBehavior:
         manager = SessionManager(redis_url="redis://invalid-host:9999", fallback_enabled=False)
 
         # Should raise error when Redis unavailable and fallback disabled
-        with pytest.raises(Exception):  # Could be HTTPException or connection error
+        with pytest.raises((ConnectionError, TimeoutError, RuntimeError)):  # Connection errors
             await manager.create_session(user_id="user-123", data={"ip": "127.0.0.1"}, ttl=3600)
 
     @pytest.mark.asyncio
@@ -149,7 +149,7 @@ class TestSessionFallbackBehavior:
             )
 
             # Should fail in production without Redis
-            with pytest.raises(Exception):
+            with pytest.raises(Exception):  # noqa: B017
                 await manager.create_session(user_id="user-123", data={"test": "data"})
 
         finally:

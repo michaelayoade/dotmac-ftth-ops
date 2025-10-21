@@ -9,6 +9,7 @@ Provides business logic for tenant operations including:
 """
 
 import secrets
+import structlog
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
@@ -16,6 +17,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import attributes
 
+from ..settings import settings
 from .models import (
     Tenant,
     TenantInvitation,
@@ -33,6 +35,8 @@ from .schemas import (
     TenantUpdate,
     TenantUsageCreate,
 )
+
+logger = structlog.get_logger(__name__)
 
 
 class TenantNotFoundError(Exception):
@@ -120,8 +124,10 @@ class TenantService:
                 updated_by=created_by,
             )
 
-            # Set trial period (14 days)
-            tenant.trial_ends_at = datetime.now(UTC) + timedelta(days=14)
+            # Set trial period from settings
+            tenant.trial_ends_at = datetime.now(UTC) + timedelta(
+                days=settings.billing.default_trial_days
+            )
 
             # Set default features based on plan
             tenant.features = self._get_default_features(tenant_data.plan_type)
@@ -253,8 +259,18 @@ class TenantService:
             tenants = list(result.scalars().all())
 
             return tenants, total
-        except Exception:
-            # Return empty list on error
+        except Exception as exc:
+            logger.exception(
+                "tenant.list.failed",
+                error=str(exc),
+                page=page,
+                page_size=page_size,
+                status=str(status) if status else None,
+                plan_type=str(plan_type) if plan_type else None,
+                search=search,
+                include_deleted=include_deleted,
+            )
+            await self.db.rollback()
             return [], 0
 
     async def update_tenant(
@@ -562,7 +578,10 @@ class TenantService:
 
     # Feature Management
     async def update_tenant_features(
-        self, tenant_id: str, features: dict[str, bool], updated_by: str | None = None
+        self,
+        tenant_id: str,
+        features: dict[str, bool] | None,
+        updated_by: str | None = None,
     ) -> Tenant:
         """Update tenant feature flags."""
         try:
@@ -592,7 +611,10 @@ class TenantService:
             raise RuntimeError(f"Failed to update tenant features: {str(e)}") from e
 
     async def update_tenant_metadata(
-        self, tenant_id: str, metadata: dict[str, Any], updated_by: str | None = None
+        self,
+        tenant_id: str,
+        metadata: dict[str, Any] | None,
+        updated_by: str | None = None,
     ) -> Tenant:
         """Update tenant metadata."""
         try:

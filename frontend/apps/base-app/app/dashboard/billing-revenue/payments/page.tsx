@@ -1,14 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React, { useState, useEffect, useCallback } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -16,16 +10,16 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -33,10 +27,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 import {
   CreditCard,
   DollarSign,
@@ -52,19 +46,19 @@ import {
   ArrowDownRight,
   Receipt,
   Send,
-} from 'lucide-react';
-import { format } from 'date-fns';
-import { apiClient } from '@/lib/api/client';
+} from "lucide-react";
+import { format } from "date-fns";
+import { usePayments, usePaymentMetrics, type PaymentStatus } from "@/hooks/usePaymentsGraphQL";
 
 interface Payment {
   id: string;
   amount: number;
   currency: string;
-  status: 'succeeded' | 'pending' | 'failed' | 'refunded' | 'cancelled';
+  status: "succeeded" | "pending" | "failed" | "refunded" | "cancelled";
   customer_name: string;
   customer_email: string;
   payment_method: string;
-  payment_method_type: 'card' | 'bank' | 'wallet' | 'other';
+  payment_method_type: "card" | "bank" | "wallet" | "other";
   description: string;
   invoice_id?: string;
   subscription_id?: string;
@@ -79,144 +73,109 @@ interface Payment {
 
 export default function PaymentsPage() {
   const { toast } = useToast();
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [dateRange, setDateRange] = useState<string>('last_30_days');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<PaymentStatus | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<string>("last_30_days");
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [showRefundDialog, setShowRefundDialog] = useState(false);
-  const [refundAmount, setRefundAmount] = useState('');
-  const [refundReason, setRefundReason] = useState('');
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundReason, setRefundReason] = useState("");
 
-  // Metrics
-  const [metrics, setMetrics] = useState({
-    totalRevenue: 0,
-    totalPayments: 0,
-    successRate: 0,
-    avgPaymentSize: 0,
-    pendingAmount: 0,
-    failedAmount: 0,
+  // Calculate date filters
+  const getDateFilters = () => {
+    const now = new Date();
+    if (dateRange === "last_7_days") {
+      return {
+        dateFrom: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+    } else if (dateRange === "last_30_days") {
+      return {
+        dateFrom: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+    } else if (dateRange === "last_90_days") {
+      return {
+        dateFrom: new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+    }
+    return {};
+  };
+
+  const dateFilters = getDateFilters();
+
+  // Fetch payments using GraphQL
+  const {
+    data: paymentsData,
+    isLoading: paymentsLoading,
+    error: paymentsError,
+    refetch: refetchPayments,
+  } = usePayments(
+    {
+      limit: 100,
+      offset: 0,
+      status: statusFilter,
+      includeCustomer: true,
+      includeInvoice: false,
+      ...dateFilters,
+    },
+    true,
+  );
+
+  // Fetch payment metrics
+  const { data: metricsData, isLoading: metricsLoading } = usePaymentMetrics({
+    ...dateFilters,
+    enabled: true,
   });
 
-  const fetchPayments = useCallback(async () => {
-    setLoading(true);
-    try {
-      // Build query parameters
-      const params = new URLSearchParams();
-      params.append('limit', '500'); // Get more for client-side filtering
+  // Transform payments data with search filter
+  const payments = (paymentsData?.payments || [])
+    .filter((payment) => {
+      if (!searchQuery) return true;
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        payment.customer?.name.toLowerCase().includes(searchLower) ||
+        payment.customer?.email.toLowerCase().includes(searchLower) ||
+        payment.id.toLowerCase().includes(searchLower) ||
+        payment.description?.toLowerCase().includes(searchLower)
+      );
+    })
+    .map((p) => ({
+      id: p.id,
+      amount: p.amount,
+      currency: p.currency,
+      status: p.status as Payment["status"],
+      customer_name: p.customer?.name || "Unknown Customer",
+      customer_email: p.customer?.email || "",
+      payment_method: p.provider,
+      payment_method_type: p.paymentMethodType as Payment["payment_method_type"],
+      description: p.description || `Payment via ${p.provider}`,
+      invoice_id: p.invoiceId || undefined,
+      subscription_id: p.subscriptionId || undefined,
+      created_at: p.createdAt,
+      processed_at: p.processedAt || undefined,
+      failure_reason: p.failureReason || undefined,
+      refund_amount: p.refundAmount || undefined,
+      fee_amount: p.feeAmount || undefined,
+      net_amount: p.netAmount || undefined,
+      metadata: p.metadata || undefined,
+    }));
 
-      if (statusFilter !== 'all') {
-        params.append('status', statusFilter);
-      }
-
-      // Fetch payments from backend API
-      const response = await apiClient.get<{
-        payments: Array<{
-          payment_id: string;
-          amount: number;
-          currency: string;
-          status: string;
-          customer_id: string;
-          payment_method_type: string;
-          provider: string;
-          created_at: string;
-          processed_at?: string;
-          failure_reason?: string;
-        }>;
-        total_count: number;
-        limit: number;
-        timestamp: string;
-      }>(`/api/v1/billing/payments?${params.toString()}`);
-
-      if (!response.success || !response.data?.payments) {
-        throw new Error('Failed to fetch payments');
-      }
-
-      // Transform API data to frontend Payment interface
-      const transformedPayments: Payment[] = response.data.payments.map(p => ({
-        id: p.payment_id,
-        amount: p.amount,
-        currency: p.currency,
-        status: p.status as Payment['status'],
-        customer_name: `Customer ${p.customer_id.substring(0, 8)}`, // TODO: Fetch customer name
-        customer_email: `customer-${p.customer_id.substring(0, 8)}@example.com`, // TODO: Fetch customer email
-        payment_method: p.provider,
-        payment_method_type: p.payment_method_type as Payment['payment_method_type'],
-        description: `Payment via ${p.provider}`,
-        created_at: p.created_at,
-        processed_at: p.processed_at,
-        failure_reason: p.failure_reason,
-      }));
-
-      // Apply client-side filters
-      let filteredData = transformedPayments;
-
-      if (searchQuery) {
-        filteredData = filteredData.filter(payment =>
-          payment.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          payment.customer_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          payment.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          payment.description.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
-
-      // Apply date range filter
-      if (dateRange === 'last_7_days') {
-        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-        filteredData = filteredData.filter(payment =>
-          new Date(payment.created_at) >= sevenDaysAgo
-        );
-      } else if (dateRange === 'last_30_days') {
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        filteredData = filteredData.filter(payment =>
-          new Date(payment.created_at) >= thirtyDaysAgo
-        );
-      }
-
-      setPayments(filteredData);
-
-      // Calculate metrics from all fetched data
-      const succeeded = transformedPayments.filter(p => p.status === 'succeeded');
-      const pending = transformedPayments.filter(p => p.status === 'pending');
-      const failed = transformedPayments.filter(p => p.status === 'failed');
-
-      const totalRevenue = succeeded.reduce((sum, p) => sum + p.amount, 0);
-      const pendingAmount = pending.reduce((sum, p) => sum + p.amount, 0);
-      const failedAmount = failed.reduce((sum, p) => sum + p.amount, 0);
-
-      setMetrics({
-        totalRevenue,
-        totalPayments: transformedPayments.length,
-        successRate: transformedPayments.length > 0 ? (succeeded.length / transformedPayments.length) * 100 : 0,
-        avgPaymentSize: succeeded.length > 0 ? totalRevenue / succeeded.length : 0,
-        pendingAmount,
-        failedAmount,
-      });
-
-    } catch (error) {
-      console.error('Failed to fetch payments:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch payments',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter, dateRange, searchQuery, toast]);
-
-  useEffect(() => {
-    fetchPayments();
-  }, [fetchPayments]);
+  // Metrics from GraphQL
+  const metrics = {
+    totalRevenue: metricsData?.totalRevenue || 0,
+    totalPayments: metricsData?.totalPayments || 0,
+    successRate: metricsData?.successRate || 0,
+    avgPaymentSize: metricsData?.averagePaymentSize || 0,
+    pendingAmount: metricsData?.pendingAmount || 0,
+    failedAmount: metricsData?.failedAmount || 0,
+  };
 
   const handleRefund = useCallback(async () => {
     if (!selectedPayment || !refundAmount) {
       toast({
-        title: 'Error',
-        description: 'Please enter a refund amount',
-        variant: 'destructive',
+        title: "Error",
+        description: "Please enter a refund amount",
+        variant: "destructive",
       });
       return;
     }
@@ -224,46 +183,65 @@ export default function PaymentsPage() {
     try {
       // API call would go here
       toast({
-        title: 'Success',
+        title: "Success",
         description: `Refund of $${refundAmount} initiated for payment ${selectedPayment.id}`,
       });
       setShowRefundDialog(false);
-      setRefundAmount('');
-      setRefundReason('');
-      fetchPayments();
+      setRefundAmount("");
+      setRefundReason("");
+      refetchPayments();
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to process refund',
-        variant: 'destructive',
+        title: "Error",
+        description: "Failed to process refund",
+        variant: "destructive",
       });
     }
-  }, [selectedPayment, refundAmount, toast, fetchPayments]);
+  }, [selectedPayment, refundAmount, toast, refetchPayments]);
 
-  const handleRetryPayment = useCallback(async (payment: Payment) => {
-    try {
-      // API call would go here
-      toast({
-        title: 'Processing',
-        description: `Retrying payment ${payment.id}...`,
-      });
-      fetchPayments();
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to retry payment',
-        variant: 'destructive',
-      });
-    }
-  }, [toast, fetchPayments]);
+  const handleRetryPayment = useCallback(
+    async (payment: Payment) => {
+      try {
+        // API call would go here
+        toast({
+          title: "Processing",
+          description: `Retrying payment ${payment.id}...`,
+        });
+        refetchPayments();
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to retry payment",
+          variant: "destructive",
+        });
+      }
+    },
+    [toast, refetchPayments],
+  );
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      succeeded: { label: 'Succeeded', variant: 'default' as const, icon: CheckCircle },
-      pending: { label: 'Pending', variant: 'outline' as const, icon: Clock },
-      failed: { label: 'Failed', variant: 'destructive' as const, icon: XCircle },
-      refunded: { label: 'Refunded', variant: 'secondary' as const, icon: ArrowDownRight },
-      cancelled: { label: 'Cancelled', variant: 'secondary' as const, icon: XCircle },
+      succeeded: {
+        label: "Succeeded",
+        variant: "default" as const,
+        icon: CheckCircle,
+      },
+      pending: { label: "Pending", variant: "outline" as const, icon: Clock },
+      failed: {
+        label: "Failed",
+        variant: "destructive" as const,
+        icon: XCircle,
+      },
+      refunded: {
+        label: "Refunded",
+        variant: "secondary" as const,
+        icon: ArrowDownRight,
+      },
+      cancelled: {
+        label: "Cancelled",
+        variant: "secondary" as const,
+        icon: XCircle,
+      },
     };
 
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
@@ -279,11 +257,11 @@ export default function PaymentsPage() {
 
   const getPaymentMethodIcon = (type: string) => {
     switch (type) {
-      case 'card':
+      case "card":
         return <CreditCard className="h-4 w-4 text-muted-foreground" />;
-      case 'bank':
+      case "bank":
         return <DollarSign className="h-4 w-4 text-muted-foreground" />;
-      case 'wallet':
+      case "wallet":
         return <CreditCard className="h-4 w-4 text-muted-foreground" />;
       default:
         return <DollarSign className="h-4 w-4 text-muted-foreground" />;
@@ -291,8 +269,8 @@ export default function PaymentsPage() {
   };
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency: currency,
     }).format(amount);
   };
@@ -310,7 +288,7 @@ export default function PaymentsPage() {
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
-          <Button onClick={fetchPayments}>
+          <Button onClick={() => refetchPayments()}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
@@ -324,9 +302,7 @@ export default function PaymentsPage() {
             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(metrics.totalRevenue, 'USD')}
-            </div>
+            <div className="text-2xl font-bold">{formatCurrency(metrics.totalRevenue, "USD")}</div>
             <p className="text-xs text-muted-foreground flex items-center mt-1">
               <ArrowUpRight className="h-3 w-3 text-green-500 mr-1" />
               From successful payments
@@ -359,7 +335,7 @@ export default function PaymentsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(metrics.avgPaymentSize, 'USD')}
+              {formatCurrency(metrics.avgPaymentSize, "USD")}
             </div>
             <p className="text-xs text-muted-foreground">Per transaction</p>
           </CardContent>
@@ -370,7 +346,7 @@ export default function PaymentsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
-              {formatCurrency(metrics.pendingAmount, 'USD')}
+              {formatCurrency(metrics.pendingAmount, "USD")}
             </div>
             <p className="text-xs text-muted-foreground">Awaiting processing</p>
           </CardContent>
@@ -381,7 +357,7 @@ export default function PaymentsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {formatCurrency(metrics.failedAmount, 'USD')}
+              {formatCurrency(metrics.failedAmount, "USD")}
             </div>
             <p className="text-xs text-muted-foreground">Requires attention</p>
           </CardContent>
@@ -404,16 +380,20 @@ export default function PaymentsPage() {
                 />
               </div>
               <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                value={statusFilter || "all"}
+                onChange={(e) =>
+                  setStatusFilter(
+                    e.target.value === "all" ? undefined : (e.target.value as PaymentStatus),
+                  )
+                }
                 className="h-10 w-[150px] rounded-md border border-border bg-accent px-3 text-sm text-white"
               >
                 <option value="all">All Status</option>
-                <option value="succeeded">Succeeded</option>
-                <option value="pending">Pending</option>
-                <option value="failed">Failed</option>
-                <option value="refunded">Refunded</option>
-                <option value="cancelled">Cancelled</option>
+                <option value="SUCCEEDED">Succeeded</option>
+                <option value="PENDING">Pending</option>
+                <option value="FAILED">Failed</option>
+                <option value="REFUNDED">Refunded</option>
+                <option value="CANCELLED">Cancelled</option>
               </select>
               <select
                 value={dateRange}
@@ -429,8 +409,16 @@ export default function PaymentsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {paymentsLoading ? (
             <div className="text-center py-8">Loading payments...</div>
+          ) : paymentsError ? (
+            <div className="text-center py-8 text-destructive">
+              Failed to load payments. Please try again.
+              <Button variant="outline" className="mt-4" onClick={() => refetchPayments()}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Retry
+              </Button>
+            </div>
           ) : payments.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No payments found for the selected filters.
@@ -463,7 +451,9 @@ export default function PaymentsPage() {
                     <TableCell>
                       <div>
                         <div className="font-medium">{payment.customer_name}</div>
-                        <div className="text-sm text-muted-foreground">{payment.customer_email}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {payment.customer_email}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -490,10 +480,10 @@ export default function PaymentsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {format(new Date(payment.created_at), 'MMM d, yyyy')}
+                        {format(new Date(payment.created_at), "MMM d, yyyy")}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {format(new Date(payment.created_at), 'h:mm a')}
+                        {format(new Date(payment.created_at), "h:mm a")}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -508,7 +498,7 @@ export default function PaymentsPage() {
                         >
                           View
                         </Button>
-                        {payment.status === 'succeeded' && !payment.refund_amount && (
+                        {payment.status === "succeeded" && !payment.refund_amount && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -520,7 +510,7 @@ export default function PaymentsPage() {
                             Refund
                           </Button>
                         )}
-                        {payment.status === 'failed' && (
+                        {payment.status === "failed" && (
                           <Button
                             size="sm"
                             variant="outline"
@@ -530,11 +520,7 @@ export default function PaymentsPage() {
                           </Button>
                         )}
                         {payment.invoice_id && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            title="View Invoice"
-                          >
+                          <Button size="sm" variant="outline" title="View Invoice">
                             <Receipt className="h-4 w-4" />
                           </Button>
                         )}
@@ -555,7 +541,8 @@ export default function PaymentsPage() {
             <DialogHeader>
               <DialogTitle>Payment Details</DialogTitle>
               <DialogDescription>
-                {selectedPayment.id} • {format(new Date(selectedPayment.created_at), 'MMM d, yyyy h:mm a')}
+                {selectedPayment.id} •{" "}
+                {format(new Date(selectedPayment.created_at), "MMM d, yyyy h:mm a")}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -574,7 +561,9 @@ export default function PaymentsPage() {
                   <Label>Customer</Label>
                   <div className="mt-1">
                     <div>{selectedPayment.customer_name}</div>
-                    <div className="text-sm text-muted-foreground">{selectedPayment.customer_email}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {selectedPayment.customer_email}
+                    </div>
                   </div>
                 </div>
                 <div>
@@ -591,7 +580,9 @@ export default function PaymentsPage() {
                 {selectedPayment.failure_reason && (
                   <div className="col-span-2">
                     <Label>Failure Reason</Label>
-                    <div className="mt-1 text-sm text-red-600">{selectedPayment.failure_reason}</div>
+                    <div className="mt-1 text-sm text-red-600">
+                      {selectedPayment.failure_reason}
+                    </div>
                   </div>
                 )}
                 {selectedPayment.fee_amount !== undefined && (
@@ -644,9 +635,7 @@ export default function PaymentsPage() {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Process Refund</DialogTitle>
-              <DialogDescription>
-                Refund payment {selectedPayment.id}
-              </DialogDescription>
+              <DialogDescription>Refund payment {selectedPayment.id}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -677,11 +666,14 @@ export default function PaymentsPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => {
-                setShowRefundDialog(false);
-                setRefundAmount('');
-                setRefundReason('');
-              }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowRefundDialog(false);
+                  setRefundAmount("");
+                  setRefundReason("");
+                }}
+              >
                 Cancel
               </Button>
               <Button onClick={handleRefund} variant="destructive">

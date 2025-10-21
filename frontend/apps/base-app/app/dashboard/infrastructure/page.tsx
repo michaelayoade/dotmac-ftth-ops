@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Activity,
   Server,
@@ -16,31 +16,31 @@ import {
   HardDrive,
   Network,
   Clock,
-  Zap
-} from 'lucide-react';
-import { metricsService, InfrastructureMetrics } from '@/lib/services/metrics-service';
-import { AlertBanner } from '@/components/alerts/AlertBanner';
-import { apiClient } from '@/lib/api/client';
-import { RouteGuard } from '@/components/auth/PermissionGuard';
+  Zap,
+} from "lucide-react";
+import { metricsService, InfrastructureMetrics } from "@/lib/services/metrics-service";
+import { AlertBanner } from "@/components/alerts/AlertBanner";
+import { apiClient } from "@/lib/api/client";
+import { RouteGuard } from "@/components/auth/PermissionGuard";
 
 interface SystemHealthStatus {
   service: string;
-  status: 'healthy' | 'degraded' | 'down';
+  status: "healthy" | "degraded" | "down";
   latency?: number;
   lastCheck: string;
 }
 
 function SystemHealthPanel({ services }: { services: SystemHealthStatus[] }) {
   const statusColors = {
-    healthy: 'text-green-400 bg-green-400/10',
-    degraded: 'text-yellow-400 bg-yellow-400/10',
-    down: 'text-red-400 bg-red-400/10'
+    healthy: "text-green-400 bg-green-400/10",
+    degraded: "text-yellow-400 bg-yellow-400/10",
+    down: "text-red-400 bg-red-400/10",
   };
 
   const statusIcons = {
     healthy: CheckCircle,
     degraded: AlertTriangle,
-    down: XCircle
+    down: XCircle,
   };
 
   return (
@@ -61,11 +61,15 @@ function SystemHealthPanel({ services }: { services: SystemHealthStatus[] }) {
                 {service.latency && (
                   <span className="text-xs text-muted-foreground">{service.latency}ms</span>
                 )}
-                <span className={`text-xs font-medium ${
-                  service.status === 'healthy' ? 'text-green-400' :
-                  service.status === 'degraded' ? 'text-yellow-400' :
-                  'text-red-400'
-                }`}>
+                <span
+                  className={`text-xs font-medium ${
+                    service.status === "healthy"
+                      ? "text-green-400"
+                      : service.status === "degraded"
+                        ? "text-yellow-400"
+                        : "text-red-400"
+                  }`}
+                >
                   {service.status.toUpperCase()}
                 </span>
               </div>
@@ -74,7 +78,10 @@ function SystemHealthPanel({ services }: { services: SystemHealthStatus[] }) {
         })}
       </div>
       <div className="mt-4 pt-4 border-t border-border">
-        <Link href="/dashboard/infrastructure/health" className="text-sm text-sky-400 hover:text-sky-300">
+        <Link
+          href="/dashboard/infrastructure/health"
+          className="text-sm text-sky-400 hover:text-sky-300"
+        >
           View detailed health metrics →
         </Link>
       </div>
@@ -102,11 +109,11 @@ function ResourceUsageCard({ resource, used, total, unit, icon: Icon }: Resource
           <Icon className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium text-muted-foreground">{resource}</span>
         </div>
-        <span className={`text-sm font-medium ${
-          isHigh ? 'text-red-400' :
-          isMedium ? 'text-yellow-400' :
-          'text-green-400'
-        }`}>
+        <span
+          className={`text-sm font-medium ${
+            isHigh ? "text-red-400" : isMedium ? "text-yellow-400" : "text-green-400"
+          }`}
+        >
           {percentage.toFixed(1)}%
         </span>
       </div>
@@ -114,16 +121,22 @@ function ResourceUsageCard({ resource, used, total, unit, icon: Icon }: Resource
         <div className="h-2 bg-accent rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all ${
-              isHigh ? 'bg-red-500 dark:bg-red-400' :
-              isMedium ? 'bg-yellow-500 dark:bg-yellow-400' :
-              'bg-green-500 dark:bg-green-400'
+              isHigh
+                ? "bg-red-500 dark:bg-red-400"
+                : isMedium
+                  ? "bg-yellow-500 dark:bg-yellow-400"
+                  : "bg-green-500 dark:bg-green-400"
             }`}
             style={{ width: `${percentage}%` }}
           />
         </div>
         <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{used.toFixed(1)} {unit}</span>
-          <span>{total.toFixed(1)} {unit}</span>
+          <span>
+            {used.toFixed(1)} {unit}
+          </span>
+          <span>
+            {total.toFixed(1)} {unit}
+          </span>
         </div>
       </div>
     </div>
@@ -133,38 +146,39 @@ function ResourceUsageCard({ resource, used, total, unit, icon: Icon }: Resource
 interface IncidentItem {
   id: string;
   title: string;
-  severity: 'critical' | 'warning' | 'info';
+  severity: "critical" | "warning" | "info";
   service: string;
   timestamp: string;
-  status: 'open' | 'investigating' | 'resolved';
+  status: "open" | "investigating" | "resolved";
 }
 
 function IncidentsList({ incidents }: { incidents: IncidentItem[] }) {
   const severityColors = {
-    critical: 'text-red-400 bg-red-400/10',
-    warning: 'text-yellow-400 bg-yellow-400/10',
-    info: 'text-blue-400 bg-blue-400/10'
+    critical: "text-red-400 bg-red-400/10",
+    warning: "text-yellow-400 bg-yellow-400/10",
+    info: "text-blue-400 bg-blue-400/10",
   };
 
   const statusColors = {
-    open: 'text-red-400',
-    investigating: 'text-yellow-400',
-    resolved: 'text-green-400'
+    open: "text-red-400",
+    investigating: "text-yellow-400",
+    resolved: "text-green-400",
   };
 
   return (
     <div className="rounded-lg border border-border bg-card">
       <div className="p-6 border-b border-border flex items-center justify-between">
         <h3 className="text-lg font-semibold text-foreground">Recent Incidents</h3>
-        <Link href="/dashboard/infrastructure/incidents" className="text-sm text-sky-400 hover:text-sky-300">
+        <Link
+          href="/dashboard/infrastructure/incidents"
+          className="text-sm text-sky-400 hover:text-sky-300"
+        >
           View all →
         </Link>
       </div>
       <div className="divide-y divide-border max-h-96 overflow-y-auto">
         {incidents.length === 0 ? (
-          <div className="p-6 text-center text-muted-foreground">
-            No active incidents
-          </div>
+          <div className="p-6 text-center text-muted-foreground">No active incidents</div>
         ) : (
           incidents.map((incident) => (
             <div key={incident.id} className="p-4 hover:bg-accent/50 transition-colors">
@@ -216,20 +230,25 @@ function InfrastructurePageContent() {
       setMetrics(infraMetrics);
 
       // Convert health data to SystemHealthStatus format
-      const services: SystemHealthStatus[] = infraMetrics.health.services.map(service => ({
+      const services: SystemHealthStatus[] = infraMetrics.health.services.map((service) => ({
         service: service.name,
-        status: service.status === 'healthy' ? 'healthy' : service.status === 'degraded' ? 'degraded' : 'down',
+        status:
+          service.status === "healthy"
+            ? "healthy"
+            : service.status === "degraded"
+              ? "degraded"
+              : "down",
         latency: service.latency,
-        lastCheck: 'Just now'
+        lastCheck: "Just now",
       }));
 
       // Add default services if not in the response
-      if (!services.find(s => s.service === 'API Gateway')) {
+      if (!services.find((s) => s.service === "API Gateway")) {
         services.unshift({
-          service: 'API Gateway',
-          status: infraMetrics.health.status,
+          service: "API Gateway",
+          status: infraMetrics.health.status === "critical" ? "down" : infraMetrics.health.status,
           latency: infraMetrics.performance.avgLatency,
-          lastCheck: 'Just now'
+          lastCheck: "Just now",
         });
       }
 
@@ -238,94 +257,95 @@ function InfrastructurePageContent() {
       // Update resource usage with real metrics
       setResourceUsage([
         {
-          resource: 'CPU Usage',
-          used: infraMetrics.resources.cpuUsage,
+          resource: "CPU Usage",
+          used: infraMetrics.resources.cpu,
           total: 100,
-          unit: '%',
-          icon: Cpu
+          unit: "%",
+          icon: Cpu,
         },
         {
-          resource: 'Memory',
-          used: infraMetrics.resources.memoryUsage,
+          resource: "Memory",
+          used: infraMetrics.resources.memory,
           total: 100,
-          unit: '%',
-          icon: HardDrive
+          unit: "%",
+          icon: HardDrive,
         },
         {
-          resource: 'Disk',
-          used: infraMetrics.resources.diskUsage,
+          resource: "Disk",
+          used: infraMetrics.resources.disk,
           total: 100,
-          unit: '%',
-          icon: Database
+          unit: "%",
+          icon: Database,
         },
         {
-          resource: 'Network',
-          used: infraMetrics.resources.networkUsage,
+          resource: "Network",
+          used: infraMetrics.resources.network,
           total: 100,
-          unit: '%',
-          icon: Network
-        }
+          unit: "%",
+          icon: Network,
+        },
       ]);
 
       // Generate incidents based on metrics
       const newIncidents: IncidentItem[] = [];
 
-      if (infraMetrics.health.status === 'degraded') {
+      if (infraMetrics.health.status === "degraded") {
         newIncidents.push({
-          id: 'health-degraded',
-          title: 'System Health Degraded',
-          severity: 'warning',
-          service: 'Health Monitor',
-          timestamp: 'Active',
-          status: 'investigating'
+          id: "health-degraded",
+          title: "System Health Degraded",
+          severity: "warning",
+          service: "Health Monitor",
+          timestamp: "Active",
+          status: "investigating",
         });
       }
 
       if (infraMetrics.performance.errorRate > 1) {
         newIncidents.push({
-          id: 'high-errors',
+          id: "high-errors",
           title: `High Error Rate: ${infraMetrics.performance.errorRate}%`,
-          severity: 'critical',
-          service: 'API Gateway',
-          timestamp: 'Current',
-          status: 'open'
+          severity: "critical",
+          service: "API Gateway",
+          timestamp: "Current",
+          status: "open",
         });
       }
 
       if (infraMetrics.performance.p99Latency > 500) {
         newIncidents.push({
-          id: 'high-latency',
+          id: "high-latency",
           title: `High P99 Latency: ${infraMetrics.performance.p99Latency}ms`,
-          severity: 'warning',
-          service: 'Performance',
-          timestamp: 'Active',
-          status: 'investigating'
+          severity: "warning",
+          service: "Performance",
+          timestamp: "Active",
+          status: "investigating",
         });
       }
 
       if (infraMetrics.logs.errors > 100) {
         newIncidents.push({
-          id: 'log-errors',
+          id: "log-errors",
           title: `${infraMetrics.logs.errors} errors in logs`,
-          severity: 'warning',
-          service: 'Logging',
-          timestamp: 'Last hour',
-          status: 'open'
+          severity: "warning",
+          service: "Logging",
+          timestamp: "Last hour",
+          status: "open",
         });
       }
 
       setIncidents(newIncidents);
     } catch (err) {
-      console.error('Failed to fetch infrastructure metrics:', err);
+      console.error("Failed to fetch infrastructure metrics:", err);
     } finally {
       setLoading(false);
     }
   };
 
-
-  const overallHealth = healthStatus.every(s => s.status === 'healthy') ? 'healthy' :
-                       healthStatus.some(s => s.status === 'down') ? 'degraded' :
-                       'warning';
+  const overallHealth = healthStatus.every((s) => s.status === "healthy")
+    ? "healthy"
+    : healthStatus.some((s) => s.status === "down")
+      ? "degraded"
+      : "warning";
 
   return (
     <div className="space-y-8">
@@ -341,32 +361,44 @@ function InfrastructurePageContent() {
       <AlertBanner category="system" maxAlerts={3} />
 
       {/* Overall Status */}
-      <div className={`rounded-lg border p-6 ${
-        overallHealth === 'healthy' ? 'border-green-900/20 bg-green-950/20 dark:border-green-800/30 dark:bg-green-900/20' :
-        overallHealth === 'warning' ? 'border-yellow-900/20 bg-yellow-950/20 dark:border-yellow-800/30 dark:bg-yellow-900/20' :
-        'border-red-900/20 bg-red-950/20 dark:border-red-800/30 dark:bg-red-900/20'
-      }`}>
+      <div
+        className={`rounded-lg border p-6 ${
+          overallHealth === "healthy"
+            ? "border-green-900/20 bg-green-950/20 dark:border-green-800/30 dark:bg-green-900/20"
+            : overallHealth === "warning"
+              ? "border-yellow-900/20 bg-yellow-950/20 dark:border-yellow-800/30 dark:bg-yellow-900/20"
+              : "border-red-900/20 bg-red-950/20 dark:border-red-800/30 dark:bg-red-900/20"
+        }`}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            {overallHealth === 'healthy' ? (
+            {overallHealth === "healthy" ? (
               <CheckCircle className="h-6 w-6 text-green-400" />
-            ) : overallHealth === 'warning' ? (
+            ) : overallHealth === "warning" ? (
               <AlertTriangle className="h-6 w-6 text-yellow-400" />
             ) : (
               <XCircle className="h-6 w-6 text-red-400" />
             )}
             <div>
-              <p className={`font-semibold ${
-                overallHealth === 'healthy' ? 'text-green-400' :
-                overallHealth === 'warning' ? 'text-yellow-400' :
-                'text-red-400'
-              }`}>
-                System Status: {overallHealth === 'healthy' ? 'All Systems Operational' :
-                               overallHealth === 'warning' ? 'Partial Service Disruption' :
-                               'Major Service Outage'}
+              <p
+                className={`font-semibold ${
+                  overallHealth === "healthy"
+                    ? "text-green-400"
+                    : overallHealth === "warning"
+                      ? "text-yellow-400"
+                      : "text-red-400"
+                }`}
+              >
+                System Status:{" "}
+                {overallHealth === "healthy"
+                  ? "All Systems Operational"
+                  : overallHealth === "warning"
+                    ? "Partial Service Disruption"
+                    : "Major Service Outage"}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Uptime: {metrics?.health.uptime || 0}% • RPS: {metrics?.performance.requestsPerSecond || 0}
+                Uptime: {metrics?.health.uptime || 0}% • RPS:{" "}
+                {metrics?.performance.requestsPerSecond || 0}
               </p>
             </div>
           </div>
@@ -396,7 +428,9 @@ function InfrastructurePageContent() {
 
           {/* Quick Actions */}
           <div>
-            <h2 className="text-xl font-semibold text-foreground mb-4">Infrastructure Management</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-4">
+              Infrastructure Management
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Link
                 href="/dashboard/infrastructure/health"
@@ -421,7 +455,9 @@ function InfrastructurePageContent() {
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-foreground">Logs & Metrics</p>
-                  <p className="text-sm text-muted-foreground">{metrics?.logs.totalLogs || 0} logs • {metrics?.logs.errors || 0} errors</p>
+                  <p className="text-sm text-muted-foreground">
+                    {metrics?.logs.totalLogs || 0} logs • {metrics?.logs.errors || 0} errors
+                  </p>
                 </div>
                 <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
               </Link>

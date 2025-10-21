@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 import { usePartnerDashboard } from "@/hooks/usePartnerPortal";
 import {
   Users,
@@ -56,9 +59,7 @@ export default function PartnerDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-muted-foreground mb-1">Total Customers</div>
-              <div className="text-3xl font-bold text-foreground">
-                {stats.total_customers}
-              </div>
+              <div className="text-3xl font-bold text-foreground">{stats.total_customers}</div>
               <div className="text-xs text-muted-foreground mt-1">
                 {stats.active_customers} active
               </div>
@@ -87,9 +88,7 @@ export default function PartnerDashboardPage() {
         <div className="bg-card p-6 rounded-lg border border-border">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-muted-foreground mb-1">
-                Pending Commissions
-              </div>
+              <div className="text-sm text-muted-foreground mb-1">Pending Commissions</div>
               <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
                 ${stats.pending_commissions.toLocaleString()}
               </div>
@@ -105,9 +104,7 @@ export default function PartnerDashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-muted-foreground mb-1">Conversion Rate</div>
-              <div className="text-3xl font-bold text-foreground">
-                {conversionRate.toFixed(1)}%
-              </div>
+              <div className="text-3xl font-bold text-foreground">{conversionRate.toFixed(1)}%</div>
               <div className="text-xs text-muted-foreground mt-1">
                 {stats.converted_referrals} of {stats.total_referrals}
               </div>
@@ -122,9 +119,7 @@ export default function PartnerDashboardPage() {
       {/* Commission Overview */}
       <div className="grid md:grid-cols-2 gap-6 mb-6">
         <div className="bg-card p-6 rounded-lg border border-border">
-          <h2 className="text-xl font-semibold text-foreground mb-4">
-            Commission Summary
-          </h2>
+          <h2 className="text-xl font-semibold text-foreground mb-4">Commission Summary</h2>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <div className="text-sm text-muted-foreground">Total Earned</div>
@@ -150,8 +145,7 @@ export default function PartnerDashboardPage() {
                 Commission Model: {stats.commission_model.replace("_", " ")}
               </div>
               <div className="text-sm text-muted-foreground">
-                Default Rate:{" "}
-                {(stats.default_commission_rate * 100).toFixed(2)}%
+                Default Rate: {(stats.default_commission_rate * 100).toFixed(2)}%
               </div>
             </div>
           </div>
@@ -164,15 +158,11 @@ export default function PartnerDashboardPage() {
         </div>
 
         <div className="bg-card p-6 rounded-lg border border-border">
-          <h2 className="text-xl font-semibold text-foreground mb-4">
-            Referral Overview
-          </h2>
+          <h2 className="text-xl font-semibold text-foreground mb-4">Referral Overview</h2>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <div className="text-sm text-muted-foreground">Total Referrals</div>
-              <div className="text-lg font-semibold text-foreground">
-                {stats.total_referrals}
-              </div>
+              <div className="text-lg font-semibold text-foreground">{stats.total_referrals}</div>
             </div>
             <div className="flex justify-between items-center">
               <div className="text-sm text-muted-foreground">Converted</div>
@@ -212,9 +202,7 @@ export default function PartnerDashboardPage() {
       <div className="bg-card p-6 rounded-lg border border-border mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-foreground mb-2">
-              Partner Status
-            </h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Partner Status</h2>
             <div className="flex items-center gap-3">
               <span className="px-3 py-1 bg-purple-100 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 rounded-lg text-sm font-medium">
                 {stats.current_tier.toUpperCase()} Tier

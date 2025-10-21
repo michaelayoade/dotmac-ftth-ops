@@ -4,8 +4,8 @@
  */
 
 // Core components and providers
-export { ManagementProvider } from './components/ManagementProvider';
-export { ManagementApiClient } from './ManagementApiClient';
+export { ManagementProvider } from "./components/ManagementProvider";
+export { ManagementApiClient } from "./ManagementApiClient";
 
 // Hooks for different use cases
 export {
@@ -15,19 +15,19 @@ export {
   useManagementAnalytics,
   useManagementPerformance,
   useManagementConfig,
-} from './components/ManagementProvider';
+} from "./components/ManagementProvider";
 
 export {
   useManagementOperations,
   type UseManagementOperationsConfig,
   type UseManagementOperationsReturn,
-} from './hooks/useManagementOperations';
+} from "./hooks/useManagementOperations";
 
 // Type definitions
-export * from './types';
+export * from "./types";
 
 // Example components for reference
-export { UnifiedBillingExample } from './examples/UnifiedBillingExample';
+export { UnifiedBillingExample } from "./examples/UnifiedBillingExample";
 
 // Re-export specific types that are commonly used
 export type {
@@ -41,4 +41,4 @@ export type {
   ReportType,
   ReportFormat,
   Report,
-} from './types';
+} from "./types";

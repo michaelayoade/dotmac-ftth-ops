@@ -4,7 +4,7 @@
  * Configures jest-axe for automated accessibility testing
  */
 
-import { configureAxe, toHaveNoViolations } from 'jest-axe';
+import { configureAxe, toHaveNoViolations } from "jest-axe";
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations());
@@ -13,41 +13,41 @@ expect.extend(toHaveNoViolations());
 export const axe = configureAxe({
   rules: {
     // WCAG 2.1 Level A & AA rules
-    'html-has-lang': { enabled: true },
-    'html-lang-valid': { enabled: true },
-    'image-alt': { enabled: true },
-    'input-image-alt': { enabled: true },
-    'label': { enabled: true },
-    'button-name': { enabled: true },
-    'link-name': { enabled: true },
-    'document-title': { enabled: true },
-    'duplicate-id': { enabled: true },
-    'frame-title': { enabled: true },
-    'heading-order': { enabled: true },
-    'landmark-one-main': { enabled: true },
-    'page-has-heading-one': { enabled: true },
-    'region': { enabled: true },
-    'skip-link': { enabled: true },
+    "html-has-lang": { enabled: true },
+    "html-lang-valid": { enabled: true },
+    "image-alt": { enabled: true },
+    "input-image-alt": { enabled: true },
+    label: { enabled: true },
+    "button-name": { enabled: true },
+    "link-name": { enabled: true },
+    "document-title": { enabled: true },
+    "duplicate-id": { enabled: true },
+    "frame-title": { enabled: true },
+    "heading-order": { enabled: true },
+    "landmark-one-main": { enabled: true },
+    "page-has-heading-one": { enabled: true },
+    region: { enabled: true },
+    "skip-link": { enabled: true },
 
     // Form accessibility
-    'label-title-only': { enabled: true },
-    'form-field-multiple-labels': { enabled: true },
+    "label-title-only": { enabled: true },
+    "form-field-multiple-labels": { enabled: true },
 
     // Keyboard accessibility
-    'focus-order-semantics': { enabled: true },
-    'tabindex': { enabled: true },
+    "focus-order-semantics": { enabled: true },
+    tabindex: { enabled: true },
 
     // ARIA
-    'aria-allowed-attr': { enabled: true },
-    'aria-required-attr': { enabled: true },
-    'aria-required-children': { enabled: true },
-    'aria-required-parent': { enabled: true },
-    'aria-roles': { enabled: true },
-    'aria-valid-attr': { enabled: true },
-    'aria-valid-attr-value': { enabled: true },
+    "aria-allowed-attr": { enabled: true },
+    "aria-required-attr": { enabled: true },
+    "aria-required-children": { enabled: true },
+    "aria-required-parent": { enabled: true },
+    "aria-roles": { enabled: true },
+    "aria-valid-attr": { enabled: true },
+    "aria-valid-attr-value": { enabled: true },
 
     // Disable rules that are too strict for development
-    'color-contrast': { enabled: false }, // Can be flaky in tests
+    "color-contrast": { enabled: false }, // Can be flaky in tests
   },
 });
 
@@ -60,13 +60,13 @@ export const a11yTestUtils = {
    */
   async testKeyboardNavigation(container: HTMLElement) {
     const focusableElements = container.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
 
     expect(focusableElements.length).toBeGreaterThan(0);
 
     // Test that all elements are keyboard accessible
-    focusableElements.forEach(element => {
+    focusableElements.forEach((element) => {
       expect(element.tabIndex).toBeGreaterThanOrEqual(-1);
     });
 
@@ -77,17 +77,15 @@ export const a11yTestUtils = {
    * Test that all buttons have accessible labels
    */
   async testButtonLabels(container: HTMLElement) {
-    const buttons = container.querySelectorAll('button');
+    const buttons = container.querySelectorAll("button");
 
-    buttons.forEach(button => {
+    buttons.forEach((button) => {
       const hasTextContent = button.textContent && button.textContent.trim().length > 0;
-      const hasAriaLabel = button.getAttribute('aria-label');
-      const hasAriaLabelledBy = button.getAttribute('aria-labelledby');
-      const hasTitle = button.getAttribute('title');
+      const hasAriaLabel = button.getAttribute("aria-label");
+      const hasAriaLabelledBy = button.getAttribute("aria-labelledby");
+      const hasTitle = button.getAttribute("title");
 
-      expect(
-        hasTextContent || hasAriaLabel || hasAriaLabelledBy || hasTitle
-      ).toBeTruthy();
+      expect(hasTextContent || hasAriaLabel || hasAriaLabelledBy || hasTitle).toBeTruthy();
     });
   },
 
@@ -95,10 +93,10 @@ export const a11yTestUtils = {
    * Test that all images have alt text
    */
   async testImageAltText(container: HTMLElement) {
-    const images = container.querySelectorAll('img');
+    const images = container.querySelectorAll("img");
 
-    images.forEach(img => {
-      expect(img.hasAttribute('alt')).toBeTruthy();
+    images.forEach((img) => {
+      expect(img.hasAttribute("alt")).toBeTruthy();
     });
   },
 
@@ -106,12 +104,12 @@ export const a11yTestUtils = {
    * Test form field labels
    */
   async testFormLabels(container: HTMLElement) {
-    const inputs = container.querySelectorAll('input, select, textarea');
+    const inputs = container.querySelectorAll("input, select, textarea");
 
-    inputs.forEach(input => {
-      const id = input.getAttribute('id');
-      const ariaLabel = input.getAttribute('aria-label');
-      const ariaLabelledBy = input.getAttribute('aria-labelledby');
+    inputs.forEach((input) => {
+      const id = input.getAttribute("id");
+      const ariaLabel = input.getAttribute("aria-label");
+      const ariaLabelledBy = input.getAttribute("aria-labelledby");
 
       // Must have id + corresponding label, OR aria-label/aria-labelledby
       if (id) {
@@ -143,9 +141,9 @@ export const a11yTestUtils = {
    * Test heading hierarchy
    */
   async testHeadingHierarchy(container: HTMLElement) {
-    const headings = Array.from(
-      container.querySelectorAll('h1, h2, h3, h4, h5, h6')
-    ).map(h => parseInt(h.tagName[1] || '1', 10));
+    const headings = Array.from(container.querySelectorAll("h1, h2, h3, h4, h5, h6")).map((h) =>
+      parseInt(h.tagName[1] || "1", 10),
+    );
 
     // Should have at least one h1
     expect(headings).toContain(1);
@@ -170,8 +168,8 @@ export const a11yTestUtils = {
  */
 export const customMatchers = {
   toHaveAriaLabel(element: HTMLElement) {
-    const hasAriaLabel = element.hasAttribute('aria-label') ||
-                        element.hasAttribute('aria-labelledby');
+    const hasAriaLabel =
+      element.hasAttribute("aria-label") || element.hasAttribute("aria-labelledby");
 
     return {
       pass: hasAriaLabel,
@@ -183,8 +181,7 @@ export const customMatchers = {
   },
 
   toBeKeyboardAccessible(element: HTMLElement) {
-    const isAccessible = element.tabIndex >= -1 &&
-                        !element.hasAttribute('disabled');
+    const isAccessible = element.tabIndex >= -1 && !element.hasAttribute("disabled");
 
     return {
       pass: isAccessible,

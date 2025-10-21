@@ -1,14 +1,9 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import type { 
-  HttpClientConfig, 
-  RequestConfig, 
-  ApiResponse, 
-  HttpMethod 
-} from './types';
-import { TenantResolver } from './tenant-resolver';
-import { ErrorNormalizer } from './error-normalizer';
-import { RetryHandler } from './retry-handler';
-import { AuthInterceptor, type AuthConfig } from './auth-interceptor';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import type { HttpClientConfig, RequestConfig, ApiResponse, HttpMethod } from "./types";
+import { TenantResolver } from "./tenant-resolver";
+import { ErrorNormalizer } from "./error-normalizer";
+import { RetryHandler } from "./retry-handler";
+import { AuthInterceptor, type AuthConfig } from "./auth-interceptor";
 
 export class HttpClient {
   private axiosInstance: AxiosInstance;
@@ -19,26 +14,26 @@ export class HttpClient {
 
   constructor(config: HttpClientConfig = {}) {
     this.config = {
-      baseURL: '',
+      baseURL: "",
       timeout: 30000,
       retries: 3,
       retryDelay: 1000,
-      tenantIdSource: 'subdomain',
-      authTokenSource: 'cookie',
-      ...config
+      tenantIdSource: "subdomain",
+      authTokenSource: "cookie",
+      ...config,
     };
 
     this.retryHandler = new RetryHandler({
       retries: this.config.retries,
-      retryDelay: this.config.retryDelay
+      retryDelay: this.config.retryDelay,
     });
 
     this.axiosInstance = axios.create({
       baseURL: this.config.baseURL,
       timeout: this.config.timeout,
       headers: {
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     });
 
     this.setupInterceptors();
@@ -53,13 +48,13 @@ export class HttpClient {
           const tenantId = this.tenantResolver?.getTenantId();
           if (tenantId) {
             config.headers = config.headers || {};
-            config.headers['X-Tenant-ID'] = tenantId;
+            config.headers["X-Tenant-ID"] = tenantId;
           }
         }
 
         return config;
       },
-      (error) => Promise.reject(ErrorNormalizer.normalize(error))
+      (error) => Promise.reject(ErrorNormalizer.normalize(error)),
     );
 
     // Response interceptor for error normalization
@@ -68,7 +63,7 @@ export class HttpClient {
       (error) => {
         const normalizedError = ErrorNormalizer.normalize(error);
         return Promise.reject(normalizedError);
-      }
+      },
     );
   }
 
@@ -91,13 +86,12 @@ export class HttpClient {
   enableAuth(authConfig?: Partial<AuthConfig>): this {
     this.authInterceptor = new AuthInterceptor({
       tokenSource: this.config.authTokenSource,
-      ...authConfig
+      ...authConfig,
     });
 
     // Add auth interceptors
-    this.axiosInstance.interceptors.request.use(
-      this.authInterceptor.requestInterceptor,
-      (error) => Promise.reject(ErrorNormalizer.normalize(error))
+    this.axiosInstance.interceptors.request.use(this.authInterceptor.requestInterceptor, (error) =>
+      Promise.reject(ErrorNormalizer.normalize(error)),
     );
 
     this.axiosInstance.interceptors.response.use(
@@ -108,7 +102,7 @@ export class HttpClient {
         } catch (authError) {
           return Promise.reject(ErrorNormalizer.normalize(authError));
         }
-      }
+      },
     );
 
     return this;
@@ -116,35 +110,31 @@ export class HttpClient {
 
   // HTTP methods with retry logic
   async get<T = any>(url: string, config: RequestConfig = {}): Promise<ApiResponse<T>> {
-    return this.request<T>('GET', url, undefined, config);
+    return this.request<T>("GET", url, undefined, config);
   }
 
   async post<T = any>(
-    url: string, 
-    data?: any, 
-    config: RequestConfig = {}
+    url: string,
+    data?: any,
+    config: RequestConfig = {},
   ): Promise<ApiResponse<T>> {
-    return this.request<T>('POST', url, data, config);
+    return this.request<T>("POST", url, data, config);
   }
 
-  async put<T = any>(
-    url: string, 
-    data?: any, 
-    config: RequestConfig = {}
-  ): Promise<ApiResponse<T>> {
-    return this.request<T>('PUT', url, data, config);
+  async put<T = any>(url: string, data?: any, config: RequestConfig = {}): Promise<ApiResponse<T>> {
+    return this.request<T>("PUT", url, data, config);
   }
 
   async patch<T = any>(
-    url: string, 
-    data?: any, 
-    config: RequestConfig = {}
+    url: string,
+    data?: any,
+    config: RequestConfig = {},
   ): Promise<ApiResponse<T>> {
-    return this.request<T>('PATCH', url, data, config);
+    return this.request<T>("PATCH", url, data, config);
   }
 
   async delete<T = any>(url: string, config: RequestConfig = {}): Promise<ApiResponse<T>> {
-    return this.request<T>('DELETE', url, undefined, config);
+    return this.request<T>("DELETE", url, undefined, config);
   }
 
   // Core request method
@@ -152,19 +142,19 @@ export class HttpClient {
     method: HttpMethod,
     url: string,
     data?: any,
-    config: RequestConfig = {}
+    config: RequestConfig = {},
   ): Promise<ApiResponse<T>> {
     const requestConfig: AxiosRequestConfig = {
       method: method.toLowerCase(),
       url,
       data,
-      ...config
+      ...config,
     };
 
     const operation = () => this.axiosInstance.request<T>(requestConfig);
 
     try {
-      const response = config.skipRetry 
+      const response = config.skipRetry
         ? await operation()
         : await this.retryHandler.execute(operation);
 
@@ -178,7 +168,7 @@ export class HttpClient {
     return {
       data: response.data,
       success: true,
-      message: 'Request successful'
+      message: "Request successful",
     };
   }
 
@@ -208,7 +198,10 @@ export class HttpClient {
     return new HttpClient(config).setTenantFromHostname();
   }
 
-  static createWithAuth(authConfig?: Partial<AuthConfig>, httpConfig?: HttpClientConfig): HttpClient {
+  static createWithAuth(
+    authConfig?: Partial<AuthConfig>,
+    httpConfig?: HttpClientConfig,
+  ): HttpClient {
     return new HttpClient(httpConfig).enableAuth(authConfig);
   }
 }

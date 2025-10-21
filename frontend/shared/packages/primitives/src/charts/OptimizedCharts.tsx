@@ -3,9 +3,9 @@
  * Memoized versions of all chart components with advanced optimization patterns
  */
 
-'use client';
+"use client";
 
-import { useState, useCallback, useMemo, memo } from 'react';
+import { useState, useCallback, useMemo, memo } from "react";
 import {
   AreaChart,
   Area,
@@ -22,14 +22,14 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-} from 'recharts';
-import { sanitizeText, validateClassName, validateArray } from '../utils/security';
+} from "recharts";
+import { sanitizeText, validateClassName, validateArray } from "../utils/security";
 import {
   revenueDataSchema,
   networkUsageDataSchema,
   serviceStatusDataSchema,
   bandwidthDataSchema,
-} from '../utils/security';
+} from "../utils/security";
 import {
   generateChartDescription,
   generateDataTable,
@@ -39,13 +39,13 @@ import {
   generateId,
   ARIA_ROLES,
   ARIA_LIVE_LEVELS,
-} from '../utils/a11y';
+} from "../utils/a11y";
 import {
   useRenderProfiler,
   createMemoizedSelector,
   useThrottledState,
   useDebouncedState,
-} from '../utils/performance';
+} from "../utils/performance";
 import type {
   CustomTooltipProps,
   RevenueChartProps,
@@ -53,38 +53,38 @@ import type {
   ServiceStatusChartProps,
   BandwidthChartProps,
   ChartColors,
-} from '../types/chart';
-import { ErrorBoundary } from '../components/ErrorBoundary';
+} from "../types/chart";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 
 // ISP-themed color palette
 const COLORS: ChartColors = {
-  primary: '#3B82F6',
-  secondary: '#10B981',
-  accent: '#8B5CF6',
-  warning: '#F59E0B',
-  danger: '#EF4444',
-  success: '#22C55E',
+  primary: "#3B82F6",
+  secondary: "#10B981",
+  accent: "#8B5CF6",
+  warning: "#F59E0B",
+  danger: "#EF4444",
+  success: "#22C55E",
   gradient: {
-    primary: 'url(#primaryGradient)',
-    secondary: 'url(#secondaryGradient)',
-    accent: 'url(#accentGradient)',
+    primary: "url(#primaryGradient)",
+    secondary: "url(#secondaryGradient)",
+    accent: "url(#accentGradient)",
   },
 };
 
 // Chart gradients (memoized)
 const ChartGradients = memo(() => (
   <defs>
-    <linearGradient id='primaryGradient' x1='0' y1='0' x2='0' y2='1'>
-      <stop offset='5%' stopColor={COLORS.primary} stopOpacity={0.8} />
-      <stop offset='95%' stopColor={COLORS.primary} stopOpacity={0.1} />
+    <linearGradient id="primaryGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.8} />
+      <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0.1} />
     </linearGradient>
-    <linearGradient id='secondaryGradient' x1='0' y1='0' x2='0' y2='1'>
-      <stop offset='5%' stopColor={COLORS.secondary} stopOpacity={0.8} />
-      <stop offset='95%' stopColor={COLORS.secondary} stopOpacity={0.1} />
+    <linearGradient id="secondaryGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stopColor={COLORS.secondary} stopOpacity={0.8} />
+      <stop offset="95%" stopColor={COLORS.secondary} stopOpacity={0.1} />
     </linearGradient>
-    <linearGradient id='accentGradient' x1='0' y1='0' x2='0' y2='1'>
-      <stop offset='5%' stopColor={COLORS.accent} stopOpacity={0.8} />
-      <stop offset='95%' stopColor={COLORS.accent} stopOpacity={0.1} />
+    <linearGradient id="accentGradient" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="5%" stopColor={COLORS.accent} stopOpacity={0.8} />
+      <stop offset="95%" stopColor={COLORS.accent} stopOpacity={0.1} />
     </linearGradient>
   </defs>
 ));
@@ -96,45 +96,45 @@ const createDataSelector = <T extends any[]>(validator: any, fallback: T) =>
       try {
         return validateArray(validator, data as unknown[]) as T;
       } catch (error) {
-        console.error('Chart data validation failed:', error);
+        console.error("Chart data validation failed:", error);
         return fallback;
       }
     },
-    (data: unknown) => [JSON.stringify(data)]
+    (data: unknown) => [JSON.stringify(data)],
   );
 
 // Performance-optimized tooltip with virtualization for large datasets
 const OptimizedTooltip: React.FC<CustomTooltipProps> = memo(
   ({ active, payload, label, formatter }) => {
-    const tooltipId = useMemo(() => generateId('chart-tooltip'), []);
+    const tooltipId = useMemo(() => generateId("chart-tooltip"), []);
 
     if (!active || !payload || payload.length === 0) {
       return null;
     }
 
     // Sanitize label to prevent XSS
-    const safeLabel = useMemo(() => (label ? sanitizeText(String(label)) : ''), [label]);
+    const safeLabel = useMemo(() => (label ? sanitizeText(String(label)) : ""), [label]);
 
     // Generate accessible description (memoized)
     const accessibleDescription = useMemo(() => {
       const items = payload.map((entry) => {
-        const name = entry.name ? sanitizeText(String(entry.name)) : 'Unknown';
-        const value = typeof entry.value === 'number' ? entry.value : 0;
+        const name = entry.name ? sanitizeText(String(entry.name)) : "Unknown";
+        const value = typeof entry.value === "number" ? entry.value : 0;
         return `${name}: ${value}`;
       });
-      return `Chart data point ${safeLabel ? 'for ' + safeLabel : ''}: ${items.join(', ')}`;
+      return `Chart data point ${safeLabel ? "for " + safeLabel : ""}: ${items.join(", ")}`;
     }, [payload, safeLabel]);
 
     // Memoized formatted entries
     const formattedEntries = useMemo(() => {
       return payload
         .map((entry, index) => {
-          if (!entry || typeof entry.value === 'undefined') {
+          if (!entry || typeof entry.value === "undefined") {
             return null;
           }
 
-          const safeName = entry.name ? sanitizeText(String(entry.name)) : 'Unknown';
-          const safeValue = typeof entry.value === 'number' ? entry.value : 0;
+          const safeName = entry.name ? sanitizeText(String(entry.name)) : "Unknown";
+          const safeValue = typeof entry.value === "number" ? entry.value : 0;
 
           let displayValue: string;
           let displayName: string;
@@ -145,7 +145,7 @@ const OptimizedTooltip: React.FC<CustomTooltipProps> = memo(
               displayValue = sanitizeText(String(formattedValue));
               displayName = sanitizeText(String(formattedName));
             } catch (error) {
-              console.error('Tooltip formatter error:', error);
+              console.error("Tooltip formatter error:", error);
               displayValue = String(safeValue);
               displayName = safeName;
             }
@@ -154,7 +154,12 @@ const OptimizedTooltip: React.FC<CustomTooltipProps> = memo(
             displayName = safeName;
           }
 
-          return { displayValue, displayName, color: entry.color || '#666', index };
+          return {
+            displayValue,
+            displayName,
+            color: entry.color || "#666",
+            index,
+          };
         })
         .filter(Boolean);
     }, [payload, formatter]);
@@ -162,23 +167,23 @@ const OptimizedTooltip: React.FC<CustomTooltipProps> = memo(
     return (
       <div
         id={tooltipId}
-        className='bg-white border border-gray-200 rounded-lg shadow-lg p-3 backdrop-blur-sm'
-        role='tooltip'
+        className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 backdrop-blur-sm"
+        role="tooltip"
         aria-label={accessibleDescription}
-        aria-live='polite'
+        aria-live="polite"
         tabIndex={-1}
       >
-        <div className='sr-only'>{accessibleDescription}</div>
-        {safeLabel && <p className='text-sm font-semibold text-gray-900 mb-2'>{safeLabel}</p>}
+        <div className="sr-only">{accessibleDescription}</div>
+        {safeLabel && <p className="text-sm font-semibold text-gray-900 mb-2">{safeLabel}</p>}
         {formattedEntries.map((entry) => (
-          <div key={`tooltip-${entry.index}`} className='flex items-center space-x-2 mb-1'>
+          <div key={`tooltip-${entry.index}`} className="flex items-center space-x-2 mb-1">
             <div
-              className='w-3 h-3 rounded-full'
+              className="w-3 h-3 rounded-full"
               style={{ backgroundColor: entry.color }}
-              aria-hidden='true'
+              aria-hidden="true"
             />
-            <span className='text-sm text-gray-600'>{entry.displayName}:</span>
-            <span className='text-sm font-semibold text-gray-900'>{entry.displayValue}</span>
+            <span className="text-sm text-gray-600">{entry.displayName}:</span>
+            <span className="text-sm font-semibold text-gray-900">{entry.displayValue}</span>
           </div>
         ))}
       </div>
@@ -192,14 +197,14 @@ const OptimizedTooltip: React.FC<CustomTooltipProps> = memo(
       prevProps.formatter === nextProps.formatter &&
       JSON.stringify(prevProps.payload) === JSON.stringify(nextProps.payload)
     );
-  }
+  },
 );
 
 // High-performance Revenue Chart
 export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
   ({ data, height = 300, className, onDataPointClick }) => {
     // Performance monitoring
-    const { renderCount } = useRenderProfiler('OptimizedRevenueChart', {
+    const { renderCount } = useRenderProfiler("OptimizedRevenueChart", {
       dataLength: data?.length,
       height,
     });
@@ -207,7 +212,7 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
     // Throttled state for better interaction performance
     const [activeIndex, setActiveIndex, throttledActiveIndex] = useThrottledState<number | null>(
       null,
-      16
+      16,
     );
 
     // Accessibility setup
@@ -217,11 +222,11 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
     // Memoized IDs for better performance
     const ids = useMemo(
       () => ({
-        chartId: generateId('revenue-chart'),
-        descriptionId: generateId('revenue-description'),
-        tableId: generateId('revenue-table'),
+        chartId: generateId("revenue-chart"),
+        descriptionId: generateId("revenue-description"),
+        tableId: generateId("revenue-table"),
       }),
-      []
+      [],
     );
 
     // High-performance data processing
@@ -233,13 +238,13 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
 
     // Memoized descriptions
     const chartDescription = useMemo(
-      () => generateChartDescription('area', validatedData, 'Revenue Trends'),
-      [validatedData]
+      () => generateChartDescription("area", validatedData, "Revenue Trends"),
+      [validatedData],
     );
 
     const dataTableDescription = useMemo(
-      () => generateDataTable(validatedData, ['month', 'revenue', 'target', 'previousYear']),
-      [validatedData]
+      () => generateDataTable(validatedData, ["month", "revenue", "target", "previousYear"]),
+      [validatedData],
     );
 
     // Optimized event handlers
@@ -247,7 +252,7 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
       (_: any, index: number) => {
         setActiveIndex(index);
       },
-      [setActiveIndex]
+      [setActiveIndex],
     );
 
     const handleMouseLeave = useCallback(() => {
@@ -260,21 +265,21 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
           onDataPointClick(validatedData[index], index);
         }
       },
-      [onDataPointClick, validatedData]
+      [onDataPointClick, validatedData],
     );
 
     // Memoized tooltip formatter
     const tooltipFormatter = useCallback(
       (value: number | string, name: string): [string, string] => {
         try {
-          const numValue = typeof value === 'number' ? value : parseFloat(String(value));
-          if (isNaN(numValue)) return ['Invalid', name];
+          const numValue = typeof value === "number" ? value : parseFloat(String(value));
+          if (isNaN(numValue)) return ["Invalid", name];
           return [`$${numValue.toLocaleString()}`, name];
         } catch {
-          return ['Error', name];
+          return ["Error", name];
         }
       },
-      []
+      [],
     );
 
     // Handle empty data
@@ -283,11 +288,11 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
         <div
           className={`w-full flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg ${safeClassName}`}
           style={{ height }}
-          role='img'
-          aria-label='No revenue data available'
+          role="img"
+          aria-label="No revenue data available"
           tabIndex={0}
         >
-          <p className='text-gray-500 text-sm'>No revenue data available</p>
+          <p className="text-gray-500 text-sm">No revenue data available</p>
         </div>
       );
     }
@@ -296,10 +301,10 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
       <ErrorBoundary
         fallback={
           <div
-            className='w-full flex items-center justify-center bg-red-50 border border-red-200 rounded-lg'
+            className="w-full flex items-center justify-center bg-red-50 border border-red-200 rounded-lg"
             style={{ height }}
           >
-            <p className='text-red-600 text-sm'>Revenue chart failed to load</p>
+            <p className="text-red-600 text-sm">Revenue chart failed to load</p>
           </div>
         }
       >
@@ -310,12 +315,12 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
           data-render-count={renderCount}
         >
           {/* Screen reader accessible chart description */}
-          <div id={ids.descriptionId} className='sr-only'>
+          <div id={ids.descriptionId} className="sr-only">
             {chartDescription}
           </div>
 
           {/* Screen reader accessible data table alternative */}
-          <div id={ids.tableId} className='sr-only'>
+          <div id={ids.tableId} className="sr-only">
             <p>Data table alternative for screen readers:</p>
             <p>{dataTableDescription}</p>
           </div>
@@ -327,37 +332,37 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
             aria-labelledby={ids.descriptionId}
             aria-describedby={ids.tableId}
             tabIndex={0}
-            className='focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded'
+            className="focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
             onFocus={() => {
               if (isScreenReader) {
-                announceToScreenReader(chartDescription, 'polite');
+                announceToScreenReader(chartDescription, "polite");
               }
             }}
           >
-            <ResponsiveContainer width='100%' height='100%'>
+            <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={validatedData}
                 margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 onClick={handleDataPointClick}
               >
                 <ChartGradients />
-                <CartesianGrid strokeDasharray='3 3' stroke='#E5E7EB' />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis
-                  dataKey='month'
+                  dataKey="month"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280' }}
+                  tick={{ fontSize: 12, fill: "#6B7280" }}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 12, fill: '#6B7280' }}
+                  tick={{ fontSize: 12, fill: "#6B7280" }}
                   tickFormatter={(value) => {
                     try {
-                      const num = typeof value === 'number' ? value : parseFloat(String(value));
-                      return isNaN(num) ? '0' : `$${(num / 1000).toFixed(0)}K`;
+                      const num = typeof value === "number" ? value : parseFloat(String(value));
+                      return isNaN(num) ? "0" : `$${(num / 1000).toFixed(0)}K`;
                     } catch {
-                      return '0';
+                      return "0";
                     }
                   }}
                 />
@@ -367,23 +372,23 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
                 />
                 <Legend />
                 <Area
-                  type='monotone'
-                  dataKey='revenue'
+                  type="monotone"
+                  dataKey="revenue"
                   stroke={COLORS.primary}
                   strokeWidth={2}
                   fill={COLORS.gradient.primary}
-                  name='Current Revenue'
+                  name="Current Revenue"
                   onMouseEnter={handleMouseEnter}
                   onMouseLeave={handleMouseLeave}
                   animationDuration={prefersReducedMotion ? 0 : 1500}
                 />
                 <Area
-                  type='monotone'
-                  dataKey='previousYear'
+                  type="monotone"
+                  dataKey="previousYear"
                   stroke={COLORS.secondary}
                   strokeWidth={2}
                   fill={COLORS.gradient.secondary}
-                  name='Previous Year'
+                  name="Previous Year"
                   animationDuration={prefersReducedMotion ? 0 : 1500}
                 />
               </AreaChart>
@@ -405,7 +410,7 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
       (prevProps.data === nextProps.data ||
         JSON.stringify(prevProps.data) === JSON.stringify(nextProps.data))
     );
-  }
+  },
 );
 
 // Export optimized components and utilities

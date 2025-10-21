@@ -8,19 +8,19 @@
  */
 export function generateNonce(): string {
   // Use crypto.getRandomValues which works in both Node.js and edge runtime
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
     const array = new Uint8Array(16);
     crypto.getRandomValues(array);
     return btoa(String.fromCharCode(...array));
   }
 
   // Fallback for environments without Web Crypto API
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let result = '';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  let result = "";
   for (let i = 0; i < 22; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return result + '==';
+  return result + "==";
 }
 
 /**
@@ -30,7 +30,7 @@ export function generateCSP(nonce: string, isDevelopment = false): string {
   const policies = [
     `default-src 'self'`,
     // Use nonce for scripts instead of unsafe-inline
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDevelopment ? " 'unsafe-eval'" : ''}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDevelopment ? " 'unsafe-eval'" : ""}`,
     // Tightened CSP: Remove unsafe-inline in production, use nonce for inline styles
     `style-src 'self'${isDevelopment ? " 'unsafe-inline'" : ` 'nonce-${nonce}'`} fonts.googleapis.com`,
     `font-src 'self' fonts.gstatic.com data:`,
@@ -43,14 +43,14 @@ export function generateCSP(nonce: string, isDevelopment = false): string {
     `upgrade-insecure-requests`,
   ];
 
-  return policies.join('; ');
+  return policies.join("; ");
 }
 
 /**
  * Generate CSP meta tag for client-side enforcement
  */
 export function generateCSPMeta(nonce: string): string {
-  const csp = generateCSP(nonce, process.env.NODE_ENV === 'development');
+  const csp = generateCSP(nonce, process.env.NODE_ENV === "development");
   return `<meta http-equiv="Content-Security-Policy" content="${csp}">`;
 }
 

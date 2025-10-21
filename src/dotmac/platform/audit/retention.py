@@ -15,7 +15,6 @@ from typing import Any
 
 import structlog
 from sqlalchemy import and_, delete, func, select
-from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import get_async_db
@@ -29,8 +28,8 @@ class AuditCleanupResult:
 
     total_deleted: int = 0
     total_archived: int = 0
-    by_severity: dict[str, int] = field(default_factory=dict)
-    errors: list[str] = field(default_factory=list)
+    by_severity: dict[str, int] = field(default_factory=lambda: {})
+    errors: list[str] = field(default_factory=lambda: [])
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -47,7 +46,7 @@ class AuditRestoreResult:
 
     total_restored: int = 0
     skipped: int = 0
-    errors: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=lambda: [])
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -73,10 +72,10 @@ class AuditRetentionStats:
     """Comprehensive statistics about current audit retention state."""
 
     total_records: int = 0
-    by_severity: dict[str, int] = field(default_factory=dict)
+    by_severity: dict[str, int] = field(default_factory=lambda: {})
     oldest_record: str | None = None
     newest_record: str | None = None
-    records_to_delete: dict[str, AuditDeletionInfo] = field(default_factory=dict)
+    records_to_delete: dict[str, AuditDeletionInfo] = field(default_factory=lambda: {})
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -211,7 +210,7 @@ class AuditRetentionService:
 
                         result = await session.execute(delete_query)
                         # Result.rowcount is available after execute() for DML statements
-                        deleted_count = int(getattr(result, 'rowcount', 0) or 0)
+                        deleted_count = int(getattr(result, "rowcount", 0) or 0)
                         await session.commit()
 
                         results.total_deleted += deleted_count

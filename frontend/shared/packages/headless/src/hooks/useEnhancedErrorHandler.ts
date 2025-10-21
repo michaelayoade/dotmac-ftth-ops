@@ -3,14 +3,14 @@
  * Provides comprehensive error handling with business context and user experience
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 import {
   EnhancedISPError,
   EnhancedErrorFactory,
   ErrorCode,
   type ErrorContext,
-} from '../utils/enhancedErrorHandling';
-import { errorLogger } from '../services/ErrorLoggingService';
+} from "../utils/enhancedErrorHandling";
+import { errorLogger } from "../services/ErrorLoggingService";
 
 export interface ErrorHandlerConfig {
   enableAutoRecovery: boolean;
@@ -40,7 +40,7 @@ export interface UseEnhancedErrorHandlerResult {
     code: ErrorCode,
     message: string,
     businessProcess: string,
-    customerImpact?: 'none' | 'low' | 'medium' | 'high' | 'critical'
+    customerImpact?: "none" | "low" | "medium" | "high" | "critical",
   ) => EnhancedISPError;
 
   // Recovery methods
@@ -62,7 +62,7 @@ const defaultConfig: ErrorHandlerConfig = {
 
 export function useEnhancedErrorHandler(
   config: Partial<ErrorHandlerConfig> = {},
-  onRetry?: (error: EnhancedISPError) => Promise<void>
+  onRetry?: (error: EnhancedISPError) => Promise<void>,
 ): UseEnhancedErrorHandlerResult {
   const finalConfig = { ...defaultConfig, ...config };
 
@@ -87,14 +87,14 @@ export function useEnhancedErrorHandler(
         correlationId: generateCorrelationId(),
         userId: finalConfig.context?.userId,
         tenantId: finalConfig.context?.tenantId,
-        service: 'isp-frontend',
-        component: 'error-handler',
-        version: process.env.REACT_APP_VERSION || '1.0.0',
-        environment: process.env.NODE_ENV || 'development',
+        service: "isp-frontend",
+        component: "error-handler",
+        version: process.env.REACT_APP_VERSION || "1.0.0",
+        environment: process.env.NODE_ENV || "development",
         ...finalConfig.context,
       };
     },
-    [finalConfig.context, generateCorrelationId]
+    [finalConfig.context, generateCorrelationId],
   );
 
   // Enhanced error handler with business context
@@ -135,7 +135,7 @@ export function useEnhancedErrorHandler(
 
       if (error instanceof Error) {
         // Network/fetch errors
-        if (error.message.includes('fetch')) {
+        if (error.message.includes("fetch")) {
           enhancedError = EnhancedErrorFactory.network(error.message, context?.operation);
         }
         // Generic JavaScript errors
@@ -143,7 +143,7 @@ export function useEnhancedErrorHandler(
           enhancedError = new EnhancedISPError({
             code: ErrorCode.UNKNOWN_ERROR,
             message: error.message,
-            context: createErrorContext(context?.operation || 'unknown'),
+            context: createErrorContext(context?.operation || "unknown"),
             technicalDetails: {
               stack: error.stack,
               name: error.name,
@@ -152,7 +152,7 @@ export function useEnhancedErrorHandler(
         }
       }
       // HTTP response errors
-      else if (error && typeof error === 'object' && 'status' in error) {
+      else if (error && typeof error === "object" && "status" in error) {
         const status = (error as any).status;
         const message = (error as any).message || `HTTP ${status} error`;
 
@@ -160,14 +160,14 @@ export function useEnhancedErrorHandler(
           enhancedError = EnhancedErrorFactory.authentication(context?.operation);
         } else if (status === 403) {
           enhancedError = EnhancedErrorFactory.authorization(
-            context?.resource || 'resource',
-            context?.operation
+            context?.resource || "resource",
+            context?.operation,
           );
         } else if (status === 422) {
           enhancedError = EnhancedErrorFactory.validation(
             message,
             context?.operation,
-            (error as any).details
+            (error as any).details,
           );
         } else if (status >= 500) {
           enhancedError = EnhancedErrorFactory.system(message, context?.operation);
@@ -175,7 +175,7 @@ export function useEnhancedErrorHandler(
           enhancedError = new EnhancedISPError({
             code: ErrorCode.UNKNOWN_ERROR,
             message,
-            context: createErrorContext(context?.operation || 'api_call'),
+            context: createErrorContext(context?.operation || "api_call"),
             status,
           });
         }
@@ -185,7 +185,7 @@ export function useEnhancedErrorHandler(
         enhancedError = new EnhancedISPError({
           code: ErrorCode.UNKNOWN_ERROR,
           message: String(error),
-          context: createErrorContext(context?.operation || 'unknown'),
+          context: createErrorContext(context?.operation || "unknown"),
         });
       }
 
@@ -205,7 +205,7 @@ export function useEnhancedErrorHandler(
 
       return enhancedError;
     },
-    [createErrorContext, finalConfig.enableAutoRecovery, finalConfig.enableMetrics]
+    [createErrorContext, finalConfig.enableAutoRecovery, finalConfig.enableMetrics],
   );
 
   // Specialized API error handler
@@ -226,19 +226,19 @@ export function useEnhancedErrorHandler(
       // Log API-specific context
       if (finalConfig.enableMetrics) {
         errorLogger.logApiError(
-          error.config?.url || 'unknown',
-          error.config?.method || 'GET',
+          error.config?.url || "unknown",
+          error.config?.method || "GET",
           error.response?.status || 0,
           enhancedError,
           error.duration || 0,
           error.config?.data,
-          error.response?.data
+          error.response?.data,
         );
       }
 
       return enhancedError;
     },
-    [handleError, finalConfig.enableMetrics]
+    [handleError, finalConfig.enableMetrics],
   );
 
   // Business logic error handler
@@ -247,7 +247,7 @@ export function useEnhancedErrorHandler(
       code: ErrorCode,
       message: string,
       businessProcess: string,
-      customerImpact: 'none' | 'low' | 'medium' | 'high' | 'critical' = 'medium'
+      customerImpact: "none" | "low" | "medium" | "high" | "critical" = "medium",
     ): EnhancedISPError => {
       const context: ErrorContext = {
         ...createErrorContext(`business_${businessProcess}`),
@@ -259,7 +259,7 @@ export function useEnhancedErrorHandler(
         code,
         message,
         context,
-        category: 'business',
+        category: "business",
       });
 
       setErrorState({
@@ -275,14 +275,14 @@ export function useEnhancedErrorHandler(
         errorLogger.logBusinessError(
           enhancedError,
           businessProcess,
-          context.workflowStep || 'unknown',
-          customerImpact
+          context.workflowStep || "unknown",
+          customerImpact,
         );
       }
 
       return enhancedError;
     },
-    [createErrorContext, finalConfig.enableMetrics]
+    [createErrorContext, finalConfig.enableMetrics],
   );
 
   // Retry mechanism
@@ -338,7 +338,7 @@ export function useEnhancedErrorHandler(
       // Log retry failure
       if (finalConfig.enableMetrics) {
         const retryErrorEnhanced = handleError(retryError, {
-          operation: 'retry_failed',
+          operation: "retry_failed",
           metadata: {
             originalError: errorState.error?.errorCode,
             retryAttempt: newRetryCount,
@@ -372,10 +372,10 @@ export function useEnhancedErrorHandler(
     if (!error.retryable) return false;
 
     // Network errors are generally recoverable
-    if (error.category === 'network') return true;
+    if (error.category === "network") return true;
 
     // System errors might be recoverable
-    if (error.category === 'system' && error.severity !== 'critical') return true;
+    if (error.category === "system" && error.severity !== "critical") return true;
 
     // Specific recoverable error codes
     const recoverableCodes = [

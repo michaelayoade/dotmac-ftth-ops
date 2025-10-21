@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React from 'react';
-import type { PortalType } from '@dotmac/auth';
+import React from "react";
+import type { PortalType } from "@dotmac/auth";
 
 interface Props {
   children: React.ReactNode;
-  variant?: 'single' | 'multi' | 'isp';
+  variant?: "single" | "multi" | "isp";
   portal: PortalType;
 }
 

@@ -17,19 +17,14 @@ from .core import (
     DataRecord,
     DataTransformer,
     DataValidator,
+    ExportOptions,
+    ImportOptions,
     ProgressCallback,
     ProgressInfo,
     TransferConfig,
 )
-from .exporters import (
-    ExportOptions,
-    create_exporter,
-)
-from .importers import (
-    ImportOptions,
-    create_importer,
-    detect_format,
-)
+from .exporters import create_exporter
+from .importers import create_importer, detect_format
 from .progress import (
     create_progress_tracker,
 )
@@ -79,7 +74,7 @@ def estimate_completion_time(
 async def create_batches(
     data: list[dict[str, Any]],
     batch_size: int = 1000,
-) -> AsyncGenerator[DataBatch, None]:
+) -> AsyncGenerator[DataBatch]:
     """Create batches from a list of data."""
     batch_number = 0
     for i in range(0, len(data), batch_size):
@@ -242,7 +237,7 @@ class DataPipeline:
             )
 
             # Process data
-            async def process_data() -> AsyncGenerator[DataBatch, None]:
+            async def process_data() -> AsyncGenerator[DataBatch]:
                 async for batch in importer.import_from_file(self.source_path):
                     # Apply validation and transformation
                     if self.validator or self.transformer:

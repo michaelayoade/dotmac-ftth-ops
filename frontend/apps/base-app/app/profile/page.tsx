@@ -1,17 +1,12 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
-import {
-  User,
-  Mail,
-  Phone,
-  Lock,
-  Bell,
-  Globe,
-  Loader2,
-} from "lucide-react";
+import { User, Mail, Phone, Lock, Bell, Globe, Loader2 } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -167,10 +162,17 @@ export default function ProfilePage() {
       });
       await refreshUser();
       setProfileSavedMessage("Profile updated successfully.");
-      toast({ title: "Profile updated", description: "Your contact information has been saved." });
+      toast({
+        title: "Profile updated",
+        description: "Your contact information has been saved.",
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update profile.";
-      toast({ title: "Unable to update profile", description: message, variant: "destructive" });
+      toast({
+        title: "Unable to update profile",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setSavingProfile(false);
     }
@@ -192,11 +194,18 @@ export default function ProfilePage() {
         current_password: passwordForm.current,
         new_password: passwordForm.next,
       });
-      toast({ title: "Password changed", description: "Use your new password next time you sign in." });
+      toast({
+        title: "Password changed",
+        description: "Use your new password next time you sign in.",
+      });
       setPasswordForm({ current: "", next: "", confirm: "" });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to change password.";
-      toast({ title: "Unable to change password", description: message, variant: "destructive" });
+      toast({
+        title: "Unable to change password",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setSavingPassword(false);
     }
@@ -213,10 +222,17 @@ export default function ProfilePage() {
         sms_notifications: notifyBilling,
       });
       setNotificationsMessage("Notification preferences updated.");
-      toast({ title: "Notifications updated", description: "Your preferences are now saved." });
+      toast({
+        title: "Notifications updated",
+        description: "Your preferences are now saved.",
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update notifications.";
-      toast({ title: "Unable to update notifications", description: message, variant: "destructive" });
+      toast({
+        title: "Unable to update notifications",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setSavingNotifications(false);
     }
@@ -231,10 +247,17 @@ export default function ProfilePage() {
           timezone,
         },
       });
-      toast({ title: "Preferences saved", description: "Language and timezone have been updated." });
+      toast({
+        title: "Preferences saved",
+        description: "Language and timezone have been updated.",
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update preferences.";
-      toast({ title: "Unable to update preferences", description: message, variant: "destructive" });
+      toast({
+        title: "Unable to update preferences",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setSavingPreferences(false);
     }
@@ -249,8 +272,8 @@ export default function ProfilePage() {
           </Link>
           <h1 className="text-3xl font-semibold text-foreground">Profile & account preferences</h1>
           <p className="max-w-2xl text-sm text-muted-foreground">
-            Keep your contact details current, manage notification delivery and update your password to maintain a secure
-            account.
+            Keep your contact details current, manage notification delivery and update your password
+            to maintain a secure account.
           </p>
         </header>
 
@@ -262,10 +285,16 @@ export default function ProfilePage() {
                   <User className="h-5 w-5 text-muted-foreground" />
                   Personal details
                 </CardTitle>
-                <CardDescription>These details appear on invoices and administrative activity logs.</CardDescription>
+                <CardDescription>
+                  These details appear on invoices and administrative activity logs.
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSaveProfile} data-testid="profile-form">
+                <form
+                  className="grid gap-4 md:grid-cols-2"
+                  onSubmit={handleSaveProfile}
+                  data-testid="profile-form"
+                >
                   <div className="md:col-span-2 space-y-2">
                     <Label htmlFor="name">Full name</Label>
                     <Input
@@ -307,7 +336,11 @@ export default function ProfilePage() {
                     <Button type="button" variant="outline" onClick={handleResetProfile}>
                       Cancel
                     </Button>
-                    <Button type="submit" data-testid="profile-save-button" disabled={savingProfile}>
+                    <Button
+                      type="submit"
+                      data-testid="profile-save-button"
+                      disabled={savingProfile}
+                    >
                       {savingProfile ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -336,7 +369,9 @@ export default function ProfilePage() {
                   <Lock className="h-5 w-5 text-muted-foreground" />
                   Password & security
                 </CardTitle>
-                <CardDescription>Update your password and check the status of multi-factor authentication.</CardDescription>
+                <CardDescription>
+                  Update your password and check the status of multi-factor authentication.
+                </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
@@ -347,7 +382,10 @@ export default function ProfilePage() {
                     name="current_password"
                     value={passwordForm.current}
                     onChange={(event) =>
-                      setPasswordForm((prev) => ({ ...prev, current: event.target.value }))
+                      setPasswordForm((prev) => ({
+                        ...prev,
+                        current: event.target.value,
+                      }))
                     }
                     placeholder="••••••••"
                   />
@@ -359,7 +397,12 @@ export default function ProfilePage() {
                     type="password"
                     name="new_password"
                     value={passwordForm.next}
-                    onChange={(event) => setPasswordForm((prev) => ({ ...prev, next: event.target.value }))}
+                    onChange={(event) =>
+                      setPasswordForm((prev) => ({
+                        ...prev,
+                        next: event.target.value,
+                      }))
+                    }
                     placeholder="Create a strong password"
                   />
                 </div>
@@ -371,7 +414,10 @@ export default function ProfilePage() {
                     name="confirm_password"
                     value={passwordForm.confirm}
                     onChange={(event) =>
-                      setPasswordForm((prev) => ({ ...prev, confirm: event.target.value }))
+                      setPasswordForm((prev) => ({
+                        ...prev,
+                        confirm: event.target.value,
+                      }))
                     }
                     placeholder="Repeat new password"
                   />
@@ -417,7 +463,9 @@ export default function ProfilePage() {
                 <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-card px-3 py-2">
                   <div>
                     <p className="text-sm font-semibold text-foreground">Billing activity</p>
-                    <p className="text-xs text-muted-foreground">Invoices, payment receipts and refund notices.</p>
+                    <p className="text-xs text-muted-foreground">
+                      Invoices, payment receipts and refund notices.
+                    </p>
                   </div>
                   <Switch
                     checked={notifyBilling}
@@ -428,7 +476,9 @@ export default function ProfilePage() {
                 <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-card px-3 py-2">
                   <div>
                     <p className="text-sm font-semibold text-foreground">Security alerts</p>
-                    <p className="text-xs text-muted-foreground">Unusual sign-in attempts or MFA resets.</p>
+                    <p className="text-xs text-muted-foreground">
+                      Unusual sign-in attempts or MFA resets.
+                    </p>
                   </div>
                   <Switch
                     checked={notifySecurity}
@@ -439,7 +489,9 @@ export default function ProfilePage() {
                 <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-card px-3 py-2">
                   <div>
                     <p className="text-sm font-semibold text-foreground">Product updates</p>
-                    <p className="text-xs text-muted-foreground">New features, release notes and roadmap previews.</p>
+                    <p className="text-xs text-muted-foreground">
+                      New features, release notes and roadmap previews.
+                    </p>
                   </div>
                   <Switch
                     checked={notifyProduct}

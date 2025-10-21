@@ -189,7 +189,7 @@ class CircuitBreakerMiddleware(BaseHTTPMiddleware):
                     "error": "Service Temporarily Unavailable",
                     "service": service,
                     "circuit_state": circuit.state,
-                    "message": "The service is experiencing issues. " "Please try again later.",
+                    "message": "The service is experiencing issues. Please try again later.",
                 },
                 headers={"Retry-After": "60"},
             )

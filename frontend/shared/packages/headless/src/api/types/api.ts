@@ -38,7 +38,7 @@ export interface QueryParams {
   page?: number;
   limit?: number;
   sort?: string;
-  order?: 'asc' | 'desc';
+  order?: "asc" | "desc";
   search?: string;
   filter?: Record<string, any>;
   include?: string[];
@@ -55,8 +55,8 @@ export interface CustomerData {
   email: string;
   phone?: string;
   address: AddressData;
-  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'PENDING';
-  account_type: 'RESIDENTIAL' | 'BUSINESS' | 'ENTERPRISE';
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
+  account_type: "RESIDENTIAL" | "BUSINESS" | "ENTERPRISE";
   billing_info?: BillingInfoData;
   services: ServiceData[];
   created_at: string;
@@ -69,7 +69,7 @@ export interface UserData {
   name: string;
   role: string;
   permissions: string[];
-  status: 'ACTIVE' | 'INACTIVE' | 'LOCKED';
+  status: "ACTIVE" | "INACTIVE" | "LOCKED";
   last_login?: string;
   created_at: string;
   updated_at: string;
@@ -90,15 +90,15 @@ export interface AddressData {
 export interface BillingInfoData {
   billing_address?: AddressData;
   payment_method_id?: string;
-  billing_cycle: 'MONTHLY' | 'QUARTERLY' | 'ANNUALLY';
+  billing_cycle: "MONTHLY" | "QUARTERLY" | "ANNUALLY";
   auto_pay: boolean;
 }
 
 export interface ServiceData {
   id: string;
   name: string;
-  type: 'INTERNET' | 'VOICE' | 'TV' | 'BUNDLE';
-  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'PENDING';
+  type: "INTERNET" | "VOICE" | "TV" | "BUNDLE";
+  status: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "PENDING";
   plan: ServicePlanData;
   installed_date?: string;
   monthly_cost: number;
@@ -121,8 +121,8 @@ export interface CreateCustomerRequest {
   contact_name: string;
   email: string;
   phone?: string;
-  address: Omit<AddressData, 'coordinates'>;
-  account_type: CustomerData['account_type'];
+  address: Omit<AddressData, "coordinates">;
+  account_type: CustomerData["account_type"];
   initial_services?: string[];
 }
 
@@ -132,7 +132,7 @@ export interface UpdateCustomerRequest {
   email?: string;
   phone?: string;
   address?: Partial<AddressData>;
-  status?: CustomerData['status'];
+  status?: CustomerData["status"];
   billing_info?: Partial<BillingInfoData>;
 }
 
@@ -152,4 +152,4 @@ export interface SearchFilter {
 }
 
 // Export all for easy importing
-export type * from './api';
+export type * from "./api";

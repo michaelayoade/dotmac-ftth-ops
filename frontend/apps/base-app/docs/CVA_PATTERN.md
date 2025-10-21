@@ -108,8 +108,8 @@ export { Button };
 ### Basic Usage
 
 ```tsx
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 function MyComponent() {
   return (
@@ -288,21 +288,21 @@ Button.displayName = 'Button';
 For styles that depend on multiple variants:
 
 ```typescript
-const buttonVariants = cva('base-styles', {
+const buttonVariants = cva("base-styles", {
   variants: {
-    variant: { primary: '...', secondary: '...' },
-    size: { sm: '...', lg: '...' },
+    variant: { primary: "...", secondary: "..." },
+    size: { sm: "...", lg: "..." },
   },
   compoundVariants: [
     {
-      variant: 'primary',
-      size: 'lg',
-      className: 'uppercase tracking-wider', // Only for primary + lg
+      variant: "primary",
+      size: "lg",
+      className: "uppercase tracking-wider", // Only for primary + lg
     },
   ],
   defaultVariants: {
-    variant: 'primary',
-    size: 'sm',
+    variant: "primary",
+    size: "sm",
   },
 });
 ```
@@ -312,16 +312,16 @@ const buttonVariants = cva('base-styles', {
 For boolean variants:
 
 ```typescript
-const alertVariants = cva('base-styles', {
+const alertVariants = cva("base-styles", {
   variants: {
-    variant: { info: '...', warning: '...', error: '...' },
+    variant: { info: "...", warning: "...", error: "..." },
     closable: {
-      true: 'pr-12', // Extra padding for close button
-      false: '',
+      true: "pr-12", // Extra padding for close button
+      false: "",
     },
   },
   defaultVariants: {
-    variant: 'info',
+    variant: "info",
     closable: false,
   },
 });

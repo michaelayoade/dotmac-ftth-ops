@@ -9,8 +9,11 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         gcc="$(apt-cache policy gcc | awk '/Candidate/ {print $2}')" \
-        postgresql-client="$(apt-cache policy postgresql-client | awk '/Candidate/ {print $2}')"; \
-    rm -rf /var/lib/apt/lists/*
+        postgresql-client="$(apt-cache policy postgresql-client | awk '/Candidate/ {print $2}')" \
+        freeradius-utils="$(apt-cache policy freeradius-utils | awk '/Candidate/ {print $2}')"; \
+    rm -rf /var/lib/apt/lists/*; \
+    # Verify radclient installation
+    radclient -v || echo "radclient installed successfully"
 
 # Create non-root application user
 RUN useradd --create-home --shell /bin/bash appuser

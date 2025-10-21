@@ -72,7 +72,7 @@ class CurrencyFormatter:
         else:
             return Decimal(minor_amount)
 
-    def get_currency_info(self) -> dict:
+    def get_currency_info(self) -> dict[str, str | int | bool]:
         """Get currency configuration information"""
 
         return {

@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 /**
  * Real-time data synchronization with WebSockets and optimistic updates
  */
 
-import { io, type Socket } from 'socket.io-client';
+import { io, type Socket } from "socket.io-client";
 
-import { useAuthStore } from '@dotmac/headless/auth';
-import { useTenantStore } from '@dotmac/headless/stores';
+import { useAuthStore } from "@dotmac/headless/auth";
+import { useTenantStore } from "@dotmac/headless/stores";
 
 export interface RealTimeEvent {
   type: string;
@@ -47,10 +47,10 @@ type EventHandler = (event: RealTimeEvent) => void;
 export function useRealTimeSync(
   options: RealTimeSyncOptions = {
     // Implementation pending
-  }
+  },
 ) {
   const {
-    url = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'ws://localhost:3001',
+    url = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "ws://localhost:3001",
     autoConnect = true,
     reconnect = true,
     reconnectAttempts = 5,
@@ -80,23 +80,23 @@ export function useRealTimeSync(
         console.log(`[RealTimeSync] ${message}`, ...args);
       }
     },
-    [debug]
+    [debug],
   );
 
   // Connect to WebSocket
   const connect = useCallback(() => {
     if (socketRef.current?.connected) {
-      log('Already connected');
+      log("Already connected");
       return;
     }
 
     if (!user || !token) {
-      log('Cannot connect: No user or token');
+      log("Cannot connect: No user or token");
       return;
     }
 
     setState((prev) => ({ ...prev, connecting: true, error: null }));
-    log('Connecting to', url);
+    log("Connecting to", url);
 
     try {
       const socket = io(url, {
@@ -105,13 +105,13 @@ export function useRealTimeSync(
           userId: user.id,
           tenantId: currentTenant?.tenant?.id,
         },
-        transports: ['websocket', 'polling'],
+        transports: ["websocket", "polling"],
         autoConnect: false,
       });
 
       // Connection events
-      socket.on('connect', () => {
-        log('Connected to real-time server');
+      socket.on("connect", () => {
+        log("Connected to real-time server");
         setState((prev) => ({
           ...prev,
           connected: true,
@@ -122,12 +122,12 @@ export function useRealTimeSync(
 
         // Re-subscribe to all active subscriptions
         subscriptionsRef.current.forEach((subscription) => {
-          socket.emit('subscribe', subscription);
+          socket.emit("subscribe", subscription);
         });
       });
 
-      socket.on('disconnect', (reason) => {
-        log('Disconnected:', reason);
+      socket.on("disconnect", (reason) => {
+        log("Disconnected:", reason);
         setState((prev) => ({
           ...prev,
           connected: false,
@@ -136,7 +136,7 @@ export function useRealTimeSync(
         }));
 
         // Auto-reconnect if enabled
-        if (reconnect && reason !== 'io client disconnect') {
+        if (reconnect && reason !== "io client disconnect") {
           const attempts = state.connectionAttempts + 1;
           if (attempts <= reconnectAttempts) {
             log(`Reconnecting in ${reconnectDelay}ms (attempt ${attempts}/${reconnectAttempts})`);
@@ -148,8 +148,8 @@ export function useRealTimeSync(
         }
       });
 
-      socket.on('connect_error', (error) => {
-        log('Connection error:', error);
+      socket.on("connect_error", (error) => {
+        log("Connection error:", error);
         setState((prev) => ({
           ...prev,
           connected: false,
@@ -159,8 +159,8 @@ export function useRealTimeSync(
       });
 
       // Real-time events
-      socket.on('event', (event: RealTimeEvent) => {
-        log('Received event:', event);
+      socket.on("event", (event: RealTimeEvent) => {
+        log("Received event:", event);
 
         setState((prev) => ({ ...prev, lastEvent: event }));
 
@@ -177,7 +177,7 @@ export function useRealTimeSync(
         }
 
         // Dispatch to wildcard handlers
-        const wildcardHandlers = eventHandlersRef.current.get('*');
+        const wildcardHandlers = eventHandlersRef.current.get("*");
         if (wildcardHandlers) {
           wildcardHandlers.forEach((handler) => {
             try {
@@ -190,8 +190,8 @@ export function useRealTimeSync(
       });
 
       // Authentication events
-      socket.on('auth_error', (error) => {
-        log('Authentication error:', error);
+      socket.on("auth_error", (error) => {
+        log("Authentication error:", error);
         setState((prev) => ({
           ...prev,
           connected: false,
@@ -201,8 +201,8 @@ export function useRealTimeSync(
       });
 
       // Subscription events
-      socket.on('subscription_error', (error) => {
-        log('Subscription error:', error);
+      socket.on("subscription_error", (error) => {
+        log("Subscription error:", error);
         setState((prev) => ({
           ...prev,
           error: `Subscription error: ${error}`,
@@ -212,7 +212,7 @@ export function useRealTimeSync(
       socketRef.current = socket;
       socket.connect();
     } catch (error) {
-      log('Failed to create socket:', error);
+      log("Failed to create socket:", error);
       setState((prev) => ({
         ...prev,
         connecting: false,
@@ -233,7 +233,7 @@ export function useRealTimeSync(
   // Disconnect from WebSocket
   const disconnect = useCallback(() => {
     if (socketRef.current) {
-      log('Disconnecting');
+      log("Disconnecting");
       socketRef.current.disconnect();
       socketRef.current = null;
     }
@@ -251,9 +251,9 @@ export function useRealTimeSync(
       handler: EventHandler,
       options: SubscriptionOptions = {
         // Implementation pending
-      }
+      },
     ) => {
-      log('Subscribing to event:', eventType);
+      log("Subscribing to event:", eventType);
 
       // Add handler
       if (!eventHandlersRef.current.has(eventType)) {
@@ -273,12 +273,12 @@ export function useRealTimeSync(
 
       // Send subscription to server
       if (socketRef.current?.connected) {
-        socketRef.current.emit('subscribe', subscriptionKey);
+        socketRef.current.emit("subscribe", subscriptionKey);
       }
 
       // Return unsubscribe function
       return () => {
-        log('Unsubscribing from event:', eventType);
+        log("Unsubscribing from event:", eventType);
 
         const handlers = eventHandlersRef.current.get(eventType);
         if (handlers) {
@@ -291,11 +291,11 @@ export function useRealTimeSync(
         subscriptionsRef.current.delete(subscriptionKey);
 
         if (socketRef.current?.connected) {
-          socketRef.current.emit('unsubscribe', subscriptionKey);
+          socketRef.current.emit("unsubscribe", subscriptionKey);
         }
       };
     },
-    [log, currentTenant, user]
+    [log, currentTenant, user],
   );
 
   // Emit event to server
@@ -305,10 +305,10 @@ export function useRealTimeSync(
       data: unknown,
       options: { broadcast?: boolean; tenantOnly?: boolean } = {
         // Implementation pending
-      }
+      },
     ) => {
       if (!socketRef.current?.connected) {
-        log('Cannot emit: Not connected');
+        log("Cannot emit: Not connected");
         return false;
       }
 
@@ -320,11 +320,11 @@ export function useRealTimeSync(
         userId: user?.id,
       };
 
-      log('Emitting event:', event);
-      socketRef.current.emit('event', event, options);
+      log("Emitting event:", event);
+      socketRef.current.emit("event", event, options);
       return true;
     },
-    [log, currentTenant, user]
+    [log, currentTenant, user],
   );
 
   // Auto-connect on mount
@@ -341,7 +341,7 @@ export function useRealTimeSync(
   // Reconnect when tenant changes
   useEffect(() => {
     if (socketRef.current?.connected && currentTenant) {
-      log('Tenant changed, updating connection');
+      log("Tenant changed, updating connection");
       disconnect();
       setTimeout(connect, 100); // Brief delay to ensure clean disconnect
     }
@@ -375,7 +375,7 @@ export function useRealTimeEvent(
   },
   syncOptions: RealTimeSyncOptions = {
     // Implementation pending
-  }
+  },
 ) {
   const { subscribe } = useRealTimeSync(syncOptions);
 
@@ -393,7 +393,7 @@ export function useRealTimeData<T>(
     syncOptions?: RealTimeSyncOptions;
   } = {
     // Implementation pending
-  }
+  },
 ) {
   const [data, setData] = useState<T>(initialData);
   const [isStale, setIsStale] = useState(false);
@@ -431,7 +431,7 @@ export function useRealTimeData<T>(
       });
       setIsStale(true);
     },
-    [optimisticUpdates]
+    [optimisticUpdates],
   );
 
   // Rollback optimistic update
@@ -444,7 +444,7 @@ export function useRealTimeData<T>(
         setIsStale(false);
       }
     },
-    [initialData]
+    [initialData],
   );
 
   return {
@@ -459,33 +459,33 @@ export function useRealTimeData<T>(
 // ISP-specific real-time event types
 export const ISP_EVENTS = {
   // Network events
-  DEVICE_STATUS_CHANGED: 'network:device:status',
-  DEVICE_METRICS_UPDATED: 'network:device:metrics',
-  NETWORK_OUTAGE: 'network:outage',
-  NETWORK_MAINTENANCE: 'network:maintenance',
+  DEVICE_STATUS_CHANGED: "network:device:status",
+  DEVICE_METRICS_UPDATED: "network:device:metrics",
+  NETWORK_OUTAGE: "network:outage",
+  NETWORK_MAINTENANCE: "network:maintenance",
 
   // Customer events
-  CUSTOMER_CREATED: 'customer:created',
-  CUSTOMER_UPDATED: 'customer:updated',
-  CUSTOMER_SERVICE_CHANGED: 'customer:service:changed',
+  CUSTOMER_CREATED: "customer:created",
+  CUSTOMER_UPDATED: "customer:updated",
+  CUSTOMER_SERVICE_CHANGED: "customer:service:changed",
 
   // Billing events
-  INVOICE_GENERATED: 'billing:invoice:generated',
-  PAYMENT_RECEIVED: 'billing:payment:received',
-  PAYMENT_FAILED: 'billing:payment:failed',
+  INVOICE_GENERATED: "billing:invoice:generated",
+  PAYMENT_RECEIVED: "billing:payment:received",
+  PAYMENT_FAILED: "billing:payment:failed",
 
   // Support events
-  TICKET_CREATED: 'support:ticket:created',
-  TICKET_UPDATED: 'support:ticket:updated',
-  CHAT_MESSAGE: 'support:chat:message',
+  TICKET_CREATED: "support:ticket:created",
+  TICKET_UPDATED: "support:ticket:updated",
+  CHAT_MESSAGE: "support:chat:message",
 
   // System events
-  USER_LOGIN: 'system:user:login',
-  USER_LOGOUT: 'system:user:logout',
-  TENANT_UPDATED: 'system:tenant:updated',
+  USER_LOGIN: "system:user:login",
+  USER_LOGOUT: "system:user:logout",
+  TENANT_UPDATED: "system:tenant:updated",
 
   // Alerts
-  CRITICAL_ALERT: 'alert:critical',
-  WARNING_ALERT: 'alert:warning',
-  INFO_ALERT: 'alert:info',
+  CRITICAL_ALERT: "alert:critical",
+  WARNING_ALERT: "alert:warning",
+  INFO_ALERT: "alert:info",
 } as const;

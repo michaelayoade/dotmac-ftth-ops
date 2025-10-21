@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Confirmation - {{ company_name }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .success-box {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .amount {
+            font-size: 36px;
+            font-weight: 700;
+            color: #059669;
+            margin: 15px 0;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .info-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .info-table td:first-child {
+            font-weight: 600;
+            color: #6b7280;
+            width: 40%;
+        }
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .invoice-table th {
+            background: #f3f4f6;
+            padding: 12px;
+            text-align: left;
+            color: #374151;
+            font-weight: 600;
+            border-bottom: 2px solid #d1d5db;
+        }
+        .invoice-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .invoice-table tr.total td {
+            font-weight: 700;
+            font-size: 18px;
+            border-top: 2px solid #d1d5db;
+            padding-top: 15px;
+        }
+        .button {
+            display: inline-block;
+            background: #10b981;
+            color: #ffffff;
+            padding: 14px 30px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background: #059669;
+        }
+        .button-secondary {
+            background: #6b7280;
+        }
+        .button-secondary:hover {
+            background: #4b5563;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #10b981;
+            text-decoration: none;
+        }
+        .payment-method {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+        }
+        .payment-method-icon {
+            width: 50px;
+            height: 50px;
+            background: #e5e7eb;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✓ Payment Received</h1>
+        </div>
+
+        <div class="content">
+            <h2>Hi {{ customer_name }},</h2>
+
+            <p>Thank you for your payment! This email confirms that we have successfully received your payment.</p>
+
+            <div class="success-box">
+                <div class="success-icon">✅</div>
+                <h3 style="margin: 10px 0;">Payment Successful</h3>
+                <div class="amount">{{ currency_symbol }}{{ amount }}</div>
+                <p style="margin-bottom: 0; font-size: 14px; color: #065f46;">
+                    Payment ID: {{ payment_id }}
+                </p>
+            </div>
+
+            <h3>Payment Details</h3>
+            <table class="info-table">
+                <tr>
+                    <td>Payment Date</td>
+                    <td>{{ payment_date }}</td>
+                </tr>
+                <tr>
+                    <td>Transaction ID</td>
+                    <td><code>{{ transaction_id }}</code></td>
+                </tr>
+                <tr>
+                    <td>Payment Method</td>
+                    <td>{{ payment_method }}</td>
+                </tr>
+                <tr>
+                    <td>Amount Paid</td>
+                    <td><strong>{{ currency_symbol }}{{ amount }}</strong></td>
+                </tr>
+                <tr>
+                    <td>Invoice Number</td>
+                    <td>{{ invoice_number }}</td>
+                </tr>
+                <tr>
+                    <td>Account Number</td>
+                    <td>{{ account_number }}</td>
+                </tr>
+            </table>
+
+            {% if payment_method_details %}
+            <div class="payment-method">
+                <div class="payment-method-icon">💳</div>
+                <div>
+                    <strong>{{ payment_method_details.type }}</strong><br>
+                    <small style="color: #6b7280;">
+                        {% if payment_method_details.last4 %}
+                        •••• {{ payment_method_details.last4 }}
+                        {% endif %}
+                        {% if payment_method_details.bank_name %}
+                        {{ payment_method_details.bank_name }}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+
+            <h3>Invoice Summary</h3>
+            <table class="invoice-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th style="text-align: right;">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in invoice_items %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.description }}</strong><br>
+                            <small style="color: #6b7280;">{{ item.period }}</small>
+                        </td>
+                        <td style="text-align: right;">{{ currency_symbol }}{{ item.amount }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if tax_amount and tax_amount > 0 %}
+                    <tr>
+                        <td>Tax ({{ tax_rate }}%)</td>
+                        <td style="text-align: right;">{{ currency_symbol }}{{ tax_amount }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr class="total">
+                        <td>Total Paid</td>
+                        <td style="text-align: right;">{{ currency_symbol }}{{ amount }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <center>
+                <a href="{{ receipt_url }}" class="button">Download Receipt</a>
+                <a href="{{ invoice_url }}" class="button button-secondary">View Invoice</a>
+            </center>
+
+            {% if next_payment_date %}
+            <div style="background: #eff6ff; padding: 20px; border-radius: 8px; border-left: 4px solid #3b82f6; margin: 25px 0;">
+                <h3 style="margin-top: 0; color: #1e40af;">📅 Next Payment</h3>
+                <p>Your next payment of <strong>{{ currency_symbol }}{{ next_payment_amount }}</strong> will be due on <strong>{{ next_payment_date }}</strong>.</p>
+                {% if auto_pay_enabled %}
+                <p style="margin-bottom: 0;">✅ <strong>AutoPay is enabled</strong> - We'll automatically charge your {{ payment_method }} on file.</p>
+                {% else %}
+                <p style="margin-bottom: 0;">💡 <strong>Tip:</strong> Enable AutoPay to ensure uninterrupted service. <a href="{{ autopay_url }}">Set up AutoPay</a></p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <h3>Account Status</h3>
+            <table class="info-table">
+                <tr>
+                    <td>Current Balance</td>
+                    <td>
+                        {% if outstanding_balance > 0 %}
+                        <span style="color: #dc2626;">{{ currency_symbol }}{{ outstanding_balance }}</span>
+                        {% else %}
+                        <span style="color: #059669;">{{ currency_symbol }}0.00 - Paid in Full</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>Service Status</td>
+                    <td><span style="color: #059669; font-weight: 600;">✓ Active</span></td>
+                </tr>
+                {% if credit_available and credit_available > 0 %}
+                <tr>
+                    <td>Account Credit</td>
+                    <td>{{ currency_symbol }}{{ credit_available }}</td>
+                </tr>
+                {% endif %}
+            </table>
+
+            <h3>Payment Breakdown</h3>
+            <ul>
+                {% for item in invoice_items %}
+                <li><strong>{{ item.description }}</strong> ({{ item.period }}): {{ currency_symbol }}{{ item.amount }}</li>
+                {% endfor %}
+                {% if tax_amount and tax_amount > 0 %}
+                <li><strong>Tax</strong>: {{ currency_symbol }}{{ tax_amount }}</li>
+                {% endif %}
+            </ul>
+
+            <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                <h3 style="margin-top: 0;">📊 Billing & Account Management</h3>
+                <p>Manage your billing preferences and view payment history:</p>
+                <ul style="margin-bottom: 0;">
+                    <li><a href="{{ portal_url }}/billing">View Billing History</a></li>
+                    <li><a href="{{ portal_url }}/invoices">Download Past Invoices</a></li>
+                    <li><a href="{{ portal_url }}/payment-methods">Update Payment Methods</a></li>
+                    <li><a href="{{ portal_url }}/billing/autopay">Manage AutoPay Settings</a></li>
+                </ul>
+            </div>
+
+            {% if loyalty_points or referral_credit %}
+            <div style="background: #fef3c7; padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                <h3 style="margin-top: 0; color: #92400e;">🎁 Rewards & Credits</h3>
+                {% if loyalty_points %}
+                <p>You earned <strong>{{ loyalty_points }} loyalty points</strong> with this payment!</p>
+                {% endif %}
+                {% if referral_credit %}
+                <p>You have <strong>{{ currency_symbol }}{{ referral_credit }} in referral credits</strong> available. <a href="{{ portal_url }}/referrals">Learn more</a></p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                <strong>Questions About This Payment?</strong><br>
+                Our billing team is here to help:<br><br>
+                📞 Phone: {{ support_phone }}<br>
+                📧 Email: <a href="mailto:{{ billing_email }}">{{ billing_email }}</a><br>
+                💬 Live Chat: <a href="{{ portal_url }}/support">Available in your portal</a><br><br>
+                <small style="color: #15803d;">Please reference transaction ID <strong>{{ transaction_id }}</strong> when contacting us.</small>
+            </div>
+
+            <p>Thank you for being a valued {{ company_name }} customer!</p>
+
+            <p>Best regards,<br>
+            <strong>The {{ company_name }} Billing Team</strong></p>
+        </div>
+
+        <div class="footer">
+            <p>{{ company_name }} | {{ company_address }}</p>
+            <p>
+                <a href="{{ receipt_url }}">Download Receipt</a> |
+                <a href="{{ portal_url }}/billing">Billing Dashboard</a> |
+                <a href="{{ support_url }}">Support</a>
+            </p>
+            <p>© {{ current_year }} {{ company_name }}. All rights reserved.</p>
+            <p style="margin-top: 15px; font-size: 12px; color: #9ca3af;">
+                This is an automated receipt for your payment. Please save this for your records.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

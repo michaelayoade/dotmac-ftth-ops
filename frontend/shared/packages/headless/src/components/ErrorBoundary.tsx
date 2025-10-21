@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { type ErrorInfo, type ReactNode } from 'react';
+import React, { type ErrorInfo, type ReactNode } from "react";
 
-import { useErrorBoundary } from '../hooks/useErrorHandler';
+import { useErrorBoundary } from "../hooks/useErrorHandler";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -103,48 +103,48 @@ interface DefaultErrorFallbackProps {
 }
 
 function DefaultErrorFallback({ error, errorInfo, resetError }: DefaultErrorFallbackProps) {
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isDevelopment = process.env.NODE_ENV === "development";
 
   return (
-    <div className='flex min-h-screen flex-col justify-center bg-gray-50 py-12 sm:px-6 lg:px-8'>
-      <div className='sm:mx-auto sm:w-full sm:max-w-md'>
-        <div className='bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10'>
-          <div className='text-center' role='alert'>
-            <div className='mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100'>
+    <div className="flex min-h-screen flex-col justify-center bg-gray-50 py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white px-4 py-8 shadow sm:rounded-lg sm:px-10">
+          <div className="text-center" role="alert">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
               <svg
-                aria-label='icon'
-                className='h-6 w-6 text-red-600'
-                fill='none'
-                viewBox='0 0 24 24'
-                strokeWidth='1.5'
-                stroke='currentColor'
+                aria-label="icon"
+                className="h-6 w-6 text-red-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="1.5"
+                stroke="currentColor"
               >
                 <title>Icon</title>
                 <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  d='M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z'
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
                 />
               </svg>
             </div>
 
-            <h2 className='mt-4 font-medium text-gray-900 text-lg'>Something went wrong</h2>
+            <h2 className="mt-4 font-medium text-gray-900 text-lg">Something went wrong</h2>
 
-            <p className='mt-2 text-gray-600 text-sm'>
+            <p className="mt-2 text-gray-600 text-sm">
               We encountered an error while loading this page. Please try again or contact support
               if the problem persists.
             </p>
 
             {isDevelopment ? (
-              <details className='mt-4 text-left'>
-                <summary className='cursor-pointer font-medium text-gray-700 text-sm hover:text-gray-900'>
+              <details className="mt-4 text-left">
+                <summary className="cursor-pointer font-medium text-gray-700 text-sm hover:text-gray-900">
                   Error Details (Development)
                 </summary>
-                <div className='mt-2 whitespace-pre-wrap rounded bg-gray-100 p-3 font-mono text-gray-800 text-xs'>
-                  <div className='mb-2'>
+                <div className="mt-2 whitespace-pre-wrap rounded bg-gray-100 p-3 font-mono text-gray-800 text-xs">
+                  <div className="mb-2">
                     <strong>Error:</strong> {error.message}
                   </div>
-                  <div className='mb-2'>
+                  <div className="mb-2">
                     <strong>Stack:</strong> {error.stack}
                   </div>
                   {errorInfo ? (
@@ -156,20 +156,20 @@ function DefaultErrorFallback({ error, errorInfo, resetError }: DefaultErrorFall
               </details>
             ) : null}
 
-            <div className='mt-6 flex flex-col space-y-3'>
+            <div className="mt-6 flex flex-col space-y-3">
               <button
-                type='button'
+                type="button"
                 onClick={resetError}
-                onKeyDown={(e) => e.key === 'Enter' && resetError}
-                className='flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 font-medium text-sm text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                onKeyDown={(e) => e.key === "Enter" && resetError}
+                className="flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 font-medium text-sm text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 Try Again
               </button>
 
               <button
-                type='button'
+                type="button"
                 onClick={() => window.location.reload()}
-                className='flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                className="flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 text-sm shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 Reload Page
               </button>
@@ -189,7 +189,7 @@ export function useErrorBoundaryHook() {
 // Higher-order component wrapper
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
+  errorBoundaryProps?: Omit<ErrorBoundaryProps, "children">,
 ) {
   const WrappedComponent = (props: P) => {
     return (

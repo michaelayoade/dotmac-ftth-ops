@@ -1,0 +1,249 @@
+groups:
+  - name: error_tracking
+    interval: 30s
+    rules:
+      # High Error Rate Alert
+      - alert: HighErrorRate
+        expr: sum(rate(dotmac_http_errors_total[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          category: errors
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors/sec (threshold: 10)"
+
+      # Critical Error Rate Alert
+      - alert: CriticalErrorRate
+        expr: sum(rate(dotmac_http_errors_total[5m])) > 50
+        for: 2m
+        labels:
+          severity: critical
+          category: errors
+        annotations:
+          summary: "CRITICAL: Very high error rate"
+          description: "Error rate is {{ $value }} errors/sec (threshold: 50)"
+
+      # High 5xx Error Rate
+      - alert: High5xxErrors
+        expr: sum(rate(dotmac_http_5xx_errors_total[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          category: errors
+        annotations:
+          summary: "High 5xx error rate"
+          description: "5xx error rate is {{ $value }} errors/sec (threshold: 5)"
+
+      # Critical 5xx Errors
+      - alert: Critical5xxErrors
+        expr: sum(rate(dotmac_http_5xx_errors_total[5m])) > 20
+        for: 2m
+        labels:
+          severity: critical
+          category: errors
+        annotations:
+          summary: "CRITICAL: Very high 5xx error rate"
+          description: "5xx error rate is {{ $value }} errors/sec (threshold: 20)"
+
+      # Database Connection Failures
+      - alert: DatabaseConnectionFailures
+        expr: sum(rate(dotmac_database_connection_failures_total[5m])) > 1
+        for: 2m
+        labels:
+          severity: critical
+          category: database
+        annotations:
+          summary: "Database connection failures detected"
+          description: "Database is experiencing {{ $value }} connection failures/sec"
+
+      # Database Query Timeouts
+      - alert: HighDatabaseQueryTimeouts
+        expr: sum(rate(dotmac_database_query_timeouts_total[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          category: database
+        annotations:
+          summary: "High database query timeout rate"
+          description: "Query timeouts: {{ $value }}/sec (threshold: 5)"
+
+      # Authentication Failures Spike
+      - alert: AuthenticationFailureSpike
+        expr: sum(rate(dotmac_auth_failures_total[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "Spike in authentication failures"
+          description: "Auth failures: {{ $value }}/sec (threshold: 10) - possible attack"
+
+      # Critical Authentication Failures
+      - alert: CriticalAuthFailures
+        expr: sum(rate(dotmac_auth_failures_total[5m])) > 50
+        for: 2m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "CRITICAL: Very high authentication failure rate"
+          description: "Auth failures: {{ $value }}/sec - likely under attack"
+
+      # Rate Limit Violations
+      - alert: HighRateLimitViolations
+        expr: sum(rate(dotmac_rate_limit_exceeded_total[5m])) > 10
+        for: 10m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "High rate limit violations"
+          description: "Rate limit violations: {{ $value }}/sec (threshold: 10)"
+
+      # External API Errors
+      - alert: ExternalAPIErrors
+        expr: sum(rate(dotmac_external_api_errors_total[5m])) by (service) > 2
+        for: 5m
+        labels:
+          severity: warning
+          category: integrations
+        annotations:
+          summary: "External API errors for {{ $labels.service }}"
+          description: "{{ $labels.service }} errors: {{ $value }}/sec (threshold: 2)"
+
+      # Redis Errors
+      - alert: RedisErrors
+        expr: sum(rate(dotmac_redis_errors_total[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          category: infrastructure
+        annotations:
+          summary: "Redis errors detected"
+          description: "Redis error rate: {{ $value }}/sec (threshold: 5)"
+
+      # MinIO/S3 Errors
+      - alert: MinIOErrors
+        expr: sum(rate(dotmac_minio_errors_total[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          category: infrastructure
+        annotations:
+          summary: "MinIO/S3 errors detected"
+          description: "MinIO error rate: {{ $value }}/sec (threshold: 5)"
+
+      # Exception Spike by Type
+      - alert: ExceptionSpike
+        expr: sum(rate(dotmac_exceptions_total[5m])) by (exception_type) > 2
+        for: 5m
+        labels:
+          severity: warning
+          category: exceptions
+        annotations:
+          summary: "Exception spike: {{ $labels.exception_type }}"
+          description: "{{ $labels.exception_type }} rate: {{ $value }}/sec (threshold: 2)"
+
+      # Tenant-Specific High Error Rate
+      - alert: TenantHighErrorRate
+        expr: sum(rate(dotmac_http_errors_total[5m])) by (tenant_id) > 5
+        for: 10m
+        labels:
+          severity: warning
+          category: tenant
+        annotations:
+          summary: "High error rate for tenant {{ $labels.tenant_id }}"
+          description: "Tenant {{ $labels.tenant_id }} error rate: {{ $value }}/sec"
+
+      # Endpoint-Specific High Error Rate
+      - alert: EndpointHighErrorRate
+        expr: sum(rate(dotmac_http_errors_total[5m])) by (endpoint) > 5
+        for: 10m
+        labels:
+          severity: warning
+          category: endpoint
+        annotations:
+          summary: "High error rate for endpoint {{ $labels.endpoint }}"
+          description: "Endpoint {{ $labels.endpoint }} error rate: {{ $value }}/sec"
+
+      # Error Rate Anomaly Detection
+      - alert: ErrorRateAnomaly
+        expr: |
+          (
+            sum(rate(dotmac_http_errors_total[5m]))
+            /
+            (sum(rate(dotmac_http_errors_total[5m] offset 1h)) + 1)
+          ) > 3
+        for: 10m
+        labels:
+          severity: warning
+          category: anomaly
+        annotations:
+          summary: "Error rate anomaly detected"
+          description: "Error rate is 3x higher than 1 hour ago"
+
+      # No Data Received (Possible Service Down)
+      - alert: NoErrorMetrics
+        expr: absent(dotmac_http_errors_total)
+        for: 5m
+        labels:
+          severity: critical
+          category: availability
+        annotations:
+          summary: "No error metrics received"
+          description: "Error metrics not being reported - service may be down"
+
+  - name: error_recovery
+    interval: 1m
+    rules:
+      # Error Rate Recovering
+      - alert: ErrorRateRecovered
+        expr: sum(rate(dotmac_http_errors_total[5m])) < 1
+        for: 10m
+        labels:
+          severity: info
+          category: recovery
+        annotations:
+          summary: "Error rate has recovered"
+          description: "Error rate is back to normal (< 1/sec)"
+
+      # Database Errors Resolved
+      - alert: DatabaseErrorsResolved
+        expr: sum(rate(dotmac_database_errors_total[5m])) == 0
+        for: 15m
+        labels:
+          severity: info
+          category: recovery
+        annotations:
+          summary: "Database errors resolved"
+          description: "No database errors for 15 minutes"
+
+  - name: error_trends
+    interval: 5m
+    rules:
+      # Error Rate Trend (Increasing)
+      - record: dotmac:error_rate_trend:5m
+        expr: |
+          (
+            sum(rate(dotmac_http_errors_total[5m]))
+            -
+            sum(rate(dotmac_http_errors_total[5m] offset 5m))
+          )
+
+      # 5xx Error Percentage
+      - record: dotmac:error_5xx_percentage:5m
+        expr: |
+          (
+            sum(rate(dotmac_http_5xx_errors_total[5m]))
+            /
+            (sum(rate(dotmac_http_errors_total[5m])) + 1)
+          ) * 100
+
+      # Exception Rate by Module
+      - record: dotmac:exception_rate_by_module:5m
+        expr: sum(rate(dotmac_exceptions_total[5m])) by (module)
+
+      # Top Error Endpoints
+      - record: dotmac:top_error_endpoints:5m
+        expr: topk(10, sum(rate(dotmac_http_errors_total[5m])) by (endpoint))

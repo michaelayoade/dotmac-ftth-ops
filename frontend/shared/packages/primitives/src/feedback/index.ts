@@ -14,24 +14,24 @@ export {
   ToastProvider,
   ToastTitle,
   ToastViewport,
-} from './Feedback';
+} from "./Feedback";
 
 // Export all from NotificationSystem including its version of useToast
-export * from './NotificationSystem';
+export * from "./NotificationSystem";
 
 // Explicitly export NotificationProvider for clarity
-export { NotificationProvider } from './NotificationSystem';
+export { NotificationProvider } from "./NotificationSystem";
 
 // Check if Modal exists in layout and create alias
-export { Modal as ConfirmationModal } from '../layout';
+export { Modal as ConfirmationModal } from "../layout";
 
 // Additional aliases for backward compatibility
-export { Sidebar as Drawer } from '../navigation';
-export { Modal as FormModal } from '../layout';
-export { Modal as ModalClose } from '../layout';
-export { Modal as ModalOverlay } from '../layout';
-export { Modal as ModalPortal } from '../layout';
-export { Modal as ModalProvider } from '../layout';
+export { Sidebar as Drawer } from "../navigation";
+export { Modal as FormModal } from "../layout";
+export { Modal as ModalClose } from "../layout";
+export { Modal as ModalOverlay } from "../layout";
+export { Modal as ModalPortal } from "../layout";
+export { Modal as ModalProvider } from "../layout";
 
 // Export client-side hooks from separate file
-export { useModal, useModalContext } from './hooks';
+export { useModal, useModalContext } from "./hooks";

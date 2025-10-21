@@ -3,6 +3,6 @@
  */
 
 module.exports = {
-  'no-cross-portal-imports': require('./no-cross-portal-imports'),
-  'require-component-registration': require('./require-component-registration'),
+  "no-cross-portal-imports": require("./no-cross-portal-imports"),
+  "require-component-registration": require("./require-component-registration"),
 };

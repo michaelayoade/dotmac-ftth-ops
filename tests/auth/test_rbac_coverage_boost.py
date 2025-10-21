@@ -171,7 +171,7 @@ class TestRoleExpiration:
         user_id = uuid4()
 
         # Create role
-        role = await rbac_service.create_role(
+        await rbac_service.create_role(
             name="temp_role",
             display_name="Temporary Role",
             permissions=["ticket.read"],
@@ -202,7 +202,7 @@ class TestRoleExpiration:
         user_id = uuid4()
 
         # Create role
-        role = await rbac_service.create_role(
+        await rbac_service.create_role(
             name="expired_role",
             display_name="Expired Role",
             permissions=["ticket.write"],
@@ -239,7 +239,7 @@ class TestPermissionRevocation:
         user_id = uuid4()
 
         # Create role with permission
-        role = await rbac_service.create_role(
+        await rbac_service.create_role(
             name="reader",
             display_name="Reader",
             permissions=["ticket.read"],
@@ -615,7 +615,7 @@ class TestServiceEdgeCases:
         user_id = uuid4()
 
         # Create role but don't assign it
-        role = await rbac_service.create_role(
+        await rbac_service.create_role(
             name="never_assigned", display_name="Never Assigned", permissions=[]
         )
         await async_db_session.commit()

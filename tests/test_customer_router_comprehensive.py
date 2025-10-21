@@ -689,7 +689,7 @@ class TestCustomerActivitiesEndpoints:
         with patch(
             "dotmac.platform.customer_management.schemas.CustomerActivityResponse.model_validate"
         ):
-            result = await get_customer_activities(
+            await get_customer_activities(
                 customer_id, mock_service, mock_current_user, limit=25, offset=10
             )
 
@@ -824,7 +824,7 @@ class TestCustomerNotesEndpoints:
         with patch(
             "dotmac.platform.customer_management.schemas.CustomerNoteResponse.model_validate"
         ):
-            result = await get_customer_notes(
+            await get_customer_notes(
                 customer_id,
                 mock_service,
                 mock_current_user,

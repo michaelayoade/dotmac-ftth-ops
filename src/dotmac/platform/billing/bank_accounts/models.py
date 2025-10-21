@@ -109,7 +109,7 @@ class CompanyBankAccountUpdate(BaseModel):
     notes: str | None = None
 
 
-class CompanyBankAccountResponse(BillingBaseModel):
+class CompanyBankAccountResponse(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resolves to Any in isolation
     """Company bank account response"""
 
     id: int
@@ -139,7 +139,7 @@ class CompanyBankAccountResponse(BillingBaseModel):
     updated_at: datetime
 
     notes: str | None
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 class ManualPaymentBase(BaseModel):
@@ -206,7 +206,7 @@ class MobileMoneyCreate(ManualPaymentBase):
     mobile_provider: str = Field(..., max_length=50, description="Provider (M-Pesa, etc.)")
 
 
-class ManualPaymentResponse(BillingBaseModel):
+class ManualPaymentResponse(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resolves to Any in isolation
     """Manual payment response"""
 
     id: int
@@ -243,7 +243,7 @@ class ManualPaymentResponse(BillingBaseModel):
 
     notes: str | None
     receipt_url: str | None
-    attachments: list[str] = Field(default_factory=list)
+    attachments: list[str] = Field(default_factory=lambda: [])
 
     recorded_by: str
     approved_by: str | None
@@ -251,7 +251,7 @@ class ManualPaymentResponse(BillingBaseModel):
 
     created_at: datetime
     updated_at: datetime
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 class ReconcilePaymentRequest(BaseModel):
@@ -311,7 +311,7 @@ class CashRegisterResponse(BaseModel):
 
     created_at: datetime
     updated_at: datetime
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 class CashTransactionCreate(BaseModel):
@@ -324,7 +324,7 @@ class CashTransactionCreate(BaseModel):
     amount: float = Field(..., ge=0, description="Transaction amount")
     reference: str | None = Field(None, description="Transaction reference")
     description: str | None = Field(None, description="Transaction description")
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 class CashTransactionResponse(BaseModel):
@@ -341,7 +341,7 @@ class CashTransactionResponse(BaseModel):
     balance_after: float
     created_at: datetime
     created_by: str
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 class CashRegisterReconciliationCreate(BaseModel):
@@ -353,7 +353,7 @@ class CashRegisterReconciliationCreate(BaseModel):
     reconciliation_date: datetime | None = Field(None, description="Reconciliation date")
     shift_id: str | None = Field(None, description="Shift identifier")
     notes: str | None = Field(None, description="Reconciliation notes")
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 class CashRegisterReconciliationResponse(BaseModel):
@@ -373,7 +373,7 @@ class CashRegisterReconciliationResponse(BaseModel):
     notes: str | None
     shift_id: str | None
     created_at: datetime
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
 class ReconciliationCreate(BaseModel):
@@ -424,7 +424,7 @@ class ReconciliationResponse(BaseModel):
     notes: str | None
     statement_file_url: str | None
 
-    reconciled_items: list[dict] = Field(default_factory=list)
+    reconciled_items: list[dict[str, Any]] = Field(default_factory=lambda: [])
     created_at: datetime
     updated_at: datetime
 

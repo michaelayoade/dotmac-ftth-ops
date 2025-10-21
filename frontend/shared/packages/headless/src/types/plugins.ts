@@ -9,7 +9,7 @@ export interface PluginCatalogItem {
   description: string;
   version: string;
   author: string;
-  category: 'billing' | 'networking' | 'analytics' | 'crm' | 'integration' | 'security' | 'other';
+  category: "billing" | "networking" | "analytics" | "crm" | "integration" | "security" | "other";
   tags: string[];
   icon?: string;
   screenshots: string[];
@@ -18,7 +18,7 @@ export interface PluginCatalogItem {
   homepage?: string;
   license: string;
   pricing: {
-    type: 'free' | 'paid' | 'freemium';
+    type: "free" | "paid" | "freemium";
     tiers?: {
       name: string;
       price: number;
@@ -54,7 +54,7 @@ export interface PluginCatalogItem {
 export interface PluginInstallationRequest {
   plugin_id: string;
   version?: string;
-  license_tier: 'trial' | 'basic' | 'professional' | 'enterprise';
+  license_tier: "trial" | "basic" | "professional" | "enterprise";
   configuration?: Record<string, any>;
   auto_enable?: boolean;
 }
@@ -62,7 +62,7 @@ export interface PluginInstallationRequest {
 export interface PluginInstallationResponse {
   installation_id: string;
   plugin_id: string;
-  status: 'pending' | 'installing' | 'configuring' | 'completed' | 'failed';
+  status: "pending" | "installing" | "configuring" | "completed" | "failed";
   progress: number;
   message: string;
   estimated_completion?: string;
@@ -73,7 +73,7 @@ export interface InstalledPlugin {
   installation_id: string;
   plugin: PluginCatalogItem;
   version: string;
-  status: 'active' | 'inactive' | 'disabled' | 'error';
+  status: "active" | "inactive" | "disabled" | "error";
   installed_at: string;
   last_updated: string;
   configuration: Record<string, any>;
@@ -90,10 +90,10 @@ export interface InstalledPlugin {
     last_activity: string;
   };
   health: {
-    status: 'healthy' | 'warning' | 'critical';
+    status: "healthy" | "warning" | "critical";
     last_check: string;
     issues: Array<{
-      type: 'error' | 'warning' | 'info';
+      type: "error" | "warning" | "info";
       message: string;
       timestamp: string;
     }>;
@@ -103,7 +103,7 @@ export interface InstalledPlugin {
 export interface PluginUpdateInfo {
   current_version: string;
   available_version: string;
-  update_type: 'major' | 'minor' | 'patch';
+  update_type: "major" | "minor" | "patch";
   breaking_changes: boolean;
   changelog: string;
   required_permissions: {
@@ -119,13 +119,13 @@ export interface PluginUpdateInfo {
 export interface PluginMarketplaceFilters {
   category?: string[];
   tags?: string[];
-  license_type?: ('free' | 'paid' | 'freemium')[];
+  license_type?: ("free" | "paid" | "freemium")[];
   compatibility?: boolean;
   verified_only?: boolean;
   min_rating?: number;
   search?: string;
-  sort_by?: 'relevance' | 'rating' | 'downloads' | 'updated' | 'name';
-  sort_order?: 'asc' | 'desc';
+  sort_by?: "relevance" | "rating" | "downloads" | "updated" | "name";
+  sort_order?: "asc" | "desc";
 }
 
 export interface PluginPermissionRequest {
@@ -148,5 +148,5 @@ export interface PluginBackup {
   configuration: Record<string, any>;
   created_at: string;
   size: number;
-  type: 'manual' | 'automatic' | 'pre_update';
+  type: "manual" | "automatic" | "pre_update";
 }

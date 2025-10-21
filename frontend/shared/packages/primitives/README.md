@@ -26,29 +26,29 @@ pnpm add @dotmac/primitives
 ## 🚀 Quick Start
 
 ```tsx
-import { Button, Form, useForm } from '@dotmac/primitives';
+import { Button, Form, useForm } from "@dotmac/primitives";
 
 function LoginForm() {
   const form = useForm<{ email: string; password: string }>();
 
   return (
     <Form form={form} onSubmit={(data) => console.log(data)}>
-      <FormField name='email'>
+      <FormField name="email">
         {({ value, onChange, error }) => (
           <FormItem>
             <FormLabel required>Email</FormLabel>
             <Input
-              type='email'
+              type="email"
               value={value}
               onChange={onChange}
-              state={error ? 'error' : 'default'}
+              state={error ? "error" : "default"}
             />
             {error && <FormMessage>{error}</FormMessage>}
           </FormItem>
         )}
       </FormField>
 
-      <Button type='submit'>Sign In</Button>
+      <Button type="submit">Sign In</Button>
     </Form>
   );
 }
@@ -91,26 +91,26 @@ import { Table, Chart, MetricCard } from '@dotmac/primitives';
 Comprehensive form system with React Hook Form integration.
 
 ```tsx
-import { Form, Input, Select, Checkbox } from '@dotmac/primitives';
+import { Form, Input, Select, Checkbox } from "@dotmac/primitives";
 
-<Form form={form} layout='vertical' onSubmit={handleSubmit}>
-  <FormField name='plan'>
+<Form form={form} layout="vertical" onSubmit={handleSubmit}>
+  <FormField name="plan">
     {({ value, onChange }) => (
       <Select
         value={value}
         onValueChange={onChange}
         options={[
-          { value: 'basic', label: 'Basic Plan' },
-          { value: 'premium', label: 'Premium Plan' },
+          { value: "basic", label: "Basic Plan" },
+          { value: "premium", label: "Premium Plan" },
         ]}
       />
     )}
   </FormField>
 
   <Checkbox
-    name='newsletter'
-    label='Subscribe to newsletter'
-    description='Get updates about new features'
+    name="newsletter"
+    label="Subscribe to newsletter"
+    description="Get updates about new features"
   />
 </Form>;
 ```
@@ -234,16 +234,16 @@ import { Container, Grid, Stack, Card } from '@dotmac/primitives';
 High-density interface for power users.
 
 ```tsx
-import { Dashboard, DataTable, MetricCard } from '@dotmac/primitives';
+import { Dashboard, DataTable, MetricCard } from "@dotmac/primitives";
 
 function AdminDashboard() {
   return (
-    <Dashboard layout='sidebar-topbar' sidebar={<AdminSidebar />} topbar={<AdminTopbar />}>
-      <Grid cols={4} gap='md'>
-        <MetricCard title='Active Customers' value='2,847' />
-        <MetricCard title='Monthly Revenue' value='$124,500' />
-        <MetricCard title='Support Tickets' value='23' />
-        <MetricCard title='Network Uptime' value='99.9%' />
+    <Dashboard layout="sidebar-topbar" sidebar={<AdminSidebar />} topbar={<AdminTopbar />}>
+      <Grid cols={4} gap="md">
+        <MetricCard title="Active Customers" value="2,847" />
+        <MetricCard title="Monthly Revenue" value="$124,500" />
+        <MetricCard title="Support Tickets" value="23" />
+        <MetricCard title="Network Uptime" value="99.9%" />
       </Grid>
 
       <Card>
@@ -268,21 +268,21 @@ function AdminDashboard() {
 Clean, focused interface for end users.
 
 ```tsx
-import { Container, Card, Stack } from '@dotmac/primitives';
+import { Container, Card, Stack } from "@dotmac/primitives";
 
 function CustomerDashboard() {
   return (
-    <Container size='lg' padding='xl'>
-      <VStack gap='lg'>
+    <Container size="lg" padding="xl">
+      <VStack gap="lg">
         <Card>
           <CardHeader>
             <h1>Welcome back, John!</h1>
           </CardHeader>
           <CardContent>
             <MetricCard
-              title='Current Plan'
-              value='Premium 100Mbps'
-              subtitle='Renews on March 15, 2024'
+              title="Current Plan"
+              value="Premium 100Mbps"
+              subtitle="Renews on March 15, 2024"
             />
           </CardContent>
         </Card>
@@ -306,39 +306,39 @@ function CustomerDashboard() {
 Partner-focused interface with branding flexibility.
 
 ```tsx
-import { Navbar, Container, Grid } from '@dotmac/primitives';
+import { Navbar, Container, Grid } from "@dotmac/primitives";
 
 function ResellerDashboard() {
   return (
     <>
       <Navbar brand={<PartnerLogo />}>
         <NavigationMenu>
-          <NavigationItem href='/dashboard'>Dashboard</NavigationItem>
-          <NavigationItem href='/customers'>My Customers</NavigationItem>
-          <NavigationItem href='/commissions'>Commissions</NavigationItem>
+          <NavigationItem href="/dashboard">Dashboard</NavigationItem>
+          <NavigationItem href="/customers">My Customers</NavigationItem>
+          <NavigationItem href="/commissions">Commissions</NavigationItem>
         </NavigationMenu>
       </Navbar>
 
-      <Container size='xl' padding='lg'>
-        <Grid cols={3} gap='lg'>
+      <Container size="xl" padding="lg">
+        <Grid cols={3} gap="lg">
           <Card>
             <CardHeader>Customer Stats</CardHeader>
             <CardContent>
-              <MetricCard title='Total Customers' value='156' />
+              <MetricCard title="Total Customers" value="156" />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>Commission</CardHeader>
             <CardContent>
-              <MetricCard title='This Month' value='$2,430' />
+              <MetricCard title="This Month" value="$2,430" />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>Growth</CardHeader>
             <CardContent>
-              <MetricCard title='New Signups' value='12' trend={{ direction: 'up', value: 8.3 }} />
+              <MetricCard title="New Signups" value="12" trend={{ direction: "up", value: 8.3 }} />
             </CardContent>
           </Card>
         </Grid>
@@ -376,14 +376,14 @@ All components follow WAI-ARIA guidelines and include:
 ### Custom Validation
 
 ```tsx
-import { createValidationRules, validationPatterns } from '@dotmac/primitives';
+import { createValidationRules, validationPatterns } from "@dotmac/primitives";
 
 const emailValidation = createValidationRules({
-  required: 'Email is required',
+  required: "Email is required",
   pattern: validationPatterns.email,
 });
 
-<FormField name='email' rules={emailValidation}>
+<FormField name="email" rules={emailValidation}>
   {/* Field content */}
 </FormField>;
 ```
@@ -391,11 +391,11 @@ const emailValidation = createValidationRules({
 ### SSR-Safe Usage
 
 ```tsx
-import { useIsHydrated, useLocalStorage } from '@dotmac/primitives';
+import { useIsHydrated, useLocalStorage } from "@dotmac/primitives";
 
 function ClientOnlyFeature() {
   const isHydrated = useIsHydrated();
-  const [theme, setTheme] = useLocalStorage('theme', 'light');
+  const [theme, setTheme] = useLocalStorage("theme", "light");
 
   if (!isHydrated) {
     return <div>Loading...</div>;
@@ -457,7 +457,7 @@ Handles keyboard navigation in lists and menus.
 
 ```tsx
 const { focusedIndex, handleKeyDown } = useKeyboardNavigation(items, {
-  orientation: 'vertical',
+  orientation: "vertical",
   loop: true,
   onSelect: handleSelect,
 });

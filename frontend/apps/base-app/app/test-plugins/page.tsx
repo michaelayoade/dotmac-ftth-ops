@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useToast } from '@/components/ui/use-toast';
-import { logger } from '@/lib/logger';
-import { PluginForm } from '../dashboard/settings/plugins/components/PluginForm';
-import { PluginCard } from '../dashboard/settings/plugins/components/PluginCard';
-import { PluginHealthDashboard } from '../dashboard/settings/plugins/components/PluginHealthDashboard';
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
+import { logger } from "@/lib/logger";
+import { PluginForm } from "../dashboard/settings/plugins/components/PluginForm";
+import { PluginCard } from "../dashboard/settings/plugins/components/PluginCard";
+import { PluginHealthDashboard } from "../dashboard/settings/plugins/components/PluginHealthDashboard";
 import type {
   PluginConfig,
   PluginInstance,
   PluginHealthCheck,
   PluginTestResult,
   FieldSpec,
-} from '@/hooks/usePlugins';
+} from "@/hooks/usePlugins";
 
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:
@@ -22,12 +22,12 @@ import type {
 
 // Mock data matching our WhatsApp plugin schema
 const withDefaults = (
-  field: Omit<FieldSpec, 'validation_rules' | 'options' | 'required' | 'is_secret'> & {
+  field: Omit<FieldSpec, "validation_rules" | "options" | "required" | "is_secret"> & {
     required?: boolean;
     is_secret?: boolean;
-    validation_rules?: FieldSpec['validation_rules'];
-    options?: FieldSpec['options'];
-  }
+    validation_rules?: FieldSpec["validation_rules"];
+    options?: FieldSpec["options"];
+  },
 ): FieldSpec => ({
   required: false,
   is_secret: false,
@@ -87,7 +87,7 @@ const mockWhatsAppPlugin: PluginConfig = {
       options: [
         { value: "v18.0", label: "v18.0 (Latest)" },
         { value: "v17.0", label: "v17.0" },
-        { value: "v16.0", label: "v16.0" }
+        { value: "v16.0", label: "v16.0" },
       ],
       group: "Environment",
       order: 1,
@@ -148,7 +148,7 @@ const mockWhatsAppPlugin: PluginConfig = {
       group: "Advanced",
       order: 3,
     }),
-  ]
+  ],
 };
 
 const mockInstances: PluginInstance[] = [
@@ -159,7 +159,7 @@ const mockInstances: PluginInstance[] = [
     config_schema: mockWhatsAppPlugin,
     status: "active" as const,
     has_configuration: true,
-    last_health_check: "2024-01-20T15:30:00Z"
+    last_health_check: "2024-01-20T15:30:00Z",
   },
   {
     id: "550e8400-e29b-41d4-a716-446655440001",
@@ -168,8 +168,8 @@ const mockInstances: PluginInstance[] = [
     config_schema: mockWhatsAppPlugin,
     status: "error" as const,
     has_configuration: true,
-    last_error: "Authentication failed: Invalid API token"
-  }
+    last_error: "Authentication failed: Invalid API token",
+  },
 ];
 
 const mockHealthChecks: PluginHealthCheck[] = [
@@ -182,10 +182,10 @@ const mockHealthChecks: PluginHealthCheck[] = [
       business_name: "DotMac Corp",
       phone_number_verified: true,
       webhook_configured: true,
-      last_message_sent: "2024-01-20T15:25:00Z"
+      last_message_sent: "2024-01-20T15:25:00Z",
     },
     response_time_ms: 245,
-    timestamp: "2024-01-20T15:30:00Z"
+    timestamp: "2024-01-20T15:30:00Z",
   },
   {
     plugin_instance_id: "550e8400-e29b-41d4-a716-446655440001",
@@ -194,11 +194,11 @@ const mockHealthChecks: PluginHealthCheck[] = [
     details: {
       api_accessible: false,
       error: "Token validation failed",
-      status_code: 401
+      status_code: 401,
     },
     response_time_ms: 120,
-    timestamp: "2024-01-20T15:30:00Z"
-  }
+    timestamp: "2024-01-20T15:30:00Z",
+  },
 ];
 
 const mockAvailablePlugins: PluginConfig[] = [mockWhatsAppPlugin];
@@ -208,29 +208,32 @@ export default function TestPluginsPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [selectedPlugin, setSelectedPlugin] = useState<PluginConfig | null>(null);
-  const [view, setView] = useState<'card' | 'form' | 'health'>('card');
+  const [view, setView] = useState<"card" | "form" | "health">("card");
 
   const handleSubmit = async (data: Record<string, unknown>) => {
-    logger.info('Form submitted', { pluginData: data });
+    logger.info("Form submitted", { pluginData: data });
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setShowForm(false);
-    toast({ title: 'Success', description: `Plugin instance "${data.instance_name}" created successfully!` });
+    toast({
+      title: "Success",
+      description: `Plugin instance "${data.instance_name}" created successfully!`,
+    });
   };
 
   const handleTestConnection = async (
     instanceId: string,
-    testConfig?: Record<string, unknown>
+    testConfig?: Record<string, unknown>,
   ): Promise<PluginTestResult> => {
-    logger.info('Testing connection', { instanceId, testConfig });
+    logger.info("Testing connection", { instanceId, testConfig });
     // Simulate connection test
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     return {
       success: true,
       message: "Connection test successful! WhatsApp Business API is accessible.",
       details: {
         business_name: "Test Business",
-        api_version: testConfig?.api_version || "v18.0"
+        api_version: testConfig?.api_version || "v18.0",
       },
       timestamp: new Date().toISOString(),
       response_time_ms: 1250,
@@ -238,8 +241,8 @@ export default function TestPluginsPage() {
   };
 
   const handleRefresh = async () => {
-    logger.info('Refreshing health data');
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    logger.info("Refreshing health data");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   };
 
   return (
@@ -255,31 +258,31 @@ export default function TestPluginsPage() {
         {/* View Selector */}
         <div className="mb-6 flex items-center gap-4">
           <button
-            onClick={() => setView('card')}
+            onClick={() => setView("card")}
             className={`px-4 py-2 rounded-lg transition-colors ${
-              view === 'card'
-                ? 'bg-sky-500 text-white'
-                : 'bg-accent text-muted-foreground hover:bg-muted'
+              view === "card"
+                ? "bg-sky-500 text-white"
+                : "bg-accent text-muted-foreground hover:bg-muted"
             }`}
           >
             Plugin Card
           </button>
           <button
-            onClick={() => setView('form')}
+            onClick={() => setView("form")}
             className={`px-4 py-2 rounded-lg transition-colors ${
-              view === 'form'
-                ? 'bg-sky-500 text-white'
-                : 'bg-accent text-muted-foreground hover:bg-muted'
+              view === "form"
+                ? "bg-sky-500 text-white"
+                : "bg-accent text-muted-foreground hover:bg-muted"
             }`}
           >
             Plugin Form
           </button>
           <button
-            onClick={() => setView('health')}
+            onClick={() => setView("health")}
             className={`px-4 py-2 rounded-lg transition-colors ${
-              view === 'health'
-                ? 'bg-sky-500 text-white'
-                : 'bg-accent text-muted-foreground hover:bg-muted'
+              view === "health"
+                ? "bg-sky-500 text-white"
+                : "bg-accent text-muted-foreground hover:bg-muted"
             }`}
           >
             Health Dashboard
@@ -287,7 +290,7 @@ export default function TestPluginsPage() {
         </div>
 
         {/* Content */}
-        {view === 'card' && (
+        {view === "card" && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold">Plugin Card Component</h2>
             <div className="max-w-md">
@@ -303,7 +306,7 @@ export default function TestPluginsPage() {
           </div>
         )}
 
-        {view === 'form' && (
+        {view === "form" && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold">Plugin Form Component</h2>
             <button
@@ -315,7 +318,7 @@ export default function TestPluginsPage() {
           </div>
         )}
 
-        {view === 'health' && (
+        {view === "health" && (
           <div className="space-y-6">
             <h2 className="text-xl font-semibold">Plugin Health Dashboard</h2>
             <PluginHealthDashboard

@@ -215,7 +215,7 @@ class TestRequestTransformMiddleware:
             assert "X-Correlation-ID" in request.headers
             return Response(content="OK", status_code=200)
 
-        response = await middleware.dispatch(mock_request, call_next)
+        await middleware.dispatch(mock_request, call_next)
 
         # Middleware should not add correlation_id to state if header exists
         # Response won't have X-Correlation-ID since it's only added from state

@@ -67,7 +67,7 @@ class AuthRateLimiter {
       navigator.language,
       `${screen.width}x${screen.height}`,
       Intl.DateTimeFormat().resolvedOptions().timeZone,
-    ].join('|');
+    ].join("|");
 
     // Create a simple hash of the fingerprint
     let hash = 0;
@@ -85,7 +85,7 @@ class AuthRateLimiter {
    */
   checkRateLimit(
     endpoint: keyof RateLimitConfig,
-    customIdentifier?: string
+    customIdentifier?: string,
   ): {
     allowed: boolean;
     remainingRequests: number;
@@ -149,7 +149,7 @@ class AuthRateLimiter {
   recordAttempt(
     endpoint: keyof RateLimitConfig,
     wasSuccessful: boolean = false,
-    customIdentifier?: string
+    customIdentifier?: string,
   ): void {
     const rule = this.config[endpoint];
     const identifier = customIdentifier || this.getClientIdentifier();
@@ -197,7 +197,7 @@ class AuthRateLimiter {
    */
   getStatus(
     endpoint: keyof RateLimitConfig,
-    customIdentifier?: string
+    customIdentifier?: string,
   ): {
     remainingRequests: number;
     resetTime: number;

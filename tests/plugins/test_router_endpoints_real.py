@@ -9,9 +9,8 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
-from fastapi.testclient import TestClient
-
 from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.plugins.interfaces import NotificationProvider
@@ -19,7 +18,7 @@ from dotmac.platform.plugins.router import router as plugin_router
 
 # Mark all tests as integration - they test real router endpoints with full app
 pytestmark = pytest.mark.integration
-from dotmac.platform.plugins.schema import (
+from dotmac.platform.plugins.schema import (  # noqa: E402
     FieldSpec,
     FieldType,
     PluginConfig,

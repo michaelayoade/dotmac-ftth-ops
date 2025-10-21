@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { logger } from '@/lib/logger';
+import { useState } from "react";
+import { logger } from "@/lib/logger";
 import {
   X,
   Key,
@@ -14,8 +14,8 @@ import {
   Activity,
   AlertTriangle,
   CheckCircle,
-} from 'lucide-react';
-import { APIKey } from '@/hooks/useApiKeys';
+} from "lucide-react";
+import { APIKey } from "@/hooks/useApiKeys";
 
 interface ApiKeyDetailModalProps {
   apiKey: APIKey;
@@ -24,21 +24,16 @@ interface ApiKeyDetailModalProps {
   onRevoke: () => void;
 }
 
-export function ApiKeyDetailModal({
-  apiKey,
-  onClose,
-  onEdit,
-  onRevoke
-}: ApiKeyDetailModalProps) {
+export function ApiKeyDetailModal({ apiKey, onClose, onEdit, onRevoke }: ApiKeyDetailModalProps) {
   const [copied, setCopied] = useState(false);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -48,42 +43,45 @@ export function ApiKeyDetailModal({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      logger.error('Failed to copy to clipboard', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Failed to copy to clipboard",
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   };
 
   const getStatusColor = () => {
-    if (!apiKey.is_active) return 'text-red-400 bg-red-500/20 border-red-500/30';
+    if (!apiKey.is_active) return "text-red-400 bg-red-500/20 border-red-500/30";
 
     const now = new Date();
     const expiresAt = apiKey.expires_at ? new Date(apiKey.expires_at) : null;
 
     if (expiresAt && expiresAt < now) {
-      return 'text-red-400 bg-red-500/20 border-red-500/30';
+      return "text-red-400 bg-red-500/20 border-red-500/30";
     }
 
     if (expiresAt && expiresAt.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000) {
-      return 'text-yellow-400 bg-yellow-500/20 border-yellow-500/30';
+      return "text-yellow-400 bg-yellow-500/20 border-yellow-500/30";
     }
 
-    return 'text-green-400 bg-green-500/20 border-green-500/30';
+    return "text-green-400 bg-green-500/20 border-green-500/30";
   };
 
   const getStatusText = () => {
-    if (!apiKey.is_active) return 'Inactive';
+    if (!apiKey.is_active) return "Inactive";
 
     const now = new Date();
     const expiresAt = apiKey.expires_at ? new Date(apiKey.expires_at) : null;
 
     if (expiresAt && expiresAt < now) {
-      return 'Expired';
+      return "Expired";
     }
 
     if (expiresAt && expiresAt.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000) {
-      return 'Expiring Soon';
+      return "Expiring Soon";
     }
 
-    return 'Active';
+    return "Active";
   };
 
   const getStatusIcon = () => {
@@ -121,7 +119,9 @@ export function ApiKeyDetailModal({
               <div>
                 <h3 className="text-lg font-semibold text-white">{apiKey.name}</h3>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor()}`}>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor()}`}
+                  >
                     <StatusIcon className="h-3 w-3" />
                     {getStatusText()}
                   </span>
@@ -167,7 +167,7 @@ export function ApiKeyDetailModal({
                 className="flex items-center gap-2 px-3 py-2 bg-sky-500 hover:bg-sky-600 text-white rounded-lg transition-colors"
               >
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {copied ? 'Copied!' : 'Copy'}
+                {copied ? "Copied!" : "Copy"}
               </button>
             </div>
             <p className="text-xs text-slate-500 mt-1">
@@ -222,7 +222,7 @@ export function ApiKeyDetailModal({
                 Expires
               </h4>
               <p className="text-slate-300 text-sm">
-                {apiKey.expires_at ? formatDate(apiKey.expires_at) : 'Never'}
+                {apiKey.expires_at ? formatDate(apiKey.expires_at) : "Never"}
               </p>
             </div>
 
@@ -243,7 +243,9 @@ export function ApiKeyDetailModal({
                 <Eye className="h-4 w-4" />
                 Status
               </h4>
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor()}`}>
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor()}`}
+              >
                 <StatusIcon className="h-3 w-3" />
                 {getStatusText()}
               </span>
@@ -251,11 +253,13 @@ export function ApiKeyDetailModal({
           </div>
 
           {/* Expiration Warning */}
-          {apiKey.expires_at && (
+          {apiKey.expires_at &&
             (() => {
               const now = new Date();
               const expiresAt = new Date(apiKey.expires_at);
-              const daysUntilExpiry = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+              const daysUntilExpiry = Math.ceil(
+                (expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+              );
 
               if (daysUntilExpiry <= 0) {
                 return (
@@ -265,7 +269,8 @@ export function ApiKeyDetailModal({
                       <div>
                         <h4 className="font-medium text-red-400">API Key Expired</h4>
                         <p className="text-sm text-slate-300 mt-1">
-                          This API key expired on {formatDate(apiKey.expires_at!)}. It will no longer work for API requests.
+                          This API key expired on {formatDate(apiKey.expires_at!)}. It will no
+                          longer work for API requests.
                         </p>
                       </div>
                     </div>
@@ -279,7 +284,8 @@ export function ApiKeyDetailModal({
                       <div>
                         <h4 className="font-medium text-yellow-400">API Key Expiring Soon</h4>
                         <p className="text-sm text-slate-300 mt-1">
-                          This API key will expire in {daysUntilExpiry} day{daysUntilExpiry !== 1 ? 's' : ''} on {formatDate(apiKey.expires_at!)}.
+                          This API key will expire in {daysUntilExpiry} day
+                          {daysUntilExpiry !== 1 ? "s" : ""} on {formatDate(apiKey.expires_at!)}.
                         </p>
                       </div>
                     </div>
@@ -287,8 +293,7 @@ export function ApiKeyDetailModal({
                 );
               }
               return null;
-            })()
-          )}
+            })()}
 
           {/* Security Notice */}
           <div className="bg-slate-800 border border-slate-700 rounded-lg p-4">

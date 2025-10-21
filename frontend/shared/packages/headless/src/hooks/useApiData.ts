@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getApiClient } from '@dotmac/headless/api';
+import { getApiClient } from "@dotmac/headless/api";
 
-import { useApiErrorNotifications } from './useNotifications';
+import { useApiErrorNotifications } from "./useNotifications";
 
 interface UseApiDataOptions {
   ttl?: number;
@@ -27,7 +27,7 @@ export function useApiData<T>(
   fetcher: () => Promise<T>,
   options: UseApiDataOptions = {
     // Implementation pending
-  }
+  },
 ): UseApiDataResult<T> {
   const {
     ttl = 5 * 60 * 1000, // 5 minutes default
@@ -74,7 +74,7 @@ export function useApiData<T>(
         });
       }
     },
-    [key]
+    [key],
   );
 
   // Helper to schedule retry
@@ -85,7 +85,7 @@ export function useApiData<T>(
         fetchFn(attemptCount + 1);
       }, delay);
     },
-    [retryDelay]
+    [retryDelay],
   );
 
   // Helper to handle fallback data
@@ -138,7 +138,7 @@ export function useApiData<T>(
         // Use fallback data or set error
         if (!useFallbackData() && mountedRef.current && attemptCount === retryCount) {
           setError(apiError as Error);
-          notifyApiError(apiError, `loading ${key.replace('-', ' ')}`);
+          notifyApiError(apiError, `loading ${key.replace("-", " ")}`);
         }
       } finally {
         if (mountedRef.current) {
@@ -156,7 +156,7 @@ export function useApiData<T>(
       handleFetchSuccess,
       scheduleRetry,
       useFallbackData,
-    ]
+    ],
   );
 
   const refetch = useCallback(async () => {
@@ -194,7 +194,7 @@ export function useApiData<T>(
 
 // Specialized hooks for different data types
 export function useCustomerDashboard() {
-  return useApiData('customer-dashboard', async () => {
+  return useApiData("customer-dashboard", async () => {
     const client = getApiClient();
     const response = await client.getCustomerDashboard();
     return response.data;
@@ -202,7 +202,7 @@ export function useCustomerDashboard() {
 }
 
 export function useCustomerServices() {
-  return useApiData('customer-services', async () => {
+  return useApiData("customer-services", async () => {
     const client = getApiClient();
     const response = await client.getCustomerServices();
     return response.data;
@@ -210,7 +210,7 @@ export function useCustomerServices() {
 }
 
 export function useCustomerBilling() {
-  return useApiData('customer-billing', async () => {
+  return useApiData("customer-billing", async () => {
     const client = getApiClient();
     const response = await client.getCustomerBilling();
     return response.data;
@@ -218,7 +218,7 @@ export function useCustomerBilling() {
 }
 
 export function useCustomerUsage(period?: string) {
-  return useApiData(`customer-usage-${period || '30d'}`, async () => {
+  return useApiData(`customer-usage-${period || "30d"}`, async () => {
     const client = getApiClient();
     const response = await client.getCustomerUsage(period);
     return response.data;
@@ -226,7 +226,7 @@ export function useCustomerUsage(period?: string) {
 }
 
 export function useCustomerDocuments() {
-  return useApiData('customer-documents', async () => {
+  return useApiData("customer-documents", async () => {
     const client = getApiClient();
     const response = await client.getCustomerDocuments();
     return response.data;
@@ -234,7 +234,7 @@ export function useCustomerDocuments() {
 }
 
 export function useCustomerSupportTickets() {
-  return useApiData('customer-support-tickets', async () => {
+  return useApiData("customer-support-tickets", async () => {
     const client = getApiClient();
     const response = await client.getCustomerSupportTickets();
     return response.data;

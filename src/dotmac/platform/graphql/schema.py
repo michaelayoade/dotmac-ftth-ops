@@ -6,42 +6,108 @@ Combines all GraphQL queries and mutations into a single schema.
 
 import strawberry
 
+from dotmac.platform.graphql.mutations.orchestration import OrchestrationMutations
 from dotmac.platform.graphql.queries.analytics import AnalyticsQueries
+from dotmac.platform.graphql.queries.customer import CustomerQueries
+from dotmac.platform.graphql.queries.fiber import FiberQueries
+from dotmac.platform.graphql.queries.network import NetworkQueries
+from dotmac.platform.graphql.queries.orchestration import OrchestrationQueries
+from dotmac.platform.graphql.queries.payment import PaymentQueries
+from dotmac.platform.graphql.queries.radius import RadiusQueries
+from dotmac.platform.graphql.queries.subscription import SubscriptionQueries
+from dotmac.platform.graphql.queries.tenant import TenantQueries
+from dotmac.platform.graphql.queries.user import UserQueries
+from dotmac.platform.graphql.queries.wireless import WirelessQueries
+from dotmac.platform.graphql.subscriptions.customer import CustomerSubscriptions
+from dotmac.platform.graphql.subscriptions.network import NetworkSubscriptions
 
 
 @strawberry.type
-class Query(AnalyticsQueries):
+class Query(
+    AnalyticsQueries,  # type: ignore[misc]
+    RadiusQueries,  # type: ignore[misc]
+    CustomerQueries,  # type: ignore[misc]
+    PaymentQueries,  # type: ignore[misc]
+    SubscriptionQueries,  # type: ignore[misc]
+    TenantQueries,  # type: ignore[misc]
+    UserQueries,  # type: ignore[misc]
+    NetworkQueries,  # type: ignore[misc]
+    OrchestrationQueries,  # type: ignore[misc]
+    WirelessQueries,  # type: ignore[misc]
+    FiberQueries,  # type: ignore[misc]
+):
     """
     Root GraphQL query type.
 
     Combines all query types into a single root.
     Currently includes:
     - Analytics and metrics queries for dashboards
+    - RADIUS subscriber and session queries for ISP management
+    - Customer management queries with batched activities and notes
+    - Payment and billing queries with batched customer and invoice data
+    - Subscription management queries with customer/plan/invoice batching
+    - Tenant management queries with conditional field loading
+    - User management queries with role/permission batching
+    - Network monitoring queries with device/traffic/alert batching
+    - Orchestration workflow queries for multi-system operations
+    - Wireless infrastructure queries (access points, clients, coverage, RF analytics)
+
+    Note: Fiber infrastructure queries temporarily disabled pending database model implementation
     """
 
-    @strawberry.field(description="API version and info")
+    @strawberry.field(description="API version and info")  # type: ignore[misc]
     def version(self) -> str:
         """Get GraphQL API version."""
         return "1.0.0"
 
 
 @strawberry.type
-class Mutation:
+class Mutation(OrchestrationMutations):  # type: ignore[misc]
     """
     Root GraphQL mutation type.
 
-    Placeholder for future mutations.
-    CRUD operations should remain in REST endpoints.
+    Includes:
+    - Orchestration mutations for atomic multi-system operations
+    - Subscriber provisioning with automatic rollback
+    - Workflow management (retry, cancel)
+
+    Note: Most CRUD operations should use REST endpoints.
+    GraphQL mutations are primarily for complex orchestrated operations.
     """
 
-    @strawberry.field(description="Health check mutation")
+    @strawberry.field(description="Health check mutation")  # type: ignore[misc]
     def ping(self) -> str:
         """Simple ping mutation for testing."""
         return "pong"
+
+
+@strawberry.type
+class RealtimeSubscription(
+    CustomerSubscriptions,  # type: ignore[misc]
+    NetworkSubscriptions,  # type: ignore[misc]
+):
+    """
+    Root GraphQL subscription type for real-time updates.
+
+    Provides real-time updates via WebSocket for:
+    - Customer network status (connection, signal, performance)
+    - Device health monitoring (status, temperature, firmware)
+    - Support ticket updates (created, assigned, resolved)
+    - Customer activities (timeline updates)
+    - Customer notes (create, update, delete)
+    - Network device updates (status, metrics, health)
+    - Network alert notifications (triggered, acknowledged, resolved)
+
+    WebSocket endpoint: ws://host/graphql
+    Uses Redis pub/sub for event broadcasting.
+    """
+
+    pass
 
 
 # Create the GraphQL schema
 schema = strawberry.Schema(
     query=Query,
     mutation=Mutation,
+    subscription=RealtimeSubscription,
 )

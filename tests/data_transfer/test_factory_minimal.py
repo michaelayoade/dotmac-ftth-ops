@@ -185,7 +185,7 @@ class TestFactoryMinimal:
         importer2 = DataTransferFactory.create_importer("csv")
 
         # Should be same type
-        assert type(importer1) == type(importer2)
+        assert type(importer1) is type(importer2)
 
     def test_registry_custom_format(self):
         """Test registering custom formats in registry."""

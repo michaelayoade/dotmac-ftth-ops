@@ -26,7 +26,7 @@ from dotmac.platform.settings import settings
 async def sms_test_app(async_db_session: AsyncSession):
     """Create test app with auth router and dependency overrides."""
     app = FastAPI()
-    app.include_router(auth_router, prefix="/auth")
+    app.include_router(auth_router)
 
     async def override_get_auth_session():
         yield async_db_session

@@ -101,7 +101,7 @@ class TestRoleEndpointsDirect:
         await async_db_session.flush()
 
         rbac = RBACService(async_db_session)
-        role = await rbac.create_role(
+        await rbac.create_role(
             name="test_role", display_name="Test Role", permissions=["test.read"]
         )
         await async_db_session.commit()

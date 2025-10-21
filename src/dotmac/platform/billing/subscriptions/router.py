@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.core.rate_limiting import limiter
+from dotmac.platform.billing._typing_helpers import rate_limit
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant import get_current_tenant_id
 
@@ -31,7 +31,7 @@ from .models import (
 )
 from .service import SubscriptionService
 
-router = APIRouter(tags=["Billing - Subscriptions"])
+router = APIRouter(prefix="/billing/subscriptions", tags=["Billing - Subscriptions"])
 
 
 # Subscription Plans Management
@@ -42,7 +42,7 @@ router = APIRouter(tags=["Billing - Subscriptions"])
     response_model=SubscriptionPlanResponse,
     status_code=status.HTTP_201_CREATED,
 )
-@limiter.limit("20/minute")
+@rate_limit("20/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def create_subscription_plan(
     request: Request,
     plan_data: SubscriptionPlanCreateRequest,
@@ -61,7 +61,7 @@ async def create_subscription_plan(
 
 
 @router.get("/plans", response_model=list[SubscriptionPlanResponse])
-@limiter.limit("100/minute")
+@rate_limit("100/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def list_subscription_plans(
     request: Request,
     db_session: AsyncSession = Depends(get_async_session),
@@ -82,7 +82,7 @@ async def list_subscription_plans(
 
 
 @router.get("/plans/{plan_id}", response_model=SubscriptionPlanResponse)
-@limiter.limit("100/minute")
+@rate_limit("100/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def get_subscription_plan(
     request: Request,
     plan_id: str,
@@ -485,4 +485,202 @@ async def preview_plan_change_proration(
         proration_result: ProrationResult = proration
         return proration_result
     except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+# Subscription Renewal Endpoints
+
+
+@router.get("/subscriptions/{subscription_id}/renewal-eligibility")
+@rate_limit("30/minute")  # type: ignore[misc]
+async def check_subscription_renewal_eligibility(
+    request: Request,
+    subscription_id: str,
+    db_session: AsyncSession = Depends(get_async_session),
+    current_user: UserInfo = Depends(get_current_user),
+    tenant_id: str = Depends(get_current_tenant_id),
+) -> dict[str, Any]:
+    """
+    Check if a subscription is eligible for renewal.
+
+    Returns detailed eligibility information including:
+    - Whether renewal is allowed
+    - Current pricing
+    - Days until renewal
+    - Any blocking reasons
+    """
+
+    service = SubscriptionService(db_session)
+    try:
+        eligibility = await service.check_renewal_eligibility(subscription_id, tenant_id)
+        return eligibility
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/subscriptions/{subscription_id}/extend")
+@rate_limit("10/minute")  # type: ignore[misc]
+async def extend_subscription(
+    request: Request,
+    subscription_id: str,
+    payment_id: str | None = Query(None, description="Associated payment ID"),
+    db_session: AsyncSession = Depends(get_async_session),
+    current_user: UserInfo = Depends(get_current_user),
+    tenant_id: str = Depends(get_current_tenant_id),
+) -> SubscriptionResponse:
+    """
+    Extend subscription to the next billing period.
+
+    This endpoint:
+    1. Validates the subscription can be extended
+    2. Extends the billing period by one cycle
+    3. Resets usage counters
+    4. Creates a renewal event
+
+    Typically called after successful payment processing.
+    """
+    service = SubscriptionService(db_session)
+    try:
+        extended_subscription = await service.extend_subscription(
+            subscription_id=subscription_id,
+            tenant_id=tenant_id,
+            payment_id=payment_id,
+            user_id=current_user.user_id,
+        )
+
+        # Convert to response model
+        response = SubscriptionResponse(
+            subscription_id=extended_subscription.subscription_id,
+            tenant_id=extended_subscription.tenant_id,
+            customer_id=extended_subscription.customer_id,
+            plan_id=extended_subscription.plan_id,
+            current_period_start=extended_subscription.current_period_start,
+            current_period_end=extended_subscription.current_period_end,
+            status=extended_subscription.status,
+            trial_end=extended_subscription.trial_end,
+            cancel_at_period_end=extended_subscription.cancel_at_period_end,
+            canceled_at=extended_subscription.canceled_at,
+            ended_at=extended_subscription.ended_at,
+            custom_price=extended_subscription.custom_price,
+            usage_records=extended_subscription.usage_records,
+            metadata=extended_subscription.metadata,
+            created_at=extended_subscription.created_at,
+            updated_at=extended_subscription.updated_at,
+            is_in_trial=extended_subscription.is_in_trial(),
+            days_until_renewal=extended_subscription.days_until_renewal(),
+        )
+
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/subscriptions/{subscription_id}/renewal-payment")
+@rate_limit("10/minute")  # type: ignore[misc]
+async def process_subscription_renewal_payment(
+    request: Request,
+    subscription_id: str,
+    payment_method_id: str = Query(..., description="Payment method to use"),
+    idempotency_key: str | None = Query(None, description="Idempotency key"),
+    db_session: AsyncSession = Depends(get_async_session),
+    current_user: UserInfo = Depends(get_current_user),
+    tenant_id: str = Depends(get_current_tenant_id),
+) -> dict[str, Any]:
+    """
+    Process payment for subscription renewal.
+
+    This endpoint:
+    1. Checks renewal eligibility
+    2. Calculates renewal amount
+    3. Prepares payment details
+    4. Returns payment information for processing
+
+    Note: Actual payment provider integration should be handled by the caller.
+    After successful payment, call the /extend endpoint to update the subscription.
+    """
+
+    service = SubscriptionService(db_session)
+    try:
+        payment_details = await service.process_renewal_payment(
+            subscription_id=subscription_id,
+            tenant_id=tenant_id,
+            payment_method_id=payment_method_id,
+            idempotency_key=idempotency_key,
+        )
+
+        return payment_details
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/subscriptions/{subscription_id}/renewal-quote")
+@rate_limit("20/minute")  # type: ignore[misc]
+async def create_subscription_renewal_quote(
+    request: Request,
+    subscription_id: str,
+    customer_id: str = Query(..., description="Customer ID"),
+    discount_percentage: float | None = Query(None, description="Renewal discount %", ge=0, le=100),
+    valid_days: int = Query(30, description="Quote validity days", ge=1, le=90),
+    notes: str | None = Query(None, description="Additional notes"),
+    db_session: AsyncSession = Depends(get_async_session),
+    current_user: UserInfo = Depends(get_current_user),
+    tenant_id: str = Depends(get_current_tenant_id),
+) -> dict[str, Any]:
+    """
+    Create a renewal quote for a subscription.
+
+    This creates a formal quote document that can be sent to the customer
+    for review and acceptance before renewal.
+    """
+    from decimal import Decimal
+    from uuid import UUID
+
+    from dotmac.platform.crm.service import QuoteService
+
+    # First get subscription details
+    subscription_service = SubscriptionService(db_session)
+    try:
+        subscription = await subscription_service.get_subscription(subscription_id, tenant_id)
+        plan = await subscription_service.get_plan(subscription.plan_id, tenant_id)
+
+        # Prepare subscription data for quote
+        subscription_data = {
+            "subscription_id": subscription_id,
+            "plan_name": plan.name,
+            "service_plan_speed": plan.name,
+            "bandwidth": plan.name,
+            "renewal_price": subscription.custom_price if subscription.custom_price else plan.price,
+            "amount": subscription.custom_price if subscription.custom_price else plan.price,
+            "billing_cycle": plan.billing_cycle.value,
+            "contract_term_months": 12,  # Default, can be customized
+        }
+
+        # Create renewal quote via CRM service
+        quote_service = QuoteService(db_session)
+        quote = await quote_service.create_renewal_quote(
+            tenant_id=tenant_id,
+            customer_id=UUID(customer_id),
+            subscription_data=subscription_data,
+            valid_days=valid_days,
+            discount_percentage=Decimal(str(discount_percentage)) if discount_percentage else None,
+            notes=notes,
+            created_by_id=UUID(current_user.user_id) if current_user.user_id else None,
+        )
+
+        await db_session.commit()
+
+        return {
+            "quote_id": str(quote.id),
+            "quote_number": quote.quote_number,
+            "status": quote.status.value,
+            "subscription_id": subscription_id,
+            "customer_id": customer_id,
+            "monthly_recurring_charge": float(quote.monthly_recurring_charge),
+            "valid_until": quote.valid_until.isoformat(),
+            "line_items": quote.line_items,
+            "metadata": quote.metadata,
+            "notes": quote.notes,
+        }
+    except Exception as e:
+        await db_session.rollback()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

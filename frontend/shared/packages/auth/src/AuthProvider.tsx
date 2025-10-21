@@ -1,9 +1,9 @@
-import * as React from 'react';
-import type { PortalType } from './types';
-import { SimpleAuthProvider } from './providers/SimpleAuthProvider';
-import { SecureAuthProvider } from './providers/SecureAuthProvider';
-import { EnterpriseAuthProvider } from './providers/EnterpriseAuthProvider';
-import type { AuthVariant, AuthConfig, PartialAuthConfig, AuthContextValue } from './types';
+import * as React from "react";
+import type { PortalType } from "./types";
+import { SimpleAuthProvider } from "./providers/SimpleAuthProvider";
+import { SecureAuthProvider } from "./providers/SecureAuthProvider";
+import { EnterpriseAuthProvider } from "./providers/EnterpriseAuthProvider";
+import type { AuthVariant, AuthConfig, PartialAuthConfig, AuthContextValue } from "./types";
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -27,13 +27,13 @@ export function AuthProvider({ children, variant, portal, config = {} }: AuthPro
   };
 
   switch (variant) {
-    case 'simple':
+    case "simple":
       return <SimpleAuthProvider {...providerProps} />;
 
-    case 'secure':
+    case "secure":
       return <SecureAuthProvider {...providerProps} />;
 
-    case 'enterprise':
+    case "enterprise":
       return <EnterpriseAuthProvider {...providerProps} />;
 
     default:
@@ -57,10 +57,10 @@ function getPortalAuthConfig(portal: PortalType, overrides: PartialAuthConfig): 
       enableAuditLog: true,
       tokenRefreshThreshold: 5 * 60 * 1000, // 5 minutes
       endpoints: {
-        login: '/api/admin/auth/login',
-        logout: '/api/admin/auth/logout',
-        refresh: '/api/admin/auth/refresh',
-        profile: '/api/admin/auth/profile',
+        login: "/api/admin/auth/login",
+        logout: "/api/admin/auth/logout",
+        refresh: "/api/admin/auth/refresh",
+        profile: "/api/admin/auth/profile",
       },
     },
 
@@ -74,10 +74,10 @@ function getPortalAuthConfig(portal: PortalType, overrides: PartialAuthConfig): 
       enableAuditLog: false,
       tokenRefreshThreshold: 2 * 60 * 1000, // 2 minutes
       endpoints: {
-        login: '/api/customer/auth/login',
-        logout: '/api/customer/auth/logout',
-        refresh: '/api/customer/auth/refresh',
-        profile: '/api/customer/auth/profile',
+        login: "/api/customer/auth/login",
+        logout: "/api/customer/auth/logout",
+        refresh: "/api/customer/auth/refresh",
+        profile: "/api/customer/auth/profile",
       },
     },
 
@@ -91,10 +91,10 @@ function getPortalAuthConfig(portal: PortalType, overrides: PartialAuthConfig): 
       enableAuditLog: true,
       tokenRefreshThreshold: 10 * 60 * 1000, // 10 minutes
       endpoints: {
-        login: '/api/reseller/auth/login',
-        logout: '/api/reseller/auth/logout',
-        refresh: '/api/reseller/auth/refresh',
-        profile: '/api/reseller/auth/profile',
+        login: "/api/reseller/auth/login",
+        logout: "/api/reseller/auth/logout",
+        refresh: "/api/reseller/auth/refresh",
+        profile: "/api/reseller/auth/profile",
       },
     },
 
@@ -108,10 +108,10 @@ function getPortalAuthConfig(portal: PortalType, overrides: PartialAuthConfig): 
       enableAuditLog: true,
       tokenRefreshThreshold: 30 * 60 * 1000, // 30 minutes
       endpoints: {
-        login: '/api/technician/auth/login',
-        logout: '/api/technician/auth/logout',
-        refresh: '/api/technician/auth/refresh',
-        profile: '/api/technician/auth/profile',
+        login: "/api/technician/auth/login",
+        logout: "/api/technician/auth/logout",
+        refresh: "/api/technician/auth/refresh",
+        profile: "/api/technician/auth/profile",
       },
     },
 
@@ -125,10 +125,10 @@ function getPortalAuthConfig(portal: PortalType, overrides: PartialAuthConfig): 
       enableAuditLog: true,
       tokenRefreshThreshold: 15 * 60 * 1000, // 15 minutes
       endpoints: {
-        login: '/api/management/auth/login',
-        logout: '/api/management/auth/logout',
-        refresh: '/api/management/auth/refresh',
-        profile: '/api/management/auth/profile',
+        login: "/api/management/auth/login",
+        logout: "/api/management/auth/logout",
+        refresh: "/api/management/auth/refresh",
+        profile: "/api/management/auth/profile",
       },
     },
   };
@@ -146,7 +146,7 @@ function getPortalAuthConfig(portal: PortalType, overrides: PartialAuthConfig): 
 export function useAuth(): AuthContextValue {
   const context = React.useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

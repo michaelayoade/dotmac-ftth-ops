@@ -2,7 +2,9 @@
 
 ## 📱 Application Structure
 
-Your Next.js app has **3 main sections**: Public, Dashboard, and Partner Portal
+Your Next.js app has **6 portals** serving different user types: Main Dashboard, Platform Admin, Tenant Self-Service, Customer Portal, Partner Referral Portal, and Partner Reseller Portal.
+
+**For detailed portal architecture, see:** [PORTAL_ARCHITECTURE.md](PORTAL_ARCHITECTURE.md)
 
 ---
 
@@ -83,17 +85,90 @@ Your Next.js app has **3 main sections**: Public, Dashboard, and Partner Portal
 
 ---
 
-## 🤝 PARTNER PORTAL (`/portal`)
+## 🏢 PLATFORM ADMIN (`/dashboard/platform-admin`)
+
+### Platform Management
+- `/dashboard/platform-admin` - Platform administration home
+- `/dashboard/platform-admin/tenants` - Tenant management
+- `/dashboard/platform-admin/platform-billing` - Platform billing overview
+- `/dashboard/platform-admin/system` - System configuration
+- `/dashboard/platform-admin/analytics` - Platform-wide analytics
+
+**Target Users:** DotMac platform administrators
+**Permission Required:** `platform:admin`
+
+---
+
+## 🏢 TENANT SELF-SERVICE PORTAL (`/tenant`)
+
+### Tenant Management
+- `/tenant` - Tenant overview
+- `/tenant/customers` - Customer list (read-only view)
+- `/tenant/billing` - Tenant billing & subscription management
+- `/tenant/billing/subscription` - Plan upgrades/downgrades with proration
+- `/tenant/billing/invoices` - Platform subscription invoices
+- `/tenant/billing/payment-methods` - Payment method management
+- `/tenant/users` - Tenant user management
+- `/tenant/usage` - Usage tracking & limits
+- `/tenant/integrations` - Third-party integrations
+- `/tenant/support` - Tenant support tickets
+
+**Target Users:** ISP administrators managing their DotMac subscription
+**Permission Required:** `tenants:read`, `platform:tenants:read`
+
+---
+
+## 👤 CUSTOMER PORTAL (`/customer-portal`)
+
+### Customer Self-Service
+- `/customer-portal` - Customer dashboard
+- `/customer-portal/service` - Service status & connection details
+- `/customer-portal/billing` - Billing & payment history
+- `/customer-portal/billing/pay` - Payment processing
+- `/customer-portal/usage` - Data usage tracking
+- `/customer-portal/support` - Support tickets
+- `/customer-portal/support/new` - Create new ticket
+- `/customer-portal/settings` - Account settings
+- `/customer-portal/settings/profile` - Profile management
+- `/customer-portal/settings/password` - Password management
+
+**Target Users:** End-user subscribers (ISP customers)
+**Authentication:** Account number + password (separate from main auth)
+**Layout:** `CustomerAuthContext` with separate navigation
+
+---
+
+## 🤝 PARTNER REFERRAL PORTAL (`/portal`)
 
 ### Authentication
 - `/portal/login` - Partner login
 
 ### Portal Pages
 - `/portal/dashboard` - Partner dashboard
-- `/portal/customers` - Partner customers
-- `/portal/commissions` - Commission tracking
 - `/portal/referrals` - Referral management
+- `/portal/commissions` - Commission tracking & earnings
+- `/portal/customers` - Referred customer list
+- `/portal/performance` - Performance metrics
 - `/portal/settings` - Partner settings
+
+**Target Users:** Sales partners, affiliates, referral partners
+**Business Model:** Commission-based revenue share on referrals
+**Permission Required:** Partner-specific auth (separate from main system)
+
+---
+
+## 🤝 PARTNER RESELLER PORTAL (`/partner`)
+
+### MSP/Reseller Management
+- `/partner` - Partner overview
+- `/partner/tenants` - Managed ISP tenants
+- `/partner/billing` - Partner billing & revenue
+- `/partner/resources` - Partner enablement resources
+- `/partner/support` - Partner support tickets
+
+**Target Users:** MSPs, resellers managing multiple ISP tenants
+**Business Model:** Wholesale/reseller pricing model
+**Permission Required:** `partners.read`, `platform:partners:read`
 
 ---
 
@@ -108,7 +183,7 @@ Your Next.js app has **3 main sections**: Public, Dashboard, and Partner Portal
 │   ├── /forgot-password
 │   └── /test-plugins
 │
-├── /dashboard (Protected - Main App)
+├── /dashboard (Protected - Main Dashboard)
 │   ├── / (dashboard home)
 │   │
 │   ├── /billing-revenue
@@ -156,6 +231,13 @@ Your Next.js app has **3 main sections**: Public, Dashboard, and Partner Portal
 │   ├── /analytics
 │   ├── /webhooks
 │   │
+│   ├── /platform-admin (Platform Admin Portal)
+│   │   ├── / (platform overview)
+│   │   ├── /tenants
+│   │   ├── /platform-billing
+│   │   ├── /system
+│   │   └── /analytics
+│   │
 │   └── /settings
 │       ├── / (home)
 │       ├── /billing
@@ -165,44 +247,108 @@ Your Next.js app has **3 main sections**: Public, Dashboard, and Partner Portal
 │       ├── /plugins
 │       └── /profile
 │
-└── /portal (Protected - Partner Portal)
-    ├── /login
-    ├── /dashboard
-    ├── /customers
-    ├── /commissions
-    ├── /referrals
-    └── /settings
+├── /tenant (Protected - Tenant Self-Service Portal)
+│   ├── / (tenant overview)
+│   ├── /customers
+│   ├── /billing
+│   │   ├── / (billing home)
+│   │   ├── /subscription
+│   │   ├── /invoices
+│   │   └── /payment-methods
+│   ├── /users
+│   ├── /usage
+│   ├── /integrations
+│   └── /support
+│
+├── /customer-portal (Protected - Customer Portal)
+│   ├── / (customer dashboard)
+│   ├── /service
+│   ├── /billing
+│   │   ├── / (billing overview)
+│   │   └── /pay
+│   ├── /usage
+│   ├── /support
+│   │   ├── / (tickets list)
+│   │   └── /new
+│   └── /settings
+│       ├── / (settings home)
+│       ├── /profile
+│       └── /password
+│
+├── /portal (Protected - Partner Referral Portal)
+│   ├── /login
+│   ├── /dashboard
+│   ├── /referrals
+│   ├── /commissions
+│   ├── /customers
+│   ├── /performance
+│   └── /settings
+│
+└── /partner (Protected - Partner Reseller Portal)
+    ├── / (partner overview)
+    ├── /tenants
+    ├── /billing
+    ├── /resources
+    └── /support
 ```
 
 ---
 
-## 🔑 Key Features by Section
+## 🔑 Key Features by Portal
 
-### 💰 Billing & Revenue
-Complete billing suite with invoicing, subscriptions, payment processing, and product catalog management.
+### 🏢 Main Dashboard (`/dashboard/*`)
+**For:** ISP staff and administrators
+**Features:** Complete billing suite, RBAC, customer operations, infrastructure management, analytics
 
-### 🔐 Security & Access
-Comprehensive RBAC system with API keys, roles, permissions, secrets, and user management.
+### 🏢 Platform Admin (`/dashboard/platform-admin/*`)
+**For:** DotMac platform administrators
+**Features:** Multi-tenant management, platform billing, system configuration, platform-wide analytics
 
-### 🤝 Partner Management
-Partner portal with separate authentication, commission tracking, and referral management.
+### 🏢 Tenant Self-Service (`/tenant/*`)
+**For:** ISP administrators managing their DotMac subscription
+**Features:** Subscription management with plan upgrades/downgrades, billing, usage tracking, user management, integrations
 
-### 🏗️ Infrastructure
-DevOps tools including health monitoring, logs, observability, feature flags, and data imports.
+### 👤 Customer Portal (`/customer-portal/*`)
+**For:** End-user subscribers (ISP customers)
+**Features:** Service status, billing & payments, usage tracking, support tickets, account settings
+**Auth:** Separate account number-based authentication
 
-### 📊 Analytics & Operations
-Customer management, communications, file handling, and analytics dashboards.
+### 🤝 Partner Referral Portal (`/portal/*`)
+**For:** Sales partners and affiliates
+**Features:** Referral tracking, commission management, referred customer list, performance analytics
+**Model:** Commission-based revenue share
+
+### 🤝 Partner Reseller Portal (`/partner/*`)
+**For:** MSPs and resellers managing multiple ISP tenants
+**Features:** Multi-tenant management, partner billing, enablement resources, partner support
+**Model:** Wholesale/reseller pricing
 
 ---
 
 ## 📝 Notes
 
-- **Main App**: `/dashboard/*` - Primary application for internal users
-- **Partner Portal**: `/portal/*` - Separate interface for partners/affiliates
-- **Authentication**: Separate login flows for main app vs partner portal
+### Portal Architecture
+- **Single Next.js App**: All 6 portals in one monolith with route-based separation
+- **Main Dashboard**: `/dashboard/*` - Primary ISP operations interface
+- **Platform Admin**: `/dashboard/platform-admin/*` - DotMac platform management (requires `platform:admin`)
+- **Tenant Portal**: `/tenant/*` - ISP self-service for DotMac subscription management
+- **Customer Portal**: `/customer-portal/*` - End-subscriber self-service (separate auth)
+- **Partner Referral**: `/portal/*` - Sales partner commission tracking (separate auth)
+- **Partner Reseller**: `/partner/*` - MSP multi-tenant management
+
+### Authentication Flows
+- **Main Dashboard & Platform Admin**: Standard JWT/session auth with RBAC permissions
+- **Tenant Portal**: Tenant-scoped auth with tenant admin permissions
+- **Customer Portal**: Account number + password (CustomerAuthContext - separate from main auth)
+- **Partner Referral Portal**: Partner-specific authentication (separate login)
+- **Partner Reseller Portal**: Partner permissions (`partners.read`, `platform:partners:read`)
+
+### Technical Notes
 - **Dynamic Routes**: `/dashboard/partners/[id]` uses Next.js dynamic routing
-- **Nested Routes**: Deep nesting in billing-revenue and infrastructure sections
+- **Nested Routes**: Deep nesting in billing-revenue, infrastructure, and settings sections
 - **Settings**: Centralized settings hub with 7 sub-sections
+- **Route Guards**: Permission-based access using RouteGuard components
+- **Deployment Modes**: Portals can be selectively enabled based on deployment mode (single_tenant, multi_tenant, hybrid)
 
 ---
 
@@ -210,28 +356,54 @@ Customer management, communications, file handling, and analytics dashboards.
 
 ### Root Layout (`/app/layout.tsx`)
 - Base layout for entire app
-- Likely includes global providers (Theme, Auth, etc.)
+- Global providers (Theme, Auth, etc.)
 
-### Dashboard Layout (`/app/dashboard/layout.tsx`)
+### Main Dashboard Layout (`/app/dashboard/layout.tsx`)
 - Protected layout for main dashboard
-- Probably includes sidebar navigation
-- Authentication guards
+- Sidebar navigation for ISP operations
+- JWT/session authentication guards
+- RBAC permission checks
 
-### Portal Layout (`/app/portal/layout.tsx`)
-- Separate layout for partner portal
-- Different navigation/branding
-- Partner-specific authentication
+### Platform Admin Layout (`/app/dashboard/platform-admin/layout.tsx`)
+- Nested within dashboard layout
+- Platform admin navigation
+- Requires `platform:admin` permission
+
+### Tenant Portal Layout (`/app/tenant/layout.tsx`)
+- Separate layout for tenant self-service
+- Tenant-specific navigation
+- RouteGuard with `tenants:read` or `platform:tenants:read` permissions
+- Subscription management focus
+
+### Customer Portal Layout (`/app/customer-portal/layout.tsx`)
+- Separate layout for end customers
+- Customer-specific navigation
+- Uses `CustomerAuthContext` (separate from main auth)
+- CustomerProtectedRoute guards
+- Account number-based authentication
+
+### Partner Referral Layout (`/app/portal/layout.tsx`)
+- Separate layout for referral partners
+- Partner navigation (dashboard, referrals, commissions)
+- Partner-specific authentication flow
+- Commission tracking focus
+
+### Partner Reseller Layout (`/app/partner/layout.tsx`)
+- Separate layout for reseller partners
+- Reseller navigation (tenants, billing, resources)
+- RouteGuard with `partners.read` or `platform:partners:read` permissions
+- Multi-tenant management focus
 
 ---
 
-## 🚀 Next Steps for Analysis
+## 🔗 Related Documentation
 
-Would you like me to:
-1. **Analyze component structure** - Map out reusable components
-2. **Document API endpoints** - List all backend calls
-3. **Map user flows** - Document user journeys through the app
-4. **Extract navigation structure** - Document menu/sidebar configs
-5. **Analyze authentication** - Document auth flows and guards
-6. **Review form structures** - Document all forms and validations
+- **[PORTAL_ARCHITECTURE.md](PORTAL_ARCHITECTURE.md)** - Comprehensive portal architecture documentation with user journeys, authentication flows, and deployment modes
+- **[README.md](../README.md)** - Project overview and high-level architecture
+- **[API_DOCUMENTATION.md](../docs/API_DOCUMENTATION.md)** - REST API surface area summary
+- **[DATABASE_SCHEMA.md](../docs/DATABASE_SCHEMA.md)** - Entity model and relationships
 
-Let me know what specific aspect you'd like me to dive deeper into!
+---
+
+**Last Updated:** October 20, 2025
+**Portal Count:** 6 portals (Main Dashboard, Platform Admin, Tenant Self-Service, Customer Portal, Partner Referral, Partner Reseller)

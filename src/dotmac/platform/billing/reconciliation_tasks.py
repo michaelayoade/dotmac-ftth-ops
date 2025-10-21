@@ -12,10 +12,10 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import structlog
-from celery import Task, shared_task
+from celery import Task
 
+from dotmac.platform.billing._typing_helpers import idempotent_task, shared_task
 from dotmac.platform.billing.reconciliation_service import ReconciliationService
-from dotmac.platform.core.tasks import idempotent_task
 from dotmac.platform.db import AsyncSessionLocal
 
 # Compatibility alias for tests that patch this symbol
@@ -24,8 +24,8 @@ async_session_factory = AsyncSessionLocal
 logger = structlog.get_logger(__name__)
 
 
-@shared_task(bind=True, max_retries=3)
-@idempotent_task(ttl=300)  # 5 minutes
+@shared_task(bind=True, max_retries=3)  # type: ignore[misc]  # Celery decorator is untyped
+@idempotent_task(ttl=300)  # type: ignore[misc]  # Custom decorator is untyped
 def auto_reconcile_cleared_payments(
     self: Task, tenant_id: str, bank_account_id: int, days_back: int = 7
 ) -> dict[str, Any]:
@@ -71,7 +71,7 @@ async def _auto_reconcile_impl(
 ) -> dict[str, Any]:
     """Implementation of auto-reconciliation."""
     async with AsyncSessionLocal() as db:
-        service = ReconciliationService(db)
+        ReconciliationService(db)
 
         # Calculate date range
         period_end = datetime.now(UTC)
@@ -138,8 +138,8 @@ async def _auto_reconcile_impl(
         }
 
 
-@shared_task(bind=True, max_retries=5)
-@idempotent_task(ttl=600)  # 10 minutes
+@shared_task(bind=True, max_retries=5)  # type: ignore[misc]  # Celery decorator is untyped
+@idempotent_task(ttl=600)  # type: ignore[misc]  # Custom decorator is untyped
 def retry_failed_payments_batch(
     self: Task, tenant_id: str, max_payments: int = 50
 ) -> dict[str, Any]:
@@ -248,8 +248,8 @@ async def _retry_failed_payments_impl(tenant_id: str, max_payments: int) -> dict
         }
 
 
-@shared_task(bind=True)
-@idempotent_task(ttl=3600)  # 1 hour
+@shared_task(bind=True)  # type: ignore[misc]  # Celery decorator is untyped
+@idempotent_task(ttl=3600)  # type: ignore[misc]  # Custom decorator is untyped
 def generate_daily_reconciliation_report(self: Task, tenant_id: str) -> dict[str, Any]:
     """
     Generate daily reconciliation report for a tenant.
@@ -336,7 +336,7 @@ async def _generate_report_impl(tenant_id: str) -> dict[str, Any]:
         return report
 
 
-@shared_task(bind=True)
+@shared_task(bind=True)  # type: ignore[misc]  # Celery decorator is untyped
 def monitor_circuit_breaker_health(self: Task) -> dict[str, Any]:
     """
     Monitor circuit breaker health across all tenants.
@@ -388,7 +388,7 @@ async def _monitor_circuit_breaker_impl() -> dict[str, Any]:
         }
 
 
-@shared_task
+@shared_task  # type: ignore[misc]  # Celery decorator is untyped
 def schedule_reconciliation_for_tenant(
     tenant_id: str, bank_account_id: int, period_days: int = 30
 ) -> str:

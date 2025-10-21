@@ -2,16 +2,16 @@
  * Route guard component for protecting pages and components
  */
 
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
-import { useCustomRouteProtection } from '../hooks/useRouteProtection';
+import { useCustomRouteProtection } from "../hooks/useRouteProtection";
 
 interface RouteGuardProps {
   children: ReactNode;
   requiredRoles?: string[];
   requiredPermissions?: string[];
   requiredFeatures?: string[];
-  allowedPortals?: Array<'admin' | 'customer' | 'reseller'>;
+  allowedPortals?: Array<"admin" | "customer" | "reseller">;
   fallback?: ReactNode;
   loadingComponent?: ReactNode;
   unauthorizedComponent?: ReactNode;
@@ -37,9 +37,9 @@ export function RouteGuard({
   if (protection.isLoading) {
     return (
       loadingComponent || (
-        <div className='flex items-center justify-center p-8'>
-          <div className='h-6 w-6 animate-spin rounded-full border-blue-600 border-b-2' />
-          <span className='ml-2 text-gray-600 text-sm'>Checking permissions...</span>
+        <div className="flex items-center justify-center p-8">
+          <div className="h-6 w-6 animate-spin rounded-full border-blue-600 border-b-2" />
+          <span className="ml-2 text-gray-600 text-sm">Checking permissions...</span>
         </div>
       )
     );
@@ -55,26 +55,26 @@ export function RouteGuard({
     }
 
     return (
-      <div className='p-8 text-center'>
-        <div className='mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-100'>
+      <div className="p-8 text-center">
+        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
           <svg
-            aria-label='icon'
-            className='h-6 w-6 text-red-600'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
+            aria-label="icon"
+            className="h-6 w-6 text-red-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
             <title>Icon</title>
             <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
+              strokeLinecap="round"
+              strokeLinejoin="round"
               strokeWidth={2}
-              d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z'
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
             />
           </svg>
         </div>
-        <h3 className='mb-2 font-medium text-gray-900 text-lg'>Access Restricted</h3>
-        <p className='text-gray-600 text-sm'>{getAccessDeniedMessage(protection.reason)}</p>
+        <h3 className="mb-2 font-medium text-gray-900 text-lg">Access Restricted</h3>
+        <p className="text-gray-600 text-sm">{getAccessDeniedMessage(protection.reason)}</p>
       </div>
     );
   }
@@ -92,8 +92,8 @@ export function AdminOnlyGuard({
 }) {
   return (
     <RouteGuard
-      allowedPortals={['admin']}
-      requiredRoles={['super-admin', 'tenant-admin']}
+      allowedPortals={["admin"]}
+      requiredRoles={["super-admin", "tenant-admin"]}
       fallback={fallback}
     >
       {children}
@@ -109,7 +109,7 @@ export function CustomerOnlyGuard({
   fallback?: ReactNode;
 }) {
   return (
-    <RouteGuard allowedPortals={['customer']} requiredRoles={['customer']} fallback={fallback}>
+    <RouteGuard allowedPortals={["customer"]} requiredRoles={["customer"]} fallback={fallback}>
       {children}
     </RouteGuard>
   );
@@ -124,8 +124,8 @@ export function ResellerOnlyGuard({
 }) {
   return (
     <RouteGuard
-      allowedPortals={['reseller']}
-      requiredRoles={['reseller-admin', 'reseller-agent']}
+      allowedPortals={["reseller"]}
+      requiredRoles={["reseller-admin", "reseller-agent"]}
       fallback={fallback}
     >
       {children}
@@ -142,9 +142,9 @@ export function NetworkEngineerGuard({
 }) {
   return (
     <RouteGuard
-      allowedPortals={['admin']}
-      requiredRoles={['tenant-admin', 'network-engineer']}
-      requiredPermissions={['network:read']}
+      allowedPortals={["admin"]}
+      requiredRoles={["tenant-admin", "network-engineer"]}
+      requiredPermissions={["network:read"]}
       fallback={fallback}
     >
       {children}
@@ -161,9 +161,9 @@ export function BillingManagerGuard({
 }) {
   return (
     <RouteGuard
-      allowedPortals={['admin']}
-      requiredRoles={['tenant-admin', 'billing-manager']}
-      requiredPermissions={['billing:read']}
+      allowedPortals={["admin"]}
+      requiredRoles={["tenant-admin", "billing-manager"]}
+      requiredPermissions={["billing:read"]}
       fallback={fallback}
     >
       {children}
@@ -180,9 +180,9 @@ export function SupportAgentGuard({
 }) {
   return (
     <RouteGuard
-      allowedPortals={['admin']}
-      requiredRoles={['tenant-admin', 'support-manager', 'support-agent']}
-      requiredPermissions={['support:read']}
+      allowedPortals={["admin"]}
+      requiredRoles={["tenant-admin", "support-manager", "support-agent"]}
+      requiredPermissions={["support:read"]}
       fallback={fallback}
     >
       {children}
@@ -228,17 +228,17 @@ export function FeatureGuard({
 
 function getAccessDeniedMessage(reason?: string): string {
   switch (reason) {
-    case 'unauthenticated':
-      return 'Please sign in to view this content.';
-    case 'portal_mismatch':
-      return 'This content is not available in your current portal.';
-    case 'insufficient_role':
-      return 'Your role does not have access to this content.';
-    case 'insufficient_permissions':
-      return 'You do not have the required permissions to view this content.';
-    case 'missing_features':
-      return 'This feature is not available in your current plan.';
+    case "unauthenticated":
+      return "Please sign in to view this content.";
+    case "portal_mismatch":
+      return "This content is not available in your current portal.";
+    case "insufficient_role":
+      return "Your role does not have access to this content.";
+    case "insufficient_permissions":
+      return "You do not have the required permissions to view this content.";
+    case "missing_features":
+      return "This feature is not available in your current plan.";
     default:
-      return 'You do not have permission to view this content.';
+      return "You do not have permission to view this content.";
   }
 }

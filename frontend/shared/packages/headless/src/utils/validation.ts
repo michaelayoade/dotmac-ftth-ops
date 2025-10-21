@@ -3,7 +3,7 @@
  * Provides sanitization and validation functions for security
  */
 
-import { sanitizeText, sanitizeEmail, sanitizeHTML, escapeHTML } from './sanitization';
+import { sanitizeText, sanitizeEmail, sanitizeHTML, escapeHTML } from "./sanitization";
 
 export interface ValidationResult {
   isValid: boolean;
@@ -25,46 +25,46 @@ export interface ValidationOptions {
  */
 export function sanitizeInput(
   input: unknown,
-  type: 'text' | 'email' | 'phone' | 'url' | 'html' | 'alphanumeric' = 'text',
-  options: { maxLength?: number; allowHTML?: boolean } = {}
+  type: "text" | "email" | "phone" | "url" | "html" | "alphanumeric" = "text",
+  options: { maxLength?: number; allowHTML?: boolean } = {},
 ): string {
   if (input === null || input === undefined) {
-    return '';
+    return "";
   }
 
   const stringValue = String(input).trim();
 
   if (!stringValue) {
-    return '';
+    return "";
   }
 
   const { maxLength = 1000, allowHTML = false } = options;
 
   switch (type) {
-    case 'email':
+    case "email":
       const emailResult = sanitizeEmail(stringValue);
-      return emailResult || '';
+      return emailResult || "";
 
-    case 'phone':
+    case "phone":
       // Remove all non-digit characters except + and -
-      return stringValue.replace(/[^\d+\-\s()]/g, '').substring(0, maxLength);
+      return stringValue.replace(/[^\d+\-\s()]/g, "").substring(0, maxLength);
 
-    case 'url':
+    case "url":
       // Basic URL sanitization - remove dangerous protocols
-      const urlCleaned = stringValue.replace(/^(javascript|data|vbscript):/i, '');
+      const urlCleaned = stringValue.replace(/^(javascript|data|vbscript):/i, "");
       return urlCleaned.substring(0, maxLength);
 
-    case 'html':
+    case "html":
       if (allowHTML) {
         return sanitizeHTML(stringValue, { maxLength });
       }
       return sanitizeText(stringValue, maxLength);
 
-    case 'alphanumeric':
+    case "alphanumeric":
       // Allow only alphanumeric characters, spaces, and common punctuation
-      return stringValue.replace(/[^a-zA-Z0-9\s\-_.,!?]/g, '').substring(0, maxLength);
+      return stringValue.replace(/[^a-zA-Z0-9\s\-_.,!?]/g, "").substring(0, maxLength);
 
-    case 'text':
+    case "text":
     default:
       return sanitizeText(stringValue, maxLength);
   }
@@ -76,7 +76,7 @@ export function sanitizeInput(
 export function validateInput(
   value: unknown,
   type: string,
-  options: ValidationOptions = {}
+  options: ValidationOptions = {},
 ): ValidationResult {
   const {
     required = false,
@@ -88,13 +88,13 @@ export function validateInput(
   } = options;
 
   // Convert to string and basic cleanup
-  const stringValue = value === null || value === undefined ? '' : String(value).trim();
+  const stringValue = value === null || value === undefined ? "" : String(value).trim();
 
   // Required field validation
   if (required && !stringValue) {
     return {
       isValid: false,
-      error: 'This field is required',
+      error: "This field is required",
     };
   }
 
@@ -102,7 +102,7 @@ export function validateInput(
   if (!required && !stringValue) {
     return {
       isValid: true,
-      sanitizedValue: '',
+      sanitizedValue: "",
     };
   }
 
@@ -130,54 +130,54 @@ export function validateInput(
   if (pattern && !pattern.test(processedValue)) {
     return {
       isValid: false,
-      error: 'Invalid format',
+      error: "Invalid format",
     };
   }
 
   // Type-specific validation
   switch (type) {
-    case 'email':
+    case "email":
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
       if (!emailRegex.test(processedValue)) {
         return {
           isValid: false,
-          error: 'Please enter a valid email address',
+          error: "Please enter a valid email address",
         };
       }
       break;
 
-    case 'phone':
+    case "phone":
       const phoneRegex = /^[\+]?[1-9]?[\d\s\-\(\)]{7,15}$/;
       if (!phoneRegex.test(processedValue)) {
         return {
           isValid: false,
-          error: 'Please enter a valid phone number',
+          error: "Please enter a valid phone number",
         };
       }
       break;
 
-    case 'url':
+    case "url":
       try {
         new URL(processedValue);
       } catch {
         return {
           isValid: false,
-          error: 'Please enter a valid URL',
+          error: "Please enter a valid URL",
         };
       }
       break;
 
-    case 'password':
+    case "password":
       if (processedValue.length < 8) {
         return {
           isValid: false,
-          error: 'Password must be at least 8 characters long',
+          error: "Password must be at least 8 characters long",
         };
       }
       if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(processedValue)) {
         return {
           isValid: false,
-          error: 'Password must contain uppercase, lowercase, and numeric characters',
+          error: "Password must contain uppercase, lowercase, and numeric characters",
         };
       }
       break;
@@ -194,8 +194,12 @@ export function validateInput(
  */
 export function validateFormData(
   data: Record<string, unknown>,
-  schema: Record<string, ValidationOptions & { type: string }>
-): { isValid: boolean; errors: Record<string, string>; sanitizedData: Record<string, any> } {
+  schema: Record<string, ValidationOptions & { type: string }>,
+): {
+  isValid: boolean;
+  errors: Record<string, string>;
+  sanitizedData: Record<string, any>;
+} {
   const errors: Record<string, string> = {};
   const sanitizedData: Record<string, any> = {};
 
@@ -204,7 +208,7 @@ export function validateFormData(
     const result = validateInput(value, rules.type, rules);
 
     if (!result.isValid) {
-      errors[field] = result.error || 'Invalid value';
+      errors[field] = result.error || "Invalid value";
     } else {
       sanitizedData[field] = result.sanitizedValue;
     }
@@ -224,7 +228,7 @@ export interface RateLimitConfig {
   windowMs: number;
   maxRequests: number;
   keyGenerator?: (req: any) => string;
-  store?: 'memory' | 'redis';
+  store?: "memory" | "redis";
   redisUrl?: string;
 }
 
@@ -235,9 +239,11 @@ export function createRateLimit(config: RateLimitConfig) {
   const attempts = new Map<string, { count: number; resetTime: number }>();
 
   return {
-    async checkLimit(
-      key: string
-    ): Promise<{ allowed: boolean; remainingRequests: number; resetTime: number }> {
+    async checkLimit(key: string): Promise<{
+      allowed: boolean;
+      remainingRequests: number;
+      resetTime: number;
+    }> {
       const now = Date.now();
       const windowStart = now - config.windowMs;
 
@@ -248,7 +254,10 @@ export function createRateLimit(config: RateLimitConfig) {
         }
       }
 
-      const current = attempts.get(key) || { count: 0, resetTime: now + config.windowMs };
+      const current = attempts.get(key) || {
+        count: 0,
+        resetTime: now + config.windowMs,
+      };
 
       if (current.count >= config.maxRequests && current.resetTime > now) {
         return {
@@ -306,20 +315,30 @@ export const PLUGIN_PATTERNS = {
 // Legacy schemas - consider migrating to existing validation system
 export const COMMON_SCHEMAS = {
   login: {
-    email: { type: 'email', required: true, maxLength: 255 },
-    password: { type: 'password', required: true, minLength: 8, maxLength: 128 },
+    email: { type: "email", required: true, maxLength: 255 },
+    password: {
+      type: "password",
+      required: true,
+      minLength: 8,
+      maxLength: 128,
+    },
   },
 
   registration: {
-    email: { type: 'email', required: true, maxLength: 255 },
-    password: { type: 'password', required: true, minLength: 8, maxLength: 128 },
-    name: { type: 'text', required: true, minLength: 2, maxLength: 100 },
-    phone: { type: 'phone', required: false, maxLength: 20 },
+    email: { type: "email", required: true, maxLength: 255 },
+    password: {
+      type: "password",
+      required: true,
+      minLength: 8,
+      maxLength: 128,
+    },
+    name: { type: "text", required: true, minLength: 2, maxLength: 100 },
+    phone: { type: "phone", required: false, maxLength: 20 },
   },
 
   profile: {
-    name: { type: 'text', required: true, minLength: 2, maxLength: 100 },
-    phone: { type: 'phone', required: false, maxLength: 20 },
-    address: { type: 'text', required: false, maxLength: 500 },
+    name: { type: "text", required: true, minLength: 2, maxLength: 100 },
+    phone: { type: "phone", required: false, maxLength: 20 },
+    address: { type: "text", required: false, maxLength: 500 },
   },
 };

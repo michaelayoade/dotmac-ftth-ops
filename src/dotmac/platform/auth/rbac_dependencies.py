@@ -7,7 +7,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from enum import Enum
 from functools import cache, wraps
-from typing import Any
+from typing import Any, ParamSpec, TypeVar
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer
@@ -21,6 +21,9 @@ from dotmac.platform.db import get_async_session
 logger = logging.getLogger(__name__)
 
 security = HTTPBearer(auto_error=False)
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 
 class PermissionMode(str, Enum):
@@ -251,6 +254,9 @@ require_customer_update = require_permission("customer.update")
 require_customer_delete = require_permission("customer.delete")
 require_customer_export = require_permission("customer.export")
 require_customer_import = require_permission("customer.import")
+require_customer_impersonate = require_permission("customer.impersonate")
+require_customer_manage_status = require_permission("customer.manage_status")
+require_customer_reset_password = require_permission("customer.reset_password")
 
 # Ticket Management
 require_ticket_read = require_any_permission(
@@ -310,17 +316,19 @@ require_admin_settings = require_permission("admin.settings.update")
 # ==================== Decorator Version for Non-FastAPI Functions ====================
 
 
-def check_permission(permission: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+def check_permission(
+    permission: str,
+) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """Decorator to check permission for regular functions"""
 
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+    def decorator(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             # Extract user from kwargs or context
             user = kwargs.get("current_user")
             db = kwargs.get("db")
 
-            if not user or not db:
+            if not isinstance(user, UserInfo) or not isinstance(db, AsyncSession):
                 raise AuthorizationError("Unable to verify permissions")
 
             rbac_service = RBACService(db)
@@ -336,16 +344,18 @@ def check_permission(permission: str) -> Callable[[Callable[..., Any]], Callable
     return decorator
 
 
-def check_any_permission(*permissions: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+def check_any_permission(
+    *permissions: str,
+) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """Decorator to check if user has any of the permissions"""
 
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+    def decorator(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             user = kwargs.get("current_user")
             db = kwargs.get("db")
 
-            if not user or not db:
+            if not isinstance(user, UserInfo) or not isinstance(db, AsyncSession):
                 raise AuthorizationError("Unable to verify permissions")
 
             rbac_service = RBACService(db)

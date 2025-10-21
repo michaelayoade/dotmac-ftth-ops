@@ -4,7 +4,7 @@ Tests for billing event emission helpers.
 Tests all event emission functions with proper mocking.
 """
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 

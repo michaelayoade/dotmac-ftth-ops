@@ -4,32 +4,32 @@
  */
 
 // Main Dashboard Container
-export { default as UniversalDashboard } from './UniversalDashboard';
+export { default as UniversalDashboard } from "./UniversalDashboard";
 export type {
   UniversalDashboardProps,
   DashboardVariant,
   DashboardUser,
   DashboardTenant,
   DashboardHeaderAction,
-} from './UniversalDashboard';
+} from "./UniversalDashboard";
 
 // Metric Display Components
-export { default as UniversalMetricCard } from './UniversalMetricCard';
+export { default as UniversalMetricCard } from "./UniversalMetricCard";
 export type {
   UniversalMetricCardProps,
   MetricTrend,
   MetricProgress,
   MetricStatus,
-} from './UniversalMetricCard';
+} from "./UniversalMetricCard";
 
 // KPI Section Component
-export { default as UniversalKPISection } from './UniversalKPISection';
-export type { UniversalKPISectionProps, KPIItem } from './UniversalKPISection';
+export { default as UniversalKPISection } from "./UniversalKPISection";
+export type { UniversalKPISectionProps, KPIItem } from "./UniversalKPISection";
 
 // Activity Feed Component
-export { default as UniversalActivityFeed } from './UniversalActivityFeed';
+export { default as UniversalActivityFeed } from "./UniversalActivityFeed";
 export type {
   UniversalActivityFeedProps,
   ActivityItem,
   ActivityAction,
-} from './UniversalActivityFeed';
+} from "./UniversalActivityFeed";

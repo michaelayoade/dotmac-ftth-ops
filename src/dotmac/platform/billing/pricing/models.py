@@ -23,7 +23,7 @@ class DiscountType(str, Enum):
     FIXED_PRICE = "fixed_price"  # Set price to $50
 
 
-class PricingRule(BillingBaseModel):
+class PricingRule(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resolves to Any in isolation
     """Simple pricing rule with clear conditions."""
 
     rule_id: str = Field(description="Rule identifier")
@@ -129,7 +129,7 @@ class PricingRule(BillingBaseModel):
         return True
 
 
-class PriceCalculationContext(AppBaseModel):
+class PriceCalculationContext(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Context for price calculations."""
 
     product_id: str = Field(description="Product being priced")
@@ -152,7 +152,7 @@ class PriceCalculationContext(AppBaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional context data")
 
 
-class PriceAdjustment(AppBaseModel):
+class PriceAdjustment(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Result of applying a pricing rule."""
 
     rule_id: str = Field(description="Rule that was applied")
@@ -166,7 +166,7 @@ class PriceAdjustment(AppBaseModel):
     adjusted_price: Decimal = Field(description="Price after this rule")
 
 
-class PriceCalculationResult(AppBaseModel):
+class PriceCalculationResult(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Complete result of price calculation."""
 
     # Input context
@@ -215,12 +215,12 @@ class PricingRuleCreateRequest(BaseModel):
     name: str = Field(description="Rule name", max_length=255)
     description: str | None = Field(None, description="Rule description")
 
-    applies_to_product_ids: list[str] = Field(default_factory=list)
-    applies_to_categories: list[str] = Field(default_factory=list)
+    applies_to_product_ids: list[str] = Field(default_factory=lambda: [])
+    applies_to_categories: list[str] = Field(default_factory=lambda: [])
     applies_to_all: bool = Field(default=False)
 
     min_quantity: int | None = Field(None, ge=1)
-    customer_segments: list[str] = Field(default_factory=list)
+    customer_segments: list[str] = Field(default_factory=lambda: [])
 
     discount_type: DiscountType
     discount_value: Decimal = Field(ge=0)
@@ -230,7 +230,7 @@ class PricingRuleCreateRequest(BaseModel):
     max_uses: int | None = Field(None, ge=1)
     priority: int = Field(default=0)
 
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
     @field_validator("ends_at")
     @classmethod
@@ -257,7 +257,7 @@ class PricingRuleUpdateRequest(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class PriceCalculationRequest(AppBaseModel):
+class PriceCalculationRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for price calculations."""
 
     product_id: str = Field(description="Product to calculate price for")
@@ -271,13 +271,13 @@ class PriceCalculationRequest(AppBaseModel):
     calculation_date: datetime | None = Field(
         None, description="Date to calculate price for (default: now)"
     )
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
     currency: str | None = Field(
         None, description="Currency for the calculation (defaults to product currency)"
     )
 
 
-class PricingRuleResponse(AppBaseModel):
+class PricingRuleResponse(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Response model for pricing rule data."""
 
     rule_id: str

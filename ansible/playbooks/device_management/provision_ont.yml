@@ -1,0 +1,134 @@
+---
+# ONT Device Provisioning Playbook
+# Auto-discovers and provisions ONT devices on the network
+
+- name: Provision ONT Device
+  hosts: "{{ target_olt }}"
+  gather_facts: yes
+  vars:
+    ont_serial: "{{ ont_serial_number }}"
+    customer_id: "{{ customer_id }}"
+    service_profile: "{{ service_profile_name | default('default') }}"
+    auto_discover: "{{ enable_auto_discovery | default(true) }}"
+
+  tasks:
+    - name: Check OLT reachability
+      wait_for:
+        host: "{{ inventory_hostname }}"
+        port: 830  # NETCONF port
+        timeout: 30
+      tags: [connectivity]
+
+    - name: Auto-discover ONTs (if enabled)
+      netconf_rpc:
+        rpc: get-unconfigured-onts
+      register: discovered_onts
+      when: auto_discover
+      tags: [discovery]
+
+    - name: Find target ONT in discovered list
+      set_fact:
+        ont_found: "{{ discovered_onts.output | selectattr('serial', 'equalto', ont_serial) | list | length > 0 }}"
+      when: auto_discover
+      tags: [discovery]
+
+    - name: Fail if ONT not found
+      fail:
+        msg: "ONT with serial {{ ont_serial }} not found on OLT"
+      when: auto_discover and not ont_found
+      tags: [discovery]
+
+    - name: Authorize ONT
+      netconf_config:
+        target: candidate
+        content: |
+          <config xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+            <gpon xmlns="urn:bbf:yang:bbf-gpon">
+              <ont-authorization>
+                <serial-number>{{ ont_serial }}</serial-number>
+                <authorized>true</authorized>
+                <authorization-date>{{ ansible_date_time.iso8601 }}</authorization-date>
+              </ont-authorization>
+            </gpon>
+          </config>
+      tags: [authorize]
+
+    - name: Apply service profile
+      netconf_config:
+        target: candidate
+        content: |
+          <config xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+            <gpon xmlns="urn:bbf:yang:bbf-gpon">
+              <ont>
+                <serial-number>{{ ont_serial }}</serial-number>
+                <service-profile>{{ service_profile }}</service-profile>
+                <customer-id>{{ customer_id }}</customer-id>
+              </ont>
+            </gpon>
+          </config>
+      tags: [profile]
+
+    - name: Enable ONT ports
+      netconf_config:
+        target: candidate
+        content: |
+          <config xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+            <interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
+              <interface>
+                <name>ont-{{ ont_serial }}-eth1</name>
+                <enabled>true</enabled>
+              </interface>
+            </interfaces>
+          </config>
+      tags: [ports]
+
+    - name: Commit ONT configuration
+      netconf_rpc:
+        rpc: commit
+      register: ont_commit
+      tags: [commit]
+
+    - name: Wait for ONT to come online
+      netconf_rpc:
+        rpc: get-ont-status
+        content: |
+          <ont-serial>{{ ont_serial }}</ont-serial>
+      register: ont_online_status
+      retries: 6
+      delay: 10
+      until: ont_online_status.output.operational_state == "online"
+      tags: [verify]
+
+    - name: Get ONT details
+      netconf_get:
+        filter: |
+          <gpon xmlns="urn:bbf:yang:bbf-gpon">
+            <ont>
+              <serial-number>{{ ont_serial }}</serial-number>
+            </ont>
+          </gpon>
+      register: ont_details
+      tags: [details]
+
+    - name: Callback with provisioning result
+      uri:
+        url: "{{ callback_url }}/api/v1/ansible/ont-provisioned"
+        method: POST
+        body_format: json
+        body:
+          ont_serial: "{{ ont_serial }}"
+          customer_id: "{{ customer_id }}"
+          status: "online"
+          olt_host: "{{ inventory_hostname }}"
+          ont_details: "{{ ont_details.output }}"
+          provisioned_at: "{{ ansible_date_time.iso8601 }}"
+        headers:
+          Authorization: "Bearer {{ api_token }}"
+      when: callback_url is defined
+      tags: [notify]
+
+  handlers:
+    - name: Rollback on failure
+      netconf_rpc:
+        rpc: discard-changes
+      when: ont_commit is failed

@@ -144,12 +144,11 @@ class TestEdgeCasesAndErrorScenarios:
                 tenant_id="test-tenant",
                 payment_id="payment_123",
             )
-        except:
+        except Exception:  # noqa: BLE001
             pass
 
         # Verify - next retry should be scheduled with exponential backoff
         if sample_payment_entity.next_retry_at:
-            expected_hours = 2**3  # 8 hours for 3rd retry
             assert sample_payment_entity.next_retry_at is not None
 
     async def test_payment_with_special_characters_in_metadata(

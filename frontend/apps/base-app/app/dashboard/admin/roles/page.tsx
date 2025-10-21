@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Shield, Users, ChevronRight, Search, Filter } from 'lucide-react';
-import { useRBAC } from '@/contexts/RBACContext';
-import { RouteGuard } from '@/components/auth/PermissionGuard';
-import RoleDetailsModal from '@/components/admin/RoleDetailsModal';
-import CreateRoleModal from '@/components/admin/CreateRoleModal';
-import AssignRoleModal from '@/components/admin/AssignRoleModal';
-import { toast } from '@/components/ui/toast';
-import { apiClient } from '@/lib/api/client';
+import { useState, useEffect } from "react";
+import { Plus, Edit, Trash2, Shield, Users, ChevronRight, Search, Filter } from "lucide-react";
+import { useRBAC } from "@/contexts/RBACContext";
+import { RouteGuard } from "@/components/auth/PermissionGuard";
+import RoleDetailsModal from "@/components/admin/RoleDetailsModal";
+import CreateRoleModal from "@/components/admin/CreateRoleModal";
+import AssignRoleModal from "@/components/admin/AssignRoleModal";
+import { toast } from "@/components/ui/toast";
+import { apiClient } from "@/lib/api/client";
 
 interface Role {
   id: string;
@@ -37,8 +37,8 @@ export default function RolesManagementPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -52,13 +52,13 @@ export default function RolesManagementPage() {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get<Role[]>('/api/v1/rbac/roles');
-      if (response.success && response.data) {
+      const response = await apiClient.get<Role[]>("/auth/rbac/roles");
+      if (response.data) {
         setRoles(response.data);
       }
     } catch (error) {
-      console.error('Error fetching roles:', error);
-      toast.error('Failed to load roles');
+      console.error("Error fetching roles:", error);
+      toast.error("Failed to load roles");
     } finally {
       setLoading(false);
     }
@@ -66,18 +66,18 @@ export default function RolesManagementPage() {
 
   const fetchPermissions = async () => {
     try {
-      const response = await apiClient.get<Permission[]>('/api/v1/rbac/permissions');
-      if (response.success && response.data) {
+      const response = await apiClient.get<Permission[]>("/auth/rbac/permissions");
+      if (response.data) {
         setPermissions(response.data);
       }
     } catch (error) {
-      console.error('Error fetching permissions:', error);
+      console.error("Error fetching permissions:", error);
     }
   };
 
   const handleDeleteRole = async (role: Role) => {
     if (role.is_system) {
-      toast.error('System roles cannot be deleted');
+      toast.error("System roles cannot be deleted");
       return;
     }
 
@@ -86,16 +86,12 @@ export default function RolesManagementPage() {
     }
 
     try {
-      const response = await apiClient.delete(`/api/v1/rbac/roles/${role.name}`);
-      if (response.success) {
-        toast.success('Role deleted successfully');
-        fetchRoles();
-      } else {
-        toast.error('Failed to delete role');
-      }
+      await apiClient.delete(`/auth/rbac/roles/${role.name}`);
+      toast.success("Role deleted successfully");
+      fetchRoles();
     } catch (error) {
-      console.error('Error deleting role:', error);
-      toast.error('Failed to delete role');
+      console.error("Error deleting role:", error);
+      toast.error("Failed to delete role");
     }
   };
 
@@ -109,29 +105,30 @@ export default function RolesManagementPage() {
     setShowAssignModal(true);
   };
 
-  const filteredRoles = roles.filter(role => {
-    const matchesSearch = role.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          role.description?.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredRoles = roles.filter((role) => {
+    const matchesSearch =
+      role.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      role.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    if (filterCategory === 'all') return matchesSearch;
-    if (filterCategory === 'system') return matchesSearch && role.is_system;
-    if (filterCategory === 'custom') return matchesSearch && !role.is_system;
-    if (filterCategory === 'default') return matchesSearch && role.is_default;
+    if (filterCategory === "all") return matchesSearch;
+    if (filterCategory === "system") return matchesSearch && role.is_system;
+    if (filterCategory === "custom") return matchesSearch && !role.is_system;
+    if (filterCategory === "default") return matchesSearch && role.is_default;
 
     return matchesSearch;
   });
 
   const getRoleBadgeColor = (role: Role) => {
-    if (role.is_system) return 'bg-red-100 text-red-800';
-    if (role.is_default) return 'bg-blue-100 text-blue-800';
-    return 'bg-green-100 text-green-800';
+    if (role.is_system) return "bg-red-100 text-red-800";
+    if (role.is_default) return "bg-blue-100 text-blue-800";
+    return "bg-green-100 text-green-800";
   };
 
   const getRoleBadgeText = (role: Role) => {
-    if (role.is_system) return 'System';
-    if (role.is_default) return 'Default';
-    return 'Custom';
+    if (role.is_system) return "System";
+    if (role.is_default) return "Default";
+    return "Custom";
   };
 
   return (
@@ -146,7 +143,7 @@ export default function RolesManagementPage() {
                 Manage roles and permissions for your organization
               </p>
             </div>
-            {hasPermission('system.manage') && (
+            {hasPermission("system.manage") && (
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors"
@@ -200,9 +197,7 @@ export default function RolesManagementPage() {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <Shield className="h-5 w-5 text-sky-400" />
-                    <h3 className="text-lg font-semibold text-white">
-                      {role.display_name}
-                    </h3>
+                    <h3 className="text-lg font-semibold text-white">{role.display_name}</h3>
                   </div>
                   <span className={`px-2 py-1 text-xs rounded-full ${getRoleBadgeColor(role)}`}>
                     {getRoleBadgeText(role)}
@@ -210,7 +205,7 @@ export default function RolesManagementPage() {
                 </div>
 
                 <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                  {role.description || 'No description available'}
+                  {role.description || "No description available"}
                 </p>
 
                 <div className="flex items-center justify-between text-xs text-foreground0 mb-3">
@@ -255,7 +250,7 @@ export default function RolesManagementPage() {
                     <Users className="h-3 w-3" />
                     Assign
                   </button>
-                  {!role.is_system && hasPermission('system.manage') && (
+                  {!role.is_system && hasPermission("system.manage") && (
                     <button
                       onClick={() => handleDeleteRole(role)}
                       className="p-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors"
@@ -275,7 +270,9 @@ export default function RolesManagementPage() {
             <Shield className="h-12 w-12 mb-4" />
             <p className="text-lg font-medium">No roles found</p>
             <p className="text-sm mt-2">
-              {searchQuery ? 'Try adjusting your search criteria' : 'Create your first role to get started'}
+              {searchQuery
+                ? "Try adjusting your search criteria"
+                : "Create your first role to get started"}
             </p>
           </div>
         )}

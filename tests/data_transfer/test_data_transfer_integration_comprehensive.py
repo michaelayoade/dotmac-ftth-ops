@@ -26,7 +26,7 @@ import pytest
 # Mark all tests in this module as integration tests
 pytestmark = pytest.mark.integration
 
-from dotmac.platform.data_transfer.core import (
+from dotmac.platform.data_transfer.core import (  # noqa: E402
     DataBatch,
     DataFormat,
     DataRecord,
@@ -35,11 +35,10 @@ from dotmac.platform.data_transfer.core import (
     ProgressInfo,
     TransferConfig,
 )
-from dotmac.platform.data_transfer.factory import (
+from dotmac.platform.data_transfer.factory import (  # noqa: E402
     create_exporter,
     create_importer,
 )
-
 
 # ============================================================================
 # Helper Functions
@@ -603,7 +602,7 @@ class TestLargeDatasetHandling:
         pd.DataFrame(large_dataset).to_csv(csv_file, index=False)
 
         # Track progress during import
-        progress = ProgressInfo(total_records=1000)
+        ProgressInfo(total_records=1000)
 
         with patch("dotmac.platform.data_transfer.factory.settings") as mock_settings:
             mock_settings.features.data_transfer_enabled = True

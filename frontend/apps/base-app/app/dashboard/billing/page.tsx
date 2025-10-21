@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 /**
  * Redirect /dashboard/billing → /dashboard/billing-revenue
@@ -13,7 +13,7 @@ export default function BillingRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/dashboard/billing-revenue');
+    router.replace("/dashboard/billing-revenue");
   }, [router]);
 
   return (

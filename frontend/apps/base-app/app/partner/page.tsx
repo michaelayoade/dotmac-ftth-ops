@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 import { PartnerManagementView } from "@/components/partners/PartnerManagementView";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +16,8 @@ export default function PartnerPortalOverview() {
         <CardHeader>
           <CardTitle>Welcome to the Partner Portal</CardTitle>
           <CardDescription>
-            Track opportunities, manage the tenants you support, and access enablement resources in one place.
+            Track opportunities, manage the tenants you support, and access enablement resources in
+            one place.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 sm:flex-row">

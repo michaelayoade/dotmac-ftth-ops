@@ -6,11 +6,11 @@ import React, {
   useRef,
   useCallback,
   useMemo,
-} from 'react';
+} from "react";
 
-export type NotificationType = 'success' | 'error' | 'warning' | 'info' | 'system';
-export type NotificationPriority = 'low' | 'medium' | 'high' | 'critical';
-export type NotificationChannel = 'browser' | 'websocket' | 'email' | 'sms' | 'push';
+export type NotificationType = "success" | "error" | "warning" | "info" | "system";
+export type NotificationPriority = "low" | "medium" | "high" | "critical";
+export type NotificationChannel = "browser" | "websocket" | "email" | "sms" | "push";
 
 export interface Notification {
   id: string;
@@ -32,7 +32,7 @@ export interface Notification {
 export interface NotificationAction {
   id: string;
   label: string;
-  type: 'primary' | 'secondary' | 'danger';
+  type: "primary" | "secondary" | "danger";
   handler: (notification: Notification) => void | Promise<void>;
 }
 
@@ -57,18 +57,18 @@ export interface NotificationSettings {
 }
 
 type NotificationAction_Type =
-  | { type: 'ADD_NOTIFICATION'; payload: Notification }
-  | { type: 'REMOVE_NOTIFICATION'; payload: string }
-  | { type: 'MARK_READ'; payload: string }
-  | { type: 'MARK_ALL_READ' }
-  | { type: 'CLEAR_ALL' }
-  | { type: 'UPDATE_SETTINGS'; payload: Partial<NotificationSettings> }
-  | { type: 'SET_CONNECTION_STATUS'; payload: boolean }
-  | { type: 'CLEANUP_EXPIRED' };
+  | { type: "ADD_NOTIFICATION"; payload: Notification }
+  | { type: "REMOVE_NOTIFICATION"; payload: string }
+  | { type: "MARK_READ"; payload: string }
+  | { type: "MARK_ALL_READ" }
+  | { type: "CLEAR_ALL" }
+  | { type: "UPDATE_SETTINGS"; payload: Partial<NotificationSettings> }
+  | { type: "SET_CONNECTION_STATUS"; payload: boolean }
+  | { type: "CLEANUP_EXPIRED" };
 
 interface NotificationContextType {
   state: NotificationState;
-  addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
+  addNotification: (notification: Omit<Notification, "id" | "timestamp" | "read">) => void;
   removeNotification: (id: string) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
@@ -111,14 +111,14 @@ const initialState: NotificationState = {
 
 function notificationReducer(
   state: NotificationState,
-  action: NotificationAction_Type
+  action: NotificationAction_Type,
 ): NotificationState {
   switch (action.type) {
-    case 'ADD_NOTIFICATION': {
+    case "ADD_NOTIFICATION": {
       const notification = action.payload;
       const notifications = [notification, ...state.notifications].slice(
         0,
-        state.settings.maxNotifications
+        state.settings.maxNotifications,
       );
 
       return {
@@ -128,7 +128,7 @@ function notificationReducer(
       };
     }
 
-    case 'REMOVE_NOTIFICATION': {
+    case "REMOVE_NOTIFICATION": {
       const notifications = state.notifications.filter((n) => n.id !== action.payload);
       const removedNotification = state.notifications.find((n) => n.id === action.payload);
       const unreadCount =
@@ -143,9 +143,9 @@ function notificationReducer(
       };
     }
 
-    case 'MARK_READ': {
+    case "MARK_READ": {
       const notifications = state.notifications.map((n) =>
-        n.id === action.payload ? { ...n, read: true } : n
+        n.id === action.payload ? { ...n, read: true } : n,
       );
       const notification = state.notifications.find((n) => n.id === action.payload);
       const unreadCount =
@@ -158,7 +158,7 @@ function notificationReducer(
       };
     }
 
-    case 'MARK_ALL_READ': {
+    case "MARK_ALL_READ": {
       return {
         ...state,
         notifications: state.notifications.map((n) => ({ ...n, read: true })),
@@ -166,7 +166,7 @@ function notificationReducer(
       };
     }
 
-    case 'CLEAR_ALL': {
+    case "CLEAR_ALL": {
       return {
         ...state,
         notifications: [],
@@ -174,26 +174,26 @@ function notificationReducer(
       };
     }
 
-    case 'UPDATE_SETTINGS': {
+    case "UPDATE_SETTINGS": {
       return {
         ...state,
         settings: { ...state.settings, ...action.payload },
       };
     }
 
-    case 'SET_CONNECTION_STATUS': {
+    case "SET_CONNECTION_STATUS": {
       return {
         ...state,
         isConnected: action.payload,
       };
     }
 
-    case 'CLEANUP_EXPIRED': {
+    case "CLEANUP_EXPIRED": {
       const now = new Date();
       const notifications = state.notifications.filter((n) => !n.expiresAt || n.expiresAt > now);
       const expiredCount = state.notifications.length - notifications.length;
       const expiredUnread = state.notifications.filter(
-        (n) => n.expiresAt && n.expiresAt <= now && !n.read
+        (n) => n.expiresAt && n.expiresAt <= now && !n.read,
       ).length;
 
       return {
@@ -246,16 +246,16 @@ export function NotificationProvider({
         // Create audio element if not exists
         if (!soundRef.current) {
           soundRef.current = new Audio();
-          soundRef.current.preload = 'auto';
+          soundRef.current.preload = "auto";
         }
 
         // Different sounds for different types
         const soundMap: Record<NotificationType, string> = {
-          success: '/sounds/notification-success.wav',
-          error: '/sounds/notification-error.wav',
-          warning: '/sounds/notification-warning.wav',
-          info: '/sounds/notification-info.wav',
-          system: '/sounds/notification-system.wav',
+          success: "/sounds/notification-success.wav",
+          error: "/sounds/notification-error.wav",
+          warning: "/sounds/notification-warning.wav",
+          info: "/sounds/notification-info.wav",
+          system: "/sounds/notification-system.wav",
         };
 
         soundRef.current.src = soundMap[type] || soundMap.info;
@@ -264,52 +264,52 @@ export function NotificationProvider({
           // Ignore audio play errors (user interaction required)
         });
       } catch (error) {
-        console.warn('Failed to play notification sound:', error);
+        console.warn("Failed to play notification sound:", error);
       }
     },
-    [state.settings.soundEnabled]
+    [state.settings.soundEnabled],
   );
 
   // Show browser notification
   const showBrowserNotification = useCallback(
     async (notification: Notification) => {
-      if (!state.settings.enableBrowser || !('Notification' in window)) return;
+      if (!state.settings.enableBrowser || !("Notification" in window)) return;
 
       try {
         let permission = Notification.permission;
 
-        if (permission === 'default') {
+        if (permission === "default") {
           permission = await Notification.requestPermission();
         }
 
-        if (permission === 'granted') {
+        if (permission === "granted") {
           const browserNotification = new Notification(notification.title, {
             body: notification.message,
             icon: `/icons/notification-${notification.type}.png`,
-            badge: '/icons/badge.png',
+            badge: "/icons/badge.png",
             tag: notification.id,
-            requireInteraction: notification.priority === 'critical',
+            requireInteraction: notification.priority === "critical",
             timestamp: notification.timestamp.getTime(),
           });
 
           browserNotification.onclick = () => {
             window.focus();
-            dispatch({ type: 'MARK_READ', payload: notification.id });
+            dispatch({ type: "MARK_READ", payload: notification.id });
             browserNotification.close();
           };
 
           // Auto-close after delay (except for critical notifications)
-          if (notification.priority !== 'critical' && state.settings.autoHideDelay > 0) {
+          if (notification.priority !== "critical" && state.settings.autoHideDelay > 0) {
             setTimeout(() => {
               browserNotification.close();
             }, state.settings.autoHideDelay);
           }
         }
       } catch (error) {
-        console.warn('Failed to show browser notification:', error);
+        console.warn("Failed to show browser notification:", error);
       }
     },
-    [state.settings]
+    [state.settings],
   );
 
   // WebSocket connection management
@@ -323,17 +323,17 @@ export function NotificationProvider({
       websocketRef.current = ws;
 
       ws.onopen = () => {
-        dispatch({ type: 'SET_CONNECTION_STATUS', payload: true });
+        dispatch({ type: "SET_CONNECTION_STATUS", payload: true });
 
         // Send authentication if provided
         if (apiKey || userId) {
           ws.send(
             JSON.stringify({
-              type: 'auth',
+              type: "auth",
               apiKey,
               userId,
               tenantId,
-            })
+            }),
           );
         }
       };
@@ -342,7 +342,7 @@ export function NotificationProvider({
         try {
           const data = JSON.parse(event.data);
 
-          if (data.type === 'notification') {
+          if (data.type === "notification") {
             const notification: Notification = {
               ...data.notification,
               id: generateId(),
@@ -350,15 +350,15 @@ export function NotificationProvider({
               read: false,
             };
 
-            dispatch({ type: 'ADD_NOTIFICATION', payload: notification });
+            dispatch({ type: "ADD_NOTIFICATION", payload: notification });
           }
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
+          console.error("Failed to parse WebSocket message:", error);
         }
       };
 
       ws.onclose = () => {
-        dispatch({ type: 'SET_CONNECTION_STATUS', payload: false });
+        dispatch({ type: "SET_CONNECTION_STATUS", payload: false });
 
         // Reconnect after delay
         setTimeout(() => {
@@ -369,12 +369,12 @@ export function NotificationProvider({
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        onError?.(new Error('WebSocket connection failed'));
-        dispatch({ type: 'SET_CONNECTION_STATUS', payload: false });
+        console.error("WebSocket error:", error);
+        onError?.(new Error("WebSocket connection failed"));
+        dispatch({ type: "SET_CONNECTION_STATUS", payload: false });
       };
     } catch (error) {
-      console.error('Failed to establish WebSocket connection:', error);
+      console.error("Failed to establish WebSocket connection:", error);
       onError?.(error as Error);
     }
   }, [websocketUrl, state.settings.enableWebSocket, apiKey, userId, tenantId, onError, generateId]);
@@ -384,12 +384,12 @@ export function NotificationProvider({
       websocketRef.current.close();
       websocketRef.current = null;
     }
-    dispatch({ type: 'SET_CONNECTION_STATUS', payload: false });
+    dispatch({ type: "SET_CONNECTION_STATUS", payload: false });
   }, []);
 
   // Add notification
   const addNotification = useCallback(
-    (notificationData: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+    (notificationData: Omit<Notification, "id" | "timestamp" | "read">) => {
       const notification: Notification = {
         ...notificationData,
         id: generateId(),
@@ -404,46 +404,46 @@ export function NotificationProvider({
 
       if (!shouldShow) return;
 
-      dispatch({ type: 'ADD_NOTIFICATION', payload: notification });
+      dispatch({ type: "ADD_NOTIFICATION", payload: notification });
 
       // Handle different notification channels
-      if (notification.channel.includes('browser')) {
+      if (notification.channel.includes("browser")) {
         showBrowserNotification(notification);
       }
 
       // Play sound for high priority notifications
-      if (['high', 'critical'].includes(notification.priority)) {
+      if (["high", "critical"].includes(notification.priority)) {
         playNotificationSound(notification.type);
       }
     },
-    [generateId, state.settings, showBrowserNotification, playNotificationSound]
+    [generateId, state.settings, showBrowserNotification, playNotificationSound],
   );
 
   // Other actions
   const removeNotification = useCallback((id: string) => {
-    dispatch({ type: 'REMOVE_NOTIFICATION', payload: id });
+    dispatch({ type: "REMOVE_NOTIFICATION", payload: id });
   }, []);
 
   const markAsRead = useCallback((id: string) => {
-    dispatch({ type: 'MARK_READ', payload: id });
+    dispatch({ type: "MARK_READ", payload: id });
   }, []);
 
   const markAllAsRead = useCallback(() => {
-    dispatch({ type: 'MARK_ALL_READ' });
+    dispatch({ type: "MARK_ALL_READ" });
   }, []);
 
   const clearAll = useCallback(() => {
-    dispatch({ type: 'CLEAR_ALL' });
+    dispatch({ type: "CLEAR_ALL" });
   }, []);
 
   const updateSettings = useCallback((settings: Partial<NotificationSettings>) => {
-    dispatch({ type: 'UPDATE_SETTINGS', payload: settings });
+    dispatch({ type: "UPDATE_SETTINGS", payload: settings });
   }, []);
 
   // Setup cleanup interval for expired notifications
   useEffect(() => {
     cleanupIntervalRef.current = setInterval(() => {
-      dispatch({ type: 'CLEANUP_EXPIRED' });
+      dispatch({ type: "CLEANUP_EXPIRED" });
     }, 60000); // Check every minute
 
     return () => {
@@ -486,7 +486,7 @@ export function NotificationProvider({
       updateSettings,
       connect,
       disconnect,
-    ]
+    ],
   );
 
   return (
@@ -497,7 +497,7 @@ export function NotificationProvider({
 export function useNotifications(): NotificationContextType {
   const context = useContext(NotificationContext);
   if (!context) {
-    throw new Error('useNotifications must be used within a NotificationProvider');
+    throw new Error("useNotifications must be used within a NotificationProvider");
   }
   return context;
 }
@@ -506,15 +506,15 @@ export function useNotifications(): NotificationContextType {
 export interface NotificationListProps {
   className?: string;
   maxVisible?: number;
-  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+  position?: "top-right" | "top-left" | "bottom-right" | "bottom-left";
   showActions?: boolean;
   onNotificationClick?: (notification: Notification) => void;
 }
 
 export function NotificationList({
-  className = '',
+  className = "",
   maxVisible = 5,
-  position = 'top-right',
+  position = "top-right",
   showActions = true,
   onNotificationClick,
 }: NotificationListProps) {
@@ -525,10 +525,10 @@ export function NotificationList({
   }, [state.notifications, maxVisible]);
 
   const positionClasses = {
-    'top-right': 'fixed top-4 right-4 z-50',
-    'top-left': 'fixed top-4 left-4 z-50',
-    'bottom-right': 'fixed bottom-4 right-4 z-50',
-    'bottom-left': 'fixed bottom-4 left-4 z-50',
+    "top-right": "fixed top-4 right-4 z-50",
+    "top-left": "fixed top-4 left-4 z-50",
+    "bottom-right": "fixed bottom-4 right-4 z-50",
+    "bottom-left": "fixed bottom-4 left-4 z-50",
   };
 
   return (
@@ -563,18 +563,18 @@ function NotificationItem({
   onClick,
 }: NotificationItemProps) {
   const typeStyles = {
-    success: 'bg-green-50 border-green-200 text-green-800',
-    error: 'bg-red-50 border-red-200 text-red-800',
-    warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-    info: 'bg-blue-50 border-blue-200 text-blue-800',
-    system: 'bg-gray-50 border-gray-200 text-gray-800',
+    success: "bg-green-50 border-green-200 text-green-800",
+    error: "bg-red-50 border-red-200 text-red-800",
+    warning: "bg-yellow-50 border-yellow-200 text-yellow-800",
+    info: "bg-blue-50 border-blue-200 text-blue-800",
+    system: "bg-gray-50 border-gray-200 text-gray-800",
   };
 
   const priorityIcons = {
-    low: '📢',
-    medium: '⚠️',
-    high: '🔔',
-    critical: '🚨',
+    low: "📢",
+    medium: "⚠️",
+    high: "🔔",
+    critical: "🚨",
   };
 
   return (
@@ -582,29 +582,29 @@ function NotificationItem({
       className={`
         max-w-sm p-4 border rounded-lg shadow-lg cursor-pointer transition-all duration-300
         ${typeStyles[notification.type]}
-        ${!notification.read ? 'ring-2 ring-blue-500 ring-opacity-30' : ''}
+        ${!notification.read ? "ring-2 ring-blue-500 ring-opacity-30" : ""}
       `}
       onClick={onClick}
     >
-      <div className='flex items-start justify-between'>
-        <div className='flex items-start space-x-2 flex-1'>
-          <span className='text-lg'>{priorityIcons[notification.priority]}</span>
-          <div className='flex-1 min-w-0'>
-            <h4 className='font-semibold text-sm truncate'>{notification.title}</h4>
-            <p className='text-sm mt-1 break-words'>{notification.message}</p>
-            <p className='text-xs mt-2 opacity-70'>{notification.timestamp.toLocaleTimeString()}</p>
+      <div className="flex items-start justify-between">
+        <div className="flex items-start space-x-2 flex-1">
+          <span className="text-lg">{priorityIcons[notification.priority]}</span>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-sm truncate">{notification.title}</h4>
+            <p className="text-sm mt-1 break-words">{notification.message}</p>
+            <p className="text-xs mt-2 opacity-70">{notification.timestamp.toLocaleTimeString()}</p>
           </div>
         </div>
 
-        <div className='flex items-center space-x-1 ml-2'>
+        <div className="flex items-center space-x-1 ml-2">
           {!notification.read && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onRead();
               }}
-              className='text-xs bg-white bg-opacity-50 hover:bg-opacity-75 px-2 py-1 rounded'
-              title='Mark as read'
+              className="text-xs bg-white bg-opacity-50 hover:bg-opacity-75 px-2 py-1 rounded"
+              title="Mark as read"
             >
               ✓
             </button>
@@ -614,8 +614,8 @@ function NotificationItem({
               e.stopPropagation();
               onClose();
             }}
-            className='text-xs bg-white bg-opacity-50 hover:bg-opacity-75 px-2 py-1 rounded'
-            title='Close'
+            className="text-xs bg-white bg-opacity-50 hover:bg-opacity-75 px-2 py-1 rounded"
+            title="Close"
           >
             ✕
           </button>
@@ -623,7 +623,7 @@ function NotificationItem({
       </div>
 
       {showActions && notification.actions && notification.actions.length > 0 && (
-        <div className='flex space-x-2 mt-3 pt-3 border-t border-current border-opacity-20'>
+        <div className="flex space-x-2 mt-3 pt-3 border-t border-current border-opacity-20">
           {notification.actions.map((action) => (
             <button
               key={action.id}
@@ -633,9 +633,9 @@ function NotificationItem({
               }}
               className={`
                 text-xs px-3 py-1 rounded transition-colors
-                ${action.type === 'primary' ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}
-                ${action.type === 'secondary' ? 'bg-gray-300 text-gray-700 hover:bg-gray-400' : ''}
-                ${action.type === 'danger' ? 'bg-red-600 text-white hover:bg-red-700' : ''}
+                ${action.type === "primary" ? "bg-blue-600 text-white hover:bg-blue-700" : ""}
+                ${action.type === "secondary" ? "bg-gray-300 text-gray-700 hover:bg-gray-400" : ""}
+                ${action.type === "danger" ? "bg-red-600 text-white hover:bg-red-700" : ""}
               `}
             >
               {action.label}
@@ -655,7 +655,7 @@ export interface NotificationBadgeProps {
 }
 
 export function NotificationBadge({
-  className = '',
+  className = "",
   showCount = true,
   maxCount = 99,
 }: NotificationBadgeProps) {
@@ -674,7 +674,7 @@ export function NotificationBadge({
         leading-none text-white bg-red-600 rounded-full ${className}
       `}
     >
-      {showCount ? displayCount : ''}
+      {showCount ? displayCount : ""}
     </span>
   );
 }
@@ -684,14 +684,14 @@ export interface NotificationSystemProps {
   children: React.ReactNode;
   maxNotifications?: number;
   defaultDuration?: number;
-  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left';
+  position?: "top-right" | "top-left" | "bottom-right" | "bottom-left";
 }
 
 function NotificationSystem({
   children,
   maxNotifications = 10,
   defaultDuration = 5000,
-  position = 'top-right',
+  position = "top-right",
 }: NotificationSystemProps) {
   return (
     <NotificationProvider maxNotifications={maxNotifications} defaultDuration={defaultDuration}>
@@ -706,13 +706,13 @@ export function useToast() {
   const { addNotification, removeNotification, clearNotifications } = useNotifications();
 
   const toast = useCallback(
-    (message: string, options?: Partial<Omit<Notification, 'id' | 'timestamp' | 'read'>>) => {
+    (message: string, options?: Partial<Omit<Notification, "id" | "timestamp" | "read">>) => {
       return addNotification({
-        title: options?.title || 'Notification',
+        title: options?.title || "Notification",
         message,
-        type: options?.type || 'info',
-        priority: options?.priority || 'medium',
-        channel: options?.channel || ['browser'],
+        type: options?.type || "info",
+        priority: options?.priority || "medium",
+        channel: options?.channel || ["browser"],
         persistent: options?.persistent || false,
         actions: options?.actions,
         metadata: options?.metadata,
@@ -721,35 +721,35 @@ export function useToast() {
         tenantId: options?.tenantId,
       });
     },
-    [addNotification]
+    [addNotification],
   );
 
   const success = useCallback(
     (message: string, title?: string) => {
-      return toast(message, { type: 'success', title: title || 'Success' });
+      return toast(message, { type: "success", title: title || "Success" });
     },
-    [toast]
+    [toast],
   );
 
   const error = useCallback(
     (message: string, title?: string) => {
-      return toast(message, { type: 'error', title: title || 'Error' });
+      return toast(message, { type: "error", title: title || "Error" });
     },
-    [toast]
+    [toast],
   );
 
   const warning = useCallback(
     (message: string, title?: string) => {
-      return toast(message, { type: 'warning', title: title || 'Warning' });
+      return toast(message, { type: "warning", title: title || "Warning" });
     },
-    [toast]
+    [toast],
   );
 
   const info = useCallback(
     (message: string, title?: string) => {
-      return toast(message, { type: 'info', title: title || 'Info' });
+      return toast(message, { type: "info", title: title || "Info" });
     },
-    [toast]
+    [toast],
   );
 
   return {

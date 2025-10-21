@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { X, Shield, Check, Save, AlertTriangle } from 'lucide-react';
-import { toast } from '@/components/ui/toast';
-import { apiClient } from '@/lib/api/client';
+import { useState, useEffect } from "react";
+import { X, Shield, Check, Save, AlertTriangle } from "lucide-react";
+import { toast } from "@/components/ui/toast";
+import { apiClient } from "@/lib/api/client";
 
 interface Permission {
   id: string;
@@ -34,31 +34,39 @@ interface RoleDetailsModalProps {
   onUpdate: () => void;
 }
 
-export default function RoleDetailsModal({ role, permissions, onClose, onUpdate }: RoleDetailsModalProps) {
+export default function RoleDetailsModal({
+  role,
+  permissions,
+  onClose,
+  onUpdate,
+}: RoleDetailsModalProps) {
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     display_name: role.display_name,
-    description: role.description || '',
+    description: role.description || "",
     priority: role.priority,
     is_active: role.is_active,
     is_default: role.is_default,
   });
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(
-    new Set(role.permissions.map(p => p.name))
+    new Set(role.permissions.map((p) => p.name)),
   );
   const [saving, setSaving] = useState(false);
 
   // Group permissions by category
-  const permissionsByCategory = permissions.reduce((acc, permission) => {
-    if (!acc[permission.category]) {
-      acc[permission.category] = [];
-    }
-    const category = acc[permission.category];
-    if (category) {
-      category.push(permission);
-    }
-    return acc;
-  }, {} as Record<string, Permission[]>);
+  const permissionsByCategory = permissions.reduce(
+    (acc, permission) => {
+      if (!acc[permission.category]) {
+        acc[permission.category] = [];
+      }
+      const category = acc[permission.category];
+      if (category) {
+        category.push(permission);
+      }
+      return acc;
+    },
+    {} as Record<string, Permission[]>,
+  );
 
   const handlePermissionToggle = (permissionName: string) => {
     const newSelected = new Set(selectedPermissions);
@@ -71,16 +79,16 @@ export default function RoleDetailsModal({ role, permissions, onClose, onUpdate 
   };
 
   const handleCategoryToggle = (categoryPermissions: Permission[]) => {
-    const categoryPermissionNames = categoryPermissions.map(p => p.name);
-    const allSelected = categoryPermissionNames.every(name => selectedPermissions.has(name));
+    const categoryPermissionNames = categoryPermissions.map((p) => p.name);
+    const allSelected = categoryPermissionNames.every((name) => selectedPermissions.has(name));
 
     const newSelected = new Set(selectedPermissions);
     if (allSelected) {
       // Unselect all in category
-      categoryPermissionNames.forEach(name => newSelected.delete(name));
+      categoryPermissionNames.forEach((name) => newSelected.delete(name));
     } else {
       // Select all in category
-      categoryPermissionNames.forEach(name => newSelected.add(name));
+      categoryPermissionNames.forEach((name) => newSelected.add(name));
     }
     setSelectedPermissions(newSelected);
   };
@@ -92,32 +100,34 @@ export default function RoleDetailsModal({ role, permissions, onClose, onUpdate 
     try {
       const updateData = {
         ...formData,
-        permissions: Array.from(selectedPermissions)
+        permissions: Array.from(selectedPermissions),
       };
 
-      const response = await apiClient.patch(`/api/v1/rbac/roles/${role.name}`, updateData);
+      const response = await apiClient.patch(`/auth/rbac/roles/${role.name}`, updateData);
 
-      if (response.success) {
-        toast.success('Role updated successfully');
+      if (response.status >= 200 && response.status < 300) {
+        toast.success("Role updated successfully");
         onUpdate();
       } else {
-        toast.error('Failed to update role');
+        toast.error("Failed to update role");
       }
     } catch (error) {
-      console.error('Error updating role:', error);
-      toast.error('Failed to update role');
+      console.error("Error updating role:", error);
+      toast.error("Failed to update role");
     } finally {
       setSaving(false);
     }
   };
 
   const getCategoryStatus = (categoryPermissions: Permission[]) => {
-    const categoryPermissionNames = categoryPermissions.map(p => p.name);
-    const selectedCount = categoryPermissionNames.filter(name => selectedPermissions.has(name)).length;
+    const categoryPermissionNames = categoryPermissions.map((p) => p.name);
+    const selectedCount = categoryPermissionNames.filter((name) =>
+      selectedPermissions.has(name),
+    ).length;
 
-    if (selectedCount === 0) return 'none';
-    if (selectedCount === categoryPermissionNames.length) return 'all';
-    return 'partial';
+    if (selectedCount === 0) return "none";
+    if (selectedCount === categoryPermissionNames.length) return "all";
+    return "partial";
   };
 
   return (
@@ -129,7 +139,7 @@ export default function RoleDetailsModal({ role, permissions, onClose, onUpdate 
             <Shield className="h-6 w-6 text-sky-400" />
             <div>
               <h2 className="text-xl font-semibold text-white">
-                {editMode ? 'Edit Role' : 'Role Details'}
+                {editMode ? "Edit Role" : "Role Details"}
               </h2>
               <p className="text-sm text-slate-400">{role.name}</p>
             </div>
@@ -145,7 +155,7 @@ export default function RoleDetailsModal({ role, permissions, onClose, onUpdate 
                 onClick={() => setEditMode(!editMode)}
                 className="px-4 py-2 bg-sky-500 text-white rounded hover:bg-sky-600 transition-colors"
               >
-                {editMode ? 'Cancel' : 'Edit'}
+                {editMode ? "Cancel" : "Edit"}
               </button>
             )}
             <button
@@ -180,14 +190,17 @@ export default function RoleDetailsModal({ role, permissions, onClose, onUpdate 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Priority
-                </label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Priority</label>
                 {editMode ? (
                   <input
                     type="number"
                     value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        priority: parseInt(e.target.value),
+                      })
+                    }
                     className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-sky-500"
                   />
                 ) : (
@@ -196,9 +209,7 @@ export default function RoleDetailsModal({ role, permissions, onClose, onUpdate 
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
                 {editMode ? (
                   <textarea
                     value={formData.description}
@@ -207,7 +218,7 @@ export default function RoleDetailsModal({ role, permissions, onClose, onUpdate 
                     className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-sky-500"
                   />
                 ) : (
-                  <p className="text-white">{role.description || 'No description'}</p>
+                  <p className="text-white">{role.description || "No description"}</p>
                 )}
               </div>
 
@@ -217,7 +228,12 @@ export default function RoleDetailsModal({ role, permissions, onClose, onUpdate 
                     <input
                       type="checkbox"
                       checked={formData.is_active}
-                      onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          is_active: e.target.checked,
+                        })
+                      }
                       className="rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
                     />
                     Active
@@ -226,7 +242,12 @@ export default function RoleDetailsModal({ role, permissions, onClose, onUpdate 
                     <input
                       type="checkbox"
                       checked={formData.is_default}
-                      onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          is_default: e.target.checked,
+                        })
+                      }
                       className="rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
                     />
                     Default Role
@@ -267,20 +288,21 @@ export default function RoleDetailsModal({ role, permissions, onClose, onUpdate 
                         {editMode && !role.is_system && (
                           <input
                             type="checkbox"
-                            checked={status === 'all'}
+                            checked={status === "all"}
                             ref={(el) => {
-                              if (el) el.indeterminate = status === 'partial';
+                              if (el) el.indeterminate = status === "partial";
                             }}
                             onChange={() => handleCategoryToggle(categoryPermissions)}
                             className="rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
                           />
                         )}
                         <h4 className="font-medium text-white capitalize">
-                          {category.replace('_', ' ')}
+                          {category.replace("_", " ")}
                         </h4>
                       </div>
                       <span className="text-xs text-slate-400">
-                        {categoryPermissions.filter(p => selectedPermissions.has(p.name)).length} / {categoryPermissions.length}
+                        {categoryPermissions.filter((p) => selectedPermissions.has(p.name)).length}{" "}
+                        / {categoryPermissions.length}
                       </span>
                     </div>
 
@@ -310,9 +332,7 @@ export default function RoleDetailsModal({ role, permissions, onClose, onUpdate 
                             <p className="text-sm font-medium text-white">
                               {permission.display_name}
                             </p>
-                            <p className="text-xs text-slate-400 mt-1">
-                              {permission.description}
-                            </p>
+                            <p className="text-xs text-slate-400 mt-1">{permission.description}</p>
                             <p className="text-xs text-slate-500 mt-1 font-mono">
                               {permission.name}
                             </p>
@@ -342,7 +362,7 @@ export default function RoleDetailsModal({ role, permissions, onClose, onUpdate 
               className="flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded hover:bg-sky-600 transition-colors disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
-              {saving ? 'Saving...' : 'Save Changes'}
+              {saving ? "Saving..." : "Save Changes"}
             </button>
           </div>
         )}

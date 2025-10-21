@@ -11,19 +11,19 @@ import {
   calculateTotalCommission,
   validateCommissionData,
   auditCommissionCalculation,
-} from '../commission-engine';
+} from "../commission-engine";
 
-describe('CommissionEngine', () => {
+describe("CommissionEngine", () => {
   let commissionEngine: CommissionEngine;
 
   beforeEach(() => {
     commissionEngine = new CommissionEngine();
   });
 
-  describe('Tier-based Commission Calculations', () => {
+  describe("Tier-based Commission Calculations", () => {
     const testTier: CommissionTier = {
-      id: 'test_tier',
-      name: 'Test Tier',
+      id: "test_tier",
+      name: "Test Tier",
       minimumRevenue: 10000,
       baseRate: 0.08, // 8%
       bonusRate: 0.02, // 2% bonus
@@ -35,14 +35,14 @@ describe('CommissionEngine', () => {
       },
     };
 
-    test('calculates basic commission correctly', () => {
+    test("calculates basic commission correctly", () => {
       const revenue = 25000;
       const expectedCommission = revenue * testTier.baseRate; // 25000 * 0.08 = 2000
 
       const result = calculateTierCommission({
         revenue,
         tier: testTier,
-        productType: 'residential_basic',
+        productType: "residential_basic",
       });
 
       expect(result.baseCommission).toBe(expectedCommission);
@@ -50,9 +50,9 @@ describe('CommissionEngine', () => {
       expect(result.tier).toBe(testTier.id);
     });
 
-    test('applies product multipliers correctly', () => {
+    test("applies product multipliers correctly", () => {
       const revenue = 20000;
-      const productType = 'enterprise';
+      const productType = "enterprise";
       const multiplier = testTier.productMultipliers![productType]; // 3.0
       const expectedCommission = revenue * testTier.baseRate * multiplier; // 20000 * 0.08 * 3.0 = 4800
 
@@ -67,7 +67,7 @@ describe('CommissionEngine', () => {
       expect(result.total).toBe(expectedCommission);
     });
 
-    test('applies bonus rate when applicable', () => {
+    test("applies bonus rate when applicable", () => {
       const revenue = 50000;
       const baseCommission = revenue * testTier.baseRate;
       const bonusCommission = revenue * testTier.bonusRate!;
@@ -76,7 +76,7 @@ describe('CommissionEngine', () => {
       const result = calculateTierCommission({
         revenue,
         tier: testTier,
-        productType: 'residential_basic',
+        productType: "residential_basic",
         applyBonusRate: true,
       });
 
@@ -85,31 +85,35 @@ describe('CommissionEngine', () => {
       expect(result.total).toBe(expectedTotal);
     });
 
-    test('handles minimum revenue requirements', () => {
+    test("handles minimum revenue requirements", () => {
       const revenue = 5000; // Below minimum of 10000
 
       const result = calculateTierCommission({
         revenue,
         tier: testTier,
-        productType: 'residential_basic',
+        productType: "residential_basic",
       });
 
       expect(result.eligible).toBe(false);
       expect(result.total).toBe(0);
-      expect(result.reason).toBe('Revenue below tier minimum');
+      expect(result.reason).toBe("Revenue below tier minimum");
     });
 
-    test('calculates multi-tier commission structure', () => {
+    test("calculates multi-tier commission structure", () => {
       const sales = [
-        { revenue: 15000, productType: 'residential_premium', partnerId: 'P001' },
-        { revenue: 30000, productType: 'business_pro', partnerId: 'P001' },
-        { revenue: 50000, productType: 'enterprise', partnerId: 'P001' },
+        {
+          revenue: 15000,
+          productType: "residential_premium",
+          partnerId: "P001",
+        },
+        { revenue: 30000, productType: "business_pro", partnerId: "P001" },
+        { revenue: 50000, productType: "enterprise", partnerId: "P001" },
       ];
 
       const totalCommission = calculateTotalCommission({
         sales,
         tier: testTier,
-        period: '2024-08',
+        period: "2024-08",
       });
 
       const expectedTotal =
@@ -120,82 +124,86 @@ describe('CommissionEngine', () => {
 
       expect(totalCommission.total).toBe(expectedTotal);
       expect(totalCommission.breakdown).toHaveLength(3);
-      expect(totalCommission.period).toBe('2024-08');
+      expect(totalCommission.period).toBe("2024-08");
     });
   });
 
-  describe('Commission Validation', () => {
-    test('validates commission data structure', () => {
+  describe("Commission Validation", () => {
+    test("validates commission data structure", () => {
       const validData = {
-        partnerId: 'P001',
+        partnerId: "P001",
         revenue: 25000,
-        productType: 'residential_premium',
-        salesDate: '2024-08-15',
-        tier: 'gold',
+        productType: "residential_premium",
+        salesDate: "2024-08-15",
+        tier: "gold",
       };
 
       expect(() => validateCommissionData(validData)).not.toThrow();
     });
 
-    test('rejects invalid commission data', () => {
+    test("rejects invalid commission data", () => {
       const invalidData = {
-        partnerId: '',
+        partnerId: "",
         revenue: -1000, // Negative revenue
-        productType: 'invalid_type',
-        salesDate: 'invalid-date',
+        productType: "invalid_type",
+        salesDate: "invalid-date",
       };
 
-      expect(() => validateCommissionData(invalidData)).toThrow('Invalid commission data');
+      expect(() => validateCommissionData(invalidData)).toThrow("Invalid commission data");
     });
 
-    test('validates revenue ranges', () => {
-      const extremeRevenue = { revenue: 999999999, partnerId: 'P001', productType: 'enterprise' };
+    test("validates revenue ranges", () => {
+      const extremeRevenue = {
+        revenue: 999999999,
+        partnerId: "P001",
+        productType: "enterprise",
+      };
 
       expect(() => validateCommissionData(extremeRevenue)).toThrow(
-        'Revenue exceeds maximum allowed'
+        "Revenue exceeds maximum allowed",
       );
     });
 
-    test('validates partner eligibility', () => {
+    test("validates partner eligibility", () => {
       const suspendedPartner = {
-        partnerId: 'SUSPENDED_001',
+        partnerId: "SUSPENDED_001",
         revenue: 10000,
-        productType: 'residential_basic',
+        productType: "residential_basic",
       };
 
       expect(() => validateCommissionData(suspendedPartner)).toThrow(
-        'Partner not eligible for commissions'
+        "Partner not eligible for commissions",
       );
     });
   });
 
-  describe('Audit Trail and Security', () => {
-    test('creates audit trail for commission calculations', () => {
+  describe("Audit Trail and Security", () => {
+    test("creates audit trail for commission calculations", () => {
       const calculationData = {
-        partnerId: 'P001',
+        partnerId: "P001",
         revenue: 25000,
-        productType: 'business_pro',
-        tier: 'gold',
+        productType: "business_pro",
+        tier: "gold",
         timestamp: new Date().toISOString(),
       };
 
       const auditRecord = auditCommissionCalculation(calculationData);
 
       expect(auditRecord).toMatchObject({
-        partnerId: 'P001',
-        calculationType: 'tier_commission',
+        partnerId: "P001",
+        calculationType: "tier_commission",
         inputData: expect.objectContaining({
           revenue: 25000,
-          productType: 'business_pro',
+          productType: "business_pro",
         }),
         timestamp: expect.any(String),
         checksum: expect.any(String),
       });
     });
 
-    test('detects tampering with commission data', () => {
-      const originalData = { revenue: 25000, partnerId: 'P001' };
-      const tamperedData = { revenue: 50000, partnerId: 'P001' }; // Revenue doubled
+    test("detects tampering with commission data", () => {
+      const originalData = { revenue: 25000, partnerId: "P001" };
+      const tamperedData = { revenue: 50000, partnerId: "P001" }; // Revenue doubled
 
       const originalChecksum = commissionEngine.generateChecksum(originalData);
       const tamperedChecksum = commissionEngine.generateChecksum(tamperedData);
@@ -203,16 +211,16 @@ describe('CommissionEngine', () => {
       expect(originalChecksum).not.toBe(tamperedChecksum);
     });
 
-    test('maintains calculation history', () => {
+    test("maintains calculation history", () => {
       const calculations = [
-        { partnerId: 'P001', revenue: 10000, date: '2024-08-01' },
-        { partnerId: 'P001', revenue: 15000, date: '2024-08-15' },
-        { partnerId: 'P001', revenue: 20000, date: '2024-08-30' },
+        { partnerId: "P001", revenue: 10000, date: "2024-08-01" },
+        { partnerId: "P001", revenue: 15000, date: "2024-08-15" },
+        { partnerId: "P001", revenue: 20000, date: "2024-08-30" },
       ];
 
       calculations.forEach((calc) => commissionEngine.recordCalculation(calc));
 
-      const history = commissionEngine.getCalculationHistory('P001', '2024-08');
+      const history = commissionEngine.getCalculationHistory("P001", "2024-08");
 
       expect(history).toHaveLength(3);
       expect(history[0].revenue).toBe(10000);
@@ -220,20 +228,20 @@ describe('CommissionEngine', () => {
     });
   });
 
-  describe('Default Commission Tiers', () => {
-    test('has valid default tier structure', () => {
+  describe("Default Commission Tiers", () => {
+    test("has valid default tier structure", () => {
       expect(DEFAULT_COMMISSION_TIERS).toHaveLength(4);
 
       const [bronze, silver, gold, platinum] = DEFAULT_COMMISSION_TIERS;
 
-      expect(bronze.id).toBe('bronze');
+      expect(bronze.id).toBe("bronze");
       expect(bronze.minimumRevenue).toBe(0);
       expect(silver.minimumRevenue).toBeGreaterThan(bronze.minimumRevenue);
       expect(gold.minimumRevenue).toBeGreaterThan(silver.minimumRevenue);
       expect(platinum.minimumRevenue).toBeGreaterThan(gold.minimumRevenue);
     });
 
-    test('has ascending commission rates', () => {
+    test("has ascending commission rates", () => {
       const rates = DEFAULT_COMMISSION_TIERS.map((tier) => tier.baseRate);
 
       for (let i = 1; i < rates.length; i++) {
@@ -241,31 +249,31 @@ describe('CommissionEngine', () => {
       }
     });
 
-    test('has consistent product multipliers', () => {
+    test("has consistent product multipliers", () => {
       DEFAULT_COMMISSION_TIERS.forEach((tier) => {
         expect(tier.productMultipliers).toBeDefined();
-        expect(tier.productMultipliers!['residential_basic']).toBe(1.0);
-        expect(tier.productMultipliers!['enterprise']).toBeGreaterThan(1.0);
+        expect(tier.productMultipliers!["residential_basic"]).toBe(1.0);
+        expect(tier.productMultipliers!["enterprise"]).toBeGreaterThan(1.0);
       });
     });
   });
 
-  describe('Edge Cases and Error Handling', () => {
-    test('handles zero revenue gracefully', () => {
+  describe("Edge Cases and Error Handling", () => {
+    test("handles zero revenue gracefully", () => {
       const result = calculateTierCommission({
         revenue: 0,
         tier: DEFAULT_COMMISSION_TIERS[0],
-        productType: 'residential_basic',
+        productType: "residential_basic",
       });
 
       expect(result.total).toBe(0);
       expect(result.eligible).toBe(true); // Zero revenue is valid for bronze tier
     });
 
-    test('handles missing product multipliers', () => {
+    test("handles missing product multipliers", () => {
       const tierWithoutMultipliers: CommissionTier = {
-        id: 'basic',
-        name: 'Basic Tier',
+        id: "basic",
+        name: "Basic Tier",
         minimumRevenue: 0,
         baseRate: 0.05,
       };
@@ -273,22 +281,22 @@ describe('CommissionEngine', () => {
       const result = calculateTierCommission({
         revenue: 10000,
         tier: tierWithoutMultipliers,
-        productType: 'unknown_product',
+        productType: "unknown_product",
       });
 
       expect(result.total).toBe(10000 * 0.05); // Base rate only
       expect(result.productBonus).toBe(0);
     });
 
-    test('handles concurrent calculation requests', async () => {
+    test("handles concurrent calculation requests", async () => {
       const requests = Array.from({ length: 100 }, (_, i) => ({
         revenue: 10000 + i * 100,
         tier: DEFAULT_COMMISSION_TIERS[1],
-        productType: 'residential_premium',
+        productType: "residential_premium",
       }));
 
       const results = await Promise.all(
-        requests.map((req) => Promise.resolve(calculateTierCommission(req)))
+        requests.map((req) => Promise.resolve(calculateTierCommission(req))),
       );
 
       expect(results).toHaveLength(100);
@@ -299,27 +307,27 @@ describe('CommissionEngine', () => {
       });
     });
 
-    test('prevents negative commission calculations', () => {
+    test("prevents negative commission calculations", () => {
       const result = calculateTierCommission({
         revenue: -5000,
         tier: DEFAULT_COMMISSION_TIERS[0],
-        productType: 'residential_basic',
+        productType: "residential_basic",
       });
 
       expect(result.eligible).toBe(false);
       expect(result.total).toBe(0);
-      expect(result.reason).toContain('negative revenue');
+      expect(result.reason).toContain("negative revenue");
     });
   });
 
-  describe('Performance and Optimization', () => {
-    test('calculates commissions within performance bounds', () => {
+  describe("Performance and Optimization", () => {
+    test("calculates commissions within performance bounds", () => {
       const startTime = performance.now();
 
       const largeBatch = Array.from({ length: 1000 }, (_, i) => ({
         revenue: Math.random() * 100000,
         tier: DEFAULT_COMMISSION_TIERS[Math.floor(Math.random() * 4)],
-        productType: 'residential_premium',
+        productType: "residential_premium",
       }));
 
       largeBatch.forEach((item) => calculateTierCommission(item));
@@ -330,12 +338,12 @@ describe('CommissionEngine', () => {
       expect(duration).toBeLessThan(1000); // Should complete within 1 second
     });
 
-    test('caches tier calculations efficiently', () => {
+    test("caches tier calculations efficiently", () => {
       const engine = new CommissionEngine({ enableCaching: true });
       const testData = {
         revenue: 25000,
         tier: DEFAULT_COMMISSION_TIERS[1],
-        productType: 'business_pro',
+        productType: "business_pro",
       };
 
       // First calculation

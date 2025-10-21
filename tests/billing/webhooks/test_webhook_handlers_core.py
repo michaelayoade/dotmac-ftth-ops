@@ -110,7 +110,6 @@ class TestBaseWebhookHandler:
             patch.object(handler.metrics, "record_webhook_received") as mock_received,
             patch.object(handler.metrics, "record_webhook_processed") as mock_processed,
         ):
-
             result = await handler.handle_webhook(payload, signature, headers)
 
             assert result["status"] == "processed"
@@ -204,7 +203,6 @@ class TestBaseWebhookHandler:
             patch.object(handler.metrics, "record_webhook_received"),
             patch.object(handler.metrics, "record_webhook_processed") as mock_processed,
         ):
-
             with pytest.raises(Exception, match="Processing failed"):
                 await handler.handle_webhook(payload, signature, headers)
 
@@ -276,7 +274,6 @@ class TestStripeWebhookHandler:
             ) as mock_create,
             patch.object(stripe_handler.subscription_service, "record_event") as mock_event,
         ):
-
             result = await stripe_handler._handle_subscription_created(event_data)
 
             assert result["status"] == "processed"
@@ -424,7 +421,6 @@ class TestPayPalWebhookHandler:
             ) as mock_create,
             patch.object(paypal_handler.subscription_service, "record_event") as mock_event,
         ):
-
             result = await paypal_handler._handle_subscription_created(event_data)
 
             assert result["status"] == "processed"
@@ -466,7 +462,6 @@ class TestPayPalWebhookHandler:
             "create_subscription",
             side_effect=Exception("Database error"),
         ):
-
             result = await paypal_handler._handle_subscription_created(event_data)
 
             assert result["status"] == "error"
@@ -608,7 +603,6 @@ class TestStripePaymentEventHandlers:
             patch.object(stripe_handler.invoice_service, "get_invoice", return_value=mock_invoice),
             patch.object(stripe_handler.invoice_service, "finalize_invoice") as mock_finalize,
         ):
-
             result = await stripe_handler._handle_invoice_finalized(event_data)
 
             assert result["status"] == "processed"
@@ -668,11 +662,10 @@ class TestStripeEventProcessing:
             },
         }
 
-        mock_payment = Mock()
+        Mock()
         with patch.object(
             stripe_handler, "_handle_payment_succeeded", return_value={"status": "processed"}
         ) as mock_handler:
-
             result = await stripe_handler.process_event("payment_intent.succeeded", event_data)
 
             assert result["status"] == "processed"

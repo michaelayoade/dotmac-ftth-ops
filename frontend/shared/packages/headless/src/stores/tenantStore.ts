@@ -2,11 +2,11 @@
  * Multi-tenant store for managing tenant context and switching
  */
 
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
-import { getApiClient } from '@dotmac/headless/api';
-import type { Tenant, User } from '../types';
+import { getApiClient } from "@dotmac/headless/api";
+import type { Tenant, User } from "../types";
 
 interface TenantPermissions {
   [key: string]: boolean;
@@ -89,7 +89,7 @@ export const useTenantStore = create<TenantState>()(
         try {
           const targetTenant = availableTenants.find((t) => t.id === tenantId);
           if (!targetTenant) {
-            throw new Error('Tenant not found');
+            throw new Error("Tenant not found");
           }
 
           // Load tenant-specific permissions
@@ -113,9 +113,9 @@ export const useTenantStore = create<TenantState>()(
 
           // Trigger tenant-specific UI updates
           window.dispatchEvent(
-            new CustomEvent('tenantChanged', {
+            new CustomEvent("tenantChanged", {
               detail: { tenantId, tenant: targetTenant },
-            })
+            }),
           );
         } catch (_error) {
           set({ switchingTenant: false });
@@ -129,7 +129,7 @@ export const useTenantStore = create<TenantState>()(
         try {
           const apiClient = getApiClient();
           const response = await apiClient.request(`/api/v1/tenants/${tenantId}/permissions`, {
-            method: 'GET',
+            method: "GET",
           });
 
           const { permissions, _features } = response.data;
@@ -203,7 +203,7 @@ export const useTenantStore = create<TenantState>()(
 
       isTenantActive: () => {
         const { currentTenant } = get();
-        return currentTenant?.tenant?.status === 'active';
+        return currentTenant?.tenant?.status === "active";
       },
 
       getTenantBranding: () => {
@@ -216,20 +216,20 @@ export const useTenantStore = create<TenantState>()(
 
         return {
           logo: settings.branding?.logo,
-          primaryColor: settings.branding?.primaryColor || '#2563eb',
-          secondaryColor: settings.branding?.secondaryColor || '#64748b',
-          companyName: currentTenant?.tenant?.name || 'DotMac Platform',
+          primaryColor: settings.branding?.primaryColor || "#2563eb",
+          secondaryColor: settings.branding?.secondaryColor || "#64748b",
+          companyName: currentTenant?.tenant?.name || "DotMac Platform",
         };
       },
     }),
     {
-      name: 'tenant-store',
+      name: "tenant-store",
       storage: createJSONStorage(() => localStorage),
       // Only persist essential data
       partialize: (state) => ({
         currentTenant: state.currentTenant,
         availableTenants: state.availableTenants,
       }),
-    }
-  )
+    },
+  ),
 );

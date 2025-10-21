@@ -3,7 +3,7 @@ API endpoints for RBAC management
 """
 
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -20,7 +20,7 @@ from dotmac.platform.db import get_async_session
 if TYPE_CHECKING:
     from dotmac.platform.auth.models import Role
 
-router = APIRouter(tags=["RBAC"])
+router = APIRouter(prefix="/auth/rbac/admin", )
 
 
 # ==================== Pydantic Models ====================
@@ -65,7 +65,7 @@ class RoleCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     display_name: str = Field(..., min_length=1, max_length=200)
     description: str | None = None
-    permissions: list[str] = Field(default_factory=list)
+    permissions: list[str] = Field(default_factory=lambda: [])
     parent_role: str | None = None
     is_default: bool = False
 
@@ -90,7 +90,7 @@ class UserRoleAssignment(BaseModel):
     user_id: UUID
     role_name: str
     expires_at: datetime | None = None
-    metadata: dict | None = None
+    metadata: dict[str, Any] | None = None
 
 
 class UserPermissionGrant(BaseModel):

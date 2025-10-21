@@ -7,6 +7,7 @@ SQLAlchemy models for tracking email, webhook, and SMS communications.
 import uuid
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from sqlalchemy import JSON, Boolean, Integer, String, Text
 from sqlalchemy import Enum as SQLEnum
@@ -36,7 +37,7 @@ class CommunicationStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-class CommunicationLog(Base, TimestampMixin, TenantMixin):
+class CommunicationLog(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Communication activity log for tracking all sent communications."""
 
     __tablename__ = "communication_logs"
@@ -86,13 +87,15 @@ class CommunicationLog(Base, TimestampMixin, TenantMixin):
     job_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
 
     # Metadata
-    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict, nullable=False)
-    headers: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
+    headers: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
 
     def __repr__(self) -> str:
         return f"<CommunicationLog(id={self.id}, type={self.type}, recipient={self.recipient}, status={self.status})>"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""
         return {
             "id": str(self.id),
@@ -113,7 +116,7 @@ class CommunicationLog(Base, TimestampMixin, TenantMixin):
         }
 
 
-class CommunicationTemplate(Base, TimestampMixin, TenantMixin):
+class CommunicationTemplate(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Email and SMS templates for communications."""
 
     __tablename__ = "communication_templates"
@@ -136,8 +139,8 @@ class CommunicationTemplate(Base, TimestampMixin, TenantMixin):
     html_template: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Template variables and validation
-    variables: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
-    required_variables: Mapped[list] = mapped_column(JSON, default=list, nullable=False)
+    variables: Mapped[list[Any]] = mapped_column(JSON, default=list, nullable=False)
+    required_variables: Mapped[list[Any]] = mapped_column(JSON, default=list, nullable=False)
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
@@ -148,12 +151,14 @@ class CommunicationTemplate(Base, TimestampMixin, TenantMixin):
     last_used_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
     # Metadata
-    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict, nullable=False)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
 
     def __repr__(self) -> str:
         return f"<CommunicationTemplate(id={self.id}, name={self.name}, type={self.type})>"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""
         return {
             "id": str(self.id),
@@ -174,7 +179,7 @@ class CommunicationTemplate(Base, TimestampMixin, TenantMixin):
         }
 
 
-class CommunicationStats(Base, TimestampMixin, TenantMixin):
+class CommunicationStats(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Aggregated communication statistics."""
 
     __tablename__ = "communication_stats"
@@ -203,12 +208,14 @@ class CommunicationStats(Base, TimestampMixin, TenantMixin):
     avg_delivery_time_seconds: Mapped[float | None] = mapped_column(nullable=True)
 
     # Metadata
-    metadata_: Mapped[dict] = mapped_column("metadata", JSON, default=dict, nullable=False)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
 
     def __repr__(self) -> str:
         return f"<CommunicationStats(id={self.id}, date={self.stats_date}, type={self.type})>"
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for API responses."""
         return {
             "id": str(self.id),
@@ -221,4 +228,95 @@ class CommunicationStats(Base, TimestampMixin, TenantMixin):
             "pending": self.total_pending,
             "avg_delivery_time": self.avg_delivery_time_seconds,
             "metadata": self.metadata_,
+        }
+
+
+class ExitSurveyResponse(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+    """Exit survey responses from churned customers.
+
+    Tracks customer feedback collected during churn to help improve
+    retention and product development.
+    """
+
+    __tablename__ = "exit_survey_responses"
+
+    # Primary key
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False
+    )
+
+    # Survey identification
+    survey_token: Mapped[str] = mapped_column(
+        String(255), nullable=False, unique=True, index=True
+    )
+
+    # Customer information
+    customer_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    customer_email: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    # Churn details
+    churned_at: Mapped[datetime | None] = mapped_column(nullable=True, index=True)
+    previous_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    subscriptions_canceled: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    # Survey responses
+    primary_reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    detailed_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
+    satisfaction_score: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 1-10 scale
+    would_recommend: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    would_return: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+    # Product/Service specific feedback
+    feature_requests: Mapped[str | None] = mapped_column(Text, nullable=True)
+    pricing_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
+    support_feedback: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Response tracking
+    responded_at: Mapped[datetime | None] = mapped_column(nullable=True, index=True)
+    survey_sent_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    response_time_hours: Mapped[float | None] = mapped_column(nullable=True)
+
+    # Email tracking
+    communication_log_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True
+    )
+
+    # Additional structured data
+    survey_data: Mapped[dict[str, Any]] = mapped_column(
+        JSON, default=dict, nullable=False
+    )
+
+    # Metadata
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
+
+    def __repr__(self) -> str:
+        return f"<ExitSurveyResponse(id={self.id}, customer_id={self.customer_id}, responded={bool(self.responded_at)})>"
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for API responses."""
+        return {
+            "id": str(self.id),
+            "survey_token": self.survey_token,
+            "customer_id": self.customer_id,
+            "customer_email": self.customer_email,
+            "churned_at": self.churned_at.isoformat() if self.churned_at else None,
+            "previous_status": self.previous_status,
+            "subscriptions_canceled": self.subscriptions_canceled,
+            "primary_reason": self.primary_reason,
+            "detailed_feedback": self.detailed_feedback,
+            "satisfaction_score": self.satisfaction_score,
+            "would_recommend": self.would_recommend,
+            "would_return": self.would_return,
+            "feature_requests": self.feature_requests,
+            "pricing_feedback": self.pricing_feedback,
+            "support_feedback": self.support_feedback,
+            "responded_at": self.responded_at.isoformat() if self.responded_at else None,
+            "survey_sent_at": self.survey_sent_at.isoformat() if self.survey_sent_at else None,
+            "response_time_hours": self.response_time_hours,
+            "survey_data": self.survey_data or {},
+            "metadata": self.metadata_,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

@@ -476,7 +476,7 @@ class TestCancellationWorkflows:
         mock_db.refresh.side_effect = mock_refresh
 
         # Cancel subscription
-        canceled_sub = await subscription_service.cancel_subscription(
+        await subscription_service.cancel_subscription(
             "sub_reactivate", "tenant_reactivate", at_period_end=True
         )
 
@@ -484,9 +484,7 @@ class TestCancellationWorkflows:
         assert mock_db_sub.canceled_at is not None
 
         # Reactivate before period end
-        reactivated_sub = await subscription_service.reactivate_subscription(
-            "sub_reactivate", "tenant_reactivate"
-        )
+        await subscription_service.reactivate_subscription("sub_reactivate", "tenant_reactivate")
 
         assert mock_db_sub.cancel_at_period_end is False
         assert mock_db_sub.canceled_at is None

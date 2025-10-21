@@ -4,12 +4,12 @@
  * Script to convert Select components to native HTML select elements
  */
 
-const fs = require('fs');
+const fs = require("fs");
 
 const filePath = process.argv[2];
 
 if (!filePath) {
-  console.error('Usage: node convert-select.js <file-path>');
+  console.error("Usage: node convert-select.js <file-path>");
   process.exit(1);
 }
 
@@ -18,14 +18,18 @@ if (!fs.existsSync(filePath)) {
   process.exit(1);
 }
 
-let content = fs.readFileSync(filePath, 'utf8');
+let content = fs.readFileSync(filePath, "utf8");
 
 // Remove Select-related imports if they exist
-content = content.replace(/import\s*{\s*([^}]*\bSelect\b[^}]*)\s*}\s*from\s*['"]@\/components\/ui\/select['"]\s*;?\s*\n?/g, '');
+content = content.replace(
+  /import\s*{\s*([^}]*\bSelect\b[^}]*)\s*}\s*from\s*['"]@\/components\/ui\/select['"]\s*;?\s*\n?/g,
+  "",
+);
 
 // Pattern to match Select components with their content
 // This is a simplified pattern - may need refinement for complex cases
-const selectPattern = /<Select\s+([^>]*)>\s*<SelectTrigger[^>]*>\s*<SelectValue[^/]*\/>\s*<\/SelectTrigger>\s*<SelectContent[^>]*>([\s\S]*?)<\/SelectContent>\s*<\/Select>/g;
+const selectPattern =
+  /<Select\s+([^>]*)>\s*<SelectTrigger[^>]*>\s*<SelectValue[^/]*\/>\s*<\/SelectTrigger>\s*<SelectContent[^>]*>([\s\S]*?)<\/SelectContent>\s*<\/Select>/g;
 
 let count = 0;
 content = content.replace(selectPattern, (match, props, items) => {
@@ -46,10 +50,15 @@ content = content.replace(selectPattern, (match, props, items) => {
   const disabled = disabledMatch ? disabledMatch[1] : null;
 
   // Convert SelectItems to options
-  const optionsHtml = items.replace(/<SelectItem\s+value="([^"]*)">([^<]*)<\/SelectItem>/g, '<option value="$1">$2</option>');
+  const optionsHtml = items.replace(
+    /<SelectItem\s+value="([^"]*)">([^<]*)<\/SelectItem>/g,
+    '<option value="$1">$2</option>',
+  );
 
   // Build onChange handler
-  const onChange = onValueChange.replace(/\(value\)\s*=>/, '(e) =>').replace(/value/g, 'e.target.value');
+  const onChange = onValueChange
+    .replace(/\(value\)\s*=>/, "(e) =>")
+    .replace(/value/g, "e.target.value");
 
   // Build select element
   let selectHtml = `<select\n`;
@@ -66,8 +75,8 @@ content = content.replace(selectPattern, (match, props, items) => {
 });
 
 if (count > 0) {
-  fs.writeFileSync(filePath, content, 'utf8');
+  fs.writeFileSync(filePath, content, "utf8");
   console.log(`\n✅ Converted ${count} Select components`);
 } else {
-  console.log('\n⚠️  No Select components found to convert');
+  console.log("\n⚠️  No Select components found to convert");
 }

@@ -12,7 +12,13 @@
     "test": "jest",
     "test:watch": "jest --watch"
   },
-  "keywords": ["react", "rbac", "permissions", "auth", "dotmac"],
+  "keywords": [
+    "react",
+    "rbac",
+    "permissions",
+    "auth",
+    "dotmac"
+  ],
   "author": "DotMac Team",
   "license": "MIT",
   "devDependencies": {

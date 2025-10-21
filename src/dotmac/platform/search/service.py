@@ -301,7 +301,19 @@ class MeilisearchBackend(SearchBackend):
         # Use dependency checker for clear error messages
         meilisearch_module = require_meilisearch()
 
-        self.host = host or os.getenv("MEILISEARCH_HOST", "http://localhost:7700")
+        # Load from centralized settings with environment overrides
+        if host is not None:
+            self.host = host
+        else:
+            env_host = os.getenv("MEILISEARCH_HOST")
+            if env_host:
+                self.host = env_host
+            else:
+                try:
+                    self.host = settings.external_services.meilisearch_url
+                except AttributeError:
+                    self.host = "http://localhost:7700"
+
         self.api_key = api_key or os.getenv("MEILISEARCH_API_KEY")
         self.primary_key = primary_key
         self.client = meilisearch_module.Client(self.host, self.api_key)

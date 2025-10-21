@@ -9,10 +9,10 @@
  * - Real backend integration during development
  */
 
-import { http, HttpResponse, passthrough } from 'msw';
+import { http, HttpResponse, passthrough } from "msw";
 
 // Backend API base URL (configurable via environment)
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const API_BASE = `${BACKEND_URL}/api/v1`;
 
 /**
@@ -50,29 +50,34 @@ interface Job {
  * Contract validation functions
  */
 function validateUserContract(user: any): asserts user is User {
-  if (typeof user.id !== 'string') throw new Error('User.id must be string');
-  if (typeof user.email !== 'string') throw new Error('User.email must be string');
-  if (typeof user.is_active !== 'boolean') throw new Error('User.is_active must be boolean');
-  if (typeof user.created_at !== 'string') throw new Error('User.created_at must be string');
+  if (typeof user.id !== "string") throw new Error("User.id must be string");
+  if (typeof user.email !== "string") throw new Error("User.email must be string");
+  if (typeof user.is_active !== "boolean") throw new Error("User.is_active must be boolean");
+  if (typeof user.created_at !== "string") throw new Error("User.created_at must be string");
 }
 
 function validateIntegrationContract(integration: any): asserts integration is Integration {
-  if (typeof integration.name !== 'string') throw new Error('Integration.name must be string');
-  if (typeof integration.type !== 'string') throw new Error('Integration.type must be string');
-  if (typeof integration.provider !== 'string') throw new Error('Integration.provider must be string');
-  if (typeof integration.enabled !== 'boolean') throw new Error('Integration.enabled must be boolean');
-  if (typeof integration.status !== 'string') throw new Error('Integration.status must be string');
-  if (typeof integration.settings_count !== 'number') throw new Error('Integration.settings_count must be number');
-  if (typeof integration.has_secrets !== 'boolean') throw new Error('Integration.has_secrets must be boolean');
-  if (!Array.isArray(integration.required_packages)) throw new Error('Integration.required_packages must be array');
+  if (typeof integration.name !== "string") throw new Error("Integration.name must be string");
+  if (typeof integration.type !== "string") throw new Error("Integration.type must be string");
+  if (typeof integration.provider !== "string")
+    throw new Error("Integration.provider must be string");
+  if (typeof integration.enabled !== "boolean")
+    throw new Error("Integration.enabled must be boolean");
+  if (typeof integration.status !== "string") throw new Error("Integration.status must be string");
+  if (typeof integration.settings_count !== "number")
+    throw new Error("Integration.settings_count must be number");
+  if (typeof integration.has_secrets !== "boolean")
+    throw new Error("Integration.has_secrets must be boolean");
+  if (!Array.isArray(integration.required_packages))
+    throw new Error("Integration.required_packages must be array");
 }
 
 function validateJobContract(job: any): asserts job is Job {
-  if (typeof job.id !== 'string') throw new Error('Job.id must be string');
-  if (typeof job.type !== 'string') throw new Error('Job.type must be string');
-  if (typeof job.status !== 'string') throw new Error('Job.status must be string');
-  if (typeof job.created_at !== 'string') throw new Error('Job.created_at must be string');
-  if (typeof job.progress !== 'number') throw new Error('Job.progress must be number');
+  if (typeof job.id !== "string") throw new Error("Job.id must be string");
+  if (typeof job.type !== "string") throw new Error("Job.type must be string");
+  if (typeof job.status !== "string") throw new Error("Job.status must be string");
+  if (typeof job.created_at !== "string") throw new Error("Job.created_at must be string");
+  if (typeof job.progress !== "number") throw new Error("Job.progress must be number");
 }
 
 /**
@@ -84,7 +89,7 @@ function validateJobContract(job: any): asserts job is Job {
  */
 export const handlers = [
   // User Management - List Users
-  http.get(`${API_BASE}/user-management/users`, async ({ request }) => {
+  http.get(`${API_BASE}/users`, async ({ request }) => {
     try {
       // Forward to real backend
       const response = await fetch(new URL(request.url, BACKEND_URL), {
@@ -99,7 +104,7 @@ export const handlers = [
 
       // Validate contract
       if (!data.users || !Array.isArray(data.users)) {
-        throw new Error('Response must have users array');
+        throw new Error("Response must have users array");
       }
 
       // Validate each user matches contract
@@ -113,7 +118,7 @@ export const handlers = [
 
       return HttpResponse.json(data);
     } catch (error) {
-      console.error('MSW Contract Validation Error (users):', error);
+      console.error("MSW Contract Validation Error (users):", error);
       return passthrough();
     }
   }),
@@ -134,7 +139,7 @@ export const handlers = [
 
       // Validate contract
       if (!data.integrations || !Array.isArray(data.integrations)) {
-        throw new Error('Response must have integrations array');
+        throw new Error("Response must have integrations array");
       }
 
       // Validate each integration matches contract
@@ -148,7 +153,7 @@ export const handlers = [
 
       return HttpResponse.json(data);
     } catch (error) {
-      console.error('MSW Contract Validation Error (integrations):', error);
+      console.error("MSW Contract Validation Error (integrations):", error);
       return passthrough();
     }
   }),
@@ -169,7 +174,7 @@ export const handlers = [
 
       // Validate contract
       if (!data.jobs || !Array.isArray(data.jobs)) {
-        throw new Error('Response must have jobs array');
+        throw new Error("Response must have jobs array");
       }
 
       // Validate each job matches contract
@@ -183,7 +188,7 @@ export const handlers = [
 
       return HttpResponse.json(data);
     } catch (error) {
-      console.error('MSW Contract Validation Error (jobs):', error);
+      console.error("MSW Contract Validation Error (jobs):", error);
       return passthrough();
     }
   }),
@@ -203,22 +208,22 @@ export const handlers = [
       const data = await response.json();
 
       // Validate contract
-      if (typeof data.status !== 'string') {
-        throw new Error('Health response must have status string');
+      if (typeof data.status !== "string") {
+        throw new Error("Health response must have status string");
       }
 
-      if (!data.checks || typeof data.checks !== 'object') {
-        throw new Error('Health response must have checks object');
+      if (!data.checks || typeof data.checks !== "object") {
+        throw new Error("Health response must have checks object");
       }
 
-      const validStatuses = ['healthy', 'degraded', 'unhealthy'];
+      const validStatuses = ["healthy", "degraded", "unhealthy"];
       if (!validStatuses.includes(data.status)) {
         throw new Error(`Invalid health status: ${data.status}`);
       }
 
       return HttpResponse.json(data);
     } catch (error) {
-      console.error('MSW Contract Validation Error (health):', error);
+      console.error("MSW Contract Validation Error (health):", error);
       return passthrough();
     }
   }),
@@ -239,12 +244,12 @@ export const handlers = [
 
       // Validate contract
       const requiredFields = [
-        'error_rate',
-        'total_requests',
-        'avg_response_time_ms',
-        'successful_requests',
-        'failed_requests',
-        'top_errors',
+        "error_rate",
+        "total_requests",
+        "avg_response_time_ms",
+        "successful_requests",
+        "failed_requests",
+        "top_errors",
       ];
 
       for (const field of requiredFields) {
@@ -254,12 +259,12 @@ export const handlers = [
       }
 
       if (!Array.isArray(data.top_errors)) {
-        throw new Error('top_errors must be an array');
+        throw new Error("top_errors must be an array");
       }
 
       return HttpResponse.json(data);
     } catch (error) {
-      console.error('MSW Contract Validation Error (metrics):', error);
+      console.error("MSW Contract Validation Error (metrics):", error);
       return passthrough();
     }
   }),
@@ -280,12 +285,12 @@ export const handlers = [
 
       // Validate contract
       if (!Array.isArray(data)) {
-        throw new Error('Settings categories must be an array');
+        throw new Error("Settings categories must be an array");
       }
 
       // Validate each category
       data.forEach((category: any, index: number) => {
-        const requiredFields = ['category', 'display_name', 'description', 'restart_required'];
+        const requiredFields = ["category", "display_name", "description", "restart_required"];
         for (const field of requiredFields) {
           if (!(field in category)) {
             throw new Error(`Category at index ${index} missing ${field} field`);
@@ -295,7 +300,7 @@ export const handlers = [
 
       return HttpResponse.json(data);
     } catch (error) {
-      console.error('MSW Contract Validation Error (settings):', error);
+      console.error("MSW Contract Validation Error (settings):", error);
       return passthrough();
     }
   }),
@@ -316,16 +321,16 @@ export const handlers = [
 
       // Validate contract
       if (!data.plugins || !Array.isArray(data.plugins)) {
-        throw new Error('Response must have plugins array');
+        throw new Error("Response must have plugins array");
       }
 
-      if (typeof data.total !== 'number') {
-        throw new Error('Response must have total number');
+      if (typeof data.total !== "number") {
+        throw new Error("Response must have total number");
       }
 
       return HttpResponse.json(data);
     } catch (error) {
-      console.error('MSW Contract Validation Error (plugins):', error);
+      console.error("MSW Contract Validation Error (plugins):", error);
       return passthrough();
     }
   }),
@@ -342,29 +347,29 @@ export const mockHandlers = [
     return HttpResponse.json({
       integrations: [
         {
-          name: 'sendgrid',
-          type: 'email',
-          provider: 'sendgrid',
+          name: "sendgrid",
+          type: "email",
+          provider: "sendgrid",
           enabled: true,
-          status: 'ready',
-          message: 'Connected successfully',
+          status: "ready",
+          message: "Connected successfully",
           last_check: new Date().toISOString(),
           settings_count: 3,
           has_secrets: true,
-          required_packages: ['sendgrid'],
-          metadata: { api_version: 'v3' },
+          required_packages: ["sendgrid"],
+          metadata: { api_version: "v3" },
         },
         {
-          name: 'twilio',
-          type: 'sms',
-          provider: 'twilio',
+          name: "twilio",
+          type: "sms",
+          provider: "twilio",
           enabled: true,
-          status: 'error',
-          message: 'Invalid credentials',
+          status: "error",
+          message: "Invalid credentials",
           last_check: new Date().toISOString(),
           settings_count: 4,
           has_secrets: true,
-          required_packages: ['twilio'],
+          required_packages: ["twilio"],
           metadata: null,
         },
       ],
@@ -376,25 +381,25 @@ export const mockHandlers = [
     return HttpResponse.json({
       jobs: [
         {
-          id: 'job-123',
-          type: 'import',
-          status: 'running',
+          id: "job-123",
+          type: "import",
+          status: "running",
           created_at: new Date().toISOString(),
           started_at: new Date().toISOString(),
           progress: 45,
-          source_type: 'csv',
+          source_type: "csv",
           records_processed: 450,
           total_records: 1000,
         },
         {
-          id: 'job-456',
-          type: 'export',
-          status: 'completed',
+          id: "job-456",
+          type: "export",
+          status: "completed",
           created_at: new Date().toISOString(),
           started_at: new Date().toISOString(),
           completed_at: new Date().toISOString(),
           progress: 100,
-          source_type: 'json',
+          source_type: "json",
           records_processed: 2500,
           total_records: 2500,
         },

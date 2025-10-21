@@ -3,7 +3,7 @@
  * Manages caching for payment-related data
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 interface CacheEntry {
   data: any;
@@ -42,7 +42,7 @@ export function usePaymentCache(config: UsePaymentCacheConfig = {}): UsePaymentC
 
       return cached.data;
     },
-    [cache, defaultDuration]
+    [cache, defaultDuration],
   );
 
   const setCachedData = useCallback((key: string, data: any, duration?: number) => {
@@ -52,8 +52,8 @@ export function usePaymentCache(config: UsePaymentCacheConfig = {}): UsePaymentC
           prev.set(key, {
             data,
             timestamp: Date.now() - (duration ? Date.now() + duration : 0),
-          })
-        )
+          }),
+        ),
     );
   }, []);
 
@@ -75,7 +75,7 @@ export function usePaymentCache(config: UsePaymentCacheConfig = {}): UsePaymentC
       if (!cached) return true;
       return Date.now() - cached.timestamp > defaultDuration;
     },
-    [cache, defaultDuration]
+    [cache, defaultDuration],
   );
 
   return {

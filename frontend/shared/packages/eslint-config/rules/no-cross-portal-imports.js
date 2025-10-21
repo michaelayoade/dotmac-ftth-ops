@@ -5,7 +5,7 @@
  * architectural boundaries and prevent style conflicts.
  */
 
-const path = require('path');
+const path = require("path");
 
 const PORTAL_PATTERNS = {
   admin: /@dotmac\/styled-components\/admin|\/admin\//,
@@ -15,45 +15,45 @@ const PORTAL_PATTERNS = {
 };
 
 const ALLOWED_CROSS_PORTAL_IMPORTS = [
-  '@dotmac/primitives',
-  '@dotmac/headless',
-  '@dotmac/registry',
-  '@dotmac/security',
-  '@dotmac/testing',
-  '@dotmac/styled-components/shared', // Shared components are always allowed
+  "@dotmac/primitives",
+  "@dotmac/headless",
+  "@dotmac/registry",
+  "@dotmac/security",
+  "@dotmac/testing",
+  "@dotmac/styled-components/shared", // Shared components are always allowed
 ];
 
 module.exports = {
   meta: {
-    type: 'problem',
+    type: "problem",
     docs: {
-      description: 'Disallow importing components from different portals',
-      category: 'Best Practices',
+      description: "Disallow importing components from different portals",
+      category: "Best Practices",
       recommended: true,
     },
     fixable: null,
     schema: [
       {
-        type: 'object',
+        type: "object",
         properties: {
           allowedCrossPortalImports: {
-            type: 'array',
+            type: "array",
             items: {
-              type: 'string',
+              type: "string",
             },
-            description: 'Additional modules allowed to be imported across portals',
+            description: "Additional modules allowed to be imported across portals",
           },
           strictMode: {
-            type: 'boolean',
-            description: 'Whether to enforce strict portal boundaries (default: true)',
+            type: "boolean",
+            description: "Whether to enforce strict portal boundaries (default: true)",
             default: true,
           },
           ignorePatterns: {
-            type: 'array',
+            type: "array",
             items: {
-              type: 'string',
+              type: "string",
             },
-            description: 'File patterns to ignore (glob patterns)',
+            description: "File patterns to ignore (glob patterns)",
           },
         },
         additionalProperties: false,
@@ -66,7 +66,7 @@ module.exports = {
         'Cannot determine portal for file "{{filename}}". Ensure proper directory structure.',
       restrictedImport: 'Import "{{importPath}}" is not allowed in portal "{{portal}}".',
       suggestionUseShared:
-        'Consider moving shared components to @dotmac/styled-components/shared or @dotmac/primitives.',
+        "Consider moving shared components to @dotmac/styled-components/shared or @dotmac/primitives.",
     },
   },
 
@@ -85,7 +85,7 @@ module.exports = {
     // Check if file should be ignored
     if (
       ignorePatterns.some((pattern) => {
-        const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+        const regex = new RegExp(pattern.replace(/\*/g, ".*"));
         return regex.test(filename);
       })
     ) {
@@ -96,30 +96,30 @@ module.exports = {
     function getCurrentPortal() {
       const relativePath = path.relative(process.cwd(), filename);
 
-      if (relativePath.includes('isp-framework/admin/') || relativePath.includes('/admin/')) {
-        return 'admin';
+      if (relativePath.includes("isp-framework/admin/") || relativePath.includes("/admin/")) {
+        return "admin";
       }
-      if (relativePath.includes('isp-framework/customer/') || relativePath.includes('/customer/')) {
-        return 'customer';
+      if (relativePath.includes("isp-framework/customer/") || relativePath.includes("/customer/")) {
+        return "customer";
       }
-      if (relativePath.includes('isp-framework/reseller/') || relativePath.includes('/reseller/')) {
-        return 'reseller';
-      }
-      if (
-        relativePath.includes('isp-framework/field-ops/') ||
-        relativePath.includes('/field-ops/')
-      ) {
-        return 'field-ops';
+      if (relativePath.includes("isp-framework/reseller/") || relativePath.includes("/reseller/")) {
+        return "reseller";
       }
       if (
-        relativePath.includes('management-portal/admin/') ||
-        relativePath.includes('management-portal/reseller/') ||
-        relativePath.includes('management-portal/tenant/')
+        relativePath.includes("isp-framework/field-ops/") ||
+        relativePath.includes("/field-ops/")
       ) {
-        return 'management';
+        return "field-ops";
       }
-      if (relativePath.includes('/shared/')) {
-        return 'shared';
+      if (
+        relativePath.includes("management-portal/admin/") ||
+        relativePath.includes("management-portal/reseller/") ||
+        relativePath.includes("management-portal/tenant/")
+      ) {
+        return "management";
+      }
+      if (relativePath.includes("/shared/")) {
+        return "shared";
       }
 
       // Check styled-components package structure
@@ -162,7 +162,7 @@ module.exports = {
       }
 
       // Allow imports from shared portal to any portal
-      if (importPortal === 'shared') {
+      if (importPortal === "shared") {
         return true;
       }
 
@@ -178,7 +178,7 @@ module.exports = {
         Program(node) {
           context.report({
             node,
-            messageId: 'unknownPortal',
+            messageId: "unknownPortal",
             data: {
               filename: path.relative(process.cwd(), filename),
             },
@@ -192,7 +192,7 @@ module.exports = {
         const importPath = node.source.value;
 
         // Skip relative imports and non-dotmac imports
-        if (importPath.startsWith('.') || !importPath.startsWith('@dotmac/')) {
+        if (importPath.startsWith(".") || !importPath.startsWith("@dotmac/")) {
           return;
         }
 
@@ -206,7 +206,7 @@ module.exports = {
 
           context.report({
             node,
-            messageId: 'crossPortalImport',
+            messageId: "crossPortalImport",
             data: {
               importPath,
               sourcePortal: importPortal,
@@ -214,8 +214,8 @@ module.exports = {
             },
             suggest: [
               {
-                desc: 'Consider using shared components instead',
-                messageId: 'suggestionUseShared',
+                desc: "Consider using shared components instead",
+                messageId: "suggestionUseShared",
                 fix: null, // We don't auto-fix this as it requires architectural decisions
               },
             ],
@@ -226,14 +226,14 @@ module.exports = {
       // Also check dynamic imports
       CallExpression(node) {
         if (
-          node.callee.type === 'Import' &&
+          node.callee.type === "Import" &&
           node.arguments.length === 1 &&
-          node.arguments[0].type === 'Literal'
+          node.arguments[0].type === "Literal"
         ) {
           const importPath = node.arguments[0].value;
 
           // Apply same rules as ImportDeclaration
-          if (importPath.startsWith('.') || !importPath.startsWith('@dotmac/')) {
+          if (importPath.startsWith(".") || !importPath.startsWith("@dotmac/")) {
             return;
           }
 
@@ -246,7 +246,7 @@ module.exports = {
 
             context.report({
               node,
-              messageId: 'crossPortalImport',
+              messageId: "crossPortalImport",
               data: {
                 importPath,
                 sourcePortal: importPortal,

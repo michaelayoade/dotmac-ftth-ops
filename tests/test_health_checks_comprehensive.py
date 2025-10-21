@@ -526,7 +526,6 @@ class TestHealthCheckerIntegration:
             patch.object(health_checker, "check_celery_broker") as mock_celery,
             patch.object(health_checker, "check_observability") as mock_obs,
         ):
-
             # All healthy
             mock_db.return_value = ServiceHealth("database", ServiceStatus.HEALTHY, required=True)
             mock_redis.return_value = ServiceHealth("redis", ServiceStatus.HEALTHY, required=True)
@@ -557,7 +556,6 @@ class TestHealthCheckerIntegration:
             patch.object(health_checker, "check_celery_broker") as mock_celery,
             patch.object(health_checker, "check_observability") as mock_obs,
         ):
-
             # Database unhealthy (required)
             mock_db.return_value = ServiceHealth("database", ServiceStatus.UNHEALTHY, required=True)
             mock_redis.return_value = ServiceHealth("redis", ServiceStatus.HEALTHY, required=True)
@@ -587,7 +585,6 @@ class TestHealthCheckerIntegration:
             patch.object(health_checker, "check_celery_broker") as mock_celery,
             patch.object(health_checker, "check_observability") as mock_obs,
         ):
-
             # Observability unhealthy (optional)
             mock_db.return_value = ServiceHealth("database", ServiceStatus.HEALTHY, required=True)
             mock_redis.return_value = ServiceHealth("redis", ServiceStatus.HEALTHY, required=True)

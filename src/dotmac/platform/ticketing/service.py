@@ -76,6 +76,11 @@ class TicketService:
     """Business logic for ticketing workflows."""
 
     def __init__(self, session: AsyncSession) -> None:
+        """Initialize ticket service.
+
+        Args:
+            session: Async SQLAlchemy session for database operations
+        """
         self.session = session
         self._log = logging.getLogger(__name__)
 

@@ -60,7 +60,7 @@ class ProrationBehavior(str, Enum):
     CREATE_PRORATIONS = "prorate"  # Create prorated charges/credits
 
 
-class SubscriptionPlan(BillingBaseModel):
+class SubscriptionPlan(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resolves to Any in isolation
     """Subscription plan definition."""
 
     plan_id: str = Field(description="Plan identifier")
@@ -122,7 +122,7 @@ class SubscriptionPlan(BillingBaseModel):
         return bool(self.included_usage or self.overage_rates)
 
 
-class Subscription(BillingBaseModel):
+class Subscription(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resolves to Any in isolation
     """Customer subscription instance."""
 
     subscription_id: str = Field(description="Subscription identifier")
@@ -177,7 +177,7 @@ class Subscription(BillingBaseModel):
         return self.status == SubscriptionStatus.PAST_DUE
 
 
-class SubscriptionEvent(BillingBaseModel):
+class SubscriptionEvent(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resolves to Any in isolation
     """Subscription lifecycle event for audit trail."""
 
     event_id: str = Field(description="Event identifier")
@@ -193,7 +193,7 @@ class SubscriptionEvent(BillingBaseModel):
 # Request/Response Models
 
 
-class SubscriptionPlanCreateRequest(AppBaseModel):
+class SubscriptionPlanCreateRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for creating subscription plans."""
 
     product_id: str = Field(description="Associated product ID")
@@ -204,9 +204,9 @@ class SubscriptionPlanCreateRequest(AppBaseModel):
     currency: str = Field(default="USD", max_length=3)
     setup_fee: Decimal | None = Field(None, description="One-time setup fee")
     trial_days: int | None = Field(None, description="Trial period days")
-    included_usage: dict[str, int] = Field(default_factory=dict)
-    overage_rates: dict[str, Decimal] = Field(default_factory=dict)
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    included_usage: dict[str, int] = Field(default_factory=lambda: {})
+    overage_rates: dict[str, Decimal] = Field(default_factory=lambda: {})
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
     @field_validator("price", "setup_fee")
     @classmethod
@@ -217,7 +217,7 @@ class SubscriptionPlanCreateRequest(AppBaseModel):
         return v
 
 
-class SubscriptionCreateRequest(AppBaseModel):
+class SubscriptionCreateRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for creating subscriptions."""
 
     customer_id: str = Field(description="Customer ID")
@@ -225,7 +225,7 @@ class SubscriptionCreateRequest(AppBaseModel):
     start_date: datetime | None = Field(None, description="Subscription start date")
     custom_price: Decimal | None = Field(None, description="Customer-specific pricing")
     trial_end_override: datetime | None = Field(None, description="Override trial end date")
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
     @field_validator("custom_price")
     @classmethod
@@ -236,7 +236,7 @@ class SubscriptionCreateRequest(AppBaseModel):
         return v
 
 
-class SubscriptionUpdateRequest(AppBaseModel):
+class SubscriptionUpdateRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for updating subscriptions."""
 
     status: SubscriptionStatus | None = Field(None, description="Update subscription status")
@@ -252,7 +252,7 @@ class SubscriptionUpdateRequest(AppBaseModel):
         return v
 
 
-class SubscriptionPlanChangeRequest(AppBaseModel):
+class SubscriptionPlanChangeRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for changing subscription plans."""
 
     new_plan_id: str = Field(description="New plan to switch to")
@@ -264,7 +264,7 @@ class SubscriptionPlanChangeRequest(AppBaseModel):
     )
 
 
-class UsageRecordRequest(AppBaseModel):
+class UsageRecordRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Request model for recording usage."""
 
     subscription_id: str = Field(description="Subscription ID")
@@ -273,7 +273,7 @@ class UsageRecordRequest(AppBaseModel):
     timestamp: datetime | None = Field(None, description="Usage timestamp (default: now)")
 
 
-class SubscriptionResponse(AppBaseModel):
+class SubscriptionResponse(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Response model for subscription data."""
 
     subscription_id: str
@@ -298,7 +298,7 @@ class SubscriptionResponse(AppBaseModel):
     days_until_renewal: int
 
 
-class SubscriptionPlanResponse(AppBaseModel):
+class SubscriptionPlanResponse(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Response model for subscription plan data."""
 
     plan_id: str
@@ -319,7 +319,7 @@ class SubscriptionPlanResponse(AppBaseModel):
     updated_at: datetime | None
 
 
-class ProrationResult(AppBaseModel):
+class ProrationResult(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
     """Result of proration calculation."""
 
     proration_amount: Decimal = Field(
@@ -329,3 +329,114 @@ class ProrationResult(AppBaseModel):
     old_plan_unused_amount: Decimal = Field(description="Unused amount from old plan")
     new_plan_prorated_amount: Decimal = Field(description="Prorated amount for new plan")
     days_remaining: int = Field(description="Days remaining in current period")
+
+
+# Renewal Models
+
+
+class RenewalEligibilityResponse(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
+    """Response model for renewal eligibility check."""
+
+    is_eligible: bool = Field(description="Whether subscription is eligible for renewal")
+    subscription_id: str = Field(description="Subscription identifier")
+    customer_id: str = Field(description="Customer identifier")
+    plan_id: str = Field(description="Current plan ID")
+    plan_name: str = Field(description="Current plan name")
+    current_period_end: datetime = Field(description="Current period end date")
+    days_until_renewal: int = Field(description="Days until renewal is due")
+    renewal_price: Decimal = Field(description="Renewal price amount")
+    currency: str = Field(description="Currency code")
+    billing_cycle: BillingCycle = Field(description="Billing cycle")
+    reasons: list[str] = Field(default_factory=list, description="Reasons if not eligible")
+    trial_active: bool = Field(description="Whether subscription is in trial")
+
+
+class RenewalPaymentRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
+    """Request model for processing renewal payment."""
+
+    subscription_id: str = Field(description="Subscription to renew")
+    payment_method_id: str = Field(description="Payment method to use")
+    idempotency_key: str | None = Field(None, description="Idempotency key for payment")
+
+
+class RenewalPaymentResponse(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
+    """Response model for renewal payment processing."""
+
+    subscription_id: str
+    customer_id: str
+    amount: Decimal
+    currency: str
+    payment_method_id: str
+    description: str
+    billing_cycle: str
+    period_start: datetime
+    period_end: datetime
+    idempotency_key: str
+    metadata: dict[str, Any]
+
+
+class RenewalQuoteRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
+    """Request model for creating renewal quote."""
+
+    customer_id: str = Field(description="Customer ID")
+    subscription_id: str = Field(description="Subscription ID to renew")
+    discount_percentage: Decimal | None = Field(
+        None, description="Optional renewal discount percentage (e.g., 10 for 10% off)", ge=0, le=100
+    )
+    valid_days: int = Field(default=30, description="Quote validity in days", ge=1, le=90)
+    notes: str | None = Field(None, description="Additional notes")
+
+    @field_validator("discount_percentage")
+    @classmethod
+    def validate_discount(cls, v: Decimal | None) -> Decimal | None:
+        """Ensure discount percentage is reasonable."""
+        if v is not None and (v < 0 or v > 100):
+            raise ValueError("Discount percentage must be between 0 and 100")
+        return v
+
+
+class ExtendSubscriptionRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation
+    """Request model for extending subscription."""
+
+    subscription_id: str = Field(description="Subscription to extend")
+    payment_id: str | None = Field(None, description="Associated payment ID")
+
+
+# Tenant Self-Service Models
+
+
+class PlanChangeRequest(AppBaseModel):  # type: ignore[misc]
+    """Request for tenant to change subscription plan."""
+
+    new_plan_id: str = Field(description="Target plan ID")
+    effective_date: datetime | None = Field(
+        None, description="When to apply change (None = immediate)"
+    )
+    proration_behavior: ProrationBehavior = Field(
+        default=ProrationBehavior.CREATE_PRORATIONS,
+        description="How to handle mid-cycle changes",
+    )
+    reason: str | None = Field(None, description="Reason for plan change", max_length=500)
+
+
+class ProrationPreview(AppBaseModel):  # type: ignore[misc]
+    """Preview of costs/credits for plan change."""
+
+    current_plan: SubscriptionPlanResponse
+    new_plan: SubscriptionPlanResponse
+    proration: ProrationResult
+    estimated_invoice_amount: Decimal = Field(
+        description="Estimated next invoice total after change"
+    )
+    effective_date: datetime = Field(description="When change will take effect")
+    next_billing_date: datetime = Field(description="Next billing date after change")
+
+
+class SubscriptionCancelRequest(AppBaseModel):  # type: ignore[misc]
+    """Request to cancel subscription."""
+
+    cancel_at_period_end: bool = Field(
+        default=True, description="Cancel at end of period (True) or immediately (False)"
+    )
+    reason: str | None = Field(None, description="Cancellation reason", max_length=1000)
+    feedback: str | None = Field(None, description="Additional feedback", max_length=2000)

@@ -76,7 +76,9 @@ class TestRouterRegistration:
 
             assert config.module_path, "module_path is required"
             assert config.router_name, "router_name is required"
-            assert config.prefix, "prefix is required"
+            # Allow empty prefix if description exists (router defines its own prefix)
+            if not config.prefix:
+                assert config.description, f"{config.module_path}:{config.router_name} has empty prefix and no description"
             assert config.tags, "tags should not be empty"
             assert isinstance(config.tags, list), "tags should be a list"
 
@@ -109,18 +111,100 @@ class TestRouterRegistration:
         allowed_duplicates = {
             "/api/v1/tenants": {
                 "dotmac.platform.tenant.router:router",
+                "dotmac.platform.tenant.onboarding_router:router",
                 "dotmac.platform.tenant.domain_verification_router:router",
             },
             "/api/v1": {
-                "dotmac.platform.billing.metrics_router:router",
-                "dotmac.platform.billing.metrics_router:customer_metrics_router",
-                "dotmac.platform.auth.metrics_router:router",
-                "dotmac.platform.communications.metrics_router:router",
-                "dotmac.platform.file_storage.metrics_router:router",
                 "dotmac.platform.analytics.metrics_router:router",
+                "dotmac.platform.analytics.router:analytics_router",
+                "dotmac.platform.ansible.router:router",
+                "dotmac.platform.audit.router:router",
                 "dotmac.platform.auth.api_keys_metrics_router:router",
-                "dotmac.platform.secrets.metrics_router:router",
+                "dotmac.platform.auth.api_keys_router:router",
+                "dotmac.platform.auth.metrics_router:router",
+                "dotmac.platform.auth.platform_admin_router:router",
+                "dotmac.platform.auth.rbac_read_router:router",
+                "dotmac.platform.auth.rbac_router:router",
+                "dotmac.platform.auth.router:auth_router",
+                "dotmac.platform.billing.bank_accounts.router:router",
+                "dotmac.platform.billing.dunning.router:router",
+                "dotmac.platform.billing.metrics_router:customer_metrics_router",
+                "dotmac.platform.billing.metrics_router:router",
+                "dotmac.platform.billing.pricing.router:router",
+                "dotmac.platform.billing.router:router",
+                "dotmac.platform.billing.subscriptions.router:router",
+                "dotmac.platform.communications.metrics_router:router",
+                "dotmac.platform.communications.router:router",
+                "dotmac.platform.config.router:health_router",
+                "dotmac.platform.config.router:router",
+                "dotmac.platform.contacts.router:router",
+                "dotmac.platform.crm.router:router",
+                "dotmac.platform.customer_management.router:router",
+                "dotmac.platform.data_import.router:router",
+                "dotmac.platform.data_transfer.router:data_transfer_router",
+                "dotmac.platform.deployment.router:router",
+                "dotmac.platform.diagnostics.router:router",
+                "dotmac.platform.feature_flags.router:feature_flags_router",
+                "dotmac.platform.fiber.router:router",
+                "dotmac.platform.file_storage.metrics_router:router",
+                "dotmac.platform.file_storage.router:file_storage_router",
+                "dotmac.platform.genieacs.router:router",
+                "dotmac.platform.integrations.router:integrations_router",
+                "dotmac.platform.jobs.router:router",
+                "dotmac.platform.jobs.scheduler_router:router",
+                "dotmac.platform.licensing.router_framework:router",
+                "dotmac.platform.metrics.router:router",
+                "dotmac.platform.monitoring.logs_router:logs_router",
                 "dotmac.platform.monitoring.metrics_router:router",
+                "dotmac.platform.monitoring.traces_router:traces_router",
+                "dotmac.platform.monitoring_metrics_router:logs_router",
+                "dotmac.platform.monitoring_metrics_router:metrics_router",
+                "dotmac.platform.netbox.router:router",
+                "dotmac.platform.notifications.router:router",
+                "dotmac.platform.partner_management.router:router",
+                "dotmac.platform.radius.router:router",
+                "dotmac.platform.rate_limit.router:router",
+                "dotmac.platform.realtime.router:router",
+                "dotmac.platform.sales.router:router",
+                "dotmac.platform.secrets.metrics_router:router",
+                "dotmac.platform.services.router:router",
+                "dotmac.platform.tenant.domain_verification_router:router",
+                "dotmac.platform.tenant.onboarding_router:router",
+                "dotmac.platform.tenant.usage_billing_router:router",
+                "dotmac.platform.ticketing.router:router",
+                "dotmac.platform.user_management.router:user_router",
+                "dotmac.platform.user_management.team_router:router",
+                "dotmac.platform.voltha.router:router",
+                "dotmac.platform.webhooks.router:router",
+                "dotmac.platform.wireguard.router:router",
+                "dotmac.platform.wireless.router:router",
+                "dotmac.platform.workflows.metrics_router:router",
+                "dotmac.platform.workflows.router:router",
+            },
+            "/api/v1/billing": {
+                "dotmac.platform.billing.credit_notes.router:router",
+                "dotmac.platform.billing.invoicing.router:router",
+                "dotmac.platform.billing.payments.router:router",
+                "dotmac.platform.billing.receipts.router:router",
+                "dotmac.platform.billing.reconciliation_router:router",
+                "dotmac.platform.billing.settings.router:router",
+                "dotmac.platform.billing.webhooks.router:router",
+            },
+            "": {
+                # Empty prefix - routers that define their own prefix internally
+                "dotmac.platform.fault_management.router:router",
+                "dotmac.platform.licensing.router:router",
+                "dotmac.platform.sales.router:public_router",
+                "dotmac.platform.services.internet_plans.router:router",
+                "dotmac.platform.tenant.oss_router:router",
+            },
+            "/api/v1/metrics": {
+                "dotmac.platform.metrics.router:router",
+                "dotmac.platform.monitoring_metrics_router:metrics_router",
+            },
+            "/api/v1/partners": {
+                "dotmac.platform.partner_management.portal_router:router",
+                "dotmac.platform.partner_management.revenue_router:router",
             },
         }
 
@@ -151,3 +235,171 @@ class TestRouterRegistration:
                 # These should have requires_auth set
                 # Note: The flag is informational, actual auth is handled by dependencies
                 pass  # Just checking the configs are present
+
+    def test_no_double_api_prefix_in_configs(self):
+        """
+        Regression test: Ensure no router prefix contains '/api/v1/api/v1' or similar duplicates.
+
+        This prevents the double-prefix bug that was fixed in Phase 1.
+        """
+        double_prefixes = []
+        invalid_patterns = ["/api/v1/api/v1", "/api/v1/api/", "/api/api/"]
+
+        for config in ROUTER_CONFIGS:
+            if config.prefix:
+                for pattern in invalid_patterns:
+                    if pattern in config.prefix:
+                        double_prefixes.append(
+                            f"{config.module_path}:{config.router_name} has double prefix: {config.prefix}"
+                        )
+
+        assert (
+            not double_prefixes
+        ), f"Double API prefixes detected (regression): {', '.join(double_prefixes)}"
+
+    def test_all_prefixes_start_with_slash(self):
+        """Ensure all prefixes start with a forward slash or are empty."""
+        invalid_prefixes = []
+
+        for config in ROUTER_CONFIGS:
+            # Allow empty prefix only for special cases (documented in description)
+            if config.prefix and not config.prefix.startswith("/"):
+                invalid_prefixes.append(
+                    f"{config.module_path}:{config.router_name} has invalid prefix: {config.prefix}"
+                )
+
+        assert (
+            not invalid_prefixes
+        ), f"Invalid prefixes (must start with /): {', '.join(invalid_prefixes)}"
+
+    def test_no_trailing_slashes_in_prefixes(self):
+        """Ensure no prefix ends with a trailing slash (except root '/')."""
+        trailing_slashes = []
+
+        for config in ROUTER_CONFIGS:
+            if config.prefix and len(config.prefix) > 1 and config.prefix.endswith("/"):
+                trailing_slashes.append(
+                    f"{config.module_path}:{config.router_name} has prefix with trailing slash: {config.prefix}"
+                )
+
+        assert (
+            not trailing_slashes
+        ), f"Prefixes with trailing slashes: {', '.join(trailing_slashes)}"
+
+    def test_public_routes_dont_require_auth(self):
+        """Ensure routes with '/public' in their prefix don't require auth."""
+        auth_on_public = []
+
+        for config in ROUTER_CONFIGS:
+            if config.prefix and "/public" in config.prefix and config.requires_auth:
+                auth_on_public.append(
+                    f"{config.module_path}:{config.router_name} ({config.prefix})"
+                )
+
+        assert (
+            not auth_on_public
+        ), f"Public routes should not require auth: {', '.join(auth_on_public)}"
+
+    def test_router_count_in_expected_range(self):
+        """
+        Ensure router count is within expected range.
+
+        This test will fail if routers are accidentally removed or if
+        a large number of routers are added without review.
+        """
+        router_count = len(ROUTER_CONFIGS)
+
+        # Expected range: 85-100 routers (current is 87)
+        # Adjust these thresholds as the platform grows
+        assert (
+            85 <= router_count <= 100
+        ), f"Unexpected router count: {router_count}. Expected 85-100. Verify no routers were accidentally removed or too many added."
+
+    def test_router_prefixes_have_consistent_api_version(self):
+        """Ensure API versioning is consistent across routers."""
+        invalid_versions = []
+        valid_prefix_patterns = [
+            "/api/v1",
+            "/api/v2",  # Future version
+            "/api/public",
+            "/api/licensing",  # Special case
+            "",  # Allowed if documented in description
+        ]
+
+        for config in ROUTER_CONFIGS:
+            if config.prefix:
+                # Extract the API version part (e.g., /api/v1 from /api/v1/billing)
+                parts = config.prefix.split("/")
+                if len(parts) >= 3:  # Should have '', 'api', 'v1' minimum
+                    api_version = f"/{parts[1]}/{parts[2]}"
+                else:
+                    api_version = config.prefix
+
+                # Check if it starts with a valid prefix
+                if not any(api_version.startswith(vp) for vp in valid_prefix_patterns):
+                    invalid_versions.append(
+                        f"{config.module_path}:{config.router_name} has non-standard API version: {config.prefix}"
+                    )
+
+        assert (
+            not invalid_versions
+        ), f"Non-standard API versions: {', '.join(invalid_versions)}"
+
+
+class TestRouterPrefixExplicitness:
+    """Tests to verify Phase 2 changes: routers have explicit prefixes in their definitions."""
+
+    def test_sample_routers_have_explicit_prefixes(self):
+        """
+        Verify that a sample of router files contain explicit prefix parameters.
+
+        This test ensures Phase 2 changes (explicit prefixes) are maintained.
+        """
+        sample_routers_to_check = [
+            ("dotmac.platform.auth.router", "auth_router"),
+            ("dotmac.platform.billing.router", "router"),
+            ("dotmac.platform.customer_management.router", "router"),
+            ("dotmac.platform.tenant.router", "router"),
+            ("dotmac.platform.webhooks.router", "router"),
+        ]
+
+        missing_prefixes = []
+
+        for module_path, router_name in sample_routers_to_check:
+            try:
+                module = import_module(module_path)
+                router_instance = getattr(module, router_name, None)
+
+                if router_instance is None:
+                    missing_prefixes.append(
+                        f"Router '{router_name}' not found in {module_path}"
+                    )
+                    continue
+
+                # Check if router has a prefix attribute
+                if not hasattr(router_instance, "prefix"):
+                    missing_prefixes.append(
+                        f"Router '{router_name}' in {module_path} missing prefix attribute"
+                    )
+                    continue
+
+                # The prefix should be set (not empty for these specific routers)
+                prefix = router_instance.prefix
+                if prefix == "":
+                    # Empty prefix is OK if router defines its own subroutes
+                    # but for our sample, these should all have explicit prefixes
+                    missing_prefixes.append(
+                        f"Router '{router_name}' in {module_path} has empty prefix (expected explicit prefix after Phase 2)"
+                    )
+
+            except ImportError:
+                # Skip if module cannot be imported (separate test handles this)
+                continue
+            except Exception as e:
+                missing_prefixes.append(
+                    f"Error checking {module_path}:{router_name} - {str(e)}"
+                )
+
+        assert (
+            not missing_prefixes
+        ), f"Routers missing explicit prefixes: {', '.join(missing_prefixes)}"

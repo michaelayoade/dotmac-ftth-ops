@@ -1,5 +1,5 @@
 // Authentication and authorization types
-import { BaseEntity, DateString, UserID, TenantID } from './common';
+import { BaseEntity, DateString, UserID, TenantID } from "./common";
 
 // User types
 export interface User extends BaseEntity {
@@ -28,13 +28,13 @@ export interface User extends BaseEntity {
 }
 
 export const UserStatuses = {
-  ACTIVE: 'active',
-  INACTIVE: 'inactive',
-  SUSPENDED: 'suspended',
-  PENDING: 'pending',
-  DELETED: 'deleted'
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+  SUSPENDED: "suspended",
+  PENDING: "pending",
+  DELETED: "deleted",
 } as const;
-export type UserStatus = typeof UserStatuses[keyof typeof UserStatuses];
+export type UserStatus = (typeof UserStatuses)[keyof typeof UserStatuses];
 
 // Role-based access control
 export interface Role {
@@ -55,16 +55,16 @@ export interface Permission {
 }
 
 export const PermissionActions = {
-  CREATE: 'create',
-  READ: 'read',
-  UPDATE: 'update',
-  DELETE: 'delete',
-  EXECUTE: 'execute',
-  MANAGE: 'manage'
+  CREATE: "create",
+  READ: "read",
+  UPDATE: "update",
+  DELETE: "delete",
+  EXECUTE: "execute",
+  MANAGE: "manage",
 } as const;
-export type PermissionAction = typeof PermissionActions[keyof typeof PermissionActions];
+export type PermissionAction = (typeof PermissionActions)[keyof typeof PermissionActions];
 
-export type PermissionScope = 'own' | 'team' | 'tenant' | 'global';
+export type PermissionScope = "own" | "team" | "tenant" | "global";
 
 // Authentication
 export interface AuthCredentials {
@@ -78,7 +78,7 @@ export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
-  tokenType: 'Bearer';
+  tokenType: "Bearer";
 }
 
 export interface AuthResponse {
@@ -95,7 +95,7 @@ export interface MfaChallenge {
   expiresAt: DateString;
 }
 
-export type MfaType = 'totp' | 'sms' | 'email' | 'backup_code';
+export type MfaType = "totp" | "sms" | "email" | "backup_code";
 
 export interface MfaSetup {
   type: MfaType;
@@ -120,7 +120,7 @@ export interface Session {
 
 // User preferences
 export interface UserPreferences {
-  theme?: 'light' | 'dark' | 'system';
+  theme?: "light" | "dark" | "system";
   language?: string;
   timezone?: string;
   notifications?: NotificationPreferences;
@@ -130,7 +130,7 @@ export interface UserPreferences {
 export interface NotificationPreferences {
   email: {
     enabled: boolean;
-    frequency?: 'immediate' | 'daily' | 'weekly';
+    frequency?: "immediate" | "daily" | "weekly";
     categories?: string[];
   };
   push: {
@@ -144,7 +144,7 @@ export interface NotificationPreferences {
 }
 
 export interface PrivacySettings {
-  profileVisibility?: 'public' | 'private' | 'team';
+  profileVisibility?: "public" | "private" | "team";
   activityTracking?: boolean;
   dataSharing?: boolean;
 }
@@ -214,7 +214,7 @@ export interface OAuthProvider {
   scopes?: string[];
 }
 
-export type OAuthProviderType = 'google' | 'github' | 'microsoft' | 'apple' | 'facebook';
+export type OAuthProviderType = "google" | "github" | "microsoft" | "apple" | "facebook";
 
 // Security events
 export interface SecurityEvent {
@@ -225,39 +225,39 @@ export interface SecurityEvent {
   ipAddress?: string;
   userAgent?: string;
   details?: Record<string, unknown>;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
 }
 
 export type SecurityEventType =
-  | 'login_success'
-  | 'login_failure'
-  | 'logout'
-  | 'password_changed'
-  | 'password_reset'
-  | 'mfa_enabled'
-  | 'mfa_disabled'
-  | 'suspicious_activity'
-  | 'account_locked'
-  | 'api_key_created'
-  | 'api_key_revoked';
+  | "login_success"
+  | "login_failure"
+  | "logout"
+  | "password_changed"
+  | "password_reset"
+  | "mfa_enabled"
+  | "mfa_disabled"
+  | "suspicious_activity"
+  | "account_locked"
+  | "api_key_created"
+  | "api_key_revoked";
 
 // Type guards and utilities
 export function hasPermission(user: User, resource: string, action: PermissionAction): boolean {
   const allPermissions = [
-    ...user.permissions || [],
-    ...user.roles.flatMap(role => role.permissions)
+    ...(user.permissions || []),
+    ...user.roles.flatMap((role) => role.permissions),
   ];
 
-  return allPermissions.some(p =>
-    p.resource === resource &&
-    (p.action === action || p.action === PermissionActions.MANAGE)
+  return allPermissions.some(
+    (p) =>
+      p.resource === resource && (p.action === action || p.action === PermissionActions.MANAGE),
   );
 }
 
 export function hasRole(user: User, roleName: string): boolean {
-  return user.roles.some(role => role.name === roleName);
+  return user.roles.some((role) => role.name === roleName);
 }
 
 export function isAdmin(user: User): boolean {
-  return hasRole(user, 'admin') || hasRole(user, 'super_admin');
+  return hasRole(user, "admin") || hasRole(user, "super_admin");
 }

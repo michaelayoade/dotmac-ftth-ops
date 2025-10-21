@@ -21,12 +21,12 @@ export const useAnalytics = () => {
   return {
     track: (event: AnalyticsEvent) => {
       // Implementation will be added later
-      console.log('Tracking event:', event);
+      console.log("Tracking event:", event);
     },
     identify: (userId: string, traits?: Record<string, unknown>) => {
       // Implementation will be added later
-      console.log('Identifying user:', userId, traits);
-    }
+      console.log("Identifying user:", userId, traits);
+    },
   };
 };
 
@@ -34,15 +34,15 @@ export const useMetrics = () => {
   return {
     record: (metric: string, data: MetricsData) => {
       // Implementation will be added later
-      console.log('Recording metric:', metric, data);
-    }
+      console.log("Recording metric:", metric, data);
+    },
   };
 };
 
 // Default export
 const Analytics = {
   useAnalytics,
-  useMetrics
+  useMetrics,
 };
 
 export default Analytics;

@@ -3,11 +3,11 @@
  * Main hook that orchestrates performance monitoring functionality
  */
 
-import { useMemo, useRef } from 'react';
-import type { PerformanceMetrics, PerformanceObserverConfig } from './types';
-import { usePerformanceObservers } from './usePerformanceObservers';
-import { useMetricTracking } from './useMetricTracking';
-import { usePerformanceReporting } from './usePerformanceReporting';
+import { useMemo, useRef } from "react";
+import type { PerformanceMetrics, PerformanceObserverConfig } from "./types";
+import { usePerformanceObservers } from "./usePerformanceObservers";
+import { useMetricTracking } from "./useMetricTracking";
+import { usePerformanceReporting } from "./usePerformanceReporting";
 
 const defaultConfig: PerformanceObserverConfig = {
   enableCoreWebVitals: true,
@@ -15,7 +15,7 @@ const defaultConfig: PerformanceObserverConfig = {
   enableNavigationTiming: true,
   enableCustomMetrics: true,
   reportingInterval: 30000, // 30 seconds
-  enableConsoleLogging: process.env.NODE_ENV === 'development',
+  enableConsoleLogging: process.env.NODE_ENV === "development",
 };
 
 export function usePerformanceMonitoring(config: PerformanceObserverConfig = {}) {

@@ -1,131 +1,94 @@
-version: '3.8'
+version: '3.9'
 
 services:
-  # Main Application
   app:
+    extends:
+      file: docker-compose.base.yml
+      service: app
     build:
       context: .
       dockerfile: Dockerfile.prod
       args:
         BUILD_ENV: production
-    container_name: dotmac-app-prod
     restart: unless-stopped
-    ports:
-      - "8000:8000"
     environment:
-      # Database
+      ENVIRONMENT: production
+      LOG_LEVEL: info
       DATABASE__HOST: postgres
       DATABASE__PORT: 5432
-      DATABASE__NAME: ${POSTGRES_DB:-dotmac_prod}
-      DATABASE__USER: ${POSTGRES_USER:-dotmac_user}
+      DATABASE__DATABASE: ${POSTGRES_DB:-dotmac_prod}
+      DATABASE__USERNAME: ${POSTGRES_USER:-dotmac_user}
       DATABASE__PASSWORD: ${POSTGRES_PASSWORD}
-
-      # Redis
       REDIS__HOST: redis
       REDIS__PORT: 6379
       REDIS__DB: 0
-
-      # Secrets Management
-      VAULT__URL: http://openbao:8200
-      VAULT__TOKEN: ${VAULT_ROOT_TOKEN}
-
-      # Security
-      JWT_SECRET: ${JWT_SECRET}
       SECRET_KEY: ${SECRET_KEY}
-
-      # Application
-      ENVIRONMENT: production
-      LOG_LEVEL: info
-
-      # Celery
+      AUTH__JWT_SECRET_KEY: ${JWT_SECRET}
+      VAULT__ENABLED: "true"
+      VAULT__URL: http://vault:8200
+      VAULT__TOKEN: ${VAULT_ROOT_TOKEN}
       CELERY__BROKER_URL: redis://redis:6379/2
       CELERY__RESULT_BACKEND: redis://redis:6379/3
-
-      # Observability
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
       OTEL_SERVICE_NAME: dotmac-platform
-
-      # Storage
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin123}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      openbao:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      STORAGE__ENDPOINT: minio:9000
+      STORAGE__ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      STORAGE__SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin123}
+      REQUIRE_REDIS_SESSIONS: "true"
+    ports:
+      - "8000:8000"
     volumes:
       - app_logs:/app/logs
       - ./storage:/app/storage
     networks:
       - dotmac-prod
 
-  # Frontend Application
   frontend:
+    extends:
+      file: docker-compose.base.yml
+      service: frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
       args:
         BUILD_ENV: production
-        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
-    container_name: dotmac-frontend-prod
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://app:8000}
     restart: unless-stopped
-    ports:
-      - "3000:3000"
     environment:
       NODE_ENV: production
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://app:8000}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+    ports:
+      - "3000:3000"
     depends_on:
       app:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     networks:
       - dotmac-prod
 
-  # Production PostgreSQL
   postgres:
-    image: postgres:15-alpine
-    container_name: dotmac-postgres-prod
+    extends:
+      file: docker-compose.base.yml
+      service: postgres
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-dotmac_prod}
       POSTGRES_USER: ${POSTGRES_USER:-dotmac_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
-      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
     ports:
       - "5432:5432"
     volumes:
       - postgres_prod_data:/var/lib/postgresql/data
       - ./database/init:/docker-entrypoint-initdb.d
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dotmac_user} -d ${POSTGRES_DB:-dotmac_prod}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
     networks:
       - dotmac-prod
 
-  # Production Redis
   redis:
-    image: redis:7-alpine
-    container_name: dotmac-redis-prod
+    extends:
+      file: docker-compose.base.yml
+      service: redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -133,144 +96,109 @@ services:
       - redis_prod_data:/data
       - ./redis/redis.conf:/etc/redis/redis.conf:ro
     command: redis-server /etc/redis/redis.conf
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - dotmac-prod
 
-  # Production Vault (OpenBao)
-  openbao:
-    image: quay.io/openbao/openbao:latest
-    container_name: dotmac-openbao-prod
+  vault:
+    extends:
+      file: docker-compose.base.yml
+      service: vault
     restart: unless-stopped
-    cap_add:
-      - IPC_LOCK
     environment:
       VAULT_LOCAL_CONFIG: |
         {
-          "backend": {
-            "file": {
-              "path": "/vault/data"
-            }
-          },
-          "listener": {
-            "tcp": {
-              "address": "0.0.0.0:8200",
-              "tls_disable": true
-            }
-          },
+          "backend": { "file": { "path": "/vault/data" } },
+          "listener": { "tcp": { "address": "0.0.0.0:8200", "tls_disable": true } },
           "default_lease_ttl": "168h",
           "max_lease_ttl": "720h",
           "ui": true
         }
-    ports:
-      - "8200:8200"
-    volumes:
-      - openbao_prod_data:/vault/data
-      - openbao_logs:/vault/logs
-      - ./vault/policies:/vault/policies:ro
     command: server
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8200/v1/sys/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+    volumes:
+      - vault_prod_data:/vault/data
+      - vault_logs:/vault/logs
+      - ./vault/policies:/vault/policies:ro
     networks:
       - dotmac-prod
 
-  # Celery Workers
+  minio:
+    extends:
+      file: docker-compose.base.yml
+      service: minio
+    restart: unless-stopped
+    volumes:
+      - minio_prod_data:/data
+    networks:
+      - dotmac-prod
+
   celery-worker:
+    extends:
+      file: docker-compose.base.yml
+      service: celery-worker
     build:
       context: .
       dockerfile: Dockerfile.prod
       args:
         BUILD_ENV: production
-    container_name: dotmac-celery-worker-prod
     restart: unless-stopped
     command: celery -A dotmac.platform.tasks worker --loglevel=info --concurrency=4
     environment:
       CELERY__BROKER_URL: redis://redis:6379/2
       CELERY__RESULT_BACKEND: redis://redis:6379/3
       DATABASE__HOST: postgres
+      DATABASE__PORT: 5432
+      DATABASE__DATABASE: ${POSTGRES_DB:-dotmac_prod}
+      DATABASE__USERNAME: ${POSTGRES_USER:-dotmac_user}
+      DATABASE__PASSWORD: ${POSTGRES_PASSWORD}
       REDIS__HOST: redis
-      VAULT__URL: http://openbao:8200
+      REDIS__PORT: 6379
+      VAULT__URL: http://vault:8200
       VAULT__TOKEN: ${VAULT_ROOT_TOKEN}
       ENVIRONMENT: production
       LOG_LEVEL: info
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     volumes:
       - app_logs:/app/logs
       - ./storage:/app/storage
-    networks:
-      - dotmac-prod
     deploy:
       replicas: 2
+    networks:
+      - dotmac-prod
+    profiles: []
 
-  # Celery Beat Scheduler
   celery-beat:
+    extends:
+      file: docker-compose.base.yml
+      service: celery-beat
     build:
       context: .
       dockerfile: Dockerfile.prod
       args:
         BUILD_ENV: production
-    container_name: dotmac-celery-beat-prod
     restart: unless-stopped
     command: celery -A dotmac.platform.tasks beat --loglevel=info --schedule=/tmp/celerybeat-schedule
     environment:
       CELERY__BROKER_URL: redis://redis:6379/2
       CELERY__RESULT_BACKEND: redis://redis:6379/3
       DATABASE__HOST: postgres
+      DATABASE__PORT: 5432
+      DATABASE__DATABASE: ${POSTGRES_DB:-dotmac_prod}
+      DATABASE__USERNAME: ${POSTGRES_USER:-dotmac_user}
+      DATABASE__PASSWORD: ${POSTGRES_PASSWORD}
       REDIS__HOST: redis
-      VAULT__URL: http://openbao:8200
+      REDIS__PORT: 6379
+      VAULT__URL: http://vault:8200
       VAULT__TOKEN: ${VAULT_ROOT_TOKEN}
       ENVIRONMENT: production
       LOG_LEVEL: info
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     volumes:
       - celery_beat_data:/tmp
       - app_logs:/app/logs
     networks:
       - dotmac-prod
+    profiles: []
 
-  # MinIO for File Storage
-  minio:
-    image: minio/minio:latest
-    container_name: dotmac-minio-prod
-    restart: unless-stopped
-    command: server /data --console-address ":9001"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin123}
-      MINIO_PROMETHEUS_AUTH_TYPE: public
-    ports:
-      - "9000:9000"  # API
-      - "9001:9001"  # Console
-    volumes:
-      - minio_prod_data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-    networks:
-      - dotmac-prod
-
-  # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
-    container_name: dotmac-nginx-prod
     restart: unless-stopped
     ports:
       - "80:80"
@@ -283,14 +211,14 @@ services:
       app:
         condition: service_healthy
       frontend:
-        condition: service_healthy
+        condition: service_started
     networks:
       - dotmac-prod
 
-  # Monitoring - Jaeger
   jaeger:
-    image: jaegertracing/all-in-one:latest
-    container_name: dotmac-jaeger-prod
+    extends:
+      file: docker-compose.base.yml
+      service: jaeger
     restart: unless-stopped
     environment:
       COLLECTOR_OTLP_ENABLED: "true"
@@ -298,67 +226,62 @@ services:
       BADGER_EPHEMERAL: "false"
       BADGER_DIRECTORY_VALUE: "/badger/data"
       BADGER_DIRECTORY_KEY: "/badger/key"
-    ports:
-      - "16686:16686"    # Jaeger UI
-      - "4317:4317"      # OTLP gRPC
-      - "4318:4318"      # OTLP HTTP
     volumes:
       - jaeger_badger_data:/badger
     networks:
       - dotmac-prod
 
-  # Monitoring - Prometheus
   prometheus:
-    image: prom/prometheus:latest
-    container_name: dotmac-prometheus-prod
+    extends:
+      file: docker-compose.base.yml
+      service: prometheus
     restart: unless-stopped
     ports:
       - "9090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
     networks:
       - dotmac-prod
 
-  # Monitoring - Grafana
   grafana:
-    image: grafana/grafana:latest
-    container_name: dotmac-grafana-prod
+    extends:
+      file: docker-compose.base.yml
+      service: grafana
     restart: unless-stopped
     ports:
       - "3400:3000"
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin123}
-      GF_INSTALL_PLUGINS: grafana-piechart-panel
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
-    depends_on:
-      - prometheus
+    networks:
+      - dotmac-prod
+
+  otel-collector:
+    extends:
+      file: docker-compose.base.yml
+      service: otel-collector
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
     networks:
       - dotmac-prod
 
 volumes:
-  postgres_prod_data:
-  redis_prod_data:
-  openbao_prod_data:
-  openbao_logs:
-  minio_prod_data:
   app_logs:
-  nginx_logs:
   celery_beat_data:
-  jaeger_badger_data:
-  prometheus_data:
   grafana_data:
+  jaeger_badger_data:
+  minio_prod_data:
+  nginx_logs:
+  postgres_prod_data:
+  prometheus_data:
+  redis_prod_data:
+  vault_logs:
+  vault_prod_data:
 
 networks:
   dotmac-prod:
-    name: dotmac-production
     driver: bridge

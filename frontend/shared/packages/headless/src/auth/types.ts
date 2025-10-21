@@ -47,7 +47,7 @@ export interface LoginCredentials {
 export interface PortalConfig {
   id: string;
   name: string;
-  type: 'admin' | 'customer' | 'reseller' | 'technician' | 'management';
+  type: "admin" | "customer" | "reseller" | "technician" | "management";
   tenantId: string;
   loginMethods: string[];
   features: {

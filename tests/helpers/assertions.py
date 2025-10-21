@@ -51,10 +51,9 @@ def assert_entity_created(
         added_entity = mock_db_session.add.call_args_list[0][0][0]
 
         if entity_type:
-            assert isinstance(added_entity, entity_type), (
-                f"Expected entity type {entity_type.__name__}, "
-                f"got {type(added_entity).__name__}"
-            )
+            assert isinstance(
+                added_entity, entity_type
+            ), f"Expected entity type {entity_type.__name__}, got {type(added_entity).__name__}"
 
         if expected_attributes:
             for attr, expected_value in expected_attributes.items():
@@ -184,9 +183,9 @@ def assert_cache_invalidated(
 
     if expected_key:
         call_args = mock_cache_delete.call_args[0]
-        assert expected_key in str(call_args), (
-            f"Expected cache key containing '{expected_key}', " f"got {call_args}"
-        )
+        assert expected_key in str(
+            call_args
+        ), f"Expected cache key containing '{expected_key}', got {call_args}"
 
 
 def assert_not_found(result: Any) -> None:

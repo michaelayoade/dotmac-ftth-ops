@@ -40,7 +40,7 @@ class InvoiceImportSchema(BaseModel):
     discount_amount: float | None = Field(default=0, ge=0)
 
     # Line items (JSON array)
-    line_items: list[dict[str, Any]] | None = Field(default_factory=list)
+    line_items: list[dict[str, Any]] | None = Field(default_factory=lambda: [])
 
     # External references
     external_id: str | None = Field(None, max_length=100)

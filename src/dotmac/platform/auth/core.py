@@ -54,8 +54,30 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 bearer_scheme = HTTPBearer(auto_error=False)
 
-# Configuration from settings or defaults
+# Configuration from centralized settings
 try:
+    from ..settings import settings
+
+    # Use new centralized AuthSettings (Phase 1 implementation)
+    _jwt_secret = (
+        settings.auth.jwt_secret_key or settings.jwt.secret_key
+    )  # Fallback to old jwt settings
+    _jwt_algorithm = settings.auth.jwt_algorithm
+    _access_token_expire_minutes = settings.auth.access_token_expire_minutes
+    _refresh_token_expire_days = settings.auth.refresh_token_expire_days
+    _redis_url = settings.auth.session_redis_url
+    _default_user_role = settings.auth.default_user_role
+except ImportError:
+    # Fallback values if settings not available (should only happen in tests)
+    _jwt_secret = "default-secret-change-this"
+    _jwt_algorithm = "HS256"
+    _access_token_expire_minutes = 15
+    _refresh_token_expire_days = 7
+    _redis_url = "redis://localhost:6379"
+    _default_user_role = "user"
+except AttributeError:
+    # Handle case where settings exists but auth field is not yet initialized
+    # This provides backwards compatibility during rollout
     from ..settings import settings
 
     _jwt_secret = settings.jwt.secret_key
@@ -63,16 +85,7 @@ try:
     _access_token_expire_minutes = settings.jwt.access_token_expire_minutes
     _refresh_token_expire_days = settings.jwt.refresh_token_expire_days
     _redis_url = settings.redis.redis_url
-    # Get default role from settings (now has proper field with default="user")
-    _default_user_role = settings.default_user_role
-except ImportError:
-    # Fallback values if settings not available
-    _jwt_secret = "default-secret-change-this"
-    _jwt_algorithm = "HS256"
-    _access_token_expire_minutes = 15
-    _refresh_token_expire_days = 7
-    _redis_url = "redis://localhost:6379"
-    _default_user_role = "user"  # Standard user role as fallback
+    _default_user_role = getattr(settings, "default_user_role", "user")
 
 # Module constants
 JWT_SECRET = _jwt_secret
@@ -126,8 +139,8 @@ class UserInfo(BaseModel):
     user_id: str  # String representation of UUID for JWT/API compatibility
     email: EmailStr | None = None
     username: str | None = None
-    roles: list[str] = Field(default_factory=list)
-    permissions: list[str] = Field(default_factory=list)
+    roles: list[str] = Field(default_factory=lambda: [])
+    permissions: list[str] = Field(default_factory=lambda: [])
     tenant_id: str | None = None  # None for platform admins
     is_platform_admin: bool = Field(
         default=False, description="Platform admin with cross-tenant access"
@@ -248,7 +261,7 @@ class JWTService:
         expires_delta = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
         return self._create_token(data, expires_delta)
 
-    def _create_token(self, data: dict, expires_delta: timedelta) -> str:
+    def _create_token(self, data: dict[str, Any], expires_delta: timedelta) -> str:
         """Internal token creation."""
         to_encode = data.copy()
         expire = datetime.now(UTC) + expires_delta
@@ -304,7 +317,7 @@ class JWTService:
         if not REDIS_AVAILABLE:
             return None
         if self._redis is None and redis_async is not None:
-            self._redis = await redis_async.from_url(self.redis_url, decode_responses=True)
+            self._redis = redis_async.from_url(self.redis_url, decode_responses=True)
         return self._redis
 
     async def revoke_token(self, token: str) -> bool:
@@ -439,6 +452,19 @@ class SessionManager:
         self._fallback_enabled = fallback_enabled
         self._redis_healthy = True
 
+        # SECURITY: Disable fallback automatically in production environments
+        try:
+            environment = getattr(settings, "environment", None)
+            env_value = getattr(environment, "value", str(environment)) if environment else "development"
+        except Exception:  # pragma: no cover - defensive
+            env_value = "development"
+
+        if self._fallback_enabled and str(env_value).lower() == "production":
+            logger.warning(
+                "Session fallback disabled for production deployment; Redis availability is required."
+            )
+            self._fallback_enabled = False
+
     async def _get_redis(self) -> Any | None:
         """Get Redis connection with health check."""
         if not REDIS_AVAILABLE:
@@ -448,7 +474,7 @@ class SessionManager:
 
         if self._redis is None and redis_async is not None:
             try:
-                self._redis = await redis_async.from_url(self.redis_url, decode_responses=True)
+                self._redis = redis_async.from_url(self.redis_url, decode_responses=True)
                 # Verify connection
                 await self._redis.ping()
                 self._redis_healthy = True
@@ -669,6 +695,12 @@ class APIKeyService:
         self._memory_lookup: dict[str, str] = {}
         self._serialize: Callable[[dict[str, Any]], str] = json.dumps
         self._deserialize: Callable[[str], dict[str, Any]] = json.loads
+        try:
+            environment = getattr(settings, "environment", None)
+            env_value = getattr(environment, "value", str(environment)) if environment else "development"
+        except Exception:  # pragma: no cover
+            env_value = "development"
+        self._fallback_allowed = str(env_value).lower() != "production"
 
     async def _get_redis(self) -> Any | None:
         """Get Redis connection."""
@@ -676,7 +708,7 @@ class APIKeyService:
             return None
 
         if self._redis is None and redis_async is not None:
-            self._redis = await redis_async.from_url(self.redis_url, decode_responses=True)
+            self._redis = redis_async.from_url(self.redis_url, decode_responses=True)
         return self._redis
 
     async def create_api_key(
@@ -721,12 +753,14 @@ class APIKeyService:
             # Store with hash as key instead of plaintext
             await client.set(f"api_key:{api_key_hash}", json.dumps(data))
         else:
+            if not self._fallback_allowed:
+                raise RuntimeError("API key service unavailable: Redis connection required")
             # Fallback to memory (also use hash)
             self._memory_keys[api_key_hash] = data
 
         return api_key
 
-    async def verify_api_key(self, api_key: str) -> dict | None:
+    async def verify_api_key(self, api_key: str) -> dict[str, Any] | None:
         """
         Verify API key by hashing and looking up.
 
@@ -753,7 +787,7 @@ class APIKeyService:
                 key_id = await client.get(f"api_key_lookup:{api_key_hash}")
                 if key_id:
                     if isinstance(key_id, bytes):
-                        key_id = key_id.decode('utf-8')
+                        key_id = key_id.decode("utf-8")
 
                     # Load metadata
                     metadata_str = await client.get(f"api_key_meta:{key_id}")
@@ -777,6 +811,10 @@ class APIKeyService:
                         key_data.update(metadata)
 
                 return key_data
+
+            if not self._fallback_allowed:
+                logger.error("API key verification failed: Redis unavailable and fallback disabled.")
+                return None
 
             # Fallback to memory (also uses hash)
             return self._memory_keys.get(api_key_hash)
@@ -806,6 +844,9 @@ class APIKeyService:
             if client:
                 deleted_count = await client.delete(f"api_key:{api_key_hash}")
                 return bool(deleted_count)
+            if not self._fallback_allowed:
+                logger.error("API key revocation failed: Redis unavailable and fallback disabled.")
+                return False
             # Fallback to memory (also uses hash)
             return bool(self._memory_keys.pop(api_key_hash, None))
         except Exception as e:
@@ -830,6 +871,9 @@ class APIKeyService:
             if client:
                 deleted_count = await client.delete(f"api_key:{api_key_hash}")
                 return bool(deleted_count)
+            if not self._fallback_allowed:
+                logger.error("API key revocation failed: Redis unavailable and fallback disabled.")
+                return False
             # Fallback to memory
             return bool(self._memory_keys.pop(api_key_hash, None))
         except Exception as e:
@@ -848,7 +892,7 @@ jwt_service = JWTService()
 # In production, Redis is mandatory for proper session management
 # Use settings.environment instead of os.getenv to respect .env files
 try:
-    _is_production = settings.environment.lower() in ("production", "prod")
+    _is_production = getattr(settings, "is_production", False)
 except (ImportError, AttributeError):
     # Fallback if settings not available
     _is_production = os.getenv("ENVIRONMENT", "development").lower() in ("production", "prod")
@@ -965,7 +1009,7 @@ async def get_current_user_optional(
         return None
 
 
-def _claims_to_user_info(claims: dict) -> UserInfo:
+def _claims_to_user_info(claims: dict[str, Any]) -> UserInfo:
     """Convert JWT claims to UserInfo."""
     return UserInfo(
         user_id=claims.get("sub", ""),

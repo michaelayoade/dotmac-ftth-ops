@@ -123,7 +123,13 @@ class PartnerRevenueService:
             total_commission_count=int(total_commission_count),
             total_payouts=total_payouts,
             pending_amount=pending_amount,
-            currency="USD",  # TODO: Support multi-currency
+            # Multi-currency support: Currently defaulting to USD
+            # To implement full multi-currency support:
+            # 1. Add currency field to PartnerCommission model
+            # 2. Group by currency in aggregation queries
+            # 3. Return dict[str, Decimal] for amounts by currency
+            # 4. Update PartnerRevenueReport schema to support multiple currencies
+            currency="USD",
         )
 
     async def list_commission_events(

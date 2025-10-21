@@ -57,7 +57,7 @@ class TestContactFieldService:
             # No field_key provided
         )
 
-        field = await service.create_field_definition(
+        await service.create_field_definition(
             field_data=field_data,
             tenant_id=tenant_id,
             created_by=user_id,

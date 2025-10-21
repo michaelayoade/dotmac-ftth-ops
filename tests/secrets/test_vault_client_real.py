@@ -82,7 +82,7 @@ class FakeVaultServer:
 
         # Handle KV v2 paths: /v1/{mount}/data/{secret_path}
         if len(parts) >= 3 and parts[2] == "data":
-            mount_path = parts[1]
+            parts[1]
             secret_path = "/".join(parts[3:]) if len(parts) > 3 else ""
             return self._handle_kv_v2(method, secret_path, json_data)
 
@@ -97,7 +97,7 @@ class FakeVaultServer:
 
         # Handle KV v1 paths: /v1/{mount}/{secret_path}
         elif len(parts) >= 3:
-            mount_path = parts[1]
+            parts[1]
             secret_path = "/".join(parts[2:])
             if "list=true" in query:
                 return self._handle_list(secret_path)
@@ -177,13 +177,10 @@ class FakeVaultServer:
 
         elif method == "DELETE":
             # Delete from both secrets and metadata
-            deleted = False
             if path in self.secrets:
                 del self.secrets[path]
-                deleted = True
             if path in self.metadata:
                 del self.metadata[path]
-                deleted = True
             # Return 204 even if not found (idempotent)
             return FakeVaultResponse(204)
 

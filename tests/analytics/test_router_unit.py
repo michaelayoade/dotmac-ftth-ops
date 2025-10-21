@@ -126,10 +126,10 @@ class TestRouterConfiguration:
     def test_router_exists(self):
         """Test analytics router is configured."""
         assert analytics_router is not None
-        assert analytics_router.prefix == ""  # No prefix by default
+        assert analytics_router.prefix == "/analytics"  # Router has /analytics prefix
 
     def test_router_has_routes(self):
         """Test router has expected routes."""
         routes = [route.path for route in analytics_router.routes]
-        assert "/events" in routes
-        assert "/metrics" in routes
+        assert "/analytics/events" in routes
+        assert "/analytics/metrics" in routes

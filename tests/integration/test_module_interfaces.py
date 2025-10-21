@@ -233,7 +233,7 @@ class TestModuleInterfaceCompatibility:
 
         # This test verifies the expected patterns exist
         # In a real implementation, we would introspect actual modules
-        for pattern, expected_params in async_method_patterns.items():
+        for _pattern, expected_params in async_method_patterns.items():
             # Verify pattern expectations
             assert len(expected_params) > 0
             assert isinstance(expected_params, list)

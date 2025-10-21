@@ -10,18 +10,14 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
-from fastapi import status
-from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.bank_accounts.entities import (
     ManualPayment,
     PaymentMethodType,
-    PaymentReconciliation,
 )
 from dotmac.platform.billing.reconciliation_service import ReconciliationService
-from dotmac.platform.main import app
 
 
 @pytest.fixture
@@ -35,7 +31,7 @@ def mock_audit_service():
 @pytest.fixture
 async def test_bank_account(async_session: AsyncSession, tenant_id: str):
     """Create a test bank account."""
-    from dotmac.platform.billing.bank_accounts.entities import CompanyBankAccount, AccountType
+    from dotmac.platform.billing.bank_accounts.entities import AccountType, CompanyBankAccount
 
     bank_account = CompanyBankAccount(
         id=1,
@@ -58,7 +54,9 @@ async def test_bank_account(async_session: AsyncSession, tenant_id: str):
 
 
 @pytest.fixture
-async def test_manual_payment(async_session: AsyncSession, tenant_id: str, test_bank_account, mock_audit_service):
+async def test_manual_payment(
+    async_session: AsyncSession, tenant_id: str, test_bank_account, mock_audit_service
+):
     """Create a test manual payment."""
     payment = ManualPayment(
         id=1,
@@ -114,8 +112,8 @@ class TestReconciliationServiceIntegration:
 
     @pytest.mark.asyncio
     async def test_get_reconciliation_summary(
-        self, async_session: AsyncSession, tenant_id: str, test_bank_account
-    , mock_audit_service):
+        self, async_session: AsyncSession, tenant_id: str, test_bank_account, mock_audit_service
+    ):
         """Test getting reconciliation summary."""
         service = ReconciliationService(async_session, audit_service=mock_audit_service)
 
@@ -145,7 +143,9 @@ class TestReconciliationCircuitBreaker:
     """Integration tests for circuit breaker functionality."""
 
     @pytest.mark.asyncio
-    async def test_circuit_breaker_initial_state(self, async_session: AsyncSession, mock_audit_service):
+    async def test_circuit_breaker_initial_state(
+        self, async_session: AsyncSession, mock_audit_service
+    ):
         """Test circuit breaker starts in closed state."""
         service = ReconciliationService(async_session, audit_service=mock_audit_service)
 
@@ -154,8 +154,8 @@ class TestReconciliationCircuitBreaker:
 
     @pytest.mark.asyncio
     async def test_circuit_breaker_tracks_failures(
-        self, async_session: AsyncSession, tenant_id: str, test_bank_account
-    , mock_audit_service):
+        self, async_session: AsyncSession, tenant_id: str, test_bank_account, mock_audit_service
+    ):
         """Test circuit breaker tracks consecutive failures."""
         service = ReconciliationService(async_session, audit_service=mock_audit_service)
 
@@ -214,9 +214,7 @@ class TestManualPaymentIntegration:
         assert payment.status == "pending"
 
     @pytest.mark.asyncio
-    async def test_update_payment_status(
-        self, async_session: AsyncSession, test_manual_payment
-    ):
+    async def test_update_payment_status(self, async_session: AsyncSession, test_manual_payment):
         """Test updating payment status."""
         test_manual_payment.status = "verified"
         test_manual_payment.verified_at = datetime.now(UTC)
@@ -230,9 +228,7 @@ class TestManualPaymentIntegration:
         assert test_manual_payment.verified_by == "user-123"
 
     @pytest.mark.asyncio
-    async def test_reconcile_payment(
-        self, async_session: AsyncSession, test_manual_payment
-    ):
+    async def test_reconcile_payment(self, async_session: AsyncSession, test_manual_payment):
         """Test reconciling a payment."""
         test_manual_payment.reconciled = True
         test_manual_payment.reconciled_at = datetime.now(UTC)
@@ -286,8 +282,8 @@ class TestReconciliationApproval:
 
     @pytest.mark.asyncio
     async def test_approve_reconciliation(
-        self, async_session: AsyncSession, tenant_id: str, test_bank_account
-    , mock_audit_service):
+        self, async_session: AsyncSession, tenant_id: str, test_bank_account, mock_audit_service
+    ):
         """Test approving a completed reconciliation."""
         service = ReconciliationService(async_session, audit_service=mock_audit_service)
 
@@ -321,8 +317,8 @@ class TestReconciliationApproval:
 
     @pytest.mark.asyncio
     async def test_reconciliation_status_flow(
-        self, async_session: AsyncSession, tenant_id: str, test_bank_account
-    , mock_audit_service):
+        self, async_session: AsyncSession, tenant_id: str, test_bank_account, mock_audit_service
+    ):
         """Test complete reconciliation status flow."""
         service = ReconciliationService(async_session, audit_service=mock_audit_service)
 
@@ -359,9 +355,7 @@ class TestReconciliationTenantIsolation:
     """Integration tests for tenant isolation in reconciliation."""
 
     @pytest.mark.asyncio
-    async def test_tenant_isolation_payments(
-        self, async_session: AsyncSession, test_bank_account
-    ):
+    async def test_tenant_isolation_payments(self, async_session: AsyncSession, test_bank_account):
         """Test payments are isolated by tenant."""
         # Create payments for different tenants
         payment1 = ManualPayment(

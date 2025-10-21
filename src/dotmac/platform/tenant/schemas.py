@@ -13,7 +13,7 @@ from .models import BillingCycle, TenantInvitationStatus, TenantPlanType, Tenant
 
 
 # Base schemas
-class TenantBase(BaseModel):
+class TenantBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base tenant schema with common fields."""
 
     model_config = ConfigDict(
@@ -32,7 +32,7 @@ class TenantBase(BaseModel):
     phone: str | None = Field(None, max_length=50, description="Contact phone number")
 
 
-class TenantCreate(TenantBase):
+class TenantCreate(TenantBase):  # TenantBase resolves to Any in isolation
     """Schema for creating a new tenant."""
 
     plan_type: TenantPlanType = Field(
@@ -54,6 +54,11 @@ class TenantCreate(TenantBase):
     max_api_calls_per_month: int = Field(default=10000, ge=0, description="Monthly API call limit")
     max_storage_gb: int = Field(default=10, ge=1, description="Storage limit in GB")
 
+    oss_config: dict[str, dict[str, Any]] | None = Field(
+        default=None,
+        description="Optional VOLTHA/GenieACS/NetBox/AWX overrides per service",
+    )
+
     @field_validator("slug")
     @classmethod
     def validate_slug(cls, v: str) -> str:
@@ -66,7 +71,7 @@ class TenantCreate(TenantBase):
         return v
 
 
-class TenantUpdate(BaseModel):
+class TenantUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating a tenant."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -97,7 +102,7 @@ class TenantUpdate(BaseModel):
     primary_color: str | None = Field(None, max_length=20)
 
 
-class TenantResponse(TenantBase):
+class TenantResponse(TenantBase):  # TenantBase resolves to Any in isolation
     """Schema for tenant response."""
 
     id: str
@@ -146,7 +151,7 @@ class TenantResponse(TenantBase):
     has_exceeded_storage_limit: bool = False
 
 
-class TenantListResponse(BaseModel):
+class TenantListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for paginated tenant list."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -159,7 +164,7 @@ class TenantListResponse(BaseModel):
 
 
 # Tenant Settings Schemas
-class TenantSettingCreate(BaseModel):
+class TenantSettingCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for creating a tenant setting."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -171,7 +176,7 @@ class TenantSettingCreate(BaseModel):
     is_encrypted: bool = Field(default=False, description="Whether to encrypt the value")
 
 
-class TenantSettingUpdate(BaseModel):
+class TenantSettingUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating a tenant setting."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -182,7 +187,7 @@ class TenantSettingUpdate(BaseModel):
     is_encrypted: bool | None = None
 
 
-class TenantSettingResponse(BaseModel):
+class TenantSettingResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for tenant setting response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -199,7 +204,7 @@ class TenantSettingResponse(BaseModel):
 
 
 # Tenant Usage Schemas
-class TenantUsageCreate(BaseModel):
+class TenantUsageCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for creating a usage record."""
 
     model_config = ConfigDict(validate_assignment=True)
@@ -210,10 +215,10 @@ class TenantUsageCreate(BaseModel):
     storage_gb: float = Field(default=0, ge=0)
     active_users: int = Field(default=0, ge=0)
     bandwidth_gb: float = Field(default=0, ge=0)
-    metrics: dict[str, Any] = Field(default_factory=dict)
+    metrics: dict[str, Any] = Field(default_factory=lambda: {})
 
 
-class TenantUsageResponse(BaseModel):
+class TenantUsageResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for usage response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -232,7 +237,7 @@ class TenantUsageResponse(BaseModel):
 
 
 # Tenant Invitation Schemas
-class TenantInvitationCreate(BaseModel):
+class TenantInvitationCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for creating a tenant invitation."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -247,7 +252,7 @@ class TenantInvitationCreate(BaseModel):
         return v.lower().strip()
 
 
-class TenantInvitationResponse(BaseModel):
+class TenantInvitationResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for invitation response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -266,7 +271,7 @@ class TenantInvitationResponse(BaseModel):
     is_pending: bool = False
 
 
-class TenantInvitationAccept(BaseModel):
+class TenantInvitationAccept(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for accepting an invitation."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -304,7 +309,7 @@ class TenantStatsResponse(BaseModel):
 
 
 # Feature management
-class TenantFeatureUpdate(BaseModel):
+class TenantFeatureUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating tenant features."""
 
     model_config = ConfigDict(validate_assignment=True)
@@ -312,7 +317,7 @@ class TenantFeatureUpdate(BaseModel):
     features: dict[str, bool] = Field(description="Feature flags to enable/disable")
 
 
-class TenantMetadataUpdate(BaseModel):
+class TenantMetadataUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating tenant metadata."""
 
     model_config = ConfigDict(validate_assignment=True)
@@ -321,7 +326,7 @@ class TenantMetadataUpdate(BaseModel):
 
 
 # Bulk operations
-class TenantBulkStatusUpdate(BaseModel):
+class TenantBulkStatusUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for bulk status updates."""
 
     model_config = ConfigDict(validate_assignment=True)
@@ -330,7 +335,7 @@ class TenantBulkStatusUpdate(BaseModel):
     status: TenantStatus = Field(description="New status to set")
 
 
-class TenantBulkDeleteRequest(BaseModel):
+class TenantBulkDeleteRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for bulk tenant deletion."""
 
     model_config = ConfigDict(validate_assignment=True)

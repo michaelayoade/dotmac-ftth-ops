@@ -202,7 +202,7 @@ class TestAnalyticsServiceEdgeCases:
         """Test creating a request span for tracing."""
         attributes = {"http.method": "GET", "http.url": "/users"}
 
-        span = analytics_service.create_request_span(
+        analytics_service.create_request_span(
             endpoint="/users", method="GET", attributes=attributes
         )
 

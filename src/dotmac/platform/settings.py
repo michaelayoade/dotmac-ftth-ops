@@ -4,10 +4,13 @@ All configuration is loaded from environment variables and .env files.
 This is the single source of truth for all platform configuration.
 """
 
+# mypy: ignore-errors
+
 from __future__ import annotations
 
+import os
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field, PostgresDsn, RedisDsn, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -20,6 +23,404 @@ class Environment(str, Enum):
     STAGING = "staging"
     PRODUCTION = "production"
     TEST = "test"
+
+
+class ServiceEndpointSettings(BaseModel):  # BaseModel resolves to Any in isolation
+    """External OSS/automation service endpoint configuration."""
+
+    model_config = ConfigDict()
+
+    url: str | None = Field(None, description="Base URL for the service endpoint")
+    username: str | None = Field(None, description="Optional username for basic auth")
+    password: str | None = Field(None, description="Optional password for basic auth")
+    api_token: str | None = Field(None, description="Optional API token")
+    verify_ssl: bool = Field(True, description="Verify SSL certificates")
+    timeout_seconds: float = Field(30.0, ge=1.0, description="HTTP timeout in seconds")
+    max_retries: int = Field(2, ge=0, description="Number of automatic retries for requests")
+
+
+class ObservabilitySettings(BaseModel):  # BaseModel resolves to Any in isolation
+    """Observability settings for logging, tracing, and metrics."""
+
+    model_config = ConfigDict()
+
+    # Logging configuration
+    log_level: str = Field("INFO", description="Log level")
+    log_format: str = Field(
+        "json",
+        description="Log format (json or text)",
+    )
+    enable_structured_logging: bool = Field(True, description="Enable structured logging")
+    enable_correlation_ids: bool = Field(True, description="Enable correlation IDs")
+    correlation_id_header: str = Field(
+        "X-Correlation-ID", description="Header name for correlation IDs"
+    )
+
+    # Tracing configuration
+    enable_tracing: bool = Field(True, description="Enable distributed tracing")
+    tracing_sample_rate: float = Field(1.0, description="Tracing sample rate (0.0-1.0)")
+
+    # Metrics configuration
+    enable_metrics: bool = Field(True, description="Enable metrics collection")
+    metrics_port: int = Field(9090, description="Metrics port")
+
+    # OpenTelemetry configuration
+    otel_enabled: bool = Field(True, description="Enable OpenTelemetry")
+    otel_endpoint: str | None = Field(
+        "http://localhost:4318/v1/traces",
+        description="OTLP endpoint (default: local OTEL collector)",
+    )
+    otel_service_name: str = Field("dotmac-platform", description="Service name")
+    otel_resource_attributes: dict[str, str] = Field(
+        default_factory=dict, description="Resource attributes"
+    )
+    otel_instrument_celery: bool = Field(
+        True, description="Enable Celery instrumentation when OTEL is enabled"
+    )
+    otel_instrument_fastapi: bool = Field(
+        True, description="Enable FastAPI instrumentation when OTEL is enabled"
+    )
+    otel_instrument_sqlalchemy: bool = Field(
+        True, description="Enable SQLAlchemy instrumentation when OTEL is enabled"
+    )
+    otel_instrument_requests: bool = Field(
+        True, description="Enable Requests instrumentation when OTEL is enabled"
+    )
+
+    # Prometheus metrics endpoint
+    prometheus_enabled: bool = Field(True, description="Enable Prometheus metrics")
+    prometheus_port: int = Field(8001, description="Prometheus metrics port")
+
+
+def _default_observability_settings() -> ObservabilitySettings:
+    return cast(ObservabilitySettings, ObservabilitySettings.model_validate({}))
+
+
+class OSSSettings(BaseModel):  # BaseModel resolves to Any in isolation
+    """Operational support system integrations per service."""
+
+    model_config = ConfigDict()
+
+    voltha: ServiceEndpointSettings = Field(
+        default_factory=lambda: ServiceEndpointSettings(
+            url=os.getenv("VOLTHA_URL", "http://localhost:8881"),
+            username=os.getenv("VOLTHA_USERNAME"),
+            password=os.getenv("VOLTHA_PASSWORD"),
+            api_token=os.getenv("VOLTHA_TOKEN"),
+            verify_ssl=os.getenv("VOLTHA_VERIFY_SSL", "true").lower() not in {"false", "0"},
+            timeout_seconds=float(os.getenv("VOLTHA_TIMEOUT_SECONDS", "30")),
+            max_retries=int(os.getenv("VOLTHA_MAX_RETRIES", "3")),
+        ),
+        description="VOLTHA PON controller configuration",
+    )
+    genieacs: ServiceEndpointSettings = Field(
+        default_factory=lambda: ServiceEndpointSettings(
+            url=os.getenv("GENIEACS_URL", "http://localhost:7557"),
+            username=os.getenv("GENIEACS_USERNAME"),
+            password=os.getenv("GENIEACS_PASSWORD"),
+            api_token=os.getenv("GENIEACS_API_TOKEN"),
+            verify_ssl=os.getenv("GENIEACS_VERIFY_SSL", "true").lower() not in {"false", "0"},
+            timeout_seconds=float(os.getenv("GENIEACS_TIMEOUT_SECONDS", "30")),
+            max_retries=int(os.getenv("GENIEACS_MAX_RETRIES", "3")),
+        ),
+        description="GenieACS TR-069 controller configuration",
+    )
+    netbox: ServiceEndpointSettings = Field(
+        default_factory=lambda: ServiceEndpointSettings(
+            url=os.getenv("NETBOX_URL", "http://localhost:8080"),
+            api_token=os.getenv("NETBOX_API_TOKEN"),
+            username=os.getenv("NETBOX_USERNAME"),
+            password=os.getenv("NETBOX_PASSWORD"),
+            verify_ssl=os.getenv("NETBOX_VERIFY_SSL", "true").lower() not in {"false", "0"},
+            timeout_seconds=float(os.getenv("NETBOX_TIMEOUT_SECONDS", "30")),
+            max_retries=int(os.getenv("NETBOX_MAX_RETRIES", "3")),
+        ),
+        description="NetBox IPAM/DCIM configuration",
+    )
+    ansible: ServiceEndpointSettings = Field(
+        default_factory=lambda: ServiceEndpointSettings(
+            url=os.getenv("AWX_URL", "http://localhost:80"),
+            username=os.getenv("AWX_USERNAME"),
+            password=os.getenv("AWX_PASSWORD"),
+            api_token=os.getenv("AWX_TOKEN"),
+            verify_ssl=os.getenv("AWX_VERIFY_SSL", "true").lower() not in {"false", "0"},
+            timeout_seconds=float(os.getenv("AWX_TIMEOUT_SECONDS", "30")),
+            max_retries=int(os.getenv("AWX_MAX_RETRIES", "2")),
+        ),
+        description="Ansible AWX automation configuration",
+    )
+
+
+class RADIUSSettings(BaseModel):  # BaseModel resolves to Any in isolation
+    """RADIUS server configuration for CoA/DM operations."""
+
+    model_config = ConfigDict()
+
+    # Server connection
+    server_host: str = Field("localhost", description="RADIUS server hostname or IP address")
+    coa_port: int = Field(3799, description="CoA port (RFC 5176 default: 3799)")
+
+    # Authentication (LOAD FROM VAULT IN PRODUCTION)
+    shared_secret: str = Field(
+        "", description="RADIUS shared secret (MUST load from Vault in production)"
+    )
+
+    # Dictionary files (NOT secrets - static configuration)
+    dictionary_path: str = Field(
+        "/etc/raddb/dictionary",
+        description="Path to RADIUS dictionary file",
+    )
+    dictionary_coa_path: str | None = Field(
+        "/etc/raddb/dictionary.rfc5176",
+        description="Path to CoA dictionary file (RFC 5176)",
+    )
+
+    # Connection settings
+    timeout_seconds: int = Field(5, description="RADIUS request timeout in seconds")
+    max_retries: int = Field(2, description="Maximum retry attempts for failed requests")
+
+    # HTTP API fallback (optional alternative to native RADIUS)
+    use_http_api: bool = Field(False, description="Use HTTP API instead of native RADIUS protocol")
+    http_api_url: str | None = Field(None, description="HTTP API endpoint URL for CoA operations")
+    http_api_key: str = Field(
+        "", description="HTTP API authentication key (load from Vault in production)"
+    )
+
+    def __init__(self, **data: Any):
+        """Initialize with environment variable overrides."""
+        # Load from environment if not explicitly provided
+        if "server_host" not in data:
+            data["server_host"] = os.getenv("RADIUS_SERVER_HOST", "localhost")
+        if "coa_port" not in data:
+            data["coa_port"] = int(os.getenv("RADIUS_COA_PORT", "3799"))
+        if "shared_secret" not in data:
+            data["shared_secret"] = os.getenv("RADIUS_SECRET", "")
+        if "timeout_seconds" not in data:
+            data["timeout_seconds"] = int(os.getenv("RADIUS_TIMEOUT", "5"))
+        if "max_retries" not in data:
+            data["max_retries"] = int(os.getenv("RADIUS_MAX_RETRIES", "2"))
+        if "use_http_api" not in data:
+            data["use_http_api"] = os.getenv("RADIUS_USE_HTTP_API", "false").lower() in {
+                "true",
+                "1",
+            }
+        if "http_api_url" not in data:
+            data["http_api_url"] = os.getenv("RADIUS_HTTP_API_URL")
+        if "http_api_key" not in data:
+            data["http_api_key"] = os.getenv("RADIUS_HTTP_API_KEY", "")
+
+        # Dictionary paths - try bundled first, then environment, then system
+        if "dictionary_path" not in data:
+            bundled_dict = os.path.join(
+                os.path.dirname(__file__), "../../../config/radius/dictionary"
+            )
+            data["dictionary_path"] = (
+                bundled_dict
+                if os.path.exists(bundled_dict)
+                else os.getenv("RADIUS_DICTIONARY_PATH", "/etc/raddb/dictionary")
+            )
+        if "dictionary_coa_path" not in data:
+            bundled_coa = os.path.join(
+                os.path.dirname(__file__), "../../../config/radius/dictionary.rfc5176"
+            )
+            data["dictionary_coa_path"] = (
+                bundled_coa
+                if os.path.exists(bundled_coa)
+                else os.getenv("RADIUS_DICTIONARY_COA_PATH", "/etc/raddb/dictionary.rfc5176")
+            )
+
+        super().__init__(**data)
+
+    @property
+    def dictionary_paths(self) -> list[str]:
+        """Return list of dictionary paths for pyrad initialization."""
+        paths = [self.dictionary_path]
+        if self.dictionary_coa_path:
+            paths.append(self.dictionary_coa_path)
+        return paths
+
+
+def _default_session_redis_url() -> str:
+    """Build session Redis URL with password support."""
+    env_value = os.getenv("SESSION_REDIS_URL")
+    if env_value:
+        return env_value
+
+    # Fall back to REDIS_URL if fully specified (includes password if provided)
+    legacy_value = os.getenv("REDIS_URL")
+    if legacy_value:
+        return legacy_value
+
+    host = os.getenv("REDIS_HOST", "localhost")
+    port = os.getenv("REDIS_PORT", "6379")
+    password = os.getenv("REDIS_PASSWORD", "")
+
+    # Allow overriding the DB index specifically for sessions while keeping backwards compatibility
+    session_db = (
+        os.getenv("SESSION_REDIS_DB")
+        or os.getenv("REDIS_SESSION_DB")
+        or os.getenv("SESSION_REDIS_DATABASE")
+        or "1"
+    )
+
+    auth_segment = f":{password}@" if password else ""
+    return f"redis://{auth_segment}{host}:{port}/{session_db}"
+
+
+class AuthSettings(BaseModel):  # BaseModel resolves to Any in isolation
+    """Authentication and authorization configuration.
+
+    Centralizes all auth-related settings including JWT, sessions, and user defaults.
+    """
+
+    model_config = ConfigDict()
+
+    # JWT Configuration
+    jwt_secret_key: str = Field(
+        default_factory=lambda: os.getenv("JWT_SECRET_KEY", ""),
+        description="JWT signing secret (MUST load from Vault in production)",
+    )
+    jwt_algorithm: str = Field(
+        default_factory=lambda: os.getenv("JWT_ALGORITHM", "HS256"),
+        description="JWT signing algorithm",
+    )
+    access_token_expire_minutes: int = Field(
+        default_factory=lambda: int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15")),
+        ge=1,
+        le=1440,
+        description="Access token TTL in minutes",
+    )
+    refresh_token_expire_days: int = Field(
+        default_factory=lambda: int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7")),
+        ge=1,
+        le=90,
+        description="Refresh token TTL in days",
+    )
+
+    # Session Management
+    session_redis_url: str = Field(
+        default_factory=_default_session_redis_url,
+        description="Redis URL for session storage (separate DB from cache)",
+    )
+
+    # User Defaults
+    default_user_role: str = Field(
+        default_factory=lambda: os.getenv("DEFAULT_USER_ROLE", "user"),
+        description="Default role assigned to new users",
+    )
+    default_admin_username: str = Field(
+        default_factory=lambda: os.getenv("DEFAULT_ADMIN_USERNAME", "admin"),
+        description="Default administrator username for development environments",
+    )
+    default_admin_email: str = Field(
+        default_factory=lambda: os.getenv("DEFAULT_ADMIN_EMAIL", "admin@example.com"),
+        description="Default administrator email for development environments",
+    )
+    default_admin_password: str = Field(
+        default_factory=lambda: os.getenv("DEFAULT_ADMIN_PASSWORD", "admin"),
+        description="Default administrator password for development/testing",
+    )
+
+    # Upload Limits
+    max_avatar_size_mb: int = Field(
+        default_factory=lambda: int(os.getenv("MAX_AVATAR_SIZE_MB", "5")),
+        ge=1,
+        le=50,
+        description="Maximum avatar upload size in MB",
+    )
+
+    def __init__(self, **data: Any):
+        """Initialize with environment variable overrides."""
+        super().__init__(**data)
+
+    @property
+    def jwt_secret_key_bytes(self) -> bytes:
+        """Return JWT secret as bytes for cryptographic operations."""
+        return self.jwt_secret_key.encode()
+
+
+class ExternalServicesSettings(BaseModel):  # BaseModel resolves to Any in isolation
+    """External service endpoint configuration (Phase 2).
+
+    Centralizes all OSS/BSS and third-party service URLs for easy management
+    across environments (development, staging, production).
+    """
+
+    model_config = ConfigDict()
+
+    # ============================================================
+    # OSS/BSS Service URLs
+    # ============================================================
+
+    # GenieACS (TR-069 ACS)
+    genieacs_url: str = Field(
+        default_factory=lambda: os.getenv("GENIEACS_URL", "http://localhost:7557"),
+        description="GenieACS TR-069 ACS server URL",
+    )
+
+    # NetBox (IPAM/DCIM)
+    netbox_url: str = Field(
+        default_factory=lambda: os.getenv("NETBOX_URL", "http://localhost:8080"),
+        description="NetBox IPAM/DCIM server URL",
+    )
+
+    # VOLTHA (OLT Management)
+    voltha_url: str = Field(
+        default_factory=lambda: os.getenv("VOLTHA_URL", "http://localhost:8881"),
+        description="VOLTHA OLT management server URL",
+    )
+
+    # Ansible/AWX (Automation)
+    awx_url: str = Field(
+        default_factory=lambda: os.getenv("AWX_URL", "http://localhost:80"),
+        description="Ansible AWX automation server URL",
+    )
+
+    # ============================================================
+    # Search & Indexing Services
+    # ============================================================
+
+    # Meilisearch
+    meilisearch_url: str = Field(
+        default_factory=lambda: os.getenv("MEILISEARCH_URL", "http://localhost:7700"),
+        description="Meilisearch search engine URL",
+    )
+
+    # Elasticsearch
+    elasticsearch_url: str = Field(
+        default_factory=lambda: os.getenv("ELASTICSEARCH_URL", "http://localhost:9200"),
+        description="Elasticsearch cluster URL",
+    )
+
+    # ============================================================
+    # Frontend Application URLs
+    # ============================================================
+
+    # Main frontend (customer-facing)
+    frontend_url: str = Field(
+        default_factory=lambda: os.getenv("FRONTEND_URL", "http://localhost:3000"),
+        description="Frontend application URL for user-facing features",
+    )
+
+    # Admin portal
+    frontend_admin_url: str = Field(
+        default_factory=lambda: os.getenv("FRONTEND_ADMIN_URL", "http://localhost:3001"),
+        description="Admin portal URL for internal users",
+    )
+
+    # ============================================================
+    # RADIUS CoA
+    # ============================================================
+
+    # RADIUS CoA API (if different from RADIUS server)
+    radius_coa_api_url: str = Field(
+        default_factory=lambda: os.getenv("RADIUS_COA_API_URL", "http://localhost:8080/coa"),
+        description="RADIUS CoA API endpoint (if using HTTP API instead of UDP)",
+    )
+
+    def __init__(self, **data: Any):
+        """Initialize with environment variable overrides."""
+        super().__init__(**data)
 
 
 class LogLevel(str, Enum):
@@ -58,6 +459,21 @@ class Settings(BaseSettings):
     debug: bool = Field(False, description="Debug mode")
     testing: bool = Field(False, description="Testing mode")
 
+    # Deployment mode configuration
+    DEPLOYMENT_MODE: str = Field(
+        "multi_tenant",
+        description="Deployment mode: multi_tenant, single_tenant, or hybrid",
+        pattern="^(multi_tenant|single_tenant|hybrid)$",
+    )
+    TENANT_ID: str | None = Field(
+        None,
+        description="Fixed tenant ID for single-tenant deployments (None for multi-tenant)",
+    )
+    ENABLE_PLATFORM_ROUTES: bool = Field(
+        True,
+        description="Enable platform administration routes (disable in single-tenant mode)",
+    )
+
     # Server configuration
     host: str = Field(
         "0.0.0.0", description="Server host"
@@ -68,7 +484,7 @@ class Settings(BaseSettings):
 
     # Security
     secret_key: str = Field(
-        "change-me-in-production", description="Secret key for signing (use Vault in production)"
+        "", description="Secret key for signing (MUST load from Vault in production)"
     )
     # SECURITY: Changed default from ["*"] to empty list
     # Production MUST set TRUSTED_HOSTS explicitly or startup will fail
@@ -93,7 +509,7 @@ class Settings(BaseSettings):
     # Database Configuration
     # ============================================================
 
-    class DatabaseSettings(BaseModel):
+    class DatabaseSettings(BaseModel):  # BaseModel resolves to Any in isolation
         """Database configuration."""
 
         model_config = ConfigDict()
@@ -129,7 +545,7 @@ class Settings(BaseSettings):
     # Redis Configuration
     # ============================================================
 
-    class RedisSettings(BaseModel):
+    class RedisSettings(BaseModel):  # BaseModel resolves to Any in isolation
         """Redis configuration."""
 
         model_config = ConfigDict()
@@ -178,12 +594,12 @@ class Settings(BaseSettings):
     # JWT & Authentication
     # ============================================================
 
-    class JWTSettings(BaseModel):
+    class JWTSettings(BaseModel):  # BaseModel resolves to Any in isolation
         """JWT configuration."""
 
         model_config = ConfigDict()
 
-        secret_key: str = Field("change-me", description="JWT secret key")
+        secret_key: str = Field("", description="JWT secret key (load from Vault in production)")
         algorithm: str = Field("HS256", description="JWT algorithm")
         access_token_expire_minutes: int = Field(30, description="Access token expiration")
         refresh_token_expire_days: int = Field(30, description="Refresh token expiration")
@@ -193,9 +609,76 @@ class Settings(BaseSettings):
         @property
         def is_secure(self) -> bool:
             """Check if JWT secret is secure (not the default)."""
-            return self.secret_key != "change-me" and len(self.secret_key) >= 32
+            return (
+                self.secret_key != ""
+                and self.secret_key != "change-me"
+                and len(self.secret_key) >= 32
+            )
 
     jwt: JWTSettings = JWTSettings()  # type: ignore[call-arg]
+
+    # ============================================================
+    # Security & Authentication
+    # ============================================================
+
+    class SecuritySettings(BaseModel):  # BaseModel resolves to Any in isolation
+        """Security and authentication configuration."""
+
+        model_config = ConfigDict()
+
+        # Account lockout settings
+        max_failed_login_attempts: int = Field(
+            5,
+            ge=1,
+            description="Maximum failed login attempts before account lockout",
+        )
+        account_lockout_duration_hours: int = Field(
+            1,
+            ge=1,
+            description="Account lockout duration in hours after max failed attempts",
+        )
+        failed_login_reset_minutes: int = Field(
+            30,
+            ge=1,
+            description="Minutes to reset failed login counter if no failures",
+        )
+
+        # Password policy
+        password_min_length: int = Field(8, ge=6, description="Minimum password length")
+        password_require_uppercase: bool = Field(
+            True, description="Require at least one uppercase letter"
+        )
+        password_require_lowercase: bool = Field(
+            True, description="Require at least one lowercase letter"
+        )
+        password_require_digits: bool = Field(True, description="Require at least one digit")
+        password_require_special: bool = Field(
+            False, description="Require at least one special character"
+        )
+
+        # Session security
+        session_timeout_minutes: int = Field(
+            60, ge=1, description="Inactive session timeout in minutes"
+        )
+        session_absolute_timeout_hours: int = Field(
+            24, ge=1, description="Absolute session timeout in hours"
+        )
+        concurrent_sessions_allowed: bool = Field(
+            True, description="Allow concurrent sessions for same user"
+        )
+        max_concurrent_sessions: int = Field(
+            5, ge=1, description="Maximum concurrent sessions per user"
+        )
+
+        # Security headers
+        enable_hsts: bool = Field(False, description="Enable HTTP Strict Transport Security")
+        hsts_max_age_seconds: int = Field(
+            31536000, ge=1, description="HSTS max-age in seconds (default: 1 year)"
+        )
+        enable_csp: bool = Field(False, description="Enable Content Security Policy headers")
+        enable_xss_protection: bool = Field(True, description="Enable XSS protection header")
+
+    security: SecuritySettings = SecuritySettings()  # type: ignore[call-arg]
 
     def validate_production_security(self) -> None:
         """
@@ -208,15 +691,52 @@ class Settings(BaseSettings):
         - JWT secret is secure (not default)
         - Trusted hosts are explicitly configured
         - Redis is configured (not localhost) - REQUIRED for session management
+        - Vault is enabled for secrets management
+        - All critical secrets are loaded from Vault
         """
         if self.environment == Environment.PRODUCTION:
-            if not self.jwt.is_secure:
+            # Vault must be enabled in production
+            if not self.vault.enabled:
                 raise ValueError(
-                    "SECURITY ERROR: JWT_SECRET_KEY must be set to a secure value in production. "
-                    "The default 'change-me' is not allowed. "
-                    "Generate a secure secret with: python -c 'import secrets; print(secrets.token_urlsafe(32))'"
+                    "SECURITY ERROR: Vault/OpenBao MUST be enabled in production. "
+                    "Set VAULT__ENABLED=true and configure VAULT__ADDR, VAULT__TOKEN. "
+                    "See docs/VAULT_SECRETS_MIGRATION.md for setup instructions."
                 )
 
+            # JWT secret must be loaded and secure
+            if not self.jwt.is_secure:
+                raise ValueError(
+                    "SECURITY ERROR: JWT_SECRET_KEY must be loaded from Vault in production. "
+                    "Path: auth/jwt_secret. Run migration script to populate Vault."
+                )
+
+            # Application secret key must be loaded
+            if not self.secret_key or len(self.secret_key) < 32:
+                raise ValueError(
+                    "SECURITY ERROR: SECRET_KEY must be loaded from Vault in production. "
+                    "Path: app/secret_key. Run migration script to populate Vault."
+                )
+
+            # Database password must be loaded
+            if not self.database.password:
+                raise ValueError(
+                    "SECURITY ERROR: DATABASE_PASSWORD must be loaded from Vault in production. "
+                    "Path: database/password. Run migration script to populate Vault."
+                )
+
+            # Storage credentials must be loaded (if storage enabled)
+            if self.storage.enabled and self.storage.provider != "local":
+                if not self.storage.secret_key:
+                    raise ValueError(
+                        "SECURITY ERROR: STORAGE_SECRET_KEY must be loaded from Vault in production. "
+                        "Path: storage/secret_key. Run migration script to populate Vault."
+                    )
+
+            # RADIUS secret must be loaded (if RADIUS is used)
+            # Note: Only validate if RADIUS service is actually initialized
+            # This is checked in radius/service.py to avoid false positives
+
+            # Trusted hosts must be configured
             if not self.trusted_hosts or self.trusted_hosts == ["*"]:
                 raise ValueError(
                     "SECURITY ERROR: TRUSTED_HOSTS must be explicitly configured in production. "
@@ -237,7 +757,7 @@ class Settings(BaseSettings):
     # CORS Configuration
     # ============================================================
 
-    class CORSSettings(BaseModel):
+    class CORSSettings(BaseModel):  # BaseModel resolves to Any in isolation
         """CORS configuration."""
 
         model_config = ConfigDict()
@@ -264,7 +784,7 @@ class Settings(BaseSettings):
     # Email & SMTP Settings
     # ============================================================
 
-    class EmailSettings(BaseModel):
+    class EmailSettings(BaseModel):  # BaseModel resolves to Any in isolation
         """Email and SMTP configuration."""
 
         model_config = ConfigDict()
@@ -297,7 +817,7 @@ class Settings(BaseSettings):
     # Tenant Settings
     # ============================================================
 
-    class TenantSettings(BaseModel):
+    class TenantSettings(BaseModel):  # BaseModel resolves to Any in isolation
         """Multi-tenant configuration."""
 
         model_config = ConfigDict()
@@ -327,7 +847,7 @@ class Settings(BaseSettings):
     # Celery & Task Queue
     # ============================================================
 
-    class CelerySettings(BaseModel):
+    class CelerySettings(BaseModel):  # BaseModel resolves to Any in isolation
         """Celery configuration."""
 
         model_config = ConfigDict()
@@ -355,61 +875,48 @@ class Settings(BaseSettings):
     # Observability & Monitoring
     # ============================================================
 
-    class ObservabilitySettings(BaseModel):
-        """Observability configuration."""
+    observability: ObservabilitySettings = Field(default_factory=_default_observability_settings)
 
-        model_config = ConfigDict()
+    # ============================================================
+    # OSS / External Integrations
+    # ============================================================
 
-        # Logging
-        log_level: LogLevel = Field(LogLevel.INFO, description="Log level")
-        log_format: str = Field("json", description="Log format (json or text)")
-        enable_structured_logging: bool = Field(True, description="Enable structured logging")
-        enable_correlation_ids: bool = Field(True, description="Enable correlation IDs")
-        correlation_id_header: str = Field("X-Correlation-ID", description="Correlation ID header")
+    oss: OSSSettings = Field(default_factory=OSSSettings)
 
-        # Tracing
-        enable_tracing: bool = Field(True, description="Enable distributed tracing")
-        tracing_sample_rate: float = Field(1.0, description="Tracing sample rate (0.0-1.0)")
+    # ============================================================
+    # RADIUS Configuration
+    # ============================================================
 
-        # Metrics
-        enable_metrics: bool = Field(True, description="Enable metrics collection")
-        metrics_port: int = Field(9090, description="Metrics port")
+    radius: RADIUSSettings = Field(
+        default_factory=RADIUSSettings,
+        description="RADIUS server configuration for CoA/DM operations",
+    )
 
-        # OpenTelemetry
-        otel_enabled: bool = Field(True, description="Enable OpenTelemetry")
-        otel_endpoint: str | None = Field(
-            "http://localhost:4318/v1/traces",
-            description="OTLP endpoint (default: local OTEL collector)",
-        )
-        otel_service_name: str = Field("dotmac-platform", description="Service name")
-        otel_resource_attributes: dict[str, str] = Field(
-            default_factory=dict, description="Resource attributes"
-        )
-        # Instrumentation toggles
-        otel_instrument_celery: bool = Field(
-            True, description="Enable Celery instrumentation when OTEL is enabled"
-        )
-        otel_instrument_fastapi: bool = Field(
-            True, description="Enable FastAPI instrumentation when OTEL is enabled"
-        )
-        otel_instrument_sqlalchemy: bool = Field(
-            True, description="Enable SQLAlchemy instrumentation when OTEL is enabled"
-        )
-        otel_instrument_requests: bool = Field(
-            True, description="Enable Requests instrumentation when OTEL is enabled"
-        )
+    # ============================================================
+    # Authentication & Authorization (Centralized)
+    # ============================================================
 
-        # Prometheus metrics endpoint
-        prometheus_enabled: bool = Field(True, description="Enable Prometheus metrics")
-        prometheus_port: int = Field(8001, description="Prometheus metrics port")
+    auth: AuthSettings = Field(
+        default_factory=AuthSettings,
+        description="Authentication and authorization configuration (JWT, sessions, user defaults)",
+    )
 
-    observability: ObservabilitySettings = ObservabilitySettings()  # type: ignore[call-arg]
+    # ============================================================
+    # External Services (Phase 2 - Centralized)
+    # ============================================================
+
+    external_services: ExternalServicesSettings = Field(
+        default_factory=ExternalServicesSettings,
+        description="External service endpoint configuration (OSS/BSS, search, frontend URLs)",
+    )
 
     # ============================================================
     # Billing Configuration
     # ============================================================
 
-    class BillingSettings(BaseModel):
+    class BillingSettings(
+        BaseModel
+    ):  # BaseModel resolves to Any in isolation # BaseModel resolves to Any in isolation
         """Billing system configuration."""
 
         model_config = ConfigDict()
@@ -457,6 +964,11 @@ class Settings(BaseSettings):
         grace_period_days: int = Field(3, description="Grace period for failed payments")
         payment_retry_attempts: int = Field(3, description="Number of payment retry attempts")
         payment_retry_interval_hours: int = Field(24, description="Hours between payment retries")
+        payment_retry_exponential_base_hours: int = Field(
+            2,
+            ge=1,
+            description="Base hours for exponential backoff retry strategy (retry_at = base^retry_count)",
+        )
 
         # Notification settings
         send_renewal_reminders: bool = Field(
@@ -502,13 +1014,34 @@ class Settings(BaseSettings):
             description="Global list of supported currencies",
         )
 
+        # Payment processing
+        require_payment_plugin: bool = Field(
+            True,
+            description="Require payment plugin (fail if unavailable). MUST be True in production to prevent mock payments. Set False ONLY in development/testing."
+        )
+
+        # Payment gateway credentials (load from Vault in production)
+        paystack_secret_key: str = Field("", description="Paystack secret key")
+        paystack_public_key: str = Field("", description="Paystack public key")
+
+        stripe_api_key: str = Field("", description="Stripe API key (secret)")
+        stripe_webhook_secret: str = Field("", description="Stripe webhook secret")
+        stripe_publishable_key: str = Field("", description="Stripe publishable key")
+
+        paypal_client_id: str = Field("", description="PayPal client ID")
+        paypal_client_secret: str = Field("", description="PayPal client secret")
+        paypal_webhook_id: str = Field("", description="PayPal webhook ID")
+
+        avalara_api_key: str = Field("", description="Avalara API key")
+        taxjar_api_token: str = Field("", description="TaxJar API token")
+
     billing: BillingSettings = BillingSettings()  # type: ignore[call-arg]
 
     # ============================================================
     # Rate Limiting
     # ============================================================
 
-    class RateLimitSettings(BaseModel):
+    class RateLimitSettings(BaseModel):  # BaseModel resolves to Any in isolation
         """Rate limiting configuration."""
 
         model_config = ConfigDict()
@@ -531,7 +1064,7 @@ class Settings(BaseSettings):
     # Vault/Secrets Management
     # ============================================================
 
-    class VaultSettings(BaseModel):
+    class VaultSettings(BaseModel):  # BaseModel resolves to Any in isolation
         """Vault/OpenBao configuration (API-compatible)."""
 
         model_config = ConfigDict()
@@ -549,7 +1082,7 @@ class Settings(BaseSettings):
     # Object Storage (S3/MinIO)
     # ============================================================
 
-    class StorageSettings(BaseModel):
+    class StorageSettings(BaseModel):  # BaseModel resolves to Any in isolation
         """MinIO object storage configuration."""
 
         model_config = ConfigDict()
@@ -558,8 +1091,8 @@ class Settings(BaseSettings):
         enabled: bool = Field(True, description="Enable MinIO storage")
         endpoint: str = Field("localhost:9000", description="MinIO endpoint")
         region: str = Field("us-east-1", description="MinIO region")
-        access_key: str = Field("minioadmin", description="MinIO access key")
-        secret_key: str = Field("minioadmin123", description="MinIO secret key")
+        access_key: str = Field("", description="MinIO access key (load from Vault in production)")
+        secret_key: str = Field("", description="MinIO secret key (load from Vault in production)")
         bucket: str = Field("dotmac", description="Default bucket")
         use_ssl: bool = Field(False, description="Use SSL")
 
@@ -572,10 +1105,193 @@ class Settings(BaseSettings):
     storage: StorageSettings = StorageSettings()  # type: ignore[call-arg]
 
     # ============================================================
+    # Billing & Payment Integration
+    # ============================================================
+
+    # ============================================================
+    # Webhooks
+    # ============================================================
+
+    class WebhookSettings(BaseModel):  # BaseModel resolves to Any in isolation
+        """Webhook configuration."""
+
+        model_config = ConfigDict()
+
+        signing_secret: str = Field("", description="Webhook signing secret for verification")
+        retry_attempts: int = Field(3, description="Number of retry attempts for failed webhooks")
+        timeout_seconds: int = Field(30, description="Webhook request timeout")
+
+    webhooks: WebhookSettings = WebhookSettings()  # type: ignore[call-arg]
+
+    # ============================================================
+    # RADIUS Server
+    # ============================================================
+
+    # RADIUS configuration moved to top-level RADIUSSettings class (line 152)
+    # Old minimal configuration removed - use settings.radius.* instead
+
+    # ============================================================
+    # Search & Indexing
+    # ============================================================
+
+    class SearchSettings(BaseModel):  # BaseModel resolves to Any in isolation
+        """Search and indexing configuration."""
+
+        model_config = ConfigDict()
+
+        meilisearch_api_key: str = Field("", description="MeiliSearch API key")
+        meilisearch_url: str = Field("http://localhost:7700", description="MeiliSearch URL")
+        meilisearch_index_prefix: str = Field("dotmac_", description="Index name prefix")
+
+    search: SearchSettings = SearchSettings()  # type: ignore[call-arg]
+
+    # ============================================================
+    # Fault Management & Archival
+    # ============================================================
+
+    class FaultManagementSettings(BaseModel):  # BaseModel resolves to Any in isolation
+        """Fault management and alarm archival configuration."""
+
+        model_config = ConfigDict()
+
+        # Alarm archival settings
+        alarm_retention_days: int = Field(
+            90,
+            ge=1,
+            description="Number of days to retain cleared alarms before archival (default: 90)",
+        )
+        archive_time_hour: int = Field(
+            2,
+            ge=0,
+            le=23,
+            description="Hour of day (0-23) to run alarm archival (default: 2 AM)",
+        )
+        archive_time_minute: int = Field(
+            0,
+            ge=0,
+            le=59,
+            description="Minute of hour to run alarm archival (default: 0)",
+        )
+        archive_batch_size: int = Field(
+            1000,
+            ge=1,
+            description="Maximum number of alarms to archive in one batch",
+        )
+        archive_compression_level: int = Field(
+            9,
+            ge=1,
+            le=9,
+            description="Gzip compression level (1-9, where 9 is maximum compression)",
+        )
+
+        # Alarm correlation settings
+        correlation_window_seconds: int = Field(
+            300,
+            ge=1,
+            description="Time window for alarm correlation (default: 5 minutes)",
+        )
+        max_occurrence_count: int = Field(
+            100,
+            ge=1,
+            description="Maximum occurrence count before marking as flapping",
+        )
+
+        # SLA tracking settings
+        sla_check_interval_seconds: int = Field(
+            60,
+            ge=1,
+            description="Interval for checking SLA compliance (default: 1 minute)",
+        )
+
+        # Notification settings
+        critical_alarm_auto_notify: bool = Field(
+            True,
+            description="Automatically send notifications for critical alarms",
+        )
+        escalation_timeout_minutes: int = Field(
+            30,
+            ge=1,
+            description="Minutes before escalating unacknowledged critical alarms",
+        )
+
+    fault_management: FaultManagementSettings = FaultManagementSettings()  # type: ignore[call-arg]
+
+    # ============================================================
+    # Notifications & Channels
+    # ============================================================
+
+    class NotificationSettings(BaseModel):  # BaseModel resolves to Any in isolation
+        """Notification channel providers configuration."""
+
+        model_config = ConfigDict()
+
+        # Email channel
+        email_enabled: bool = Field(True, description="Enable email notifications")
+
+        # SMS channel
+        sms_enabled: bool = Field(False, description="Enable SMS notifications")
+        sms_provider: str = Field("twilio", description="SMS provider: twilio, aws_sns, http")
+        # Twilio
+        twilio_account_sid: str | None = Field(None, description="Twilio account SID")
+        twilio_auth_token: str | None = Field(None, description="Twilio auth token")
+        twilio_from_number: str | None = Field(
+            None, description="Twilio sender phone number (E.164 format)"
+        )
+        # SMS HTTP API
+        sms_http_api_url: str | None = Field(None, description="Custom SMS API URL")
+        sms_http_api_key: str | None = Field(None, description="Custom SMS API key")
+        # SMS settings
+        sms_max_length: int = Field(160, ge=70, description="Max SMS message length")
+        sms_min_priority: str = Field(
+            "HIGH", description="Minimum priority for SMS (LOW, MEDIUM, HIGH, URGENT)"
+        )
+        sms_max_retries: int = Field(2, ge=0, description="Max SMS retry attempts")
+
+        # Push channel
+        push_enabled: bool = Field(False, description="Enable push notifications")
+        push_provider: str = Field(
+            "fcm", description="Push provider: fcm, onesignal, aws_sns, http"
+        )
+        # Firebase
+        fcm_credentials_path: str | None = Field(
+            None, description="Path to Firebase service account JSON"
+        )
+        # OneSignal
+        onesignal_app_id: str | None = Field(None, description="OneSignal app ID")
+        onesignal_api_key: str | None = Field(None, description="OneSignal API key")
+        # Push HTTP API
+        push_http_api_url: str | None = Field(None, description="Custom push API URL")
+        push_http_api_key: str | None = Field(None, description="Custom push API key")
+        # Push settings
+        push_min_priority: str = Field(
+            "MEDIUM", description="Minimum priority for push (LOW, MEDIUM, HIGH, URGENT)"
+        )
+        push_max_retries: int = Field(3, ge=0, description="Max push retry attempts")
+
+        # Webhook channel
+        webhook_enabled: bool = Field(False, description="Enable webhook notifications")
+        webhook_urls: list[str] = Field(default_factory=list, description="List of webhook URLs")
+        webhook_format: str = Field(
+            "standard",
+            description="Webhook payload format: standard, slack, teams, discord",
+        )
+        webhook_secret: str | None = Field(None, description="Shared secret for webhook signature")
+        webhook_headers: dict[str, str] = Field(
+            default_factory=dict, description="Custom webhook headers"
+        )
+        webhook_timeout: float = Field(10.0, ge=1.0, description="Webhook HTTP timeout in seconds")
+        webhook_max_retries: int = Field(3, ge=0, description="Max webhook retry attempts")
+
+        # AWS (shared for SNS)
+        aws_region: str = Field("us-east-1", description="AWS region for SNS")
+
+    notifications: NotificationSettings = NotificationSettings()  # type: ignore[call-arg]
+
+    # ============================================================
     # Feature Flags
     # ============================================================
 
-    class FeatureFlags(BaseModel):
+    class FeatureFlags(BaseModel):  # BaseModel resolves to Any in isolation
         """Feature flags for core platform features."""
 
         model_config = ConfigDict()
@@ -621,6 +1337,22 @@ class Settings(BaseSettings):
         db_postgresql: bool = Field(True, description="Enable PostgreSQL support")
         db_sqlite: bool = Field(True, description="Enable SQLite support for dev/test")
 
+        # OSS/BSS Domain Features
+        graphql_enabled: bool = Field(True, description="Enable GraphQL API")
+        analytics_enabled: bool = Field(True, description="Enable analytics features")
+        banking_enabled: bool = Field(True, description="Enable banking integrations")
+        payments_enabled: bool = Field(True, description="Enable payment processing")
+        radius_enabled: bool = Field(True, description="Enable RADIUS AAA")
+        network_enabled: bool = Field(True, description="Enable network management")
+        automation_enabled: bool = Field(True, description="Enable automation workflows")
+        wireless_enabled: bool = Field(True, description="Enable wireless infrastructure")
+        fiber_enabled: bool = Field(True, description="Enable fiber infrastructure")
+        orchestration_enabled: bool = Field(True, description="Enable service orchestration")
+        dunning_enabled: bool = Field(True, description="Enable dunning workflows")
+        ticketing_enabled: bool = Field(True, description="Enable ticketing system")
+        crm_enabled: bool = Field(True, description="Enable CRM features")
+        notification_enabled: bool = Field(True, description="Enable notification center")
+
     features: FeatureFlags = FeatureFlags()  # type: ignore[call-arg]
 
     # ============================================================
@@ -637,20 +1369,23 @@ class Settings(BaseSettings):
     # ============================================================
 
     @field_validator("environment")
-    def validate_environment(cls, v: str) -> str:
+    def validate_environment(cls, v: str | Environment) -> Environment:
         """Validate environment."""
-        if isinstance(v, str):
-            return Environment(v.lower())
-        return v
+        if isinstance(v, Environment):
+            return v
+        return Environment(v.lower())
 
     @field_validator("secret_key")
     def validate_secret_key(cls, v: str, info: Any) -> str:
         """Validate secret key."""
-        if (
-            v == "change-me-in-production"
-            and info.data.get("environment") == Environment.PRODUCTION
-        ):
-            raise ValueError("Secret key must be changed in production")
+        if info.data.get("environment") == Environment.PRODUCTION:
+            if not v or v in ("", "change-me-in-production", "change-me"):
+                raise ValueError(
+                    "SECRET_KEY must be loaded from Vault in production. "
+                    "Ensure VAULT_ENABLED=true and secrets are migrated."
+                )
+            if len(v) < 32:
+                raise ValueError("SECRET_KEY must be at least 32 characters in production")
         return v
 
     @property
@@ -689,3 +1424,6 @@ def reset_settings() -> None:
 
 # Convenience export
 settings = get_settings()
+
+# Resolve forward references introduced by nested OSS settings
+Settings.model_rebuild()

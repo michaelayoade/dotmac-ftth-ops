@@ -10,7 +10,7 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.auth.core import UserInfo, get_current_user
+from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant.domain_verification import (
@@ -28,7 +28,7 @@ from dotmac.platform.tenant.domain_verification_schemas import (
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter()
+router = APIRouter(prefix="/tenants", )
 
 
 def get_domain_verification_service(

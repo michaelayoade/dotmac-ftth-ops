@@ -5,8 +5,8 @@
  * This enables API mocking during development and Storybook.
  */
 
-import { setupWorker } from 'msw/browser';
-import { handlers } from './handlers';
+import { setupWorker } from "msw/browser";
+import { handlers } from "./handlers";
 
 /**
  * Create MSW worker with handlers
@@ -25,23 +25,23 @@ export const worker = setupWorker(...handlers);
  * ```
  */
 export async function startMSW() {
-  if (typeof window === 'undefined') {
-    console.warn('MSW browser worker can only run in browser environment');
+  if (typeof window === "undefined") {
+    console.warn("MSW browser worker can only run in browser environment");
     return;
   }
 
   try {
     await worker.start({
-      onUnhandledRequest: 'bypass', // Let unhandled requests pass through
+      onUnhandledRequest: "bypass", // Let unhandled requests pass through
       serviceWorker: {
-        url: '/mockServiceWorker.js',
+        url: "/mockServiceWorker.js",
       },
     });
 
-    console.log('[MSW] Service Worker started with backend proxy handlers');
-    console.log('[MSW] Contract validation enabled for API endpoints');
+    console.log("[MSW] Service Worker started with backend proxy handlers");
+    console.log("[MSW] Contract validation enabled for API endpoints");
   } catch (error) {
-    console.error('[MSW] Failed to start:', error);
+    console.error("[MSW] Failed to start:", error);
   }
 }
 
@@ -50,5 +50,5 @@ export async function startMSW() {
  */
 export async function stopMSW() {
   worker.stop();
-  console.log('[MSW] Service Worker stopped');
+  console.log("[MSW] Service Worker stopped");
 }

@@ -3,10 +3,10 @@
  * Pre-configured chart templates for common ISP use cases
  */
 
-'use client';
+"use client";
 
-import React from 'react';
-import { UniversalChart, UniversalChartProps, ChartDataPoint } from './UniversalChart';
+import React from "react";
+import { UniversalChart, UniversalChartProps, ChartDataPoint } from "./UniversalChart";
 
 // Revenue Chart
 export interface RevenueChartData extends ChartDataPoint {
@@ -16,7 +16,7 @@ export interface RevenueChartData extends ChartDataPoint {
   previousYear?: number;
 }
 
-export interface RevenueChartProps extends Omit<UniversalChartProps, 'data' | 'series' | 'type'> {
+export interface RevenueChartProps extends Omit<UniversalChartProps, "data" | "series" | "type"> {
   data: RevenueChartData[];
   showTarget?: boolean;
   showComparison?: boolean;
@@ -27,22 +27,29 @@ export function RevenueChart({
   data,
   showTarget = false,
   showComparison = false,
-  currency = 'USD',
+  currency = "USD",
   ...props
 }: RevenueChartProps) {
   const series = [
-    { key: 'revenue', name: 'Revenue', type: 'area' as const },
+    { key: "revenue", name: "Revenue", type: "area" as const },
     ...(showTarget
-      ? [{ key: 'target', name: 'Target', type: 'line' as const, strokeDashArray: '5 5' }]
+      ? [
+          {
+            key: "target",
+            name: "Target",
+            type: "line" as const,
+            strokeDashArray: "5 5",
+          },
+        ]
       : []),
     ...(showComparison
-      ? [{ key: 'previousYear', name: 'Previous Year', type: 'line' as const }]
+      ? [{ key: "previousYear", name: "Previous Year", type: "line" as const }]
       : []),
   ];
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
@@ -52,11 +59,14 @@ export function RevenueChart({
   return (
     <UniversalChart
       {...props}
-      type='area'
+      type="area"
       data={data}
       series={series}
-      title={props.title || 'Revenue Trends'}
-      xAxis={{ dataKey: 'date', format: (value) => new Date(value).toLocaleDateString() }}
+      title={props.title || "Revenue Trends"}
+      xAxis={{
+        dataKey: "date",
+        format: (value) => new Date(value).toLocaleDateString(),
+      }}
       yAxis={{ left: { format: formatCurrency } }}
       smooth
     />
@@ -72,23 +82,30 @@ export interface NetworkUsageData extends ChartDataPoint {
 }
 
 export interface NetworkUsageChartProps
-  extends Omit<UniversalChartProps, 'data' | 'series' | 'type'> {
+  extends Omit<UniversalChartProps, "data" | "series" | "type"> {
   data: NetworkUsageData[];
   showTotal?: boolean;
-  unit?: 'MB' | 'GB' | 'TB';
+  unit?: "MB" | "GB" | "TB";
 }
 
 export function NetworkUsageChart({
   data,
   showTotal = false,
-  unit = 'GB',
+  unit = "GB",
   ...props
 }: NetworkUsageChartProps) {
   const series = [
-    { key: 'download', name: 'Download', stackId: 'usage' },
-    { key: 'upload', name: 'Upload', stackId: 'usage' },
+    { key: "download", name: "Download", stackId: "usage" },
+    { key: "upload", name: "Upload", stackId: "usage" },
     ...(showTotal
-      ? [{ key: 'total', name: 'Total', type: 'line' as const, yAxisId: 'right' }]
+      ? [
+          {
+            key: "total",
+            name: "Total",
+            type: "line" as const,
+            yAxisId: "right",
+          },
+        ]
       : []),
   ];
 
@@ -97,11 +114,11 @@ export function NetworkUsageChart({
   return (
     <UniversalChart
       {...props}
-      type='area'
+      type="area"
       data={data}
       series={series}
-      title={props.title || 'Network Usage'}
-      xAxis={{ dataKey: 'time' }}
+      title={props.title || "Network Usage"}
+      xAxis={{ dataKey: "time" }}
       yAxis={{
         left: { format: formatBytes },
         ...(showTotal && { right: { format: formatBytes } }),
@@ -121,28 +138,37 @@ export interface CustomerGrowthData extends ChartDataPoint {
 }
 
 export interface CustomerGrowthChartProps
-  extends Omit<UniversalChartProps, 'data' | 'series' | 'type'> {
+  extends Omit<UniversalChartProps, "data" | "series" | "type"> {
   data: CustomerGrowthData[];
 }
 
 export function CustomerGrowthChart({ data, ...props }: CustomerGrowthChartProps) {
   const series = [
-    { key: 'newCustomers', name: 'New Customers', type: 'bar' as const },
-    { key: 'churnedCustomers', name: 'Churned Customers', type: 'bar' as const },
-    { key: 'totalCustomers', name: 'Total Customers', type: 'line' as const, yAxisId: 'right' },
+    { key: "newCustomers", name: "New Customers", type: "bar" as const },
+    {
+      key: "churnedCustomers",
+      name: "Churned Customers",
+      type: "bar" as const,
+    },
+    {
+      key: "totalCustomers",
+      name: "Total Customers",
+      type: "line" as const,
+      yAxisId: "right",
+    },
   ];
 
   return (
     <UniversalChart
       {...props}
-      type='combo'
+      type="combo"
       data={data}
       series={series}
-      title={props.title || 'Customer Growth'}
-      xAxis={{ dataKey: 'period' }}
+      title={props.title || "Customer Growth"}
+      xAxis={{ dataKey: "period" }}
       yAxis={{
-        left: { label: 'Monthly Change' },
-        right: { label: 'Total Customers' },
+        left: { label: "Monthly Change" },
+        right: { label: "Total Customers" },
       }}
     />
   );
@@ -156,17 +182,17 @@ export interface ServiceStatusData extends ChartDataPoint {
 }
 
 export interface ServiceStatusChartProps
-  extends Omit<UniversalChartProps, 'data' | 'series' | 'type'> {
+  extends Omit<UniversalChartProps, "data" | "series" | "type"> {
   data: ServiceStatusData[];
-  chartType?: 'pie' | 'donut';
+  chartType?: "pie" | "donut";
 }
 
 export function ServiceStatusChart({
   data,
-  chartType = 'donut',
+  chartType = "donut",
   ...props
 }: ServiceStatusChartProps) {
-  const series = [{ key: 'count', name: 'Services' }];
+  const series = [{ key: "count", name: "Services" }];
 
   return (
     <UniversalChart
@@ -174,7 +200,7 @@ export function ServiceStatusChart({
       type={chartType}
       data={data}
       series={series}
-      title={props.title || 'Service Status Distribution'}
+      title={props.title || "Service Status Distribution"}
     />
   );
 }
@@ -189,20 +215,20 @@ export interface PerformanceData extends ChartDataPoint {
 }
 
 export interface PerformanceChartProps
-  extends Omit<UniversalChartProps, 'data' | 'series' | 'type'> {
+  extends Omit<UniversalChartProps, "data" | "series" | "type"> {
   data: PerformanceData[];
-  metrics?: ('latency' | 'throughput' | 'errorRate' | 'uptime')[];
+  metrics?: ("latency" | "throughput" | "errorRate" | "uptime")[];
 }
 
 export function PerformanceChart({
   data,
-  metrics = ['latency', 'throughput', 'uptime'],
+  metrics = ["latency", "throughput", "uptime"],
   ...props
 }: PerformanceChartProps) {
   const series = metrics.map((metric) => ({
     key: metric,
     name: metric.charAt(0).toUpperCase() + metric.slice(1),
-    yAxisId: metric === 'uptime' ? 'right' : 'left',
+    yAxisId: metric === "uptime" ? "right" : "left",
   }));
 
   const formatLatency = (value: number) => `${value}ms`;
@@ -212,11 +238,11 @@ export function PerformanceChart({
   return (
     <UniversalChart
       {...props}
-      type='line'
+      type="line"
       data={data}
       series={series}
-      title={props.title || 'Network Performance'}
-      xAxis={{ dataKey: 'timestamp' }}
+      title={props.title || "Network Performance"}
+      xAxis={{ dataKey: "timestamp" }}
       yAxis={{
         left: { format: formatLatency },
         right: { format: formatUptime, domain: [0, 100] },
@@ -234,16 +260,28 @@ export interface BandwidthData extends ChartDataPoint {
   enterprise: number;
 }
 
-export interface BandwidthChartProps extends Omit<UniversalChartProps, 'data' | 'series' | 'type'> {
+export interface BandwidthChartProps extends Omit<UniversalChartProps, "data" | "series" | "type"> {
   data: BandwidthData[];
   showStacked?: boolean;
 }
 
 export function BandwidthChart({ data, showStacked = true, ...props }: BandwidthChartProps) {
   const series = [
-    { key: 'residential', name: 'Residential', stackId: showStacked ? 'bandwidth' : undefined },
-    { key: 'business', name: 'Business', stackId: showStacked ? 'bandwidth' : undefined },
-    { key: 'enterprise', name: 'Enterprise', stackId: showStacked ? 'bandwidth' : undefined },
+    {
+      key: "residential",
+      name: "Residential",
+      stackId: showStacked ? "bandwidth" : undefined,
+    },
+    {
+      key: "business",
+      name: "Business",
+      stackId: showStacked ? "bandwidth" : undefined,
+    },
+    {
+      key: "enterprise",
+      name: "Enterprise",
+      stackId: showStacked ? "bandwidth" : undefined,
+    },
   ];
 
   const formatBandwidth = (value: number) => `${value} Gbps`;
@@ -251,11 +289,11 @@ export function BandwidthChart({ data, showStacked = true, ...props }: Bandwidth
   return (
     <UniversalChart
       {...props}
-      type='area'
+      type="area"
       data={data}
       series={series}
-      title={props.title || 'Bandwidth Distribution'}
-      xAxis={{ dataKey: 'timeSlot' }}
+      title={props.title || "Bandwidth Distribution"}
+      xAxis={{ dataKey: "timeSlot" }}
       yAxis={{ left: { format: formatBandwidth } }}
       stacked={showStacked}
       smooth
@@ -272,28 +310,36 @@ export interface TicketVolumeData extends ChartDataPoint {
 }
 
 export interface TicketVolumeChartProps
-  extends Omit<UniversalChartProps, 'data' | 'series' | 'type'> {
+  extends Omit<UniversalChartProps, "data" | "series" | "type"> {
   data: TicketVolumeData[];
 }
 
 export function TicketVolumeChart({ data, ...props }: TicketVolumeChartProps) {
   const series = [
-    { key: 'created', name: 'Created', type: 'bar' as const },
-    { key: 'resolved', name: 'Resolved', type: 'bar' as const },
-    { key: 'backlog', name: 'Backlog', type: 'line' as const, yAxisId: 'right' },
+    { key: "created", name: "Created", type: "bar" as const },
+    { key: "resolved", name: "Resolved", type: "bar" as const },
+    {
+      key: "backlog",
+      name: "Backlog",
+      type: "line" as const,
+      yAxisId: "right",
+    },
   ];
 
   return (
     <UniversalChart
       {...props}
-      type='combo'
+      type="combo"
       data={data}
       series={series}
-      title={props.title || 'Support Ticket Volume'}
-      xAxis={{ dataKey: 'date', format: (value) => new Date(value).toLocaleDateString() }}
+      title={props.title || "Support Ticket Volume"}
+      xAxis={{
+        dataKey: "date",
+        format: (value) => new Date(value).toLocaleDateString(),
+      }}
       yAxis={{
-        left: { label: 'Daily Volume' },
-        right: { label: 'Total Backlog' },
+        left: { label: "Daily Volume" },
+        right: { label: "Total Backlog" },
       }}
     />
   );
@@ -308,22 +354,27 @@ export interface FinancialData extends ChartDataPoint {
   margin: number;
 }
 
-export interface FinancialChartProps extends Omit<UniversalChartProps, 'data' | 'series' | 'type'> {
+export interface FinancialChartProps extends Omit<UniversalChartProps, "data" | "series" | "type"> {
   data: FinancialData[];
   currency?: string;
 }
 
-export function FinancialChart({ data, currency = 'USD', ...props }: FinancialChartProps) {
+export function FinancialChart({ data, currency = "USD", ...props }: FinancialChartProps) {
   const series = [
-    { key: 'revenue', name: 'Revenue', type: 'bar' as const },
-    { key: 'expenses', name: 'Expenses', type: 'bar' as const },
-    { key: 'profit', name: 'Profit', type: 'line' as const },
-    { key: 'margin', name: 'Margin %', type: 'line' as const, yAxisId: 'right' },
+    { key: "revenue", name: "Revenue", type: "bar" as const },
+    { key: "expenses", name: "Expenses", type: "bar" as const },
+    { key: "profit", name: "Profit", type: "line" as const },
+    {
+      key: "margin",
+      name: "Margin %",
+      type: "line" as const,
+      yAxisId: "right",
+    },
   ];
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
@@ -335,11 +386,11 @@ export function FinancialChart({ data, currency = 'USD', ...props }: FinancialCh
   return (
     <UniversalChart
       {...props}
-      type='combo'
+      type="combo"
       data={data}
       series={series}
-      title={props.title || 'Financial Overview'}
-      xAxis={{ dataKey: 'month' }}
+      title={props.title || "Financial Overview"}
+      xAxis={{ dataKey: "month" }}
       yAxis={{
         left: { format: formatCurrency },
         right: { format: formatPercentage, domain: [0, 100] },

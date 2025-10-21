@@ -4,17 +4,17 @@
  */
 
 // Base Chart Component
-export { default as UniversalChart } from './UniversalChart';
+export { default as UniversalChart } from "./UniversalChart";
 export type {
   UniversalChartProps,
   ChartType,
   ChartDataPoint,
   ChartSeries,
   ChartVariant,
-} from './UniversalChart';
+} from "./UniversalChart";
 
 // Pre-configured Chart Templates
-export * from './ChartLibrary';
+export * from "./ChartLibrary";
 
 // Legacy OptimizedCharts (for backward compatibility)
-export * from './OptimizedCharts';
+export * from "./OptimizedCharts";

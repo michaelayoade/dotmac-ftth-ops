@@ -23,7 +23,7 @@ email_service = EmailService()
 # Ticket Creation Handlers
 
 
-@subscribe("ticket.created")
+@subscribe("ticket.created")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_ticket_created(event: Event) -> None:
     """
     Handle ticket created event.
@@ -117,7 +117,7 @@ Please review and respond at your earliest convenience.
         )
 
 
-@subscribe("ticket.message.added")
+@subscribe("ticket.message.added")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_ticket_message_added(event: Event) -> None:
     """
     Handle ticket message added event.
@@ -198,7 +198,7 @@ Please log in to view and respond to the message.
         )
 
 
-@subscribe("ticket.status_changed")
+@subscribe("ticket.status_changed")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_ticket_status_changed(event: Event) -> None:
     """
     Handle ticket status changed event.
@@ -302,7 +302,7 @@ New Status: {new_status}
         logger.error("Failed to log status change audit", ticket_number=ticket_number, error=str(e))
 
 
-@subscribe("ticket.assigned")
+@subscribe("ticket.assigned")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_ticket_assigned(event: Event) -> None:
     """
     Handle ticket assigned event.
@@ -373,7 +373,7 @@ Please review the ticket and respond at your earliest convenience.
         logger.error("Failed to log assignment audit", ticket_number=ticket_number, error=str(e))
 
 
-@subscribe("ticket.escalated.to_partner")
+@subscribe("ticket.escalated.to_partner")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_ticket_escalated_to_partner(event: Event) -> None:
     """
     Handle ticket escalated to partner event.
@@ -459,7 +459,7 @@ Please review the ticket details and respond as soon as possible.
 # Analytics Handlers
 
 
-@subscribe("ticket.created")
+@subscribe("ticket.created")  # type: ignore[misc]  # Custom decorator is untyped
 async def track_ticket_creation_analytics(event: Event) -> None:
     """Track ticket creation metrics for analytics."""
     ticket_id = event.payload.get("ticket_id")
@@ -510,7 +510,7 @@ async def track_ticket_creation_analytics(event: Event) -> None:
         )
 
 
-@subscribe("ticket.status_changed")
+@subscribe("ticket.status_changed")  # type: ignore[misc]  # Custom decorator is untyped
 async def track_ticket_resolution_analytics(event: Event) -> None:
     """Track ticket resolution metrics for analytics."""
     ticket_id = event.payload.get("ticket_id")

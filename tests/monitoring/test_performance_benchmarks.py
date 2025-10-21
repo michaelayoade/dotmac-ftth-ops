@@ -83,7 +83,7 @@ class TestPerformanceBenchmarkRealism:
         """Test that memory benchmark allocates expected amount of memory."""
         # Get initial memory usage
         process = psutil.Process()
-        initial_memory = process.memory_info().rss
+        _initial_memory = process.memory_info().rss
 
         # Run memory benchmark
         benchmark = MemoryBenchmark(allocation_mb=50, iterations=1000)
@@ -371,7 +371,7 @@ class TestBenchmarkResourceMonitoring:
         process = psutil.Process()
 
         # Get baseline memory
-        initial_memory = process.memory_info().rss
+        _baseline_memory = process.memory_info().rss
 
         # Run memory benchmark
         benchmark = MemoryBenchmark(allocation_mb=20, iterations=200)

@@ -3,10 +3,10 @@
  * Provides permission-based visibility and access control
  */
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { useRBAC, PermissionCategory, PermissionAction } from '@/contexts/RBACContext';
-import { AlertCircle, Lock } from 'lucide-react';
+import React from "react";
+import { useRouter } from "next/navigation";
+import { useRBAC, PermissionCategory, PermissionAction } from "@/contexts/RBACContext";
+import { AlertCircle, Lock } from "lucide-react";
 
 /**
  * Permission guard for components
@@ -83,7 +83,7 @@ export function RouteGuard({
   role,
   category,
   action,
-  redirectTo = '/dashboard',
+  redirectTo = "/dashboard",
 }: RouteGuardProps) {
   const router = useRouter();
   const { permissions, loading, hasPermission, hasAnyPermission, hasRole, canAccess } = useRBAC();
@@ -95,7 +95,7 @@ export function RouteGuard({
 
   // No user permissions loaded (not authenticated)
   if (!permissions) {
-    router.push('/login');
+    router.push("/login");
     return <LoadingPermissions />;
   }
 
@@ -135,9 +135,7 @@ interface CanProps {
 export function Can({ children, I, fallback }: CanProps) {
   const { hasPermission, hasAnyPermission } = useRBAC();
 
-  const hasAccess = Array.isArray(I)
-    ? hasAnyPermission(I)
-    : hasPermission(I);
+  const hasAccess = Array.isArray(I) ? hasAnyPermission(I) : hasPermission(I);
 
   if (hasAccess) {
     return <>{children}</>;
@@ -152,9 +150,7 @@ export function Can({ children, I, fallback }: CanProps) {
 export function Cannot({ children, I, fallback }: CanProps) {
   const { hasPermission, hasAnyPermission } = useRBAC();
 
-  const hasAccess = Array.isArray(I)
-    ? hasAnyPermission(I)
-    : hasPermission(I);
+  const hasAccess = Array.isArray(I) ? hasAnyPermission(I) : hasPermission(I);
 
   if (!hasAccess) {
     return <>{children}</>;
@@ -187,7 +183,9 @@ function AccessDenied() {
         <Lock className="h-5 w-5 text-red-500" />
         <div>
           <p className="text-red-400 font-medium">Access Denied</p>
-          <p className="text-red-400/70 text-sm">You don&apos;t have permission to view this content</p>
+          <p className="text-red-400/70 text-sm">
+            You don&apos;t have permission to view this content
+          </p>
         </div>
       </div>
     </div>
@@ -208,7 +206,8 @@ function AccessDeniedPage({ redirectTo }: { redirectTo: string }) {
         </div>
         <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
         <p className="text-slate-400 mb-6">
-          You don&apos;t have permission to access this page. Please contact your administrator if you believe this is an error.
+          You don&apos;t have permission to access this page. Please contact your administrator if
+          you believe this is an error.
         </p>
         <button
           onClick={() => router.push(redirectTo)}
@@ -232,7 +231,7 @@ export function withPermission<T extends object>(
     category?: PermissionCategory;
     action?: PermissionAction;
     redirectTo?: string;
-  }
+  },
 ) {
   return function ProtectedComponent(props: T) {
     return (
@@ -252,7 +251,7 @@ export function usePermissionVisibility(
   options?: {
     hideCompletely?: boolean;
     disableOnly?: boolean;
-  }
+  },
 ) {
   const { hasPermission, hasAnyPermission } = useRBAC();
 
@@ -318,7 +317,7 @@ export function PermissionButton({
     <button
       {...props}
       disabled={props.disabled || (disableWhenUnauthorized && !hasAccess)}
-      title={!hasAccess ? 'You do not have permission to perform this action' : props.title}
+      title={!hasAccess ? "You do not have permission to perform this action" : props.title}
     >
       {children}
     </button>

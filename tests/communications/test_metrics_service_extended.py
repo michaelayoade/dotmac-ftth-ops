@@ -2,7 +2,7 @@
 Extended tests for communication metrics service to improve coverage.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -187,7 +187,7 @@ class TestLogCommunication:
         )
 
         # Execute
-        result = await metrics_service.log_communication(
+        await metrics_service.log_communication(
             type=CommunicationType.EMAIL,
             recipient="user@example.com",
             subject="Test Email",
@@ -211,7 +211,7 @@ class TestLogCommunication:
     async def test_log_sms_communication(self, metrics_service, mock_db_session):
         """Test logging an SMS communication."""
         # Execute
-        result = await metrics_service.log_communication(
+        await metrics_service.log_communication(
             type=CommunicationType.SMS,
             recipient="+1234567890",
             text_body="Test SMS",
@@ -427,7 +427,7 @@ class TestAggregateDailyStats:
         ]
 
         # Execute
-        result = await metrics_service.aggregate_daily_stats()
+        await metrics_service.aggregate_daily_stats()
 
         # Verify existing entry was updated (just check that attributes were set)
         # The mock allows setting but we verify commit was called

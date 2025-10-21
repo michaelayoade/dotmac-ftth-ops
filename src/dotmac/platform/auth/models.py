@@ -109,9 +109,13 @@ class PermissionCategory(str, Enum):
     ANALYTICS = "analytics"
     COMMUNICATION = "communication"
     WORKFLOW = "workflow"
+    NETWORK = "network"
+    IPAM = "ipam"
+    AUTOMATION = "automation"
+    CPE = "cpe"
 
 
-class Permission(Base):
+class Permission(Base):  # type: ignore[misc]  # Base has type Any
     """Individual permission that can be granted"""
 
     __tablename__ = "permissions"
@@ -132,7 +136,7 @@ class Permission(Base):
     is_system: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
     )  # Can't be deleted
-    metadata_: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSON, nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -157,7 +161,7 @@ def _users_table() -> Any:
     return User.__table__
 
 
-class Role(Base):
+class Role(Base):  # type: ignore[misc]  # Base has type Any
     """Role that groups permissions"""
 
     __tablename__ = "roles"
@@ -184,7 +188,7 @@ class Role(Base):
 
     # Metadata
     max_users: Mapped[int | None] = mapped_column(Integer, nullable=True)  # Optional limit
-    metadata_: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSON, nullable=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
@@ -230,7 +234,7 @@ class Role(Base):
         return f"<Role(name='{self.name}', priority={self.priority})>"
 
 
-class RoleHierarchy(Base):
+class RoleHierarchy(Base):  # type: ignore[misc]  # Base has type Any
     """Explicit role inheritance relationships (alternative to parent_id)"""
 
     __tablename__ = "role_hierarchy"
@@ -252,7 +256,7 @@ class RoleHierarchy(Base):
     )
 
 
-class PermissionGrant(Base):
+class PermissionGrant(Base):  # type: ignore[misc]  # Base has type Any
     """Audit trail for permission grants/revokes"""
 
     __tablename__ = "permission_grants"
@@ -278,7 +282,7 @@ class PermissionGrant(Base):
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Metadata (IP address, session ID, etc.)
-    metadata_: Mapped[dict | None] = mapped_column("metadata", JSON, nullable=True)
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSON, nullable=True)
 
     __table_args__ = (
         Index("ix_permission_grants_user_id", "user_id"),

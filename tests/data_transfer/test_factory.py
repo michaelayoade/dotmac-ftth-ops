@@ -420,7 +420,7 @@ class TestOptionalFormatRegistration:
         registry = DataTransferRegistry()
 
         # Excel should not be in core formats
-        formats = registry.list_available_formats()
+        registry.list_available_formats()
         # Note: Excel might be registered from module-level code, but won't be enabled
         enabled = registry.list_enabled_formats()
         assert DataFormat.EXCEL not in enabled["importers"]

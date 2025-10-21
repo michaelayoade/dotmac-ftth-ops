@@ -1,12 +1,15 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Handshake, Mail, Lock, AlertCircle } from "lucide-react";
 import { platformConfig } from "@/lib/config";
 
-const API_BASE = platformConfig.apiBaseUrl;
+const API_BASE = platformConfig.api.baseUrl;
 
 export default function PartnerPortalLogin() {
   const router = useRouter();
@@ -144,7 +147,10 @@ export default function PartnerPortalLogin() {
         <div className="mt-6 text-center text-xs text-foreground0">
           <p>
             Need help?{" "}
-            <a href="mailto:partners@dotmac.com" className="text-muted-foreground hover:text-muted-foreground">
+            <a
+              href="mailto:partners@dotmac.com"
+              className="text-muted-foreground hover:text-muted-foreground"
+            >
               Contact Support
             </a>
           </p>

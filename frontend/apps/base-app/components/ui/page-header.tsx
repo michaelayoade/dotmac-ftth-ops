@@ -54,42 +54,25 @@ export function PageHeader({
   showBorder = false,
 }: PageHeaderProps) {
   return (
-    <div
-      className={cn(
-        "mb-6",
-        showBorder && "pb-6 border-b border-border",
-        className
-      )}
-    >
+    <div className={cn("mb-6", showBorder && "pb-6 border-b border-border", className)}>
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3">
             {Icon && (
               <div className="flex-shrink-0">
-                <Icon
-                  className="h-8 w-8 text-primary"
-                  aria-hidden="true"
-                />
+                <Icon className="h-8 w-8 text-primary" aria-hidden="true" />
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <h1 className="text-3xl font-bold text-foreground truncate">
-                {title}
-              </h1>
+              <h1 className="text-3xl font-bold text-foreground truncate">{title}</h1>
               {description && (
-                <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-                  {description}
-                </p>
+                <p className="text-muted-foreground mt-1 text-sm sm:text-base">{description}</p>
               )}
             </div>
           </div>
         </div>
 
-        {actions && (
-          <div className="flex-shrink-0 flex items-start gap-2">
-            {actions}
-          </div>
-        )}
+        {actions && <div className="flex-shrink-0 flex items-start gap-2">{actions}</div>}
       </div>
 
       {children && <div className="mt-4">{children}</div>}
@@ -107,11 +90,7 @@ PageHeader.Actions = function PageHeaderActions({
   children: React.ReactNode;
   className?: string;
 }) {
-  return (
-    <div className={cn("flex items-center gap-2 flex-wrap", className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn("flex items-center gap-2 flex-wrap", className)}>{children}</div>;
 };
 
 /**
@@ -129,15 +108,8 @@ PageHeader.Stat = function PageHeaderStat({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 px-3 py-2 bg-accent rounded-lg",
-        className
-      )}
-    >
-      {Icon && (
-        <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-      )}
+    <div className={cn("flex items-center gap-2 px-3 py-2 bg-accent rounded-lg", className)}>
+      {Icon && <Icon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />}
       <div>
         <p className="text-xs text-muted-foreground">{label}</p>
         <p className="text-sm font-semibold text-foreground">{value}</p>
@@ -157,10 +129,7 @@ PageHeader.Breadcrumb = function PageHeaderBreadcrumb({
   className?: string;
 }) {
   return (
-    <nav
-      aria-label="Breadcrumb"
-      className={cn("flex items-center gap-2 text-sm mb-2", className)}
-    >
+    <nav aria-label="Breadcrumb" className={cn("flex items-center gap-2 text-sm mb-2", className)}>
       {items.map((item, index) => (
         <div key={index} className="flex items-center gap-2">
           {index > 0 && (

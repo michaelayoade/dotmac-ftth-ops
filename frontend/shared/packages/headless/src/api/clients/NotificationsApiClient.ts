@@ -3,20 +3,20 @@
  * Handles multi-channel communication, alerts, and notification management
  */
 
-import { BaseApiClient } from './BaseApiClient';
-import type { PaginatedResponse, QueryParams } from '../types/api';
+import { BaseApiClient } from "./BaseApiClient";
+import type { PaginatedResponse, QueryParams } from "../types/api";
 
 export interface NotificationTemplate {
   id: string;
   name: string;
   description: string;
-  template_type: 'EMAIL' | 'SMS' | 'PUSH' | 'IN_APP' | 'WEBHOOK' | 'VOICE';
-  category: 'BILLING' | 'SERVICE' | 'MARKETING' | 'SYSTEM' | 'EMERGENCY' | 'SUPPORT';
+  template_type: "EMAIL" | "SMS" | "PUSH" | "IN_APP" | "WEBHOOK" | "VOICE";
+  category: "BILLING" | "SERVICE" | "MARKETING" | "SYSTEM" | "EMERGENCY" | "SUPPORT";
   subject?: string;
   content: string;
   variables: TemplateVariable[];
   channels: NotificationChannel[];
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   active: boolean;
   version: number;
   created_by: string;
@@ -26,7 +26,7 @@ export interface NotificationTemplate {
 
 export interface TemplateVariable {
   name: string;
-  type: 'STRING' | 'NUMBER' | 'DATE' | 'BOOLEAN' | 'URL';
+  type: "STRING" | "NUMBER" | "DATE" | "BOOLEAN" | "URL";
   description: string;
   required: boolean;
   default_value?: string;
@@ -34,7 +34,7 @@ export interface TemplateVariable {
 }
 
 export interface NotificationChannel {
-  type: 'EMAIL' | 'SMS' | 'PUSH' | 'IN_APP' | 'WEBHOOK' | 'VOICE';
+  type: "EMAIL" | "SMS" | "PUSH" | "IN_APP" | "WEBHOOK" | "VOICE";
   enabled: boolean;
   priority: number;
   retry_attempts: number;
@@ -47,16 +47,16 @@ export interface Notification {
   id: string;
   template_id?: string;
   recipient_id: string;
-  recipient_type: 'CUSTOMER' | 'USER' | 'TECHNICIAN' | 'ADMIN' | 'SYSTEM';
+  recipient_type: "CUSTOMER" | "USER" | "TECHNICIAN" | "ADMIN" | "SYSTEM";
   recipient_contact: {
     email?: string;
     phone?: string;
     device_token?: string;
     webhook_url?: string;
   };
-  channel: NotificationChannel['type'];
-  status: 'PENDING' | 'SENT' | 'DELIVERED' | 'FAILED' | 'EXPIRED' | 'CANCELLED';
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | 'EMERGENCY';
+  channel: NotificationChannel["type"];
+  status: "PENDING" | "SENT" | "DELIVERED" | "FAILED" | "EXPIRED" | "CANCELLED";
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT" | "EMERGENCY";
   subject?: string;
   message: string;
   data?: Record<string, any>;
@@ -76,12 +76,12 @@ export interface NotificationCampaign {
   id: string;
   name: string;
   description: string;
-  campaign_type: 'BROADCAST' | 'TARGETED' | 'SCHEDULED' | 'TRIGGERED';
+  campaign_type: "BROADCAST" | "TARGETED" | "SCHEDULED" | "TRIGGERED";
   template_id: string;
   target_audience: AudienceFilter;
-  channels: NotificationChannel['type'][];
+  channels: NotificationChannel["type"][];
   scheduling: CampaignScheduling;
-  status: 'DRAFT' | 'SCHEDULED' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'CANCELLED';
+  status: "DRAFT" | "SCHEDULED" | "RUNNING" | "PAUSED" | "COMPLETED" | "CANCELLED";
   metrics: CampaignMetrics;
   created_by: string;
   created_at: string;
@@ -100,12 +100,12 @@ export interface AudienceFilter {
 }
 
 export interface CampaignScheduling {
-  schedule_type: 'IMMEDIATE' | 'SCHEDULED' | 'RECURRING';
+  schedule_type: "IMMEDIATE" | "SCHEDULED" | "RECURRING";
   start_date?: string;
   end_date?: string;
   time_zone: string;
   recurrence?: {
-    frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY';
+    frequency: "DAILY" | "WEEKLY" | "MONTHLY";
     interval: number;
     days_of_week?: number[];
     days_of_month?: number[];
@@ -130,8 +130,8 @@ export interface CampaignMetrics {
 
 export interface Alert {
   id: string;
-  alert_type: 'SYSTEM' | 'BILLING' | 'NETWORK' | 'SERVICE' | 'SECURITY' | 'MAINTENANCE';
-  severity: 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
+  alert_type: "SYSTEM" | "BILLING" | "NETWORK" | "SERVICE" | "SECURITY" | "MAINTENANCE";
+  severity: "INFO" | "WARNING" | "ERROR" | "CRITICAL";
   title: string;
   message: string;
   source: string;
@@ -161,7 +161,7 @@ export interface EscalationRule {
 export interface NotificationPreference {
   id: string;
   user_id: string;
-  category: NotificationTemplate['category'];
+  category: NotificationTemplate["category"];
   channels: {
     email: { enabled: boolean; address?: string };
     sms: { enabled: boolean; number?: string };
@@ -189,7 +189,7 @@ export class NotificationsApiClient extends BaseApiClient {
 
   // Templates
   async getTemplates(params?: QueryParams): Promise<PaginatedResponse<NotificationTemplate>> {
-    return this.get('/api/notifications/templates', { params });
+    return this.get("/api/notifications/templates", { params });
   }
 
   async getTemplate(templateId: string): Promise<{ data: NotificationTemplate }> {
@@ -197,14 +197,14 @@ export class NotificationsApiClient extends BaseApiClient {
   }
 
   async createTemplate(
-    data: Omit<NotificationTemplate, 'id' | 'version' | 'created_at' | 'updated_at'>
+    data: Omit<NotificationTemplate, "id" | "version" | "created_at" | "updated_at">,
   ): Promise<{ data: NotificationTemplate }> {
-    return this.post('/api/notifications/templates', data);
+    return this.post("/api/notifications/templates", data);
   }
 
   async updateTemplate(
     templateId: string,
-    data: Partial<NotificationTemplate>
+    data: Partial<NotificationTemplate>,
   ): Promise<{ data: NotificationTemplate }> {
     return this.put(`/api/notifications/templates/${templateId}`, data);
   }
@@ -217,18 +217,22 @@ export class NotificationsApiClient extends BaseApiClient {
     templateId: string,
     testData: {
       recipient: string;
-      channel: NotificationChannel['type'];
+      channel: NotificationChannel["type"];
       variables?: Record<string, any>;
-    }
+    },
   ): Promise<{ data: { success: boolean; preview?: string } }> {
     return this.post(`/api/notifications/templates/${templateId}/test`, testData);
   }
 
   async previewTemplate(
     templateId: string,
-    variables?: Record<string, any>
-  ): Promise<{ data: { rendered_content: string; rendered_subject?: string } }> {
-    return this.post(`/api/notifications/templates/${templateId}/preview`, { variables });
+    variables?: Record<string, any>,
+  ): Promise<{
+    data: { rendered_content: string; rendered_subject?: string };
+  }> {
+    return this.post(`/api/notifications/templates/${templateId}/preview`, {
+      variables,
+    });
   }
 
   // Notifications
@@ -239,9 +243,9 @@ export class NotificationsApiClient extends BaseApiClient {
       channel?: string;
       start_date?: string;
       end_date?: string;
-    }
+    },
   ): Promise<PaginatedResponse<Notification>> {
-    return this.get('/api/notifications', { params });
+    return this.get("/api/notifications", { params });
   }
 
   async getNotification(notificationId: string): Promise<{ data: Notification }> {
@@ -251,32 +255,32 @@ export class NotificationsApiClient extends BaseApiClient {
   async sendNotification(data: {
     template_id?: string;
     recipient_id: string;
-    recipient_contact: Notification['recipient_contact'];
-    channel: NotificationChannel['type'];
+    recipient_contact: Notification["recipient_contact"];
+    channel: NotificationChannel["type"];
     subject?: string;
     message?: string;
     variables?: Record<string, any>;
-    priority?: Notification['priority'];
+    priority?: Notification["priority"];
     scheduled_at?: string;
     expires_at?: string;
   }): Promise<{ data: Notification }> {
-    return this.post('/api/notifications/send', data);
+    return this.post("/api/notifications/send", data);
   }
 
   async sendBulkNotifications(data: {
     template_id?: string;
     recipients: Array<{
       recipient_id: string;
-      recipient_contact: Notification['recipient_contact'];
+      recipient_contact: Notification["recipient_contact"];
       variables?: Record<string, any>;
     }>;
-    channel: NotificationChannel['type'];
+    channel: NotificationChannel["type"];
     subject?: string;
     message?: string;
-    priority?: Notification['priority'];
+    priority?: Notification["priority"];
     scheduled_at?: string;
   }): Promise<{ data: { notifications_created: number; batch_id: string } }> {
-    return this.post('/api/notifications/send-bulk', data);
+    return this.post("/api/notifications/send-bulk", data);
   }
 
   async cancelNotification(notificationId: string): Promise<{ data: Notification }> {
@@ -292,12 +296,14 @@ export class NotificationsApiClient extends BaseApiClient {
   }
 
   async trackClick(notificationId: string, linkUrl?: string): Promise<{ data: Notification }> {
-    return this.post(`/api/notifications/${notificationId}/click`, { link_url: linkUrl });
+    return this.post(`/api/notifications/${notificationId}/click`, {
+      link_url: linkUrl,
+    });
   }
 
   // Campaigns
   async getCampaigns(params?: QueryParams): Promise<PaginatedResponse<NotificationCampaign>> {
-    return this.get('/api/notifications/campaigns', { params });
+    return this.get("/api/notifications/campaigns", { params });
   }
 
   async getCampaign(campaignId: string): Promise<{ data: NotificationCampaign }> {
@@ -305,14 +311,14 @@ export class NotificationsApiClient extends BaseApiClient {
   }
 
   async createCampaign(
-    data: Omit<NotificationCampaign, 'id' | 'status' | 'metrics' | 'created_at'>
+    data: Omit<NotificationCampaign, "id" | "status" | "metrics" | "created_at">,
   ): Promise<{ data: NotificationCampaign }> {
-    return this.post('/api/notifications/campaigns', data);
+    return this.post("/api/notifications/campaigns", data);
   }
 
   async updateCampaign(
     campaignId: string,
-    data: Partial<NotificationCampaign>
+    data: Partial<NotificationCampaign>,
   ): Promise<{ data: NotificationCampaign }> {
     return this.put(`/api/notifications/campaigns/${campaignId}`, data);
   }
@@ -331,9 +337,11 @@ export class NotificationsApiClient extends BaseApiClient {
 
   async cancelCampaign(
     campaignId: string,
-    reason?: string
+    reason?: string,
   ): Promise<{ data: NotificationCampaign }> {
-    return this.post(`/api/notifications/campaigns/${campaignId}/cancel`, { reason });
+    return this.post(`/api/notifications/campaigns/${campaignId}/cancel`, {
+      reason,
+    });
   }
 
   async getCampaignMetrics(campaignId: string): Promise<{ data: CampaignMetrics }> {
@@ -342,17 +350,19 @@ export class NotificationsApiClient extends BaseApiClient {
 
   async getCampaignRecipients(
     campaignId: string,
-    params?: QueryParams
+    params?: QueryParams,
   ): Promise<
     PaginatedResponse<{
       recipient_id: string;
-      recipient_contact: Notification['recipient_contact'];
-      status: Notification['status'];
+      recipient_contact: Notification["recipient_contact"];
+      status: Notification["status"];
       sent_at?: string;
       delivered_at?: string;
     }>
   > {
-    return this.get(`/api/notifications/campaigns/${campaignId}/recipients`, { params });
+    return this.get(`/api/notifications/campaigns/${campaignId}/recipients`, {
+      params,
+    });
   }
 
   // Alerts
@@ -362,9 +372,9 @@ export class NotificationsApiClient extends BaseApiClient {
       severity?: string;
       resolved?: boolean;
       acknowledged?: boolean;
-    }
+    },
   ): Promise<PaginatedResponse<Alert>> {
-    return this.get('/api/notifications/alerts', { params });
+    return this.get("/api/notifications/alerts", { params });
   }
 
   async getAlert(alertId: string): Promise<{ data: Alert }> {
@@ -372,9 +382,9 @@ export class NotificationsApiClient extends BaseApiClient {
   }
 
   async createAlert(
-    data: Omit<Alert, 'id' | 'resolved' | 'acknowledged' | 'created_at'>
+    data: Omit<Alert, "id" | "resolved" | "acknowledged" | "created_at">,
   ): Promise<{ data: Alert }> {
-    return this.post('/api/notifications/alerts', data);
+    return this.post("/api/notifications/alerts", data);
   }
 
   async acknowledgeAlert(alertId: string, acknowledgementNote?: string): Promise<{ data: Alert }> {
@@ -384,15 +394,21 @@ export class NotificationsApiClient extends BaseApiClient {
   }
 
   async resolveAlert(alertId: string, resolutionNote?: string): Promise<{ data: Alert }> {
-    return this.post(`/api/notifications/alerts/${alertId}/resolve`, { note: resolutionNote });
+    return this.post(`/api/notifications/alerts/${alertId}/resolve`, {
+      note: resolutionNote,
+    });
   }
 
   async escalateAlert(alertId: string, escalationLevel?: number): Promise<{ data: Alert }> {
-    return this.post(`/api/notifications/alerts/${alertId}/escalate`, { level: escalationLevel });
+    return this.post(`/api/notifications/alerts/${alertId}/escalate`, {
+      level: escalationLevel,
+    });
   }
 
   async snoozeAlert(alertId: string, snoozeUntil: string): Promise<{ data: Alert }> {
-    return this.post(`/api/notifications/alerts/${alertId}/snooze`, { snooze_until: snoozeUntil });
+    return this.post(`/api/notifications/alerts/${alertId}/snooze`, {
+      snooze_until: snoozeUntil,
+    });
   }
 
   // User Preferences
@@ -402,37 +418,46 @@ export class NotificationsApiClient extends BaseApiClient {
 
   async updateUserPreferences(
     userId: string,
-    preferences: Partial<NotificationPreference>[]
+    preferences: Partial<NotificationPreference>[],
   ): Promise<{ data: NotificationPreference[] }> {
-    return this.put(`/api/notifications/users/${userId}/preferences`, { preferences });
+    return this.put(`/api/notifications/users/${userId}/preferences`, {
+      preferences,
+    });
   }
 
   async optOut(userId: string, categories: string[]): Promise<{ data: { success: boolean } }> {
-    return this.post(`/api/notifications/users/${userId}/opt-out`, { categories });
+    return this.post(`/api/notifications/users/${userId}/opt-out`, {
+      categories,
+    });
   }
 
   async optIn(userId: string, categories: string[]): Promise<{ data: { success: boolean } }> {
-    return this.post(`/api/notifications/users/${userId}/opt-in`, { categories });
+    return this.post(`/api/notifications/users/${userId}/opt-in`, {
+      categories,
+    });
   }
 
   // Channel Management
   async getChannelStatus(): Promise<{
     data: Array<{
-      channel: NotificationChannel['type'];
-      status: 'HEALTHY' | 'DEGRADED' | 'DOWN';
+      channel: NotificationChannel["type"];
+      status: "HEALTHY" | "DEGRADED" | "DOWN";
       last_success: string;
       error_rate: number;
       throughput: number;
     }>;
   }> {
-    return this.get('/api/notifications/channels/status');
+    return this.get("/api/notifications/channels/status");
   }
 
   async testChannelConfiguration(
-    channel: NotificationChannel['type'],
-    config: Record<string, any>
+    channel: NotificationChannel["type"],
+    config: Record<string, any>,
   ): Promise<{ data: { success: boolean; error?: string } }> {
-    return this.post('/api/notifications/channels/test', { channel, configuration: config });
+    return this.post("/api/notifications/channels/test", {
+      channel,
+      configuration: config,
+    });
   }
 
   // Analytics & Reporting
@@ -452,12 +477,12 @@ export class NotificationsApiClient extends BaseApiClient {
       trends: any[];
     };
   }> {
-    return this.get('/api/notifications/metrics', { params });
+    return this.get("/api/notifications/metrics", { params });
   }
 
   async getChannelPerformance(params?: { start_date?: string; end_date?: string }): Promise<{
     data: Array<{
-      channel: NotificationChannel['type'];
+      channel: NotificationChannel["type"];
       sent_count: number;
       delivered_count: number;
       failed_count: number;
@@ -465,7 +490,9 @@ export class NotificationsApiClient extends BaseApiClient {
       average_delivery_time: number;
     }>;
   }> {
-    return this.get('/api/notifications/analytics/channel-performance', { params });
+    return this.get("/api/notifications/analytics/channel-performance", {
+      params,
+    });
   }
 
   async getEngagementAnalytics(params?: {
@@ -480,22 +507,22 @@ export class NotificationsApiClient extends BaseApiClient {
       user_engagement_segments: any[];
     };
   }> {
-    return this.get('/api/notifications/analytics/engagement', { params });
+    return this.get("/api/notifications/analytics/engagement", { params });
   }
 
   // Webhooks & Real-time
   async subscribeToNotificationEvents(
     webhookUrl: string,
-    events: string[]
+    events: string[],
   ): Promise<{ data: { subscription_id: string } }> {
-    return this.post('/api/notifications/webhooks/subscribe', {
+    return this.post("/api/notifications/webhooks/subscribe", {
       webhook_url: webhookUrl,
       events,
     });
   }
 
   async unsubscribeFromNotificationEvents(
-    subscriptionId: string
+    subscriptionId: string,
   ): Promise<{ data: { success: boolean } }> {
     return this.delete(`/api/notifications/webhooks/subscriptions/${subscriptionId}`);
   }

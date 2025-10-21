@@ -34,7 +34,7 @@ from dotmac.platform.tenant import get_current_tenant_id
 logger = structlog.get_logger(__name__)
 
 # Create router
-file_storage_router = APIRouter()
+file_storage_router = APIRouter(prefix="/files/storage", )
 storage_router = file_storage_router  # Alias for backward compatibility
 
 # Get service instance
@@ -73,7 +73,7 @@ def _resolve_tenant_id(request: Request, current_user: UserInfo) -> str:
 
 
 # Request/Response Models
-class FileUploadResponse(BaseModel):
+class FileUploadResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """File upload response."""
 
     model_config = ConfigDict()
@@ -86,7 +86,7 @@ class FileUploadResponse(BaseModel):
     url: str | None = Field(None, description="Download URL if available")
 
 
-class FileListResponse(BaseModel):
+class FileListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """File list response."""
 
     model_config = ConfigDict()
@@ -97,7 +97,7 @@ class FileListResponse(BaseModel):
     per_page: int = Field(..., description="Items per page")
 
 
-class FileOperationRequest(BaseModel):
+class FileOperationRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """File operation request."""
 
     model_config = ConfigDict()
@@ -234,7 +234,7 @@ async def delete_file(
     request: Request,
     file_id: str,
     current_user: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """
     Delete a file from storage.
     """
@@ -360,7 +360,7 @@ async def batch_operation(
     request: Request,
     operations: FileOperationRequest,
     current_user: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """
     Perform batch operations on files.
     """

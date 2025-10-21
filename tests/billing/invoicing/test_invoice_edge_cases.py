@@ -61,7 +61,7 @@ class TestInvoiceServiceEdgeCases:
         mock_db.refresh = AsyncMock(side_effect=mock_refresh_entity)
 
         # Create invoice with zero amounts
-        result = await service.create_invoice(
+        await service.create_invoice(
             tenant_id=sample_tenant_id,
             customer_id=sample_customer_id,
             billing_email="customer@example.com",
@@ -95,7 +95,7 @@ class TestInvoiceServiceEdgeCases:
         credit_application_id = str(uuid4())
 
         # Apply excessive credit
-        result = await service.apply_credit_to_invoice(
+        await service.apply_credit_to_invoice(
             sample_tenant_id, mock_invoice_entity.invoice_id, credit_amount, credit_application_id
         )
 
@@ -123,7 +123,7 @@ class TestInvoiceServiceEdgeCases:
         # Test the mark_invoice_paid method
         # Note: The original code has a bug at line 273 where it references undefined 'payment_status'
         # We'll test that the method still completes successfully despite this
-        result = await service.mark_invoice_paid(
+        await service.mark_invoice_paid(
             sample_tenant_id, mock_invoice_entity.invoice_id, payment_id=str(uuid4())
         )
 

@@ -6,7 +6,7 @@ Tests event handlers that react to domain events and send notifications.
 
 from datetime import UTC, datetime
 from smtplib import SMTPException
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest

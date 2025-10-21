@@ -10,14 +10,48 @@ from enum import Enum
 from typing import Any
 
 import httpx
-from redis import Redis
 from redis.exceptions import RedisError
 from sqlalchemy import text
 
 from dotmac.platform.db import get_sync_engine
 from dotmac.platform.settings import settings
+from redis import Redis
 
 logger = logging.getLogger(__name__)
+
+
+def _is_truthy(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "1", "yes", "on"}
+    return False
+
+
+def _is_production_environment() -> bool:
+    settings_flag = getattr(settings, "is_production", None)
+    if isinstance(settings_flag, bool):
+        if settings_flag:
+            return True
+    elif isinstance(settings_flag, str) and _is_truthy(settings_flag):
+        return True
+
+    environment = getattr(settings, "environment", None)
+    if isinstance(environment, Enum):
+        env_value = environment.value
+    else:
+        env_value = environment
+
+    if isinstance(env_value, str) and env_value.strip().lower() in {"production", "prod"}:
+        return True
+
+    import os
+
+    env_var = os.getenv("ENVIRONMENT", "")
+    if env_var.strip().lower() in {"production", "prod"}:
+        return True
+
+    return False
 
 
 class ServiceStatus(str, Enum):
@@ -43,7 +77,7 @@ class ServiceHealth:
     def is_healthy(self) -> bool:
         return self.status == ServiceStatus.HEALTHY
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "name": self.name,
             "status": self.status.value,
@@ -138,9 +172,10 @@ class HealthChecker:
 
         is_healthy, message = self._check_redis_url(settings.redis.redis_url, "Redis")
 
-        # Check if we're in production mode
-        is_production = os.getenv("ENVIRONMENT", "development").lower() in ("production", "prod")
-        require_redis = os.getenv("REQUIRE_REDIS_SESSIONS", str(is_production)).lower() == "true"
+        # Determine environment from settings first, fall back to ENV var
+        is_production = _is_production_environment()
+        require_env = os.getenv("REQUIRE_REDIS_SESSIONS")
+        require_redis = _is_truthy(require_env) if require_env is not None else is_production
 
         # SECURITY: Redis is ALWAYS required in production (no fallback)
         if not is_healthy:
@@ -182,6 +217,8 @@ class HealthChecker:
 
     def check_vault(self) -> ServiceHealth:
         """Check Vault/OpenBao connectivity."""
+        is_production = _is_production_environment()
+
         if not settings.vault.enabled:
             return ServiceHealth(
                 name="vault",
@@ -205,14 +242,14 @@ class HealthChecker:
                         name="vault",
                         status=ServiceStatus.HEALTHY,
                         message="Vault connection successful",
-                        required=settings.environment == "production",
+                        required=is_production,
                     )
                 else:
                     return ServiceHealth(
                         name="vault",
                         status=ServiceStatus.UNHEALTHY,
                         message="Vault health check failed",
-                        required=settings.environment == "production",
+                        required=is_production,
                     )
         except Exception as e:
             logger.error(f"Vault health check failed: {e}")
@@ -220,7 +257,7 @@ class HealthChecker:
                 name="vault",
                 status=ServiceStatus.UNHEALTHY,
                 message=f"Connection failed: {str(e)}",
-                required=settings.environment == "production",
+                required=is_production,
             )
 
     def check_celery_broker(self) -> ServiceHealth:
@@ -335,6 +372,65 @@ class HealthChecker:
                 required=False,
             )
 
+    def check_radius_server(self) -> ServiceHealth:
+        """Check FreeRADIUS server connectivity and health."""
+        import os
+        import socket
+
+        radius_host = os.getenv("RADIUS_SERVER_HOST", "localhost")
+        radius_port = int(os.getenv("RADIUS_AUTH_PORT", "1812"))
+        status_port = int(os.getenv("RADIUS_STATUS_PORT", "18120"))
+
+        # First check if the authentication port is listening
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                sock.settimeout(2)
+                # Try to connect to UDP port
+                sock.connect((radius_host, radius_port))
+                auth_reachable = True
+        except (TimeoutError, OSError) as e:
+            logger.warning(f"RADIUS auth port unreachable: {e}")
+            auth_reachable = False
+
+        # Check HTTP status server if available
+        status_reachable = False
+        status_message = ""
+
+        try:
+            with httpx.Client(timeout=5.0) as client:
+                response = client.get(f"http://{radius_host}:{status_port}/")
+                if response.status_code == 200:
+                    status_reachable = True
+                    status_message = "Status server OK"
+                else:
+                    status_message = f"Status server returned {response.status_code}"
+        except Exception as e:
+            logger.debug(f"RADIUS status server check failed: {e}")
+            status_message = "Status server unavailable"
+
+        # Determine overall health
+        if auth_reachable and status_reachable:
+            return ServiceHealth(
+                name="radius_server",
+                status=ServiceStatus.HEALTHY,
+                message=f"RADIUS server healthy at {radius_host}:{radius_port}, {status_message}",
+                required=False,
+            )
+        elif auth_reachable:
+            return ServiceHealth(
+                name="radius_server",
+                status=ServiceStatus.HEALTHY,
+                message=f"RADIUS auth port reachable at {radius_host}:{radius_port}, {status_message}",
+                required=False,
+            )
+        else:
+            return ServiceHealth(
+                name="radius_server",
+                status=ServiceStatus.DEGRADED,
+                message=f"RADIUS server unreachable at {radius_host}:{radius_port}",
+                required=False,
+            )
+
     def run_all_checks(self) -> tuple[bool, list[ServiceHealth]]:
         """
         Run all health checks.
@@ -346,7 +442,7 @@ class HealthChecker:
             self.check_database(),
             self.check_redis(),
             self.check_vault(),
-            self.check_storage(),  # Re-enabled with proper guards
+            self.check_storage(),
             self.check_celery_broker(),
             self.check_observability(),
         ]
@@ -397,7 +493,7 @@ def check_startup_dependencies() -> bool:
         if failed_required:
             logger.error(f"Required services not available: {', '.join(failed_required)}")
 
-            if settings.environment == "production":
+            if _is_production_environment():
                 logger.error("Cannot start in production with missing required services")
                 return False
             else:
@@ -412,23 +508,40 @@ def ensure_infrastructure_running() -> None:
 
     This doesn't start services but provides helpful instructions.
     """
-    print("\n" + "=" * 60)
+    import structlog
+
+    structured_logger = structlog.get_logger(__name__)
+
+    logger.info("Starting DotMac Platform Services - verifying supporting infrastructure")
+
     print("Starting DotMac Platform Services")
-    print("=" * 60)
-    print("\nRequired Infrastructure Services:")
-    print("  • PostgreSQL (database)")
-    print("  • Redis (cache & sessions)")
-    print("  • Vault/OpenBao (secrets) - optional in dev, required in prod")
-    print("  • Celery (background tasks) - optional")
-    print("  • OTLP Collector (observability) - optional")
+    print()
+    print("Required Infrastructure Services:")
+    print("PostgreSQL (database)")
+    print("Redis (cache & sessions)")
+    print()
+    print("Optional Services:")
+    print("Vault/OpenBao (secrets)")
+    print("Celery worker (background tasks)")
+    print("OTLP Collector (observability)")
+    print()
+    print("Recommended command: docker-compose up -d")
+    print("Minimal startup: docker-compose up -d postgres redis")
 
-    print("\nTo start all services with Docker Compose:")
-    print("  $ docker-compose up -d")
-    print("\nTo start individual services:")
-    print("  $ docker run -d -p 5432:5432 postgres:15")
-    print("  $ docker run -d -p 6379:6379 redis:7")
-    print("  $ docker run -d -p 8200:8200 hashicorp/vault:latest")
+    # Log structured infrastructure requirements
+    structured_logger.info(
+        "infrastructure.startup_guide",
+        message="Starting DotMac Platform Services",
+        required_services=["PostgreSQL", "Redis"],
+        optional_services=["Vault/OpenBao", "Celery", "OTLP Collector"],
+        docker_compose_command="docker-compose up -d",
+        minimal_startup="docker-compose up -d postgres redis",
+    )
 
-    print("\nFor development with minimal dependencies:")
-    print("  $ docker-compose up -d postgres redis")
-    print("=" * 60 + "\n")
+    # Also log individual service commands for reference
+    structured_logger.debug(
+        "infrastructure.individual_services",
+        postgres="docker run -d -p 5432:5432 postgres:15",
+        redis="docker run -d -p 6379:6379 redis:7",
+        vault="docker run -d -p 8200:8200 hashicorp/vault:latest",
+    )

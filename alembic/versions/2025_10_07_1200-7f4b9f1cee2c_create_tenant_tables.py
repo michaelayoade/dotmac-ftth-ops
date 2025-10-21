@@ -184,7 +184,9 @@ def upgrade() -> None:
         ["tenant_id"],
         unique=False,
     )
-    op.create_index(op.f("ix_tenant_invitations_email"), "tenant_invitations", ["email"], unique=False)
+    op.create_index(
+        op.f("ix_tenant_invitations_email"), "tenant_invitations", ["email"], unique=False
+    )
     op.create_index(
         op.f("ix_tenant_invitations_status"),
         "tenant_invitations",
@@ -192,13 +194,10 @@ def upgrade() -> None:
         unique=False,
     )
 
+
 def downgrade() -> None:
-    op.drop_index(
-        op.f("ix_tenant_invitations_status"), table_name="tenant_invitations"
-    )
-    op.drop_index(
-        op.f("ix_tenant_invitations_email"), table_name="tenant_invitations"
-    )
+    op.drop_index(op.f("ix_tenant_invitations_status"), table_name="tenant_invitations")
+    op.drop_index(op.f("ix_tenant_invitations_email"), table_name="tenant_invitations")
     op.drop_index(
         op.f("ix_tenant_invitations_tenant_id"),
         table_name="tenant_invitations",
@@ -210,9 +209,7 @@ def downgrade() -> None:
     op.drop_table("tenant_usage")
 
     op.drop_index(op.f("ix_tenant_settings_key"), table_name="tenant_settings")
-    op.drop_index(
-        op.f("ix_tenant_settings_tenant_id"), table_name="tenant_settings"
-    )
+    op.drop_index(op.f("ix_tenant_settings_tenant_id"), table_name="tenant_settings")
     op.drop_table("tenant_settings")
 
     op.drop_index(op.f("ix_tenants_status"), table_name="tenants")

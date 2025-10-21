@@ -214,10 +214,9 @@ class TestOpenTelemetryCollectorWithMeter:
 
         # Create metric with unsupported type
         metric = CounterMetric(name="test", delta=1.0, tenant_id="tenant1")
-        original_type = metric.type
         metric.type = MetricType.SUMMARY  # Unsupported type
 
-        with patch("dotmac.platform.analytics.otel_collector.logger") as mock_logger:
+        with patch("dotmac.platform.analytics.otel_collector.logger"):
             await collector.collect(metric)
             # Warning should be logged for unsupported type
             # Note: if meter properly handles it, warning might not be called
@@ -285,7 +284,7 @@ class TestOpenTelemetryCollectorWithMeter:
         exception = ValueError("test error")
 
         with (
-            patch("dotmac.platform.analytics.otel_collector.Status") as mock_status,
+            patch("dotmac.platform.analytics.otel_collector.Status"),
             patch("dotmac.platform.analytics.otel_collector.StatusCode") as mock_status_code,
         ):
             mock_status_code.ERROR = "ERROR"

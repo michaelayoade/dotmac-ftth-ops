@@ -66,7 +66,7 @@ import { UniversalProviders } from '@dotmac/providers';
       description: 'Feature flags configuration',
     },
   },
-} satisfies Meta<typeof UniversalProviders>;
+};
 
 export default meta;
 type Story = StoryObj<typeof meta>;

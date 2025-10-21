@@ -91,9 +91,7 @@ def _make_db_subscription_stub(subscription: Subscription) -> SimpleNamespace:
 
     async def test_create_plan_success(self, subscription_service, mock_db, basic_plan_request):
         """Test successful plan creation."""
-        plan = await subscription_service.create_plan(
-            plan_data=basic_plan_request, tenant_id="tenant-1"
-        )
+        await subscription_service.create_plan(plan_data=basic_plan_request, tenant_id="tenant-1")
 
         # Verify plan was added to DB
         assert mock_db.add.called
@@ -191,7 +189,7 @@ class TestSubscriptionLifecycle:
 
         with patch.object(service, "get_plan", return_value=active_plan):
             with patch.object(service, "_create_event", return_value=None):
-                subscription = await service.create_subscription(
+                await service.create_subscription(
                     subscription_data=subscription_request, tenant_id="tenant-1"
                 )
 
@@ -216,7 +214,7 @@ class TestSubscriptionLifecycle:
 
         with patch.object(service, "get_plan", return_value=active_plan):
             with patch.object(service, "_create_event", return_value=None):
-                subscription = await service.create_subscription(
+                await service.create_subscription(
                     subscription_data=subscription_request, tenant_id="tenant-1"
                 )
 

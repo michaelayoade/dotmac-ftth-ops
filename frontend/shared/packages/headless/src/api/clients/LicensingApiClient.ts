@@ -3,8 +3,8 @@
  * Handles software licensing, activation, and compliance management
  */
 
-import { BaseApiClient } from './BaseApiClient';
-import type { PaginatedResponse, QueryParams } from '../types/api';
+import { BaseApiClient } from "./BaseApiClient";
+import type { PaginatedResponse, QueryParams } from "../types/api";
 
 export interface SoftwareLicense {
   id: string;
@@ -12,8 +12,8 @@ export interface SoftwareLicense {
   product_id: string;
   product_name: string;
   product_version: string;
-  license_type: 'PERPETUAL' | 'SUBSCRIPTION' | 'TRIAL' | 'EVALUATION' | 'CONCURRENT' | 'NAMED_USER';
-  license_model: 'PER_SEAT' | 'PER_DEVICE' | 'PER_CPU' | 'PER_CORE' | 'SITE_LICENSE' | 'ENTERPRISE';
+  license_type: "PERPETUAL" | "SUBSCRIPTION" | "TRIAL" | "EVALUATION" | "CONCURRENT" | "NAMED_USER";
+  license_model: "PER_SEAT" | "PER_DEVICE" | "PER_CPU" | "PER_CORE" | "SITE_LICENSE" | "ENTERPRISE";
   customer_id?: string;
   reseller_id?: string;
   issued_to: string;
@@ -25,7 +25,7 @@ export interface SoftwareLicense {
   activation_date?: string;
   expiry_date?: string;
   maintenance_expiry?: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'EXPIRED' | 'SUSPENDED' | 'REVOKED' | 'PENDING';
+  status: "ACTIVE" | "INACTIVE" | "EXPIRED" | "SUSPENDED" | "REVOKED" | "PENDING";
   auto_renewal: boolean;
   trial_period_days?: number;
   grace_period_days?: number;
@@ -39,20 +39,20 @@ export interface LicenseFeature {
   feature_name: string;
   enabled: boolean;
   limit_value?: number;
-  limit_type?: 'COUNT' | 'SIZE' | 'DURATION' | 'BANDWIDTH';
+  limit_type?: "COUNT" | "SIZE" | "DURATION" | "BANDWIDTH";
   expires_at?: string;
 }
 
 export interface LicenseRestriction {
   restriction_type:
-    | 'GEOGRAPHIC'
-    | 'DOMAIN'
-    | 'IP_RANGE'
-    | 'MAC_ADDRESS'
-    | 'HARDWARE_ID'
-    | 'TIME_BASED';
+    | "GEOGRAPHIC"
+    | "DOMAIN"
+    | "IP_RANGE"
+    | "MAC_ADDRESS"
+    | "HARDWARE_ID"
+    | "TIME_BASED";
   values: string[];
-  operator: 'ALLOW' | 'DENY';
+  operator: "ALLOW" | "DENY";
 }
 
 export interface Activation {
@@ -67,8 +67,8 @@ export interface Activation {
   operating_system?: string;
   user_agent?: string;
   application_version: string;
-  activation_type: 'ONLINE' | 'OFFLINE' | 'EMERGENCY';
-  status: 'ACTIVE' | 'DEACTIVATED' | 'SUSPENDED' | 'EXPIRED';
+  activation_type: "ONLINE" | "OFFLINE" | "EMERGENCY";
+  status: "ACTIVE" | "DEACTIVATED" | "SUSPENDED" | "EXPIRED";
   activated_at: string;
   last_heartbeat?: string;
   deactivated_at?: string;
@@ -99,8 +99,8 @@ export interface LicenseTemplate {
   template_name: string;
   product_id: string;
   description: string;
-  license_type: SoftwareLicense['license_type'];
-  license_model: SoftwareLicense['license_model'];
+  license_type: SoftwareLicense["license_type"];
+  license_model: SoftwareLicense["license_model"];
   default_duration: number;
   max_activations: number;
   features: TemplateFeature[];
@@ -125,8 +125,8 @@ export interface TemplateFeature {
 }
 
 export interface TemplateRestriction {
-  restriction_type: LicenseRestriction['restriction_type'];
-  operator: LicenseRestriction['operator'];
+  restriction_type: LicenseRestriction["restriction_type"];
+  operator: LicenseRestriction["operator"];
   configurable: boolean;
   default_values?: string[];
 }
@@ -134,7 +134,7 @@ export interface TemplateRestriction {
 export interface LicensePricing {
   base_price: number;
   currency: string;
-  billing_cycle: 'MONTHLY' | 'QUARTERLY' | 'ANNUALLY' | 'ONE_TIME';
+  billing_cycle: "MONTHLY" | "QUARTERLY" | "ANNUALLY" | "ONE_TIME";
   per_seat_price?: number;
   volume_discounts?: VolumeDiscount[];
   maintenance_percentage?: number;
@@ -159,11 +159,11 @@ export interface LicenseOrder {
   duration_override?: number;
   pricing_override?: Partial<LicensePricing>;
   special_instructions?: string;
-  status: 'PENDING' | 'APPROVED' | 'FULFILLED' | 'CANCELLED';
+  status: "PENDING" | "APPROVED" | "FULFILLED" | "CANCELLED";
   total_amount: number;
   discount_applied?: number;
-  payment_status: 'PENDING' | 'PAID' | 'PARTIAL' | 'FAILED' | 'REFUNDED';
-  fulfillment_method: 'AUTO' | 'MANUAL' | 'BATCH';
+  payment_status: "PENDING" | "PAID" | "PARTIAL" | "FAILED" | "REFUNDED";
+  fulfillment_method: "AUTO" | "MANUAL" | "BATCH";
   generated_licenses?: string[];
   created_at: string;
   fulfilled_at?: string;
@@ -171,11 +171,11 @@ export interface LicenseOrder {
 
 export interface ComplianceAudit {
   id: string;
-  audit_type: 'SCHEDULED' | 'RANDOM' | 'COMPLAINT_DRIVEN' | 'RENEWAL';
+  audit_type: "SCHEDULED" | "RANDOM" | "COMPLAINT_DRIVEN" | "RENEWAL";
   customer_id?: string;
   product_ids: string[];
-  audit_scope: 'FULL' | 'PARTIAL' | 'SPOT_CHECK';
-  status: 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  audit_scope: "FULL" | "PARTIAL" | "SPOT_CHECK";
+  status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   auditor_id: string;
   audit_date: string;
   findings: AuditFinding[];
@@ -191,12 +191,12 @@ export interface ComplianceAudit {
 
 export interface AuditFinding {
   finding_type:
-    | 'OVER_DEPLOYMENT'
-    | 'UNLICENSED_SOFTWARE'
-    | 'EXPIRED_LICENSE'
-    | 'FEATURE_MISUSE'
-    | 'DOCUMENTATION_MISSING';
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    | "OVER_DEPLOYMENT"
+    | "UNLICENSED_SOFTWARE"
+    | "EXPIRED_LICENSE"
+    | "FEATURE_MISUSE"
+    | "DOCUMENTATION_MISSING";
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   description: string;
   evidence: string[];
   affected_licenses: string[];
@@ -206,12 +206,12 @@ export interface AuditFinding {
 
 export interface ComplianceViolation {
   violation_type:
-    | 'UNAUTHORIZED_USE'
-    | 'OVER_DEPLOYMENT'
-    | 'FEATURE_ABUSE'
-    | 'TRANSFER_VIOLATION'
-    | 'REVERSE_ENGINEERING';
-  severity: 'MINOR' | 'MAJOR' | 'CRITICAL';
+    | "UNAUTHORIZED_USE"
+    | "OVER_DEPLOYMENT"
+    | "FEATURE_ABUSE"
+    | "TRANSFER_VIOLATION"
+    | "REVERSE_ENGINEERING";
+  severity: "MINOR" | "MAJOR" | "CRITICAL";
   license_id: string;
   description: string;
   detected_at: string;
@@ -219,7 +219,7 @@ export interface ComplianceViolation {
   financial_impact?: number;
   resolution_required: boolean;
   resolution_deadline?: string;
-  status: 'OPEN' | 'ACKNOWLEDGED' | 'RESOLVED' | 'DISPUTED';
+  status: "OPEN" | "ACKNOWLEDGED" | "RESOLVED" | "DISPUTED";
 }
 
 export interface LicenseUsageReport {
@@ -245,7 +245,7 @@ export interface LicenseUsageReport {
     unique_users: number;
     peak_usage: number;
   }>;
-  compliance_status: 'COMPLIANT' | 'NON_COMPLIANT' | 'REQUIRES_REVIEW';
+  compliance_status: "COMPLIANT" | "NON_COMPLIANT" | "REQUIRES_REVIEW";
   recommendations: string[];
   generated_at: string;
 }
@@ -264,9 +264,9 @@ export class LicensingApiClient extends BaseApiClient {
       license_type?: string;
       expiry_date_from?: string;
       expiry_date_to?: string;
-    }
+    },
   ): Promise<PaginatedResponse<SoftwareLicense>> {
-    return this.get('/api/licensing/licenses', { params });
+    return this.get("/api/licensing/licenses", { params });
   }
 
   async getLicense(licenseId: string): Promise<{ data: SoftwareLicense }> {
@@ -280,15 +280,15 @@ export class LicensingApiClient extends BaseApiClient {
   async createLicense(
     data: Omit<
       SoftwareLicense,
-      'id' | 'license_key' | 'current_activations' | 'created_at' | 'updated_at'
-    >
+      "id" | "license_key" | "current_activations" | "created_at" | "updated_at"
+    >,
   ): Promise<{ data: SoftwareLicense }> {
-    return this.post('/api/licensing/licenses', data);
+    return this.post("/api/licensing/licenses", data);
   }
 
   async updateLicense(
     licenseId: string,
-    data: Partial<SoftwareLicense>
+    data: Partial<SoftwareLicense>,
   ): Promise<{ data: SoftwareLicense }> {
     return this.put(`/api/licensing/licenses/${licenseId}`, data);
   }
@@ -299,13 +299,15 @@ export class LicensingApiClient extends BaseApiClient {
       duration_months: number;
       extend_maintenance?: boolean;
       upgrade_features?: LicenseFeature[];
-    }
+    },
   ): Promise<{ data: SoftwareLicense }> {
     return this.post(`/api/licensing/licenses/${licenseId}/renew`, data);
   }
 
   async suspendLicense(licenseId: string, reason: string): Promise<{ data: SoftwareLicense }> {
-    return this.post(`/api/licensing/licenses/${licenseId}/suspend`, { reason });
+    return this.post(`/api/licensing/licenses/${licenseId}/suspend`, {
+      reason,
+    });
   }
 
   async revokeLicense(licenseId: string, reason: string): Promise<{ data: SoftwareLicense }> {
@@ -319,7 +321,7 @@ export class LicensingApiClient extends BaseApiClient {
       new_issued_to: string;
       transfer_reason: string;
       deactivate_existing: boolean;
-    }
+    },
   ): Promise<{ data: SoftwareLicense }> {
     return this.post(`/api/licensing/licenses/${licenseId}/transfer`, data);
   }
@@ -330,10 +332,10 @@ export class LicensingApiClient extends BaseApiClient {
     device_fingerprint: string;
     machine_name?: string;
     hardware_id?: string;
-    activation_type?: Activation['activation_type'];
+    activation_type?: Activation["activation_type"];
     metadata?: Record<string, any>;
   }): Promise<{ data: Activation }> {
-    return this.post('/api/licensing/activations', data);
+    return this.post("/api/licensing/activations", data);
   }
 
   async getActivations(
@@ -341,30 +343,38 @@ export class LicensingApiClient extends BaseApiClient {
       license_id?: string;
       status?: string;
       device_fingerprint?: string;
-    }
+    },
   ): Promise<PaginatedResponse<Activation>> {
-    return this.get('/api/licensing/activations', { params });
+    return this.get("/api/licensing/activations", { params });
   }
 
   async getActivation(activationId: string): Promise<{ data: Activation }> {
     return this.get(`/api/licensing/activations/${activationId}`);
   }
 
-  async validateActivation(
-    activationToken: string
-  ): Promise<{ data: { valid: boolean; activation?: Activation; license?: SoftwareLicense } }> {
-    return this.post('/api/licensing/activations/validate', { activation_token: activationToken });
+  async validateActivation(activationToken: string): Promise<{
+    data: {
+      valid: boolean;
+      activation?: Activation;
+      license?: SoftwareLicense;
+    };
+  }> {
+    return this.post("/api/licensing/activations/validate", {
+      activation_token: activationToken,
+    });
   }
 
   async deactivateLicense(activationId: string, reason?: string): Promise<{ data: Activation }> {
-    return this.post(`/api/licensing/activations/${activationId}/deactivate`, { reason });
+    return this.post(`/api/licensing/activations/${activationId}/deactivate`, {
+      reason,
+    });
   }
 
   async sendHeartbeat(
     activationToken: string,
-    metrics?: Partial<UsageMetrics>
+    metrics?: Partial<UsageMetrics>,
   ): Promise<{ data: { status: string; message?: string } }> {
-    return this.post('/api/licensing/activations/heartbeat', {
+    return this.post("/api/licensing/activations/heartbeat", {
       activation_token: activationToken,
       metrics,
     });
@@ -372,9 +382,9 @@ export class LicensingApiClient extends BaseApiClient {
 
   async getOfflineActivationRequest(
     licenseKey: string,
-    deviceFingerprint: string
+    deviceFingerprint: string,
   ): Promise<{ data: { request_code: string; instructions: string } }> {
-    return this.post('/api/licensing/activations/offline-request', {
+    return this.post("/api/licensing/activations/offline-request", {
       license_key: licenseKey,
       device_fingerprint: deviceFingerprint,
     });
@@ -382,9 +392,9 @@ export class LicensingApiClient extends BaseApiClient {
 
   async processOfflineActivation(
     requestCode: string,
-    responseCode: string
+    responseCode: string,
   ): Promise<{ data: Activation }> {
-    return this.post('/api/licensing/activations/offline-activate', {
+    return this.post("/api/licensing/activations/offline-activate", {
       request_code: requestCode,
       response_code: responseCode,
     });
@@ -392,7 +402,7 @@ export class LicensingApiClient extends BaseApiClient {
 
   // License Templates
   async getTemplates(params?: QueryParams): Promise<PaginatedResponse<LicenseTemplate>> {
-    return this.get('/api/licensing/templates', { params });
+    return this.get("/api/licensing/templates", { params });
   }
 
   async getTemplate(templateId: string): Promise<{ data: LicenseTemplate }> {
@@ -400,25 +410,27 @@ export class LicensingApiClient extends BaseApiClient {
   }
 
   async createTemplate(
-    data: Omit<LicenseTemplate, 'id' | 'created_at' | 'updated_at'>
+    data: Omit<LicenseTemplate, "id" | "created_at" | "updated_at">,
   ): Promise<{ data: LicenseTemplate }> {
-    return this.post('/api/licensing/templates', data);
+    return this.post("/api/licensing/templates", data);
   }
 
   async updateTemplate(
     templateId: string,
-    data: Partial<LicenseTemplate>
+    data: Partial<LicenseTemplate>,
   ): Promise<{ data: LicenseTemplate }> {
     return this.put(`/api/licensing/templates/${templateId}`, data);
   }
 
   async duplicateTemplate(templateId: string, newName: string): Promise<{ data: LicenseTemplate }> {
-    return this.post(`/api/licensing/templates/${templateId}/duplicate`, { new_name: newName });
+    return this.post(`/api/licensing/templates/${templateId}/duplicate`, {
+      new_name: newName,
+    });
   }
 
   // License Orders
   async getOrders(params?: QueryParams): Promise<PaginatedResponse<LicenseOrder>> {
-    return this.get('/api/licensing/orders', { params });
+    return this.get("/api/licensing/orders", { params });
   }
 
   async getOrder(orderId: string): Promise<{ data: LicenseOrder }> {
@@ -426,13 +438,15 @@ export class LicensingApiClient extends BaseApiClient {
   }
 
   async createOrder(
-    data: Omit<LicenseOrder, 'id' | 'order_number' | 'status' | 'total_amount' | 'created_at'>
+    data: Omit<LicenseOrder, "id" | "order_number" | "status" | "total_amount" | "created_at">,
   ): Promise<{ data: LicenseOrder }> {
-    return this.post('/api/licensing/orders', data);
+    return this.post("/api/licensing/orders", data);
   }
 
   async approveOrder(orderId: string, approvalNotes?: string): Promise<{ data: LicenseOrder }> {
-    return this.post(`/api/licensing/orders/${orderId}/approve`, { approval_notes: approvalNotes });
+    return this.post(`/api/licensing/orders/${orderId}/approve`, {
+      approval_notes: approvalNotes,
+    });
   }
 
   async fulfillOrder(orderId: string): Promise<{ data: LicenseOrder }> {
@@ -445,7 +459,7 @@ export class LicensingApiClient extends BaseApiClient {
 
   // Compliance & Auditing
   async getComplianceAudits(params?: QueryParams): Promise<PaginatedResponse<ComplianceAudit>> {
-    return this.get('/api/licensing/compliance/audits', { params });
+    return this.get("/api/licensing/compliance/audits", { params });
   }
 
   async getComplianceAudit(auditId: string): Promise<{ data: ComplianceAudit }> {
@@ -455,19 +469,21 @@ export class LicensingApiClient extends BaseApiClient {
   async scheduleComplianceAudit(data: {
     customer_id?: string;
     product_ids: string[];
-    audit_type: ComplianceAudit['audit_type'];
-    audit_scope: ComplianceAudit['audit_scope'];
+    audit_type: ComplianceAudit["audit_type"];
+    audit_scope: ComplianceAudit["audit_scope"];
     audit_date: string;
     special_instructions?: string;
   }): Promise<{ data: ComplianceAudit }> {
-    return this.post('/api/licensing/compliance/audits', data);
+    return this.post("/api/licensing/compliance/audits", data);
   }
 
   async submitAuditFindings(
     auditId: string,
-    findings: AuditFinding[]
+    findings: AuditFinding[],
   ): Promise<{ data: ComplianceAudit }> {
-    return this.post(`/api/licensing/compliance/audits/${auditId}/findings`, { findings });
+    return this.post(`/api/licensing/compliance/audits/${auditId}/findings`, {
+      findings,
+    });
   }
 
   async resolveComplianceViolation(
@@ -476,7 +492,7 @@ export class LicensingApiClient extends BaseApiClient {
       resolution_action: string;
       resolution_notes: string;
       evidence?: string[];
-    }
+    },
   ): Promise<{ data: ComplianceViolation }> {
     return this.post(`/api/licensing/compliance/violations/${violationId}/resolve`, data);
   }
@@ -500,28 +516,35 @@ export class LicensingApiClient extends BaseApiClient {
     product_id?: string;
     start_date: string;
     end_date: string;
-    report_format: 'JSON' | 'PDF' | 'CSV';
+    report_format: "JSON" | "PDF" | "CSV";
     include_details?: boolean;
   }): Promise<{
-    data: { report_id: string; download_url?: string; report_data?: LicenseUsageReport };
+    data: {
+      report_id: string;
+      download_url?: string;
+      report_data?: LicenseUsageReport;
+    };
   }> {
-    return this.post('/api/licensing/reports/usage', params);
+    return this.post("/api/licensing/reports/usage", params);
   }
 
   async getLicenseUtilization(params?: {
     customer_id?: string;
     product_id?: string;
-    time_period?: 'DAY' | 'WEEK' | 'MONTH' | 'QUARTER';
+    time_period?: "DAY" | "WEEK" | "MONTH" | "QUARTER";
   }): Promise<{
     data: {
       total_licenses: number;
       utilized_licenses: number;
       utilization_percentage: number;
       peak_utilization: number;
-      underutilized_licenses: Array<{ license_id: string; utilization: number }>;
+      underutilized_licenses: Array<{
+        license_id: string;
+        utilization: number;
+      }>;
     };
   }> {
-    return this.get('/api/licensing/analytics/utilization', { params });
+    return this.get("/api/licensing/analytics/utilization", { params });
   }
 
   async getFeatureUsageAnalytics(params?: {
@@ -537,7 +560,7 @@ export class LicensingApiClient extends BaseApiClient {
       peak_concurrent_usage: number;
     }>;
   }> {
-    return this.get('/api/licensing/analytics/feature-usage', { params });
+    return this.get("/api/licensing/analytics/feature-usage", { params });
   }
 
   async getExpiryAlerts(daysAhead: number = 30): Promise<{
@@ -550,35 +573,49 @@ export class LicensingApiClient extends BaseApiClient {
       auto_renewal_enabled: boolean;
     }>;
   }> {
-    return this.get('/api/licensing/alerts/expiring', { params: { days_ahead: daysAhead } });
+    return this.get("/api/licensing/alerts/expiring", {
+      params: { days_ahead: daysAhead },
+    });
   }
 
   // License Validation & Security
-  async validateLicenseKey(
-    licenseKey: string
-  ): Promise<{ data: { valid: boolean; license?: SoftwareLicense; validation_details: any } }> {
-    return this.post('/api/licensing/validate', { license_key: licenseKey });
+  async validateLicenseKey(licenseKey: string): Promise<{
+    data: {
+      valid: boolean;
+      license?: SoftwareLicense;
+      validation_details: any;
+    };
+  }> {
+    return this.post("/api/licensing/validate", { license_key: licenseKey });
   }
 
   async checkLicenseIntegrity(
     licenseKey: string,
-    signature?: string
-  ): Promise<{ data: { integrity_check: boolean; tampering_detected: boolean } }> {
-    return this.post('/api/licensing/integrity-check', { license_key: licenseKey, signature });
+    signature?: string,
+  ): Promise<{
+    data: { integrity_check: boolean; tampering_detected: boolean };
+  }> {
+    return this.post("/api/licensing/integrity-check", {
+      license_key: licenseKey,
+      signature,
+    });
   }
 
   async generateEmergencyCode(
     licenseKey: string,
-    reason: string
+    reason: string,
   ): Promise<{ data: { emergency_code: string; valid_until: string } }> {
-    return this.post('/api/licensing/emergency-code', { license_key: licenseKey, reason });
+    return this.post("/api/licensing/emergency-code", {
+      license_key: licenseKey,
+      reason,
+    });
   }
 
   async blacklistDevice(
     deviceFingerprint: string,
-    reason: string
+    reason: string,
   ): Promise<{ data: { success: boolean } }> {
-    return this.post('/api/licensing/security/blacklist-device', {
+    return this.post("/api/licensing/security/blacklist-device", {
       device_fingerprint: deviceFingerprint,
       reason,
     });
@@ -587,10 +624,10 @@ export class LicensingApiClient extends BaseApiClient {
   async reportSuspiciousActivity(data: {
     license_key?: string;
     activation_token?: string;
-    activity_type: 'MULTIPLE_ACTIVATIONS' | 'UNUSUAL_LOCATION' | 'TAMPERING_ATTEMPT' | 'API_ABUSE';
+    activity_type: "MULTIPLE_ACTIVATIONS" | "UNUSUAL_LOCATION" | "TAMPERING_ATTEMPT" | "API_ABUSE";
     description: string;
     evidence?: Record<string, any>;
   }): Promise<{ data: { incident_id: string } }> {
-    return this.post('/api/licensing/security/report-activity', data);
+    return this.post("/api/licensing/security/report-activity", data);
   }
 }

@@ -3,10 +3,10 @@
  * Configures testing environment for headless hooks and utilities
  */
 
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";
 
 // Mock React Query for data fetching hooks
-jest.mock('@tanstack/react-query', () => ({
+jest.mock("@tanstack/react-query", () => ({
   QueryClient: jest.fn().mockImplementation(() => ({
     setDefaultOptions: jest.fn(),
     getQueryData: jest.fn(),
@@ -51,7 +51,7 @@ jest.mock('@tanstack/react-query', () => ({
 }));
 
 // Mock Zustand for state management
-jest.mock('zustand', () => ({
+jest.mock("zustand", () => ({
   create: jest.fn((fn) => fn),
   subscribeWithSelector: jest.fn((fn) => fn),
   persist: jest.fn((fn) => fn),
@@ -70,7 +70,7 @@ const localStorageMock = {
   length: 0,
   key: jest.fn(),
 };
-Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+Object.defineProperty(window, "localStorage", { value: localStorageMock });
 
 const sessionStorageMock = {
   getItem: jest.fn(),
@@ -80,7 +80,7 @@ const sessionStorageMock = {
   length: 0,
   key: jest.fn(),
 };
-Object.defineProperty(window, 'sessionStorage', { value: sessionStorageMock });
+Object.defineProperty(window, "sessionStorage", { value: sessionStorageMock });
 
 // Mock WebSocket for real-time features
 global.WebSocket = jest.fn().mockImplementation(() => ({
@@ -102,7 +102,7 @@ global.performance.mark = global.performance.mark || jest.fn();
 global.performance.measure = global.performance.measure || jest.fn();
 
 // Mock crypto for secure operations
-Object.defineProperty(window, 'crypto', {
+Object.defineProperty(window, "crypto", {
   value: {
     getRandomValues: jest.fn((arr) => {
       for (let i = 0; i < arr.length; i++) {
@@ -110,7 +110,7 @@ Object.defineProperty(window, 'crypto', {
       }
       return arr;
     }),
-    randomUUID: jest.fn(() => 'mock-uuid-' + Math.random().toString(36).substr(2, 9)),
+    randomUUID: jest.fn(() => "mock-uuid-" + Math.random().toString(36).substr(2, 9)),
     subtle: {
       digest: jest.fn(),
       encrypt: jest.fn(),
@@ -170,11 +170,11 @@ export const mockFetchResponse = (data: any, status = 200, ok = true) => {
   (global.fetch as jest.Mock).mockResolvedValueOnce({
     ok,
     status,
-    statusText: status === 200 ? 'OK' : 'Error',
+    statusText: status === 200 ? "OK" : "Error",
     json: jest.fn().mockResolvedValueOnce(data),
     text: jest.fn().mockResolvedValueOnce(JSON.stringify(data)),
     headers: new Headers({
-      'content-type': 'application/json',
+      "content-type": "application/json",
     }),
   });
 };
@@ -185,22 +185,22 @@ export const mockFetchError = (error: Error) => {
 
 // Mock user objects for auth testing
 export const createMockUser = (overrides = {}) => ({
-  id: 'user-123',
-  email: 'test@example.com',
-  name: 'Test User',
-  role: 'tenant_admin',
-  permissions: ['users:read', 'customers:read'],
-  tenantId: 'tenant-123',
-  createdAt: new Date('2023-01-01'),
-  updatedAt: new Date('2023-01-01'),
+  id: "user-123",
+  email: "test@example.com",
+  name: "Test User",
+  role: "tenant_admin",
+  permissions: ["users:read", "customers:read"],
+  tenantId: "tenant-123",
+  createdAt: new Date("2023-01-01"),
+  updatedAt: new Date("2023-01-01"),
   ...overrides,
 });
 
 export const createMockTokens = (overrides = {}) => ({
-  accessToken: 'mock-access-token',
-  refreshToken: 'mock-refresh-token',
+  accessToken: "mock-access-token",
+  refreshToken: "mock-refresh-token",
   expiresAt: Date.now() + 3600000, // 1 hour
-  tokenType: 'Bearer',
+  tokenType: "Bearer",
   ...overrides,
 });
 
@@ -223,42 +223,42 @@ export const createMockFeatureFlags = (overrides = {}) => ({
 export const createMockPortalConfig = (portal: string, overrides = {}) => ({
   portal,
   theme:
-    portal === 'admin'
-      ? 'professional'
-      : portal === 'customer'
-        ? 'friendly'
-        : portal === 'technician'
-          ? 'mobile'
-          : portal === 'reseller'
-            ? 'business'
-            : portal === 'management-admin'
-              ? 'enterprise'
-              : portal === 'management-reseller'
-                ? 'corporate'
-                : portal === 'tenant-portal'
-                  ? 'minimal'
-                  : 'default',
+    portal === "admin"
+      ? "professional"
+      : portal === "customer"
+        ? "friendly"
+        : portal === "technician"
+          ? "mobile"
+          : portal === "reseller"
+            ? "business"
+            : portal === "management-admin"
+              ? "enterprise"
+              : portal === "management-reseller"
+                ? "corporate"
+                : portal === "tenant-portal"
+                  ? "minimal"
+                  : "default",
   features: {
     notifications: true,
-    realtime: portal !== 'customer',
+    realtime: portal !== "customer",
     analytics:
-      portal === 'admin' || portal === 'management-admin' || portal === 'management-reseller',
-    offline: portal === 'technician',
-    websocket: portal !== 'customer' && portal !== 'tenant-portal',
-    tenantManagement: portal === 'management-admin' || portal === 'tenant-portal',
+      portal === "admin" || portal === "management-admin" || portal === "management-reseller",
+    offline: portal === "technician",
+    websocket: portal !== "customer" && portal !== "tenant-portal",
+    tenantManagement: portal === "management-admin" || portal === "tenant-portal",
     errorHandling: true,
-    pwa: portal === 'technician',
+    pwa: portal === "technician",
     toasts: true,
-    devtools: portal === 'management-admin' || portal === 'management-reseller',
+    devtools: portal === "management-admin" || portal === "management-reseller",
   },
   auth: {
     sessionTimeout: 30 * 60 * 1000,
-    enableMFA: portal !== 'customer' && portal !== 'tenant-portal',
-    enablePermissions: portal !== 'customer' && portal !== 'tenant-portal',
+    enableMFA: portal !== "customer" && portal !== "tenant-portal",
+    enablePermissions: portal !== "customer" && portal !== "tenant-portal",
     requirePasswordComplexity: true,
   },
   api: {
-    baseURL: `/api/${portal === 'admin' ? 'admin' : portal}`,
+    baseURL: `/api/${portal === "admin" ? "admin" : portal}`,
     timeout: 10000,
     retries: 3,
   },
@@ -278,7 +278,7 @@ export const createMockApiResponse = (data: any, meta = {}) => ({
   timestamp: new Date().toISOString(),
 });
 
-export const createMockApiError = (message: string, code = 'GENERIC_ERROR', status = 400) => ({
+export const createMockApiError = (message: string, code = "GENERIC_ERROR", status = 400) => ({
   error: {
     message,
     code,
@@ -291,26 +291,26 @@ export const createMockApiError = (message: string, code = 'GENERIC_ERROR', stat
 
 // Mock business workflow data
 export const createMockWorkflow = (overrides = {}) => ({
-  id: 'workflow-123',
-  name: 'Test Workflow',
-  type: 'customer_onboarding',
-  status: 'active',
+  id: "workflow-123",
+  name: "Test Workflow",
+  type: "customer_onboarding",
+  status: "active",
   steps: [
-    { id: 'step-1', name: 'Initial Setup', status: 'completed' },
-    { id: 'step-2', name: 'Configuration', status: 'in_progress' },
-    { id: 'step-3', name: 'Validation', status: 'pending' },
+    { id: "step-1", name: "Initial Setup", status: "completed" },
+    { id: "step-2", name: "Configuration", status: "in_progress" },
+    { id: "step-3", name: "Validation", status: "pending" },
   ],
-  createdAt: new Date('2023-01-01'),
-  updatedAt: new Date('2023-01-01'),
+  createdAt: new Date("2023-01-01"),
+  updatedAt: new Date("2023-01-01"),
   ...overrides,
 });
 
 // Mock notification data
 export const createMockNotification = (overrides = {}) => ({
-  id: 'notification-123',
-  type: 'info',
-  title: 'Test Notification',
-  message: 'This is a test notification',
+  id: "notification-123",
+  type: "info",
+  title: "Test Notification",
+  message: "This is a test notification",
   read: false,
   createdAt: new Date(),
   expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
@@ -330,10 +330,10 @@ export const createMockPerformanceMetric = (name: string, value: number) => ({
   name,
   value,
   timestamp: performance.now(),
-  type: 'custom',
+  type: "custom",
   tags: {
-    portal: 'admin',
-    component: 'test',
+    portal: "admin",
+    component: "test",
   },
 });
 
@@ -353,7 +353,7 @@ expect.extend({
   toHaveBeenCalledWithAuth(received: any) {
     const hasAuth = received.mock.calls.some((call: any[]) => {
       const options = call[1];
-      return options?.headers?.Authorization?.startsWith('Bearer ');
+      return options?.headers?.Authorization?.startsWith("Bearer ");
     });
 
     return {
@@ -368,8 +368,8 @@ expect.extend({
   toBeValidApiRequest(received: any) {
     const isValid =
       received &&
-      typeof received.method === 'string' &&
-      typeof received.url === 'string' &&
+      typeof received.method === "string" &&
+      typeof received.url === "string" &&
       received.headers instanceof Headers;
 
     return {
@@ -384,8 +384,8 @@ expect.extend({
   toHaveCorrectFeatureFlags(received: any) {
     const hasFlags =
       received &&
-      typeof received === 'object' &&
-      Object.values(received).every((flag) => typeof flag === 'boolean');
+      typeof received === "object" &&
+      Object.values(received).every((flag) => typeof flag === "boolean");
 
     return {
       message: () =>
@@ -408,8 +408,8 @@ expect.extend({
 });
 
 // Mock environment variables
-Object.defineProperty(process.env, 'NODE_ENV', {
-  value: 'test',
+Object.defineProperty(process.env, "NODE_ENV", {
+  value: "test",
   writable: true,
 });
 
@@ -430,7 +430,7 @@ global.IntersectionObserver = jest.fn().mockImplementation(() => ({
 }));
 
 // Mock matchMedia for responsive hooks
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: jest.fn().mockImplementation((query) => ({
     matches: false,
@@ -453,7 +453,7 @@ export const createMockHookContext = (overrides = {}) => ({
   user: createMockUser(),
   tokens: createMockTokens(),
   features: createMockFeatureFlags(),
-  portalConfig: createMockPortalConfig('admin'),
+  portalConfig: createMockPortalConfig("admin"),
   ...overrides,
 });
 
@@ -467,7 +467,7 @@ export const waitForAsyncUpdate = async (hookResult: any, timeout = 1000) => {
       if (!hookResult.current.isLoading) {
         resolve(hookResult.current);
       } else if (Date.now() - start > timeout) {
-        reject(new Error('Timeout waiting for async update'));
+        reject(new Error("Timeout waiting for async update"));
       } else {
         setTimeout(check, 10);
       }

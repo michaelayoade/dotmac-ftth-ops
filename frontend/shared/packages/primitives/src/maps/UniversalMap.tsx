@@ -3,10 +3,10 @@
  * Base map component supporting service coverage, network topology, and customer locations
  */
 
-'use client';
+"use client";
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useCallback, useMemo } from "react";
+import { motion } from "framer-motion";
 import {
   MapPin,
   Wifi,
@@ -18,15 +18,15 @@ import {
   ZoomOut,
   Maximize2,
   Filter,
-} from 'lucide-react';
-import { cn } from '../utils/cn';
+} from "lucide-react";
+import { cn } from "../utils/cn";
 
 // Map Types
 export type MapType =
-  | 'service_coverage'
-  | 'network_topology'
-  | 'customer_locations'
-  | 'technician_routes';
+  | "service_coverage"
+  | "network_topology"
+  | "customer_locations"
+  | "technician_routes";
 
 // Geographic Data Types
 export interface Coordinates {
@@ -45,8 +45,8 @@ export interface Bounds {
 export interface MapMarker {
   id: string;
   position: Coordinates;
-  type: 'customer' | 'tower' | 'fiber' | 'technician' | 'issue' | 'poi';
-  status?: 'active' | 'inactive' | 'maintenance' | 'error';
+  type: "customer" | "tower" | "fiber" | "technician" | "issue" | "poi";
+  status?: "active" | "inactive" | "maintenance" | "error";
   title: string;
   description?: string;
   metadata?: Record<string, any>;
@@ -57,9 +57,9 @@ export interface MapMarker {
 export interface ServiceArea {
   id: string;
   name: string;
-  type: 'fiber' | 'wireless' | 'hybrid';
+  type: "fiber" | "wireless" | "hybrid";
   polygon: Coordinates[];
-  serviceLevel: 'full' | 'limited' | 'planned';
+  serviceLevel: "full" | "limited" | "planned";
   maxSpeed: number; // Mbps
   coverage: number; // percentage
   customers?: number;
@@ -69,9 +69,9 @@ export interface ServiceArea {
 // Network Infrastructure
 export interface NetworkNode {
   id: string;
-  type: 'router' | 'switch' | 'server' | 'tower' | 'fiber_node';
+  type: "router" | "switch" | "server" | "tower" | "fiber_node";
   position: Coordinates;
-  status: 'online' | 'offline' | 'maintenance' | 'error';
+  status: "online" | "offline" | "maintenance" | "error";
   name: string;
   connections?: string[]; // IDs of connected nodes
   metrics?: {
@@ -86,10 +86,10 @@ export interface Route {
   id: string;
   name: string;
   waypoints: Coordinates[];
-  type: 'installation' | 'maintenance' | 'emergency';
+  type: "installation" | "maintenance" | "emergency";
   technician?: string;
   estimatedTime?: number; // minutes
-  status: 'planned' | 'in_progress' | 'completed';
+  status: "planned" | "in_progress" | "completed";
 }
 
 export interface UniversalMapProps {
@@ -106,7 +106,7 @@ export interface UniversalMapProps {
   routes?: Route[];
 
   // Display Options
-  variant?: 'admin' | 'customer' | 'reseller' | 'technician' | 'management';
+  variant?: "admin" | "customer" | "reseller" | "technician" | "management";
   showLegend?: boolean;
   showControls?: boolean;
   showHeatmap?: boolean;
@@ -121,9 +121,9 @@ export interface UniversalMapProps {
 
   // Filters
   filters?: {
-    markerTypes?: MapMarker['type'][];
-    serviceTypes?: ServiceArea['type'][];
-    nodeTypes?: NetworkNode['type'][];
+    markerTypes?: MapMarker["type"][];
+    serviceTypes?: ServiceArea["type"][];
+    nodeTypes?: NetworkNode["type"][];
     statusFilter?: string[];
   };
 
@@ -141,58 +141,58 @@ export interface UniversalMapProps {
 // Map variant styles
 const variantStyles = {
   admin: {
-    primary: '#3B82F6',
-    secondary: '#1E40AF',
-    accent: '#60A5FA',
-    success: '#10B981',
-    warning: '#F59E0B',
-    danger: '#EF4444',
+    primary: "#3B82F6",
+    secondary: "#1E40AF",
+    accent: "#60A5FA",
+    success: "#10B981",
+    warning: "#F59E0B",
+    danger: "#EF4444",
   },
   customer: {
-    primary: '#10B981',
-    secondary: '#047857',
-    accent: '#34D399',
-    success: '#22C55E',
-    warning: '#F59E0B',
-    danger: '#EF4444',
+    primary: "#10B981",
+    secondary: "#047857",
+    accent: "#34D399",
+    success: "#22C55E",
+    warning: "#F59E0B",
+    danger: "#EF4444",
   },
   reseller: {
-    primary: '#8B5CF6',
-    secondary: '#7C3AED',
-    accent: '#A78BFA',
-    success: '#10B981',
-    warning: '#F59E0B',
-    danger: '#EF4444',
+    primary: "#8B5CF6",
+    secondary: "#7C3AED",
+    accent: "#A78BFA",
+    success: "#10B981",
+    warning: "#F59E0B",
+    danger: "#EF4444",
   },
   technician: {
-    primary: '#EF4444',
-    secondary: '#DC2626',
-    accent: '#F87171',
-    success: '#10B981',
-    warning: '#F59E0B',
-    danger: '#B91C1C',
+    primary: "#EF4444",
+    secondary: "#DC2626",
+    accent: "#F87171",
+    success: "#10B981",
+    warning: "#F59E0B",
+    danger: "#B91C1C",
   },
   management: {
-    primary: '#F97316',
-    secondary: '#EA580C',
-    accent: '#FB923C',
-    success: '#10B981',
-    warning: '#F59E0B',
-    danger: '#EF4444',
+    primary: "#F97316",
+    secondary: "#EA580C",
+    accent: "#FB923C",
+    success: "#10B981",
+    warning: "#F59E0B",
+    danger: "#EF4444",
   },
 };
 
 // Status colors
 const statusColors = {
-  active: '#10B981',
-  online: '#10B981',
-  inactive: '#6B7280',
-  offline: '#6B7280',
-  maintenance: '#F59E0B',
-  error: '#EF4444',
-  planned: '#8B5CF6',
-  in_progress: '#3B82F6',
-  completed: '#10B981',
+  active: "#10B981",
+  online: "#10B981",
+  inactive: "#6B7280",
+  offline: "#6B7280",
+  maintenance: "#F59E0B",
+  error: "#EF4444",
+  planned: "#8B5CF6",
+  in_progress: "#3B82F6",
+  completed: "#10B981",
 };
 
 // Marker icons based on type
@@ -218,16 +218,16 @@ const MockMapCanvas = ({
   height,
 }: any) => {
   return (
-    <div className='relative bg-gray-100 rounded-lg overflow-hidden' style={{ height }}>
+    <div className="relative bg-gray-100 rounded-lg overflow-hidden" style={{ height }}>
       {/* Simulated map background */}
-      <div className='absolute inset-0 bg-gradient-to-br from-blue-50 to-green-50'>
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-green-50">
         {/* Grid pattern to simulate map */}
         <div
-          className='absolute inset-0 opacity-20'
+          className="absolute inset-0 opacity-20"
           style={{
             backgroundImage:
-              'linear-gradient(rgba(0,0,0,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.1) 1px, transparent 1px)',
-            backgroundSize: '20px 20px',
+              "linear-gradient(rgba(0,0,0,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.1) 1px, transparent 1px)",
+            backgroundSize: "20px 20px",
           }}
         />
       </div>
@@ -236,14 +236,14 @@ const MockMapCanvas = ({
       {serviceAreas?.map((area, index) => (
         <div
           key={area.id}
-          className='absolute opacity-30 hover:opacity-50 cursor-pointer transition-opacity'
+          className="absolute opacity-30 hover:opacity-50 cursor-pointer transition-opacity"
           style={{
             left: `${10 + index * 20}%`,
             top: `${20 + index * 15}%`,
-            width: '120px',
-            height: '80px',
+            width: "120px",
+            height: "80px",
             backgroundColor: area.color || colors.primary,
-            borderRadius: '40px',
+            borderRadius: "40px",
           }}
           onClick={() => onAreaClick?.(area)}
           title={`${area.name} - ${area.serviceLevel} service`}
@@ -252,21 +252,21 @@ const MockMapCanvas = ({
 
       {/* Network Nodes */}
       {networkNodes?.map((node, index) => {
-        const Icon = node.type === 'tower' ? Wifi : MapPin;
+        const Icon = node.type === "tower" ? Wifi : MapPin;
         return (
           <div
             key={node.id}
-            className='absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer'
+            className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer"
             style={{
               left: `${30 + index * 25}%`,
               top: `${30 + index * 20}%`,
             }}
           >
             <div
-              className='p-2 rounded-full shadow-lg'
+              className="p-2 rounded-full shadow-lg"
               style={{ backgroundColor: statusColors[node.status] }}
             >
-              <Icon className='w-4 h-4 text-white' />
+              <Icon className="w-4 h-4 text-white" />
             </div>
           </div>
         );
@@ -278,7 +278,7 @@ const MockMapCanvas = ({
         return (
           <div
             key={marker.id}
-            className='absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer hover:scale-110 transition-transform'
+            className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer hover:scale-110 transition-transform"
             style={{
               left: `${15 + index * 12}%`,
               top: `${40 + index * 8}%`,
@@ -287,10 +287,12 @@ const MockMapCanvas = ({
             title={marker.title}
           >
             <div
-              className='p-1 rounded-full shadow-md border-2 border-white'
-              style={{ backgroundColor: statusColors[marker.status || 'active'] }}
+              className="p-1 rounded-full shadow-md border-2 border-white"
+              style={{
+                backgroundColor: statusColors[marker.status || "active"],
+              }}
             >
-              <Icon className='w-3 h-3 text-white' />
+              <Icon className="w-3 h-3 text-white" />
             </div>
           </div>
         );
@@ -300,25 +302,25 @@ const MockMapCanvas = ({
       {routes?.map((route, index) => (
         <svg
           key={route.id}
-          className='absolute inset-0 pointer-events-none'
-          style={{ width: '100%', height: '100%' }}
+          className="absolute inset-0 pointer-events-none"
+          style={{ width: "100%", height: "100%" }}
         >
           <path
             d={`M ${20 + index * 30} ${50} L ${80 - index * 20} ${70 + index * 10}`}
             stroke={statusColors[route.status]}
-            strokeWidth='3'
-            strokeDashArray={route.type === 'planned' ? '5,5' : 'none'}
-            fill='none'
+            strokeWidth="3"
+            strokeDashArray={route.type === "planned" ? "5,5" : "none"}
+            fill="none"
           />
         </svg>
       ))}
 
       {/* Heatmap overlay */}
       {showHeatmap && (
-        <div className='absolute inset-0 pointer-events-none'>
-          <div className='absolute top-1/4 left-1/4 w-32 h-32 bg-red-500 opacity-20 rounded-full blur-xl' />
-          <div className='absolute top-1/2 right-1/4 w-24 h-24 bg-yellow-500 opacity-30 rounded-full blur-xl' />
-          <div className='absolute bottom-1/3 left-1/3 w-20 h-20 bg-green-500 opacity-25 rounded-full blur-xl' />
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-red-500 opacity-20 rounded-full blur-xl" />
+          <div className="absolute top-1/2 right-1/4 w-24 h-24 bg-yellow-500 opacity-30 rounded-full blur-xl" />
+          <div className="absolute bottom-1/3 left-1/3 w-20 h-20 bg-green-500 opacity-25 rounded-full blur-xl" />
         </div>
       )}
     </div>
@@ -334,7 +336,7 @@ export function UniversalMap({
   serviceAreas = [],
   networkNodes = [],
   routes = [],
-  variant = 'admin',
+  variant = "admin",
   showLegend = true,
   showControls = true,
   showHeatmap = false,
@@ -347,10 +349,10 @@ export function UniversalMap({
   filters,
   title,
   height = 400,
-  width = '100%',
+  width = "100%",
   loading = false,
   error = null,
-  className = '',
+  className = "",
 }: UniversalMapProps) {
   const [currentZoom, setCurrentZoom] = useState(zoom);
   const [showFilters, setShowFilters] = useState(false);
@@ -368,7 +370,7 @@ export function UniversalMap({
         !activeFilters.markerTypes?.length || activeFilters.markerTypes.includes(marker.type);
       const statusMatch =
         !activeFilters.statusFilter?.length ||
-        activeFilters.statusFilter.includes(marker.status || 'active');
+        activeFilters.statusFilter.includes(marker.status || "active");
       return typeMatch && statusMatch;
     });
   }, [markers, activeFilters]);
@@ -397,9 +399,9 @@ export function UniversalMap({
   // Loading State
   if (loading) {
     return (
-      <div className={cn('bg-white rounded-lg border border-gray-200 p-6', className)}>
-        {title && <div className='h-6 bg-gray-200 rounded w-48 mb-4 animate-pulse' />}
-        <div className='w-full bg-gray-200 rounded animate-pulse' style={{ height }} />
+      <div className={cn("bg-white rounded-lg border border-gray-200 p-6", className)}>
+        {title && <div className="h-6 bg-gray-200 rounded w-48 mb-4 animate-pulse" />}
+        <div className="w-full bg-gray-200 rounded animate-pulse" style={{ height }} />
       </div>
     );
   }
@@ -407,10 +409,10 @@ export function UniversalMap({
   // Error State
   if (error) {
     return (
-      <div className={cn('bg-white rounded-lg border border-gray-200 p-6', className)}>
-        <div className='text-center text-gray-500'>
-          <p className='text-sm'>Failed to load map</p>
-          <p className='text-xs text-gray-400 mt-1'>{error}</p>
+      <div className={cn("bg-white rounded-lg border border-gray-200 p-6", className)}>
+        <div className="text-center text-gray-500">
+          <p className="text-sm">Failed to load map</p>
+          <p className="text-xs text-gray-400 mt-1">{error}</p>
         </div>
       </div>
     );
@@ -418,7 +420,7 @@ export function UniversalMap({
 
   return (
     <motion.div
-      className={cn('bg-white rounded-lg border border-gray-200 overflow-hidden', className)}
+      className={cn("bg-white rounded-lg border border-gray-200 overflow-hidden", className)}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -426,30 +428,30 @@ export function UniversalMap({
     >
       {/* Header */}
       {(title || showControls) && (
-        <div className='flex items-center justify-between p-4 border-b border-gray-200'>
-          <div>{title && <h3 className='text-lg font-semibold text-gray-900'>{title}</h3>}</div>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <div>{title && <h3 className="text-lg font-semibold text-gray-900">{title}</h3>}</div>
 
           {showControls && (
-            <div className='flex items-center space-x-2'>
+            <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className='p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100'
-                title='Filters'
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                title="Filters"
               >
-                <Filter className='w-4 h-4' />
+                <Filter className="w-4 h-4" />
               </button>
-              <button className='p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100'>
-                <Layers className='w-4 h-4' />
+              <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                <Layers className="w-4 h-4" />
               </button>
-              <button className='p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100'>
-                <Maximize2 className='w-4 h-4' />
+              <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                <Maximize2 className="w-4 h-4" />
               </button>
             </div>
           )}
         </div>
       )}
 
-      <div className='relative'>
+      <div className="relative">
         {/* Map Canvas */}
         <MockMapCanvas
           markers={filteredMarkers}
@@ -465,41 +467,41 @@ export function UniversalMap({
 
         {/* Zoom Controls */}
         {showControls && (
-          <div className='absolute top-4 right-4 flex flex-col space-y-1'>
+          <div className="absolute top-4 right-4 flex flex-col space-y-1">
             <button
               onClick={handleZoomIn}
-              className='p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow'
+              className="p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
             >
-              <ZoomIn className='w-4 h-4 text-gray-600' />
+              <ZoomIn className="w-4 h-4 text-gray-600" />
             </button>
             <button
               onClick={handleZoomOut}
-              className='p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow'
+              className="p-2 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
             >
-              <ZoomOut className='w-4 h-4 text-gray-600' />
+              <ZoomOut className="w-4 h-4 text-gray-600" />
             </button>
           </div>
         )}
 
         {/* Legend */}
         {showLegend && (
-          <div className='absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs'>
-            <h4 className='font-medium text-gray-900 mb-2 text-sm'>Legend</h4>
-            <div className='space-y-1'>
+          <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 max-w-xs">
+            <h4 className="font-medium text-gray-900 mb-2 text-sm">Legend</h4>
+            <div className="space-y-1">
               {/* Marker types */}
               {Object.entries(markerIcons).map(([type, Icon]) => (
-                <div key={type} className='flex items-center space-x-2 text-xs'>
-                  <Icon className='w-3 h-3 text-gray-600' />
-                  <span className='capitalize text-gray-700'>{type.replace('_', ' ')}</span>
+                <div key={type} className="flex items-center space-x-2 text-xs">
+                  <Icon className="w-3 h-3 text-gray-600" />
+                  <span className="capitalize text-gray-700">{type.replace("_", " ")}</span>
                 </div>
               ))}
 
               {/* Status indicators */}
-              <div className='mt-2 pt-2 border-t border-gray-200'>
+              <div className="mt-2 pt-2 border-t border-gray-200">
                 {Object.entries(statusColors).map(([status, color]) => (
-                  <div key={status} className='flex items-center space-x-2 text-xs'>
-                    <div className='w-2 h-2 rounded-full' style={{ backgroundColor: color }} />
-                    <span className='capitalize text-gray-700'>{status.replace('_', ' ')}</span>
+                  <div key={status} className="flex items-center space-x-2 text-xs">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+                    <span className="capitalize text-gray-700">{status.replace("_", " ")}</span>
                   </div>
                 ))}
               </div>
@@ -509,18 +511,18 @@ export function UniversalMap({
 
         {/* Filters Panel */}
         {showFilters && (
-          <div className='absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 w-64'>
-            <h4 className='font-medium text-gray-900 mb-3'>Filters</h4>
+          <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 w-64">
+            <h4 className="font-medium text-gray-900 mb-3">Filters</h4>
 
             {/* Marker Type Filter */}
-            <div className='mb-3'>
-              <label className='text-sm font-medium text-gray-700'>Marker Types</label>
-              <div className='mt-1 space-y-1'>
+            <div className="mb-3">
+              <label className="text-sm font-medium text-gray-700">Marker Types</label>
+              <div className="mt-1 space-y-1">
                 {Object.keys(markerIcons).map((type) => (
-                  <label key={type} className='flex items-center text-sm'>
+                  <label key={type} className="flex items-center text-sm">
                     <input
-                      type='checkbox'
-                      className='mr-2'
+                      type="checkbox"
+                      className="mr-2"
                       checked={activeFilters.markerTypes?.includes(type as any)}
                       onChange={(e) => {
                         const types = activeFilters.markerTypes || [];
@@ -537,7 +539,7 @@ export function UniversalMap({
                         }
                       }}
                     />
-                    <span className='capitalize'>{type.replace('_', ' ')}</span>
+                    <span className="capitalize">{type.replace("_", " ")}</span>
                   </label>
                 ))}
               </div>
@@ -545,7 +547,7 @@ export function UniversalMap({
 
             <button
               onClick={() => setShowFilters(false)}
-              className='w-full mt-3 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg'
+              className="w-full mt-3 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
             >
               Close
             </button>
@@ -554,9 +556,9 @@ export function UniversalMap({
       </div>
 
       {/* Stats Footer */}
-      <div className='bg-gray-50 px-4 py-3 border-t border-gray-200'>
-        <div className='flex items-center justify-between text-sm text-gray-600'>
-          <div className='flex items-center space-x-4'>
+      <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="flex items-center space-x-4">
             <span>Markers: {filteredMarkers.length}</span>
             <span>Areas: {filteredAreas.length}</span>
             <span>Nodes: {filteredNodes.length}</span>

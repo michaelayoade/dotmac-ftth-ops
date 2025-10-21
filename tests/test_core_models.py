@@ -19,9 +19,16 @@ try:
 
     # These were removed - no longer needed
     DatabaseManager = None
-    check_database_health = lambda: {"status": "ok"}
-    get_db = lambda: None
-    get_db_session = lambda: None
+
+    def check_database_health():
+        return {"status": "ok"}
+
+    def get_db():
+        return None
+
+    def get_db_session():
+        return None
+
 except ImportError:
     # Mock implementations for testing
     class BaseModel:

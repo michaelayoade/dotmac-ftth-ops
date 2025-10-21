@@ -340,7 +340,7 @@ class TestAuditService:
         audit_service._session = async_db_session
 
         # Create activities for different tenants
-        activity1 = await audit_service.log_activity(
+        await audit_service.log_activity(
             activity_type=ActivityType.USER_LOGIN,
             action="login",
             description="Tenant 1 activity",
@@ -348,7 +348,7 @@ class TestAuditService:
             tenant_id="tenant1",
         )
 
-        activity2 = await audit_service.log_activity(
+        await audit_service.log_activity(
             activity_type=ActivityType.USER_LOGIN,
             action="login",
             description="Tenant 2 activity",

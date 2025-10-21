@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { X, Shield, Plus, Check } from 'lucide-react';
-import { toast } from '@/components/ui/toast';
-import { apiClient } from '@/lib/api/client';
+import { useState } from "react";
+import { X, Shield, Plus, Check } from "lucide-react";
+import { toast } from "@/components/ui/toast";
+import { apiClient } from "@/lib/api/client";
 
 interface Permission {
   id: string;
@@ -29,33 +29,41 @@ interface CreateRoleModalProps {
   onCreate: () => void;
 }
 
-export default function CreateRoleModal({ permissions, roles, onClose, onCreate }: CreateRoleModalProps) {
+export default function CreateRoleModal({
+  permissions,
+  roles,
+  onClose,
+  onCreate,
+}: CreateRoleModalProps) {
   const [formData, setFormData] = useState({
-    name: '',
-    display_name: '',
-    description: '',
+    name: "",
+    display_name: "",
+    description: "",
     priority: 10,
     is_active: true,
     is_default: false,
-    parent_role: '',
+    parent_role: "",
   });
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
   const [creating, setCreating] = useState(false);
 
   // Group permissions by category
-  const permissionsByCategory = permissions.reduce((acc, permission) => {
-    if (!acc[permission.category]) {
-      acc[permission.category] = [];
-    }
-    const category = acc[permission.category];
-    if (category) {
-      category.push(permission);
-    }
-    return acc;
-  }, {} as Record<string, Permission[]>);
+  const permissionsByCategory = permissions.reduce(
+    (acc, permission) => {
+      if (!acc[permission.category]) {
+        acc[permission.category] = [];
+      }
+      const category = acc[permission.category];
+      if (category) {
+        category.push(permission);
+      }
+      return acc;
+    },
+    {} as Record<string, Permission[]>,
+  );
 
   // Get non-system roles for parent selection
-  const availableParentRoles = roles.filter(role => !role.is_system);
+  const availableParentRoles = roles.filter((role) => !role.is_system);
 
   const handlePermissionToggle = (permissionName: string) => {
     const newSelected = new Set(selectedPermissions);
@@ -68,36 +76,36 @@ export default function CreateRoleModal({ permissions, roles, onClose, onCreate 
   };
 
   const handleCategoryToggle = (categoryPermissions: Permission[]) => {
-    const categoryPermissionNames = categoryPermissions.map(p => p.name);
-    const allSelected = categoryPermissionNames.every(name => selectedPermissions.has(name));
+    const categoryPermissionNames = categoryPermissions.map((p) => p.name);
+    const allSelected = categoryPermissionNames.every((name) => selectedPermissions.has(name));
 
     const newSelected = new Set(selectedPermissions);
     if (allSelected) {
       // Unselect all in category
-      categoryPermissionNames.forEach(name => newSelected.delete(name));
+      categoryPermissionNames.forEach((name) => newSelected.delete(name));
     } else {
       // Select all in category
-      categoryPermissionNames.forEach(name => newSelected.add(name));
+      categoryPermissionNames.forEach((name) => newSelected.add(name));
     }
     setSelectedPermissions(newSelected);
   };
 
   const handleCreate = async () => {
     if (!formData.name.trim() || !formData.display_name.trim()) {
-      toast.error('Name and display name are required');
+      toast.error("Name and display name are required");
       return;
     }
 
     // Validate name format (lowercase with underscores/dots)
     const namePattern = /^[a-z][a-z0-9_]*$/;
     if (!namePattern.test(formData.name)) {
-      toast.error('Role name must be lowercase letters, numbers, and underscores only');
+      toast.error("Role name must be lowercase letters, numbers, and underscores only");
       return;
     }
 
     // Check if name already exists
-    if (roles.some(role => role.name === formData.name)) {
-      toast.error('A role with this name already exists');
+    if (roles.some((role) => role.name === formData.name)) {
+      toast.error("A role with this name already exists");
       return;
     }
 
@@ -109,33 +117,35 @@ export default function CreateRoleModal({ permissions, roles, onClose, onCreate 
         parent_role: formData.parent_role || undefined,
       };
 
-      const response = await apiClient.post('/api/v1/rbac/roles', createData);
+      const response = await apiClient.post("/auth/rbac/roles", createData);
 
-      if (response.success) {
-        toast.success('Role created successfully');
+      if (response.status >= 200 && response.status < 300) {
+        toast.success("Role created successfully");
         onCreate();
       } else {
-        toast.error('Failed to create role');
+        toast.error("Failed to create role");
       }
     } catch (error) {
-      console.error('Error creating role:', error);
-      toast.error('Failed to create role');
+      console.error("Error creating role:", error);
+      toast.error("Failed to create role");
     } finally {
       setCreating(false);
     }
   };
 
   const getCategoryStatus = (categoryPermissions: Permission[]) => {
-    const categoryPermissionNames = categoryPermissions.map(p => p.name);
-    const selectedCount = categoryPermissionNames.filter(name => selectedPermissions.has(name)).length;
+    const categoryPermissionNames = categoryPermissions.map((p) => p.name);
+    const selectedCount = categoryPermissionNames.filter((name) =>
+      selectedPermissions.has(name),
+    ).length;
 
-    if (selectedCount === 0) return 'none';
-    if (selectedCount === categoryPermissionNames.length) return 'all';
-    return 'partial';
+    if (selectedCount === 0) return "none";
+    if (selectedCount === categoryPermissionNames.length) return "all";
+    return "partial";
   };
 
   const loadRoleTemplate = (templateRole: Role) => {
-    const role = roles.find(r => r.name === templateRole.name);
+    const role = roles.find((r) => r.name === templateRole.name);
     if (role) {
       // You'd need to fetch the role's permissions from the API
       // For now, just set basic info
@@ -175,13 +185,16 @@ export default function CreateRoleModal({ permissions, roles, onClose, onCreate 
             <h3 className="text-lg font-medium text-white mb-4">Role Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Role Name *
-                </label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Role Name *</label>
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""),
+                    })
+                  }
                   placeholder="e.g., content_manager"
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-sky-500"
                 />
@@ -204,20 +217,21 @@ export default function CreateRoleModal({ permissions, roles, onClose, onCreate 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Priority
-                </label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Priority</label>
                 <input
                   type="number"
                   value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      priority: parseInt(e.target.value) || 0,
+                    })
+                  }
                   min="1"
                   max="100"
                   className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-sky-500"
                 />
-                <p className="text-xs text-slate-400 mt-1">
-                  Higher numbers = higher priority
-                </p>
+                <p className="text-xs text-slate-400 mt-1">Higher numbers = higher priority</p>
               </div>
 
               <div>
@@ -239,9 +253,7 @@ export default function CreateRoleModal({ permissions, roles, onClose, onCreate 
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -310,19 +322,20 @@ export default function CreateRoleModal({ permissions, roles, onClose, onCreate 
                       <div className="flex items-center gap-2">
                         <input
                           type="checkbox"
-                          checked={status === 'all'}
+                          checked={status === "all"}
                           ref={(el) => {
-                            if (el) el.indeterminate = status === 'partial';
+                            if (el) el.indeterminate = status === "partial";
                           }}
                           onChange={() => handleCategoryToggle(categoryPermissions)}
                           className="rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500"
                         />
                         <h4 className="font-medium text-white capitalize">
-                          {category.replace('_', ' ')}
+                          {category.replace("_", " ")}
                         </h4>
                       </div>
                       <span className="text-xs text-slate-400">
-                        {categoryPermissions.filter(p => selectedPermissions.has(p.name)).length} / {categoryPermissions.length}
+                        {categoryPermissions.filter((p) => selectedPermissions.has(p.name)).length}{" "}
+                        / {categoryPermissions.length}
                       </span>
                     </div>
 
@@ -342,9 +355,7 @@ export default function CreateRoleModal({ permissions, roles, onClose, onCreate 
                             <p className="text-sm font-medium text-white">
                               {permission.display_name}
                             </p>
-                            <p className="text-xs text-slate-400 mt-1">
-                              {permission.description}
-                            </p>
+                            <p className="text-xs text-slate-400 mt-1">{permission.description}</p>
                             <p className="text-xs text-slate-500 mt-1 font-mono">
                               {permission.name}
                             </p>
@@ -373,7 +384,7 @@ export default function CreateRoleModal({ permissions, roles, onClose, onCreate 
             className="flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded hover:bg-sky-600 transition-colors disabled:opacity-50"
           >
             <Plus className="h-4 w-4" />
-            {creating ? 'Creating...' : 'Create Role'}
+            {creating ? "Creating..." : "Create Role"}
           </button>
         </div>
       </div>

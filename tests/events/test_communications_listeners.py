@@ -26,6 +26,7 @@ class TestCommunicationsEventListeners:
 
         # Clear event_listeners from module cache to force fresh registration
         import sys
+
         if "dotmac.platform.communications.event_listeners" in sys.modules:
             del sys.modules["dotmac.platform.communications.event_listeners"]
 
@@ -47,7 +48,9 @@ class TestCommunicationsEventListeners:
 
         mock_email_service = AsyncMock()
 
-        with patch("dotmac.platform.communications.email_service.EmailService") as mock_email_service_class:
+        with patch(
+            "dotmac.platform.communications.email_service.EmailService"
+        ) as mock_email_service_class:
             mock_email_service_class.return_value = mock_email_service
 
             # Import event_listeners module to register handlers with the new event bus
@@ -87,11 +90,12 @@ class TestCommunicationsEventListeners:
 
         mock_email_service = AsyncMock()
 
-        with patch("dotmac.platform.communications.email_service.EmailService") as mock_email_service_class:
+        with patch(
+            "dotmac.platform.communications.email_service.EmailService"
+        ) as mock_email_service_class:
             mock_email_service_class.return_value = mock_email_service
 
             import dotmac.platform.communications.event_listeners  # noqa: F401
-            
 
             await emit_invoice_paid(
                 invoice_id="INV-001",
@@ -123,11 +127,12 @@ class TestCommunicationsEventListeners:
 
         mock_email_service = AsyncMock()
 
-        with patch("dotmac.platform.communications.email_service.EmailService") as mock_email_service_class:
+        with patch(
+            "dotmac.platform.communications.email_service.EmailService"
+        ) as mock_email_service_class:
             mock_email_service_class.return_value = mock_email_service
 
             import dotmac.platform.communications.event_listeners  # noqa: F401
-            
 
             await emit_payment_failed(
                 payment_id="PAY-001",
@@ -160,11 +165,12 @@ class TestCommunicationsEventListeners:
 
         mock_email_service = AsyncMock()
 
-        with patch("dotmac.platform.communications.email_service.EmailService") as mock_email_service_class:
+        with patch(
+            "dotmac.platform.communications.email_service.EmailService"
+        ) as mock_email_service_class:
             mock_email_service_class.return_value = mock_email_service
 
             import dotmac.platform.communications.event_listeners  # noqa: F401
-            
 
             # Emit different events
             await emit_invoice_created(
@@ -201,11 +207,12 @@ class TestCommunicationsEventListeners:
         mock_email_service = AsyncMock()
         mock_email_service.send_email.side_effect = Exception("SMTP error")
 
-        with patch("dotmac.platform.communications.email_service.EmailService") as mock_email_service_class:
+        with patch(
+            "dotmac.platform.communications.email_service.EmailService"
+        ) as mock_email_service_class:
             mock_email_service_class.return_value = mock_email_service
 
             import dotmac.platform.communications.event_listeners  # noqa: F401
-
 
             # Emit event - handler will raise exception after logging
             # Event bus catches and logs the exception but doesn't re-raise
@@ -240,6 +247,7 @@ class TestEventListenerIntegration:
 
         # Clear event_listeners from module cache
         import sys
+
         if "dotmac.platform.communications.event_listeners" in sys.modules:
             del sys.modules["dotmac.platform.communications.event_listeners"]
 
@@ -258,11 +266,12 @@ class TestEventListenerIntegration:
 
         mock_email_service = AsyncMock()
 
-        with patch("dotmac.platform.communications.email_service.EmailService") as mock_email_service_class:
+        with patch(
+            "dotmac.platform.communications.email_service.EmailService"
+        ) as mock_email_service_class:
             mock_email_service_class.return_value = mock_email_service
 
             import dotmac.platform.communications.event_listeners  # noqa: F401
-            
 
             # 1. Invoice created
             await emit_invoice_created(

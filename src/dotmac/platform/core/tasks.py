@@ -11,7 +11,7 @@ Usage:
         return f"Processed {arg1} and {arg2}"
 
     @app.task
-    @idempotent_task(ttl=3600)
+    @idempotent_task(ttl=3600)  # type: ignore[misc]  # Custom decorator is untyped
     def unique_task(data):
         return process_data(data)
 
@@ -27,15 +27,19 @@ import hashlib
 import json
 from collections.abc import Callable
 from functools import wraps
-from typing import Any
+from typing import Any, ParamSpec, TypeVar, cast
 
 import structlog
 from celery import Celery
+from celery import shared_task as celery_shared_task
 
-from dotmac.platform.core.caching import redis_client
+from dotmac.platform.core.caching import get_redis, redis_client
 from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
+
+P = ParamSpec("P")
+R = TypeVar("R")
 
 # Create Celery app instance
 app = Celery(
@@ -77,7 +81,15 @@ app.conf.update(
 app.autodiscover_tasks(["dotmac.platform"])
 
 
-def idempotent_task(ttl: int = 3600) -> Callable:
+def shared_task(*args: Any, **kwargs: Any) -> Callable[..., Any]:
+    """Typed wrapper around Celery's ``shared_task`` decorator."""
+    if args and callable(args[0]) and len(args) == 1 and not kwargs:
+        func = cast(Callable[..., Any], args[0])
+        return cast(Callable[..., Any], celery_shared_task(func))
+    return cast(Callable[..., Any], celery_shared_task(*args, **kwargs))
+
+
+def idempotent_task(ttl: int = 3600) -> Callable[[Callable[P, R]], Callable[P, R | None]]:
     """Decorator to ensure task idempotency using Redis.
 
     Prevents duplicate task execution within the TTL window by using
@@ -88,7 +100,8 @@ def idempotent_task(ttl: int = 3600) -> Callable:
              Default is 3600 seconds (1 hour).
 
     Returns:
-        Decorated function that ensures single execution within TTL.
+        Decorated function that ensures single execution within TTL, returning the original
+        result or ``None`` when a duplicate invocation is detected.
 
     Example:
         @app.task
@@ -98,21 +111,23 @@ def idempotent_task(ttl: int = 3600) -> Callable:
             return send_email_to_user(user_id, subject)
     """
 
-    def decorator(func: Callable) -> Callable:
+    def decorator(func: Callable[P, R]) -> Callable[P, R | None]:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R | None:
             # Generate unique key based on function name and arguments
             key_data = f"{func.__name__}:{args}:{sorted(kwargs.items())}"
             task_key = f"task:idempotent:{hashlib.md5(key_data.encode(), usedforsecurity=False).hexdigest()}"  # nosec B324 - MD5 for task deduplication key
             result_key = f"{task_key}:result"
 
-            if not redis_client:
+            client = redis_client or get_redis()
+
+            if not client:
                 logger.warning("Redis not available, executing task without idempotency")
-                return func(*args, **kwargs)
+                return cast(R | None, func(*args, **kwargs))
 
             try:
                 # Try to acquire lock with TTL (atomic operation)
-                if redis_client.set(task_key, "processing", nx=True, ex=ttl):
+                if client.set(task_key, "processing", nx=True, ex=ttl):
                     logger.debug(f"Acquired idempotency lock for {func.__name__}")
                     try:
                         # Execute the task
@@ -120,12 +135,12 @@ def idempotent_task(ttl: int = 3600) -> Callable:
 
                         # Cache the result
                         if result is not None:
-                            redis_client.setex(result_key, ttl, json.dumps(result, default=str))
+                            client.setex(result_key, ttl, json.dumps(result, default=str))
 
                         return result
                     except Exception as e:
                         # Release lock on failure to allow retry
-                        redis_client.delete(task_key)
+                        client.delete(task_key)
                         logger.error(f"Task {func.__name__} failed, releasing lock: {e}")
                         raise
                 else:
@@ -135,14 +150,14 @@ def idempotent_task(ttl: int = 3600) -> Callable:
                     )
 
                     # Try to get cached result
-                    cached_bytes = redis_client.get(result_key)
+                    cached_bytes = client.get(result_key)
                     if cached_bytes is not None:
                         # Redis returns bytes, decode to string for JSON
                         if isinstance(cached_bytes, bytes):
                             cached_str = cached_bytes.decode("utf-8")
                         else:
                             cached_str = str(cached_bytes)
-                        return json.loads(cached_str)
+                        return cast(R | None, json.loads(cached_str))
 
                     # Still processing, return None
                     logger.info(f"Task {func.__name__} still processing")
@@ -151,7 +166,7 @@ def idempotent_task(ttl: int = 3600) -> Callable:
             except Exception as e:
                 logger.error(f"Idempotency check failed for {func.__name__}: {e}")
                 # Fall back to executing the task
-                return func(*args, **kwargs)
+                return cast(R | None, func(*args, **kwargs))
 
         return wrapper
 
@@ -224,6 +239,7 @@ except Exception:
 
 __all__ = [
     "app",
+    "shared_task",
     "idempotent_task",
     "get_celery_app",
     "init_celery_instrumentation",

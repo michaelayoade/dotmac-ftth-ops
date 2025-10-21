@@ -517,7 +517,7 @@ class TestErrorHandling:
 
     async def test_record_usage_invalid_tenant(self, usage_billing_integration):
         """Test usage recording with invalid tenant."""
-        from src.dotmac.platform.tenant.service import TenantNotFoundError
+        from dotmac.platform.tenant.service import TenantNotFoundError
 
         now = datetime.now(UTC)
         usage_data = TenantUsageCreate(
@@ -534,14 +534,14 @@ class TestErrorHandling:
 
     async def test_overage_calculation_invalid_tenant(self, usage_billing_integration):
         """Test overage calculation with invalid tenant."""
-        from src.dotmac.platform.tenant.service import TenantNotFoundError
+        from dotmac.platform.tenant.service import TenantNotFoundError
 
         with pytest.raises(TenantNotFoundError):
             await usage_billing_integration.calculate_overage_charges(tenant_id="nonexistent")
 
     async def test_billing_preview_invalid_tenant(self, usage_billing_integration):
         """Test billing preview with invalid tenant."""
-        from src.dotmac.platform.tenant.service import TenantNotFoundError
+        from dotmac.platform.tenant.service import TenantNotFoundError
 
         with pytest.raises(TenantNotFoundError):
             await usage_billing_integration.get_billing_preview(tenant_id="nonexistent")

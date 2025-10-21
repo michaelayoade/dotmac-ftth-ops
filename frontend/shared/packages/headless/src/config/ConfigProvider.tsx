@@ -3,15 +3,15 @@
  * Provides centralized configuration management across the application
  */
 
-'use client';
+"use client";
 
-import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
+import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 
 import {
   type ConfigContextType,
   defaultFrameworkConfig,
   type FrameworkConfig,
-} from './framework.config';
+} from "./framework.config";
 
 const ConfigContext = createContext<ConfigContextType | undefined>(undefined);
 
@@ -52,7 +52,7 @@ export function ConfigProvider({
 
   // Load configuration from localStorage
   useEffect(() => {
-    const savedConfig = localStorage.getItem('dotmac-framework-config');
+    const savedConfig = localStorage.getItem("dotmac-framework-config");
     if (savedConfig) {
       try {
         const parsedConfig = JSON.parse(savedConfig);
@@ -76,7 +76,7 @@ export function ConfigProvider({
 
       // Save to localStorage
       try {
-        localStorage.setItem('dotmac-framework-config', JSON.stringify(newConfig));
+        localStorage.setItem("dotmac-framework-config", JSON.stringify(newConfig));
       } catch (_error) {
         // Error handling intentionally empty
       }
@@ -87,7 +87,7 @@ export function ConfigProvider({
 
   const resetConfig = () => {
     setConfig(defaultFrameworkConfig);
-    localStorage.removeItem('dotmac-framework-config');
+    localStorage.removeItem("dotmac-framework-config");
   };
 
   const value: ConfigContextType = {
@@ -103,7 +103,7 @@ export function ConfigProvider({
 export function useConfig(): ConfigContextType {
   const context = useContext(ConfigContext);
   if (!context) {
-    throw new Error('useConfig must be used within a ConfigProvider');
+    throw new Error("useConfig must be used within a ConfigProvider");
   }
   return context;
 }

@@ -1,4 +1,4 @@
-import { Page, Locator } from '@playwright/test';
+import { Page, Locator } from "@playwright/test";
 
 export class LoginPage {
   readonly page: Page;
@@ -18,19 +18,31 @@ export class LoginPage {
     this.page = page;
     this.emailInput = page.locator('input[name="email"], input[type="email"]');
     this.passwordInput = page.locator('input[name="password"], input[type="password"]');
-    this.loginButton = page.locator('button[type="submit"], button:has-text("Sign in"), button:has-text("Login")');
-    this.rememberMeCheckbox = page.locator('input[name="remember"], input[type="checkbox"]:near(:text("Remember"))');
+    this.loginButton = page.locator(
+      'button[type="submit"], button:has-text("Sign in"), button:has-text("Login")',
+    );
+    this.rememberMeCheckbox = page.locator(
+      'input[name="remember"], input[type="checkbox"]:near(:text("Remember"))',
+    );
     this.forgotPasswordLink = page.locator('a:has-text("Forgot"), a:has-text("Reset password")');
-    this.signUpLink = page.locator('a:has-text("Sign up"), a:has-text("Create account"), a:has-text("Register")');
+    this.signUpLink = page.locator(
+      'a:has-text("Sign up"), a:has-text("Create account"), a:has-text("Register")',
+    );
     this.errorMessage = page.locator('.error-message, .alert-error, [role="alert"]');
-    this.emailError = page.locator('.email-error, input[name="email"] + .error, .field-error:near(input[name="email"])');
-    this.passwordError = page.locator('.password-error, input[name="password"] + .error, .field-error:near(input[name="password"])');
+    this.emailError = page.locator(
+      '.email-error, input[name="email"] + .error, .field-error:near(input[name="email"])',
+    );
+    this.passwordError = page.locator(
+      '.password-error, input[name="password"] + .error, .field-error:near(input[name="password"])',
+    );
     this.loadingSpinner = page.locator('.loading, .spinner, [data-testid="loading-spinner"]');
-    this.sessionExpiredMessage = page.locator('.session-expired, :text("Session expired"), :text("Please log in again")');
+    this.sessionExpiredMessage = page.locator(
+      '.session-expired, :text("Session expired"), :text("Please log in again")',
+    );
   }
 
   async goto(): Promise<void> {
-    await this.page.goto('/login');
+    await this.page.goto("/login");
   }
 
   async fillEmail(email: string): Promise<void> {
@@ -56,7 +68,7 @@ export class LoginPage {
   }
 
   async getErrorText(): Promise<string> {
-    return await this.errorMessage.textContent() || '';
+    return (await this.errorMessage.textContent()) || "";
   }
 
   async isLoading(): Promise<boolean> {
@@ -64,7 +76,7 @@ export class LoginPage {
   }
 
   async waitForError(): Promise<void> {
-    await this.errorMessage.waitFor({ state: 'visible' });
+    await this.errorMessage.waitFor({ state: "visible" });
   }
 
   async waitForRedirect(): Promise<void> {

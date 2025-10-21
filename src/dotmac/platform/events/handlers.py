@@ -16,7 +16,7 @@ logger = structlog.get_logger(__name__)
 # Billing Events
 
 
-@subscribe("billing.invoice.created")
+@subscribe("billing.invoice.created")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_invoice_created(event: Event) -> None:
     """
     Handle invoice created event.
@@ -43,7 +43,7 @@ async def handle_invoice_created(event: Event) -> None:
     # await webhook_service.trigger("invoice.created", event.payload)
 
 
-@subscribe("billing.payment.succeeded")
+@subscribe("billing.payment.succeeded")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_payment_succeeded(event: Event) -> None:
     """
     Handle successful payment event.
@@ -70,7 +70,7 @@ async def handle_payment_succeeded(event: Event) -> None:
     # await receipt_service.generate_receipt(payment_id)
 
 
-@subscribe("billing.payment.failed")
+@subscribe("billing.payment.failed")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_payment_failed(event: Event) -> None:
     """
     Handle failed payment event.
@@ -97,7 +97,7 @@ async def handle_payment_failed(event: Event) -> None:
     # await payment_service.schedule_retry(payment_id)
 
 
-@subscribe("billing.subscription.created")
+@subscribe("billing.subscription.created")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_subscription_created(event: Event) -> None:
     """
     Handle subscription created event.
@@ -118,7 +118,7 @@ async def handle_subscription_created(event: Event) -> None:
     )
 
 
-@subscribe("billing.subscription.cancelled")
+@subscribe("billing.subscription.cancelled")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_subscription_cancelled(event: Event) -> None:
     """
     Handle subscription cancellation event.
@@ -142,7 +142,7 @@ async def handle_subscription_cancelled(event: Event) -> None:
 # Customer Events
 
 
-@subscribe("customer.created")
+@subscribe("customer.created")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_customer_created(event: Event) -> None:
     """
     Handle customer created event.
@@ -167,7 +167,7 @@ async def handle_customer_created(event: Event) -> None:
     # await onboarding_service.start_onboarding(customer_id)
 
 
-@subscribe("customer.updated")
+@subscribe("customer.updated")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_customer_updated(event: Event) -> None:
     """
     Handle customer updated event.
@@ -189,7 +189,7 @@ async def handle_customer_updated(event: Event) -> None:
 # Auth Events
 
 
-@subscribe("auth.user.login")
+@subscribe("auth.user.login")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_user_login(event: Event) -> None:
     """
     Handle user login event.
@@ -214,7 +214,7 @@ async def handle_user_login(event: Event) -> None:
     # await analytics_service.track_login(user_id, ip_address)
 
 
-@subscribe("auth.user.logout")
+@subscribe("auth.user.logout")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_user_logout(event: Event) -> None:
     """
     Handle user logout event.
@@ -233,7 +233,7 @@ async def handle_user_logout(event: Event) -> None:
     )
 
 
-@subscribe("auth.password.reset")
+@subscribe("auth.password.reset")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_password_reset(event: Event) -> None:
     """
     Handle password reset event.
@@ -255,7 +255,7 @@ async def handle_password_reset(event: Event) -> None:
 # File Events
 
 
-@subscribe("file.uploaded")
+@subscribe("file.uploaded")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_file_uploaded(event: Event) -> None:
     """
     Handle file upload event.
@@ -276,7 +276,7 @@ async def handle_file_uploaded(event: Event) -> None:
     )
 
 
-@subscribe("file.deleted")
+@subscribe("file.deleted")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_file_deleted(event: Event) -> None:
     """
     Handle file deletion event.
@@ -296,7 +296,7 @@ async def handle_file_deleted(event: Event) -> None:
 # Webhook Events
 
 
-@subscribe("webhook.triggered")
+@subscribe("webhook.triggered")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_webhook_triggered(event: Event) -> None:
     """
     Handle webhook triggered event.
@@ -317,7 +317,7 @@ async def handle_webhook_triggered(event: Event) -> None:
     )
 
 
-@subscribe("webhook.failed")
+@subscribe("webhook.failed")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_webhook_failed(event: Event) -> None:
     """
     Handle webhook failure event.
@@ -341,7 +341,7 @@ async def handle_webhook_failed(event: Event) -> None:
 # System Events
 
 
-@subscribe("system.health.degraded")
+@subscribe("system.health.degraded")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_system_degraded(event: Event) -> None:
     """
     Handle system degradation event.
@@ -361,7 +361,7 @@ async def handle_system_degraded(event: Event) -> None:
     )
 
 
-@subscribe("system.error")
+@subscribe("system.error")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_system_error(event: Event) -> None:
     """
     Handle system error event.
@@ -384,7 +384,7 @@ async def handle_system_error(event: Event) -> None:
 # Audit Events
 
 
-@subscribe("audit.activity.recorded")
+@subscribe("audit.activity.recorded")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_audit_activity(event: Event) -> None:
     """
     Handle audit activity event.
@@ -410,7 +410,7 @@ async def handle_audit_activity(event: Event) -> None:
 # Data Export Events
 
 
-@subscribe("export.started")
+@subscribe("export.started")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_export_started(event: Event) -> None:
     """
     Handle export started event.
@@ -429,7 +429,7 @@ async def handle_export_started(event: Event) -> None:
     )
 
 
-@subscribe("export.completed")
+@subscribe("export.completed")  # type: ignore[misc]  # Custom decorator is untyped
 async def handle_export_completed(event: Event) -> None:
     """
     Handle export completed event.

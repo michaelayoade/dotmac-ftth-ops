@@ -1,0 +1,355 @@
+# ISP-Specific Infrastructure Services
+# Deploy with: docker compose -f docker-compose.isp.yml up -d
+
+services:
+  # FreeRADIUS - AAA Server
+  freeradius:
+    image: freeradius-postgresql:latest
+    container_name: isp-freeradius
+    environment:
+      - RADIUS_DB_TYPE=postgresql
+      - RADIUS_DB_HOST=postgres
+      - RADIUS_DB_PORT=5432
+      - RADIUS_DB_NAME=dotmac
+      - RADIUS_DB_USER=dotmac_user
+      - RADIUS_DB_PASSWORD=${POSTGRES_PASSWORD:-change-me-in-production}
+    ports:
+      - "1812:1812/udp"   # RADIUS Auth
+      - "1813:1813/udp"   # RADIUS Accounting
+      - "3799:3799/udp"   # CoA/DM (Change of Authorization / Disconnect Messages)
+      - "18120:18120"     # Status server
+    volumes:
+      - ./config/radius/clients.conf:/etc/raddb/clients.conf:ro
+      - ./config/radius/sql.conf:/etc/raddb/mods-available/sql:ro
+      - ./config/radius/sql.conf:/etc/raddb/mods-enabled/sql:ro
+      - ./config/radius/radiusd.conf:/etc/raddb/radiusd.conf:ro
+      - ./config/radius/default:/etc/raddb/sites-available/default:ro
+      - ./config/freeradius/coa-config.conf:/etc/raddb/sites-available/coa:ro
+      - radius_logs:/var/log/radius
+    networks:
+      - dotmac-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "radtest", "test", "test", "localhost", "0", "testing123"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # NetBox - Network Inventory (IPAM/DCIM)
+  netbox:
+    image: netboxcommunity/netbox:latest
+    container_name: isp-netbox
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=netbox
+      - DB_USER=dotmac_user
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change-me-in-production}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SECRET_KEY=${NETBOX_SECRET_KEY:-changeme_secret_key_50chars_long_minimum}
+      - SUPERUSER_NAME=${NETBOX_ADMIN_USER:-admin}
+      - SUPERUSER_EMAIL=${NETBOX_ADMIN_EMAIL:-admin@example.com}
+      - SUPERUSER_PASSWORD=${NETBOX_ADMIN_PASSWORD:-admin}
+      - ALLOWED_HOSTS=*
+      - SKIP_SUPERUSER=${NETBOX_SKIP_SUPERUSER:-false}
+    ports:
+      - "8080:8080"
+    volumes:
+      - netbox_media:/opt/netbox/netbox/media
+      - netbox_reports:/opt/netbox/netbox/reports
+      - netbox_scripts:/opt/netbox/netbox/scripts
+    networks:
+      - dotmac-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/status/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # NetBox Worker (for background tasks)
+  netbox-worker:
+    image: netboxcommunity/netbox:latest
+    container_name: isp-netbox-worker
+    entrypoint: /opt/netbox/venv/bin/python /opt/netbox/netbox/manage.py rqworker
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=netbox
+      - DB_USER=dotmac_user
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change-me-in-production}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SECRET_KEY=${NETBOX_SECRET_KEY:-changeme_secret_key_50chars_long_minimum}
+    networks:
+      - dotmac-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # MongoDB - for GenieACS
+  mongodb:
+    image: mongo:6
+    container_name: isp-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-changeme_mongo_password}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - dotmac-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # GenieACS - TR-069 ACS Server
+  genieacs:
+    image: drumsergio/genieacs:latest
+    container_name: isp-genieacs
+    environment:
+      - GENIEACS_CWMP_ACCESS_LOG_FILE=/var/log/genieacs/cwmp-access.log
+      - GENIEACS_NBI_ACCESS_LOG_FILE=/var/log/genieacs/nbi-access.log
+      - GENIEACS_FS_ACCESS_LOG_FILE=/var/log/genieacs/fs-access.log
+      - GENIEACS_UI_ACCESS_LOG_FILE=/var/log/genieacs/ui-access.log
+      - GENIEACS_DEBUG_FILE=/var/log/genieacs/debug.yaml
+      - GENIEACS_MONGODB_CONNECTION_URL=mongodb://${MONGO_USER:-admin}:${MONGO_PASSWORD:-changeme_mongo_password}@mongodb:27017/genieacs?authSource=admin
+    ports:
+      - "7547:7547"   # TR-069 CWMP
+      - "7557:7557"   # NBI (REST API)
+      - "7567:7567"   # Web UI
+      - "7577:7577"   # File Server
+    volumes:
+      - genieacs_logs:/var/log/genieacs
+      - genieacs_config:/opt/genieacs/config
+    networks:
+      - dotmac-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7557/devices"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # WireGuard VPN Gateway
+  wireguard:
+    image: linuxserver/wireguard:latest
+    container_name: isp-wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - SERVERURL=${WG_SERVER_URL:-auto}
+      - SERVERPORT=51820
+      - PEERS=${WG_PEERS:-10}
+      - PEERDNS=auto
+      - INTERNAL_SUBNET=10.200.0.0/16
+      - ALLOWEDIPS=0.0.0.0/0
+      - LOG_CONFS=true
+    ports:
+      - "51820:51820/udp"
+    volumes:
+      - wireguard_config:/config
+      - /lib/modules:/lib/modules:ro
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.ip_forward=1
+    networks:
+      - dotmac-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # LibreNMS - Network Monitoring
+  librenms:
+    image: librenms/librenms:latest
+    container_name: isp-librenms
+    hostname: librenms
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - TZ=UTC
+      - PUID=1000
+      - PGID=1000
+      - DB_HOST=postgres
+      - DB_NAME=librenms
+      - DB_USER=dotmac_user
+      - DB_PASSWORD=${POSTGRES_PASSWORD:-change-me-in-production}
+      - DB_TIMEOUT=60
+      - LIBRENMS_SNMP_COMMUNITY=${LIBRENMS_SNMP_COMMUNITY:-public}
+      - LIBRENMS_WEATHERMAP=false
+      - LIBRENMS_WEATHERMAP_SCHEDULE=*/5 * * * *
+    ports:
+      - "8000:8000"
+    volumes:
+      - librenms_data:/data
+    networks:
+      - dotmac-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # Ansible AWX Web (using AWX-EE image)
+  awx-web:
+    image: quay.io/ansible/awx-ee:latest
+    container_name: isp-awx-web
+    hostname: awxweb
+    user: root
+    environment:
+      - DATABASE_HOST=postgres
+      - DATABASE_NAME=awx
+      - DATABASE_USER=dotmac_user
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-change-me-in-production}
+      - DATABASE_PORT=5432
+      - AWX_ADMIN_USER=${AWX_ADMIN_USER:-admin}
+      - AWX_ADMIN_PASSWORD=${AWX_ADMIN_PASSWORD:-changeme_awx_admin}
+      - SECRET_KEY=${AWX_SECRET_KEY:-changeme_awx_secret_key_here}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "8052:8052"
+    volumes:
+      - awx_projects:/var/lib/awx/projects
+      - awx_rsyslog:/var/lib/awx/rsyslog
+    networks:
+      - dotmac-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # AWX Task Manager
+  awx-task:
+    image: quay.io/ansible/awx-ee:latest
+    container_name: isp-awx-task
+    hostname: awx
+    user: root
+    command: /usr/bin/launch_awx_task.sh
+    environment:
+      - DATABASE_HOST=postgres
+      - DATABASE_NAME=awx
+      - DATABASE_USER=dotmac_user
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-change-me-in-production}
+      - AWX_ADMIN_USER=${AWX_ADMIN_USER:-admin}
+      - AWX_ADMIN_PASSWORD=${AWX_ADMIN_PASSWORD:-changeme_awx_admin}
+      - SECRET_KEY=${AWX_SECRET_KEY:-changeme_awx_secret_key_here}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - awx_projects:/var/lib/awx/projects
+      - awx_rsyslog:/var/lib/awx/rsyslog
+    networks:
+      - dotmac-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # TimescaleDB - Time-Series Metrics Database
+  timescaledb:
+    image: timescale/timescaledb:latest-pg14
+    container_name: isp-timescaledb
+    environment:
+      POSTGRES_USER: timescale_user
+      POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD:-changeme_timescale_password}
+      POSTGRES_DB: metrics
+    ports:
+      - "5433:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+    networks:
+      - dotmac-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U timescale_user -d metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  radius_logs:
+    driver: local
+  netbox_media:
+    driver: local
+  netbox_reports:
+    driver: local
+  netbox_scripts:
+    driver: local
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  genieacs_logs:
+    driver: local
+  genieacs_config:
+    driver: local
+  wireguard_config:
+    driver: local
+  librenms_data:
+    driver: local
+  awx_projects:
+    driver: local
+  awx_rsyslog:
+    driver: local
+  timescale_data:
+    driver: local
+
+networks:
+  dotmac-network:
+    external: true

@@ -1,224 +1,69 @@
 # Documentation Index
 
-**Last Updated**: October 5, 2025
+**Last Updated:** October 19, 2025
 
-## 📚 Quick Navigation
-
-### Essential Documentation (Root)
-- **[README.md](../README.md)** - Project overview and getting started
-- **[CONTRIBUTING.md](../CONTRIBUTING.md)** - Contribution guidelines
-- **[CLAUDE.md](../CLAUDE.md)** - Claude AI development guidelines
+This repository now ships a lean documentation set. Everything you are likely to reference lives in one of the sections below.
 
 ---
 
-## 📂 Documentation Structure
+## Core References
 
-### 1. [Sessions](./sessions/) - Development History (90 files)
-Development session summaries, progress reports, and completion records from parallel development work.
-
-**Key Sessions**:
-- `DEV1_*` - Core platform & API development
-- `DEV2_COVERAGE_SESSION_SUMMARY.md` - User Management & Webhooks coverage
-- `DEV3_*` - Analytics & Monitoring
-- `DEV4_*` - Plugins & Integrations
-- `PHASE*` - Multi-phase implementation summaries
-- `WEEK*` - Weekly progress reports
-
-### 2. [Coverage Reports](./coverage-reports/) - Test Coverage (52 files)
-Historical test coverage improvements and module-specific coverage reports.
-
-**Categories**:
-- **Module Coverage**: `BILLING_*`, `AUTH_*`, `CUSTOMER_*`, `COMMUNICATIONS_*`
-- **Overall Status**: `OVERALL_TESTING_STATUS.md`
-- **Strategies**: Pattern application reports and fake implementation guides
-
-**Key Reports**:
-- `FAKE_PATTERN_COMPLETE_SUMMARY.md` - Fake implementation pattern results
-- Module-specific coverage improvements (90%+ achieved)
-
-### 3. [Architecture](./architecture/) - System Design (14 files)
-System architecture, design patterns, and implementation guides.
-
-**Topics**:
-- **Domain-Driven Design**: `DDD_*` files
-- **CQRS**: `CQRS_*` implementation patterns
-- **Event-Driven**: `DOMAIN_EVENTS_*` architecture
-- **API Design**: `API_GATEWAY_*` patterns
-- **Metrics**: `COMPLETE_METRICS_IMPLEMENTATION.md`
-- **Frontend**: `FRONTEND_SITEMAP.md`
-
-### 4. [Guides](./guides/) - Developer Resources (9 files)
-Setup guides, testing strategies, and development workflows.
-
-**Available Guides**:
-- `DEV_SETUP_GUIDE.md` - Development environment setup
-- `DEPLOYMENT*.md` - Deployment procedures
-- `QUICK_REFERENCE_TEST_HELPERS.md` - Testing utilities
-- `QUICK_START_NEW_TESTS.md` - Test writing quickstart
-- `REFACTORED_TESTS_README.md` - Test refactoring guide
-- `SHARED_TEST_HELPERS_IMPLEMENTATION.md` - Shared test infrastructure
-- `GRAPHQL_TESTS_REFINED.md` - GraphQL testing guide
-- `MAKEFILE_ENHANCEMENT.md` - Build system improvements
-
-### 5. [Archived](./archived/) - Historical Documents (60 files)
-Outdated or superseded documentation kept for historical reference.
-
-**Categories**:
-- Analysis reports (`*_ANALYSIS*.md`)
-- Failure investigations (`*_FAILURE*.md`, `BUG_*`)
-- Implementation records (`IMPLEMENTATION_*`, `MIGRATION_*`)
-- Assessment documents (`*_ASSESSMENT*.md`)
-- Various module-specific archived docs
+- [README.md](../README.md) — project overview and high-level architecture.
+- [README_ISP_PLATFORM.md](README_ISP_PLATFORM.md) — ISP-specific workflows and terminology.
+- [quick_start.md](quick_start.md) — fastest path to running the stack locally.
+- [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) — configuration knobs with defaults.
+- [DEVELOPMENT_DATABASE.md](DEVELOPMENT_DATABASE.md) — local database setup, migrations, and troubleshooting.
+- [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) — canonical entity model and relationships.
 
 ---
 
-## 🔍 Finding Documentation
+## Feature Guides & Runbooks
 
-### By Topic
-
-**Authentication & Authorization**:
-- Coverage: `coverage-reports/AUTH_*`
-- Architecture: `architecture/DOMAIN_EVENTS_*` (auth events)
-
-**Billing & Payments**:
-- Coverage: `coverage-reports/BILLING_*`
-- Architecture: `architecture/BILLING_DOMAIN_*`, `architecture/BILLING_CQRS_*`
-
-**Testing & Coverage**:
-- Guides: `guides/QUICK_START_NEW_TESTS.md`
-- Reports: `coverage-reports/OVERALL_TESTING_STATUS.md`
-- Patterns: `coverage-reports/FAKE_*`
-
-**Deployment & Operations**:
-- Guides: `guides/DEPLOYMENT*.md`
-- Setup: `guides/DEV_SETUP_GUIDE.md`
-
-**Frontend**:
-- Architecture: `architecture/FRONTEND_SITEMAP.md`
-- Sessions: Various frontend-related session summaries
-
-### By Development Phase
-
-**Phase 1** - Core Platform: `sessions/PHASE1_*`
-**Phase 2** - Authentication & Security: `sessions/PHASE2_*`
-**Phase 3** - Advanced Features: `sessions/PHASE3_*`
-**Phase 4** - Polish & Optimization: `sessions/PHASE4_*`
-
-### By Week
-
-**Week 1**: `sessions/WEEK1_*`
-**Week 2**: `sessions/WEEK2_*`
-**Week 3**: `sessions/WEEK3_*`
-**Week 4**: `sessions/WEEK4_*`
+- [NETWORK_DIAGNOSTICS_IMPLEMENTATION.md](NETWORK_DIAGNOSTICS_IMPLEMENTATION.md) — RADIUS session control, ping, and traceroute tooling.
+- [DYNAMIC_ALERTING_SETUP.md](DYNAMIC_ALERTING_SETUP.md) — alert routing, Prometheus/Alertmanager configuration, and CLI helpers.
+- [FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md](FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md) — data model, migrations, and APIs for fiber plant management.
+- [SUBSCRIBER_BULK_OPERATIONS_IMPLEMENTATION.md](SUBSCRIBER_BULK_OPERATIONS_IMPLEMENTATION.md) — bulk suspend/activate/delete flows in the subscriber UI.
+- [FRONTEND_BACKEND_ALIGNMENT_FIX.md](FRONTEND_BACKEND_ALIGNMENT_FIX.md) — current API contract for RADIUS disconnect actions.
+- [WEBSOCKET_JOB_CAMPAIGN_CONTROLS.md](WEBSOCKET_JOB_CAMPAIGN_CONTROLS.md) — controlling long-running jobs over WebSockets.
+- [WIREGUARD_FRONTEND_IMPLEMENTATION.md](WIREGUARD_FRONTEND_IMPLEMENTATION.md) & [WIREGUARD_VPN_IMPLEMENTATION_BLUEPRINT.md](WIREGUARD_VPN_IMPLEMENTATION_BLUEPRINT.md) — provisioning and UI notes for WireGuard.
+- [TENANT_ONBOARDING_IMPLEMENTATION.md](TENANT_ONBOARDING_IMPLEMENTATION.md) — tenant enrollment, RBAC, and setup flows.
+- [VAULT_SECRETS_MIGRATION.md](VAULT_SECRETS_MIGRATION.md) — secret management rollout plan.
+- [ALARM_ARCHIVAL.md](ALARM_ARCHIVAL.md) & [ALARM_NOTIFICATION_TESTS.md](ALARM_NOTIFICATION_TESTS.md) — alarm retention and alert-testing guidance.
 
 ---
 
-## 📊 Coverage Achievement Summary
+## API & Integration Resources
 
-### Current Status (October 2025)
-- **Overall Coverage**: 90%+ achieved
-- **Critical Modules**: All at 90%+
-- **CI/CD Threshold**: Increased from 80% to 90%
-- **Diff Coverage**: 95% for PR changes
-
-### Key Achievements
-1. ✅ User Management: 88.27% → 94.14%
-2. ✅ Webhooks Delivery: 86.18% → 100%
-3. ✅ File Storage: 30.49% → 90.24%
-4. ✅ Analytics: Multiple modules to 90%+
-5. ✅ Billing: Comprehensive coverage across all submodules
-
-See `coverage-reports/` for detailed module-specific reports.
+- [API_DOCUMENTATION.md](API_DOCUMENTATION.md) — REST surface area summary.
+- [API_SPECIFICATIONS.md](API_SPECIFICATIONS.md) — protocol-level expectations by service.
+- [API_EXAMPLES.md](API_EXAMPLES.md) — request/response samples for common flows.
+- [EMAIL_TEMPLATES_SETUP.md](EMAIL_TEMPLATES_SETUP.md) — transactional email configuration.
+- [CODE_IMPROVEMENTS_2025_01_15.md](CODE_IMPROVEMENTS_2025_01_15.md) — code-quality improvements and follow-up checklist.
 
 ---
 
-## 🛠️ Development Workflow
+## Operations & Troubleshooting
 
-### For New Contributors
-1. Read `../README.md` - Project overview
-2. Read `../CONTRIBUTING.md` - Contribution guidelines
-3. Follow `guides/DEV_SETUP_GUIDE.md` - Environment setup
-4. Reference `guides/QUICK_START_NEW_TESTS.md` - Write tests
-
-### For Test Development
-1. Check `coverage-reports/OVERALL_TESTING_STATUS.md` - Current status
-2. Use `guides/QUICK_REFERENCE_TEST_HELPERS.md` - Test utilities
-3. Apply `coverage-reports/FAKE_PATTERN_*` - Testing patterns
-4. Follow `guides/SHARED_TEST_HELPERS_IMPLEMENTATION.md` - Shared infrastructure
-
-### For Architecture Understanding
-1. Review `architecture/COMPLETE_METRICS_IMPLEMENTATION.md` - Metrics system
-2. Study `architecture/DOMAIN_EVENTS_*` - Event-driven patterns
-3. Explore `architecture/CQRS_*` - CQRS implementation
-4. Check `architecture/FRONTEND_SITEMAP.md` - Frontend structure
+- [EXCEPTION_HANDLING_GUIDE.md](EXCEPTION_HANDLING_GUIDE.md) — structured logging patterns and FastAPI error handling.
+- [TROUBLESHOOTING_PLAYBOOKS.md](TROUBLESHOOTING_PLAYBOOKS.md) — production incident runbooks.
+- SQL migration files:  
+  - [DEPLOYMENT_MIGRATION.sql](DEPLOYMENT_MIGRATION.sql)  
+  - [SALES_MIGRATION.sql](SALES_MIGRATION.sql)
 
 ---
 
-## 🔄 Recent Updates (Last 7 Days)
+## Architecture Documentation
 
-### October 5, 2025
-- ✅ Organized 225+ documentation files into structured directories
-- ✅ Increased CI/CD coverage threshold from 80% to 90%
-- ✅ Enhanced .gitignore to exclude session summaries and temp files
-- ✅ Created comprehensive documentation index
-- ✅ Cleaned up root directory (3 essential files only)
-
-### Coverage Milestones
-- Dev 2 completed: User Management & Webhooks to 90%+
-- All 7 assigned modules achieved 90%+ coverage
-- 23 new tests created with 100% pass rate
+- [PORTAL_ARCHITECTURE.md](architecture/PORTAL_ARCHITECTURE.md) — comprehensive portal architecture with 6 portals, authentication flows, user journeys, and deployment modes.
+- [FRONTEND_SITEMAP.md](architecture/FRONTEND_SITEMAP.md) — complete route hierarchy and navigation structure for all portals.
 
 ---
 
-## 📝 Documentation Guidelines
+## Directories of Note
 
-### Creating New Documentation
-
-**Session Summaries** → `sessions/`
-- Format: `DEV{N}_SESSION_NAME.md` or `PHASE{N}_*.md`
-- Include: Date, objectives, achievements, metrics
-
-**Coverage Reports** → `coverage-reports/`
-- Format: `{MODULE}_COVERAGE_*.md`
-- Include: Baseline, final coverage, improvements, test details
-
-**Architecture Docs** → `architecture/`
-- Format: `{PATTERN}_{DESCRIPTION}.md`
-- Include: Diagrams, code examples, implementation guides
-
-**Developer Guides** → `guides/`
-- Format: `{TOPIC}_GUIDE.md` or `QUICK_*.md`
-- Include: Step-by-step instructions, examples, troubleshooting
-
-### Archiving Old Documentation
-- Move superseded docs to `archived/`
-- Keep original filenames for traceability
-- Update this index when archiving
-
----
-
-## 🔗 External Resources
-
-### CI/CD
-- **GitHub Actions**: `.github/workflows/ci.yml`
-- **Coverage Threshold**: 90% (COV_FAIL_UNDER)
-- **Diff Coverage**: 95% (DIFF_COV_FAIL_UNDER)
-
-### Code Quality
-- **Makefile**: Root `Makefile` - `make format`, `make lint`, `make test`
-- **Pyright Config**: `pyrightconfig.json`
-- **Package Config**: `package.json` (frontend tools)
-
----
-
-## 📞 Support
-
-For questions or clarifications about documentation:
-1. Check this index for relevant documents
-2. Review `CONTRIBUTING.md` for contribution process
-3. See `guides/` for development workflows
-4. Refer to `architecture/` for design decisions
-
----
-
-*This index is automatically updated when documentation is reorganized. Last major reorganization: October 5, 2025*
+- `architecture/` — system diagrams, domain models, DDD notes, and portal architecture.
+- `api/` — per-service API references.
+- `guides/` — developer setup, testing, and deployment guides.
+- `plugins/` — plugin contract documentation.
+- `sessions/` — detailed historical dev session logs (still available for audit).
+- `webhooks/` — webhook payloads, retry logic, and onboarding.

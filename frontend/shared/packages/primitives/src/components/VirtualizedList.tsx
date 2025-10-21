@@ -3,18 +3,18 @@
  * Optimized for large datasets with accessibility and performance focus
  */
 
-'use client';
+"use client";
 
-import { useState, useCallback, useMemo, useRef, useEffect, memo } from 'react';
-import { useVirtualizedList, useRenderProfiler } from '../utils/performance';
+import { useState, useCallback, useMemo, useRef, useEffect, memo } from "react";
+import { useVirtualizedList, useRenderProfiler } from "../utils/performance";
 import {
   useKeyboardNavigation,
   announceToScreenReader,
   generateId,
   ARIA_ROLES,
-} from '../utils/a11y';
-import { validateClassName } from '../utils/security';
-import { ErrorBoundary } from './ErrorBoundary';
+} from "../utils/a11y";
+import { validateClassName } from "../utils/security";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 // Types for virtualized list
 export interface VirtualizedListProps<T> {
@@ -29,8 +29,8 @@ export interface VirtualizedListProps<T> {
   onItemsRendered?: (visibleRange: { start: number; end: number }) => void;
   onScroll?: (scrollOffset: number) => void;
   // Accessibility props
-  'aria-label'?: string;
-  'aria-labelledby'?: string;
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
   role?: string;
   // Performance props
   throttleMs?: number;
@@ -61,21 +61,21 @@ export const VirtualizedList = memo(
     items,
     itemHeight,
     height,
-    width = '100%',
+    width = "100%",
     className,
     overscan = 5,
     renderItem,
     getItemKey,
     onItemsRendered,
     onScroll,
-    'aria-label': ariaLabel,
-    'aria-labelledby': ariaLabelledby,
-    role = 'list',
+    "aria-label": ariaLabel,
+    "aria-labelledby": ariaLabelledby,
+    role = "list",
     throttleMs = 16,
     enableKeyboardNavigation = true,
   }: VirtualizedListProps<T>) => {
     // Performance monitoring
-    const { renderCount } = useRenderProfiler('VirtualizedList', {
+    const { renderCount } = useRenderProfiler("VirtualizedList", {
       itemCount: items.length,
       height,
     });
@@ -85,14 +85,14 @@ export const VirtualizedList = memo(
     const [isScrolling, setIsScrolling] = useState(false);
     const scrollTimeoutRef = useRef<NodeJS.Timeout>();
     const containerRef = useRef<HTMLDivElement>(null);
-    const listId = useMemo(() => generateId('virtualized-list'), []);
+    const listId = useMemo(() => generateId("virtualized-list"), []);
 
     // Sanitize className
     const safeClassName = useMemo(() => validateClassName(className), [className]);
 
     // Calculate item positions and dimensions
     const itemMetrics = useMemo(() => {
-      if (typeof itemHeight === 'number') {
+      if (typeof itemHeight === "number") {
         // Fixed height items
         const totalHeight = items.length * itemHeight;
         return {
@@ -120,7 +120,7 @@ export const VirtualizedList = memo(
 
     // Calculate visible range with overscan
     const visibleRange = useMemo(() => {
-      if (typeof itemHeight === 'number') {
+      if (typeof itemHeight === "number") {
         // Optimized calculation for fixed height
         const start = Math.floor(scrollTop / itemHeight);
         const end = Math.ceil((scrollTop + height) / itemHeight);
@@ -176,7 +176,7 @@ export const VirtualizedList = memo(
           index: i,
           item,
           style: {
-            position: 'absolute' as const,
+            position: "absolute" as const,
             top: offset,
             left: 0,
             right: 0,
@@ -210,7 +210,7 @@ export const VirtualizedList = memo(
           onScroll(newScrollTop);
         }
       },
-      [onScroll]
+      [onScroll],
     );
 
     // Keyboard navigation setup
@@ -219,7 +219,7 @@ export const VirtualizedList = memo(
     }, [visibleItems.length]);
 
     const { handleKeyDown } = useKeyboardNavigation(visibleElements as HTMLElement[], {
-      orientation: 'vertical',
+      orientation: "vertical",
       onSelect: (index) => {
         const actualIndex = visibleRange.start + index;
         const offset = itemMetrics.getItemOffset(actualIndex);
@@ -227,7 +227,7 @@ export const VirtualizedList = memo(
         // Scroll to selected item
         if (containerRef.current) {
           containerRef.current.scrollTop = offset - height / 2;
-          announceToScreenReader(`Item ${actualIndex + 1} of ${items.length} selected`, 'polite');
+          announceToScreenReader(`Item ${actualIndex + 1} of ${items.length} selected`, "polite");
         }
       },
       disabled: !enableKeyboardNavigation,
@@ -255,10 +255,10 @@ export const VirtualizedList = memo(
         <div
           className={`flex items-center justify-center bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg ${safeClassName}`}
           style={{ height, width }}
-          role='status'
-          aria-label='No items to display'
+          role="status"
+          aria-label="No items to display"
         >
-          <p className='text-gray-500 text-sm'>No items to display</p>
+          <p className="text-gray-500 text-sm">No items to display</p>
         </div>
       );
     }
@@ -267,10 +267,10 @@ export const VirtualizedList = memo(
       <ErrorBoundary
         fallback={
           <div
-            className='flex items-center justify-center bg-red-50 border border-red-200 rounded-lg'
+            className="flex items-center justify-center bg-red-50 border border-red-200 rounded-lg"
             style={{ height, width }}
           >
-            <p className='text-red-600 text-sm'>List failed to load</p>
+            <p className="text-red-600 text-sm">List failed to load</p>
           </div>
         }
       >
@@ -290,13 +290,13 @@ export const VirtualizedList = memo(
           data-scrolling={isScrolling}
         >
           {/* Total height container */}
-          <div style={{ height: itemMetrics.totalHeight, position: 'relative' }}>
+          <div style={{ height: itemMetrics.totalHeight, position: "relative" }}>
             {/* Visible items */}
             {visibleItems.map(({ key, index, item, style }) => (
               <div
                 key={key}
                 style={style}
-                role={role === 'list' ? 'listitem' : undefined}
+                role={role === "list" ? "listitem" : undefined}
                 aria-rowindex={index + 1}
                 aria-setsize={items.length}
               >
@@ -306,13 +306,13 @@ export const VirtualizedList = memo(
           </div>
 
           {/* Screen reader helper for total count */}
-          <div className='sr-only' aria-live='polite'>
+          <div className="sr-only" aria-live="polite">
             Showing items {visibleRange.start + 1} to {visibleRange.end} of {items.length}
           </div>
         </div>
       </ErrorBoundary>
     );
-  }
+  },
 ) as <T>(props: VirtualizedListProps<T>) => React.ReactElement;
 
 // High-performance virtualized grid for 2D layouts
@@ -330,7 +330,7 @@ export const VirtualizedGrid = memo(
     onItemsRendered,
   }: VirtualizedGridProps<T>) => {
     // Performance monitoring
-    const { renderCount } = useRenderProfiler('VirtualizedGrid', {
+    const { renderCount } = useRenderProfiler("VirtualizedGrid", {
       itemCount: items.length,
       width,
       height,
@@ -339,7 +339,7 @@ export const VirtualizedGrid = memo(
     const [scrollTop, setScrollTop] = useState(0);
     const [scrollLeft, setScrollLeft] = useState(0);
     const containerRef = useRef<HTMLDivElement>(null);
-    const gridId = useMemo(() => generateId('virtualized-grid'), []);
+    const gridId = useMemo(() => generateId("virtualized-grid"), []);
 
     // Sanitize className
     const safeClassName = useMemo(() => validateClassName(className), [className]);
@@ -398,7 +398,7 @@ export const VirtualizedGrid = memo(
           index: i,
           item,
           style: {
-            position: 'absolute' as const,
+            position: "absolute" as const,
             top: row * itemHeight,
             left: col * itemWidth,
             width: itemWidth,
@@ -427,10 +427,10 @@ export const VirtualizedGrid = memo(
       <ErrorBoundary
         fallback={
           <div
-            className='flex items-center justify-center bg-red-50 border border-red-200 rounded-lg'
+            className="flex items-center justify-center bg-red-50 border border-red-200 rounded-lg"
             style={{ height, width }}
           >
-            <p className='text-red-600 text-sm'>Grid failed to load</p>
+            <p className="text-red-600 text-sm">Grid failed to load</p>
           </div>
         }
       >
@@ -440,7 +440,7 @@ export const VirtualizedGrid = memo(
           className={`overflow-auto ${safeClassName}`}
           style={{ height, width }}
           onScroll={handleScroll}
-          role='grid'
+          role="grid"
           aria-label={`Grid with ${items.length} items`}
           aria-rowcount={gridMetrics.rowCount}
           aria-colcount={gridMetrics.columnsPerRow}
@@ -451,7 +451,7 @@ export const VirtualizedGrid = memo(
             style={{
               height: gridMetrics.totalHeight,
               width: gridMetrics.totalWidth,
-              position: 'relative',
+              position: "relative",
             }}
           >
             {/* Visible items */}
@@ -463,7 +463,7 @@ export const VirtualizedGrid = memo(
                 <div
                   key={key}
                   style={style}
-                  role='gridcell'
+                  role="gridcell"
                   aria-rowindex={row + 1}
                   aria-colindex={col + 1}
                 >
@@ -475,7 +475,7 @@ export const VirtualizedGrid = memo(
         </div>
       </ErrorBoundary>
     );
-  }
+  },
 ) as <T>(props: VirtualizedGridProps<T>) => React.ReactElement;
 
 // Performance-optimized table virtualization
@@ -508,13 +508,13 @@ export const VirtualizedTable = memo(
     onRowClick,
     getRowKey,
   }: VirtualizedTableProps<T>) => {
-    const { renderCount } = useRenderProfiler('VirtualizedTable', {
+    const { renderCount } = useRenderProfiler("VirtualizedTable", {
       itemCount: items.length,
       columnCount: columns.length,
     });
 
     const safeClassName = useMemo(() => validateClassName(className), [className]);
-    const tableId = useMemo(() => generateId('virtualized-table'), []);
+    const tableId = useMemo(() => generateId("virtualized-table"), []);
 
     // Render table row
     const renderRow = useCallback(
@@ -523,61 +523,61 @@ export const VirtualizedTable = memo(
 
         return (
           <div
-            style={{ ...style, display: 'flex' }}
-            className={`border-b border-gray-200 ${onRowClick ? 'hover:bg-gray-50 cursor-pointer' : ''}`}
+            style={{ ...style, display: "flex" }}
+            className={`border-b border-gray-200 ${onRowClick ? "hover:bg-gray-50 cursor-pointer" : ""}`}
             onClick={handleRowClick}
-            role='row'
+            role="row"
             tabIndex={onRowClick ? 0 : -1}
           >
             {columns.map((column, colIndex) => (
               <div
                 key={String(column.key)}
                 style={{ width: column.width }}
-                className='px-4 py-2 flex items-center'
-                role='cell'
+                className="px-4 py-2 flex items-center"
+                role="cell"
               >
                 {column.render
                   ? column.render(item[column.key], item, index)
-                  : String(item[column.key] || '')}
+                  : String(item[column.key] || "")}
               </div>
             ))}
           </div>
         );
       },
-      [columns, onRowClick]
+      [columns, onRowClick],
     );
 
     // Table header
     const tableHeader = useMemo(
       () => (
         <div
-          className='border-b-2 border-gray-200 bg-gray-50 sticky top-0 z-10'
-          style={{ display: 'flex', height: rowHeight }}
-          role='row'
+          className="border-b-2 border-gray-200 bg-gray-50 sticky top-0 z-10"
+          style={{ display: "flex", height: rowHeight }}
+          role="row"
         >
           {columns.map((column) => (
             <div
               key={String(column.key)}
               style={{ width: column.width }}
-              className='px-4 py-2 font-medium text-gray-900 flex items-center'
-              role='columnheader'
+              className="px-4 py-2 font-medium text-gray-900 flex items-center"
+              role="columnheader"
             >
               {column.header}
             </div>
           ))}
         </div>
       ),
-      [columns, rowHeight]
+      [columns, rowHeight],
     );
 
     return (
       <ErrorBoundary
         fallback={
           <div
-            className='flex items-center justify-center bg-red-50 border border-red-200 rounded-lg'
+            className="flex items-center justify-center bg-red-50 border border-red-200 rounded-lg"
             style={{ height, width }}
           >
-            <p className='text-red-600 text-sm'>Table failed to load</p>
+            <p className="text-red-600 text-sm">Table failed to load</p>
           </div>
         }
       >
@@ -585,7 +585,7 @@ export const VirtualizedTable = memo(
           id={tableId}
           className={`border border-gray-200 rounded-lg overflow-hidden ${safeClassName}`}
           style={{ width, height }}
-          role='table'
+          role="table"
           aria-label={`Table with ${items.length} rows and ${columns.length} columns`}
           data-render-count={renderCount}
         >
@@ -596,13 +596,13 @@ export const VirtualizedTable = memo(
             height={height - rowHeight} // Account for header
             renderItem={renderRow}
             getItemKey={getRowKey}
-            role='rowgroup'
+            role="rowgroup"
             overscan={overscan}
           />
         </div>
       </ErrorBoundary>
     );
-  }
+  },
 ) as <T extends Record<string, any>>(props: VirtualizedTableProps<T>) => React.ReactElement;
 
 // Export all virtualized components

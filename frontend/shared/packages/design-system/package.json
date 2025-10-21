@@ -10,7 +10,12 @@
     "clean": "rm -rf dist",
     "type-check": "echo 'Type checking disabled for experimental design-system package'"
   },
-  "keywords": ["react", "design-system", "components", "dotmac"],
+  "keywords": [
+    "react",
+    "design-system",
+    "components",
+    "dotmac"
+  ],
   "author": "DotMac Team",
   "license": "MIT",
   "devDependencies": {

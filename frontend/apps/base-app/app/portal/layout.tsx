@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { platformConfig } from "@/lib/config";
 
-const API_BASE = platformConfig.apiBaseUrl;
+const API_BASE = platformConfig.api.baseUrl;
 
 interface NavItem {
   name: string;
@@ -34,14 +34,13 @@ const navigation: NavItem[] = [
   { name: "Settings", href: "/portal/settings", icon: Settings },
 ];
 
-export default function PartnerPortalLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function PartnerPortalLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [partner, setPartner] = useState<{ company_name?: string; partner_number?: string } | null>(null);
+  const [partner, setPartner] = useState<{
+    company_name?: string;
+    partner_number?: string;
+  } | null>(null);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -134,9 +133,7 @@ export default function PartnerPortalLayout({
                 <div className="absolute right-0 mt-2 w-56 rounded-md bg-accent shadow-lg ring-1 ring-black ring-opacity-5">
                   <div className="py-1">
                     <div className="px-4 py-2 text-sm text-muted-foreground">
-                      <div className="font-semibold text-foreground">
-                        {partner?.company_name}
-                      </div>
+                      <div className="font-semibold text-foreground">{partner?.company_name}</div>
                       <div className="text-xs">{partner?.partner_number}</div>
                     </div>
                     <hr className="my-1 border-border" />
@@ -210,10 +207,7 @@ export default function PartnerPortalLayout({
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
           <div className="text-xs text-foreground0">
             <div>Need help?</div>
-            <a
-              href="mailto:partners@dotmac.com"
-              className="text-blue-400 hover:text-blue-300"
-            >
+            <a href="mailto:partners@dotmac.com" className="text-blue-400 hover:text-blue-300">
               Contact Support
             </a>
           </div>

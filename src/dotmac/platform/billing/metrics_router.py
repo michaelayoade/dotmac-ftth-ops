@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.billing.cache import CacheTier, cached_result
+from dotmac.platform.billing._typing_helpers import CacheTier, cached_result
 from dotmac.platform.billing.core.entities import (
     InvoiceEntity,
     PaymentEntity,
@@ -28,8 +28,8 @@ from dotmac.platform.db import get_session_dependency
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(tags=["Billing Metrics"])
-customer_metrics_router = APIRouter(tags=["Customer Metrics"])
+router = APIRouter(prefix="", )
+customer_metrics_router = APIRouter(prefix="", )
 
 
 # ============================================================================
@@ -134,7 +134,7 @@ class CustomerMetricsResponse(BaseModel):
 # ============================================================================
 
 
-@cached_result(
+@cached_result(  # type: ignore[misc]  # Cache decorator is untyped
     ttl=METRICS_CACHE_TTL,
     key_prefix="billing:metrics",
     key_params=["period_days", "tenant_id"],
@@ -243,7 +243,7 @@ async def _get_billing_metrics_cached(
     }
 
 
-@cached_result(
+@cached_result(  # type: ignore[misc]  # Cache decorator is untyped
     ttl=METRICS_CACHE_TTL,
     key_prefix="customer:metrics",
     key_params=["period_days", "tenant_id"],
@@ -354,7 +354,7 @@ async def _get_customer_metrics_cached(
     }
 
 
-@cached_result(
+@cached_result(  # type: ignore[misc]  # Cache decorator is untyped
     ttl=EXPIRING_SUBS_CACHE_TTL,
     key_prefix="billing:expiring_subs",
     key_params=["days", "limit", "tenant_id"],

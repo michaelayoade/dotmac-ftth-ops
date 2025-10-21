@@ -6,7 +6,7 @@ view recovery status, and approve reconciliation sessions.
 """
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Any
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -30,7 +30,7 @@ from dotmac.platform.db import get_async_session
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/reconciliations", tags=["Billing Reconciliation"])
+router = APIRouter(prefix="/reconciliations")
 
 
 def get_reconciliation_service(
@@ -334,7 +334,7 @@ async def retry_failed_payment(
 async def get_circuit_breaker_status(
     current_user: Annotated[UserInfo, Depends(require_permission("billing.admin"))],
     service: Annotated[ReconciliationService, Depends(get_reconciliation_service)],
-) -> dict:
+) -> dict[str, Any]:
     """
     Get circuit breaker status.
 

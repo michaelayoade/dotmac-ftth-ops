@@ -90,11 +90,10 @@ class TestOtelCollectorAdvanced:
         """Test create_otel_collector with custom endpoint and environment."""
         with (
             patch("dotmac.platform.analytics.otel_collector.settings") as mock_settings,
-            patch("dotmac.platform.analytics.otel_collector.trace") as mock_trace,
-            patch("dotmac.platform.analytics.otel_collector.metrics") as mock_metrics,
-            patch("dotmac.platform.analytics.otel_collector.Resource") as mock_resource,
+            patch("dotmac.platform.analytics.otel_collector.trace"),
+            patch("dotmac.platform.analytics.otel_collector.metrics"),
+            patch("dotmac.platform.analytics.otel_collector.Resource"),
         ):
-
             mock_settings.observability.otel_enabled = True
 
             collector = create_otel_collector(

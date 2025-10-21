@@ -4,13 +4,13 @@
  * Split into focused sub-hooks for better maintainability
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { useISPTenant } from './useISPTenant';
-import { ispApiClient } from '../api/isp-client';
-import { usePaymentCache } from './payment/usePaymentCache';
-import { usePaymentValidation } from './payment/usePaymentValidation';
-import { usePaymentSecurity } from './payment/usePaymentSecurity';
-import { useStandardErrorHandler } from './useStandardErrorHandler';
+import { useState, useEffect, useCallback } from "react";
+import { useISPTenant } from "./useISPTenant";
+import { ispApiClient } from "../api/isp-client";
+import { usePaymentCache } from "./payment/usePaymentCache";
+import { usePaymentValidation } from "./payment/usePaymentValidation";
+import { usePaymentSecurity } from "./payment/usePaymentSecurity";
+import { useStandardErrorHandler } from "./useStandardErrorHandler";
 import type {
   PaymentProcessor,
   PaymentMethod,
@@ -18,7 +18,7 @@ import type {
   Transaction,
   BillingAnalytics,
   WebhookEvent,
-} from '../types/billing';
+} from "../types/billing";
 
 export interface UsePaymentProcessorConfig {
   autoLoadProcessors?: boolean;
@@ -45,14 +45,14 @@ export interface UsePaymentProcessorReturn {
   createPaymentIntent: (
     amount: number,
     currency: string,
-    customerId: string
+    customerId: string,
   ) => Promise<PaymentIntent>;
   loadTransactions: (filters?: any) => Promise<void>;
   formatAmount: (amount: number, currency: string) => string;
 }
 
 export function usePaymentProcessor(
-  config: UsePaymentProcessorConfig = {}
+  config: UsePaymentProcessorConfig = {},
 ): UsePaymentProcessorReturn {
   const { tenant, hasPermission } = useISPTenant();
   const { autoLoadProcessors = true } = config;
@@ -74,7 +74,7 @@ export function usePaymentProcessor(
 
   // Core operations with standardized error handling
   const errorHandler = useStandardErrorHandler({
-    context: 'Payment Processor',
+    context: "Payment Processor",
     enableRetry: true,
     maxRetries: 2,
     fallbackData: [],
@@ -84,13 +84,13 @@ export function usePaymentProcessor(
   });
 
   const loadProcessors = useCallback(async () => {
-    if (!tenant || !hasPermission('billing:read')) return;
+    if (!tenant || !hasPermission("billing:read")) return;
 
     setIsLoading(true);
     setError(null);
 
     const result = await errorHandler.withErrorHandling(async () => {
-      const cachedData = cache.getCachedData('processors');
+      const cachedData = cache.getCachedData("processors");
       if (cachedData) {
         return cachedData;
       }
@@ -99,13 +99,13 @@ export function usePaymentProcessor(
         tenant_id: tenant.id,
       });
 
-      cache.setCachedData('processors', response.data);
+      cache.setCachedData("processors", response.data);
       return response.data;
     });
 
     if (result) {
       setProcessors(result);
-      const activeProcessor = result.find((p) => p.status === 'ACTIVE');
+      const activeProcessor = result.find((p) => p.status === "ACTIVE");
       if (activeProcessor) {
         setSelectedProcessor(activeProcessor);
       }
@@ -124,16 +124,16 @@ export function usePaymentProcessor(
         setPaymentMethods([]);
       }
     },
-    [processors, security]
+    [processors, security],
   );
 
   const loadPaymentMethods = useCallback(
     async (customerId: string) => {
-      if (!selectedProcessor || !hasPermission('billing:read')) return;
+      if (!selectedProcessor || !hasPermission("billing:read")) return;
 
       const customerValidation = validation.validateCustomerId(customerId);
       if (!customerValidation.isValid) {
-        setError(customerValidation.errors.join(', '));
+        setError(customerValidation.errors.join(", "));
         return;
       }
 
@@ -155,18 +155,18 @@ export function usePaymentProcessor(
         setPaymentMethods(response.data);
         cache.setCachedData(cacheKey, response.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load payment methods');
+        setError(err instanceof Error ? err.message : "Failed to load payment methods");
       } finally {
         setIsLoading(false);
       }
     },
-    [selectedProcessor, hasPermission, tenant, validation, cache]
+    [selectedProcessor, hasPermission, tenant, validation, cache],
   );
 
   const createPaymentIntent = useCallback(
     async (amount: number, currency: string, customerId: string): Promise<PaymentIntent> => {
-      if (!selectedProcessor || !hasPermission('billing:write')) {
-        throw new Error('Insufficient permissions');
+      if (!selectedProcessor || !hasPermission("billing:write")) {
+        throw new Error("Insufficient permissions");
       }
 
       const paymentValidation = validation.validatePaymentData({
@@ -175,7 +175,7 @@ export function usePaymentProcessor(
         customer_id: customerId,
       });
       if (!paymentValidation.isValid) {
-        throw new Error(paymentValidation.errors.join(', '));
+        throw new Error(paymentValidation.errors.join(", "));
       }
 
       const response = await ispApiClient.createPaymentIntent({
@@ -188,12 +188,12 @@ export function usePaymentProcessor(
 
       return response.data;
     },
-    [selectedProcessor, hasPermission, tenant, validation]
+    [selectedProcessor, hasPermission, tenant, validation],
   );
 
   const loadTransactions = useCallback(
     async (filters: any = {}) => {
-      if (!hasPermission('billing:read')) return;
+      if (!hasPermission("billing:read")) return;
 
       setIsLoading(true);
       try {
@@ -205,18 +205,18 @@ export function usePaymentProcessor(
 
         setRecentTransactions(response.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load transactions');
+        setError(err instanceof Error ? err.message : "Failed to load transactions");
       } finally {
         setIsLoading(false);
       }
     },
-    [hasPermission, tenant]
+    [hasPermission, tenant],
   );
 
   const formatAmount = useCallback((amount: number, currency: string): string => {
     try {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
         currency: currency.toUpperCase(),
         minimumFractionDigits: 2,
       }).format(amount / 100); // Assuming amounts are in cents

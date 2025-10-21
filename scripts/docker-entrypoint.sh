@@ -1,185 +1,125 @@
 #!/bin/bash
 set -e
 
-# Default environment values
-export PYTHONPATH=/app/src:${PYTHONPATH}
+# Docker Entrypoint Script for DotMac Platform API
+# Handles database migrations, health checks, and service startup
 
-# Function to wait for services
-wait_for_service() {
-    local host=$1
-    local port=$2
-    local service=$3
+echo "========================================"
+echo "DotMac Platform API Starting..."
+echo "========================================"
 
-    echo "⏳ Waiting for $service to be ready at $host:$port..."
-    while ! nc -z "$host" "$port"; do
-        sleep 1
+# Function to wait for database
+wait_for_db() {
+    echo "Waiting for database to be ready..."
+
+    local max_attempts=30
+    local attempt=1
+
+    while [ $attempt -le $max_attempts ]; do
+        if nc -z "${DATABASE__HOST:-postgres}" "${DATABASE__PORT:-5432}" 2>/dev/null; then
+            echo "Database is ready!"
+            return 0
+        fi
+
+        echo "Attempt $attempt/$max_attempts: Database not ready, waiting..."
+        sleep 2
+        attempt=$((attempt + 1))
     done
-    echo "✅ $service is ready!"
+
+    echo "ERROR: Database failed to become ready after $max_attempts attempts"
+    exit 1
 }
 
-# Function to check database connection
-check_database() {
-    echo "🔍 Checking database connection..."
-    python -c "
-from dotmac.platform.database.session import get_engine
-import asyncio
+# Function to wait for Redis
+wait_for_redis() {
+    echo "Waiting for Redis to be ready..."
 
-async def check_db():
-    try:
-        engine = get_engine()
-        async with engine.begin() as conn:
-            await conn.execute('SELECT 1')
-        print('✅ Database connection successful!')
-        return True
-    except Exception as e:
-        print(f'❌ Database connection failed: {e}')
-        return False
+    local max_attempts=30
+    local attempt=1
 
-if not asyncio.run(check_db()):
-    exit(1)
-"
+    while [ $attempt -le $max_attempts ]; do
+        if nc -z "${REDIS__HOST:-redis}" "${REDIS__PORT:-6379}" 2>/dev/null; then
+            echo "Redis is ready!"
+            return 0
+        fi
+
+        echo "Attempt $attempt/$max_attempts: Redis not ready, waiting..."
+        sleep 2
+        attempt=$((attempt + 1))
+    done
+
+    echo "WARNING: Redis not available, continuing anyway..."
+    return 0
 }
 
 # Function to run database migrations
 run_migrations() {
-    echo "🔄 Running database migrations..."
-    alembic upgrade head
-    echo "✅ Migrations completed!"
-}
+    echo "Running database migrations..."
 
-# Function to setup initial data
-setup_initial_data() {
-    echo "🔧 Setting up initial data..."
-    python -c "
-import asyncio
-from dotmac.platform.cli import setup_initial_admin, setup_jwt_keys
-
-async def setup():
-    try:
-        await setup_jwt_keys()
-        await setup_initial_admin()
-        print('✅ Initial setup completed!')
-    except Exception as e:
-        print(f'⚠️  Initial setup warning: {e}')
-
-asyncio.run(setup())
-"
+    if [ -f "/app/alembic.ini" ]; then
+        cd /app
+        python -m alembic upgrade head
+        echo "Migrations completed successfully!"
+    else
+        echo "WARNING: alembic.ini not found, skipping migrations"
+    fi
 }
 
 # Main entrypoint logic
 main() {
-    case "$1" in
-        "api")
-            echo "🚀 Starting DotMac Platform API..."
+    # Wait for dependencies
+    wait_for_db
+    wait_for_redis
 
-            # Wait for dependencies
-            if [ -n "${DATABASE__HOST}" ]; then
-                wait_for_service "${DATABASE__HOST}" "${DATABASE__PORT:-5432}" "PostgreSQL"
+    # Determine command
+    COMMAND=${1:-api}
+
+    case "$COMMAND" in
+        api)
+            echo "Starting API server..."
+
+            # Run migrations if AUTO_MIGRATE is enabled (default: true)
+            if [ "${AUTO_MIGRATE:-true}" = "true" ]; then
+                run_migrations
             fi
 
-            if [ -n "${REDIS__HOST}" ]; then
-                wait_for_service "${REDIS__HOST}" "${REDIS__PORT:-6379}" "Redis"
-            fi
-
-            if [ -n "${VAULT__URL}" ]; then
-                VAULT_HOST=$(echo "${VAULT__URL}" | sed 's/http[s]*:\/\///' | cut -d: -f1)
-                VAULT_PORT=$(echo "${VAULT__URL}" | sed 's/http[s]*:\/\///' | cut -d: -f2 | cut -d/ -f1)
-                wait_for_service "${VAULT_HOST}" "${VAULT_PORT:-8200}" "Vault"
-            fi
-
-            # Database setup
-            check_database
-            run_migrations
-            setup_initial_data
-
-            # Start API server
-            echo "🌟 Starting API server with Gunicorn..."
+            # Start API with Gunicorn
             exec gunicorn dotmac.platform.main:app \
-                --worker-class "${GUNICORN_WORKER_CLASS}" \
-                --workers "${GUNICORN_WORKERS}" \
-                --bind "${GUNICORN_BIND}" \
-                --max-requests "${GUNICORN_MAX_REQUESTS}" \
-                --max-requests-jitter "${GUNICORN_MAX_REQUESTS_JITTER}" \
-                --timeout "${GUNICORN_TIMEOUT}" \
-                --keepalive "${GUNICORN_KEEPALIVE}" \
-                --access-logfile "${GUNICORN_ACCESS_LOG}" \
-                --error-logfile "${GUNICORN_ERROR_LOG}" \
-                --log-level "${GUNICORN_LOG_LEVEL}" \
-                --capture-output \
-                --enable-stdio-inheritance
+                --worker-class ${GUNICORN_WORKER_CLASS} \
+                --workers ${GUNICORN_WORKERS} \
+                --bind ${GUNICORN_BIND} \
+                --max-requests ${GUNICORN_MAX_REQUESTS} \
+                --max-requests-jitter ${GUNICORN_MAX_REQUESTS_JITTER} \
+                --timeout ${GUNICORN_TIMEOUT} \
+                --keepalive ${GUNICORN_KEEPALIVE} \
+                --access-logfile ${GUNICORN_ACCESS_LOG} \
+                --error-logfile ${GUNICORN_ERROR_LOG} \
+                --log-level ${GUNICORN_LOG_LEVEL}
             ;;
 
-        "migrate")
-            echo "🔄 Running migrations only..."
-            check_database
+        migrate)
+            echo "Running migrations only..."
             run_migrations
-            echo "✅ Migration completed!"
+            echo "Migrations complete. Exiting."
             ;;
 
-        "setup")
-            echo "🔧 Running initial setup only..."
-            check_database
-            setup_initial_data
-            echo "✅ Setup completed!"
+        shell)
+            echo "Starting Python shell..."
+            exec python
             ;;
 
-        "shell")
-            echo "🐚 Starting interactive shell..."
-            exec python -c "
-import asyncio
-from dotmac.platform.database.session import get_session
-from dotmac.platform.core.models import *
-from dotmac.platform.auth.models import *
-from dotmac.platform.secrets.models import *
-
-async def main():
-    print('DotMac Platform Shell')
-    print('Available imports: get_session, User, Tenant, etc.')
-    # Start IPython if available, otherwise regular Python
-    try:
-        from IPython import start_ipython
-        start_ipython(argv=[])
-    except ImportError:
-        import code
-        code.interact(local=locals())
-
-asyncio.run(main())
-"
-            ;;
-
-        "health")
-            echo "🏥 Running health check..."
-            python -c "
-import asyncio
-from dotmac.platform.observability.health import health_check
-
-async def check():
-    result = await health_check()
-    if result['status'] == 'healthy':
-        print('✅ All systems healthy!')
-        exit(0)
-    else:
-        print('❌ Health check failed!')
-        print(result)
-        exit(1)
-
-asyncio.run(check())
-"
+        bash)
+            echo "Starting bash shell..."
+            exec /bin/bash
             ;;
 
         *)
-            echo "Usage: $0 {api|migrate|setup|shell|health}"
-            echo ""
-            echo "Commands:"
-            echo "  api     - Start the API server (default)"
-            echo "  migrate - Run database migrations only"
-            echo "  setup   - Run initial setup only"
-            echo "  shell   - Start interactive Python shell"
-            echo "  health  - Run health check"
+            echo "Unknown command: $COMMAND"
+            echo "Available commands: api, migrate, shell, bash"
             exit 1
             ;;
     esac
 }
 
-# Run main function with all arguments
+# Run main function
 main "$@"

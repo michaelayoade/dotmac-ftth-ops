@@ -1,0 +1,138 @@
+---
+# Fiber Service Provisioning Playbook
+# Provisions a new fiber internet service on OLT and configures ONT
+
+- name: Provision Fiber Internet Service
+  hosts: "{{ target_olt | default('olts') }}"
+  gather_facts: yes
+  vars:
+    service_id: "{{ service_instance_id }}"
+    customer_id: "{{ customer_id }}"
+    ont_serial: "{{ ont_serial_number }}"
+    vlan_id: "{{ service_vlan }}"
+    bandwidth_profile: "{{ bandwidth_profile_name }}"
+    service_port: "{{ olt_service_port | default('auto') }}"
+
+  tasks:
+    - name: Validate required variables
+      assert:
+        that:
+          - service_id is defined
+          - customer_id is defined
+          - ont_serial is defined
+          - vlan_id is defined
+          - bandwidth_profile is defined
+        fail_msg: "Missing required variables for service provisioning"
+      tags: [validate]
+
+    - name: Connect to OLT via NETCONF
+      netconf_get:
+        filter: <system xmlns="urn:ietf:params:xml:ns:yang:ietf-system"/>
+      register: olt_info
+      tags: [connect]
+
+    - name: Check ONT registration status
+      netconf_rpc:
+        rpc: get-ont-status
+        content: |
+          <ont-serial>{{ ont_serial }}</ont-serial>
+      register: ont_status
+      tags: [ont_check]
+
+    - name: Configure ONT on OLT
+      netconf_config:
+        target: candidate
+        content: |
+          <config xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+            <gpon xmlns="urn:bbf:yang:bbf-gpon">
+              <ont>
+                <serial-number>{{ ont_serial }}</serial-number>
+                <customer-id>{{ customer_id }}</customer-id>
+                <service-id>{{ service_id }}</service-id>
+                <admin-state>enabled</admin-state>
+              </ont>
+            </gpon>
+          </config>
+      register: ont_config
+      tags: [ont_config]
+
+    - name: Create bandwidth profile
+      netconf_config:
+        target: candidate
+        content: |
+          <config xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+            <qos xmlns="urn:bbf:yang:bbf-qos">
+              <profile>
+                <name>{{ bandwidth_profile }}</name>
+                <cir>{{ download_speed_kbps }}</cir>
+                <pir>{{ upload_speed_kbps }}</pir>
+              </profile>
+            </qos>
+          </config>
+      tags: [bandwidth]
+
+    - name: Configure service VLAN
+      netconf_config:
+        target: candidate
+        content: |
+          <config xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+            <vlans xmlns="urn:ieee:std:802.1Q:yang:ieee802-dot1q-bridge">
+              <vlan>
+                <vlan-id>{{ vlan_id }}</vlan-id>
+                <name>SVC-{{ service_id }}</name>
+              </vlan>
+            </vlans>
+          </config>
+      tags: [vlan]
+
+    - name: Map service to ONT port
+      netconf_config:
+        target: candidate
+        content: |
+          <config xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+            <service-mapping xmlns="urn:bbf:yang:bbf-gpon">
+              <ont-serial>{{ ont_serial }}</ont-serial>
+              <service-port>{{ service_port }}</service-port>
+              <vlan-id>{{ vlan_id }}</vlan-id>
+              <bandwidth-profile>{{ bandwidth_profile }}</bandwidth-profile>
+            </service-mapping>
+          </config>
+      tags: [service_map]
+
+    - name: Commit configuration
+      netconf_rpc:
+        rpc: commit
+      register: commit_result
+      tags: [commit]
+
+    - name: Verify service activation
+      netconf_rpc:
+        rpc: get-service-status
+        content: |
+          <service-id>{{ service_id }}</service-id>
+      register: service_status
+      retries: 3
+      delay: 10
+      until: service_status.output.status == "active"
+      tags: [verify]
+
+    - name: Send activation notification
+      uri:
+        url: "{{ callback_url }}/api/v1/lifecycle/services/{{ service_id }}/provisioning-complete"
+        method: POST
+        body_format: json
+        body:
+          status: "success"
+          ont_serial: "{{ ont_serial }}"
+          vlan_id: "{{ vlan_id }}"
+          olt_details: "{{ olt_info }}"
+        headers:
+          Authorization: "Bearer {{ api_token }}"
+      when: callback_url is defined
+      tags: [notify]
+
+  handlers:
+    - name: Rollback on failure
+      netconf_rpc:
+        rpc: discard-changes
+      when: commit_result is failed

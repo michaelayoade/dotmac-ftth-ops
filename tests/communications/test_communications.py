@@ -292,9 +292,7 @@ class TestTemplateService:
         template1 = service.create_template(
             TemplateData(name="template1", subject_template="Subject 1")
         )
-        template2 = service.create_template(
-            TemplateData(name="template2", subject_template="Subject 2")
-        )
+        service.create_template(TemplateData(name="template2", subject_template="Subject 2"))
 
         # List templates
         templates = service.list_templates()

@@ -1,6 +1,7 @@
 """Subscription Read Models"""
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -44,7 +45,7 @@ class SubscriptionDetail(BaseModel):
     cancelled_at: datetime | None
     ended_at: datetime | None
     created_at: datetime
-    items: list[dict] = Field(default_factory=list)
+    items: list[dict[str, Any]] = Field(default_factory=lambda: [])
     latest_invoice_id: str | None
 
 

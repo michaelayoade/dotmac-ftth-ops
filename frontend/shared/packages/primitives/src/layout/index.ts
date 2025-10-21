@@ -1,7 +1,7 @@
 // Export Card components first (takes priority)
-export * from './Card';
+export * from "./Card";
 // Export Modal components
-export * from './Modal';
+export * from "./Modal";
 // Export Layout components (excluding conflicting Card exports)
 export {
   Center,
@@ -15,7 +15,7 @@ export {
   Spacer,
   Stack,
   VStack,
-} from './Layout';
+} from "./Layout";
 // Export Universal Layout components
-export { default as UniversalHeader } from './UniversalHeader';
-export { default as UniversalLayout } from './UniversalLayout';
+export { default as UniversalHeader } from "./UniversalHeader";
+export { default as UniversalLayout } from "./UniversalLayout";

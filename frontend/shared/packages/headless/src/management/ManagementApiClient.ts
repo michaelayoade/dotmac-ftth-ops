@@ -4,7 +4,7 @@
  * Features: Retry logic, caching, error handling, audit logging, rate limiting
  */
 
-import { BaseApiClient, RequestConfig } from '../api/clients/BaseApiClient';
+import { BaseApiClient, RequestConfig } from "../api/clients/BaseApiClient";
 import {
   BaseEntity,
   EntityFilters,
@@ -26,7 +26,7 @@ import {
   CacheEntry,
   ManagementEvent,
   OperationError,
-} from './types';
+} from "./types";
 
 export interface ManagementApiClientConfig {
   baseURL: string;
@@ -48,7 +48,7 @@ export class ManagementApiClient extends BaseApiClient {
   private enablePerformanceMonitoring: boolean;
 
   constructor(config: ManagementApiClientConfig) {
-    super(config.baseURL, {}, 'ManagementAPI');
+    super(config.baseURL, {}, "ManagementAPI");
 
     this.apiConfig = {
       base_url: config.baseURL,
@@ -57,9 +57,9 @@ export class ManagementApiClient extends BaseApiClient {
       retry_delay_ms: 1000,
       rate_limit_requests: 100,
       rate_limit_window_ms: 60000,
-      auth_header_name: 'Authorization',
-      tenant_header_name: 'X-Tenant-ID',
-      request_id_header_name: 'X-Request-ID',
+      auth_header_name: "Authorization",
+      tenant_header_name: "X-Tenant-ID",
+      request_id_header_name: "X-Request-ID",
       ...config.apiConfig,
     };
 
@@ -67,8 +67,8 @@ export class ManagementApiClient extends BaseApiClient {
       enabled: true,
       default_ttl_seconds: 300,
       max_entries: 1000,
-      cache_key_prefix: 'mgmt_api',
-      invalidation_patterns: ['create_*', 'update_*', 'delete_*'],
+      cache_key_prefix: "mgmt_api",
+      invalidation_patterns: ["create_*", "update_*", "delete_*"],
       ...config.cacheConfig,
     };
 
@@ -103,17 +103,17 @@ export class ManagementApiClient extends BaseApiClient {
       method: string,
       endpoint: string,
       data?: unknown,
-      config?: RequestConfig
+      config?: RequestConfig,
     ): Promise<T> {
       const startTime = performance.now();
       try {
         const result = await originalRequest(method, endpoint, data, config);
         const duration = performance.now() - startTime;
-        this.logPerformanceMetric(method, endpoint, duration, 'success');
+        this.logPerformanceMetric(method, endpoint, duration, "success");
         return result;
       } catch (error) {
         const duration = performance.now() - startTime;
-        this.logPerformanceMetric(method, endpoint, duration, 'error');
+        this.logPerformanceMetric(method, endpoint, duration, "error");
         throw error;
       }
     }.bind(this);
@@ -123,7 +123,7 @@ export class ManagementApiClient extends BaseApiClient {
     method: string,
     endpoint: string,
     duration: number,
-    status: string
+    status: string,
   ): void {
     const metric = {
       timestamp: new Date().toISOString(),
@@ -134,12 +134,12 @@ export class ManagementApiClient extends BaseApiClient {
     };
 
     // Send to performance monitoring service
-    if (typeof window !== 'undefined' && 'performanceMonitor' in window) {
+    if (typeof window !== "undefined" && "performanceMonitor" in window) {
       (
         window as unknown as {
           performanceMonitor: { track: (event: string, data: unknown) => void };
         }
-      ).performanceMonitor.track('api_request', metric);
+      ).performanceMonitor.track("api_request", metric);
     }
   }
 
@@ -150,7 +150,7 @@ export class ManagementApiClient extends BaseApiClient {
       method: string,
       endpoint: string,
       data?: unknown,
-      config?: RequestConfig
+      config?: RequestConfig,
     ): Promise<T> {
       const requestContext = this.createRequestContext(method, endpoint);
       const auditConfig = {
@@ -158,16 +158,20 @@ export class ManagementApiClient extends BaseApiClient {
         headers: {
           ...config?.headers,
           [this.apiConfig.request_id_header_name]: requestContext.request_id,
-          'X-Audit-Context': JSON.stringify(requestContext),
+          "X-Audit-Context": JSON.stringify(requestContext),
         },
       };
 
       try {
         const result = await originalRequest(method, endpoint, data, auditConfig);
-        this.logAuditEvent('api_request', 'success', requestContext, { method, endpoint, data });
+        this.logAuditEvent("api_request", "success", requestContext, {
+          method,
+          endpoint,
+          data,
+        });
         return result;
       } catch (error) {
-        this.logAuditEvent('api_request', 'error', requestContext, {
+        this.logAuditEvent("api_request", "error", requestContext, {
           method,
           endpoint,
           data,
@@ -191,24 +195,24 @@ export class ManagementApiClient extends BaseApiClient {
 
   private getCurrentUserId(): string | undefined {
     // Implementation depends on your auth system
-    return typeof window !== 'undefined' ? localStorage.getItem('user_id') || undefined : undefined;
+    return typeof window !== "undefined" ? localStorage.getItem("user_id") || undefined : undefined;
   }
 
   private getCurrentTenantId(): string | undefined {
-    return typeof window !== 'undefined'
-      ? localStorage.getItem('tenant_id') || undefined
+    return typeof window !== "undefined"
+      ? localStorage.getItem("tenant_id") || undefined
       : undefined;
   }
 
   private getPortalType(): string {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const hostname = window.location.hostname;
-      if (hostname.includes('admin')) return 'admin';
-      if (hostname.includes('reseller')) return 'reseller';
-      if (hostname.includes('management')) return 'management';
-      return 'unknown';
+      if (hostname.includes("admin")) return "admin";
+      if (hostname.includes("reseller")) return "reseller";
+      if (hostname.includes("management")) return "management";
+      return "unknown";
     }
-    return 'server';
+    return "server";
   }
 
   private generateCorrelationId(): string {
@@ -218,7 +222,7 @@ export class ManagementApiClient extends BaseApiClient {
   private logAuditEvent(type: string, status: string, context: RequestContext, data: any): void {
     if (this.enableAuditLogging) {
       // Integration with audit system would go here
-      console.debug('[Audit]', { type, status, context, data });
+      console.debug("[Audit]", { type, status, context, data });
     }
   }
 
@@ -336,11 +340,11 @@ export class ManagementApiClient extends BaseApiClient {
 
   async listEntities<T extends BaseEntity>(
     entityType: string,
-    filters: EntityFilters = {}
+    filters: EntityFilters = {},
   ): Promise<EntityListResponse<T>> {
     await this.checkRateLimit();
 
-    const cacheKey = this.getCacheKey('GET', `/entities/${entityType}`, filters);
+    const cacheKey = this.getCacheKey("GET", `/entities/${entityType}`, filters);
     const cached = this.getFromCache<EntityListResponse<T>>(cacheKey);
     if (cached) return cached;
 
@@ -354,7 +358,7 @@ export class ManagementApiClient extends BaseApiClient {
   async getEntity<T extends BaseEntity>(entityType: string, entityId: string): Promise<T> {
     await this.checkRateLimit();
 
-    const cacheKey = this.getCacheKey('GET', `/entities/${entityType}/${entityId}`);
+    const cacheKey = this.getCacheKey("GET", `/entities/${entityType}/${entityId}`);
     const cached = this.getFromCache<T>(cacheKey);
     if (cached) return cached;
 
@@ -365,12 +369,12 @@ export class ManagementApiClient extends BaseApiClient {
   }
 
   async createEntity<T extends BaseEntity>(
-    request: CreateEntityRequest
+    request: CreateEntityRequest,
   ): Promise<EntityOperationResult<T>> {
     await this.checkRateLimit();
 
     try {
-      const result = await this.post<EntityOperationResult<T>>('/api/v1/entities', request);
+      const result = await this.post<EntityOperationResult<T>>("/api/v1/entities", request);
 
       // Invalidate related caches
       this.invalidateCache(`entities/${request.entity_type}`);
@@ -388,19 +392,19 @@ export class ManagementApiClient extends BaseApiClient {
   async updateEntity<T extends BaseEntity>(
     entityType: string,
     entityId: string,
-    request: UpdateEntityRequest
+    request: UpdateEntityRequest,
   ): Promise<EntityOperationResult<T>> {
     await this.checkRateLimit();
 
     try {
       const result = await this.put<EntityOperationResult<T>>(
         `/api/v1/entities/${entityType}/${entityId}`,
-        request
+        request,
       );
 
       // Invalidate related caches
       this.invalidateCache(`entities/${entityType}`);
-      this.cache.delete(this.getCacheKey('GET', `/entities/${entityType}/${entityId}`));
+      this.cache.delete(this.getCacheKey("GET", `/entities/${entityType}/${entityId}`));
 
       return result;
     } catch (error) {
@@ -420,7 +424,7 @@ export class ManagementApiClient extends BaseApiClient {
 
       // Invalidate related caches
       this.invalidateCache(`entities/${entityType}`);
-      this.cache.delete(this.getCacheKey('GET', `/entities/${entityType}/${entityId}`));
+      this.cache.delete(this.getCacheKey("GET", `/entities/${entityType}/${entityId}`));
 
       return { success: true };
     } catch (error) {
@@ -436,11 +440,11 @@ export class ManagementApiClient extends BaseApiClient {
 
   async getBillingData(
     entityId: string,
-    period: { start_date: string; end_date: string }
+    period: { start_date: string; end_date: string },
   ): Promise<BillingData> {
     await this.checkRateLimit();
 
-    const cacheKey = this.getCacheKey('GET', `/billing/${entityId}`, period);
+    const cacheKey = this.getCacheKey("GET", `/billing/${entityId}`, period);
     const cached = this.getFromCache<BillingData>(cacheKey);
     if (cached) return cached;
 
@@ -482,7 +486,7 @@ export class ManagementApiClient extends BaseApiClient {
   async getInvoices(entityId: string, filters: any = {}): Promise<Invoice[]> {
     await this.checkRateLimit();
 
-    const cacheKey = this.getCacheKey('GET', `/billing/${entityId}/invoices`, filters);
+    const cacheKey = this.getCacheKey("GET", `/billing/${entityId}/invoices`, filters);
     const cached = this.getFromCache<Invoice[]>(cacheKey);
     if (cached) return cached;
 
@@ -498,12 +502,17 @@ export class ManagementApiClient extends BaseApiClient {
   async getDashboardStats(timeframe: string, entityType?: string): Promise<DashboardStats> {
     await this.checkRateLimit();
 
-    const cacheKey = this.getCacheKey('GET', '/analytics/dashboard', { timeframe, entityType });
+    const cacheKey = this.getCacheKey("GET", "/analytics/dashboard", {
+      timeframe,
+      entityType,
+    });
     const cached = this.getFromCache<DashboardStats>(cacheKey);
     if (cached) return cached;
 
-    const config: RequestConfig = { params: { timeframe, entity_type: entityType } };
-    const result = await this.get<DashboardStats>('/api/v1/analytics/dashboard', config);
+    const config: RequestConfig = {
+      params: { timeframe, entity_type: entityType },
+    };
+    const result = await this.get<DashboardStats>("/api/v1/analytics/dashboard", config);
 
     this.setCache(cacheKey, result, 600); // Cache for 10 minutes
     return result;
@@ -512,7 +521,7 @@ export class ManagementApiClient extends BaseApiClient {
   async getUsageMetrics(entityId: string, period: any): Promise<UsageMetrics> {
     await this.checkRateLimit();
 
-    const cacheKey = this.getCacheKey('GET', `/analytics/usage/${entityId}`, period);
+    const cacheKey = this.getCacheKey("GET", `/analytics/usage/${entityId}`, period);
     const cached = this.getFromCache<UsageMetrics>(cacheKey);
     if (cached) return cached;
 
@@ -526,7 +535,7 @@ export class ManagementApiClient extends BaseApiClient {
   async generateReport(type: ReportType, params: ReportParams): Promise<Report> {
     await this.checkRateLimit();
 
-    const result = await this.post<Report>('/api/v1/reports/generate', {
+    const result = await this.post<Report>("/api/v1/reports/generate", {
       type,
       parameters: params,
     });
@@ -538,7 +547,7 @@ export class ManagementApiClient extends BaseApiClient {
   async getReport(reportId: string): Promise<Report> {
     await this.checkRateLimit();
 
-    const cacheKey = this.getCacheKey('GET', `/reports/${reportId}`);
+    const cacheKey = this.getCacheKey("GET", `/reports/${reportId}`);
     const cached = this.getFromCache<Report>(cacheKey);
     if (cached) return cached;
 
@@ -552,7 +561,7 @@ export class ManagementApiClient extends BaseApiClient {
     await this.checkRateLimit();
 
     const result = await this.get<Blob>(`/api/v1/reports/${reportId}/download`, {
-      headers: { Accept: 'application/octet-stream' },
+      headers: { Accept: "application/octet-stream" },
     });
 
     return result;
@@ -565,11 +574,11 @@ export class ManagementApiClient extends BaseApiClient {
       method: string;
       endpoint: string;
       data?: any;
-    }>
+    }>,
   ): Promise<EntityOperationResult<T>[]> {
     await this.checkRateLimit();
 
-    const result = await this.post<EntityOperationResult<T>[]>('/api/v1/batch', {
+    const result = await this.post<EntityOperationResult<T>[]>("/api/v1/batch", {
       operations,
     });
 
@@ -583,11 +592,11 @@ export class ManagementApiClient extends BaseApiClient {
 
   async getApiHealth(): Promise<{ status: string; checks: any[] }> {
     // Health checks don't count against rate limits
-    return this.get('/api/v1/health');
+    return this.get("/api/v1/health");
   }
 
   async getApiMetrics(): Promise<any> {
-    return this.get('/api/v1/metrics');
+    return this.get("/api/v1/metrics");
   }
 
   // ===== CACHE MANAGEMENT =====

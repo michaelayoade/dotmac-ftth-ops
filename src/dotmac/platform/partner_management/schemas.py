@@ -31,7 +31,7 @@ from dotmac.platform.partner_management.models import (
 # ============================================================================
 
 
-class PartnerBase(BaseModel):
+class PartnerBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base partner schema with common fields."""
 
     model_config = ConfigDict(
@@ -93,15 +93,15 @@ class PartnerBase(BaseModel):
         return v
 
 
-class PartnerCreate(PartnerBase):
+class PartnerCreate(PartnerBase):  # PartnerBase resolves to Any in isolation
     """Schema for creating a new partner."""
 
     external_id: str | None = Field(None, max_length=100)
-    metadata: dict[str, Any] = Field(default_factory=dict)
-    custom_fields: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
+    custom_fields: dict[str, Any] = Field(default_factory=lambda: {})
 
 
-class PartnerUpdate(BaseModel):
+class PartnerUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating partner information."""
 
     model_config = ConfigDict(
@@ -154,7 +154,7 @@ class PartnerUpdate(BaseModel):
     custom_fields: dict[str, Any] | None = None
 
 
-class PartnerResponse(PartnerBase):
+class PartnerResponse(PartnerBase):  # PartnerBase resolves to Any in isolation
     """Schema for partner response."""
 
     id: UUID
@@ -182,7 +182,7 @@ class PartnerResponse(PartnerBase):
     custom_fields: dict[str, Any]
 
 
-class PartnerListResponse(BaseModel):
+class PartnerListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for partner list endpoint."""
 
     model_config = ConfigDict()
@@ -198,7 +198,7 @@ class PartnerListResponse(BaseModel):
 # ============================================================================
 
 
-class PartnerUserBase(BaseModel):
+class PartnerUserBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base partner user schema."""
 
     model_config = ConfigDict(
@@ -221,14 +221,14 @@ class PartnerUserBase(BaseModel):
         return v.lower()
 
 
-class PartnerUserCreate(PartnerUserBase):
+class PartnerUserCreate(PartnerUserBase):  # PartnerUserBase resolves to Any in isolation
     """Schema for creating a partner user."""
 
     partner_id: UUID
     user_id: UUID | None = Field(None, description="Link to auth user account")
 
 
-class PartnerUserUpdate(BaseModel):
+class PartnerUserUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating partner user."""
 
     model_config = ConfigDict(
@@ -246,7 +246,7 @@ class PartnerUserUpdate(BaseModel):
     is_active: bool | None = None
 
 
-class PartnerUserResponse(PartnerUserBase):
+class PartnerUserResponse(PartnerUserBase):  # PartnerUserBase resolves to Any in isolation
     """Schema for partner user response."""
 
     id: UUID
@@ -262,7 +262,7 @@ class PartnerUserResponse(PartnerUserBase):
 # ============================================================================
 
 
-class PartnerAccountBase(BaseModel):
+class PartnerAccountBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base partner account schema."""
 
     model_config = ConfigDict(
@@ -279,13 +279,13 @@ class PartnerAccountBase(BaseModel):
     notes: str | None = None
 
 
-class PartnerAccountCreate(PartnerAccountBase):
+class PartnerAccountCreate(PartnerAccountBase):  # PartnerAccountBase resolves to Any in isolation
     """Schema for creating partner account assignment."""
 
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
-class PartnerAccountUpdate(BaseModel):
+class PartnerAccountUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating partner account."""
 
     model_config = ConfigDict(
@@ -302,7 +302,7 @@ class PartnerAccountUpdate(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class PartnerAccountResponse(PartnerAccountBase):
+class PartnerAccountResponse(PartnerAccountBase):  # PartnerAccountBase resolves to Any in isolation
     """Schema for partner account response."""
 
     id: UUID
@@ -314,7 +314,7 @@ class PartnerAccountResponse(PartnerAccountBase):
     updated_at: datetime
 
 
-class PartnerAccountListResponse(BaseModel):
+class PartnerAccountListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """List response for partner customer accounts."""
 
     model_config = ConfigDict()
@@ -330,7 +330,7 @@ class PartnerAccountListResponse(BaseModel):
 # ============================================================================
 
 
-class PartnerCommissionEventBase(BaseModel):
+class PartnerCommissionEventBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base commission event schema."""
 
     model_config = ConfigDict(
@@ -347,7 +347,9 @@ class PartnerCommissionEventBase(BaseModel):
     event_type: str = Field(min_length=1, max_length=50)
 
 
-class PartnerCommissionEventCreate(PartnerCommissionEventBase):
+class PartnerCommissionEventCreate(
+    PartnerCommissionEventBase
+):  # PartnerCommissionEventBase resolves to Any in isolation
     """Schema for creating commission event."""
 
     invoice_id: UUID | None = None
@@ -358,7 +360,7 @@ class PartnerCommissionEventCreate(PartnerCommissionEventBase):
     metadata_: dict[str, Any] = Field(default_factory=dict, alias="metadata")
 
 
-class PartnerCommissionEventUpdate(BaseModel):
+class PartnerCommissionEventUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating commission event."""
 
     model_config = ConfigDict(
@@ -372,7 +374,9 @@ class PartnerCommissionEventUpdate(BaseModel):
     notes: str | None = None
 
 
-class PartnerCommissionEventResponse(PartnerCommissionEventBase):
+class PartnerCommissionEventResponse(
+    PartnerCommissionEventBase
+):  # PartnerCommissionEventBase resolves to Any in isolation
     """Schema for commission event response."""
 
     id: UUID
@@ -390,7 +394,7 @@ class PartnerCommissionEventResponse(PartnerCommissionEventBase):
     updated_at: datetime
 
 
-class PartnerCommissionEventListResponse(BaseModel):
+class PartnerCommissionEventListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for commission event list."""
 
     model_config = ConfigDict()
@@ -406,7 +410,7 @@ class PartnerCommissionEventListResponse(BaseModel):
 # ============================================================================
 
 
-class ReferralLeadBase(BaseModel):
+class ReferralLeadBase(BaseModel):  # BaseModel resolves to Any in isolation
     """Base referral lead schema."""
 
     model_config = ConfigDict(
@@ -430,14 +434,14 @@ class ReferralLeadBase(BaseModel):
         return v.lower()
 
 
-class ReferralLeadCreate(ReferralLeadBase):
+class ReferralLeadCreate(ReferralLeadBase):  # ReferralLeadBase resolves to Any in isolation
     """Schema for creating referral lead."""
 
     source: str | None = Field(None, max_length=100, description="Referral source/campaign")
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=lambda: {})
 
 
-class ReferralLeadUpdate(BaseModel):
+class ReferralLeadUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Schema for updating referral lead."""
 
     model_config = ConfigDict(
@@ -461,7 +465,7 @@ class ReferralLeadUpdate(BaseModel):
     metadata: dict[str, Any] | None = None
 
 
-class ReferralLeadResponse(ReferralLeadBase):
+class ReferralLeadResponse(ReferralLeadBase):  # ReferralLeadBase resolves to Any in isolation
     """Schema for referral lead response."""
 
     id: UUID
@@ -478,7 +482,7 @@ class ReferralLeadResponse(ReferralLeadBase):
     updated_at: datetime
 
 
-class ReferralLeadListResponse(BaseModel):
+class ReferralLeadListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response for referral lead list."""
 
     model_config = ConfigDict()
@@ -494,7 +498,7 @@ class ReferralLeadListResponse(BaseModel):
 # ============================================================================
 
 
-class PartnerSummary(BaseModel):
+class PartnerSummary(BaseModel):  # BaseModel resolves to Any in isolation
     """Partner performance summary."""
 
     model_config = ConfigDict()
@@ -520,7 +524,7 @@ class PartnerSummary(BaseModel):
     average_deal_value: Decimal
 
 
-class PartnerPayoutSummary(BaseModel):
+class PartnerPayoutSummary(BaseModel):  # BaseModel resolves to Any in isolation
     """Payout summary for a partner."""
 
     model_config = ConfigDict()
@@ -541,10 +545,10 @@ class PartnerPayoutSummary(BaseModel):
     payout_date: datetime | None = None
 
     # Event breakdown
-    events: list[PartnerCommissionEventResponse] = Field(default_factory=list)
+    events: list[PartnerCommissionEventResponse] = Field(default_factory=lambda: [])
 
 
-class PartnerPayoutResponse(BaseModel):
+class PartnerPayoutResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Detailed partner payout record response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -567,7 +571,7 @@ class PartnerPayoutResponse(BaseModel):
     updated_at: datetime
 
 
-class PartnerPayoutListResponse(BaseModel):
+class PartnerPayoutListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """List response for partner payouts."""
 
     model_config = ConfigDict()
@@ -578,7 +582,7 @@ class PartnerPayoutListResponse(BaseModel):
     page_size: int = Field(ge=1, le=100)
 
 
-class PayoutSummary(BaseModel):
+class PayoutSummary(BaseModel):  # BaseModel resolves to Any in isolation
     """Lightweight payout summary for dashboards."""
 
     model_config = ConfigDict()
@@ -593,7 +597,7 @@ class PayoutSummary(BaseModel):
     payment_reference: str | None = None
 
 
-class PartnerRevenueMetrics(BaseModel):
+class PartnerRevenueMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     """Partner revenue metrics for a specific time period."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -608,7 +612,7 @@ class PartnerRevenueMetrics(BaseModel):
     currency: str = "USD"
 
 
-class PartnerRevenueDashboard(BaseModel):
+class PartnerRevenueDashboard(BaseModel):  # BaseModel resolves to Any in isolation
     """Aggregated partner revenue dashboard metrics."""
 
     model_config = ConfigDict()
@@ -639,13 +643,13 @@ class PartnerRevenueDashboard(BaseModel):
     active_customers: int = 0
 
     # Activity
-    recent_commissions: list[PartnerCommissionEventResponse] = Field(default_factory=list)
-    recent_payouts: list[PartnerPayoutResponse] = Field(default_factory=list)
+    recent_commissions: list[PartnerCommissionEventResponse] = Field(default_factory=lambda: [])
+    recent_payouts: list[PartnerPayoutResponse] = Field(default_factory=lambda: [])
     pending_commission_events: int = 0
     next_payout_date: datetime | None = None
 
 
-class PartnerStatementResponse(BaseModel):
+class PartnerStatementResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Monthly partner statement derived from payout data."""
 
     model_config = ConfigDict()

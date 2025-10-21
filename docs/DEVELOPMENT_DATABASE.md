@@ -385,7 +385,7 @@ make db-reset-seed
 
 ## Related Documentation
 
-- `CLAUDE.md` - Testing guidelines
+- `[Legacy AI assistant guidelines](../CLAUDE_OLD.md)` - Historical reference
 - `FIXTURE_DOCUMENTATION.md` - Test fixtures
 - `scripts/seed_data.py` - Main seed script
 - `.gitignore` - Excluded files (includes *.db, *.sqlite)

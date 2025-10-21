@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface UseRealTimeMetricsOptions<T> {
   fetchFn: () => Promise<T>;
@@ -52,7 +52,7 @@ export function useRealTimeMetrics<T>({
       }
     } catch (err) {
       if (mountedRef.current) {
-        const error = err instanceof Error ? err : new Error('Unknown error');
+        const error = err instanceof Error ? err : new Error("Unknown error");
         setError(error);
         onError?.(error);
       }
@@ -116,14 +116,14 @@ export function useRealTimeMetrics<T>({
 // Specialized hook for dashboard metrics
 export function useDashboardMetrics<T>(
   fetchFn: () => Promise<T>,
-  refreshInterval: number = 60000 // 1 minute for dashboard metrics
+  refreshInterval: number = 60000, // 1 minute for dashboard metrics
 ) {
   return useRealTimeMetrics({
     fetchFn,
     refreshInterval,
     enabled: true,
     onError: (error) => {
-      console.error('Dashboard metrics error:', error);
+      console.error("Dashboard metrics error:", error);
     },
   });
 }
@@ -131,7 +131,7 @@ export function useDashboardMetrics<T>(
 // Hook for high-frequency updates (e.g., real-time monitoring)
 export function useHighFrequencyMetrics<T>(
   fetchFn: () => Promise<T>,
-  refreshInterval: number = 5000 // 5 seconds for real-time data
+  refreshInterval: number = 5000, // 5 seconds for real-time data
 ) {
   return useRealTimeMetrics({
     fetchFn,

@@ -5,7 +5,7 @@
  * using small, focused, reusable functions and components.
  */
 
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 // Core composition types
 export type ComponentRenderer<T = any> = (props: T) => ReactNode;
@@ -20,10 +20,10 @@ export type ComposableProps<T = any> = T & {
  */
 export function when<T>(
   condition: ConditionalRenderer<T> | boolean,
-  component: ComponentRenderer<T>
+  component: ComponentRenderer<T>,
 ) {
   return (props: T) => {
-    const shouldRender = typeof condition === 'function' ? condition(props) : condition;
+    const shouldRender = typeof condition === "function" ? condition(props) : condition;
     return shouldRender ? component(props) : null;
   };
 }
@@ -45,7 +45,7 @@ export function compose<T>(...renderers: ComponentRenderer<T>[]) {
  * Slot-based composition
  */
 export function createSlotRenderer<T extends Record<string, unknown>>(
-  slots: Partial<Record<keyof T, ComponentRenderer<T[keyof T]>>>
+  slots: Partial<Record<keyof T, ComponentRenderer<T[keyof T]>>>,
 ) {
   return (props: T) => (
     <>
@@ -102,7 +102,7 @@ export const LayoutComposers = {
     <T,>(gap?: string) =>
     (...renderers: ComponentRenderer<T>[]) =>
     (props: T) => (
-      <div className={`flex flex-col ${gap ? `gap-${gap}` : 'gap-4'}`}>
+      <div className={`flex flex-col ${gap ? `gap-${gap}` : "gap-4"}`}>
         {renderers.map((render, index) => (
           <div key={`item-${index}`}>{render(props)}</div>
         ))}
@@ -113,7 +113,7 @@ export const LayoutComposers = {
     <T,>(gap?: string) =>
     (...renderers: ComponentRenderer<T>[]) =>
     (props: T) => (
-      <div className={`flex flex-row items-center ${gap ? `gap-${gap}` : 'gap-2'}`}>
+      <div className={`flex flex-row items-center ${gap ? `gap-${gap}` : "gap-2"}`}>
         {renderers.map((render, index) => (
           <div key={`item-${index}`}>{render(props)}</div>
         ))}
@@ -147,7 +147,7 @@ export const A11yComposers = {
     ),
 
   withError:
-    <T extends { error?: string }>(errorRenderer: ComponentRenderer<Pick<T, 'error'>>) =>
+    <T extends { error?: string }>(errorRenderer: ComponentRenderer<Pick<T, "error">>) =>
     (component: ComponentRenderer<T>) =>
     (props: T) => (
       <div>
@@ -157,7 +157,7 @@ export const A11yComposers = {
     ),
 
   withHelp:
-    <T extends { help?: string }>(helpRenderer: ComponentRenderer<Pick<T, 'help'>>) =>
+    <T extends { help?: string }>(helpRenderer: ComponentRenderer<Pick<T, "help">>) =>
     (component: ComponentRenderer<T>) =>
     (props: T) => (
       <div>

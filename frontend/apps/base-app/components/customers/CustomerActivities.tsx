@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { logger } from '@/lib/logger';
+import { useState } from "react";
+import { logger } from "@/lib/logger";
 import {
   Clock,
   Plus,
@@ -13,9 +13,9 @@ import {
   LogIn,
   MessageSquare,
   Tag,
-  Loader2
-} from 'lucide-react';
-import { useCustomerActivities, CustomerActivity } from '@/hooks/useCustomers';
+  Loader2,
+} from "lucide-react";
+import { useCustomerActivities, CustomerActivity } from "@/hooks/useCustomers";
 
 interface CustomerActivitiesProps {
   customerId: string;
@@ -44,22 +44,22 @@ function ActivityIcon({ type }: ActivityIconProps) {
   const IconComponent = iconMap[type] || Activity;
 
   const colorMap: Record<string, string> = {
-    created: 'text-green-400',
-    updated: 'text-blue-400',
-    status_changed: 'text-yellow-400',
-    note_added: 'text-purple-400',
-    tag_added: 'text-sky-400',
-    tag_removed: 'text-gray-400',
-    contact_made: 'text-green-400',
-    purchase: 'text-green-500',
-    support_ticket: 'text-orange-400',
-    login: 'text-blue-400',
-    export: 'text-slate-400',
-    import: 'text-slate-400',
+    created: "text-green-400",
+    updated: "text-blue-400",
+    status_changed: "text-yellow-400",
+    note_added: "text-purple-400",
+    tag_added: "text-sky-400",
+    tag_removed: "text-gray-400",
+    contact_made: "text-green-400",
+    purchase: "text-green-500",
+    support_ticket: "text-orange-400",
+    login: "text-blue-400",
+    export: "text-slate-400",
+    import: "text-slate-400",
   };
 
   return (
-    <div className={`p-2 rounded-full bg-slate-800 ${colorMap[type] || 'text-slate-400'}`}>
+    <div className={`p-2 rounded-full bg-slate-800 ${colorMap[type] || "text-slate-400"}`}>
       <IconComponent className="h-4 w-4" />
     </div>
   );
@@ -67,30 +67,30 @@ function ActivityIcon({ type }: ActivityIconProps) {
 
 interface AddActivityModalProps {
   onClose: () => void;
-  onAdd: (activity: Omit<CustomerActivity, 'id' | 'customer_id' | 'created_at'>) => Promise<void>;
+  onAdd: (activity: Omit<CustomerActivity, "id" | "customer_id" | "created_at">) => Promise<void>;
 }
 
 function AddActivityModal({ onClose, onAdd }: AddActivityModalProps) {
   const [formData, setFormData] = useState({
-    activity_type: 'contact_made',
-    title: '',
-    description: '',
+    activity_type: "contact_made",
+    title: "",
+    description: "",
     metadata: {} as Record<string, any>,
   });
   const [loading, setLoading] = useState(false);
 
   const activityTypes = [
-    { value: 'contact_made', label: 'Contact Made' },
-    { value: 'updated', label: 'Updated' },
-    { value: 'status_changed', label: 'Status Changed' },
-    { value: 'note_added', label: 'Note Added' },
-    { value: 'tag_added', label: 'Tag Added' },
-    { value: 'tag_removed', label: 'Tag Removed' },
-    { value: 'purchase', label: 'Purchase' },
-    { value: 'support_ticket', label: 'Support Ticket' },
-    { value: 'login', label: 'Login' },
-    { value: 'export', label: 'Export' },
-    { value: 'import', label: 'Import' },
+    { value: "contact_made", label: "Contact Made" },
+    { value: "updated", label: "Updated" },
+    { value: "status_changed", label: "Status Changed" },
+    { value: "note_added", label: "Note Added" },
+    { value: "tag_added", label: "Tag Added" },
+    { value: "tag_removed", label: "Tag Removed" },
+    { value: "purchase", label: "Purchase" },
+    { value: "support_ticket", label: "Support Ticket" },
+    { value: "login", label: "Login" },
+    { value: "export", label: "Export" },
+    { value: "import", label: "Import" },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -102,7 +102,10 @@ function AddActivityModal({ onClose, onAdd }: AddActivityModalProps) {
       await onAdd(formData);
       onClose();
     } catch (error) {
-      logger.error('Failed to add activity', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Failed to add activity",
+        error instanceof Error ? error : new Error(String(error)),
+      );
     } finally {
       setLoading(false);
     }
@@ -126,12 +129,15 @@ function AddActivityModal({ onClose, onAdd }: AddActivityModalProps) {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Activity Type
-            </label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Activity Type</label>
             <select
               value={formData.activity_type}
-              onChange={(e) => setFormData(prev => ({ ...prev, activity_type: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  activity_type: e.target.value,
+                }))
+              }
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
             >
               {activityTypes.map((type) => (
@@ -143,13 +149,11 @@ function AddActivityModal({ onClose, onAdd }: AddActivityModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Title *
-            </label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Title *</label>
             <input
               type="text"
               value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
               placeholder="Enter activity title"
               required
@@ -157,12 +161,15 @@ function AddActivityModal({ onClose, onAdd }: AddActivityModalProps) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
-              Description
-            </label>
+            <label className="block text-sm font-medium text-slate-300 mb-2">Description</label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
               rows={3}
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
               placeholder="Enter activity description"
@@ -207,20 +214,20 @@ function formatDate(dateString: string): string {
   const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
   if (diffInMinutes < 1) {
-    return 'Just now';
+    return "Just now";
   } else if (diffInMinutes < 60) {
-    return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+    return `${diffInMinutes} minute${diffInMinutes !== 1 ? "s" : ""} ago`;
   } else if (diffInMinutes < 1440) {
     const hours = Math.floor(diffInMinutes / 60);
-    return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+    return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
   } else if (diffInMinutes < 10080) {
     const days = Math.floor(diffInMinutes / 1440);
-    return `${days} day${days !== 1 ? 's' : ''} ago`;
+    return `${days} day${days !== 1 ? "s" : ""} ago`;
   } else {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   }
 }
@@ -242,7 +249,7 @@ function ActivityItem({ activity }: { activity: CustomerActivity }) {
                 <div className="bg-slate-700 rounded p-2 text-xs text-slate-300">
                   {Object.entries(activity.metadata).map(([key, value]) => (
                     <div key={key} className="flex justify-between">
-                      <span className="capitalize">{key.replace(/_/g, ' ')}:</span>
+                      <span className="capitalize">{key.replace(/_/g, " ")}:</span>
                       <span>{String(value)}</span>
                     </div>
                   ))}
@@ -277,7 +284,9 @@ export function CustomerActivities({ customerId }: CustomerActivitiesProps) {
   const { activities, loading, error, addActivity } = useCustomerActivities(customerId);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const handleAddActivity = async (activityData: Omit<CustomerActivity, 'id' | 'customer_id' | 'created_at'>) => {
+  const handleAddActivity = async (
+    activityData: Omit<CustomerActivity, "id" | "customer_id" | "created_at">,
+  ) => {
     await addActivity(activityData);
   };
 
@@ -353,10 +362,7 @@ export function CustomerActivities({ customerId }: CustomerActivitiesProps) {
       )}
 
       {showAddModal && (
-        <AddActivityModal
-          onClose={() => setShowAddModal(false)}
-          onAdd={handleAddActivity}
-        />
+        <AddActivityModal onClose={() => setShowAddModal(false)} onAdd={handleAddActivity} />
       )}
     </div>
   );

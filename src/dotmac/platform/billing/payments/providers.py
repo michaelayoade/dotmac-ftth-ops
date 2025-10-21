@@ -40,7 +40,7 @@ class SetupIntent(BaseModel):
     intent_id: str
     client_secret: str
     status: str
-    payment_method_types: list[str] = Field(default_factory=list)
+    payment_method_types: list[str] = Field(default_factory=lambda: [])
 
 
 class PaymentProvider(ABC):

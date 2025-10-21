@@ -110,10 +110,10 @@ The `@dotmac/primitives` package provides enterprise-grade accessibility feature
 ### Testing Tools
 
 ```typescript
-import { runDevelopmentA11yTest, generateAccessibilityReport } from '@dotmac/primitives';
+import { runDevelopmentA11yTest, generateAccessibilityReport } from "@dotmac/primitives";
 
 // Automated testing during development
-runDevelopmentA11yTest(document.getElementById('my-component'));
+runDevelopmentA11yTest(document.getElementById("my-component"));
 
 // Generate compliance reports
 const result = runAccessibilityTest(container);
@@ -128,7 +128,7 @@ import {
   useScreenReader, // Detects screen reader usage
   useKeyboardNavigation, // Implements arrow key navigation
   announceToScreenReader, // Manual screen reader announcements
-} from '@dotmac/primitives';
+} from "@dotmac/primitives";
 
 const prefersReducedMotion = useReducedMotion();
 const isScreenReader = useScreenReader();
@@ -142,7 +142,7 @@ import {
   generateId, // Unique ID generation for relationships
   generateStatusText, // Color-independent status text
   generateChartDescription, // Automated chart descriptions
-} from '@dotmac/primitives';
+} from "@dotmac/primitives";
 ```
 
 ## 🎮 Interaction Patterns
@@ -198,12 +198,12 @@ import { StatusBadge } from '@dotmac/primitives';
 
 ```typescript
 // ✅ Using accessibility utilities
-import { generateStatusText, announceToScreenReader } from '@dotmac/primitives';
+import { generateStatusText, announceToScreenReader } from "@dotmac/primitives";
 
 const handleStatusChange = (newStatus: string) => {
   setStatus(newStatus);
-  const announcement = generateStatusText(newStatus, 'Service status updated');
-  announceToScreenReader(announcement, 'polite');
+  const announcement = generateStatusText(newStatus, "Service status updated");
+  announceToScreenReader(announcement, "polite");
 };
 ```
 
@@ -213,7 +213,7 @@ const handleStatusChange = (newStatus: string) => {
 
 ```typescript
 // Development testing (runs in browser console)
-import { runDevelopmentA11yTest } from '@dotmac/primitives';
+import { runDevelopmentA11yTest } from "@dotmac/primitives";
 runDevelopmentA11yTest(); // Tests entire page
 
 // Component-specific testing

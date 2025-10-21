@@ -8,7 +8,7 @@ Targets large uncovered blocks in router.py:
 """
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
@@ -25,7 +25,7 @@ from dotmac.platform.user_management.models import EmailVerificationToken, User
 def verification_app():
     """Create test app with auth router."""
     app = FastAPI()
-    app.include_router(auth_router, prefix="/auth")
+    app.include_router(auth_router)
     return app
 
 
@@ -116,7 +116,12 @@ async def test_confirm_email_verification_valid_token(
 
     # Ensure user_id is UUID type
     from uuid import UUID
-    user_uuid = verification_test_user.id if isinstance(verification_test_user.id, UUID) else UUID(str(verification_test_user.id))
+
+    user_uuid = (
+        verification_test_user.id
+        if isinstance(verification_test_user.id, UUID)
+        else UUID(str(verification_test_user.id))
+    )
 
     verification_token = EmailVerificationToken(
         id=uuid4(),
@@ -211,7 +216,12 @@ async def test_confirm_email_verification_expired_token(
 
     # Ensure user_id is UUID type
     from uuid import UUID
-    user_uuid = verification_test_user.id if isinstance(verification_test_user.id, UUID) else UUID(str(verification_test_user.id))
+
+    user_uuid = (
+        verification_test_user.id
+        if isinstance(verification_test_user.id, UUID)
+        else UUID(str(verification_test_user.id))
+    )
 
     verification_token = EmailVerificationToken(
         id=uuid4(),
@@ -272,7 +282,12 @@ async def test_confirm_email_verification_already_used_token(
 
     # Ensure user_id is UUID type
     from uuid import UUID
-    user_uuid = verification_test_user.id if isinstance(verification_test_user.id, UUID) else UUID(str(verification_test_user.id))
+
+    user_uuid = (
+        verification_test_user.id
+        if isinstance(verification_test_user.id, UUID)
+        else UUID(str(verification_test_user.id))
+    )
 
     verification_token = EmailVerificationToken(
         id=uuid4(),
@@ -323,9 +338,11 @@ async def test_login_logs_activity_on_failure(verification_app: FastAPI, async_d
 
     verification_app.dependency_overrides[get_auth_session] = override_session
 
-    with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"), patch(
-        "dotmac.platform.tenant.get_tenant_config", return_value=None
-    ), patch("dotmac.platform.auth.router.log_user_activity", new_callable=AsyncMock) as mock_log:
+    with (
+        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
+        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
+        patch("dotmac.platform.auth.router.log_user_activity", new_callable=AsyncMock) as mock_log,
+    ):
         transport = ASGITransport(app=verification_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.post(
@@ -340,7 +357,9 @@ async def test_login_logs_activity_on_failure(verification_app: FastAPI, async_d
     assert response.status_code == 401
 
     # Verify activity logging was called
-    assert mock_log.called or mock_log.call_count >= 0  # May or may not be called depending on implementation
+    assert (
+        mock_log.called or mock_log.call_count >= 0
+    )  # May or may not be called depending on implementation
 
 
 @pytest.mark.asyncio
@@ -359,8 +378,9 @@ async def test_login_updates_last_login_on_success(
 
     verification_app.dependency_overrides[get_auth_session] = override_session
 
-    with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"), patch(
-        "dotmac.platform.tenant.get_tenant_config", return_value=None
+    with (
+        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
+        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
     ):
         transport = ASGITransport(app=verification_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
@@ -379,7 +399,9 @@ async def test_login_updates_last_login_on_success(
 
 
 @pytest.mark.asyncio
-async def test_password_reset_request(verification_app: FastAPI, verification_test_user: User, async_db_session):
+async def test_password_reset_request(
+    verification_app: FastAPI, verification_test_user: User, async_db_session
+):
     """Test requesting a password reset."""
     from dotmac.platform.auth.router import get_auth_session
 
@@ -406,7 +428,9 @@ async def test_password_reset_request(verification_app: FastAPI, verification_te
 
 
 @pytest.mark.asyncio
-async def test_password_reset_request_nonexistent_email(verification_app: FastAPI, async_db_session):
+async def test_password_reset_request_nonexistent_email(
+    verification_app: FastAPI, async_db_session
+):
     """Test password reset request with nonexistent email."""
     from dotmac.platform.auth.router import get_auth_session
 

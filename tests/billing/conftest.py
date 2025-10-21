@@ -777,25 +777,25 @@ This module provides:
 - Common test entities (customers, payment methods)
 """
 
-from unittest.mock import MagicMock
-from uuid import uuid4
+from unittest.mock import MagicMock  # noqa: E402
+from uuid import uuid4  # noqa: E402
 
-import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
+import pytest  # noqa: E402
+from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 
-from dotmac.platform.billing.core.entities import (
+from dotmac.platform.billing.core.entities import (  # noqa: E402
     InvoiceEntity,
     PaymentEntity,
     PaymentMethodEntity,
 )
-from dotmac.platform.billing.core.enums import (
+from dotmac.platform.billing.core.enums import (  # noqa: E402
     InvoiceStatus,
     PaymentMethodStatus,
     PaymentMethodType,
     PaymentStatus,
 )
-from dotmac.platform.billing.core.models import Payment, PaymentMethod
-from dotmac.platform.billing.models import Invoice
+from dotmac.platform.billing.core.models import Payment, PaymentMethod  # noqa: E402
+from dotmac.platform.billing.models import Invoice  # noqa: E402
 
 # =============================================================================
 # Payment Provider Mocks

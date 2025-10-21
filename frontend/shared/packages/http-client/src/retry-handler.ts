@@ -1,5 +1,5 @@
-import type { RetryConfig, ApiError } from './types';
-import { ErrorNormalizer } from './error-normalizer';
+import type { RetryConfig, ApiError } from "./types";
+import { ErrorNormalizer } from "./error-normalizer";
 
 export class RetryHandler {
   private config: RetryConfig;
@@ -9,24 +9,21 @@ export class RetryHandler {
       retries: 3,
       retryDelay: 1000,
       shouldRetry: ErrorNormalizer.isRetryableError,
-      ...config
+      ...config,
     };
   }
 
-  async execute<T>(
-    operation: () => Promise<T>,
-    currentAttempt: number = 0
-  ): Promise<T> {
+  async execute<T>(operation: () => Promise<T>, currentAttempt: number = 0): Promise<T> {
     try {
       return await operation();
     } catch (error) {
       const normalizedError = ErrorNormalizer.normalize(error);
-      
+
       if (this.shouldRetry(normalizedError, currentAttempt)) {
         await this.delay(currentAttempt);
         return this.execute(operation, currentAttempt + 1);
       }
-      
+
       throw normalizedError;
     }
   }
@@ -35,13 +32,13 @@ export class RetryHandler {
     if (currentAttempt >= this.config.retries) {
       return false;
     }
-    
+
     return this.config.shouldRetry(error);
   }
 
   private delay(attempt: number): Promise<void> {
     const delay = this.calculateDelay(attempt);
-    return new Promise(resolve => setTimeout(resolve, delay));
+    return new Promise((resolve) => setTimeout(resolve, delay));
   }
 
   private calculateDelay(attempt: number): number {
@@ -49,7 +46,7 @@ export class RetryHandler {
     const baseDelay = this.config.retryDelay;
     const exponentialDelay = baseDelay * Math.pow(2, attempt);
     const jitter = Math.random() * 0.1 * exponentialDelay;
-    
+
     return Math.min(exponentialDelay + jitter, 30000); // Max 30 seconds
   }
 

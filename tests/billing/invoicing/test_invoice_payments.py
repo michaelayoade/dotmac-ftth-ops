@@ -37,7 +37,7 @@ class TestInvoiceServicePaymentManagement:
         mock_db.execute = AsyncMock(return_value=build_success_result(mock_invoice_entity))
 
         # Mark invoice as paid
-        result = await service.mark_invoice_paid(
+        await service.mark_invoice_paid(
             sample_tenant_id, mock_invoice_entity.invoice_id, payment_id=str(uuid4())
         )
 
@@ -77,7 +77,7 @@ class TestInvoiceServicePaymentManagement:
         credit_application_id = str(uuid4())
 
         # Apply credit
-        result = await service.apply_credit_to_invoice(
+        await service.apply_credit_to_invoice(
             sample_tenant_id, mock_invoice_entity.invoice_id, credit_amount, credit_application_id
         )
 
@@ -112,7 +112,7 @@ class TestInvoiceServicePaymentManagement:
         credit_application_id = str(uuid4())
 
         # Apply full credit
-        result = await service.apply_credit_to_invoice(
+        await service.apply_credit_to_invoice(
             sample_tenant_id, mock_invoice_entity.invoice_id, credit_amount, credit_application_id
         )
 
@@ -145,7 +145,7 @@ class TestInvoiceServicePaymentManagement:
         mock_db.execute = AsyncMock(return_value=build_success_result(mock_invoice_entity))
 
         # Update payment status
-        result = await service.update_invoice_payment_status(
+        await service.update_invoice_payment_status(
             sample_tenant_id, mock_invoice_entity.invoice_id, PaymentStatus.SUCCEEDED
         )
 
@@ -166,7 +166,7 @@ class TestInvoiceServicePaymentManagement:
         mock_db.execute = AsyncMock(return_value=build_success_result(mock_invoice_entity))
 
         # Update payment status
-        result = await service.update_invoice_payment_status(
+        await service.update_invoice_payment_status(
             sample_tenant_id, mock_invoice_entity.invoice_id, PaymentStatus.PARTIALLY_REFUNDED
         )
 

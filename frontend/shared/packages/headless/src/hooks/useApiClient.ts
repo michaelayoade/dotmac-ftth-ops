@@ -4,9 +4,9 @@
  * Following DRY patterns from existing hooks
  */
 
-import { useMemo } from 'react';
-import { getApiClient, createApiClient, ApiClient } from '../api/client';
-import type { ApiClientConfig } from '../api/types';
+import { useMemo } from "react";
+import { getApiClient, createApiClient, ApiClient } from "../api/client";
+import type { ApiClientConfig } from "../api/types";
 
 // Global client instance
 let globalClient: ApiClient | null = null;
@@ -20,9 +20,9 @@ export function useApiClient(config?: ApiClientConfig): ApiClient {
       // If no client exists, create one with provided or default config
       if (!globalClient) {
         globalClient = createApiClient({
-          baseUrl: '/api',
+          baseUrl: "/api",
           defaultHeaders: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           timeout: 30000,
           retries: 3,
@@ -30,17 +30,17 @@ export function useApiClient(config?: ApiClientConfig): ApiClient {
           caching: true,
           csrf: true,
           auth: {
-            tokenHeader: 'Authorization',
-            refreshEndpoint: '/auth/refresh',
+            tokenHeader: "Authorization",
+            refreshEndpoint: "/auth/refresh",
             autoRefresh: true,
           },
           onError: (error) => {
-            console.error('API Error:', error);
+            console.error("API Error:", error);
           },
           onUnauthorized: () => {
             // Handle unauthorized access
-            if (typeof window !== 'undefined') {
-              window.location.href = '/login';
+            if (typeof window !== "undefined") {
+              window.location.href = "/login";
             }
           },
           ...config,

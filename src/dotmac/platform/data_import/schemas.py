@@ -14,7 +14,7 @@ from dotmac.platform.data_import.models import ImportJob, ImportJobStatus
 from dotmac.platform.data_import.service import ImportResult
 
 
-class ImportJobResponse(BaseModel):
+class ImportJobResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response model for import job details."""
 
     model_config = ConfigDict(populate_by_name=True, from_attributes=True, use_enum_values=True)
@@ -89,7 +89,7 @@ class ImportJobResponse(BaseModel):
         return cls(**data)
 
 
-class ImportJobListResponse(BaseModel):
+class ImportJobListResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response model for list of import jobs."""
 
     model_config = ConfigDict()
@@ -100,7 +100,7 @@ class ImportJobListResponse(BaseModel):
     offset: int = Field(description="Number of results skipped")
 
 
-class ImportStatusResponse(BaseModel):
+class ImportStatusResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response model for import job status check."""
 
     model_config = ConfigDict()
@@ -118,7 +118,7 @@ class ImportStatusResponse(BaseModel):
     error_message: str | None = Field(None, description="Error if failed")
 
 
-class ImportFailureResponse(BaseModel):
+class ImportFailureResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response model for import failure details."""
 
     model_config = ConfigDict()
@@ -130,7 +130,7 @@ class ImportFailureResponse(BaseModel):
     field_errors: dict[str, str] = Field(default_factory=dict, description="Field-level errors")
 
 
-class ImportRequest(BaseModel):
+class ImportRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request model for initiating import."""
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
@@ -141,7 +141,7 @@ class ImportRequest(BaseModel):
     config: dict[str, Any] = Field(default_factory=dict, description="Additional configuration")
 
 
-class BulkImportRequest(BaseModel):
+class BulkImportRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request model for bulk import operations."""
 
     model_config = ConfigDict()
@@ -152,7 +152,7 @@ class BulkImportRequest(BaseModel):
     parallel: bool = Field(default=False, description="Process imports in parallel")
 
 
-class ImportTemplateResponse(BaseModel):
+class ImportTemplateResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Response model for import template download."""
 
     model_config = ConfigDict()

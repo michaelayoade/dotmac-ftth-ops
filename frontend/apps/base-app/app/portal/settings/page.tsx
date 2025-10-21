@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 import { useState } from "react";
 import { usePartnerProfile, useUpdatePartnerProfile } from "@/hooks/usePartnerPortal";
 import { Save, Building2, Mail, Phone, Globe, AlertCircle } from "lucide-react";
@@ -82,27 +85,19 @@ export default function PartnerSettingsPage() {
         {/* Sidebar - Partner Info */}
         <div className="space-y-6">
           <div className="bg-card p-6 rounded-lg border border-border">
-            <h2 className="text-lg font-semibold text-white mb-4">
-              Partner Information
-            </h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Partner Information</h2>
             <div className="space-y-3 text-sm">
               <div>
                 <div className="text-muted-foreground">Partner Number</div>
-                <div className="text-white font-medium">
-                  {profile.partner_number}
-                </div>
+                <div className="text-white font-medium">{profile.partner_number}</div>
               </div>
               <div>
                 <div className="text-muted-foreground">Status</div>
-                <div className="text-white font-medium capitalize">
-                  {profile.status}
-                </div>
+                <div className="text-white font-medium capitalize">{profile.status}</div>
               </div>
               <div>
                 <div className="text-muted-foreground">Tier</div>
-                <div className="text-white font-medium capitalize">
-                  {profile.tier}
-                </div>
+                <div className="text-white font-medium capitalize">{profile.tier}</div>
               </div>
               <div>
                 <div className="text-muted-foreground">Commission Model</div>
@@ -122,9 +117,7 @@ export default function PartnerSettingsPage() {
           </div>
 
           <div className="bg-card p-6 rounded-lg border border-border">
-            <h2 className="text-lg font-semibold text-white mb-4">
-              Account Dates
-            </h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Account Dates</h2>
             <div className="space-y-3 text-sm">
               <div>
                 <div className="text-muted-foreground">Created</div>
@@ -147,16 +140,12 @@ export default function PartnerSettingsPage() {
           {saveSuccess && (
             <div className="mb-4 p-4 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-green-400" />
-              <div className="text-sm text-green-400">
-                Profile updated successfully!
-              </div>
+              <div className="text-sm text-green-400">Profile updated successfully!</div>
             </div>
           )}
 
           <div className="bg-card p-6 rounded-lg border border-border">
-            <h2 className="text-xl font-semibold text-white mb-6">
-              Profile Information
-            </h2>
+            <h2 className="text-xl font-semibold text-white mb-6">Profile Information</h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
@@ -169,9 +158,7 @@ export default function PartnerSettingsPage() {
                     type="text"
                     required
                     value={formData.company_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, company_name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                     className="w-full pl-10 pr-4 py-2 bg-accent border border-border rounded-lg text-white focus:outline-none focus:border-blue-500"
                     placeholder="Your Company Inc."
                   />
@@ -187,9 +174,7 @@ export default function PartnerSettingsPage() {
                   <input
                     type="text"
                     value={formData.legal_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, legal_name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, legal_name: e.target.value })}
                     className="w-full pl-10 pr-4 py-2 bg-accent border border-border rounded-lg text-white focus:outline-none focus:border-blue-500"
                     placeholder="Your Company Legal Name LLC"
                   />
@@ -205,9 +190,7 @@ export default function PartnerSettingsPage() {
                   <input
                     type="url"
                     value={formData.website}
-                    onChange={(e) =>
-                      setFormData({ ...formData, website: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                     className="w-full pl-10 pr-4 py-2 bg-accent border border-border rounded-lg text-white focus:outline-none focus:border-blue-500"
                     placeholder="https://yourcompany.com"
                   />
@@ -224,7 +207,10 @@ export default function PartnerSettingsPage() {
                     type="email"
                     value={formData.billing_email}
                     onChange={(e) =>
-                      setFormData({ ...formData, billing_email: e.target.value })
+                      setFormData({
+                        ...formData,
+                        billing_email: e.target.value,
+                      })
                     }
                     className="w-full pl-10 pr-4 py-2 bg-accent border border-border rounded-lg text-white focus:outline-none focus:border-blue-500"
                     placeholder="billing@yourcompany.com"
@@ -244,9 +230,7 @@ export default function PartnerSettingsPage() {
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full pl-10 pr-4 py-2 bg-accent border border-border rounded-lg text-white focus:outline-none focus:border-blue-500"
                     placeholder="+1 (555) 123-4567"
                   />
@@ -285,9 +269,7 @@ export default function PartnerSettingsPage() {
 
           {/* Read-Only Section */}
           <div className="bg-card p-6 rounded-lg border border-border mt-6">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Contact Information
-            </h2>
+            <h2 className="text-xl font-semibold text-white mb-4">Contact Information</h2>
             <div className="space-y-3 text-sm">
               <div>
                 <div className="text-muted-foreground">Primary Email</div>

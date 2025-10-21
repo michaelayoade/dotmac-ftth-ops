@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import * as React from 'react';
-import Link from 'next/link';
-import { LucideIcon, ArrowUpRight, AlertCircle, TrendingUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import * as React from "react";
+import Link from "next/link";
+import { LucideIcon, ArrowUpRight, AlertCircle, TrendingUp } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MetricCardEnhancedProps {
   title: string;
@@ -33,13 +33,13 @@ export function MetricCardEnhanced({
   loading = false,
   error,
   emptyStateMessage,
-  className = '',
+  className = "",
 }: MetricCardEnhancedProps) {
   const formattedValue = React.useMemo(() => {
-    if (currency && typeof value === 'number') {
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
+    if (currency && typeof value === "number") {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
         minimumFractionDigits: 0,
         maximumFractionDigits: 2,
       }).format(value);
@@ -47,7 +47,7 @@ export function MetricCardEnhanced({
     return value;
   }, [value, currency]);
 
-  const isEmpty = value === 0 || value === '0';
+  const isEmpty = value === 0 || value === "0";
   const showEmptyState = isEmpty && emptyStateMessage && !loading && !error;
 
   const content = (
@@ -55,14 +55,17 @@ export function MetricCardEnhanced({
       className={cn(
         "group relative rounded-lg border p-6 transition-all duration-200",
         "bg-card border-border",
-        !error && "hover:border-border dark:hover:border-border hover:shadow-lg hover:shadow-sky-500/5",
+        !error &&
+          "hover:border-border dark:hover:border-border hover:shadow-lg hover:shadow-sky-500/5",
         error && "border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-950/20",
-        className
+        className,
       )}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 space-y-2">
-          <p className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">{title}</p>
+          <p className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
+            {title}
+          </p>
 
           {loading ? (
             <div className="space-y-2">
@@ -79,10 +82,14 @@ export function MetricCardEnhanced({
             </div>
           ) : (
             <>
-              <p className={cn(
-                "text-3xl font-bold transition-colors duration-200",
-                showEmptyState ? "text-muted-foreground" : "text-foreground group-hover:text-sky-400"
-              )}>
+              <p
+                className={cn(
+                  "text-3xl font-bold transition-colors duration-200",
+                  showEmptyState
+                    ? "text-muted-foreground"
+                    : "text-foreground group-hover:text-sky-400",
+                )}
+              >
                 {formattedValue}
               </p>
 
@@ -93,14 +100,16 @@ export function MetricCardEnhanced({
               ) : null}
 
               {trend && !showEmptyState && (
-                <div className={cn(
-                  "flex items-center text-sm transition-colors duration-200",
-                  trend.isPositive ? "text-green-400" : "text-red-400"
-                )}>
+                <div
+                  className={cn(
+                    "flex items-center text-sm transition-colors duration-200",
+                    trend.isPositive ? "text-green-400" : "text-red-400",
+                  )}
+                >
                   <TrendingUp
                     className={cn(
                       "h-4 w-4 mr-1 transition-transform duration-200",
-                      !trend.isPositive && "rotate-180"
+                      !trend.isPositive && "rotate-180",
                     )}
                   />
                   {Math.abs(trend.value)}% from last month
@@ -110,17 +119,21 @@ export function MetricCardEnhanced({
           )}
         </div>
 
-        <div className={cn(
-          "p-3 rounded-lg transition-all duration-200",
-          error ? "bg-red-900/30" : "bg-muted group-hover:bg-muted group-hover:scale-110"
-        )}>
+        <div
+          className={cn(
+            "p-3 rounded-lg transition-all duration-200",
+            error ? "bg-red-900/30" : "bg-muted group-hover:bg-muted group-hover:scale-110",
+          )}
+        >
           {error ? (
             <AlertCircle className="h-6 w-6 text-red-400" />
           ) : (
-            <Icon className={cn(
-              "h-6 w-6 transition-colors duration-200",
-              showEmptyState ? "text-muted-foreground" : "text-sky-400 group-hover:text-sky-300"
-            )} />
+            <Icon
+              className={cn(
+                "h-6 w-6 transition-colors duration-200",
+                showEmptyState ? "text-muted-foreground" : "text-sky-400 group-hover:text-sky-300",
+              )}
+            />
           )}
         </div>
       </div>

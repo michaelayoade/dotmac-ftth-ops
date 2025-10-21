@@ -45,7 +45,7 @@ class Route:
     pattern: str
     method: RouteMethod
     service: str
-    handler: Callable
+    handler: Callable[..., Any]
     route_type: RouteType = RouteType.DIRECT
     timeout: int = 30
     cache_ttl: int | None = None
@@ -55,7 +55,7 @@ class Route:
 
     def __post_init__(self) -> None:
         """Compile pattern after initialization."""
-        self._compiled_pattern: Pattern = re.compile(self.pattern)
+        self._compiled_pattern: Pattern[Any] = re.compile(self.pattern)
 
     def matches(self, path: str, method: str) -> bool:
         """
@@ -114,7 +114,7 @@ class RouteRegistry:
         for existing in self.routes:
             if existing.pattern == route.pattern and existing.method == route.method:
                 raise ValueError(
-                    f"Route conflict: {route.method} {route.pattern} " f"already registered"
+                    f"Route conflict: {route.method} {route.pattern} already registered"
                 )
 
         self.routes.append(route)
@@ -211,7 +211,7 @@ def register_route(
     pattern: str,
     method: RouteMethod,
     service: str,
-    handler: Callable,
+    handler: Callable[..., Any],
     **kwargs: Any,
 ) -> None:
     """

@@ -5,6 +5,7 @@ This directory contains MSW configuration for API mocking and contract validatio
 ## Overview
 
 MSW intercepts network requests at the service worker level and can either:
+
 1. **Proxy Mode** (default): Forward requests to real backend while validating contracts
 2. **Mock Mode**: Return deterministic data for isolated UI testing
 
@@ -82,6 +83,7 @@ interface Integration {
 ```
 
 If backend response doesn't match:
+
 - **Development**: Error logged in browser console
 - **Tests**: Request passes through (falls back to direct API call)
 
@@ -146,21 +148,27 @@ http.get(`${API_BASE}/your-endpoint`, () => {
 ## Testing Strategy
 
 ### Layer 1: Backend Smoke Tests (Fastest)
+
 ```bash
 pytest tests/integration/test_frontend_backend_smoke.py -v
 ```
+
 Validates endpoint existence and basic response structure.
 
 ### Layer 2: MSW Contract Tests (Fast)
+
 ```bash
 npx playwright test tests/msw-contract-validation.spec.ts
 ```
+
 Validates TypeScript interfaces match backend Pydantic models.
 
 ### Layer 3: Full E2E Tests (Comprehensive)
+
 ```bash
 npx playwright test tests/admin-*.spec.ts
 ```
+
 Validates complete user journeys with real UI interactions.
 
 ## Benefits

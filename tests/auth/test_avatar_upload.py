@@ -18,7 +18,7 @@ from dotmac.platform.user_management.models import User
 def app():
     """Create FastAPI app for testing."""
     app = FastAPI()
-    app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+    app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
     return app
 
 
@@ -196,7 +196,7 @@ async def test_upload_avatar_updates_user_profile(
     )
 
     assert upload_response.status_code == 200
-    avatar_url = upload_response.json()["avatar_url"]
+    upload_response.json()["avatar_url"]
 
     # Get current user profile
     profile_response = await client.get(

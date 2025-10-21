@@ -1,0 +1,33 @@
+[Unit]
+Description=DotMac WebSocket Control Workers
+After=network.target redis.service postgresql.service
+Wants=redis.service postgresql.service
+
+[Service]
+Type=simple
+User=dotmac
+Group=dotmac
+WorkingDirectory=/opt/dotmac
+Environment="DATABASE_URL=postgresql://dotmac_user:change-me@localhost:5432/dotmac"
+Environment="REDIS_URL=redis://:change-me@localhost:6379/0"
+Environment="LOG_LEVEL=INFO"
+Environment="PYTHONPATH=/opt/dotmac/src"
+
+# Run the control workers
+ExecStart=/opt/dotmac/.venv/bin/python -m dotmac.platform.realtime.control_workers
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Resource limits
+LimitNOFILE=65536
+Nice=0
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=dotmac-control-workers
+
+[Install]
+WantedBy=multi-user.target

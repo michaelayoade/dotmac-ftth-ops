@@ -2,12 +2,13 @@
  * React Query hooks for user management
  *
  * Connects to backend user management API:
- * - GET /api/v1/user-management/users - List all users
- * - GET /api/v1/user-management/users/{id} - Get user details
- * - PUT /api/v1/user-management/users/{id} - Update user
- * - DELETE /api/v1/user-management/users/{id} - Delete user
- * - POST /api/v1/user-management/users/{id}/disable - Disable user
- * - POST /api/v1/user-management/users/{id}/enable - Enable user
+ * - GET /api/v1/users - List all users
+ * - GET /api/v1/users/{id} - Get user details
+ * - GET /api/v1/users/me - Current user
+ * - PUT /api/v1/users/{id} - Update user
+ * - DELETE /api/v1/users/{id} - Delete user
+ * - POST /api/v1/users/{id}/disable - Disable user
+ * - POST /api/v1/users/{id}/enable - Enable user
  */
 
 import {
@@ -16,10 +17,10 @@ import {
   useQueryClient,
   type UseQueryOptions,
   type QueryKey,
-} from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/client';
-import { useToast } from '@/components/ui/use-toast';
-import { extractDataOrThrow } from '@/lib/api/response-helpers';
+} from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { useToast } from "@/components/ui/use-toast";
+import { extractDataOrThrow } from "@/lib/api/response-helpers";
 
 // ============================================
 // Types matching backend user_management models
@@ -68,20 +69,18 @@ export interface UserUpdateRequest {
 
 type QueryOptions<TData, TKey extends QueryKey> = Omit<
   UseQueryOptions<TData, Error, TData, TKey>,
-  'queryKey' | 'queryFn'
+  "queryKey" | "queryFn"
 >;
 
 /**
  * Fetch all users
  */
-export function useUsers(
-  options?: QueryOptions<User[], ['users']>
-) {
-  return useQuery<User[], Error, User[], ['users']>({
-    queryKey: ['users'],
+export function useUsers(options?: QueryOptions<User[], ["users"]>) {
+  return useQuery<User[], Error, User[], ["users"]>({
+    queryKey: ["users"],
     queryFn: async () => {
-      const response = await apiClient.get<UserListResponse>('/user-management/users');
-      const payload = extractDataOrThrow(response, 'Failed to load users');
+      const response = await apiClient.get<UserListResponse>("/users");
+      const payload = extractDataOrThrow(response, "Failed to load users");
       return payload.users;
     },
     ...options,
@@ -91,15 +90,12 @@ export function useUsers(
 /**
  * Fetch single user by ID
  */
-export function useUser(
-  userId: string,
-  options?: QueryOptions<User, ['users', string]>
-) {
-  return useQuery<User, Error, User, ['users', string]>({
-    queryKey: ['users', userId],
+export function useUser(userId: string, options?: QueryOptions<User, ["users", string]>) {
+  return useQuery<User, Error, User, ["users", string]>({
+    queryKey: ["users", userId],
     queryFn: async () => {
-      const response = await apiClient.get<User>(`/user-management/users/${userId}`);
-      return extractDataOrThrow(response, 'Failed to load user');
+      const response = await apiClient.get<User>(`/users/${userId}`);
+      return extractDataOrThrow(response, "Failed to load user");
     },
     enabled: !!userId,
     ...options,
@@ -109,14 +105,12 @@ export function useUser(
 /**
  * Get current authenticated user
  */
-export function useCurrentUser(
-  options?: QueryOptions<User, ['users', 'me']>
-) {
-  return useQuery<User, Error, User, ['users', 'me']>({
-    queryKey: ['users', 'me'],
+export function useCurrentUser(options?: QueryOptions<User, ["users", "me"]>) {
+  return useQuery<User, Error, User, ["users", "me"]>({
+    queryKey: ["users", "me"],
     queryFn: async () => {
-      const response = await apiClient.get<User>('/user-management/me');
-      return extractDataOrThrow(response, 'Failed to load current user');
+      const response = await apiClient.get<User>("/users/me");
+      return extractDataOrThrow(response, "Failed to load current user");
     },
     ...options,
   });
@@ -135,24 +129,24 @@ export function useUpdateUser() {
 
   return useMutation({
     mutationFn: async ({ userId, data }: { userId: string; data: UserUpdateRequest }) => {
-      const response = await apiClient.put<User>(`/user-management/users/${userId}`, data);
-      return extractDataOrThrow(response, 'Failed to update user');
+      const response = await apiClient.put<User>(`/users/${userId}`, data);
+      return extractDataOrThrow(response, "Failed to update user");
     },
     onSuccess: (data) => {
       // Invalidate queries
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      queryClient.invalidateQueries({ queryKey: ['users', data.id] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["users", data.id] });
 
       toast({
-        title: 'User updated',
+        title: "User updated",
         description: `${data.full_name || data.username} was updated successfully.`,
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Update failed',
-        description: error.response?.data?.detail || 'Failed to update user',
-        variant: 'destructive',
+        title: "Update failed",
+        description: error.response?.data?.detail || "Failed to update user",
+        variant: "destructive",
       });
     },
   });
@@ -167,25 +161,25 @@ export function useDeleteUser() {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiClient.delete(`/user-management/users/${userId}`);
-      // Allow success=false for 204 No Content (DELETE operations)
-      if (!response.success && response.error?.status !== 204) {
-        throw new Error(response.error?.message || 'Failed to delete user');
+      const response = await apiClient.delete(`/users/${userId}`);
+      // Check for successful status codes (2xx)
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error("Failed to delete user");
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
 
       toast({
-        title: 'User deleted',
-        description: 'User was removed successfully.',
+        title: "User deleted",
+        description: "User was removed successfully.",
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Delete failed',
-        description: error.response?.data?.detail || 'Failed to delete user',
-        variant: 'destructive',
+        title: "Delete failed",
+        description: error.response?.data?.detail || "Failed to delete user",
+        variant: "destructive",
       });
     },
   });
@@ -200,24 +194,24 @@ export function useDisableUser() {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiClient.post(`/user-management/users/${userId}/disable`);
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to disable user');
+      const response = await apiClient.post(`/users/${userId}/disable`);
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error("Failed to disable user");
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
 
       toast({
-        title: 'User disabled',
-        description: 'User account has been disabled.',
+        title: "User disabled",
+        description: "User account has been disabled.",
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Disable failed',
-        description: error.response?.data?.detail || 'Failed to disable user',
-        variant: 'destructive',
+        title: "Disable failed",
+        description: error.response?.data?.detail || "Failed to disable user",
+        variant: "destructive",
       });
     },
   });
@@ -232,24 +226,24 @@ export function useEnableUser() {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      const response = await apiClient.post(`/user-management/users/${userId}/enable`);
-      if (!response.success) {
-        throw new Error(response.error?.message || 'Failed to enable user');
+      const response = await apiClient.post(`/users/${userId}/enable`);
+      if (response.status < 200 || response.status >= 300) {
+        throw new Error("Failed to enable user");
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ["users"] });
 
       toast({
-        title: 'User enabled',
-        description: 'User account has been enabled.',
+        title: "User enabled",
+        description: "User account has been enabled.",
       });
     },
     onError: (error: any) => {
       toast({
-        title: 'Enable failed',
-        description: error.response?.data?.detail || 'Failed to enable user',
-        variant: 'destructive',
+        title: "Enable failed",
+        description: error.response?.data?.detail || "Failed to enable user",
+        variant: "destructive",
       });
     },
   });
@@ -269,18 +263,18 @@ export function getUserDisplayName(user: User): string {
 /**
  * Get user status
  */
-export function getUserStatus(user: User): 'Active' | 'Suspended' | 'Invited' {
-  if (!user.is_active) return 'Suspended';
-  if (!user.is_verified) return 'Invited';
-  return 'Active';
+export function getUserStatus(user: User): "Active" | "Suspended" | "Invited" {
+  if (!user.is_active) return "Suspended";
+  if (!user.is_verified) return "Invited";
+  return "Active";
 }
 
 /**
  * Get user primary role
  */
 export function getUserPrimaryRole(user: User): string {
-  if (user.is_platform_admin) return 'Platform Admin';
-  if (user.is_superuser) return 'Superuser';
+  if (user.is_platform_admin) return "Platform Admin";
+  if (user.is_superuser) return "Superuser";
   if (user.roles && user.roles.length > 0) {
     // Capitalize first letter
     const primaryRole = user.roles[0];
@@ -288,28 +282,28 @@ export function getUserPrimaryRole(user: User): string {
       return primaryRole.charAt(0).toUpperCase() + primaryRole.slice(1);
     }
   }
-  return 'User';
+  return "User";
 }
 
 /**
  * Format last seen timestamp
  */
 export function formatLastSeen(lastLogin: string | null): string {
-  if (!lastLogin) return 'Never';
+  if (!lastLogin) return "Never";
 
   const date = new Date(lastLogin);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
 
   const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
 
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 30) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+  if (diffDays < 30) return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
 
   return date.toLocaleDateString();
 }

@@ -1,12 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useNotifications } from './useNotifications';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNotifications } from "./useNotifications";
 
 export interface BillingAccount {
   id: string;
   customerId: string;
   accountNumber: string;
-  billingCycle: 'monthly' | 'quarterly' | 'annually';
-  status: 'active' | 'suspended' | 'cancelled' | 'past_due';
+  billingCycle: "monthly" | "quarterly" | "annually";
+  status: "active" | "suspended" | "cancelled" | "past_due";
   balance: number;
   nextBillDate: Date;
   lastPaymentDate?: Date;
@@ -18,12 +18,12 @@ export interface BillingAccount {
 
 export interface PaymentMethod {
   id: string;
-  type: 'credit_card' | 'bank_account' | 'paypal' | 'ach' | 'wire';
+  type: "credit_card" | "bank_account" | "paypal" | "ach" | "wire";
   isDefault: boolean;
   lastFour: string;
   expiryDate?: string;
   brand?: string;
-  status: 'active' | 'expired' | 'declined';
+  status: "active" | "expired" | "declined";
   billingAddress?: Address;
 }
 
@@ -50,7 +50,7 @@ export interface Invoice {
   invoiceNumber: string;
   customerId: string;
   accountId: string;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled' | 'refunded';
+  status: "draft" | "sent" | "paid" | "overdue" | "cancelled" | "refunded";
   issueDate: Date;
   dueDate: Date;
   paidDate?: Date;
@@ -86,9 +86,9 @@ export interface Payment {
   customerId: string;
   amount: number;
   currency: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' | 'refunded';
+  status: "pending" | "processing" | "completed" | "failed" | "cancelled" | "refunded";
   method: PaymentMethod;
-  gateway: 'stripe' | 'paypal' | 'square' | 'authorize_net' | 'manual';
+  gateway: "stripe" | "paypal" | "square" | "authorize_net" | "manual";
   transactionId?: string;
   gatewayTransactionId?: string;
   processedAt?: Date;
@@ -118,7 +118,7 @@ export interface Subscription {
   id: string;
   customerId: string;
   planId: string;
-  status: 'active' | 'cancelled' | 'past_due' | 'unpaid' | 'trialing';
+  status: "active" | "cancelled" | "past_due" | "unpaid" | "trialing";
   currentPeriodStart: Date;
   currentPeriodEnd: Date;
   trialStart?: Date;
@@ -205,7 +205,7 @@ const initialState: BillingState = {
 
 export function useBilling(options: UseBillingOptions = {}) {
   const {
-    apiEndpoint = '/api/billing',
+    apiEndpoint = "/api/billing",
     websocketEndpoint,
     apiKey,
     tenantId,
@@ -227,20 +227,20 @@ export function useBilling(options: UseBillingOptions = {}) {
   const apiCall = useCallback(
     async (endpoint: string, options: RequestInit = {}) => {
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...(options.headers as Record<string, string>),
       };
 
       if (apiKey) {
-        headers['Authorization'] = `Bearer ${apiKey}`;
+        headers["Authorization"] = `Bearer ${apiKey}`;
       }
 
       if (tenantId) {
-        headers['X-Tenant-ID'] = tenantId;
+        headers["X-Tenant-ID"] = tenantId;
       }
 
       if (resellerId) {
-        headers['X-Reseller-ID'] = resellerId;
+        headers["X-Reseller-ID"] = resellerId;
       }
 
       const response = await fetch(`${apiEndpoint}${endpoint}`, {
@@ -255,7 +255,7 @@ export function useBilling(options: UseBillingOptions = {}) {
 
       return response.json();
     },
-    [apiEndpoint, apiKey, tenantId, resellerId]
+    [apiEndpoint, apiKey, tenantId, resellerId],
   );
 
   // WebSocket Connection
@@ -266,9 +266,9 @@ export function useBilling(options: UseBillingOptions = {}) {
       if (websocketRef.current?.readyState === WebSocket.OPEN) return;
 
       const wsUrl = new URL(websocketEndpoint);
-      if (apiKey) wsUrl.searchParams.set('apiKey', apiKey);
-      if (tenantId) wsUrl.searchParams.set('tenantId', tenantId);
-      if (resellerId) wsUrl.searchParams.set('resellerId', resellerId);
+      if (apiKey) wsUrl.searchParams.set("apiKey", apiKey);
+      if (tenantId) wsUrl.searchParams.set("tenantId", tenantId);
+      if (resellerId) wsUrl.searchParams.set("resellerId", resellerId);
 
       const ws = new WebSocket(wsUrl.toString());
       websocketRef.current = ws;
@@ -278,11 +278,11 @@ export function useBilling(options: UseBillingOptions = {}) {
         retryCountRef.current = 0;
 
         addNotification({
-          type: 'system',
-          priority: 'low',
-          title: 'Billing System',
-          message: 'Real-time billing updates connected',
-          channel: ['browser'],
+          type: "system",
+          priority: "low",
+          title: "Billing System",
+          message: "Real-time billing updates connected",
+          channel: ["browser"],
           persistent: false,
         });
       };
@@ -292,91 +292,99 @@ export function useBilling(options: UseBillingOptions = {}) {
           const data = JSON.parse(event.data);
 
           switch (data.type) {
-            case 'payment_completed':
+            case "payment_completed":
               setState((prev) => ({
                 ...prev,
                 payments: [data.payment, ...prev.payments],
                 invoices: prev.invoices.map((inv) =>
                   inv.id === data.payment.invoiceId
-                    ? { ...inv, status: 'paid', paidDate: new Date(data.payment.processedAt) }
-                    : inv
+                    ? {
+                        ...inv,
+                        status: "paid",
+                        paidDate: new Date(data.payment.processedAt),
+                      }
+                    : inv,
                 ),
               }));
 
               addNotification({
-                type: 'success',
-                priority: 'medium',
-                title: 'Payment Received',
+                type: "success",
+                priority: "medium",
+                title: "Payment Received",
                 message: `Payment of $${data.payment.amount} completed successfully`,
-                channel: ['browser'],
+                channel: ["browser"],
                 persistent: false,
               });
               break;
 
-            case 'payment_failed':
+            case "payment_failed":
               setState((prev) => ({
                 ...prev,
                 payments: prev.payments.map((payment) =>
                   payment.id === data.paymentId
-                    ? { ...payment, status: 'failed', failureReason: data.reason }
-                    : payment
+                    ? {
+                        ...payment,
+                        status: "failed",
+                        failureReason: data.reason,
+                      }
+                    : payment,
                 ),
               }));
 
               addNotification({
-                type: 'error',
-                priority: 'high',
-                title: 'Payment Failed',
+                type: "error",
+                priority: "high",
+                title: "Payment Failed",
                 message: `Payment failed: ${data.reason}`,
-                channel: ['browser'],
+                channel: ["browser"],
                 persistent: true,
               });
               break;
 
-            case 'invoice_created':
+            case "invoice_created":
               setState((prev) => ({
                 ...prev,
                 invoices: [data.invoice, ...prev.invoices],
               }));
 
               addNotification({
-                type: 'info',
-                priority: 'medium',
-                title: 'New Invoice',
+                type: "info",
+                priority: "medium",
+                title: "New Invoice",
                 message: `Invoice ${data.invoice.invoiceNumber} created`,
-                channel: ['browser'],
+                channel: ["browser"],
                 persistent: false,
               });
               break;
 
-            case 'invoice_overdue':
+            case "invoice_overdue":
               setState((prev) => ({
                 ...prev,
                 invoices: prev.invoices.map((inv) =>
-                  inv.id === data.invoiceId ? { ...inv, status: 'overdue' } : inv
+                  inv.id === data.invoiceId ? { ...inv, status: "overdue" } : inv,
                 ),
               }));
 
               addNotification({
-                type: 'warning',
-                priority: 'high',
-                title: 'Invoice Overdue',
+                type: "warning",
+                priority: "high",
+                title: "Invoice Overdue",
                 message: `Invoice ${data.invoiceNumber} is now overdue`,
-                channel: ['browser'],
+                channel: ["browser"],
                 persistent: true,
               });
               break;
 
-            case 'subscription_renewed':
+            case "subscription_renewed":
               setState((prev) => ({
                 ...prev,
                 subscriptions: prev.subscriptions.map((sub) =>
-                  sub.id === data.subscriptionId ? { ...sub, ...data.updates } : sub
+                  sub.id === data.subscriptionId ? { ...sub, ...data.updates } : sub,
                 ),
               }));
               break;
 
-            case 'stats_update':
+            case "stats_update":
               setState((prev) => ({
                 ...prev,
                 stats: data.stats,
@@ -384,7 +392,7 @@ export function useBilling(options: UseBillingOptions = {}) {
               break;
           }
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
+          console.error("Failed to parse WebSocket message:", error);
         }
       };
 
@@ -402,19 +410,19 @@ export function useBilling(options: UseBillingOptions = {}) {
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error("WebSocket error:", error);
         setState((prev) => ({
           ...prev,
           isConnected: false,
-          error: 'WebSocket connection failed',
+          error: "WebSocket connection failed",
         }));
       };
     } catch (error) {
-      console.error('Failed to establish WebSocket connection:', error);
+      console.error("Failed to establish WebSocket connection:", error);
       setState((prev) => ({
         ...prev,
         isConnected: false,
-        error: error instanceof Error ? error.message : 'Connection failed',
+        error: error instanceof Error ? error.message : "Connection failed",
       }));
     }
   }, [
@@ -434,7 +442,7 @@ export function useBilling(options: UseBillingOptions = {}) {
         status?: string;
         customerId?: string;
         limit?: number;
-      } = {}
+      } = {},
     ) => {
       try {
         setState((prev) => ({ ...prev, isLoading: true, error: null }));
@@ -455,12 +463,12 @@ export function useBilling(options: UseBillingOptions = {}) {
       } catch (error) {
         setState((prev) => ({
           ...prev,
-          error: error instanceof Error ? error.message : 'Failed to load accounts',
+          error: error instanceof Error ? error.message : "Failed to load accounts",
           isLoading: false,
         }));
       }
     },
-    [apiCall]
+    [apiCall],
   );
 
   // Load Invoices
@@ -473,7 +481,7 @@ export function useBilling(options: UseBillingOptions = {}) {
         dateFrom?: Date;
         dateTo?: Date;
         limit?: number;
-      } = {}
+      } = {},
     ) => {
       try {
         setState((prev) => ({ ...prev, isLoading: true }));
@@ -494,12 +502,12 @@ export function useBilling(options: UseBillingOptions = {}) {
       } catch (error) {
         setState((prev) => ({
           ...prev,
-          error: error instanceof Error ? error.message : 'Failed to load invoices',
+          error: error instanceof Error ? error.message : "Failed to load invoices",
           isLoading: false,
         }));
       }
     },
-    [apiCall]
+    [apiCall],
   );
 
   // Load Payments
@@ -512,7 +520,7 @@ export function useBilling(options: UseBillingOptions = {}) {
         dateFrom?: Date;
         dateTo?: Date;
         limit?: number;
-      } = {}
+      } = {},
     ) => {
       try {
         const params = new URLSearchParams();
@@ -530,16 +538,16 @@ export function useBilling(options: UseBillingOptions = {}) {
       } catch (error) {
         setState((prev) => ({
           ...prev,
-          error: error instanceof Error ? error.message : 'Failed to load payments',
+          error: error instanceof Error ? error.message : "Failed to load payments",
         }));
       }
     },
-    [apiCall]
+    [apiCall],
   );
 
   // Load Statistics
   const loadStats = useCallback(
-    async (timeRange: '30d' | '90d' | '1y' = '30d') => {
+    async (timeRange: "30d" | "90d" | "1y" = "30d") => {
       try {
         const data = await apiCall(`/stats?range=${timeRange}`);
         setState((prev) => ({
@@ -549,11 +557,11 @@ export function useBilling(options: UseBillingOptions = {}) {
       } catch (error) {
         setState((prev) => ({
           ...prev,
-          error: error instanceof Error ? error.message : 'Failed to load statistics',
+          error: error instanceof Error ? error.message : "Failed to load statistics",
         }));
       }
     },
-    [apiCall]
+    [apiCall],
   );
 
   // Process Payment
@@ -568,8 +576,8 @@ export function useBilling(options: UseBillingOptions = {}) {
       try {
         setState((prev) => ({ ...prev, paymentProcessing: true }));
 
-        const data = await apiCall('/payments', {
-          method: 'POST',
+        const data = await apiCall("/payments", {
+          method: "POST",
           body: JSON.stringify(paymentData),
         });
 
@@ -580,22 +588,22 @@ export function useBilling(options: UseBillingOptions = {}) {
           paymentProcessing: false,
         }));
 
-        if (newPayment.status === 'completed') {
+        if (newPayment.status === "completed") {
           addNotification({
-            type: 'success',
-            priority: 'medium',
-            title: 'Payment Processed',
+            type: "success",
+            priority: "medium",
+            title: "Payment Processed",
             message: `Payment of $${newPayment.amount} processed successfully`,
-            channel: ['browser'],
+            channel: ["browser"],
             persistent: false,
           });
-        } else if (newPayment.status === 'failed') {
+        } else if (newPayment.status === "failed") {
           addNotification({
-            type: 'error',
-            priority: 'high',
-            title: 'Payment Failed',
-            message: newPayment.failureReason || 'Payment processing failed',
-            channel: ['browser'],
+            type: "error",
+            priority: "high",
+            title: "Payment Failed",
+            message: newPayment.failureReason || "Payment processing failed",
+            channel: ["browser"],
             persistent: true,
           });
         }
@@ -604,21 +612,21 @@ export function useBilling(options: UseBillingOptions = {}) {
       } catch (error) {
         setState((prev) => ({ ...prev, paymentProcessing: false }));
 
-        const errorMessage = error instanceof Error ? error.message : 'Payment processing failed';
+        const errorMessage = error instanceof Error ? error.message : "Payment processing failed";
 
         addNotification({
-          type: 'error',
-          priority: 'high',
-          title: 'Payment Error',
+          type: "error",
+          priority: "high",
+          title: "Payment Error",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: true,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Create Invoice
@@ -627,15 +635,15 @@ export function useBilling(options: UseBillingOptions = {}) {
       customerId: string;
       accountId?: string;
       dueDate: Date;
-      lineItems: Omit<InvoiceLineItem, 'id'>[];
+      lineItems: Omit<InvoiceLineItem, "id">[];
       notes?: string;
       sendEmail?: boolean;
     }) => {
       try {
         setState((prev) => ({ ...prev, isLoading: true }));
 
-        const data = await apiCall('/invoices', {
-          method: 'POST',
+        const data = await apiCall("/invoices", {
+          method: "POST",
           body: JSON.stringify({
             ...invoiceData,
             dueDate: invoiceData.dueDate.toISOString(),
@@ -650,11 +658,11 @@ export function useBilling(options: UseBillingOptions = {}) {
         }));
 
         addNotification({
-          type: 'success',
-          priority: 'medium',
-          title: 'Invoice Created',
+          type: "success",
+          priority: "medium",
+          title: "Invoice Created",
           message: `Invoice ${newInvoice.invoiceNumber} created successfully`,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
@@ -662,29 +670,29 @@ export function useBilling(options: UseBillingOptions = {}) {
       } catch (error) {
         setState((prev) => ({ ...prev, isLoading: false }));
 
-        const errorMessage = error instanceof Error ? error.message : 'Failed to create invoice';
+        const errorMessage = error instanceof Error ? error.message : "Failed to create invoice";
 
         addNotification({
-          type: 'error',
-          priority: 'high',
-          title: 'Invoice Creation Failed',
+          type: "error",
+          priority: "high",
+          title: "Invoice Creation Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Update Invoice Status
   const updateInvoiceStatus = useCallback(
-    async (invoiceId: string, status: Invoice['status'], notes?: string) => {
+    async (invoiceId: string, status: Invoice["status"], notes?: string) => {
       try {
         const data = await apiCall(`/invoices/${invoiceId}/status`, {
-          method: 'PUT',
+          method: "PUT",
           body: JSON.stringify({ status, notes }),
         });
 
@@ -696,21 +704,21 @@ export function useBilling(options: UseBillingOptions = {}) {
 
         return updatedInvoice;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to update invoice';
+        const errorMessage = error instanceof Error ? error.message : "Failed to update invoice";
 
         addNotification({
-          type: 'error',
-          priority: 'medium',
-          title: 'Update Failed',
+          type: "error",
+          priority: "medium",
+          title: "Update Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Send Invoice
@@ -718,41 +726,41 @@ export function useBilling(options: UseBillingOptions = {}) {
     async (invoiceId: string, email?: string) => {
       try {
         await apiCall(`/invoices/${invoiceId}/send`, {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({ email }),
         });
 
         setState((prev) => ({
           ...prev,
           invoices: prev.invoices.map((inv) =>
-            inv.id === invoiceId ? { ...inv, status: 'sent' as const } : inv
+            inv.id === invoiceId ? { ...inv, status: "sent" as const } : inv,
           ),
         }));
 
         addNotification({
-          type: 'success',
-          priority: 'low',
-          title: 'Invoice Sent',
-          message: 'Invoice has been sent to customer',
-          channel: ['browser'],
+          type: "success",
+          priority: "low",
+          title: "Invoice Sent",
+          message: "Invoice has been sent to customer",
+          channel: ["browser"],
           persistent: false,
         });
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to send invoice';
+        const errorMessage = error instanceof Error ? error.message : "Failed to send invoice";
 
         addNotification({
-          type: 'error',
-          priority: 'medium',
-          title: 'Send Failed',
+          type: "error",
+          priority: "medium",
+          title: "Send Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Add Payment Method
@@ -760,15 +768,15 @@ export function useBilling(options: UseBillingOptions = {}) {
     async (
       customerId: string,
       paymentMethodData: {
-        type: PaymentMethod['type'];
+        type: PaymentMethod["type"];
         token: string; // From payment gateway
         isDefault?: boolean;
         billingAddress?: Address;
-      }
+      },
     ) => {
       try {
-        const data = await apiCall('/payment-methods', {
-          method: 'POST',
+        const data = await apiCall("/payment-methods", {
+          method: "POST",
           body: JSON.stringify({
             customerId,
             ...paymentMethodData,
@@ -778,32 +786,32 @@ export function useBilling(options: UseBillingOptions = {}) {
         const paymentMethod = data.paymentMethod;
 
         addNotification({
-          type: 'success',
-          priority: 'low',
-          title: 'Payment Method Added',
+          type: "success",
+          priority: "low",
+          title: "Payment Method Added",
           message: `${paymentMethod.type} ending in ${paymentMethod.lastFour} added successfully`,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         return paymentMethod;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : 'Failed to add payment method';
+          error instanceof Error ? error.message : "Failed to add payment method";
 
         addNotification({
-          type: 'error',
-          priority: 'medium',
-          title: 'Payment Method Failed',
+          type: "error",
+          priority: "medium",
+          title: "Payment Method Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Refund Payment
@@ -811,7 +819,7 @@ export function useBilling(options: UseBillingOptions = {}) {
     async (paymentId: string, amount: number, reason: string) => {
       try {
         const data = await apiCall(`/payments/${paymentId}/refund`, {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify({ amount, reason }),
         });
 
@@ -819,36 +827,36 @@ export function useBilling(options: UseBillingOptions = {}) {
         setState((prev) => ({
           ...prev,
           payments: prev.payments.map((payment) =>
-            payment.id === paymentId ? refundedPayment : payment
+            payment.id === paymentId ? refundedPayment : payment,
           ),
         }));
 
         addNotification({
-          type: 'info',
-          priority: 'medium',
-          title: 'Refund Processed',
+          type: "info",
+          priority: "medium",
+          title: "Refund Processed",
           message: `Refund of $${amount} processed successfully`,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         return refundedPayment;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to process refund';
+        const errorMessage = error instanceof Error ? error.message : "Failed to process refund";
 
         addNotification({
-          type: 'error',
-          priority: 'high',
-          title: 'Refund Failed',
+          type: "error",
+          priority: "high",
+          title: "Refund Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Retry Failed Payment
@@ -856,34 +864,34 @@ export function useBilling(options: UseBillingOptions = {}) {
     async (paymentId: string) => {
       try {
         const data = await apiCall(`/payments/${paymentId}/retry`, {
-          method: 'POST',
+          method: "POST",
         });
 
         const retriedPayment = data.payment;
         setState((prev) => ({
           ...prev,
           payments: prev.payments.map((payment) =>
-            payment.id === paymentId ? retriedPayment : payment
+            payment.id === paymentId ? retriedPayment : payment,
           ),
         }));
 
         return retriedPayment;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to retry payment';
+        const errorMessage = error instanceof Error ? error.message : "Failed to retry payment";
 
         addNotification({
-          type: 'error',
-          priority: 'medium',
-          title: 'Retry Failed',
+          type: "error",
+          priority: "medium",
+          title: "Retry Failed",
           message: errorMessage,
-          channel: ['browser'],
+          channel: ["browser"],
           persistent: false,
         });
 
         throw error;
       }
     },
-    [apiCall, addNotification]
+    [apiCall, addNotification],
   );
 
   // Initialize
@@ -973,13 +981,13 @@ export function useBilling(options: UseBillingOptions = {}) {
     }, []),
 
     // Computed values
-    overdueInvoices: state.invoices.filter((inv) => inv.status === 'overdue'),
-    unpaidInvoices: state.invoices.filter((inv) => inv.status === 'sent' && inv.amountDue > 0),
-    failedPayments: state.payments.filter((payment) => payment.status === 'failed'),
-    pendingPayments: state.payments.filter((payment) => payment.status === 'pending'),
+    overdueInvoices: state.invoices.filter((inv) => inv.status === "overdue"),
+    unpaidInvoices: state.invoices.filter((inv) => inv.status === "sent" && inv.amountDue > 0),
+    failedPayments: state.payments.filter((payment) => payment.status === "failed"),
+    pendingPayments: state.payments.filter((payment) => payment.status === "pending"),
     recentPayments: state.payments.slice(0, 10),
     totalOutstanding: state.invoices
-      .filter((inv) => ['sent', 'overdue'].includes(inv.status))
+      .filter((inv) => ["sent", "overdue"].includes(inv.status))
       .reduce((sum, inv) => sum + inv.amountDue, 0),
   };
 }

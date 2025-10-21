@@ -12,7 +12,7 @@ import type {
   LegacyApiResponse,
   NetworkDevice,
   DeviceMetrics,
-} from './index';
+} from "./index";
 
 import type {
   CustomerData,
@@ -22,9 +22,9 @@ import type {
   PaginatedResponse,
   ApiResponse,
   UserData,
-} from '../api/types/api';
+} from "../api/types/api";
 
-import type { ISPTenant, TenantUser } from './tenant';
+import type { ISPTenant, TenantUser } from "./tenant";
 
 /**
  * Migration utilities for converting between legacy and API types
@@ -36,7 +36,7 @@ export class TypeMigration {
       id: customer.id,
       portal_id: `CUST${customer.id.slice(-6).toUpperCase()}`, // Generate portal ID
       company_name:
-        customer.name.includes(' Inc') || customer.name.includes(' LLC')
+        customer.name.includes(" Inc") || customer.name.includes(" LLC")
           ? customer.name
           : undefined,
       contact_name: customer.name,
@@ -45,14 +45,14 @@ export class TypeMigration {
       address: customer.address
         ? this.addressToAddressData(customer.address)
         : {
-            street: '',
-            city: '',
-            state: '',
-            zip: '',
-            country: 'US',
+            street: "",
+            city: "",
+            state: "",
+            zip: "",
+            country: "US",
           },
       status: customer.status,
-      account_type: 'RESIDENTIAL', // Default, should be determined by business logic
+      account_type: "RESIDENTIAL", // Default, should be determined by business logic
       billing_info: customer.billing_info
         ? this.billingInfoToBillingInfoData(customer.billing_info)
         : undefined,
@@ -65,7 +65,7 @@ export class TypeMigration {
   static customerDataToCustomer(customerData: CustomerData): Customer {
     return {
       id: customerData.id,
-      tenant_id: 'default', // Should come from context
+      tenant_id: "default", // Should come from context
       email: customerData.email,
       name: customerData.contact_name,
       phone: customerData.phone,
@@ -76,8 +76,8 @@ export class TypeMigration {
         ? this.billingInfoDataToBillingInfo(customerData.billing_info)
         : {
             customer_id: customerData.id,
-            billing_cycle: 'MONTHLY',
-            payment_method: 'credit_card',
+            billing_cycle: "MONTHLY",
+            payment_method: "credit_card",
             next_billing_date: new Date().toISOString(),
             balance: 0,
             credit_limit: 1000,
@@ -120,9 +120,9 @@ export class TypeMigration {
 
   static billingInfoDataToBillingInfo(billingInfoData: BillingInfoData): BillingInfo {
     return {
-      customer_id: '', // Should be provided by context
+      customer_id: "", // Should be provided by context
       billing_cycle: billingInfoData.billing_cycle,
-      payment_method: 'credit_card', // Default
+      payment_method: "credit_card", // Default
       next_billing_date: new Date().toISOString(),
       balance: 0,
       credit_limit: 1000,
@@ -134,12 +134,12 @@ export class TypeMigration {
     return {
       id: service.id,
       name: service.service_name,
-      type: 'INTERNET', // Default, should be determined by business logic
+      type: "INTERNET", // Default, should be determined by business logic
       status: service.status,
       plan: {
         id: service.service_id,
         name: service.plan,
-        description: '',
+        description: "",
         monthly_price: service.monthly_rate,
         setup_fee: 0,
       },
@@ -151,12 +151,12 @@ export class TypeMigration {
   static serviceDataToCustomerService(serviceData: ServiceData): CustomerService {
     return {
       id: serviceData.id,
-      customer_id: '', // Should be provided by context
+      customer_id: "", // Should be provided by context
       service_id: serviceData.plan.id,
       service_name: serviceData.name,
       status: serviceData.status,
       plan: serviceData.plan.name,
-      bandwidth: '', // Should be derived from plan
+      bandwidth: "", // Should be derived from plan
       ip_address: undefined,
       installation_date: serviceData.installed_date,
       monthly_rate: serviceData.monthly_cost,
@@ -248,8 +248,8 @@ export class TypeGuards {
       obj &&
       Array.isArray(obj.data) &&
       obj.pagination &&
-      typeof obj.pagination.hasNext === 'boolean' &&
-      typeof obj.pagination.hasPrev === 'boolean'
+      typeof obj.pagination.hasNext === "boolean" &&
+      typeof obj.pagination.hasPrev === "boolean"
     );
   }
 
@@ -258,17 +258,17 @@ export class TypeGuards {
       obj &&
       Array.isArray(obj.data) &&
       obj.pagination &&
-      typeof obj.pagination.has_next === 'boolean' &&
-      typeof obj.pagination.has_previous === 'boolean'
+      typeof obj.pagination.has_next === "boolean" &&
+      typeof obj.pagination.has_previous === "boolean"
     );
   }
 
   static isLegacyCustomer(obj: any): obj is Customer {
     return (
       obj &&
-      typeof obj.id === 'string' &&
-      typeof obj.tenant_id === 'string' &&
-      typeof obj.email === 'string' &&
+      typeof obj.id === "string" &&
+      typeof obj.tenant_id === "string" &&
+      typeof obj.email === "string" &&
       Array.isArray(obj.services)
     );
   }
@@ -276,16 +276,16 @@ export class TypeGuards {
   static isApiCustomerData(obj: any): obj is CustomerData {
     return (
       obj &&
-      typeof obj.id === 'string' &&
-      typeof obj.portal_id === 'string' &&
-      typeof obj.email === 'string' &&
+      typeof obj.id === "string" &&
+      typeof obj.portal_id === "string" &&
+      typeof obj.email === "string" &&
       Array.isArray(obj.services)
     );
   }
 
   static isISPTenant(obj: any): obj is ISPTenant {
     return (
-      obj && typeof obj.id === 'string' && obj.isp_config && obj.features && obj.limits && obj.usage
+      obj && typeof obj.id === "string" && obj.isp_config && obj.features && obj.limits && obj.usage
     );
   }
 }
@@ -317,11 +317,11 @@ export class FieldNameConverter {
     for (const [key, value] of Object.entries(obj)) {
       const snakeKey = this.camelToSnake(key);
 
-      if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+      if (value && typeof value === "object" && !Array.isArray(value) && !(value instanceof Date)) {
         result[snakeKey] = this.objectCamelToSnake(value);
       } else if (Array.isArray(value)) {
         result[snakeKey] = value.map((item) =>
-          item && typeof item === 'object' ? this.objectCamelToSnake(item) : item
+          item && typeof item === "object" ? this.objectCamelToSnake(item) : item,
         );
       } else {
         result[snakeKey] = value;
@@ -340,11 +340,11 @@ export class FieldNameConverter {
     for (const [key, value] of Object.entries(obj)) {
       const camelKey = this.snakeToCamel(key);
 
-      if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+      if (value && typeof value === "object" && !Array.isArray(value) && !(value instanceof Date)) {
         result[camelKey] = this.objectSnakeToCamel(value);
       } else if (Array.isArray(value)) {
         result[camelKey] = value.map((item) =>
-          item && typeof item === 'object' ? this.objectSnakeToCamel(item) : item
+          item && typeof item === "object" ? this.objectSnakeToCamel(item) : item,
         );
       } else {
         result[camelKey] = value;
@@ -365,13 +365,13 @@ export class TypeValidator {
   static validateCustomerData(obj: any): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    if (!obj.id) errors.push('Missing required field: id');
-    if (!obj.portal_id) errors.push('Missing required field: portal_id');
-    if (!obj.contact_name) errors.push('Missing required field: contact_name');
-    if (!obj.email) errors.push('Missing required field: email');
-    if (!obj.address) errors.push('Missing required field: address');
-    if (!obj.status) errors.push('Missing required field: status');
-    if (!obj.account_type) errors.push('Missing required field: account_type');
+    if (!obj.id) errors.push("Missing required field: id");
+    if (!obj.portal_id) errors.push("Missing required field: portal_id");
+    if (!obj.contact_name) errors.push("Missing required field: contact_name");
+    if (!obj.email) errors.push("Missing required field: email");
+    if (!obj.address) errors.push("Missing required field: address");
+    if (!obj.status) errors.push("Missing required field: status");
+    if (!obj.account_type) errors.push("Missing required field: account_type");
 
     return {
       valid: errors.length === 0,

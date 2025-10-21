@@ -394,7 +394,7 @@ class TestTeamMembers:
     ):
         """Test listing team members."""
         # Add members
-        for i in range(3):
+        for _i in range(3):
             member = TeamMember(
                 id=uuid.uuid4(),
                 team_id=sample_team.id,

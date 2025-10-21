@@ -60,7 +60,7 @@ async def cleanup_session_state():
 def app():
     """Create FastAPI app for testing."""
     app = FastAPI()
-    app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+    app.include_router(auth_router, prefix="/api/v1", tags=["auth"])
     return app
 
 
@@ -522,7 +522,7 @@ async def test_backup_code_marked_as_used(
     result = await async_db_session.execute(
         select(BackupCode).where(
             BackupCode.user_id == test_user_with_2fa.id,
-            BackupCode.used == True,
+            BackupCode.used,
         )
     )
     used_codes = result.scalars().all()

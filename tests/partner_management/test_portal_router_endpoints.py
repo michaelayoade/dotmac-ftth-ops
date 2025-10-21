@@ -5,11 +5,9 @@ from decimal import Decimal
 from uuid import uuid4
 
 import pytest
-from httpx import AsyncClient
 from sqlalchemy import select
 
 from dotmac.platform.customer_management.models import Customer
-from dotmac.platform.main import app
 from dotmac.platform.partner_management.models import (
     CommissionModel,
     CommissionStatus,
@@ -50,7 +48,7 @@ class TestPartnerDashboardEndpoint:
         db_session.add(partner)
 
         # Create active customer accounts
-        for i in range(3):
+        for _i in range(3):
             account = PartnerAccount(
                 id=uuid4(),
                 partner_id=partner.id,
@@ -88,7 +86,7 @@ class TestPartnerDashboardEndpoint:
         result = await db_session.execute(
             select(PartnerAccount).where(
                 PartnerAccount.partner_id == partner.id,
-                PartnerAccount.is_active == True,
+                PartnerAccount.is_active,
             )
         )
         active_accounts = result.scalars().all()
@@ -343,7 +341,7 @@ class TestCustomerEndpoints:
             customer = Customer(
                 id=uuid4(),
                 customer_number=f"CUST-{i:04d}",
-                first_name=f"Customer",
+                first_name="Customer",
                 last_name=f"{i}",
                 email=f"customer{i}@test.com",
                 tenant_id=test_tenant_id,

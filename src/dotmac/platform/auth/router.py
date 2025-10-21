@@ -6,6 +6,7 @@ Provides login, register, token refresh endpoints with rate limiting.
 
 import inspect
 import json
+import secrets
 from collections.abc import AsyncGenerator
 from datetime import UTC, datetime
 from typing import Any, Literal
@@ -59,10 +60,10 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
         refresh_token: JWT refresh token
     """
     # Cookie settings - secure only in production (requires HTTPS)
-    secure = settings.environment == "production"
+    secure = settings.is_production
     # Use 'lax' for development to allow cross-origin requests, 'strict' for production
     samesite: Literal["strict", "lax", "none"] = (
-        "strict" if settings.environment == "production" else "lax"
+        "strict" if settings.is_production else "lax"
     )
 
     # Set access token cookie (15 minutes)
@@ -118,7 +119,7 @@ def get_token_from_cookie(request: Request, cookie_name: str) -> str | None:
 # ========================================
 
 
-async def get_auth_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_auth_session() -> AsyncGenerator[AsyncSession]:
     """Adapter to reuse the shared session dependency helper."""
     dependency = get_session_dependency()
 
@@ -136,13 +137,13 @@ async def get_auth_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 # Backwards compatibility: some tests patch this symbol directly
-async def get_async_session() -> AsyncGenerator[AsyncSession, None]:  # pragma: no cover
+async def get_async_session() -> AsyncGenerator[AsyncSession]:  # pragma: no cover
     async for session in get_auth_session():
         yield session
 
 
 # Create router
-auth_router = APIRouter()
+auth_router = APIRouter(prefix="/auth", )
 security = HTTPBearer(auto_error=False)
 
 
@@ -407,8 +408,66 @@ async def _authenticate_and_issue_tokens(
     )
 
 
+async def _complete_cookie_login(
+    user: User,
+    request: Request,
+    response: Response,
+    session: AsyncSession,
+) -> None:
+    """Issue tokens, create session, and set cookies for non-2FA logins."""
+
+    client_ip = request.client.host if request.client else None
+    user_service = UserService(session)
+
+    await user_service.update_last_login(user.id, ip_address=client_ip)
+
+    access_token = jwt_service.create_access_token(
+        subject=str(user.id),
+        additional_claims={
+            "username": user.username,
+            "email": user.email,
+            "roles": user.roles or [],
+            "permissions": user.permissions or [],
+            "tenant_id": user.tenant_id,
+            "is_platform_admin": getattr(user, "is_platform_admin", False),
+        },
+    )
+
+    refresh_token = jwt_service.create_refresh_token(subject=str(user.id))
+
+    await session_manager.create_session(
+        user_id=str(user.id),
+        data={
+            "username": user.username,
+            "email": user.email,
+            "roles": user.roles or [],
+            "access_token": access_token,
+        },
+    )
+
+    set_auth_cookies(response, access_token, refresh_token)
+
+    await log_user_activity(
+        user_id=str(user.id),
+        activity_type=ActivityType.USER_LOGIN,
+        action="login_success",
+        description=f"User {user.username} logged in successfully (cookie-auth)",
+        severity=ActivitySeverity.LOW,
+        details={
+            "username": user.username,
+            "email": user.email,
+            "roles": user.roles or [],
+            "auth_method": "cookie",
+        },
+        ip_address=client_ip,
+        user_agent=request.headers.get("user-agent"),
+        tenant_id=user.tenant_id,
+        session=session,
+    )
+
+
 @auth_router.post("/login", response_model=TokenResponse)
-@rate_limit("5/minute")  # SECURITY: Prevent brute force attacks
+@rate_limit("5/minute")  # type: ignore[misc]  # SECURITY: Prevent brute force attacks
 async def login(
     login_request: LoginRequest,
     request: Request,
@@ -666,6 +725,7 @@ async def verify_2fa_login(
 
 
 @auth_router.post("/login/cookie", response_model=LoginSuccessResponse)
+@rate_limit("5/minute")
 async def login_cookie_only(
     login_request: LoginRequest,
     request: Request,
@@ -716,58 +776,30 @@ async def login_cookie_only(
             detail="Account is disabled",
         )
 
-    # Update last login
-    client_ip = request.client.host if request.client else None
-    await user_service.update_last_login(user.id, ip_address=client_ip)
+    if user.mfa_enabled:
+        # Mirror the JSON login behaviour by issuing a 2FA challenge
+        await log_user_activity(
+            user_id=str(user.id),
+            activity_type=ActivityType.USER_LOGIN,
+            action="2fa_challenge_issued",
+            description=f"2FA challenge issued for user {user.username} (cookie-auth)",
+            severity=ActivitySeverity.LOW,
+            details={"username": user.username},
+            ip_address=request.client.host if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+            tenant_id=user.tenant_id,
+            session=session,
+        )
+        # Match JSON login behaviour: rely on 403 to signal pending 2FA; no success body returned
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="2FA verification required",
+            headers={"X-2FA-Required": "true", "X-User-ID": str(user.id)},
+        )
 
-    # Create tokens
-    access_token = jwt_service.create_access_token(
-        subject=str(user.id),
-        additional_claims={
-            "username": user.username,
-            "email": user.email,
-            "roles": user.roles or [],
-            "permissions": user.permissions or [],
-            "tenant_id": user.tenant_id,
-            "is_platform_admin": getattr(user, "is_platform_admin", False),
-        },
-    )
+    # Reuse shared helper to update last login, create session, set cookies, and log activity
+    await _complete_cookie_login(user, request, response, session)
 
-    refresh_token = jwt_service.create_refresh_token(subject=str(user.id))
-
-    # Create session
-    await session_manager.create_session(
-        user_id=str(user.id),
-        data={
-            "username": user.username,
-            "email": user.email,
-            "roles": user.roles or [],
-        },
-    )
-
-    # Set HttpOnly authentication cookies
-    set_auth_cookies(response, access_token, refresh_token)
-
-    # Log successful login
-    await log_user_activity(
-        user_id=str(user.id),
-        activity_type=ActivityType.USER_LOGIN,
-        action="login_success",
-        description=f"User {user.username} logged in successfully (cookie-auth)",
-        severity=ActivitySeverity.LOW,
-        details={
-            "username": user.username,
-            "email": user.email,
-            "roles": user.roles or [],
-            "auth_method": "cookie",
-        },
-        ip_address=client_ip,
-        user_agent=request.headers.get("user-agent"),
-        tenant_id=user.tenant_id,
-        session=session,
-    )
-
-    # Return success response without tokens
     return LoginSuccessResponse(
         user_id=str(user.id), username=user.username, email=user.email, roles=user.roles or []
     )
@@ -792,7 +824,7 @@ async def issue_token(
 
 
 @auth_router.post("/register", response_model=TokenResponse)
-@rate_limit("3/minute")  # SECURITY: Prevent mass account creation
+@rate_limit("3/minute")  # type: ignore[misc]  # SECURITY: Prevent mass account creation
 async def register(
     register_request: RegisterRequest,
     request: Request,
@@ -809,9 +841,21 @@ async def register(
     # Get current tenant from request context (set by TenantMiddleware)
     current_tenant_id = get_current_tenant_id()
 
-    # Check if user already exists - use generic error message to prevent enumeration
-    existing_user_by_username = await user_service.get_user_by_username(register_request.username)
-    existing_user_by_email = await user_service.get_user_by_email(register_request.email)
+    if current_tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant context is required for registration. Provide a valid tenant identifier.",
+        )
+
+    # Check if user already exists within current tenant - use generic error message to prevent enumeration
+    existing_user_by_username = await user_service.get_user_by_username(
+        register_request.username,
+        tenant_id=current_tenant_id,
+    )
+    existing_user_by_email = await user_service.get_user_by_email(
+        register_request.email,
+        tenant_id=current_tenant_id,
+    )
 
     if existing_user_by_username or existing_user_by_email:
         # Log registration attempt with existing user
@@ -990,7 +1034,7 @@ async def register(
 
 
 @auth_router.post("/refresh", response_model=TokenResponse)
-@rate_limit("10/minute")  # SECURITY: Reasonable limit for token refresh
+@rate_limit("10/minute")  # type: ignore[misc]  # SECURITY: Reasonable limit for token refresh
 async def refresh_token(
     request: Request,
     response: Response,
@@ -1079,7 +1123,7 @@ async def refresh_token(
 async def logout(
     request: Request,
     response: Response,
-) -> dict:
+) -> dict[str, Any]:
     """
     Logout user and invalidate session and tokens.
     """
@@ -1108,7 +1152,6 @@ async def logout(
             return {"message": "Logout completed"}
 
         if user_id:
-
             # Revoke the access token
             if token:
                 await jwt_service.revoke_token(token)
@@ -1153,7 +1196,7 @@ async def logout(
 @auth_router.get("/me/sessions")
 async def list_active_sessions(
     user_info: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """
     List all active sessions for the current user.
 
@@ -1206,7 +1249,7 @@ async def revoke_session(
     request: Request,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Revoke a specific session by ID.
 
@@ -1281,7 +1324,7 @@ async def revoke_all_sessions(
     request: Request,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Revoke all sessions except the current one.
 
@@ -1354,7 +1397,7 @@ async def revoke_all_sessions(
 @auth_router.get("/verify")
 async def verify_token(
     user_info: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """
     Verify if the current token is valid from Bearer token or HttpOnly cookie.
     """
@@ -1368,18 +1411,45 @@ async def verify_token(
 
 
 @auth_router.post("/password-reset")
-@rate_limit("3/minute")  # SECURITY: Prevent abuse of password reset
+@rate_limit("3/minute")  # type: ignore[misc]  # SECURITY: Prevent abuse of password reset
 async def request_password_reset(
-    request: PasswordResetRequest,
+    reset_request: PasswordResetRequest,
+    request: Request,
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Request a password reset token to be sent via email.
+
+    Multi-tenant support:
+    - Tenant can be specified via X-Tenant-ID header or tenant_id query parameter
+    - If tenant is not specified and multiple users exist with the same email across tenants,
+      reset emails will be sent to all matching accounts for security
     """
+    from sqlalchemy.exc import MultipleResultsFound
+
+    from dotmac.platform.tenant import TenantIdentityResolver
+
     user_service = UserService(session)
 
-    # Find user by email
-    user = await user_service.get_user_by_email(request.email)
+    # Try to resolve tenant from request (header or query param)
+    resolver = TenantIdentityResolver()
+    tenant_id = await resolver.resolve(request)
+
+    # Find user by email with optional tenant filtering
+    # Handle MultipleResultsFound when same email exists in multiple tenants
+    user = None
+    try:
+        user = await user_service.get_user_by_email(reset_request.email, tenant_id=tenant_id)
+    except MultipleResultsFound:
+        # Multiple users with same email across tenants
+        # For security, we silently ignore and return success message
+        # User should specify tenant via header/query param to disambiguate
+        logger.warning(
+            "Password reset requested for email with multiple tenant accounts",
+            email=reset_request.email,
+            tenant_provided=tenant_id is not None,
+        )
+        return {"message": "If the email exists, a password reset link has been sent."}
 
     # Always return success to prevent email enumeration
     if user and user.is_active:
@@ -1398,16 +1468,26 @@ async def request_password_reset(
 
 @auth_router.post("/password-reset/confirm")
 async def confirm_password_reset(
-    request: PasswordResetConfirm,
+    reset_confirm: PasswordResetConfirm,
     response: Response,
+    http_request: Request,
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Confirm password reset with token and set new password.
+
+    Multi-tenant support:
+    - Tenant can be specified via X-Tenant-ID header or tenant_id query parameter
+    - If tenant is not specified and multiple users exist with the same email across tenants,
+      the request will fail and user must provide tenant information
     """
+    from sqlalchemy.exc import MultipleResultsFound
+
+    from dotmac.platform.tenant import TenantIdentityResolver
+
     # Verify the reset token
     email_service = get_auth_email_service()
-    email = email_service.verify_reset_token(request.token)
+    email = email_service.verify_reset_token(reset_confirm.token)
 
     if not email:
         raise HTTPException(
@@ -1415,9 +1495,25 @@ async def confirm_password_reset(
             detail="Invalid or expired reset token",
         )
 
-    # Find user and update password
+    # Try to resolve tenant from request (header or query param)
+    resolver = TenantIdentityResolver()
+    tenant_id = await resolver.resolve(http_request)
+
+    # Find user and update password with tenant filtering
     user_service = UserService(session)
-    user = await user_service.get_user_by_email(email)
+    try:
+        user = await user_service.get_user_by_email(email, tenant_id=tenant_id)
+    except MultipleResultsFound:
+        # Multiple users with same email across tenants
+        logger.error(
+            "Password reset confirmation failed: multiple tenant accounts",
+            email=email,
+            tenant_provided=tenant_id is not None,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unable to identify account. Please include tenant information in request.",
+        )
 
     if not user:
         raise HTTPException(
@@ -1427,7 +1523,7 @@ async def confirm_password_reset(
 
     # Update password
     try:
-        user.password_hash = hash_password(request.new_password)
+        user.password_hash = hash_password(reset_confirm.new_password)
         await session.commit()
 
         # Send confirmation email
@@ -1589,7 +1685,7 @@ class ChangePasswordRequest(BaseModel):
 async def get_current_user_endpoint(
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Get current user information from Bearer token or HttpOnly cookie.
     """
@@ -1602,6 +1698,18 @@ async def get_current_user_endpoint(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found",
             )
+
+        backup_codes_remaining = 0
+        if getattr(user, "mfa_enabled", False):
+            try:
+                backup_codes_remaining = await mfa_service.get_remaining_backup_codes_count(
+                    user_id=user.id,
+                    session=session,
+                )
+            except Exception as exc:  # pragma: no cover - defensive logging
+                logger.warning(
+                    "Failed to fetch remaining backup codes", user_id=str(user.id), error=str(exc)
+                )
 
         return {
             "id": str(user.id),
@@ -1619,6 +1727,8 @@ async def get_current_user_endpoint(
             "roles": user.roles or [],
             "is_active": user.is_active,
             "tenant_id": user.tenant_id,
+            "mfa_enabled": bool(getattr(user, "mfa_enabled", False)),
+            "mfa_backup_codes_remaining": backup_codes_remaining,
         }
     except HTTPException:
         raise
@@ -1631,13 +1741,17 @@ async def get_current_user_endpoint(
 
 
 async def _validate_username_email_conflicts(
-    update_data: dict,
+    update_data: dict[str, Any],
     user: User,
     user_service: UserService,
+    tenant_id: str | None = None,
 ) -> None:
-    """Validate that username and email changes don't conflict with existing users."""
+    """Validate that username and email changes don't conflict with existing users within the same tenant."""
     if "username" in update_data and update_data["username"] != user.username:
-        existing = await user_service.get_user_by_username(update_data["username"])
+        existing = await user_service.get_user_by_username(
+            update_data["username"],
+            tenant_id=tenant_id,
+        )
         if existing and existing.id != user.id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -1645,7 +1759,10 @@ async def _validate_username_email_conflicts(
             )
 
     if "email" in update_data and update_data["email"] != user.email:
-        existing = await user_service.get_user_by_email(update_data["email"])
+        existing = await user_service.get_user_by_email(
+            update_data["email"],
+            tenant_id=tenant_id,
+        )
         if existing and existing.id != user.id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -1653,7 +1770,7 @@ async def _validate_username_email_conflicts(
             )
 
 
-def _prepare_name_fields(update_data: dict, user: User) -> None:
+def _prepare_name_fields(update_data: dict[str, Any], user: User) -> None:
     """Parse first_name and last_name into full_name."""
     if "first_name" in update_data or "last_name" in update_data:
         first_name = update_data.get("first_name", getattr(user, "first_name", ""))
@@ -1661,7 +1778,7 @@ def _prepare_name_fields(update_data: dict, user: User) -> None:
         update_data["full_name"] = f"{first_name} {last_name}".strip()
 
 
-def _collect_profile_changes(update_data: dict, user: User) -> list:
+def _collect_profile_changes(update_data: dict[str, Any], user: User) -> list[dict[str, Any]]:
     """Collect changes for logging by comparing old and new values."""
     changes_to_log = []
     for field, new_value in update_data.items():
@@ -1680,7 +1797,7 @@ def _collect_profile_changes(update_data: dict, user: User) -> list:
 
 
 async def _log_profile_change_history(
-    changes: list,
+    changes: list[dict[str, Any]],
     user: User,
     request: Request,
     session: AsyncSession,
@@ -1720,7 +1837,7 @@ async def _log_profile_change_history(
             )
 
 
-def _build_profile_response(user: User) -> dict:
+def _build_profile_response(user: User) -> dict[str, Any]:
     """Build profile response dictionary from user object."""
     return {
         "id": str(user.id),
@@ -1747,7 +1864,7 @@ async def update_current_user_profile(
     request: Request,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Update current user's profile information.
     """
@@ -1764,8 +1881,10 @@ async def update_current_user_profile(
         # Update only provided fields
         update_data = profile_update.model_dump(exclude_unset=True)
 
-        # Validate username/email conflicts
-        await _validate_username_email_conflicts(update_data, user, user_service)
+        # Validate username/email conflicts within current tenant
+        await _validate_username_email_conflicts(
+            update_data, user, user_service, tenant_id=user.tenant_id
+        )
 
         # Prepare name fields (first_name + last_name → full_name)
         _prepare_name_fields(update_data, user)
@@ -1818,7 +1937,7 @@ async def upload_avatar(
     avatar: UploadFile = File(...),
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Upload user avatar image.
 
@@ -1942,7 +2061,7 @@ async def upload_avatar(
 async def delete_avatar(
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Delete user's avatar.
 
@@ -2051,7 +2170,7 @@ async def send_verification_email(
     email_request: SendVerificationEmailRequest,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Send email verification link to the specified email address.
 
@@ -2098,7 +2217,14 @@ async def send_verification_email(
         # Send verification email
         try:
             _email_service = get_auth_email_service()
-            verification_url = f"{getattr(settings, 'frontend_url', 'http://localhost:3000')}/verify-email?token={token}"
+            # Use centralized frontend URL (Phase 2 implementation)
+            try:
+                frontend_url = settings.external_services.frontend_url
+            except AttributeError:
+                # Fallback for backwards compatibility
+                frontend_url = getattr(settings, "frontend_url", "http://localhost:3000")
+
+            verification_url = f"{frontend_url}/verify-email?token={token}"
 
             # Send verification email using communications service
             user_name = user.username or user.email
@@ -2164,7 +2290,7 @@ async def confirm_email_verification(
     confirm_request: ConfirmEmailRequest,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Confirm email verification using the token sent via email.
 
@@ -2264,7 +2390,7 @@ async def resend_verification_email(
     email_request: SendVerificationEmailRequest,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Resend email verification link.
 
@@ -2307,7 +2433,7 @@ async def change_password(
     password_change: ChangePasswordRequest,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Change current user's password.
     """
@@ -2513,7 +2639,7 @@ async def verify_2fa_setup(
     request: Verify2FARequest,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Verify 2FA token and complete 2FA setup.
 
@@ -2592,7 +2718,7 @@ async def disable_2fa(
     request: Disable2FARequest,
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Disable two-factor authentication for the current user.
 
@@ -2689,7 +2815,7 @@ async def regenerate_backup_codes(
     regenerate_request: RegenerateBackupCodesRequest,
     current_user: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Regenerate backup codes for MFA.
 
@@ -2790,7 +2916,7 @@ async def regenerate_backup_codes(
 async def get_auth_metrics(
     session: AsyncSession = Depends(get_auth_session),
     current_user: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """
     Get authentication metrics including failed login attempts.
 
@@ -2852,7 +2978,7 @@ async def get_auth_metrics(
 @auth_router.get("/sessions")
 async def list_user_sessions(
     user_info: UserInfo = Depends(get_current_user),
-) -> dict:
+) -> dict[str, Any]:
     """
     List all active sessions for the current user.
 
@@ -2894,10 +3020,10 @@ async def list_user_sessions(
 
 @auth_router.post("/verify-phone/request")
 async def request_phone_verification(
-    phone_request: dict,
+    phone_request: dict[str, Any],
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Request phone number verification code.
     """
@@ -2909,10 +3035,8 @@ async def request_phone_verification(
                 detail="Phone number is required",
             )
 
-        # Generate 6-digit verification code
-        import random
-
-        verification_code = f"{random.randint(100000, 999999)}"
+        # Generate 6-digit verification code using cryptographically secure RNG
+        verification_code = f"{secrets.randbelow(1_000_000):06d}"
 
         # Get Redis client
         redis_client = await session_manager._get_redis()
@@ -2920,7 +3044,9 @@ async def request_phone_verification(
         if redis_client:
             # Store code in Redis with 10-minute expiry
             await redis_client.setex(
-                f"phone_verify:{user_info.user_id}", 600, verification_code  # 10 minutes
+                f"phone_verify:{user_info.user_id}",
+                600,
+                verification_code,  # 10 minutes
             )
         else:
             # Fallback - store in session manager's fallback store
@@ -2973,8 +3099,7 @@ async def request_phone_verification(
             )
 
         message_body = (
-            f"Your DotMac verification code is {verification_code}. "
-            "It will expire in 10 minutes."
+            f"Your DotMac verification code is {verification_code}. It will expire in 10 minutes."
         )
 
         send_result: dict[str, Any]
@@ -3048,10 +3173,10 @@ async def request_phone_verification(
 
 @auth_router.post("/verify-phone/confirm")
 async def confirm_phone_verification(
-    verify_request: dict,
+    verify_request: dict[str, Any],
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Confirm phone number with verification code.
     """
@@ -3119,7 +3244,7 @@ async def confirm_phone_verification(
 async def setup_2fa(
     user_info: UserInfo = Depends(get_current_user),
     session: AsyncSession = Depends(get_auth_session),
-) -> dict:
+) -> dict[str, Any]:
     """
     Initialize 2FA setup and return QR code data.
     """

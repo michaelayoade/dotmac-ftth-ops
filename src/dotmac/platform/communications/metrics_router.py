@@ -30,7 +30,7 @@ logger = structlog.get_logger(__name__)
 # Cache TTL (in seconds)
 COMMS_STATS_CACHE_TTL = 300  # 5 minutes
 
-router = APIRouter(tags=["Communications Stats"])
+router = APIRouter(prefix="", tags=["Communications Metrics"])
 
 
 # ============================================================================
@@ -38,7 +38,7 @@ router = APIRouter(tags=["Communications Stats"])
 # ============================================================================
 
 
-class CommunicationStatsResponse(BaseModel):
+class CommunicationStatsResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Communication statistics response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -75,7 +75,7 @@ class CommunicationStatsResponse(BaseModel):
 # ============================================================================
 
 
-@cached_result(
+@cached_result(  # type: ignore[misc]  # Cache decorator is untyped
     ttl=COMMS_STATS_CACHE_TTL,
     key_prefix="comms:stats",
     key_params=["period_days", "tenant_id"],

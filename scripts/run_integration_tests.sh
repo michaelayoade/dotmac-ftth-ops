@@ -1,9 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
+#
+# Run Integration Tests
+#
+# This script runs integration tests for the DotMac Platform.
+# It ensures infrastructure is running and executes pytest with integration markers.
+#
 
-# DotMac Platform Services - Integration Test Runner
-# Starts Docker services and runs integration tests
-
-set -e
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -12,183 +15,189 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Configuration
-COMPOSE_FILE="docker-compose.yml"
-COMPOSE_TEST_FILE="docker-compose.test.yml"
-WAIT_TIMEOUT=60
+# Script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-echo -e "${BLUE}DotMac Platform Services - Integration Test Runner${NC}"
-echo "=================================================="
+cd "${PROJECT_ROOT}"
 
-# Function to check if a service is ready
-check_service() {
-    local service=$1
-    local check_cmd=$2
-    local max_attempts=30
-    local attempt=0
+echo -e "${BLUE}========================================${NC}"
+echo -e "${BLUE}  DotMac Platform - Integration Tests${NC}"
+echo -e "${BLUE}========================================${NC}"
+echo ""
 
-    echo -n "Waiting for $service..."
+# Function to check if infrastructure is running
+check_infrastructure() {
+    echo -e "${YELLOW}→${NC} Checking infrastructure status..."
 
-    while [ $attempt -lt $max_attempts ]; do
-        if eval "$check_cmd" >/dev/null 2>&1; then
-            echo -e " ${GREEN}✓${NC}"
-            return 0
+    local services_required=("postgres" "redis")
+    local all_running=true
+
+    for service in "${services_required[@]}"; do
+        if docker compose ps --services --filter "status=running" | grep -q "^${service}$"; then
+            echo -e "${GREEN}  ✓${NC} ${service} is running"
+        else
+            echo -e "${RED}  ✗${NC} ${service} is NOT running"
+            all_running=false
         fi
-        echo -n "."
-        sleep 2
-        ((attempt++))
     done
 
-    echo -e " ${RED}✗${NC}"
-    return 1
+    if [ "$all_running" = false ]; then
+        echo ""
+        echo -e "${RED}✗ Infrastructure is not fully running${NC}"
+        echo -e "${YELLOW}→${NC} Run 'make docker-up' or 'docker compose up -d postgres redis' to start services"
+        exit 1
+    fi
+
+    echo -e "${GREEN}✓ Infrastructure is ready${NC}"
+    echo ""
 }
 
-# Function to cleanup
-cleanup() {
-    echo -e "\n${YELLOW}Cleaning up...${NC}"
-    docker compose -f $COMPOSE_FILE down -v
-    exit ${1:-0}
+# Function to wait for services
+wait_for_services() {
+    echo -e "${YELLOW}→${NC} Waiting for services to be healthy..."
+
+    # Wait for PostgreSQL
+    echo -n "  Waiting for PostgreSQL..."
+    for i in {1..30}; do
+        if docker compose exec -T postgres pg_isready -U dotmac_user >/dev/null 2>&1; then
+            echo -e " ${GREEN}✓${NC}"
+            break
+        fi
+        if [ "$i" -eq 30 ]; then
+            echo -e " ${RED}✗ (timeout)${NC}"
+            exit 1
+        fi
+        sleep 1
+        echo -n "."
+    done
+
+    # Wait for Redis
+    echo -n "  Waiting for Redis..."
+    for i in {1..30}; do
+        if docker compose exec -T redis redis-cli ping >/dev/null 2>&1; then
+            echo -e " ${GREEN}✓${NC}"
+            break
+        fi
+        if [ "$i" -eq 30 ]; then
+            echo -e " ${RED}✗ (timeout)${NC}"
+            exit 1
+        fi
+        sleep 1
+        echo -n "."
+    done
+
+    echo ""
 }
 
-# Trap cleanup on exit
-trap cleanup SIGINT SIGTERM
+# Function to run database migrations
+run_migrations() {
+    echo -e "${YELLOW}→${NC} Running database migrations..."
 
-# Step 1: Check Docker and Docker Compose
-echo -e "\n${BLUE}Step 1: Checking prerequisites...${NC}"
+    if poetry run python -m alembic upgrade head; then
+        echo -e "${GREEN}✓ Migrations applied successfully${NC}"
+    else
+        echo -e "${RED}✗ Migration failed${NC}"
+        exit 1
+    fi
+    echo ""
+}
 
-if ! command -v docker &> /dev/null; then
-    echo -e "${RED}Docker is not installed${NC}"
-    exit 1
+# Function to run integration tests
+run_tests() {
+    echo -e "${YELLOW}→${NC} Running integration tests..."
+    echo ""
+
+    # Set test environment variables
+    export ENVIRONMENT=testing
+    export DATABASE_URL="${DATABASE_URL:-postgresql://dotmac_user:change-me-in-production@localhost:5432/dotmac_test}"
+    export REDIS_URL="${REDIS_URL:-redis://:change-me-in-production@localhost:6379/1}"
+
+    # Run pytest with integration markers
+    local test_args=(
+        "tests/integration"
+        "-v"
+        "--tb=short"
+        "--strict-markers"
+        "-m" "integration"
+        "--maxfail=5"
+        "--disable-warnings"
+    )
+
+    # Add coverage if requested
+    if [ "${COVERAGE:-false}" = "true" ]; then
+        test_args+=(
+            "--cov=src/dotmac/platform"
+            "--cov-report=term-missing"
+            "--cov-report=html:htmlcov"
+        )
+    fi
+
+    # Add parallel execution if requested
+    if [ "${PARALLEL:-false}" = "true" ]; then
+        test_args+=("-n" "auto")
+    fi
+
+    # Run tests
+    if poetry run pytest "${test_args[@]}" "$@"; then
+        echo ""
+        echo -e "${GREEN}========================================${NC}"
+        echo -e "${GREEN}  ✓ All integration tests passed!${NC}"
+        echo -e "${GREEN}========================================${NC}"
+
+        if [ "${COVERAGE:-false}" = "true" ]; then
+            echo ""
+            echo -e "${BLUE}Coverage report generated: htmlcov/index.html${NC}"
+        fi
+
+        return 0
+    else
+        echo ""
+        echo -e "${RED}========================================${NC}"
+        echo -e "${RED}  ✗ Some integration tests failed${NC}"
+        echo -e "${RED}========================================${NC}"
+        return 1
+    fi
+}
+
+# Main execution
+main() {
+    # Check if running in CI
+    if [ "${CI:-false}" = "true" ]; then
+        echo -e "${BLUE}Running in CI mode${NC}"
+        echo ""
+    fi
+
+    # Check infrastructure
+    check_infrastructure
+
+    # Wait for services to be healthy
+    wait_for_services
+
+    # Run migrations
+    run_migrations
+
+    # Run tests
+    run_tests "$@"
+}
+
+# Show help
+if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
+    echo "Usage: $0 [pytest-options]"
+    echo ""
+    echo "Environment variables:"
+    echo "  COVERAGE=true    Enable coverage reporting"
+    echo "  PARALLEL=true    Run tests in parallel"
+    echo "  CI=true          Run in CI mode"
+    echo ""
+    echo "Examples:"
+    echo "  $0                                    # Run all integration tests"
+    echo "  $0 -k test_customer                  # Run tests matching pattern"
+    echo "  COVERAGE=true $0                     # Run with coverage"
+    echo "  PARALLEL=true $0                     # Run in parallel"
+    echo ""
+    exit 0
 fi
 
-if ! command -v docker compose &> /dev/null; then
-    echo -e "${RED}Docker Compose is not installed${NC}"
-    exit 1
-fi
-
-echo -e "${GREEN}✓${NC} Docker and Docker Compose are installed"
-
-# Step 2: Stop any existing containers
-echo -e "\n${BLUE}Step 2: Stopping existing containers...${NC}"
-docker compose -f $COMPOSE_FILE down -v || true
-
-# Step 3: Start Docker services
-echo -e "\n${BLUE}Step 3: Starting Docker services...${NC}"
-docker compose -f $COMPOSE_FILE up -d
-
-# Step 4: Wait for services to be ready
-echo -e "\n${BLUE}Step 4: Waiting for services to be ready...${NC}"
-
-# Check PostgreSQL
-check_service "PostgreSQL" "docker exec dotmac-postgres pg_isready -U dotmac" || {
-    echo -e "${RED}PostgreSQL failed to start${NC}"
-    cleanup 1
-}
-
-# Check Redis
-check_service "Redis" "docker exec dotmac-redis redis-cli ping" || {
-    echo -e "${RED}Redis failed to start${NC}"
-    cleanup 1
-}
-
-# Check RabbitMQ
-check_service "RabbitMQ" "docker exec dotmac-rabbitmq rabbitmqctl status" || {
-    echo -e "${RED}RabbitMQ failed to start${NC}"
-    cleanup 1
-}
-
-# Check Vault/OpenBao
-check_service "Vault/OpenBao" "curl -s http://localhost:8200/v1/sys/health" || {
-    echo -e "${RED}Vault/OpenBao failed to start${NC}"
-    cleanup 1
-}
-
-# Check MinIO
-check_service "MinIO" "curl -s http://localhost:9000/minio/health/live" || {
-    echo -e "${RED}MinIO failed to start${NC}"
-    cleanup 1
-}
-
-# Check Meilisearch
-check_service "Meilisearch" "curl -s http://localhost:7700/health" || {
-    echo -e "${RED}Meilisearch failed to start${NC}"
-    cleanup 1
-}
-
-echo -e "\n${GREEN}All services are ready!${NC}"
-
-# Step 5: Initialize services
-echo -e "\n${BLUE}Step 5: Initializing services...${NC}"
-
-# Initialize Vault
-echo "Initializing Vault secrets engine..."
-docker exec dotmac-openbao bao secrets enable -path=secret kv-v2 2>/dev/null || true
-
-# Initialize MinIO buckets
-echo "Creating MinIO buckets..."
-docker exec dotmac-minio mc config host add minio http://localhost:9000 minioadmin minioadmin 2>/dev/null || true
-docker exec dotmac-minio mc mb minio/dotmac 2>/dev/null || true
-
-echo -e "${GREEN}✓${NC} Services initialized"
-
-# Step 6: Start Celery worker
-echo -e "\n${BLUE}Step 6: Starting Celery worker...${NC}"
-
-# Check if virtual environment exists
-if [ -d ".venv" ]; then
-    source .venv/bin/activate
-elif command -v poetry &> /dev/null; then
-    eval "$(poetry env info --path)/bin/activate"
-fi
-
-# Start Celery worker in background
-celery -A dotmac.platform.tasks.celery_app worker --loglevel=info &
-CELERY_PID=$!
-sleep 5
-
-echo -e "${GREEN}✓${NC} Celery worker started (PID: $CELERY_PID)"
-
-# Step 7: Run integration tests
-echo -e "\n${BLUE}Step 7: Running integration tests...${NC}"
-
-# Export environment variables
-export DATABASE_URL="postgresql+asyncpg://dotmac:dotmac_password@localhost:5432/dotmac"
-export REDIS_URL="redis://localhost:6379/0"
-export VAULT_URL="http://localhost:8200"
-export VAULT_TOKEN="root-token"
-export CELERY_BROKER_URL="amqp://admin:admin@localhost:5672//"
-export MINIO_ENDPOINT="localhost:9000"
-export MINIO_ACCESS_KEY="minioadmin"
-export MINIO_SECRET_KEY="minioadmin"
-export MEILISEARCH_URL="http://localhost:7700"
-export MEILISEARCH_KEY="masterKey"
-
-# Run tests
-echo ""
-pytest tests/integration/test_docker_services.py -v --tb=short
-
-TEST_EXIT_CODE=$?
-
-# Step 8: Show service logs if tests failed
-if [ $TEST_EXIT_CODE -ne 0 ]; then
-    echo -e "\n${YELLOW}Tests failed. Showing recent logs...${NC}"
-    echo -e "\n${BLUE}PostgreSQL logs:${NC}"
-    docker logs dotmac-postgres --tail 20
-    echo -e "\n${BLUE}Redis logs:${NC}"
-    docker logs dotmac-redis --tail 20
-fi
-
-# Step 9: Stop Celery worker
-echo -e "\n${BLUE}Stopping Celery worker...${NC}"
-kill $CELERY_PID 2>/dev/null || true
-
-# Step 10: Cleanup (optional)
-read -p "Do you want to stop Docker services? (y/N): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    cleanup $TEST_EXIT_CODE
-else
-    echo -e "${GREEN}Docker services are still running${NC}"
-    echo -e "${YELLOW}To stop them later, run: docker compose down -v${NC}"
-    exit $TEST_EXIT_CODE
-fi
+# Run main function
+main "$@"

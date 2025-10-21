@@ -770,7 +770,7 @@ class TestLabelDefinitionEndpoints:
 
             from dotmac.platform.contacts.router import get_label_definitions
 
-            result = await get_label_definitions(
+            await get_label_definitions(
                 category="customer_type",
                 include_hidden=True,
                 db=Mock(),

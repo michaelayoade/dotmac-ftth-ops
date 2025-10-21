@@ -91,7 +91,7 @@ class TestUpdateSubscription:
 
         update_data = WebhookSubscriptionUpdate(url=HttpUrl("https://new.example.com/webhook"))
 
-        result = await service.update_subscription(
+        await service.update_subscription(
             subscription_id=str(mock_sub.id), tenant_id="tenant-123", update_data=update_data
         )
 

@@ -89,7 +89,7 @@ class WebhookEvent(str, Enum):
     TICKET_SLA_BREACH = "ticket.sla_breach"
 
 
-class WebhookSubscription(Base, TenantMixin, TimestampMixin):
+class WebhookSubscription(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]
     """Webhook endpoint subscription."""
 
     __tablename__ = "webhook_subscriptions"
@@ -133,7 +133,7 @@ class WebhookSubscription(Base, TenantMixin, TimestampMixin):
         return f"<WebhookSubscription(id={self.id}, url={self.url}, events={len(self.events)})>"
 
 
-class WebhookDelivery(Base, TenantMixin, TimestampMixin):
+class WebhookDelivery(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]
     """Webhook delivery attempt log."""
 
     __tablename__ = "webhook_deliveries"
@@ -179,7 +179,7 @@ class WebhookDelivery(Base, TenantMixin, TimestampMixin):
 # Pydantic schemas for API
 
 
-class WebhookSubscriptionCreate(BaseModel):
+class WebhookSubscriptionCreate(BaseModel):  # BaseModel resolves to Any in isolation
     """Request to create webhook subscription."""
 
     model_config = ConfigDict(
@@ -204,12 +204,12 @@ class WebhookSubscriptionCreate(BaseModel):
         invalid_events = [evt for evt in v if evt not in valid_events]
         if invalid_events:
             raise ValueError(
-                f"Invalid event types: {invalid_events}. " f"Valid events: {sorted(valid_events)}"
+                f"Invalid event types: {invalid_events}. Valid events: {sorted(valid_events)}"
             )
         return v
 
 
-class WebhookSubscriptionUpdate(BaseModel):
+class WebhookSubscriptionUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     """Request to update webhook subscription."""
 
     model_config = ConfigDict(
@@ -240,7 +240,7 @@ class WebhookSubscriptionUpdate(BaseModel):
         return v
 
 
-class WebhookSubscriptionResponse(BaseModel):
+class WebhookSubscriptionResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Webhook subscription response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -269,7 +269,7 @@ class WebhookSubscriptionResponse(BaseModel):
         return str(v) if v else None
 
 
-class WebhookDeliveryResponse(BaseModel):
+class WebhookDeliveryResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Webhook delivery response."""
 
     model_config = ConfigDict(from_attributes=True)
@@ -293,7 +293,7 @@ class WebhookDeliveryResponse(BaseModel):
         return str(v) if v else None
 
 
-class WebhookEventPayload(BaseModel):
+class WebhookEventPayload(BaseModel):  # BaseModel resolves to Any in isolation
     """Standard webhook event payload sent to endpoints."""
 
     model_config = ConfigDict()

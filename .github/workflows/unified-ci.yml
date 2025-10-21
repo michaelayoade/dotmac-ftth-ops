@@ -173,7 +173,12 @@ jobs:
       - name: Check module-specific coverage thresholds
         if: success()
         run: |
-          poetry run python scripts/check_coverage.py coverage.xml
+          echo "📊 Checking module-specific coverage thresholds..."
+          poetry run python scripts/check_coverage.py coverage.xml || {
+            echo "⚠️  Some modules are below their coverage targets"
+            echo "See .coveragerc for target thresholds per module"
+            exit 1
+          }
 
       - name: Check diff coverage (PRs only)
         if: success() && github.event_name == 'pull_request'

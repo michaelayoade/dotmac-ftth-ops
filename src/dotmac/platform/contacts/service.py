@@ -32,7 +32,7 @@ from dotmac.platform.contacts.schemas import (
     ContactMethodUpdate,
     ContactUpdate,
 )
-from dotmac.platform.core.caching import cache_delete, cache_get, cache_set
+from dotmac.platform.core.caching import cache_delete, cache_get
 
 logger = structlog.get_logger(__name__)
 
@@ -238,7 +238,7 @@ class ContactService:
         )
         return True
 
-    def _build_base_conditions(self, tenant_id: UUID, include_deleted: bool) -> list:
+    def _build_base_conditions(self, tenant_id: UUID, include_deleted: bool) -> list[Any]:
         """Build base tenant and deletion filter conditions."""
         conditions = [Contact.tenant_id == tenant_id]
         if not include_deleted:
@@ -261,7 +261,7 @@ class ContactService:
         status: ContactStatus | None,
         stage: ContactStage | None,
         owner_id: UUID | None,
-    ) -> list:
+    ) -> list[Any]:
         """Build attribute filter conditions."""
         conditions = []
 

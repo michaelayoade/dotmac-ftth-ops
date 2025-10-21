@@ -3,27 +3,27 @@
  * Handles regulatory compliance, audit trails, and policy management
  */
 
-import { BaseApiClient } from './BaseApiClient';
-import type { PaginatedResponse, QueryParams } from '../types/api';
+import { BaseApiClient } from "./BaseApiClient";
+import type { PaginatedResponse, QueryParams } from "../types/api";
 
 export interface CompliancePolicy {
   id: string;
   name: string;
   description: string;
-  policy_type: 'REGULATORY' | 'INTERNAL' | 'INDUSTRY' | 'CONTRACTUAL';
+  policy_type: "REGULATORY" | "INTERNAL" | "INDUSTRY" | "CONTRACTUAL";
   regulation_framework:
-    | 'FCC'
-    | 'GDPR'
-    | 'CCPA'
-    | 'SOX'
-    | 'HIPAA'
-    | 'ISO27001'
-    | 'SOC2'
-    | 'PCI_DSS'
-    | 'CUSTOM';
+    | "FCC"
+    | "GDPR"
+    | "CCPA"
+    | "SOX"
+    | "HIPAA"
+    | "ISO27001"
+    | "SOC2"
+    | "PCI_DSS"
+    | "CUSTOM";
   effective_date: string;
   expiry_date?: string;
-  status: 'DRAFT' | 'ACTIVE' | 'SUSPENDED' | 'EXPIRED';
+  status: "DRAFT" | "ACTIVE" | "SUSPENDED" | "EXPIRED";
   requirements: PolicyRequirement[];
   controls: ComplianceControl[];
   created_by: string;
@@ -38,14 +38,14 @@ export interface PolicyRequirement {
   title: string;
   description: string;
   requirement_type:
-    | 'DATA_PROTECTION'
-    | 'ACCESS_CONTROL'
-    | 'AUDIT_LOGGING'
-    | 'INCIDENT_RESPONSE'
-    | 'DOCUMENTATION'
-    | 'TRAINING';
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  compliance_status: 'COMPLIANT' | 'NON_COMPLIANT' | 'PARTIAL' | 'NOT_ASSESSED';
+    | "DATA_PROTECTION"
+    | "ACCESS_CONTROL"
+    | "AUDIT_LOGGING"
+    | "INCIDENT_RESPONSE"
+    | "DOCUMENTATION"
+    | "TRAINING";
+  priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  compliance_status: "COMPLIANT" | "NON_COMPLIANT" | "PARTIAL" | "NOT_ASSESSED";
   evidence_required: string[];
   responsible_party: string;
   due_date?: string;
@@ -57,10 +57,10 @@ export interface ComplianceControl {
   control_id: string;
   name: string;
   description: string;
-  control_type: 'PREVENTIVE' | 'DETECTIVE' | 'CORRECTIVE' | 'COMPENSATING';
-  implementation_status: 'NOT_IMPLEMENTED' | 'PLANNED' | 'IN_PROGRESS' | 'IMPLEMENTED' | 'TESTED';
-  effectiveness: 'EFFECTIVE' | 'INEFFECTIVE' | 'NEEDS_IMPROVEMENT' | 'NOT_TESTED';
-  test_frequency: 'CONTINUOUS' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'ANNUALLY';
+  control_type: "PREVENTIVE" | "DETECTIVE" | "CORRECTIVE" | "COMPENSATING";
+  implementation_status: "NOT_IMPLEMENTED" | "PLANNED" | "IN_PROGRESS" | "IMPLEMENTED" | "TESTED";
+  effectiveness: "EFFECTIVE" | "INEFFECTIVE" | "NEEDS_IMPROVEMENT" | "NOT_TESTED";
+  test_frequency: "CONTINUOUS" | "DAILY" | "WEEKLY" | "MONTHLY" | "QUARTERLY" | "ANNUALLY";
   last_tested?: string;
   next_test_date?: string;
   owner: string;
@@ -73,31 +73,31 @@ export interface AuditLog {
   resource_id: string;
   user_id?: string;
   user_email?: string;
-  action: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT' | 'ACCESS' | 'EXPORT';
+  action: "CREATE" | "READ" | "UPDATE" | "DELETE" | "LOGIN" | "LOGOUT" | "ACCESS" | "EXPORT";
   details: Record<string, any>;
   ip_address?: string;
   user_agent?: string;
   session_id?: string;
   tenant_id?: string;
-  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  risk_level: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   timestamp: string;
 }
 
 export interface DataPrivacyRequest {
   id: string;
   request_type:
-    | 'ACCESS'
-    | 'RECTIFICATION'
-    | 'ERASURE'
-    | 'PORTABILITY'
-    | 'RESTRICTION'
-    | 'OBJECTION';
+    | "ACCESS"
+    | "RECTIFICATION"
+    | "ERASURE"
+    | "PORTABILITY"
+    | "RESTRICTION"
+    | "OBJECTION";
   customer_id: string;
   customer_email: string;
   request_details: string;
   legal_basis?: string;
-  status: 'SUBMITTED' | 'VERIFIED' | 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED';
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  status: "SUBMITTED" | "VERIFIED" | "IN_PROGRESS" | "COMPLETED" | "REJECTED";
+  priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   assigned_to?: string;
   verification_method?: string;
   completion_deadline: string;
@@ -111,13 +111,13 @@ export interface DataPrivacyRequest {
 export interface IncidentReport {
   id: string;
   incident_type:
-    | 'DATA_BREACH'
-    | 'PRIVACY_VIOLATION'
-    | 'SECURITY_INCIDENT'
-    | 'COMPLIANCE_VIOLATION'
-    | 'SYSTEM_FAILURE';
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  status: 'REPORTED' | 'INVESTIGATING' | 'CONTAINED' | 'RESOLVED' | 'CLOSED';
+    | "DATA_BREACH"
+    | "PRIVACY_VIOLATION"
+    | "SECURITY_INCIDENT"
+    | "COMPLIANCE_VIOLATION"
+    | "SYSTEM_FAILURE";
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  status: "REPORTED" | "INVESTIGATING" | "CONTAINED" | "RESOLVED" | "CLOSED";
   title: string;
   description: string;
   affected_systems: string[];
@@ -139,7 +139,7 @@ export interface RegulatoryNotification {
   id: string;
   authority: string;
   notification_type: string;
-  status: 'PENDING' | 'SUBMITTED' | 'ACKNOWLEDGED' | 'UNDER_REVIEW' | 'CLOSED';
+  status: "PENDING" | "SUBMITTED" | "ACKNOWLEDGED" | "UNDER_REVIEW" | "CLOSED";
   submitted_at?: string;
   reference_number?: string;
   response_deadline?: string;
@@ -149,10 +149,10 @@ export interface RegulatoryNotification {
 export interface ComplianceAssessment {
   id: string;
   assessment_name: string;
-  framework: CompliancePolicy['regulation_framework'];
+  framework: CompliancePolicy["regulation_framework"];
   scope: string;
-  assessment_type: 'SELF_ASSESSMENT' | 'INTERNAL_AUDIT' | 'EXTERNAL_AUDIT' | 'CERTIFICATION';
-  status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  assessment_type: "SELF_ASSESSMENT" | "INTERNAL_AUDIT" | "EXTERNAL_AUDIT" | "CERTIFICATION";
+  status: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   start_date: string;
   end_date?: string;
   assessor: string;
@@ -167,8 +167,8 @@ export interface ComplianceAssessment {
 export interface AssessmentFinding {
   id: string;
   control_id: string;
-  finding_type: 'DEFICIENCY' | 'OBSERVATION' | 'STRENGTH' | 'RECOMMENDATION';
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  finding_type: "DEFICIENCY" | "OBSERVATION" | "STRENGTH" | "RECOMMENDATION";
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   title: string;
   description: string;
   evidence: string[];
@@ -181,10 +181,10 @@ export interface ActionItem {
   id: string;
   title: string;
   description: string;
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  priority: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   assigned_to: string;
   due_date: string;
-  status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'OVERDUE';
+  status: "OPEN" | "IN_PROGRESS" | "COMPLETED" | "OVERDUE";
   progress_notes?: string[];
   completion_evidence?: string[];
 }
@@ -196,7 +196,7 @@ export class ComplianceApiClient extends BaseApiClient {
 
   // Compliance Policies
   async getPolicies(params?: QueryParams): Promise<PaginatedResponse<CompliancePolicy>> {
-    return this.get('/api/compliance/policies', { params });
+    return this.get("/api/compliance/policies", { params });
   }
 
   async getPolicy(policyId: string): Promise<{ data: CompliancePolicy }> {
@@ -204,21 +204,21 @@ export class ComplianceApiClient extends BaseApiClient {
   }
 
   async createPolicy(
-    data: Omit<CompliancePolicy, 'id' | 'created_at' | 'updated_at'>
+    data: Omit<CompliancePolicy, "id" | "created_at" | "updated_at">,
   ): Promise<{ data: CompliancePolicy }> {
-    return this.post('/api/compliance/policies', data);
+    return this.post("/api/compliance/policies", data);
   }
 
   async updatePolicy(
     policyId: string,
-    data: Partial<CompliancePolicy>
+    data: Partial<CompliancePolicy>,
   ): Promise<{ data: CompliancePolicy }> {
     return this.put(`/api/compliance/policies/${policyId}`, data);
   }
 
   async approvePolicy(
     policyId: string,
-    approvalNotes?: string
+    approvalNotes?: string,
   ): Promise<{ data: CompliancePolicy }> {
     return this.post(`/api/compliance/policies/${policyId}/approve`, {
       approval_notes: approvalNotes,
@@ -226,7 +226,9 @@ export class ComplianceApiClient extends BaseApiClient {
   }
 
   async suspendPolicy(policyId: string, reason: string): Promise<{ data: CompliancePolicy }> {
-    return this.post(`/api/compliance/policies/${policyId}/suspend`, { reason });
+    return this.post(`/api/compliance/policies/${policyId}/suspend`, {
+      reason,
+    });
   }
 
   // Compliance Controls
@@ -234,10 +236,10 @@ export class ComplianceApiClient extends BaseApiClient {
     controlId: string,
     testResults: {
       test_date: string;
-      effectiveness: ComplianceControl['effectiveness'];
+      effectiveness: ComplianceControl["effectiveness"];
       test_evidence: string[];
       notes?: string;
-    }
+    },
   ): Promise<{ data: ComplianceControl }> {
     return this.post(`/api/compliance/controls/${controlId}/test`, testResults);
   }
@@ -246,12 +248,12 @@ export class ComplianceApiClient extends BaseApiClient {
     framework?: string;
     control_type?: string;
   }): Promise<{ data: ComplianceControl[] }> {
-    return this.get('/api/compliance/controls/status', { params });
+    return this.get("/api/compliance/controls/status", { params });
   }
 
   async scheduleControlTest(
     controlId: string,
-    scheduledDate: string
+    scheduledDate: string,
   ): Promise<{ data: ComplianceControl }> {
     return this.post(`/api/compliance/controls/${controlId}/schedule-test`, {
       scheduled_date: scheduledDate,
@@ -267,9 +269,9 @@ export class ComplianceApiClient extends BaseApiClient {
       start_date?: string;
       end_date?: string;
       risk_level?: string;
-    }
+    },
   ): Promise<PaginatedResponse<AuditLog>> {
-    return this.get('/api/compliance/audit-logs', { params });
+    return this.get("/api/compliance/audit-logs", { params });
   }
 
   async getAuditLog(logId: string): Promise<{ data: AuditLog }> {
@@ -279,10 +281,10 @@ export class ComplianceApiClient extends BaseApiClient {
   async exportAuditLogs(params: {
     start_date: string;
     end_date: string;
-    format: 'CSV' | 'JSON' | 'PDF';
+    format: "CSV" | "JSON" | "PDF";
     filters?: Record<string, any>;
   }): Promise<{ data: { export_id: string; download_url: string } }> {
-    return this.post('/api/compliance/audit-logs/export', params);
+    return this.post("/api/compliance/audit-logs/export", params);
   }
 
   async searchAuditLogs(
@@ -291,14 +293,14 @@ export class ComplianceApiClient extends BaseApiClient {
       start_date?: string;
       end_date?: string;
       event_types?: string[];
-    }
+    },
   ): Promise<PaginatedResponse<AuditLog>> {
-    return this.post('/api/compliance/audit-logs/search', { query, ...params });
+    return this.post("/api/compliance/audit-logs/search", { query, ...params });
   }
 
   // Data Privacy Requests
   async getPrivacyRequests(params?: QueryParams): Promise<PaginatedResponse<DataPrivacyRequest>> {
-    return this.get('/api/compliance/privacy-requests', { params });
+    return this.get("/api/compliance/privacy-requests", { params });
   }
 
   async getPrivacyRequest(requestId: string): Promise<{ data: DataPrivacyRequest }> {
@@ -306,14 +308,14 @@ export class ComplianceApiClient extends BaseApiClient {
   }
 
   async createPrivacyRequest(
-    data: Omit<DataPrivacyRequest, 'id' | 'status' | 'submitted_at'>
+    data: Omit<DataPrivacyRequest, "id" | "status" | "submitted_at">,
   ): Promise<{ data: DataPrivacyRequest }> {
-    return this.post('/api/compliance/privacy-requests', data);
+    return this.post("/api/compliance/privacy-requests", data);
   }
 
   async verifyPrivacyRequest(
     requestId: string,
-    verificationMethod: string
+    verificationMethod: string,
   ): Promise<{ data: DataPrivacyRequest }> {
     return this.post(`/api/compliance/privacy-requests/${requestId}/verify`, {
       verification_method: verificationMethod,
@@ -327,14 +329,14 @@ export class ComplianceApiClient extends BaseApiClient {
       data_extracted?: any[];
       data_deleted?: string[];
       data_modified?: any[];
-    }
+    },
   ): Promise<{ data: DataPrivacyRequest }> {
     return this.post(`/api/compliance/privacy-requests/${requestId}/process`, data);
   }
 
   async completePrivacyRequest(
     requestId: string,
-    completionNotes: string
+    completionNotes: string,
   ): Promise<{ data: DataPrivacyRequest }> {
     return this.post(`/api/compliance/privacy-requests/${requestId}/complete`, {
       completion_notes: completionNotes,
@@ -343,7 +345,7 @@ export class ComplianceApiClient extends BaseApiClient {
 
   // Incident Management
   async getIncidents(params?: QueryParams): Promise<PaginatedResponse<IncidentReport>> {
-    return this.get('/api/compliance/incidents', { params });
+    return this.get("/api/compliance/incidents", { params });
   }
 
   async getIncident(incidentId: string): Promise<{ data: IncidentReport }> {
@@ -351,14 +353,14 @@ export class ComplianceApiClient extends BaseApiClient {
   }
 
   async createIncident(
-    data: Omit<IncidentReport, 'id' | 'status' | 'created_at'>
+    data: Omit<IncidentReport, "id" | "status" | "created_at">,
   ): Promise<{ data: IncidentReport }> {
-    return this.post('/api/compliance/incidents', data);
+    return this.post("/api/compliance/incidents", data);
   }
 
   async updateIncident(
     incidentId: string,
-    data: Partial<IncidentReport>
+    data: Partial<IncidentReport>,
   ): Promise<{ data: IncidentReport }> {
     return this.put(`/api/compliance/incidents/${incidentId}`, data);
   }
@@ -366,7 +368,7 @@ export class ComplianceApiClient extends BaseApiClient {
   async escalateIncident(
     incidentId: string,
     escalationReason: string,
-    escalateTo: string
+    escalateTo: string,
   ): Promise<{ data: IncidentReport }> {
     return this.post(`/api/compliance/incidents/${incidentId}/escalate`, {
       escalation_reason: escalationReason,
@@ -381,7 +383,7 @@ export class ComplianceApiClient extends BaseApiClient {
       corrective_actions_taken: string[];
       lessons_learned: string;
       follow_up_required: boolean;
-    }
+    },
   ): Promise<{ data: IncidentReport }> {
     return this.post(`/api/compliance/incidents/${incidentId}/resolve`, resolution);
   }
@@ -393,7 +395,7 @@ export class ComplianceApiClient extends BaseApiClient {
       authority: string;
       notification_type: string;
       notification_data: Record<string, any>;
-    }
+    },
   ): Promise<{ data: RegulatoryNotification }> {
     return this.post(`/api/compliance/incidents/${incidentId}/notify`, notification);
   }
@@ -404,7 +406,7 @@ export class ComplianceApiClient extends BaseApiClient {
 
   // Compliance Assessments
   async getAssessments(params?: QueryParams): Promise<PaginatedResponse<ComplianceAssessment>> {
-    return this.get('/api/compliance/assessments', { params });
+    return this.get("/api/compliance/assessments", { params });
   }
 
   async getAssessment(assessmentId: string): Promise<{ data: ComplianceAssessment }> {
@@ -412,14 +414,14 @@ export class ComplianceApiClient extends BaseApiClient {
   }
 
   async createAssessment(
-    data: Omit<ComplianceAssessment, 'id' | 'status' | 'findings' | 'action_plan' | 'created_at'>
+    data: Omit<ComplianceAssessment, "id" | "status" | "findings" | "action_plan" | "created_at">,
   ): Promise<{ data: ComplianceAssessment }> {
-    return this.post('/api/compliance/assessments', data);
+    return this.post("/api/compliance/assessments", data);
   }
 
   async addAssessmentFinding(
     assessmentId: string,
-    finding: Omit<AssessmentFinding, 'id'>
+    finding: Omit<AssessmentFinding, "id">,
   ): Promise<{ data: AssessmentFinding }> {
     return this.post(`/api/compliance/assessments/${assessmentId}/findings`, finding);
   }
@@ -427,7 +429,7 @@ export class ComplianceApiClient extends BaseApiClient {
   async updateAssessmentFinding(
     assessmentId: string,
     findingId: string,
-    data: Partial<AssessmentFinding>
+    data: Partial<AssessmentFinding>,
   ): Promise<{ data: AssessmentFinding }> {
     return this.put(`/api/compliance/assessments/${assessmentId}/findings/${findingId}`, data);
   }
@@ -439,7 +441,7 @@ export class ComplianceApiClient extends BaseApiClient {
       compliance_percentage: number;
       recommendations: string[];
       final_report?: string;
-    }
+    },
   ): Promise<{ data: ComplianceAssessment }> {
     return this.post(`/api/compliance/assessments/${assessmentId}/complete`, data);
   }
@@ -447,21 +449,21 @@ export class ComplianceApiClient extends BaseApiClient {
   // Action Items
   async createActionItem(
     assessmentId: string,
-    actionItem: Omit<ActionItem, 'id' | 'status'>
+    actionItem: Omit<ActionItem, "id" | "status">,
   ): Promise<{ data: ActionItem }> {
     return this.post(`/api/compliance/assessments/${assessmentId}/action-items`, actionItem);
   }
 
   async updateActionItem(
     actionItemId: string,
-    data: Partial<ActionItem>
+    data: Partial<ActionItem>,
   ): Promise<{ data: ActionItem }> {
     return this.put(`/api/compliance/action-items/${actionItemId}`, data);
   }
 
   async completeActionItem(
     actionItemId: string,
-    completionEvidence: string[]
+    completionEvidence: string[],
   ): Promise<{ data: ActionItem }> {
     return this.post(`/api/compliance/action-items/${actionItemId}/complete`, {
       completion_evidence: completionEvidence,
@@ -481,17 +483,17 @@ export class ComplianceApiClient extends BaseApiClient {
       compliance_trends: any[];
     };
   }> {
-    return this.get('/api/compliance/dashboard', { params: { framework } });
+    return this.get("/api/compliance/dashboard", { params: { framework } });
   }
 
   async generateComplianceReport(params: {
     framework: string;
-    report_type: 'COMPLIANCE_STATUS' | 'AUDIT_SUMMARY' | 'INCIDENT_ANALYSIS' | 'RISK_ASSESSMENT';
+    report_type: "COMPLIANCE_STATUS" | "AUDIT_SUMMARY" | "INCIDENT_ANALYSIS" | "RISK_ASSESSMENT";
     start_date?: string;
     end_date?: string;
-    format: 'PDF' | 'HTML' | 'JSON';
+    format: "PDF" | "HTML" | "JSON";
   }): Promise<{ data: { report_id: string; download_url: string } }> {
-    return this.post('/api/compliance/reports/generate', params);
+    return this.post("/api/compliance/reports/generate", params);
   }
 
   async getComplianceMetrics(params?: {
@@ -506,6 +508,6 @@ export class ComplianceApiClient extends BaseApiClient {
       privacy_request_resolution_time: any[];
     };
   }> {
-    return this.get('/api/compliance/metrics', { params });
+    return this.get("/api/compliance/metrics", { params });
   }
 }

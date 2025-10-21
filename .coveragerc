@@ -137,3 +137,48 @@ target = 70
 [coverage:path.ticketing]
 path = src/dotmac/platform/ticketing
 target = 70
+
+# ISP Operations Support Systems - Critical Infrastructure (85-90%):
+[coverage:path.radius]
+path = src/dotmac/platform/radius
+target = 85
+
+[coverage:path.orchestration]
+path = src/dotmac/platform/orchestration
+target = 90
+
+[coverage:path.workflows]
+path = src/dotmac/platform/workflows
+target = 90
+
+[coverage:path.netbox]
+path = src/dotmac/platform/netbox
+target = 80
+
+[coverage:path.genieacs]
+path = src/dotmac/platform/genieacs
+target = 80
+
+[coverage:path.voltha]
+path = src/dotmac/platform/voltha
+target = 80
+
+[coverage:path.wireless]
+path = src/dotmac/platform/wireless
+target = 75
+
+[coverage:path.wireguard]
+path = src/dotmac/platform/wireguard
+target = 75
+
+[coverage:path.network_monitoring]
+path = src/dotmac/platform/network_monitoring
+target = 70
+
+[coverage:path.fault_management]
+path = src/dotmac/platform/fault_management
+target = 75
+
+[coverage:path.diagnostics]
+path = src/dotmac/platform/diagnostics
+target = 70

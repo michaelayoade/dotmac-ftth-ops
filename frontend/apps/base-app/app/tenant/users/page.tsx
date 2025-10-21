@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 import Link from "next/link";
 import { Users, UserPlus, Shield } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +18,8 @@ export default function TenantUsersPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-bold text-foreground">Users & Access</h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          Invite teammates, manage roles, and review recent access changes for {currentTenant?.name}.
+          Invite teammates, manage roles, and review recent access changes for {currentTenant?.name}
+          .
         </p>
       </header>
 

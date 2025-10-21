@@ -1,5 +1,5 @@
-import * as React from 'react';
-import { AlertCircle } from 'lucide-react';
+import * as React from "react";
+import { AlertCircle } from "lucide-react";
 
 interface FormErrorProps {
   id?: string;
@@ -7,7 +7,7 @@ interface FormErrorProps {
   className?: string;
 }
 
-export function FormError({ id, error, className = '' }: FormErrorProps) {
+export function FormError({ id, error, className = "" }: FormErrorProps) {
   if (!error) return null;
 
   return (

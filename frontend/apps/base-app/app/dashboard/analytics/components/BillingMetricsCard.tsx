@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart } from '@/components/charts/BarChart';
-import { LineChart } from '@/components/charts/LineChart';
-import { useBillingMetrics } from '@/lib/graphql/hooks';
-import { DollarSign, TrendingUp, FileText, AlertCircle } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart } from "@/components/charts/BarChart";
+import { LineChart } from "@/components/charts/LineChart";
+import { useBillingMetrics } from "@/lib/graphql/hooks";
+import { DollarSign, TrendingUp, FileText, AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export function BillingMetricsCard({ period = '30d' }: { period?: string }) {
+export function BillingMetricsCard({ period = "30d" }: { period?: string }) {
   const { data, isLoading, error } = useBillingMetrics(period);
 
   if (isLoading) {
@@ -42,16 +42,16 @@ export function BillingMetricsCard({ period = '30d' }: { period?: string }) {
     );
   }
 
-  const metrics = data?.billingMetrics;
-
-  if (!metrics) {
+  if (!data) {
     return null;
   }
 
+  const metrics = data;
+
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
@@ -68,9 +68,7 @@ export function BillingMetricsCard({ period = '30d' }: { period?: string }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(metrics.mrr)}</div>
-            <p className="text-xs text-muted-foreground">
-              ARR: {formatCurrency(metrics.arr)}
-            </p>
+            <p className="text-xs text-muted-foreground">ARR: {formatCurrency(metrics.arr)}</p>
           </CardContent>
         </Card>
 
@@ -107,9 +105,7 @@ export function BillingMetricsCard({ period = '30d' }: { period?: string }) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(metrics.outstandingBalance)}</div>
-            <p className="text-xs text-muted-foreground">
-              Awaiting payment
-            </p>
+            <p className="text-xs text-muted-foreground">Awaiting payment</p>
           </CardContent>
         </Card>
       </div>
@@ -123,7 +119,7 @@ export function BillingMetricsCard({ period = '30d' }: { period?: string }) {
           </CardHeader>
           <CardContent>
             <LineChart
-              data={metrics.revenueTimeSeries.map(ts => ({
+              data={metrics.revenueTimeSeries.map((ts) => ({
                 label: ts.label,
                 value: ts.value,
               }))}
@@ -145,7 +141,7 @@ export function BillingMetricsCard({ period = '30d' }: { period?: string }) {
           </CardHeader>
           <CardContent>
             <BarChart
-              data={metrics.subscriptionsTimeSeries.map(ts => ({
+              data={metrics.subscriptionsTimeSeries.map((ts) => ({
                 label: ts.label,
                 value: ts.value,
               }))}

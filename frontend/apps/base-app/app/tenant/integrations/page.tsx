@@ -1,5 +1,8 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 import Link from "next/link";
 import { Package, Webhook, ToggleLeft, Settings2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +39,8 @@ export default function TenantIntegrationsPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-bold text-foreground">Integrations</h1>
         <p className="text-sm text-muted-foreground">
-          Connect DotMac with the rest of your stack, manage webhooks, and control feature availability.
+          Connect DotMac with the rest of your stack, manage webhooks, and control feature
+          availability.
         </p>
       </header>
 
@@ -72,7 +76,8 @@ export default function TenantIntegrationsPage() {
         <CardHeader>
           <CardTitle>Coming soon: Integration catalog</CardTitle>
           <CardDescription>
-            Install partner apps, configure API credentials, and set up sandbox environments directly inside the portal.
+            Install partner apps, configure API credentials, and set up sandbox environments
+            directly inside the portal.
           </CardDescription>
         </CardHeader>
       </Card>

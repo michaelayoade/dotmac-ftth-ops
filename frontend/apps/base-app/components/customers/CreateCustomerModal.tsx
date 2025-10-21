@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { X, Save, Loader2 } from 'lucide-react';
-import { Customer, CustomerCreateInput, CustomerUpdateInput } from '@/types';
-import { logger } from '@/lib/logger';
+import { useState } from "react";
+import { X, Save, Loader2 } from "lucide-react";
+import { Customer, CustomerCreateInput, CustomerUpdateInput } from "@/types";
+import { logger } from "@/lib/logger";
 
 interface CreateCustomerModalProps {
   onClose: () => void;
@@ -21,8 +21,8 @@ interface FormData {
   email: string;
   phone: string;
   mobile: string;
-  customer_type: 'individual' | 'business' | 'enterprise' | 'partner' | 'vendor';
-  tier: 'free' | 'basic' | 'standard' | 'premium' | 'enterprise';
+  customer_type: "individual" | "business" | "enterprise" | "partner" | "vendor";
+  tier: "free" | "basic" | "standard" | "premium" | "enterprise";
   address_line1: string;
   address_line2: string;
   city: string;
@@ -38,28 +38,28 @@ interface FormData {
 }
 
 const initialFormData: FormData = {
-  first_name: '',
-  last_name: '',
-  middle_name: '',
-  display_name: '',
-  company_name: '',
-  email: '',
-  phone: '',
-  mobile: '',
-  customer_type: 'individual',
-  tier: 'free',
-  address_line1: '',
-  address_line2: '',
-  city: '',
-  state_province: '',
-  postal_code: '',
-  country: 'US',
-  preferred_language: 'en',
-  timezone: 'UTC',
+  first_name: "",
+  last_name: "",
+  middle_name: "",
+  display_name: "",
+  company_name: "",
+  email: "",
+  phone: "",
+  mobile: "",
+  customer_type: "individual",
+  tier: "free",
+  address_line1: "",
+  address_line2: "",
+  city: "",
+  state_province: "",
+  postal_code: "",
+  country: "US",
+  preferred_language: "en",
+  timezone: "UTC",
   opt_in_marketing: false,
   opt_in_updates: true,
-  tags: '',
-  notes: '',
+  tags: "",
+  notes: "",
 };
 
 export function CreateCustomerModal({
@@ -68,54 +68,54 @@ export function CreateCustomerModal({
   editingCustomer,
   createCustomer,
   updateCustomer,
-  loading = false
+  loading = false,
 }: CreateCustomerModalProps) {
   const [formData, setFormData] = useState<FormData>(() => {
     if (editingCustomer) {
       return {
         first_name: editingCustomer.first_name,
         last_name: editingCustomer.last_name,
-        middle_name: editingCustomer.middle_name || '',
-        display_name: editingCustomer.display_name || '',
-        company_name: editingCustomer.company_name || '',
+        middle_name: editingCustomer.middle_name || "",
+        display_name: editingCustomer.display_name || "",
+        company_name: editingCustomer.company_name || "",
         email: editingCustomer.email,
-        phone: editingCustomer.phone || '',
-        mobile: editingCustomer.mobile || '',
+        phone: editingCustomer.phone || "",
+        mobile: editingCustomer.mobile || "",
         customer_type: editingCustomer.customer_type,
         tier: editingCustomer.tier,
-        address_line1: editingCustomer.address_line_1 || '',
-        address_line2: editingCustomer.address_line_2 || '',
-        city: editingCustomer.city || '',
-        state_province: editingCustomer.state_province || '',
-        postal_code: editingCustomer.postal_code || '',
-        country: editingCustomer.country || 'US',
-        preferred_language: 'en',
-        timezone: 'UTC',
+        address_line1: editingCustomer.address_line_1 || "",
+        address_line2: editingCustomer.address_line_2 || "",
+        city: editingCustomer.city || "",
+        state_province: editingCustomer.state_province || "",
+        postal_code: editingCustomer.postal_code || "",
+        country: editingCustomer.country || "US",
+        preferred_language: "en",
+        timezone: "UTC",
         opt_in_marketing: false,
         opt_in_updates: true,
-        tags: (editingCustomer.tags ?? []).join(', '),
-        notes: '',
+        tags: (editingCustomer.tags ?? []).join(", "),
+        notes: "",
       };
     }
     return initialFormData;
   });
 
   const [errors, setErrors] = useState<Partial<FormData>>({});
-  const [activeTab, setActiveTab] = useState<'basic' | 'contact' | 'preferences'>('basic');
+  const [activeTab, setActiveTab] = useState<"basic" | "contact" | "preferences">("basic");
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {};
 
     if (!formData.first_name.trim()) {
-      newErrors.first_name = 'First name is required';
+      newErrors.first_name = "First name is required";
     }
     if (!formData.last_name.trim()) {
-      newErrors.last_name = 'Last name is required';
+      newErrors.last_name = "Last name is required";
     }
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Invalid email format';
+      newErrors.email = "Invalid email format";
     }
 
     setErrors(newErrors);
@@ -132,7 +132,10 @@ export function CreateCustomerModal({
     try {
       const customerData = {
         ...formData,
-        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+        tags: formData.tags
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean),
         metadata: formData.notes ? { initial_notes: formData.notes } : {},
         custom_fields: {},
       };
@@ -146,15 +149,18 @@ export function CreateCustomerModal({
 
       onCustomerCreated(result);
     } catch (error) {
-      logger.error('Failed to save customer', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Failed to save customer",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       // You might want to show a toast notification here
     }
   };
 
   const handleInputChange = (field: keyof FormData, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
@@ -173,12 +179,9 @@ export function CreateCustomerModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-700">
           <h2 className="text-xl font-semibold text-white">
-            {editingCustomer ? 'Edit Customer' : 'Create New Customer'}
+            {editingCustomer ? "Edit Customer" : "Create New Customer"}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors"
-          >
+          <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors">
             <X className="h-6 w-6" />
           </button>
         </div>
@@ -188,9 +191,9 @@ export function CreateCustomerModal({
           <div className="border-b border-slate-700">
             <nav className="flex px-6">
               {[
-                { id: 'basic', label: 'Basic Info' },
-                { id: 'contact', label: 'Contact & Address' },
-                { id: 'preferences', label: 'Preferences & Tags' },
+                { id: "basic", label: "Basic Info" },
+                { id: "contact", label: "Contact & Address" },
+                { id: "preferences", label: "Preferences & Tags" },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -198,8 +201,8 @@ export function CreateCustomerModal({
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`py-4 px-6 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === tab.id
-                      ? 'border-sky-500 text-sky-400'
-                      : 'border-transparent text-slate-400 hover:text-slate-300'
+                      ? "border-sky-500 text-sky-400"
+                      : "border-transparent text-slate-400 hover:text-slate-300"
                   }`}
                 >
                   {tab.label}
@@ -211,7 +214,7 @@ export function CreateCustomerModal({
           {/* Form Content */}
           <div className="p-6">
             {/* Basic Info Tab */}
-            {activeTab === 'basic' && (
+            {activeTab === "basic" && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -221,9 +224,9 @@ export function CreateCustomerModal({
                     <input
                       type="text"
                       value={formData.first_name}
-                      onChange={(e) => handleInputChange('first_name', e.target.value)}
+                      onChange={(e) => handleInputChange("first_name", e.target.value)}
                       className={`w-full px-3 py-2 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                        errors.first_name ? 'border-red-500' : 'border-slate-700'
+                        errors.first_name ? "border-red-500" : "border-slate-700"
                       }`}
                       placeholder="Enter first name"
                     />
@@ -239,9 +242,9 @@ export function CreateCustomerModal({
                     <input
                       type="text"
                       value={formData.last_name}
-                      onChange={(e) => handleInputChange('last_name', e.target.value)}
+                      onChange={(e) => handleInputChange("last_name", e.target.value)}
                       className={`w-full px-3 py-2 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                        errors.last_name ? 'border-red-500' : 'border-slate-700'
+                        errors.last_name ? "border-red-500" : "border-slate-700"
                       }`}
                       placeholder="Enter last name"
                     />
@@ -257,7 +260,7 @@ export function CreateCustomerModal({
                     <input
                       type="text"
                       value={formData.middle_name}
-                      onChange={(e) => handleInputChange('middle_name', e.target.value)}
+                      onChange={(e) => handleInputChange("middle_name", e.target.value)}
                       className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="Enter middle name"
                     />
@@ -270,7 +273,7 @@ export function CreateCustomerModal({
                     <input
                       type="text"
                       value={formData.display_name}
-                      onChange={(e) => handleInputChange('display_name', e.target.value)}
+                      onChange={(e) => handleInputChange("display_name", e.target.value)}
                       className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="Preferred display name"
                     />
@@ -283,7 +286,7 @@ export function CreateCustomerModal({
                     <input
                       type="text"
                       value={formData.company_name}
-                      onChange={(e) => handleInputChange('company_name', e.target.value)}
+                      onChange={(e) => handleInputChange("company_name", e.target.value)}
                       className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="Enter company name"
                     />
@@ -296,15 +299,13 @@ export function CreateCustomerModal({
                     <input
                       type="email"
                       value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
                       className={`w-full px-3 py-2 bg-slate-800 border rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 ${
-                        errors.email ? 'border-red-500' : 'border-slate-700'
+                        errors.email ? "border-red-500" : "border-slate-700"
                       }`}
                       placeholder="Enter email address"
                     />
-                    {errors.email && (
-                      <p className="mt-1 text-sm text-red-400">{errors.email}</p>
-                    )}
+                    {errors.email && <p className="mt-1 text-sm text-red-400">{errors.email}</p>}
                   </div>
 
                   <div>
@@ -313,7 +314,7 @@ export function CreateCustomerModal({
                     </label>
                     <select
                       value={formData.customer_type}
-                      onChange={(e) => handleInputChange('customer_type', e.target.value)}
+                      onChange={(e) => handleInputChange("customer_type", e.target.value)}
                       className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                       <option value="individual">Individual</option>
@@ -325,12 +326,10 @@ export function CreateCustomerModal({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Tier
-                    </label>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Tier</label>
                     <select
                       value={formData.tier}
-                      onChange={(e) => handleInputChange('tier', e.target.value)}
+                      onChange={(e) => handleInputChange("tier", e.target.value)}
                       className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                       <option value="free">Free</option>
@@ -345,7 +344,7 @@ export function CreateCustomerModal({
             )}
 
             {/* Contact & Address Tab */}
-            {activeTab === 'contact' && (
+            {activeTab === "contact" && (
               <div className="space-y-6">
                 {/* Contact Information */}
                 <div>
@@ -358,7 +357,7 @@ export function CreateCustomerModal({
                       <input
                         type="tel"
                         value={formData.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
+                        onChange={(e) => handleInputChange("phone", e.target.value)}
                         className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                         placeholder="+1 (555) 123-4567"
                       />
@@ -371,7 +370,7 @@ export function CreateCustomerModal({
                       <input
                         type="tel"
                         value={formData.mobile}
-                        onChange={(e) => handleInputChange('mobile', e.target.value)}
+                        onChange={(e) => handleInputChange("mobile", e.target.value)}
                         className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                         placeholder="+1 (555) 123-4567"
                       />
@@ -390,7 +389,7 @@ export function CreateCustomerModal({
                       <input
                         type="text"
                         value={formData.address_line1}
-                        onChange={(e) => handleInputChange('address_line1', e.target.value)}
+                        onChange={(e) => handleInputChange("address_line1", e.target.value)}
                         className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                         placeholder="123 Main Street"
                       />
@@ -403,7 +402,7 @@ export function CreateCustomerModal({
                       <input
                         type="text"
                         value={formData.address_line2}
-                        onChange={(e) => handleInputChange('address_line2', e.target.value)}
+                        onChange={(e) => handleInputChange("address_line2", e.target.value)}
                         className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                         placeholder="Suite 100"
                       />
@@ -417,7 +416,7 @@ export function CreateCustomerModal({
                         <input
                           type="text"
                           value={formData.city}
-                          onChange={(e) => handleInputChange('city', e.target.value)}
+                          onChange={(e) => handleInputChange("city", e.target.value)}
                           className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                           placeholder="New York"
                         />
@@ -430,7 +429,7 @@ export function CreateCustomerModal({
                         <input
                           type="text"
                           value={formData.state_province}
-                          onChange={(e) => handleInputChange('state_province', e.target.value)}
+                          onChange={(e) => handleInputChange("state_province", e.target.value)}
                           className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                           placeholder="NY"
                         />
@@ -443,7 +442,7 @@ export function CreateCustomerModal({
                         <input
                           type="text"
                           value={formData.postal_code}
-                          onChange={(e) => handleInputChange('postal_code', e.target.value)}
+                          onChange={(e) => handleInputChange("postal_code", e.target.value)}
                           className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                           placeholder="10001"
                         />
@@ -456,7 +455,7 @@ export function CreateCustomerModal({
                       </label>
                       <select
                         value={formData.country}
-                        onChange={(e) => handleInputChange('country', e.target.value)}
+                        onChange={(e) => handleInputChange("country", e.target.value)}
                         className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                       >
                         <option value="US">United States</option>
@@ -473,7 +472,7 @@ export function CreateCustomerModal({
             )}
 
             {/* Preferences & Tags Tab */}
-            {activeTab === 'preferences' && (
+            {activeTab === "preferences" && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -482,7 +481,7 @@ export function CreateCustomerModal({
                     </label>
                     <select
                       value={formData.preferred_language}
-                      onChange={(e) => handleInputChange('preferred_language', e.target.value)}
+                      onChange={(e) => handleInputChange("preferred_language", e.target.value)}
                       className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                       <option value="en">English</option>
@@ -498,7 +497,7 @@ export function CreateCustomerModal({
                     </label>
                     <select
                       value={formData.timezone}
-                      onChange={(e) => handleInputChange('timezone', e.target.value)}
+                      onChange={(e) => handleInputChange("timezone", e.target.value)}
                       className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
                     >
                       <option value="UTC">UTC</option>
@@ -516,7 +515,7 @@ export function CreateCustomerModal({
                       type="checkbox"
                       id="opt_in_marketing"
                       checked={formData.opt_in_marketing}
-                      onChange={(e) => handleInputChange('opt_in_marketing', e.target.checked)}
+                      onChange={(e) => handleInputChange("opt_in_marketing", e.target.checked)}
                       className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-slate-700 rounded bg-slate-800"
                     />
                     <label htmlFor="opt_in_marketing" className="ml-2 text-sm text-slate-300">
@@ -529,7 +528,7 @@ export function CreateCustomerModal({
                       type="checkbox"
                       id="opt_in_updates"
                       checked={formData.opt_in_updates}
-                      onChange={(e) => handleInputChange('opt_in_updates', e.target.checked)}
+                      onChange={(e) => handleInputChange("opt_in_updates", e.target.checked)}
                       className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-slate-700 rounded bg-slate-800"
                     />
                     <label htmlFor="opt_in_updates" className="ml-2 text-sm text-slate-300">
@@ -539,19 +538,15 @@ export function CreateCustomerModal({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Tags
-                  </label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Tags</label>
                   <input
                     type="text"
                     value={formData.tags}
-                    onChange={(e) => handleInputChange('tags', e.target.value)}
+                    onChange={(e) => handleInputChange("tags", e.target.value)}
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                     placeholder="vip, priority, enterprise (comma separated)"
                   />
-                  <p className="mt-1 text-xs text-slate-400">
-                    Enter tags separated by commas
-                  </p>
+                  <p className="mt-1 text-xs text-slate-400">Enter tags separated by commas</p>
                 </div>
 
                 {!editingCustomer && (
@@ -561,7 +556,7 @@ export function CreateCustomerModal({
                     </label>
                     <textarea
                       value={formData.notes}
-                      onChange={(e) => handleInputChange('notes', e.target.value)}
+                      onChange={(e) => handleInputChange("notes", e.target.value)}
                       rows={4}
                       className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                       placeholder="Any initial notes about this customer..."
@@ -589,12 +584,12 @@ export function CreateCustomerModal({
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  {editingCustomer ? 'Updating...' : 'Creating...'}
+                  {editingCustomer ? "Updating..." : "Creating..."}
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  {editingCustomer ? 'Update Customer' : 'Create Customer'}
+                  {editingCustomer ? "Update Customer" : "Create Customer"}
                 </>
               )}
             </button>

@@ -3,9 +3,9 @@
  * Provides real-time connectivity for network monitoring, customer updates, and system events
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useISPTenant } from './useISPTenant';
-import { usePortalIdAuth } from './usePortalIdAuth';
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useISPTenant } from "./useISPTenant";
+import { usePortalIdAuth } from "./usePortalIdAuth";
 
 export interface WebSocketMessage {
   type: string;
@@ -29,7 +29,7 @@ interface UseWebSocketReturn {
   isConnecting: boolean;
   error: string | null;
   lastMessage: WebSocketMessage | null;
-  connectionQuality: 'excellent' | 'good' | 'poor' | 'offline';
+  connectionQuality: "excellent" | "good" | "poor" | "offline";
   sendMessage: (message: Partial<WebSocketMessage>) => void;
   subscribe: (eventType: string, callback: (data: any) => void) => () => void;
   unsubscribe: (eventType: string) => void;
@@ -42,11 +42,11 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
   const { isAuthenticated } = usePortalIdAuth();
 
   const {
-    url = process.env.NEXT_PUBLIC_WS_URL || 'wss://localhost:8001/ws',
+    url = process.env.NEXT_PUBLIC_WS_URL || "wss://localhost:8001/ws",
     reconnectInterval = 3000,
     maxReconnectAttempts = 10,
     heartbeatInterval = 30000,
-    protocols = ['isp-protocol-v1'],
+    protocols = ["isp-protocol-v1"],
   } = config;
 
   const [isConnected, setIsConnected] = useState(false);
@@ -54,8 +54,8 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
   const [error, setError] = useState<string | null>(null);
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null);
   const [connectionQuality, setConnectionQuality] = useState<
-    'excellent' | 'good' | 'poor' | 'offline'
-  >('offline');
+    "excellent" | "good" | "poor" | "offline"
+  >("offline");
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectAttemptsRef = useRef(0);
@@ -66,15 +66,15 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
 
   // Build WebSocket URL with authentication
   const buildWebSocketUrl = useCallback(() => {
-    const accessToken = localStorage.getItem('access_token');
+    const accessToken = localStorage.getItem("access_token");
     const tenantId = session?.tenant.id;
 
     const wsUrl = new URL(url);
     if (accessToken) {
-      wsUrl.searchParams.set('token', accessToken);
+      wsUrl.searchParams.set("token", accessToken);
     }
     if (tenantId) {
-      wsUrl.searchParams.set('tenant_id', tenantId);
+      wsUrl.searchParams.set("tenant_id", tenantId);
     }
 
     return wsUrl.toString();
@@ -86,11 +86,11 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
       pingStartTimeRef.current = Date.now();
       wsRef.current.send(
         JSON.stringify({
-          type: 'heartbeat',
-          event: 'ping',
+          type: "heartbeat",
+          event: "ping",
           timestamp: new Date().toISOString(),
           tenant_id: session?.tenant.id,
-        })
+        }),
       );
     }
   }, [session?.tenant.id]);
@@ -121,14 +121,14 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
       setError(null);
 
       // Handle heartbeat response and calculate connection quality
-      if (message.type === 'heartbeat' && message.event === 'pong') {
+      if (message.type === "heartbeat" && message.event === "pong") {
         const latency = Date.now() - pingStartTimeRef.current;
         if (latency < 100) {
-          setConnectionQuality('excellent');
+          setConnectionQuality("excellent");
         } else if (latency < 300) {
-          setConnectionQuality('good');
+          setConnectionQuality("good");
         } else {
-          setConnectionQuality('poor');
+          setConnectionQuality("poor");
         }
         return;
       }
@@ -140,13 +140,13 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
       }
 
       // Notify wildcard subscribers
-      const wildcardSubscribers = subscribersRef.current.get('*');
+      const wildcardSubscribers = subscribersRef.current.get("*");
       if (wildcardSubscribers) {
         wildcardSubscribers.forEach((callback) => callback(message));
       }
     } catch (err) {
-      console.error('Failed to parse WebSocket message:', err);
-      setError('Invalid message format received');
+      console.error("Failed to parse WebSocket message:", err);
+      setError("Invalid message format received");
     }
   }, []);
 
@@ -173,15 +173,15 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
       wsRef.current.onopen = () => {
         setIsConnected(true);
         setIsConnecting(false);
-        setConnectionQuality('good');
+        setConnectionQuality("good");
         reconnectAttemptsRef.current = 0;
         setError(null);
 
         // Send authentication message
         wsRef.current?.send(
           JSON.stringify({
-            type: 'auth',
-            event: 'authenticate',
+            type: "auth",
+            event: "authenticate",
             data: {
               tenant_id: session.tenant.id,
               user_id: session.user.id,
@@ -189,7 +189,7 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
               permissions: session.permissions,
             },
             timestamp: new Date().toISOString(),
-          })
+          }),
         );
 
         startHeartbeat();
@@ -200,14 +200,14 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
       wsRef.current.onclose = (event) => {
         setIsConnected(false);
         setIsConnecting(false);
-        setConnectionQuality('offline');
+        setConnectionQuality("offline");
         stopHeartbeat();
 
         if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
           // Attempt to reconnect unless it was a clean close
           const delay = Math.min(
             reconnectInterval * Math.pow(2, reconnectAttemptsRef.current),
-            30000
+            30000,
           );
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectAttemptsRef.current++;
@@ -217,10 +217,10 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
       };
 
       wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setError('Connection error occurred');
+        console.error("WebSocket error:", error);
+        setError("Connection error occurred");
         setIsConnecting(false);
-        setConnectionQuality('offline');
+        setConnectionQuality("offline");
       };
     } catch (err) {
       setIsConnecting(false);
@@ -247,13 +247,13 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
     stopHeartbeat();
 
     if (wsRef.current) {
-      wsRef.current.close(1000, 'Client disconnect');
+      wsRef.current.close(1000, "Client disconnect");
       wsRef.current = null;
     }
 
     setIsConnected(false);
     setIsConnecting(false);
-    setConnectionQuality('offline');
+    setConnectionQuality("offline");
     setError(null);
   }, [stopHeartbeat]);
 
@@ -269,8 +269,8 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
     (message: Partial<WebSocketMessage>) => {
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         const fullMessage: WebSocketMessage = {
-          type: message.type || 'message',
-          event: message.event || 'generic',
+          type: message.type || "message",
+          event: message.event || "generic",
           data: message.data || {},
           timestamp: new Date().toISOString(),
           tenant_id: session?.tenant.id,
@@ -280,10 +280,10 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
 
         wsRef.current.send(JSON.stringify(fullMessage));
       } else {
-        setError('WebSocket is not connected');
+        setError("WebSocket is not connected");
       }
     },
-    [session?.tenant.id, session?.user.id]
+    [session?.tenant.id, session?.user.id],
   );
 
   // Subscribe to specific events
@@ -351,11 +351,11 @@ export function useNetworkMonitoring() {
   const [networkAlerts, setNetworkAlerts] = useState<any[]>([]);
 
   useEffect(() => {
-    const unsubscribeDevices = webSocket.subscribe('device_status_update', (data) => {
+    const unsubscribeDevices = webSocket.subscribe("device_status_update", (data) => {
       setDeviceUpdates((prev) => [data, ...prev.slice(0, 49)]); // Keep last 50 updates
     });
 
-    const unsubscribeAlerts = webSocket.subscribe('network_alert', (data) => {
+    const unsubscribeAlerts = webSocket.subscribe("network_alert", (data) => {
       setNetworkAlerts((prev) => [data, ...prev.slice(0, 19)]); // Keep last 20 alerts
     });
 
@@ -379,11 +379,11 @@ export function useCustomerActivity() {
   const [customerEvents, setCustomerEvents] = useState<any[]>([]);
 
   useEffect(() => {
-    const unsubscribeCustomers = webSocket.subscribe('customer_update', (data) => {
+    const unsubscribeCustomers = webSocket.subscribe("customer_update", (data) => {
       setCustomerEvents((prev) => [data, ...prev.slice(0, 29)]); // Keep last 30 events
     });
 
-    const unsubscribeServices = webSocket.subscribe('service_update', (data) => {
+    const unsubscribeServices = webSocket.subscribe("service_update", (data) => {
       setCustomerEvents((prev) => [data, ...prev.slice(0, 29)]);
     });
 
@@ -406,11 +406,11 @@ export function useFieldOperations() {
   const [technicianLocations, setTechnicianLocations] = useState<Map<string, any>>(new Map());
 
   useEffect(() => {
-    const unsubscribeWorkOrders = webSocket.subscribe('work_order_update', (data) => {
+    const unsubscribeWorkOrders = webSocket.subscribe("work_order_update", (data) => {
       setWorkOrderUpdates((prev) => [data, ...prev.slice(0, 19)]);
     });
 
-    const unsubscribeTechLocations = webSocket.subscribe('technician_location_update', (data) => {
+    const unsubscribeTechLocations = webSocket.subscribe("technician_location_update", (data) => {
       setTechnicianLocations((prev) => new Map(prev.set(data.technician_id, data)));
     });
 

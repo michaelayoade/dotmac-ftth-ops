@@ -455,7 +455,11 @@ class TestOtherImportTypes:
             # OR ValueError (job not found) if table exists but job doesn't
             with pytest.raises((OperationalError, ValueError)):
                 await _process_invoice_import(
-                    job_id=job_id, file_path=temp_path, tenant_id="tenant", user_id=None, config=None
+                    job_id=job_id,
+                    file_path=temp_path,
+                    tenant_id="tenant",
+                    user_id=None,
+                    config=None,
                 )
 
         finally:
@@ -475,7 +479,11 @@ class TestOtherImportTypes:
             # Stub function raises NotImplementedError
             with pytest.raises(NotImplementedError, match="Subscription import requires"):
                 await _process_subscription_import(
-                    job_id=job_id, file_path=temp_path, tenant_id="tenant", user_id=None, config=None
+                    job_id=job_id,
+                    file_path=temp_path,
+                    tenant_id="tenant",
+                    user_id=None,
+                    config=None,
                 )
 
         finally:
@@ -495,7 +503,11 @@ class TestOtherImportTypes:
             # Stub function raises NotImplementedError
             with pytest.raises(NotImplementedError, match="Payment import requires"):
                 await _process_payment_import(
-                    job_id=job_id, file_path=temp_path, tenant_id="tenant", user_id=None, config=None
+                    job_id=job_id,
+                    file_path=temp_path,
+                    tenant_id="tenant",
+                    user_id=None,
+                    config=None,
                 )
 
         finally:

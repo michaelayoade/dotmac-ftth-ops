@@ -2,12 +2,12 @@
  * Multi-Factor Authentication (MFA) hook and utilities
  */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 
-import { getApiClient } from '@dotmac/headless/api';
-import { useAuthStore } from '@dotmac/headless/auth';
+import { getApiClient } from "@dotmac/headless/api";
+import { useAuthStore } from "@dotmac/headless/auth";
 
-export type MFAMethod = 'totp' | 'sms' | 'email' | 'backup_code';
+export type MFAMethod = "totp" | "sms" | "email" | "backup_code";
 
 export interface MFASetupData {
   secret: string;
@@ -58,8 +58,8 @@ export function useMFA() {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.request('/api/v1/auth/mfa/setup', {
-        method: 'POST',
+      const response = await apiClient.request("/api/v1/auth/mfa/setup", {
+        method: "POST",
       });
 
       const data: MFASetupData = response.data;
@@ -68,7 +68,7 @@ export function useMFA() {
       return data;
     } catch (_error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Failed to initialize MFA setup';
+        error instanceof Error ? error.message : "Failed to initialize MFA setup";
       setError(errorMessage);
       return null;
     } finally {
@@ -86,11 +86,11 @@ export function useMFA() {
         setError(null);
 
         if (!setupData) {
-          throw new Error('MFA setup not initialized');
+          throw new Error("MFA setup not initialized");
         }
 
-        const response = await apiClient.request('/api/v1/auth/mfa/setup/verify', {
-          method: 'POST',
+        const response = await apiClient.request("/api/v1/auth/mfa/setup/verify", {
+          method: "POST",
           body: JSON.stringify({
             code,
             secret: setupData.secret,
@@ -106,14 +106,14 @@ export function useMFA() {
 
         return false;
       } catch (_error) {
-        const errorMessage = error instanceof Error ? error.message : 'MFA verification failed';
+        const errorMessage = error instanceof Error ? error.message : "MFA verification failed";
         setError(errorMessage);
         return false;
       } finally {
         setIsLoading(false);
       }
     },
-    [apiClient, setupData, authStore, error]
+    [apiClient, setupData, authStore, error],
   );
 
   /**
@@ -125,8 +125,8 @@ export function useMFA() {
         setIsLoading(true);
         setError(null);
 
-        const response = await apiClient.request('/api/v1/auth/mfa/disable', {
-          method: 'POST',
+        const response = await apiClient.request("/api/v1/auth/mfa/disable", {
+          method: "POST",
           body: JSON.stringify({ password }),
         });
 
@@ -137,14 +137,14 @@ export function useMFA() {
 
         return false;
       } catch (_error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to disable MFA';
+        const errorMessage = error instanceof Error ? error.message : "Failed to disable MFA";
         setError(errorMessage);
         return false;
       } finally {
         setIsLoading(false);
       }
     },
-    [apiClient, authStore, error]
+    [apiClient, authStore, error],
   );
 
   /**
@@ -155,8 +155,8 @@ export function useMFA() {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.request('/api/v1/auth/mfa/challenge', {
-        method: 'POST',
+      const response = await apiClient.request("/api/v1/auth/mfa/challenge", {
+        method: "POST",
       });
 
       const challengeData: MFAChallenge = response.data;
@@ -165,7 +165,7 @@ export function useMFA() {
       return challengeData;
     } catch (_error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Failed to request MFA challenge';
+        error instanceof Error ? error.message : "Failed to request MFA challenge";
       setError(errorMessage);
       return null;
     } finally {
@@ -180,14 +180,14 @@ export function useMFA() {
     async (
       challengeId: string,
       code: string,
-      method: MFAMethod = 'totp'
+      method: MFAMethod = "totp",
     ): Promise<MFAVerificationResult> => {
       try {
         setIsLoading(true);
         setError(null);
 
-        const response = await apiClient.request('/api/v1/auth/mfa/verify', {
-          method: 'POST',
+        const response = await apiClient.request("/api/v1/auth/mfa/verify", {
+          method: "POST",
           body: JSON.stringify({
             challengeId,
             code,
@@ -205,7 +205,7 @@ export function useMFA() {
 
         return result;
       } catch (_error) {
-        const errorMessage = error instanceof Error ? error.message : 'MFA verification failed';
+        const errorMessage = error instanceof Error ? error.message : "MFA verification failed";
         setError(errorMessage);
 
         return {
@@ -216,7 +216,7 @@ export function useMFA() {
         setIsLoading(false);
       }
     },
-    [apiClient, authStore, error]
+    [apiClient, authStore, error],
   );
 
   /**
@@ -228,8 +228,8 @@ export function useMFA() {
         setIsLoading(true);
         setError(null);
 
-        const response = await apiClient.request('/api/v1/auth/mfa/sms', {
-          method: 'POST',
+        const response = await apiClient.request("/api/v1/auth/mfa/sms", {
+          method: "POST",
           body: JSON.stringify({
             phoneNumber,
             challengeId: challenge?.challengeId,
@@ -238,14 +238,14 @@ export function useMFA() {
 
         return response.success;
       } catch (_error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to send SMS code';
+        const errorMessage = error instanceof Error ? error.message : "Failed to send SMS code";
         setError(errorMessage);
         return false;
       } finally {
         setIsLoading(false);
       }
     },
-    [apiClient, challenge, error]
+    [apiClient, challenge, error],
   );
 
   /**
@@ -256,8 +256,8 @@ export function useMFA() {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.request('/api/v1/auth/mfa/email', {
-        method: 'POST',
+      const response = await apiClient.request("/api/v1/auth/mfa/email", {
+        method: "POST",
         body: JSON.stringify({
           challengeId: challenge?.challengeId,
         }),
@@ -265,7 +265,7 @@ export function useMFA() {
 
       return response.success;
     } catch (_error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send email code';
+      const errorMessage = error instanceof Error ? error.message : "Failed to send email code";
       setError(errorMessage);
       return false;
     } finally {
@@ -281,14 +281,14 @@ export function useMFA() {
       setIsLoading(true);
       setError(null);
 
-      const response = await apiClient.request('/api/v1/auth/mfa/backup-codes', {
-        method: 'POST',
+      const response = await apiClient.request("/api/v1/auth/mfa/backup-codes", {
+        method: "POST",
       });
 
       return response.data.codes;
     } catch (_error) {
       const errorMessage =
-        error instanceof Error ? error.message : 'Failed to generate backup codes';
+        error instanceof Error ? error.message : "Failed to generate backup codes";
       setError(errorMessage);
       return null;
     } finally {
@@ -337,7 +337,7 @@ export function useMFA() {
   useEffect(() => {
     if (challenge && isChallengeExpired()) {
       setChallenge(null);
-      setError('MFA challenge has expired. Please try again.');
+      setError("MFA challenge has expired. Please try again.");
     }
   }, [challenge, isChallengeExpired]);
 
@@ -413,7 +413,7 @@ export function isValidBackupCode(code: string): boolean {
  * Format backup code for display
  */
 export function formatBackupCode(code: string): string {
-  const cleaned = code.replace(/[^A-Z0-9]/g, '').toUpperCase();
+  const cleaned = code.replace(/[^A-Z0-9]/g, "").toUpperCase();
   if (cleaned.length >= 8) {
     return `${cleaned.slice(0, 8)}-${cleaned.slice(8, 16)}`;
   }

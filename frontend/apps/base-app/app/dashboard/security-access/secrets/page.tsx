@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
   Shield,
   Plus,
@@ -15,11 +15,11 @@ import {
   Calendar,
   Key,
   Lock,
-  AlertTriangle
-} from 'lucide-react';
-import { platformConfig } from '@/lib/config';
-import { RouteGuard } from '@/components/auth/PermissionGuard';
-import { logger } from '@/lib/logger';
+  AlertTriangle,
+} from "lucide-react";
+import { platformConfig } from "@/lib/config";
+import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { logger } from "@/lib/logger";
 
 interface Secret {
   path: string;
@@ -36,42 +36,46 @@ interface Secret {
 function SecretsPageContent() {
   const [secrets, setSecrets] = useState<Secret[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedSecret, setSelectedSecret] = useState<string | null>(null);
-  const [secretValue, setSecretValue] = useState<string>('');
+  const [secretValue, setSecretValue] = useState<string>("");
   const [showValue, setShowValue] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newSecretData, setNewSecretData] = useState({
-    path: '',
-    value: '',
-    description: '',
-    tags: ''
+    path: "",
+    value: "",
+    description: "",
+    tags: "",
   });
-  const [toast, setToast] = useState<{ show: boolean; message: string; type: 'success' | 'error' }>({
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: "success" | "error";
+  }>({
     show: false,
-    message: '',
-    type: 'success'
+    message: "",
+    type: "success",
   });
 
   const fetchSecrets = useCallback(async () => {
     try {
-      const response = await fetch(`${platformConfig.apiBaseUrl}/api/v1/secrets`, {
-        credentials: 'include',
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/secrets`, {
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       });
 
       if (response.ok) {
         const data = await response.json();
         setSecrets(data.secrets || data);
       } else if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = "/login";
       } else {
-        logger.error('Failed to fetch secrets', { status: response.status });
+        logger.error("Failed to fetch secrets", { status: response.status });
       }
     } catch (error) {
-      logger.error('Error fetching secrets', { error });
+      logger.error("Error fetching secrets", { error });
     } finally {
       setLoading(false);
     }
@@ -84,7 +88,7 @@ function SecretsPageContent() {
   useEffect(() => {
     if (toast.show) {
       const timer = setTimeout(() => {
-        setToast(t => ({ ...t, show: false }));
+        setToast((t) => ({ ...t, show: false }));
       }, 3000);
       return () => clearTimeout(timer);
     }
@@ -93,75 +97,90 @@ function SecretsPageContent() {
 
   const fetchSecretValue = async (path: string) => {
     try {
-      const response = await fetch(`${platformConfig.apiBaseUrl}/api/v1/secrets/${encodeURIComponent(path)}`, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await fetch(
+        `${platformConfig.api.baseUrl}/api/v1/secrets/${encodeURIComponent(path)}`,
+        {
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
 
       if (response.ok) {
         const data = await response.json();
-        setSecretValue(data.data || data.value || 'N/A');
+        setSecretValue(data.data || data.value || "N/A");
         setSelectedSecret(path);
       } else if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = "/login";
       }
     } catch (error) {
-      logger.error('Error fetching secret value', { path, error });
+      logger.error("Error fetching secret value", { path, error });
     }
   };
 
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setToast({ show: true, message: 'Copied to clipboard!', type: 'success' });
+      setToast({
+        show: true,
+        message: "Copied to clipboard!",
+        type: "success",
+      });
     } catch (error) {
-      setToast({ show: true, message: 'Failed to copy to clipboard', type: 'error' });
+      setToast({
+        show: true,
+        message: "Failed to copy to clipboard",
+        type: "error",
+      });
     }
   };
 
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+  const showToast = (message: string, type: "success" | "error" = "success") => {
     setToast({ show: true, message, type });
   };
 
   const handleCreateSecret = async () => {
     try {
-      const response = await fetch(`${platformConfig.apiBaseUrl}/api/v1/secrets`, {
-        method: 'POST',
-        credentials: 'include',
+      const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/secrets`, {
+        method: "POST",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           path: newSecretData.path,
           data: newSecretData.value,
           metadata: {
             description: newSecretData.description,
-            tags: newSecretData.tags ? newSecretData.tags.split(',').map(t => t.trim()) : []
-          }
-        })
+            tags: newSecretData.tags ? newSecretData.tags.split(",").map((t) => t.trim()) : [],
+          },
+        }),
       });
 
       if (response.ok) {
-        showToast('Secret created successfully!', 'success');
+        showToast("Secret created successfully!", "success");
         setShowCreateModal(false);
-        setNewSecretData({ path: '', value: '', description: '', tags: '' });
+        setNewSecretData({ path: "", value: "", description: "", tags: "" });
         await fetchSecrets();
       } else if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = "/login";
       } else {
-        showToast('Failed to create secret', 'error');
+        showToast("Failed to create secret", "error");
       }
     } catch (error) {
-      logger.error('Error creating secret', { path: newSecretData.path, error });
-      showToast('Error creating secret', 'error');
+      logger.error("Error creating secret", {
+        path: newSecretData.path,
+        error,
+      });
+      showToast("Error creating secret", "error");
     }
   };
 
-  const filteredSecrets = secrets.filter(secret =>
-    secret.path.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    secret.metadata?.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredSecrets = secrets.filter(
+    (secret) =>
+      secret.path.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      secret.metadata?.description?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (loading) {
@@ -195,8 +214,9 @@ function SecretsPageContent() {
           <AlertTriangle className="h-5 w-5 text-yellow-400" />
           <div className="ml-3">
             <p className="text-sm text-yellow-700">
-              <strong>Security Notice:</strong> Secret values are encrypted and only revealed when explicitly requested.
-              Always follow security best practices when handling sensitive data.
+              <strong>Security Notice:</strong> Secret values are encrypted and only revealed when
+              explicitly requested. Always follow security best practices when handling sensitive
+              data.
             </p>
           </div>
         </div>
@@ -219,7 +239,7 @@ function SecretsPageContent() {
             <div className="ml-4">
               <p className="text-sm font-medium text-muted-foreground">API Keys</p>
               <p className="text-2xl font-bold text-foreground">
-                {secrets.filter(s => s.path.includes('api') || s.path.includes('key')).length}
+                {secrets.filter((s) => s.path.includes("api") || s.path.includes("key")).length}
               </p>
             </div>
           </div>
@@ -230,7 +250,7 @@ function SecretsPageContent() {
             <div className="ml-4">
               <p className="text-sm font-medium text-muted-foreground">Databases</p>
               <p className="text-2xl font-bold text-foreground">
-                {secrets.filter(s => s.path.includes('db') || s.path.includes('database')).length}
+                {secrets.filter((s) => s.path.includes("db") || s.path.includes("database")).length}
               </p>
             </div>
           </div>
@@ -241,11 +261,13 @@ function SecretsPageContent() {
             <div className="ml-4">
               <p className="text-sm font-medium text-muted-foreground">Updated Today</p>
               <p className="text-2xl font-bold text-foreground">
-                {secrets.filter(s => {
-                  const updated = new Date(s.updated_at);
-                  const today = new Date();
-                  return updated.toDateString() === today.toDateString();
-                }).length}
+                {
+                  secrets.filter((s) => {
+                    const updated = new Date(s.updated_at);
+                    const today = new Date();
+                    return updated.toDateString() === today.toDateString();
+                  }).length
+                }
               </p>
             </div>
           </div>
@@ -324,7 +346,7 @@ function SecretsPageContent() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                    {secret.metadata?.description || 'No description'}
+                    {secret.metadata?.description || "No description"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     v{secret.version || 1}
@@ -336,7 +358,7 @@ function SecretsPageContent() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                    {secret.metadata?.created_by || 'System'}
+                    {secret.metadata?.created_by || "System"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center space-x-2">
@@ -369,9 +391,8 @@ function SecretsPageContent() {
               <h3 className="mt-2 text-sm font-medium text-foreground">No secrets found</h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 {searchQuery
-                  ? 'Try adjusting your search criteria'
-                  : 'Get started by adding your first secret'
-                }
+                  ? "Try adjusting your search criteria"
+                  : "Get started by adding your first secret"}
               </p>
               {!searchQuery && (
                 <div className="mt-6">
@@ -424,7 +445,7 @@ function SecretsPageContent() {
                   </div>
                 </div>
                 <div className="font-mono text-sm bg-background p-2 rounded border">
-                  {showValue ? secretValue : '••••••••••••••••'}
+                  {showValue ? secretValue : "••••••••••••••••"}
                 </div>
               </div>
 
@@ -451,7 +472,12 @@ function SecretsPageContent() {
                 <button
                   onClick={() => {
                     setShowCreateModal(false);
-                    setNewSecretData({ path: '', value: '', description: '', tags: '' });
+                    setNewSecretData({
+                      path: "",
+                      value: "",
+                      description: "",
+                      tags: "",
+                    });
                   }}
                   className="text-muted-foreground hover:text-muted-foreground"
                 >
@@ -468,7 +494,12 @@ function SecretsPageContent() {
                     type="text"
                     placeholder="e.g., database/password"
                     value={newSecretData.path}
-                    onChange={(e) => setNewSecretData({ ...newSecretData, path: e.target.value })}
+                    onChange={(e) =>
+                      setNewSecretData({
+                        ...newSecretData,
+                        path: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-border rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -480,7 +511,12 @@ function SecretsPageContent() {
                   <textarea
                     placeholder="Enter the secret value"
                     value={newSecretData.value}
-                    onChange={(e) => setNewSecretData({ ...newSecretData, value: e.target.value })}
+                    onChange={(e) =>
+                      setNewSecretData({
+                        ...newSecretData,
+                        value: e.target.value,
+                      })
+                    }
                     rows={3}
                     className="w-full px-3 py-2 border border-border rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -494,7 +530,12 @@ function SecretsPageContent() {
                     type="text"
                     placeholder="Brief description of this secret"
                     value={newSecretData.description}
-                    onChange={(e) => setNewSecretData({ ...newSecretData, description: e.target.value })}
+                    onChange={(e) =>
+                      setNewSecretData({
+                        ...newSecretData,
+                        description: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-border rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -507,7 +548,12 @@ function SecretsPageContent() {
                     type="text"
                     placeholder="e.g., production, sensitive"
                     value={newSecretData.tags}
-                    onChange={(e) => setNewSecretData({ ...newSecretData, tags: e.target.value })}
+                    onChange={(e) =>
+                      setNewSecretData({
+                        ...newSecretData,
+                        tags: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-border rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -517,7 +563,12 @@ function SecretsPageContent() {
                 <button
                   onClick={() => {
                     setShowCreateModal(false);
-                    setNewSecretData({ path: '', value: '', description: '', tags: '' });
+                    setNewSecretData({
+                      path: "",
+                      value: "",
+                      description: "",
+                      tags: "",
+                    });
                   }}
                   className="px-4 py-2 text-sm font-medium text-foreground bg-muted rounded-md hover:bg-accent"
                 >
@@ -539,26 +590,40 @@ function SecretsPageContent() {
       {/* Toast Notification */}
       {toast.show && (
         <div className="fixed bottom-4 right-4 z-50">
-          <div className={`flex items-center p-4 rounded-md shadow-lg ${
-            toast.type === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-          } border`}>
-            <div className={`flex-shrink-0 ${
-              toast.type === 'success' ? 'text-green-400' : 'text-red-400'
-            }`}>
-              {toast.type === 'success' ? (
+          <div
+            className={`flex items-center p-4 rounded-md shadow-lg ${
+              toast.type === "success" ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
+            } border`}
+          >
+            <div
+              className={`flex-shrink-0 ${
+                toast.type === "success" ? "text-green-400" : "text-red-400"
+              }`}
+            >
+              {toast.type === "success" ? (
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               ) : (
                 <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
                 </svg>
               )}
             </div>
             <div className="ml-3">
-              <p className={`text-sm font-medium ${
-                toast.type === 'success' ? 'text-green-800' : 'text-red-800'
-              }`}>
+              <p
+                className={`text-sm font-medium ${
+                  toast.type === "success" ? "text-green-800" : "text-red-800"
+                }`}
+              >
                 {toast.message}
               </p>
             </div>

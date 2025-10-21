@@ -57,7 +57,7 @@ logger = structlog.get_logger(__name__)
 class AnalyticsQueries:
     """Analytics and metrics queries optimized for dashboards and charts."""
 
-    @strawberry.field(description="Get billing overview metrics")
+    @strawberry.field(description="Get billing overview metrics")  # type: ignore[misc]
     async def billing_metrics(
         self,
         info: strawberry.Info[Context],
@@ -87,7 +87,7 @@ class AnalyticsQueries:
 
         return BillingMetrics(**result)
 
-    @strawberry.field(description="Get customer analytics metrics")
+    @strawberry.field(description="Get customer analytics metrics")  # type: ignore[misc]
     async def customer_metrics(
         self,
         info: strawberry.Info[Context],
@@ -132,7 +132,7 @@ class AnalyticsQueries:
             timestamp=result["timestamp"],
         )
 
-    @strawberry.field(description="Get system monitoring metrics")
+    @strawberry.field(description="Get system monitoring metrics")  # type: ignore[misc]
     async def monitoring_metrics(
         self,
         info: strawberry.Info[Context],
@@ -234,7 +234,7 @@ class AnalyticsQueries:
             timestamp=now,
         )
 
-    @strawberry.field(description="Get complete dashboard overview in one query")
+    @strawberry.field(description="Get complete dashboard overview in one query")  # type: ignore[misc]
     async def dashboard_overview(
         self,
         info: strawberry.Info[Context],
@@ -406,7 +406,7 @@ class AnalyticsQueries:
             file_storage=file_storage_metrics,
         )
 
-    @strawberry.field(description="Get security metrics overview")
+    @strawberry.field(description="Get security metrics overview")  # type: ignore[misc]
     async def security_metrics(
         self,
         info: strawberry.Info[Context],
@@ -510,7 +510,7 @@ class AnalyticsQueries:
             secrets=secrets_metrics,
         )
 
-    @strawberry.field(description="Get infrastructure metrics overview")
+    @strawberry.field(description="Get infrastructure metrics overview")  # type: ignore[misc]
     async def infrastructure_metrics(
         self,
         info: strawberry.Info[Context],

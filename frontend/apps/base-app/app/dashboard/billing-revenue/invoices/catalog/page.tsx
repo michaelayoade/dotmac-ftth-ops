@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Package, Plus, Search, Filter, Edit, Trash2, DollarSign } from 'lucide-react';
-import { apiClient } from '@/lib/api/client';
-import { useTenant } from '@/lib/contexts/tenant-context';
+import { useState, useEffect } from "react";
+import { Package, Plus, Search, Filter, Edit, Trash2, DollarSign } from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { useTenant } from "@/lib/contexts/tenant-context";
 
 interface Product {
   product_id: string;
   name: string;
   description?: string;
-  type: 'one_time' | 'recurring' | 'usage_based' | 'tiered';
-  status: 'active' | 'inactive' | 'draft';
+  type: "one_time" | "recurring" | "usage_based" | "tiered";
+  status: "active" | "inactive" | "draft";
   currency: string;
   base_price: number;
   category_id?: string;
@@ -31,8 +31,8 @@ export default function ProductCatalogPage() {
   const [categories, setCategories] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   useEffect(() => {
     if (tenantId) {
@@ -47,58 +47,68 @@ export default function ProductCatalogPage() {
     try {
       // Load products and categories
       const [productsResponse, categoriesResponse] = await Promise.all([
-        apiClient.get<{ products: Product[] }>('/api/v1/billing/catalog/products'),
-        apiClient.get<{ categories: ProductCategory[] }>('/api/v1/billing/catalog/categories')
+        apiClient.get<{ products: Product[] }>("/billing/catalog/products"),
+        apiClient.get<{ categories: ProductCategory[] }>("/billing/catalog/categories"),
       ]);
 
-      if (productsResponse.success && productsResponse.data) {
+      if (productsResponse.data) {
         setProducts(productsResponse.data.products || []);
       }
 
-      if (categoriesResponse.success && categoriesResponse.data) {
+      if (categoriesResponse.data) {
         setCategories(categoriesResponse.data.categories || []);
       }
     } catch (error) {
-      console.error('Failed to load catalog data:', error);
-      setError('Failed to load catalog data');
+      console.error("Failed to load catalog data:", error);
+      setError("Failed to load catalog data");
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = !searchQuery ||
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
+      !searchQuery ||
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
+    const matchesCategory = selectedCategory === "all" || product.category_id === selectedCategory;
 
     return matchesSearch && matchesCategory;
   });
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+  const formatCurrency = (amount: number, currency: string = "USD") => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency: currency,
     }).format(amount / 100);
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'one_time': return 'bg-blue-100 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400';
-      case 'recurring': return 'bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400';
-      case 'usage_based': return 'bg-purple-100 dark:bg-purple-950/20 text-purple-800 dark:text-purple-400';
-      case 'tiered': return 'bg-orange-100 dark:bg-orange-950/20 text-orange-800 dark:text-orange-400';
-      default: return 'bg-muted text-muted-foreground';
+      case "one_time":
+        return "bg-blue-100 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400";
+      case "recurring":
+        return "bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400";
+      case "usage_based":
+        return "bg-purple-100 dark:bg-purple-950/20 text-purple-800 dark:text-purple-400";
+      case "tiered":
+        return "bg-orange-100 dark:bg-orange-950/20 text-orange-800 dark:text-orange-400";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400';
-      case 'inactive': return 'bg-red-100 dark:bg-red-950/20 text-red-800 dark:text-red-400';
-      case 'draft': return 'bg-muted text-muted-foreground';
-      default: return 'bg-muted text-muted-foreground';
+      case "active":
+        return "bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400";
+      case "inactive":
+        return "bg-red-100 dark:bg-red-950/20 text-red-800 dark:text-red-400";
+      case "draft":
+        return "bg-muted text-muted-foreground";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -185,11 +195,11 @@ export default function ProductCatalogPage() {
           <Package className="h-12 w-12 text-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-muted-foreground mb-2">No Products Found</h3>
           <p className="text-foreground0 mb-4">
-            {searchQuery || selectedCategory !== 'all'
-              ? 'No products match your current filters.'
-              : 'Get started by creating your first product.'}
+            {searchQuery || selectedCategory !== "all"
+              ? "No products match your current filters."
+              : "Get started by creating your first product."}
           </p>
-          {(!searchQuery && selectedCategory === 'all') && (
+          {!searchQuery && selectedCategory === "all" && (
             <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
               Create Your First Product
             </button>
@@ -198,12 +208,17 @@ export default function ProductCatalogPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => (
-            <div key={product.product_id} className="bg-card border border-border rounded-lg p-6 hover:border-border transition-colors">
+            <div
+              key={product.product_id}
+              className="bg-card border border-border rounded-lg p-6 hover:border-border transition-colors"
+            >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-foreground mb-1">{product.name}</h3>
                   {product.description && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {product.description}
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -225,10 +240,14 @@ export default function ProductCatalogPage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(product.type)}`}>
-                    {product.type.replace('_', ' ')}
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(product.type)}`}
+                  >
+                    {product.type.replace("_", " ")}
                   </span>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(product.status)}`}>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(product.status)}`}
+                  >
                     {product.status}
                   </span>
                 </div>
@@ -238,7 +257,10 @@ export default function ProductCatalogPage() {
                     <p className="text-xs text-foreground0 mb-1">Features:</p>
                     <div className="flex flex-wrap gap-1">
                       {product.features.slice(0, 3).map((feature, index) => (
-                        <span key={index} className="text-xs bg-muted text-foreground px-2 py-1 rounded">
+                        <span
+                          key={index}
+                          className="text-xs bg-muted text-foreground px-2 py-1 rounded"
+                        >
                           {feature}
                         </span>
                       ))}
@@ -267,9 +289,7 @@ export default function ProductCatalogPage() {
                 {category.description && (
                   <p className="text-sm text-muted-foreground mb-2">{category.description}</p>
                 )}
-                <p className="text-xs text-foreground0">
-                  {category.product_count || 0} products
-                </p>
+                <p className="text-xs text-foreground0">{category.product_count || 0} products</p>
               </div>
             ))}
           </div>

@@ -40,7 +40,7 @@ class TestDataTransferRouterCoverage:
         client = TestClient(app_with_router)
 
         # Send invalid request that will cause an exception
-        with patch("dotmac.platform.data_transfer.router.logger") as mock_logger:
+        with patch("dotmac.platform.data_transfer.router.logger"):
             response = client.post(
                 "/export",
                 json={
@@ -113,7 +113,7 @@ class TestDataTransferRouterCoverage:
         client = TestClient(app_with_router)
 
         # Mock an exception in job listing
-        with patch("dotmac.platform.data_transfer.router.logger") as mock_logger:
+        with patch("dotmac.platform.data_transfer.router.logger"):
             # Trigger error by sending invalid parameters
             response = client.get("/jobs", params={"page": -1, "page_size": 999999})
 

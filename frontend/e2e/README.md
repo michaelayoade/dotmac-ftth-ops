@@ -5,6 +5,7 @@ Comprehensive end-to-end tests for the DotMac Platform using Playwright.
 ## Overview
 
 This test suite provides comprehensive coverage of:
+
 - **Authentication flows** (login, MFA, logout)
 - **API integrations** (REST and GraphQL)
 - **User journeys** (admin and regular user workflows)
@@ -129,15 +130,15 @@ tests/
 Page objects are located in `pages/` directory:
 
 ```typescript
-import { LoginPage } from '../pages/LoginPage';
-import { DashboardPage } from '../pages/DashboardPage';
+import { LoginPage } from "../pages/LoginPage";
+import { DashboardPage } from "../pages/DashboardPage";
 
-test('user login flow', async ({ page }) => {
+test("user login flow", async ({ page }) => {
   const loginPage = new LoginPage(page);
   const dashboardPage = new DashboardPage(page);
 
   await loginPage.goto();
-  await loginPage.login('user@test.com', 'password');
+  await loginPage.login("user@test.com", "password");
   await dashboardPage.waitForDashboardLoad();
 });
 ```
@@ -147,11 +148,11 @@ test('user login flow', async ({ page }) => {
 ### API Testing
 
 ```typescript
-import { APITestHelper } from '../utils/api-helper';
+import { APITestHelper } from "../utils/api-helper";
 
-test('API integration', async ({ page }) => {
+test("API integration", async ({ page }) => {
   const apiHelper = new APITestHelper(page);
-  await apiHelper.authenticate('admin@test.com', 'password');
+  await apiHelper.authenticate("admin@test.com", "password");
 
   const user = await apiHelper.createTestUser();
   // Test continues...
@@ -161,11 +162,11 @@ test('API integration', async ({ page }) => {
 ### GraphQL Testing
 
 ```typescript
-import { GraphQLTestHelper } from '../utils/graphql-helper';
+import { GraphQLTestHelper } from "../utils/graphql-helper";
 
-test('GraphQL queries', async ({ page }) => {
+test("GraphQL queries", async ({ page }) => {
   const gqlHelper = new GraphQLTestHelper(page);
-  await gqlHelper.authenticate('admin@test.com', 'password');
+  await gqlHelper.authenticate("admin@test.com", "password");
 
   const response = await gqlHelper.getUsersQuery({ limit: 10 });
   // Test continues...
@@ -175,9 +176,9 @@ test('GraphQL queries', async ({ page }) => {
 ### TOTP/MFA Testing
 
 ```typescript
-import { generateTOTP, TOTPTestHelper } from '../utils/totp-helper';
+import { generateTOTP, TOTPTestHelper } from "../utils/totp-helper";
 
-test('MFA authentication', async ({ page }) => {
+test("MFA authentication", async ({ page }) => {
   const totpHelper = new TOTPTestHelper();
   const code = totpHelper.getCurrentCode();
 
@@ -212,6 +213,7 @@ Key settings in `playwright.config.ts`:
 ### GitHub Actions
 
 Tests run automatically on:
+
 - **Push** to main/develop branches
 - **Pull requests** to main/develop
 - **Nightly schedule** for comprehensive testing
@@ -219,6 +221,7 @@ Tests run automatically on:
 ### Test Sharding
 
 Tests are sharded across multiple runners for faster execution:
+
 - 4 shards per browser
 - Matrix strategy for browser/shard combinations
 - Parallel execution reduces total test time
@@ -261,6 +264,7 @@ Tests are sharded across multiple runners for faster execution:
 ### Common Issues
 
 1. **Services Not Running**
+
    ```bash
    # Check backend is running
    curl http://localhost:8000/health
@@ -287,6 +291,7 @@ Tests are sharded across multiple runners for faster execution:
 ### Environment Issues
 
 1. **Database State**
+
    ```bash
    # Reset test database
    poetry run alembic downgrade base
@@ -294,6 +299,7 @@ Tests are sharded across multiple runners for faster execution:
    ```
 
 2. **Redis Cache**
+
    ```bash
    # Clear Redis cache
    redis-cli FLUSHDB

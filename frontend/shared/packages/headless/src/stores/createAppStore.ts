@@ -3,9 +3,9 @@
  * Creates consistent app stores across all portals
  */
 
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
 import type {
   AppStore,
@@ -18,15 +18,15 @@ import type {
   PreferencesState,
   ContextState,
   NotificationItem,
-} from './types';
-import { SecureStorage } from '../auth/storage';
+} from "./types";
+import { SecureStorage } from "../auth/storage";
 
 // Default state values
 const defaultFilterState: FilterState = {
-  searchTerm: '',
-  statusFilter: 'all',
-  sortBy: 'name',
-  sortOrder: 'asc',
+  searchTerm: "",
+  statusFilter: "all",
+  sortBy: "name",
+  sortOrder: "asc",
   dateRange: { start: null, end: null },
   customFilters: {},
   showAdvanced: false,
@@ -58,13 +58,13 @@ const defaultLoadingState: LoadingState = {
 const defaultUIState: UIState = {
   sidebarOpen: true,
   sidebarCollapsed: false,
-  activeTab: '',
-  activeView: 'list',
+  activeTab: "",
+  activeView: "list",
   showFilters: false,
   showBulkActions: false,
-  theme: 'light',
-  density: 'comfortable',
-  language: 'en',
+  theme: "light",
+  density: "comfortable",
+  language: "en",
   notifications: [],
   modals: {
     confirmDialog: {
@@ -83,8 +83,8 @@ const defaultPreferencesState: PreferencesState = {
   showAdvancedFeatures: false,
   tablePageSize: 25,
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  dateFormat: 'MM/dd/yyyy',
-  numberFormat: 'en-US',
+  dateFormat: "MM/dd/yyyy",
+  numberFormat: "en-US",
   emailNotifications: true,
   pushNotifications: false,
   soundEnabled: true,
@@ -107,12 +107,12 @@ export function createAppStore(config: AppStoreConfig) {
     secureStorage = false,
     includePersistence = true,
     initialState = {},
-    storagePrefix = 'app_',
+    storagePrefix = "app_",
   } = config;
 
   // Setup storage if needed
   const storage = secureStorage
-    ? new SecureStorage({ backend: 'localStorage', prefix: storagePrefix })
+    ? new SecureStorage({ backend: "localStorage", prefix: storagePrefix })
     : undefined;
 
   const store = create<AppStore>()(
@@ -121,7 +121,10 @@ export function createAppStore(config: AppStoreConfig) {
           immer((set, get) => ({
             // Initial state
             ui: { ...defaultUIState, ...initialState.ui },
-            preferences: { ...defaultPreferencesState, ...initialState.preferences },
+            preferences: {
+              ...defaultPreferencesState,
+              ...initialState.preferences,
+            },
             contexts: initialState.contexts || {},
             portalData: initialState.portalData || {},
 
@@ -151,7 +154,7 @@ export function createAppStore(config: AppStoreConfig) {
               get().updateFilters(context, { statusFilter: status });
             },
 
-            setSorting: (context: string, sortBy: string, sortOrder = 'asc') => {
+            setSorting: (context: string, sortBy: string, sortOrder = "asc") => {
               get().updateFilters(context, { sortBy, sortOrder });
             },
 
@@ -187,9 +190,9 @@ export function createAppStore(config: AppStoreConfig) {
                 Object.assign(pagination, updates);
 
                 // Auto-calculate derived values
-                if ('totalItems' in updates || 'itemsPerPage' in updates) {
+                if ("totalItems" in updates || "itemsPerPage" in updates) {
                   pagination.totalPages = Math.ceil(
-                    pagination.totalItems / pagination.itemsPerPage
+                    pagination.totalItems / pagination.itemsPerPage,
                   );
                   pagination.hasNext = pagination.currentPage < pagination.totalPages;
                   pagination.hasPrev = pagination.currentPage > 1;
@@ -295,7 +298,9 @@ export function createAppStore(config: AppStoreConfig) {
             clearSelection: (context: string) => {
               set((state) => {
                 if (state.contexts[context]) {
-                  state.contexts[context].selection = { ...defaultSelectionState };
+                  state.contexts[context].selection = {
+                    ...defaultSelectionState,
+                  };
                 }
               });
             },
@@ -408,13 +413,13 @@ export function createAppStore(config: AppStoreConfig) {
               });
             },
 
-            setTheme: (theme: 'light' | 'dark' | 'auto') => {
+            setTheme: (theme: "light" | "dark" | "auto") => {
               set((state) => {
                 state.ui.theme = theme;
               });
             },
 
-            setDensity: (density: 'compact' | 'comfortable' | 'spacious') => {
+            setDensity: (density: "compact" | "comfortable" | "spacious") => {
               set((state) => {
                 state.ui.density = density;
               });
@@ -454,7 +459,7 @@ export function createAppStore(config: AppStoreConfig) {
               });
             },
 
-            clearNotificationsByType: (type: NotificationItem['type']) => {
+            clearNotificationsByType: (type: NotificationItem["type"]) => {
               set((state) => {
                 state.ui.notifications = state.ui.notifications.filter((n) => n.type !== type);
               });
@@ -583,17 +588,17 @@ export function createAppStore(config: AppStoreConfig) {
 
               if (searchTerm) {
                 filtered = filtered.filter((item) =>
-                  JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase())
+                  JSON.stringify(item).toLowerCase().includes(searchTerm.toLowerCase()),
                 );
               }
 
-              if (statusFilter && statusFilter !== 'all') {
+              if (statusFilter && statusFilter !== "all") {
                 filtered = filtered.filter((item) => item.status === statusFilter);
               }
 
               // Apply custom filters
               Object.entries(customFilters).forEach(([key, value]) => {
-                if (value !== undefined && value !== null && value !== '') {
+                if (value !== undefined && value !== null && value !== "") {
                   filtered = filtered.filter((item) => item[key] === value);
                 }
               });
@@ -610,8 +615,8 @@ export function createAppStore(config: AppStoreConfig) {
                   const aVal = a[sortBy];
                   const bVal = b[sortBy];
 
-                  if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-                  if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+                  if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
+                  if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
                   return 0;
                 });
               }
@@ -691,12 +696,12 @@ export function createAppStore(config: AppStoreConfig) {
               },
               // Don't persist contexts or notifications - they should reload fresh
             }),
-          }
+          },
         )
       : immer((set, get) => ({
           // Same implementation but without persistence
           // ... (implementation would be identical)
-        }))
+        })),
   );
 
   return store;

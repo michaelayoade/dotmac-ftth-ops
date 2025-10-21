@@ -4,5 +4,5 @@
  */
 
 // Data Table
-export { default as UniversalDataTable } from './UniversalDataTable';
-export type { UniversalDataTableProps, TableColumn, TableAction } from './UniversalDataTable';
+export { default as UniversalDataTable } from "./UniversalDataTable";
+export type { UniversalDataTableProps, TableColumn, TableAction } from "./UniversalDataTable";

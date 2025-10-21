@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Package,
   Plus,
@@ -14,17 +14,17 @@ import {
   TrendingUp,
   Pause,
   Play,
-  X
-} from 'lucide-react';
-import { apiClient } from '@/lib/api/client';
-import { useTenant } from '@/lib/contexts/tenant-context';
+  X,
+} from "lucide-react";
+import { apiClient } from "@/lib/api/client";
+import { useTenant } from "@/lib/contexts/tenant-context";
 
 interface SubscriptionPlan {
   plan_id: string;
   product_id: string;
   name: string;
   description?: string;
-  billing_cycle: 'monthly' | 'quarterly' | 'yearly' | 'one_time';
+  billing_cycle: "monthly" | "quarterly" | "yearly" | "one_time";
   price: number;
   currency: string;
   trial_period_days?: number;
@@ -39,7 +39,7 @@ interface Subscription {
   subscription_id: string;
   customer_id: string;
   plan_id: string;
-  status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'incomplete';
+  status: "active" | "trialing" | "past_due" | "canceled" | "incomplete";
   current_period_start: string;
   current_period_end: string;
   trial_end?: string;
@@ -57,9 +57,9 @@ export default function SubscriptionManagementPage() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'plans' | 'subscriptions'>('plans');
-  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"plans" | "subscriptions">("plans");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
   useEffect(() => {
     if (tenantId) {
@@ -74,68 +74,81 @@ export default function SubscriptionManagementPage() {
     try {
       // Load both plans and subscriptions
       const [plansResponse, subscriptionsResponse] = await Promise.all([
-        apiClient.get<SubscriptionPlan[]>('/api/v1/billing/subscriptions/plans'),
-        apiClient.get<Subscription[]>('/api/v1/billing/subscriptions')
+        apiClient.get<SubscriptionPlan[]>("/billing/subscriptions/plans"),
+        apiClient.get<Subscription[]>("/billing/subscriptions"),
       ]);
 
-      if (plansResponse.success && plansResponse.data) {
+      if (plansResponse.data) {
         setPlans(plansResponse.data || []);
       }
 
-      if (subscriptionsResponse.success && subscriptionsResponse.data) {
+      if (subscriptionsResponse.data) {
         setSubscriptions(subscriptionsResponse.data || []);
       }
     } catch (error) {
-      console.error('Failed to load subscription data:', error);
-      setError('Failed to load subscription data');
+      console.error("Failed to load subscription data:", error);
+      setError("Failed to load subscription data");
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredPlans = plans.filter(plan => {
-    const matchesSearch = !searchQuery ||
+  const filteredPlans = plans.filter((plan) => {
+    const matchesSearch =
+      !searchQuery ||
       plan.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       plan.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesSearch;
   });
 
-  const filteredSubscriptions = subscriptions.filter(subscription => {
-    const matchesSearch = !searchQuery ||
+  const filteredSubscriptions = subscriptions.filter((subscription) => {
+    const matchesSearch =
+      !searchQuery ||
       subscription.subscription_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       subscription.customer_id.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus = selectedStatus === 'all' || subscription.status === selectedStatus;
+    const matchesStatus = selectedStatus === "all" || subscription.status === selectedStatus;
 
     return matchesSearch && matchesStatus;
   });
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+  const formatCurrency = (amount: number, currency: string = "USD") => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency: currency,
     }).format(amount / 100);
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400';
-      case 'trialing': return 'bg-blue-100 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400';
-      case 'past_due': return 'bg-yellow-100 dark:bg-yellow-950/20 text-yellow-800 dark:text-yellow-400';
-      case 'canceled': return 'bg-red-100 dark:bg-red-950/20 text-red-800 dark:text-red-400';
-      case 'incomplete': return 'bg-muted text-muted-foreground';
-      default: return 'bg-muted text-muted-foreground';
+      case "active":
+        return "bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400";
+      case "trialing":
+        return "bg-blue-100 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400";
+      case "past_due":
+        return "bg-yellow-100 dark:bg-yellow-950/20 text-yellow-800 dark:text-yellow-400";
+      case "canceled":
+        return "bg-red-100 dark:bg-red-950/20 text-red-800 dark:text-red-400";
+      case "incomplete":
+        return "bg-muted text-muted-foreground";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
   const getBillingCycleColor = (cycle: string) => {
     switch (cycle) {
-      case 'monthly': return 'bg-blue-100 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400';
-      case 'quarterly': return 'bg-purple-100 dark:bg-purple-950/20 text-purple-800 dark:text-purple-400';
-      case 'yearly': return 'bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400';
-      case 'one_time': return 'bg-orange-100 dark:bg-orange-950/20 text-orange-800 dark:text-orange-400';
-      default: return 'bg-muted text-muted-foreground';
+      case "monthly":
+        return "bg-blue-100 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400";
+      case "quarterly":
+        return "bg-purple-100 dark:bg-purple-950/20 text-purple-800 dark:text-purple-400";
+      case "yearly":
+        return "bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400";
+      case "one_time":
+        return "bg-orange-100 dark:bg-orange-950/20 text-orange-800 dark:text-orange-400";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -160,7 +173,9 @@ export default function SubscriptionManagementPage() {
       <div className="p-6 max-w-7xl mx-auto">
         <div className="text-center py-12">
           <Package className="h-12 w-12 text-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-muted-foreground mb-2">Error Loading Subscriptions</h3>
+          <h3 className="text-lg font-medium text-muted-foreground mb-2">
+            Error Loading Subscriptions
+          </h3>
           <p className="text-muted-foreground mb-4">{error}</p>
           <button
             onClick={loadSubscriptionData}
@@ -192,21 +207,21 @@ export default function SubscriptionManagementPage() {
       <div className="border-b border-border">
         <div className="flex space-x-8">
           <button
-            onClick={() => setActiveTab('plans')}
+            onClick={() => setActiveTab("plans")}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'plans'
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-muted-foreground hover:text-muted-foreground hover:border-border'
+              activeTab === "plans"
+                ? "border-indigo-500 text-indigo-400"
+                : "border-transparent text-muted-foreground hover:text-muted-foreground hover:border-border"
             }`}
           >
             Subscription Plans ({plans.length})
           </button>
           <button
-            onClick={() => setActiveTab('subscriptions')}
+            onClick={() => setActiveTab("subscriptions")}
             className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === 'subscriptions'
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-muted-foreground hover:text-muted-foreground hover:border-border'
+              activeTab === "subscriptions"
+                ? "border-indigo-500 text-indigo-400"
+                : "border-transparent text-muted-foreground hover:text-muted-foreground hover:border-border"
             }`}
           >
             Active Subscriptions ({subscriptions.length})
@@ -221,14 +236,14 @@ export default function SubscriptionManagementPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder={activeTab === 'plans' ? 'Search plans...' : 'Search subscriptions...'}
+              placeholder={activeTab === "plans" ? "Search plans..." : "Search subscriptions..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-card border border-border rounded-lg text-foreground placeholder-muted-foreground focus:border-indigo-500 focus:outline-none"
             />
           </div>
         </div>
-        {activeTab === 'subscriptions' && (
+        {activeTab === "subscriptions" && (
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
@@ -245,7 +260,7 @@ export default function SubscriptionManagementPage() {
       </div>
 
       {/* Content */}
-      {activeTab === 'plans' ? (
+      {activeTab === "plans" ? (
         // Subscription Plans
         filteredPlans.length === 0 ? (
           <div className="text-center py-12 bg-card rounded-lg border border-border">
@@ -253,8 +268,8 @@ export default function SubscriptionManagementPage() {
             <h3 className="text-lg font-medium text-muted-foreground mb-2">No Plans Found</h3>
             <p className="text-muted-foreground mb-4">
               {searchQuery
-                ? 'No plans match your search criteria.'
-                : 'Get started by creating your first subscription plan.'}
+                ? "No plans match your search criteria."
+                : "Get started by creating your first subscription plan."}
             </p>
             {!searchQuery && (
               <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
@@ -265,12 +280,17 @@ export default function SubscriptionManagementPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPlans.map((plan) => (
-              <div key={plan.plan_id} className="bg-card border border-border rounded-lg p-6 hover:border-border transition-colors">
+              <div
+                key={plan.plan_id}
+                className="bg-card border border-border rounded-lg p-6 hover:border-border transition-colors"
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-foreground mb-1">{plan.name}</h3>
                     {plan.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">{plan.description}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {plan.description}
+                      </p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
@@ -289,8 +309,10 @@ export default function SubscriptionManagementPage() {
                     <span className="text-foreground font-medium">
                       {formatCurrency(plan.price, plan.currency)}
                     </span>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBillingCycleColor(plan.billing_cycle)}`}>
-                      {plan.billing_cycle.replace('_', ' ')}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBillingCycleColor(plan.billing_cycle)}`}
+                    >
+                      {plan.billing_cycle.replace("_", " ")}
                     </span>
                   </div>
 
@@ -304,10 +326,14 @@ export default function SubscriptionManagementPage() {
                   )}
 
                   <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      plan.is_active ? 'bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400' : 'bg-red-100 dark:bg-red-950/20 text-red-800 dark:text-red-400'
-                    }`}>
-                      {plan.is_active ? 'Active' : 'Inactive'}
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        plan.is_active
+                          ? "bg-green-100 dark:bg-green-950/20 text-green-800 dark:text-green-400"
+                          : "bg-red-100 dark:bg-red-950/20 text-red-800 dark:text-red-400"
+                      }`}
+                    >
+                      {plan.is_active ? "Active" : "Inactive"}
                     </span>
                   </div>
                 </div>
@@ -315,110 +341,112 @@ export default function SubscriptionManagementPage() {
             ))}
           </div>
         )
+      ) : // Active Subscriptions
+      filteredSubscriptions.length === 0 ? (
+        <div className="text-center py-12 bg-card rounded-lg border border-border">
+          <Users className="h-12 w-12 text-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-muted-foreground mb-2">No Subscriptions Found</h3>
+          <p className="text-muted-foreground mb-4">
+            {searchQuery || selectedStatus !== "all"
+              ? "No subscriptions match your current filters."
+              : "No active subscriptions yet."}
+          </p>
+        </div>
       ) : (
-        // Active Subscriptions
-        filteredSubscriptions.length === 0 ? (
-          <div className="text-center py-12 bg-card rounded-lg border border-border">
-            <Users className="h-12 w-12 text-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground mb-2">No Subscriptions Found</h3>
-            <p className="text-muted-foreground mb-4">
-              {searchQuery || selectedStatus !== 'all'
-                ? 'No subscriptions match your current filters.'
-                : 'No active subscriptions yet.'}
-            </p>
-          </div>
-        ) : (
-          <div className="bg-card border border-border rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-border">
-                <thead className="bg-muted">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Subscription
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Customer
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Current Period
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Renewal
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-card divide-y divide-border">
-                  {filteredSubscriptions.map((subscription) => (
-                    <tr key={subscription.subscription_id} className="hover:bg-muted">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div>
-                            <div className="text-sm font-medium text-foreground">
-                              {subscription.subscription_id}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              Plan: {subscription.plan_id}
-                            </div>
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-border">
+              <thead className="bg-muted">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Subscription
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Current Period
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Renewal
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-card divide-y divide-border">
+                {filteredSubscriptions.map((subscription) => (
+                  <tr key={subscription.subscription_id} className="hover:bg-muted">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div>
+                          <div className="text-sm font-medium text-foreground">
+                            {subscription.subscription_id}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Plan: {subscription.plan_id}
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-foreground">{subscription.customer_id}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col gap-1">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(subscription.status)}`}>
-                            {subscription.status}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-foreground">{subscription.customer_id}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-col gap-1">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(subscription.status)}`}
+                        >
+                          {subscription.status}
+                        </span>
+                        {subscription.is_in_trial && (
+                          <span className="text-xs text-blue-600 dark:text-blue-400">In Trial</span>
+                        )}
+                        {subscription.cancel_at_period_end && (
+                          <span className="text-xs text-yellow-600 dark:text-yellow-400">
+                            Canceling
                           </span>
-                          {subscription.is_in_trial && (
-                            <span className="text-xs text-blue-600 dark:text-blue-400">In Trial</span>
-                          )}
-                          {subscription.cancel_at_period_end && (
-                            <span className="text-xs text-yellow-600 dark:text-yellow-400">Canceling</span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        <div>
-                          {new Date(subscription.current_period_start).toLocaleDateString()} -
-                          {new Date(subscription.current_period_end).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                        {subscription.days_until_renewal} days
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center gap-2 justify-end">
-                          <button className="text-muted-foreground hover:text-foreground">
-                            <Edit className="h-4 w-4" />
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                      <div>
+                        {new Date(subscription.current_period_start).toLocaleDateString()} -
+                        {new Date(subscription.current_period_end).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                      {subscription.days_until_renewal} days
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center gap-2 justify-end">
+                        <button className="text-muted-foreground hover:text-foreground">
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        {subscription.status === "active" ? (
+                          <button className="text-muted-foreground hover:text-yellow-600 dark:hover:text-yellow-400">
+                            <Pause className="h-4 w-4" />
                           </button>
-                          {subscription.status === 'active' ? (
-                            <button className="text-muted-foreground hover:text-yellow-600 dark:hover:text-yellow-400">
-                              <Pause className="h-4 w-4" />
-                            </button>
-                          ) : (
-                            <button className="text-muted-foreground hover:text-green-600 dark:hover:text-green-400">
-                              <Play className="h-4 w-4" />
-                            </button>
-                          )}
-                          <button className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400">
-                            <X className="h-4 w-4" />
+                        ) : (
+                          <button className="text-muted-foreground hover:text-green-600 dark:hover:text-green-400">
+                            <Play className="h-4 w-4" />
                           </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        )}
+                        <button className="text-muted-foreground hover:text-red-600 dark:hover:text-red-400">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )
+        </div>
       )}
     </div>
   );

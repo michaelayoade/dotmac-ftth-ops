@@ -44,7 +44,7 @@ else:
 class CSVImporter(BaseImporter):
     """CSV file importer using pandas."""
 
-    async def import_from_file(self, file_path: Path) -> AsyncGenerator[DataBatch, None]:
+    async def import_from_file(self, file_path: Path) -> AsyncGenerator[DataBatch]:
         """Import CSV file in chunks."""
         try:
             self._progress.status = TransferStatus.RUNNING
@@ -100,7 +100,7 @@ class CSVImporter(BaseImporter):
 class JSONImporter(BaseImporter):
     """JSON file importer using pandas."""
 
-    async def import_from_file(self, file_path: Path) -> AsyncGenerator[DataBatch, None]:
+    async def import_from_file(self, file_path: Path) -> AsyncGenerator[DataBatch]:
         """Import JSON file."""
         try:
             self._progress.status = TransferStatus.RUNNING
@@ -154,7 +154,7 @@ class JSONImporter(BaseImporter):
 class ExcelImporter(BaseImporter):
     """Excel file importer using pandas."""
 
-    async def import_from_file(self, file_path: Path) -> AsyncGenerator[DataBatch, None]:
+    async def import_from_file(self, file_path: Path) -> AsyncGenerator[DataBatch]:
         """Import Excel file."""
         try:
             self._progress.status = TransferStatus.RUNNING
@@ -206,7 +206,7 @@ class ExcelImporter(BaseImporter):
 class XMLImporter(BaseImporter):
     """XML file importer."""
 
-    async def import_from_file(self, file_path: Path) -> AsyncGenerator[DataBatch, None]:
+    async def import_from_file(self, file_path: Path) -> AsyncGenerator[DataBatch]:
         """Import XML file."""
         try:
             self._progress.status = TransferStatus.RUNNING
@@ -292,7 +292,7 @@ class XMLImporter(BaseImporter):
 class YAMLImporter(BaseImporter):
     """YAML file importer."""
 
-    async def import_from_file(self, file_path: Path) -> AsyncGenerator[DataBatch, None]:
+    async def import_from_file(self, file_path: Path) -> AsyncGenerator[DataBatch]:
         """Import YAML file."""
         try:
             self._progress.status = TransferStatus.RUNNING
@@ -393,7 +393,7 @@ async def import_file(
     config: TransferConfig | None = None,
     options: ImportOptions | None = None,
     progress_callback: ProgressCallback | None = None,
-) -> AsyncGenerator[DataBatch, None]:
+) -> AsyncGenerator[DataBatch]:
     """Import data from a file."""
     path = Path(file_path)
 

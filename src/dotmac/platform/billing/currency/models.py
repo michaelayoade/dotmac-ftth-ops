@@ -15,7 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from dotmac.platform.db import Base, TimestampMixin
 
 
-class ExchangeRate(Base, TimestampMixin):
+class ExchangeRate(Base, TimestampMixin):  # type: ignore[misc]  # Mixin has type Any
     """Historical exchange rate information."""
 
     __tablename__ = "billing_exchange_rates"

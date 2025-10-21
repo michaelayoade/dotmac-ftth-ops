@@ -107,7 +107,7 @@ class HealthResponse(BaseModel):
 
 @router.get("/health", response_model=HealthResponse, tags=["Secrets Management"])
 async def check_vault_health(
-    vault: Annotated[AsyncVaultClient, Depends(get_vault_client)]
+    vault: Annotated[AsyncVaultClient, Depends(get_vault_client)],
 ) -> HealthResponse:
     """Check Vault/OpenBao health status."""
     try:

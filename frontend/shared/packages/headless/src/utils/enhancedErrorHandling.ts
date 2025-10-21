@@ -3,71 +3,71 @@
  * Addresses context loss, client experience, and debugging concerns
  */
 
-import { ISPError, type ErrorCategory, type ErrorSeverity } from './errorUtils';
+import { ISPError, type ErrorCategory, type ErrorSeverity } from "./errorUtils";
 
 // Enhanced error codes with business context
 export enum ErrorCode {
   // Network & Connectivity
-  NETWORK_CONNECTION_FAILED = 'NET_001',
-  NETWORK_TIMEOUT = 'NET_002',
-  NETWORK_RATE_LIMITED = 'NET_003',
-  NETWORK_OFFLINE = 'NET_004',
+  NETWORK_CONNECTION_FAILED = "NET_001",
+  NETWORK_TIMEOUT = "NET_002",
+  NETWORK_RATE_LIMITED = "NET_003",
+  NETWORK_OFFLINE = "NET_004",
 
   // Authentication & Authorization
-  AUTH_TOKEN_EXPIRED = 'AUTH_001',
-  AUTH_TOKEN_INVALID = 'AUTH_002',
-  AUTH_LOGIN_FAILED = 'AUTH_003',
-  AUTH_MFA_REQUIRED = 'AUTH_004',
-  AUTH_ACCOUNT_LOCKED = 'AUTH_005',
-  AUTHZ_INSUFFICIENT_PERMISSIONS = 'AUTHZ_001',
-  AUTHZ_RESOURCE_FORBIDDEN = 'AUTHZ_002',
-  AUTHZ_TENANT_ACCESS_DENIED = 'AUTHZ_003',
+  AUTH_TOKEN_EXPIRED = "AUTH_001",
+  AUTH_TOKEN_INVALID = "AUTH_002",
+  AUTH_LOGIN_FAILED = "AUTH_003",
+  AUTH_MFA_REQUIRED = "AUTH_004",
+  AUTH_ACCOUNT_LOCKED = "AUTH_005",
+  AUTHZ_INSUFFICIENT_PERMISSIONS = "AUTHZ_001",
+  AUTHZ_RESOURCE_FORBIDDEN = "AUTHZ_002",
+  AUTHZ_TENANT_ACCESS_DENIED = "AUTHZ_003",
 
   // Validation Errors - Detailed by Domain
-  VALIDATION_REQUIRED_FIELD = 'VAL_001',
-  VALIDATION_INVALID_FORMAT = 'VAL_002',
-  VALIDATION_OUT_OF_RANGE = 'VAL_003',
-  VALIDATION_DUPLICATE_VALUE = 'VAL_004',
-  VALIDATION_BUSINESS_RULE = 'VAL_005',
+  VALIDATION_REQUIRED_FIELD = "VAL_001",
+  VALIDATION_INVALID_FORMAT = "VAL_002",
+  VALIDATION_OUT_OF_RANGE = "VAL_003",
+  VALIDATION_DUPLICATE_VALUE = "VAL_004",
+  VALIDATION_BUSINESS_RULE = "VAL_005",
 
   // Customer Management
-  CUSTOMER_NOT_FOUND = 'CUST_001',
-  CUSTOMER_ALREADY_EXISTS = 'CUST_002',
-  CUSTOMER_SERVICE_SUSPENDED = 'CUST_003',
-  CUSTOMER_PAYMENT_OVERDUE = 'CUST_004',
-  CUSTOMER_INVALID_STATUS = 'CUST_005',
+  CUSTOMER_NOT_FOUND = "CUST_001",
+  CUSTOMER_ALREADY_EXISTS = "CUST_002",
+  CUSTOMER_SERVICE_SUSPENDED = "CUST_003",
+  CUSTOMER_PAYMENT_OVERDUE = "CUST_004",
+  CUSTOMER_INVALID_STATUS = "CUST_005",
 
   // Billing & Payments
-  BILLING_PAYMENT_FAILED = 'BILL_001',
-  BILLING_INVOICE_NOT_FOUND = 'BILL_002',
-  BILLING_AMOUNT_INVALID = 'BILL_003',
-  BILLING_REFUND_FAILED = 'BILL_004',
-  BILLING_SUBSCRIPTION_EXPIRED = 'BILL_005',
-  BILLING_CREDIT_LIMIT_EXCEEDED = 'BILL_006',
+  BILLING_PAYMENT_FAILED = "BILL_001",
+  BILLING_INVOICE_NOT_FOUND = "BILL_002",
+  BILLING_AMOUNT_INVALID = "BILL_003",
+  BILLING_REFUND_FAILED = "BILL_004",
+  BILLING_SUBSCRIPTION_EXPIRED = "BILL_005",
+  BILLING_CREDIT_LIMIT_EXCEEDED = "BILL_006",
 
   // Network Operations
-  NETWORK_DEVICE_UNREACHABLE = 'NET_DEV_001',
-  NETWORK_CONFIGURATION_FAILED = 'NET_DEV_002',
-  NETWORK_SERVICE_UNAVAILABLE = 'NET_SVC_001',
-  NETWORK_BANDWIDTH_EXCEEDED = 'NET_SVC_002',
-  NETWORK_MAINTENANCE_MODE = 'NET_SVC_003',
+  NETWORK_DEVICE_UNREACHABLE = "NET_DEV_001",
+  NETWORK_CONFIGURATION_FAILED = "NET_DEV_002",
+  NETWORK_SERVICE_UNAVAILABLE = "NET_SVC_001",
+  NETWORK_BANDWIDTH_EXCEEDED = "NET_SVC_002",
+  NETWORK_MAINTENANCE_MODE = "NET_SVC_003",
 
   // Service Management
-  SERVICE_PROVISIONING_FAILED = 'SVC_001',
-  SERVICE_DEPROVISIONING_FAILED = 'SVC_002',
-  SERVICE_CONFIGURATION_INVALID = 'SVC_003',
-  SERVICE_DEPENDENCY_MISSING = 'SVC_004',
-  SERVICE_QUOTA_EXCEEDED = 'SVC_005',
+  SERVICE_PROVISIONING_FAILED = "SVC_001",
+  SERVICE_DEPROVISIONING_FAILED = "SVC_002",
+  SERVICE_CONFIGURATION_INVALID = "SVC_003",
+  SERVICE_DEPENDENCY_MISSING = "SVC_004",
+  SERVICE_QUOTA_EXCEEDED = "SVC_005",
 
   // System Errors
-  SYSTEM_DATABASE_ERROR = 'SYS_001',
-  SYSTEM_CACHE_ERROR = 'SYS_002',
-  SYSTEM_QUEUE_FULL = 'SYS_003',
-  SYSTEM_RESOURCE_EXHAUSTED = 'SYS_004',
-  SYSTEM_MAINTENANCE = 'SYS_005',
+  SYSTEM_DATABASE_ERROR = "SYS_001",
+  SYSTEM_CACHE_ERROR = "SYS_002",
+  SYSTEM_QUEUE_FULL = "SYS_003",
+  SYSTEM_RESOURCE_EXHAUSTED = "SYS_004",
+  SYSTEM_MAINTENANCE = "SYS_005",
 
   // Generic
-  UNKNOWN_ERROR = 'UNKNOWN_001',
+  UNKNOWN_ERROR = "UNKNOWN_001",
 }
 
 // Detailed error context for business operations
@@ -84,7 +84,7 @@ export interface ErrorContext {
   // Business Context
   businessProcess?: string;
   workflowStep?: string;
-  customerImpact?: 'none' | 'low' | 'medium' | 'high' | 'critical';
+  customerImpact?: "none" | "low" | "medium" | "high" | "critical";
 
   // Technical Context
   service?: string;
@@ -226,24 +226,24 @@ function mapCodeToProperties(code: ErrorCode): {
 } {
   const mappings: Record<string, { category: ErrorCategory; severity: ErrorSeverity }> = {
     // Network
-    NET_: { category: 'network', severity: 'medium' },
+    NET_: { category: "network", severity: "medium" },
 
     // Authentication
-    AUTH_: { category: 'authentication', severity: 'high' },
-    AUTHZ_: { category: 'authorization', severity: 'high' },
+    AUTH_: { category: "authentication", severity: "high" },
+    AUTHZ_: { category: "authorization", severity: "high" },
 
     // Validation
-    VAL_: { category: 'validation', severity: 'low' },
+    VAL_: { category: "validation", severity: "low" },
 
     // Business domains
-    CUST_: { category: 'business', severity: 'medium' },
-    BILL_: { category: 'business', severity: 'high' },
-    SVC_: { category: 'business', severity: 'medium' },
+    CUST_: { category: "business", severity: "medium" },
+    BILL_: { category: "business", severity: "high" },
+    SVC_: { category: "business", severity: "medium" },
 
     // System
-    SYS_: { category: 'system', severity: 'critical' },
-    NET_DEV_: { category: 'system', severity: 'high' },
-    NET_SVC_: { category: 'system', severity: 'medium' },
+    SYS_: { category: "system", severity: "critical" },
+    NET_DEV_: { category: "system", severity: "high" },
+    NET_SVC_: { category: "system", severity: "medium" },
   };
 
   for (const [prefix, mapping] of Object.entries(mappings)) {
@@ -252,7 +252,7 @@ function mapCodeToProperties(code: ErrorCode): {
     }
   }
 
-  return { category: 'unknown', severity: 'medium' };
+  return { category: "unknown", severity: "medium" };
 }
 
 function mapCodeToHttpStatus(code: ErrorCode): number {
@@ -318,111 +318,111 @@ function generateContextualUserMessage(code: ErrorCode, context: ErrorContext): 
   const baseMessages: Record<ErrorCode, string> = {
     // Network
     [ErrorCode.NETWORK_CONNECTION_FAILED]:
-      'Unable to connect to our servers. Please check your internet connection.',
-    [ErrorCode.NETWORK_TIMEOUT]: 'The request is taking longer than usual. Please try again.',
+      "Unable to connect to our servers. Please check your internet connection.",
+    [ErrorCode.NETWORK_TIMEOUT]: "The request is taking longer than usual. Please try again.",
     [ErrorCode.NETWORK_RATE_LIMITED]:
       "You're making requests too quickly. Please wait a moment before trying again.",
-    [ErrorCode.NETWORK_OFFLINE]: 'You appear to be offline. Please check your internet connection.',
+    [ErrorCode.NETWORK_OFFLINE]: "You appear to be offline. Please check your internet connection.",
 
     // Authentication
-    [ErrorCode.AUTH_TOKEN_EXPIRED]: 'Your session has expired. Please log in again.',
-    [ErrorCode.AUTH_TOKEN_INVALID]: 'Authentication failed. Please log in again.',
-    [ErrorCode.AUTH_LOGIN_FAILED]: 'Login failed. Please check your credentials and try again.',
-    [ErrorCode.AUTH_MFA_REQUIRED]: 'Multi-factor authentication is required to continue.',
+    [ErrorCode.AUTH_TOKEN_EXPIRED]: "Your session has expired. Please log in again.",
+    [ErrorCode.AUTH_TOKEN_INVALID]: "Authentication failed. Please log in again.",
+    [ErrorCode.AUTH_LOGIN_FAILED]: "Login failed. Please check your credentials and try again.",
+    [ErrorCode.AUTH_MFA_REQUIRED]: "Multi-factor authentication is required to continue.",
     [ErrorCode.AUTH_ACCOUNT_LOCKED]:
-      'Your account has been temporarily locked for security reasons.',
+      "Your account has been temporarily locked for security reasons.",
 
     // Authorization
     [ErrorCode.AUTHZ_INSUFFICIENT_PERMISSIONS]: `You don't have permission to ${context.operation}.`,
-    [ErrorCode.AUTHZ_RESOURCE_FORBIDDEN]: `Access to ${context.resource || 'this resource'} is not allowed.`,
+    [ErrorCode.AUTHZ_RESOURCE_FORBIDDEN]: `Access to ${context.resource || "this resource"} is not allowed.`,
     [ErrorCode.AUTHZ_TENANT_ACCESS_DENIED]: "You don't have access to this organization.",
 
     // Validation
-    [ErrorCode.VALIDATION_REQUIRED_FIELD]: 'Please fill in all required fields.',
-    [ErrorCode.VALIDATION_INVALID_FORMAT]: 'Please check the format of your input.',
-    [ErrorCode.VALIDATION_OUT_OF_RANGE]: 'The value is outside the acceptable range.',
+    [ErrorCode.VALIDATION_REQUIRED_FIELD]: "Please fill in all required fields.",
+    [ErrorCode.VALIDATION_INVALID_FORMAT]: "Please check the format of your input.",
+    [ErrorCode.VALIDATION_OUT_OF_RANGE]: "The value is outside the acceptable range.",
     [ErrorCode.VALIDATION_DUPLICATE_VALUE]:
-      'This value already exists. Please choose a different one.',
-    [ErrorCode.VALIDATION_BUSINESS_RULE]: 'This action violates business rules.',
+      "This value already exists. Please choose a different one.",
+    [ErrorCode.VALIDATION_BUSINESS_RULE]: "This action violates business rules.",
 
     // Customer
-    [ErrorCode.CUSTOMER_NOT_FOUND]: 'Customer not found. Please verify the customer information.',
-    [ErrorCode.CUSTOMER_ALREADY_EXISTS]: 'A customer with this information already exists.',
-    [ErrorCode.CUSTOMER_SERVICE_SUSPENDED]: 'Customer service is currently suspended.',
-    [ErrorCode.CUSTOMER_PAYMENT_OVERDUE]: 'Customer has overdue payments that need to be resolved.',
-    [ErrorCode.CUSTOMER_INVALID_STATUS]: 'Customer status prevents this operation.',
+    [ErrorCode.CUSTOMER_NOT_FOUND]: "Customer not found. Please verify the customer information.",
+    [ErrorCode.CUSTOMER_ALREADY_EXISTS]: "A customer with this information already exists.",
+    [ErrorCode.CUSTOMER_SERVICE_SUSPENDED]: "Customer service is currently suspended.",
+    [ErrorCode.CUSTOMER_PAYMENT_OVERDUE]: "Customer has overdue payments that need to be resolved.",
+    [ErrorCode.CUSTOMER_INVALID_STATUS]: "Customer status prevents this operation.",
 
     // Billing
     [ErrorCode.BILLING_PAYMENT_FAILED]:
-      'Payment processing failed. Please check your payment method.',
-    [ErrorCode.BILLING_INVOICE_NOT_FOUND]: 'Invoice not found. Please verify the invoice number.',
-    [ErrorCode.BILLING_AMOUNT_INVALID]: 'Payment amount is invalid.',
-    [ErrorCode.BILLING_REFUND_FAILED]: 'Refund processing failed. Please contact support.',
-    [ErrorCode.BILLING_SUBSCRIPTION_EXPIRED]: 'Subscription has expired. Please renew to continue.',
+      "Payment processing failed. Please check your payment method.",
+    [ErrorCode.BILLING_INVOICE_NOT_FOUND]: "Invoice not found. Please verify the invoice number.",
+    [ErrorCode.BILLING_AMOUNT_INVALID]: "Payment amount is invalid.",
+    [ErrorCode.BILLING_REFUND_FAILED]: "Refund processing failed. Please contact support.",
+    [ErrorCode.BILLING_SUBSCRIPTION_EXPIRED]: "Subscription has expired. Please renew to continue.",
     [ErrorCode.BILLING_CREDIT_LIMIT_EXCEEDED]:
-      'Credit limit exceeded. Payment is required to continue.',
+      "Credit limit exceeded. Payment is required to continue.",
 
     // Network Operations
-    [ErrorCode.NETWORK_DEVICE_UNREACHABLE]: 'Network device is currently unreachable.',
-    [ErrorCode.NETWORK_CONFIGURATION_FAILED]: 'Network configuration update failed.',
-    [ErrorCode.NETWORK_SERVICE_UNAVAILABLE]: 'Network service is temporarily unavailable.',
-    [ErrorCode.NETWORK_BANDWIDTH_EXCEEDED]: 'Bandwidth limit has been exceeded.',
-    [ErrorCode.NETWORK_MAINTENANCE_MODE]: 'Network is currently in maintenance mode.',
+    [ErrorCode.NETWORK_DEVICE_UNREACHABLE]: "Network device is currently unreachable.",
+    [ErrorCode.NETWORK_CONFIGURATION_FAILED]: "Network configuration update failed.",
+    [ErrorCode.NETWORK_SERVICE_UNAVAILABLE]: "Network service is temporarily unavailable.",
+    [ErrorCode.NETWORK_BANDWIDTH_EXCEEDED]: "Bandwidth limit has been exceeded.",
+    [ErrorCode.NETWORK_MAINTENANCE_MODE]: "Network is currently in maintenance mode.",
 
     // Services
-    [ErrorCode.SERVICE_PROVISIONING_FAILED]: 'Service provisioning failed. Please try again.',
-    [ErrorCode.SERVICE_DEPROVISIONING_FAILED]: 'Service removal failed. Please contact support.',
-    [ErrorCode.SERVICE_CONFIGURATION_INVALID]: 'Service configuration is invalid.',
-    [ErrorCode.SERVICE_DEPENDENCY_MISSING]: 'Required service dependency is missing.',
-    [ErrorCode.SERVICE_QUOTA_EXCEEDED]: 'Service quota has been exceeded.',
+    [ErrorCode.SERVICE_PROVISIONING_FAILED]: "Service provisioning failed. Please try again.",
+    [ErrorCode.SERVICE_DEPROVISIONING_FAILED]: "Service removal failed. Please contact support.",
+    [ErrorCode.SERVICE_CONFIGURATION_INVALID]: "Service configuration is invalid.",
+    [ErrorCode.SERVICE_DEPENDENCY_MISSING]: "Required service dependency is missing.",
+    [ErrorCode.SERVICE_QUOTA_EXCEEDED]: "Service quota has been exceeded.",
 
     // System
-    [ErrorCode.SYSTEM_DATABASE_ERROR]: 'Database error occurred. Please try again later.',
-    [ErrorCode.SYSTEM_CACHE_ERROR]: 'System cache error. Please refresh and try again.',
-    [ErrorCode.SYSTEM_QUEUE_FULL]: 'System is busy. Please try again in a few moments.',
-    [ErrorCode.SYSTEM_RESOURCE_EXHAUSTED]: 'System resources are temporarily unavailable.',
-    [ErrorCode.SYSTEM_MAINTENANCE]: 'System is under maintenance. Please try again later.',
+    [ErrorCode.SYSTEM_DATABASE_ERROR]: "Database error occurred. Please try again later.",
+    [ErrorCode.SYSTEM_CACHE_ERROR]: "System cache error. Please refresh and try again.",
+    [ErrorCode.SYSTEM_QUEUE_FULL]: "System is busy. Please try again in a few moments.",
+    [ErrorCode.SYSTEM_RESOURCE_EXHAUSTED]: "System resources are temporarily unavailable.",
+    [ErrorCode.SYSTEM_MAINTENANCE]: "System is under maintenance. Please try again later.",
 
-    [ErrorCode.UNKNOWN_ERROR]: 'An unexpected error occurred. Please try again.',
+    [ErrorCode.UNKNOWN_ERROR]: "An unexpected error occurred. Please try again.",
   };
 
-  return baseMessages[code] || 'An error occurred. Please try again or contact support.';
+  return baseMessages[code] || "An error occurred. Please try again or contact support.";
 }
 
 function generateUserActions(code: ErrorCode): string[] {
   const actionMappings: Record<ErrorCode, string[]> = {
     [ErrorCode.NETWORK_CONNECTION_FAILED]: [
-      'Check your internet connection',
-      'Try refreshing the page',
-      'Contact your IT administrator if the problem persists',
+      "Check your internet connection",
+      "Try refreshing the page",
+      "Contact your IT administrator if the problem persists",
     ],
     [ErrorCode.AUTH_TOKEN_EXPIRED]: [
-      'Log in again',
-      'Clear your browser cache if the problem persists',
+      "Log in again",
+      "Clear your browser cache if the problem persists",
     ],
     [ErrorCode.VALIDATION_REQUIRED_FIELD]: [
-      'Fill in all required fields marked with *',
-      'Review the form for any missing information',
+      "Fill in all required fields marked with *",
+      "Review the form for any missing information",
     ],
     [ErrorCode.BILLING_PAYMENT_FAILED]: [
-      'Check your payment method details',
-      'Ensure sufficient funds are available',
-      'Try a different payment method',
-      'Contact your bank if the issue persists',
+      "Check your payment method details",
+      "Ensure sufficient funds are available",
+      "Try a different payment method",
+      "Contact your bank if the issue persists",
     ],
     [ErrorCode.CUSTOMER_PAYMENT_OVERDUE]: [
-      'Review outstanding invoices',
-      'Make a payment to bring account current',
-      'Contact billing department for payment arrangements',
+      "Review outstanding invoices",
+      "Make a payment to bring account current",
+      "Contact billing department for payment arrangements",
     ],
   };
 
-  return actionMappings[code] || ['Try again', 'Contact support if the problem persists'];
+  return actionMappings[code] || ["Try again", "Contact support if the problem persists"];
 }
 
 function generateDocumentationUrl(code: ErrorCode): string {
-  const baseUrl = '/docs/errors';
-  const category = code.split('_')[0].toLowerCase();
+  const baseUrl = "/docs/errors";
+  const category = code.split("_")[0].toLowerCase();
   return `${baseUrl}/${category}/${code.toLowerCase()}`;
 }
 
@@ -435,7 +435,7 @@ function requiresEscalation(code: ErrorCode, severity: ErrorSeverity): boolean {
     ErrorCode.NETWORK_DEVICE_UNREACHABLE,
   ];
 
-  return escalationCodes.includes(code) || severity === 'critical';
+  return escalationCodes.includes(code) || severity === "critical";
 }
 
 function calculateBackoffDelay(code: ErrorCode): number {
@@ -457,11 +457,11 @@ export const EnhancedErrorFactory = {
       code: ErrorCode.CUSTOMER_NOT_FOUND,
       message: `Customer with ID ${customerId} not found`,
       context: {
-        operation: 'customer_lookup',
-        resource: 'customer',
+        operation: "customer_lookup",
+        resource: "customer",
         resourceId: customerId,
-        businessProcess: 'customer_management',
-        customerImpact: 'medium',
+        businessProcess: "customer_management",
+        customerImpact: "medium",
         ...context,
       },
     }),
@@ -469,24 +469,24 @@ export const EnhancedErrorFactory = {
   customerServiceSuspended: (
     customerId: string,
     reason: string,
-    context: Partial<ErrorContext> = {}
+    context: Partial<ErrorContext> = {},
   ) =>
     new EnhancedISPError({
       code: ErrorCode.CUSTOMER_SERVICE_SUSPENDED,
       message: `Customer service suspended: ${reason}`,
       context: {
-        operation: 'service_access',
-        resource: 'customer_service',
+        operation: "service_access",
+        resource: "customer_service",
         resourceId: customerId,
-        businessProcess: 'service_management',
-        customerImpact: 'high',
+        businessProcess: "service_management",
+        customerImpact: "high",
         metadata: { suspensionReason: reason },
         ...context,
       },
       userActions: [
-        'Contact customer service',
-        'Review account status',
-        'Resolve outstanding issues',
+        "Contact customer service",
+        "Review account status",
+        "Resolve outstanding issues",
       ],
     }),
 
@@ -495,16 +495,16 @@ export const EnhancedErrorFactory = {
     amount: number,
     paymentMethod: string,
     reason: string,
-    context: Partial<ErrorContext> = {}
+    context: Partial<ErrorContext> = {},
   ) =>
     new EnhancedISPError({
       code: ErrorCode.BILLING_PAYMENT_FAILED,
       message: `Payment of $${amount} failed: ${reason}`,
       context: {
-        operation: 'process_payment',
-        resource: 'payment',
-        businessProcess: 'billing',
-        customerImpact: 'high',
+        operation: "process_payment",
+        resource: "payment",
+        businessProcess: "billing",
+        customerImpact: "high",
         metadata: { amount, paymentMethod, failureReason: reason },
         ...context,
       },
@@ -516,11 +516,11 @@ export const EnhancedErrorFactory = {
       code: ErrorCode.NETWORK_DEVICE_UNREACHABLE,
       message: `${deviceType} device ${deviceId} is unreachable`,
       context: {
-        operation: 'network_operation',
-        resource: 'network_device',
+        operation: "network_operation",
+        resource: "network_device",
         resourceId: deviceId,
-        businessProcess: 'network_management',
-        customerImpact: 'medium',
+        businessProcess: "network_management",
+        customerImpact: "medium",
         metadata: { deviceType },
         ...context,
       },
@@ -532,16 +532,16 @@ export const EnhancedErrorFactory = {
     serviceType: string,
     customerId: string,
     reason: string,
-    context: Partial<ErrorContext> = {}
+    context: Partial<ErrorContext> = {},
   ) =>
     new EnhancedISPError({
       code: ErrorCode.SERVICE_PROVISIONING_FAILED,
       message: `Failed to provision ${serviceType} service: ${reason}`,
       context: {
-        operation: 'provision_service',
-        resource: 'service',
-        businessProcess: 'service_provisioning',
-        customerImpact: 'high',
+        operation: "provision_service",
+        resource: "service",
+        businessProcess: "service_provisioning",
+        customerImpact: "high",
         metadata: { serviceType, customerId, failureReason: reason },
         ...context,
       },
@@ -554,15 +554,15 @@ export const EnhancedErrorFactory = {
       code: ErrorCode.VALIDATION_BUSINESS_RULE,
       message: `Validation failed for field ${field}: ${rule}`,
       context: {
-        operation: 'validate_input',
-        resource: 'form_field',
+        operation: "validate_input",
+        resource: "form_field",
         resourceId: field,
-        businessProcess: context.businessProcess || 'data_entry',
-        customerImpact: 'low',
+        businessProcess: context.businessProcess || "data_entry",
+        customerImpact: "low",
         metadata: { field, value, rule },
         ...context,
       },
-      userActions: [`Please correct the ${field} field`, 'Review input requirements'],
+      userActions: [`Please correct the ${field} field`, "Review input requirements"],
     }),
 };
 
@@ -576,7 +576,7 @@ export function handleApiError(error: any, context: ErrorContext): EnhancedISPEr
   // Extract error details from API response
   const status = error.response?.status || error.status || 500;
   const data = error.response?.data || {};
-  const message = data.message || error.message || 'API request failed';
+  const message = data.message || error.message || "API request failed";
 
   // Map common API errors to enhanced errors
   if (status === 404) {

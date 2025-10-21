@@ -1,15 +1,15 @@
 // Billing domain types using TypeScript best practices
-import { BaseEntitySnake, Money, DateString, CustomerID, InvoiceID, WithMetadata } from './common';
-import { PartialBy, RequiredBy } from './utils';
+import { BaseEntitySnake, Money, DateString, CustomerID, InvoiceID, WithMetadata } from "./common";
+import { PartialBy, RequiredBy } from "./utils";
 
 // Invoice types (using snake_case to match API)
 export interface Invoice extends BaseEntitySnake, WithMetadata {
-  invoice_id: string;  // Using API's actual field name
+  invoice_id: string; // Using API's actual field name
   invoice_number: string;
   customer_id: CustomerID;
   billing_email?: string;
   status: InvoiceStatus;
-  payment_status?: 'pending' | 'processing' | 'paid' | 'failed' | 'refunded';
+  payment_status?: "pending" | "processing" | "paid" | "failed" | "refunded";
 
   // Dates
   due_date: DateString;
@@ -37,16 +37,16 @@ export interface Invoice extends BaseEntitySnake, WithMetadata {
 }
 
 export const InvoiceStatuses = {
-  DRAFT: 'draft',
-  FINALIZED: 'finalized',
-  PAID: 'paid',
-  VOID: 'void',
-  UNCOLLECTIBLE: 'uncollectible'
+  DRAFT: "draft",
+  FINALIZED: "finalized",
+  PAID: "paid",
+  VOID: "void",
+  UNCOLLECTIBLE: "uncollectible",
 } as const;
-export type InvoiceStatus = typeof InvoiceStatuses[keyof typeof InvoiceStatuses];
+export type InvoiceStatus = (typeof InvoiceStatuses)[keyof typeof InvoiceStatuses];
 
 export interface InvoiceLineItem {
-  item_id?: string;  // Using API's field name
+  item_id?: string; // Using API's field name
   description: string;
   quantity: number;
   unit_price: number;
@@ -96,25 +96,25 @@ export interface Subscription extends BaseEntitySnake, WithMetadata {
 }
 
 export const SubscriptionStatuses = {
-  ACTIVE: 'active',
-  TRIALING: 'trialing',
-  PAST_DUE: 'past_due',
-  PAUSED: 'paused',
-  CANCELLED: 'cancelled',
-  EXPIRED: 'expired'
+  ACTIVE: "active",
+  TRIALING: "trialing",
+  PAST_DUE: "past_due",
+  PAUSED: "paused",
+  CANCELLED: "cancelled",
+  EXPIRED: "expired",
 } as const;
-export type SubscriptionStatus = typeof SubscriptionStatuses[keyof typeof SubscriptionStatuses];
+export type SubscriptionStatus = (typeof SubscriptionStatuses)[keyof typeof SubscriptionStatuses];
 
 export const BillingCycles = {
-  DAILY: 'daily',
-  WEEKLY: 'weekly',
-  MONTHLY: 'monthly',
-  QUARTERLY: 'quarterly',
-  SEMI_ANNUAL: 'semi_annual',
-  ANNUAL: 'annual',
-  CUSTOM: 'custom'
+  DAILY: "daily",
+  WEEKLY: "weekly",
+  MONTHLY: "monthly",
+  QUARTERLY: "quarterly",
+  SEMI_ANNUAL: "semi_annual",
+  ANNUAL: "annual",
+  CUSTOM: "custom",
 } as const;
-export type BillingCycle = typeof BillingCycles[keyof typeof BillingCycles];
+export type BillingCycle = (typeof BillingCycles)[keyof typeof BillingCycles];
 
 export interface SubscriptionUsage {
   period: DateString;
@@ -157,20 +157,20 @@ export interface Product extends BaseEntitySnake, WithMetadata {
 }
 
 export const ProductTypes = {
-  PHYSICAL: 'physical',
-  DIGITAL: 'digital',
-  SERVICE: 'service',
-  SUBSCRIPTION: 'subscription'
+  PHYSICAL: "physical",
+  DIGITAL: "digital",
+  SERVICE: "service",
+  SUBSCRIPTION: "subscription",
 } as const;
-export type ProductType = typeof ProductTypes[keyof typeof ProductTypes];
+export type ProductType = (typeof ProductTypes)[keyof typeof ProductTypes];
 
 export const ProductStatuses = {
-  ACTIVE: 'active',
-  INACTIVE: 'inactive',
-  ARCHIVED: 'archived',
-  OUT_OF_STOCK: 'out_of_stock'
+  ACTIVE: "active",
+  INACTIVE: "inactive",
+  ARCHIVED: "archived",
+  OUT_OF_STOCK: "out_of_stock",
 } as const;
-export type ProductStatus = typeof ProductStatuses[keyof typeof ProductStatuses];
+export type ProductStatus = (typeof ProductStatuses)[keyof typeof ProductStatuses];
 
 export interface ProductPricing {
   model: PricingModel;
@@ -179,7 +179,7 @@ export interface ProductPricing {
   customPricing?: boolean;
 }
 
-export type PricingModel = 'flat' | 'tiered' | 'volume' | 'usage' | 'custom';
+export type PricingModel = "flat" | "tiered" | "volume" | "usage" | "custom";
 
 export interface PriceTier {
   minQuantity: number;
@@ -223,27 +223,27 @@ export interface Payment extends BaseEntitySnake, WithMetadata {
 }
 
 export const PaymentStatuses = {
-  PENDING: 'pending',
-  PROCESSING: 'processing',
-  SUCCEEDED: 'succeeded',
-  FAILED: 'failed',
-  CANCELLED: 'cancelled',
-  REFUNDED: 'refunded',
-  PARTIAL_REFUND: 'partial_refund'
+  PENDING: "pending",
+  PROCESSING: "processing",
+  SUCCEEDED: "succeeded",
+  FAILED: "failed",
+  CANCELLED: "cancelled",
+  REFUNDED: "refunded",
+  PARTIAL_REFUND: "partial_refund",
 } as const;
-export type PaymentStatus = typeof PaymentStatuses[keyof typeof PaymentStatuses];
+export type PaymentStatus = (typeof PaymentStatuses)[keyof typeof PaymentStatuses];
 
 export const PaymentMethods = {
-  CARD: 'card',
-  BANK_TRANSFER: 'bank_transfer',
-  PAYPAL: 'paypal',
-  STRIPE: 'stripe',
-  CHECK: 'check',
-  CASH: 'cash',
-  CRYPTO: 'crypto',
-  OTHER: 'other'
+  CARD: "card",
+  BANK_TRANSFER: "bank_transfer",
+  PAYPAL: "paypal",
+  STRIPE: "stripe",
+  CHECK: "check",
+  CASH: "cash",
+  CRYPTO: "crypto",
+  OTHER: "other",
 } as const;
-export type PaymentMethod = typeof PaymentMethods[keyof typeof PaymentMethods];
+export type PaymentMethod = (typeof PaymentMethods)[keyof typeof PaymentMethods];
 
 // Discount types
 export interface Discount {
@@ -258,22 +258,25 @@ export interface Discount {
   usageCount?: number;
 }
 
-export type DiscountType = 'percentage' | 'fixed' | 'trial';
+export type DiscountType = "percentage" | "fixed" | "trial";
 
 // Input types using utilities
 export type InvoiceCreateInput = RequiredBy<
-  PartialBy<Invoice, 'invoice_id' | 'invoice_number' | 'created_at' | 'updated_at' | 'amount_due' | 'amount_paid'>,
-  'customer_id' | 'due_date' | 'line_items'
+  PartialBy<
+    Invoice,
+    "invoice_id" | "invoice_number" | "created_at" | "updated_at" | "amount_due" | "amount_paid"
+  >,
+  "customer_id" | "due_date" | "line_items"
 >;
 
 export type SubscriptionCreateInput = RequiredBy<
-  PartialBy<Subscription, 'id' | 'created_at' | 'updated_at' | 'status'>,
-  'customer_id' | 'plan_id' | 'startDate'
+  PartialBy<Subscription, "id" | "created_at" | "updated_at" | "status">,
+  "customer_id" | "plan_id" | "startDate"
 >;
 
 export type ProductCreateInput = RequiredBy<
-  PartialBy<Product, 'id' | 'created_at' | 'updated_at' | 'status'>,
-  'name' | 'type' | 'pricing'
+  PartialBy<Product, "id" | "created_at" | "updated_at" | "status">,
+  "name" | "type" | "pricing"
 >;
 
 // Search params
@@ -324,4 +327,74 @@ export interface BillingMetrics {
     pending: number;
     totalProcessed: Money;
   };
+}
+
+// Receipt types
+export interface ReceiptLineItem {
+  line_item_id: string;
+  description: string;
+  quantity: number;
+  unit_price: number; // in minor units
+  total_price: number; // in minor units
+  tax_rate: number; // percentage
+  tax_amount: number; // in minor units
+  product_id?: string;
+  sku?: string;
+  extra_data?: Record<string, any>;
+}
+
+export interface Receipt extends BaseEntitySnake, WithMetadata {
+  receipt_id: string;
+  receipt_number: string;
+
+  // References
+  payment_id?: string;
+  invoice_id?: string;
+  customer_id: CustomerID;
+
+  // Receipt details
+  issue_date: DateString;
+  currency: string; // 3-letter currency code
+
+  // Amounts (in minor units)
+  subtotal: number;
+  tax_amount: number;
+  total_amount: number;
+
+  // Payment information
+  payment_method: string;
+  payment_status: string;
+
+  // Line items
+  line_items: ReceiptLineItem[];
+
+  // Customer information
+  customer_name: string;
+  customer_email: string;
+  billing_address?: Record<string, string>;
+
+  // Content
+  notes?: string;
+
+  // Receipt generation
+  pdf_url?: string;
+  html_content?: string;
+
+  // Delivery
+  sent_at?: DateString;
+  delivery_method?: string;
+
+  // Metadata
+  extra_data?: Record<string, any>;
+}
+
+export interface ReceiptSearchParams {
+  customer_id?: CustomerID;
+  payment_id?: string;
+  invoice_id?: string;
+  from_date?: DateString;
+  to_date?: DateString;
+  page?: number;
+  limit?: number;
+  offset?: number;
 }

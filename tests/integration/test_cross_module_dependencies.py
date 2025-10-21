@@ -14,7 +14,7 @@ import pytest
 
 # Test module availability and imports
 try:
-    from dotmac.platform.auth.core import JWTService, UserInfo
+    from dotmac.platform.auth.core import JWTService, UserInfo  # noqa: F401
     from dotmac.platform.core.models import TenantContext
 
     HAS_AUTH_TENANT = True
@@ -31,7 +31,7 @@ except ImportError:
 
 try:
     from dotmac.platform.data_transfer.factory import DataTransferFactory
-    from dotmac.platform.file_storage.service import FileStorageService
+    from dotmac.platform.file_storage.service import FileStorageService  # noqa: F401
 
     HAS_DATA_STORAGE = True
 except ImportError:
@@ -47,7 +47,7 @@ except ImportError:
 
 try:
     from dotmac.platform.communications.template_service import TemplateService
-    from dotmac.platform.user_management.models import User
+    from dotmac.platform.user_management.models import User  # noqa: F401
 
     HAS_COMMS_USER = True
 except ImportError:
@@ -198,7 +198,7 @@ class TestAnalyticsMonitoringIntegration:
     )
     def test_health_check_with_analytics(self):
         """Test health checks can monitor analytics services."""
-        health_checker = HealthChecker()
+        HealthChecker()
 
         # Create analytics collector
         collector = create_otel_collector("test-tenant", "test-service")

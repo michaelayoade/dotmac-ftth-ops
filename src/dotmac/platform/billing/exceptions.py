@@ -365,3 +365,34 @@ class WebhookError(BillingError):
             context=context,
             recovery_hint="Check webhook configuration and retry the webhook delivery",
         )
+
+
+class AddonError(BillingError):
+    """Add-on related errors."""
+
+    def __init__(
+        self,
+        message: str,
+        context: dict[str, Any] | None = None,
+        recovery_hint: str | None = None,
+    ):
+        super().__init__(
+            message, "ADDON_ERROR", status_code=400, context=context, recovery_hint=recovery_hint
+        )
+
+
+class AddonNotFoundError(AddonError):
+    """Add-on not found error."""
+
+    def __init__(self, message: str, addon_id: str | None = None) -> None:
+        context = {}
+        if addon_id:
+            context["addon_id"] = addon_id
+
+        super().__init__(
+            message,
+            context=context,
+            recovery_hint="Verify the add-on ID and ensure it exists and is active",
+        )
+        self.error_code = "ADDON_NOT_FOUND"
+        self.status_code = 404

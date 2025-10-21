@@ -483,7 +483,7 @@ class TestMoneyValueObjectWithBilling:
         """Test Money is immutable."""
         price = Money(amount=99.99, currency="USD")
 
-        with pytest.raises(Exception):  # ValidationError for frozen model
+        with pytest.raises(Exception):  # ValidationError for frozen model  # noqa: B017
             price.amount = 100.00
 
 

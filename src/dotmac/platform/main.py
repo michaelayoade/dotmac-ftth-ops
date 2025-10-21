@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import Any
 
+import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -15,16 +16,30 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from starlette.responses import Response
 
+from dotmac.platform.api.app_boundary_middleware import (
+    AppBoundaryMiddleware,
+    SingleTenantMiddleware,
+)
 from dotmac.platform.audit import AuditContextMiddleware
+from dotmac.platform.auth.billing_permissions import ensure_billing_rbac
+from dotmac.platform.auth.bootstrap import ensure_default_admin_user
 from dotmac.platform.auth.exceptions import AuthError, get_http_status
+from dotmac.platform.auth.isp_permissions import ensure_isp_rbac
 from dotmac.platform.core.rate_limiting import get_limiter
-from dotmac.platform.db import init_db
+from dotmac.platform.db import AsyncSessionLocal, init_db
+from dotmac.platform.monitoring.error_middleware import (
+    ErrorTrackingMiddleware,
+    RequestMetricsMiddleware,
+)
 from dotmac.platform.monitoring.health_checks import HealthChecker, ensure_infrastructure_running
+from dotmac.platform.platform_app import platform_app
+from dotmac.platform.redis_client import init_redis, shutdown_redis
 from dotmac.platform.routers import get_api_info, register_routers
 from dotmac.platform.secrets import load_secrets_from_vault_sync
 from dotmac.platform.settings import settings
 from dotmac.platform.telemetry import setup_telemetry
 from dotmac.platform.tenant import TenantMiddleware
+from dotmac.platform.tenant_app import tenant_app
 
 
 def rate_limit_handler(request: Request, exc: Exception) -> Response:
@@ -45,20 +60,22 @@ def auth_error_handler(request: Request, exc: Exception) -> JSONResponse:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Manage application lifecycle events."""
     # SECURITY: Validate production security settings before anything else
     try:
         settings.validate_production_security()
     except ValueError as e:
-        # Log security error and fail fast
-        print(f"❌ {e}")
+        # Setup basic logging to capture security validation failure
+        import structlog
+
+        logger = structlog.get_logger(__name__)
+        logger.critical(
+            "security.validation.failed", error=str(e), environment=settings.environment
+        )
         raise RuntimeError(str(e)) from e
 
-    # Setup telemetry first to enable structured logging
-    setup_telemetry(app)
-
-    # Get structured logger after telemetry setup
+    # Get structured logger (telemetry configured during app creation)
     import structlog
 
     logger = structlog.get_logger(__name__)
@@ -86,20 +103,34 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             message=check.message,
         )
 
-    # Summary for human-readable console output (keep minimal print for deployment visibility)
-    print(f"🚀 DotMac Platform Services starting (v{settings.app_version})")
+    # Summary with structured logging for deployment visibility
+    logger.info(
+        "service.startup.services_check",
+        version=settings.app_version,
+        all_healthy=all_healthy,
+        emoji="🚀",
+    )
+
     failed_services = [c.name for c in checks if c.required and not c.is_healthy]
     if failed_services:
-        print(f"❌ Required services unavailable: {', '.join(failed_services)}")
+        logger.error(
+            "service.startup.required_services_unavailable",
+            failed_services=failed_services,
+            emoji="❌",
+        )
     elif not all_healthy:
         optional_failed = [c.name for c in checks if not c.required and not c.is_healthy]
-        print(f"⚠️  Optional services unavailable: {', '.join(optional_failed)}")
+        logger.warning(
+            "service.startup.optional_services_unavailable",
+            optional_failed_services=optional_failed,
+            emoji="⚠️",
+        )
     else:
-        print("✅ All service dependencies healthy")
+        logger.info("service.startup.all_services_healthy", emoji="✅")
 
     # Fail fast in production if required services are missing
     if not all_healthy:
-        if failed_services and settings.environment == "production":
+        if failed_services and settings.is_production:
             logger.error(
                 "service.startup.failed",
                 failed_services=failed_services,
@@ -117,41 +148,69 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Load secrets from Vault/OpenBao if configured
     try:
         load_secrets_from_vault_sync()
-        logger.info("secrets.load.success", source="vault")
-        print("✅ Secrets loaded from Vault/OpenBao")
+        logger.info("secrets.load.success", source="vault", emoji="✅")
     except Exception as e:
-        logger.warning("secrets.load.failed", source="vault", error=str(e))
-        print(f"⚠️  Using default secrets (Vault unavailable: {e})")
+        logger.warning("secrets.load.failed", source="vault", error=str(e), emoji="⚠️")
         # Continue with default values in development, fail in production
-        if settings.environment == "production":
+        if settings.is_production:
             logger.error("secrets.load.production_failure", error=str(e))
             raise
 
     # Initialize database
     try:
         init_db()
-        logger.info("database.init.success")
-        print("✅ Database initialized successfully")
+        logger.info("database.init.success", emoji="✅")
     except Exception as e:
-        logger.error("database.init.failed", error=str(e))
-        print(f"❌ Database initialization failed: {e}")
+        logger.error("database.init.failed", error=str(e), emoji="❌")
         # Continue in development, fail in production
-        if settings.environment == "production":
+        if settings.is_production:
             raise
 
-    logger.info("service.startup.complete", healthy=all_healthy)
-    print("🎉 Startup complete - service ready")
+    # Initialize Redis
+    try:
+        await init_redis()
+        logger.info("redis.init.success", emoji="✅")
+    except Exception as e:
+        logger.error("redis.init.failed", error=str(e), emoji="❌")
+        # Continue in development, fail in production if Redis is critical
+        # Allow graceful degradation for features that can work without Redis
+        if settings.is_production:
+            logger.warning("redis.production.unavailable", emoji="⚠️")
+
+    # Seed RBAC permissions/roles after database init
+    try:
+        async with AsyncSessionLocal() as session:
+            await ensure_isp_rbac(session)
+            logger.info("rbac.isp_permissions.seeded", emoji="✅")
+            await ensure_billing_rbac(session)
+            logger.info("rbac.billing_permissions.seeded", emoji="✅")
+    except Exception as e:
+        logger.error("rbac.permissions.failed", error=str(e), emoji="❌")
+        if settings.is_production:
+            raise
+
+    # Provision development admin user
+    try:
+        await ensure_default_admin_user()
+        logger.info("auth.default_admin.ready", emoji="🛠️")
+    except Exception as e:
+        logger.warning("auth.default_admin.failed", error=str(e), emoji="⚠️")
+
+    logger.info("service.startup.complete", healthy=all_healthy, emoji="🎉")
 
     yield
 
     # Shutdown with structured logging
-    logger.info("service.shutdown.begin")
-    print("👋 Shutting down DotMac Platform Services...")
+    logger.info("service.shutdown.begin", emoji="👋")
 
-    # Cleanup resources here if needed
+    # Cleanup Redis connections
+    try:
+        await shutdown_redis()
+        logger.info("redis.shutdown.success", emoji="✅")
+    except Exception as e:
+        logger.error("redis.shutdown.failed", error=str(e), emoji="❌")
 
-    logger.info("service.shutdown.complete")
-    print("✅ Shutdown complete")
+    logger.info("service.shutdown.complete", emoji="✅")
 
 
 def create_application() -> FastAPI:
@@ -162,16 +221,38 @@ def create_application() -> FastAPI:
         description="Unified platform services providing auth, secrets, and observability",
         version=settings.app_version,
         lifespan=lifespan,
-        docs_url="/docs" if settings.environment != "production" else None,
-        redoc_url="/redoc" if settings.environment != "production" else None,
+        docs_url="/docs" if not settings.is_production else None,
+        redoc_url="/redoc" if not settings.is_production else None,
     )
+
+    # Configure telemetry early so middleware instrumentation happens before startup events.
+    setup_telemetry(app)
+
+    # Get logger after telemetry is configured
+    logger = structlog.get_logger(__name__)
 
     # Add GZip compression
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-    # Add tenant middleware BEFORE audit middleware
-    # This ensures tenant context is set before audit logs are created
+    # Add error tracking middleware (should be early in the chain)
+    # Tracks HTTP errors and exceptions in Prometheus
+    if settings.observability.enable_metrics:
+        app.add_middleware(ErrorTrackingMiddleware)
+        app.add_middleware(RequestMetricsMiddleware)
+
+    # Add tenant middleware BEFORE other middleware
+    # This ensures tenant context is set before boundary checks
     app.add_middleware(TenantMiddleware)
+
+    # Add single-tenant middleware if in single-tenant mode
+    # This automatically sets fixed tenant_id from config
+    if settings.DEPLOYMENT_MODE == "single_tenant":
+        app.add_middleware(SingleTenantMiddleware)
+
+    # Add app boundary middleware to enforce platform/tenant route separation
+    # This runs after tenant context is set but before audit logging
+    # NOTE: Auth middleware runs via route dependencies, so user context is set in request.state
+    app.add_middleware(AppBoundaryMiddleware)
 
     # Add audit context middleware for user tracking
     app.add_middleware(AuditContextMiddleware)
@@ -194,7 +275,39 @@ def create_application() -> FastAPI:
     # Add auth error handler for proper status codes (401 for auth, 403 for authz)
     app.add_exception_handler(AuthError, auth_error_handler)
 
-    # Register all API routers
+    # Mount sub-applications based on deployment mode
+    logger.info(
+        "mounting_applications",
+        deployment_mode=settings.DEPLOYMENT_MODE,
+        enable_platform_routes=settings.ENABLE_PLATFORM_ROUTES,
+    )
+
+    if settings.DEPLOYMENT_MODE == "single_tenant":
+        # Single-tenant mode: Only mount tenant app (no platform routes)
+        logger.info("single_tenant_mode.mounting_tenant_app_only")
+        app.mount("/api/v1", tenant_app)  # Mount at /api/v1 for backward compatibility
+
+    elif settings.DEPLOYMENT_MODE == "hybrid":
+        # Hybrid mode: Could be control plane OR tenant instance
+        # Control plane: platform app only
+        # Tenant instance: tenant app only
+        # Determined by ENABLE_PLATFORM_ROUTES setting
+        if settings.ENABLE_PLATFORM_ROUTES:
+            logger.info("hybrid_mode.control_plane.mounting_platform_app")
+            app.mount("/api/platform/v1", platform_app)
+        else:
+            logger.info("hybrid_mode.tenant_instance.mounting_tenant_app")
+            app.mount("/api/tenant/v1", tenant_app)
+
+    else:  # multi_tenant (default)
+        # Multi-tenant SaaS mode: Mount both apps
+        logger.info("multi_tenant_mode.mounting_both_apps")
+        app.mount("/api/platform/v1", platform_app)
+        app.mount("/api/tenant/v1", tenant_app)
+
+    # Register shared routers (auth, webhooks, etc.) - available in all modes
+    # NOTE: For Phase 2, we're keeping the old router registration for shared routes
+    # This will be refactored in Phase 3
     register_routers(app)
 
     # Health check endpoint (public - no auth required)
@@ -254,10 +367,15 @@ def create_application() -> FastAPI:
 
     # Metrics endpoint (if metrics enabled)
     if settings.observability.enable_metrics:
-        from prometheus_client import make_asgi_app
+        from prometheus_client import CONTENT_TYPE_LATEST, generate_latest, make_asgi_app
 
         metrics_app = make_asgi_app()
-        app.mount("/metrics", metrics_app)
+        app.mount("/metrics/", metrics_app)
+
+        @app.get("/metrics", include_in_schema=False)
+        async def metrics_root() -> Response:
+            """Serve Prometheus metrics without redirect."""
+            return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
     return app
 
@@ -277,6 +395,6 @@ if __name__ == "__main__":
         "dotmac.platform.main:app",
         host=settings.host,
         port=settings.port,
-        reload=settings.environment == "development",
+        reload=settings.is_development,
         log_level=settings.observability.log_level.value.lower(),
     )

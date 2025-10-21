@@ -2,27 +2,27 @@
  * Security utilities for input sanitization and validation
  */
 
-import DOMPurify from 'dompurify';
-import { z } from 'zod';
+import DOMPurify from "dompurify";
+import { z } from "zod";
 
 // Sanitize HTML content to prevent XSS attacks
 export const sanitizeHtml = (content: string): string => {
-  if (typeof content !== 'string') {
-    throw new Error('Content must be a string');
+  if (typeof content !== "string") {
+    throw new Error("Content must be a string");
   }
 
   return DOMPurify.sanitize(content, {
-    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'span'],
-    ALLOWED_ATTR: ['class'],
-    FORBID_TAGS: ['script', 'object', 'embed', 'base', 'link'],
-    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover'],
+    ALLOWED_TAGS: ["b", "i", "em", "strong", "span"],
+    ALLOWED_ATTR: ["class"],
+    FORBID_TAGS: ["script", "object", "embed", "base", "link"],
+    FORBID_ATTR: ["onerror", "onload", "onclick", "onmouseover"],
   });
 };
 
 // Sanitize plain text (no HTML allowed)
 export const sanitizeText = (text: string): string => {
-  if (typeof text !== 'string') {
-    throw new Error('Text must be a string');
+  if (typeof text !== "string") {
+    throw new Error("Text must be a string");
   }
 
   return DOMPurify.sanitize(text, {
@@ -52,7 +52,7 @@ const ALLOWED_CLASS_PATTERNS = [
 ];
 
 export const validateClassName = (className?: string): string => {
-  if (!className) return '';
+  if (!className) return "";
 
   const sanitized = sanitizeText(className);
 
@@ -61,7 +61,7 @@ export const validateClassName = (className?: string): string => {
 
   if (!isValid) {
     console.warn(`Potentially unsafe className detected: ${className}`);
-    return ''; // Return empty string for safety
+    return ""; // Return empty string for safety
   }
 
   return sanitized;
@@ -92,7 +92,7 @@ export const networkUsageDataSchema = z.object({
 export const serviceStatusDataSchema = z.object({
   name: z.string().min(1),
   value: z.number().min(0).finite(),
-  status: z.enum(['online', 'maintenance', 'offline']),
+  status: z.enum(["online", "maintenance", "offline"]),
 });
 
 export const bandwidthDataSchema = z.object({
@@ -112,10 +112,10 @@ export const networkMetricsSchema = z.object({
 });
 
 // Service tier validation
-export const serviceTierSchema = z.enum(['basic', 'standard', 'premium', 'enterprise']);
+export const serviceTierSchema = z.enum(["basic", "standard", "premium", "enterprise"]);
 
 // Alert severity validation
-export const alertSeveritySchema = z.enum(['info', 'warning', 'error', 'critical']);
+export const alertSeveritySchema = z.enum(["info", "warning", "error", "critical"]);
 
 // Generic validation helper
 export const validateData = <T>(schema: z.ZodSchema<T>, data: unknown): T => {
@@ -123,8 +123,8 @@ export const validateData = <T>(schema: z.ZodSchema<T>, data: unknown): T => {
     return schema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.error('Data validation failed:', error.issues);
-      throw new Error(`Invalid data: ${error.issues.map((e) => e.message).join(', ')}`);
+      console.error("Data validation failed:", error.issues);
+      throw new Error(`Invalid data: ${error.issues.map((e) => e.message).join(", ")}`);
     }
     throw error;
   }
@@ -133,11 +133,11 @@ export const validateData = <T>(schema: z.ZodSchema<T>, data: unknown): T => {
 // Safe array validation
 export const validateArray = <T>(schema: z.ZodSchema<T>, data: unknown[]): T[] => {
   if (!Array.isArray(data)) {
-    throw new Error('Expected array data');
+    throw new Error("Expected array data");
   }
 
   if (data.length === 0) {
-    throw new Error('Empty data array');
+    throw new Error("Empty data array");
   }
 
   return data.map((item, index) => {

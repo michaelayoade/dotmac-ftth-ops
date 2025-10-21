@@ -14,21 +14,21 @@
  * Also adds const { toast } = useToast() hook at the beginning of function components
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 // Files to process
 const filesToProcess = [
-  'app/test-plugins/page.tsx',
-  'app/dashboard/settings/integrations/page.tsx',
-  'app/dashboard/settings/organization/page.tsx',
-  'app/dashboard/settings/profile/page.tsx',
-  'app/dashboard/settings/notifications/page.tsx',
-  'contexts/RBACContext.tsx',
-  'hooks/useObservability.ts',
-  'hooks/useLogs.ts',
-  'hooks/useCustomersQuery.ts',
-  'components/communications/CommunicationsDashboard.tsx'
+  "app/test-plugins/page.tsx",
+  "app/dashboard/settings/integrations/page.tsx",
+  "app/dashboard/settings/organization/page.tsx",
+  "app/dashboard/settings/profile/page.tsx",
+  "app/dashboard/settings/notifications/page.tsx",
+  "contexts/RBACContext.tsx",
+  "hooks/useObservability.ts",
+  "hooks/useLogs.ts",
+  "hooks/useCustomersQuery.ts",
+  "components/communications/CommunicationsDashboard.tsx",
 ];
 
 function migrateFile(filePath) {
@@ -39,7 +39,7 @@ function migrateFile(filePath) {
     return;
   }
 
-  let content = fs.readFileSync(filePath, 'utf8');
+  let content = fs.readFileSync(filePath, "utf8");
   let modified = false;
 
   // Check if file has toast calls that need migration
@@ -60,10 +60,10 @@ function migrateFile(filePath) {
   if (content.includes("from 'sonner'") || content.includes('from "sonner"')) {
     content = content.replace(
       /import\s*{\s*toast\s*}\s*from\s*['"]sonner['"]\s*;?/g,
-      "import { useToast } from '@/components/ui/use-toast';"
+      "import { useToast } from '@/components/ui/use-toast';",
     );
     modified = true;
-    console.log('  ✓ Replaced import statement');
+    console.log("  ✓ Replaced import statement");
   }
 
   // Step 2: Find the main function/component and add useToast hook
@@ -72,7 +72,7 @@ function migrateFile(filePath) {
     /export\s+default\s+function\s+(\w+)\s*\([^)]*\)\s*{/,
     /export\s+function\s+(\w+)\s*\([^)]*\)\s*{/,
     /const\s+(\w+)\s*[:=]\s*\([^)]*\)\s*=>\s*{/,
-    /function\s+(\w+)\s*\([^)]*\)\s*{/
+    /function\s+(\w+)\s*\([^)]*\)\s*{/,
   ];
 
   for (const pattern of functionPatterns) {
@@ -82,7 +82,7 @@ function migrateFile(filePath) {
       const functionName = match[1];
 
       // Check if useToast hook already exists
-      if (!content.includes('const { toast } = useToast()')) {
+      if (!content.includes("const { toast } = useToast()")) {
         // Add the hook right after the function declaration
         const hookLine = `\n  const { toast } = useToast();\n`;
         content = content.replace(fullMatch, fullMatch + hookLine);
@@ -102,7 +102,7 @@ function migrateFile(filePath) {
       replacement: (match, content) => {
         return `toast({ title: 'Success', description: ${content} })`;
       },
-      name: 'toast.success'
+      name: "toast.success",
     },
     // toast.error(...)
     {
@@ -110,7 +110,7 @@ function migrateFile(filePath) {
       replacement: (match, content) => {
         return `toast({ title: 'Error', description: ${content}, variant: 'destructive' })`;
       },
-      name: 'toast.error'
+      name: "toast.error",
     },
     // toast.warning(...)
     {
@@ -118,7 +118,7 @@ function migrateFile(filePath) {
       replacement: (match, content) => {
         return `toast({ title: 'Warning', description: ${content} })`;
       },
-      name: 'toast.warning'
+      name: "toast.warning",
     },
     // toast.info(...)
     {
@@ -126,8 +126,8 @@ function migrateFile(filePath) {
       replacement: (match, content) => {
         return `toast({ title: 'Info', description: ${content} })`;
       },
-      name: 'toast.info'
-    }
+      name: "toast.info",
+    },
   ];
 
   replacements.forEach(({ pattern, replacement, name }) => {
@@ -140,7 +140,7 @@ function migrateFile(filePath) {
   });
 
   // Step 4: Add explanatory comment at the top if modified
-  if (modified && !content.includes('// Migrated from sonner to useToast')) {
+  if (modified && !content.includes("// Migrated from sonner to useToast")) {
     const commentBlock = `// Migrated from sonner to useToast hook
 // Note: toast options have changed:
 // - sonner: toast.success('msg') -> useToast: toast({ title: 'Success', description: 'msg' })
@@ -149,18 +149,19 @@ function migrateFile(filePath) {
 
 `;
     // Insert after the first import or at the beginning
-    const firstImportIndex = content.indexOf('import');
+    const firstImportIndex = content.indexOf("import");
     if (firstImportIndex !== -1) {
-      const endOfImports = content.indexOf('\n\n', firstImportIndex);
+      const endOfImports = content.indexOf("\n\n", firstImportIndex);
       if (endOfImports !== -1) {
-        content = content.slice(0, endOfImports + 2) + commentBlock + content.slice(endOfImports + 2);
+        content =
+          content.slice(0, endOfImports + 2) + commentBlock + content.slice(endOfImports + 2);
       }
     }
   }
 
   // Step 5: Write back to file
   if (modified) {
-    fs.writeFileSync(filePath, content, 'utf8');
+    fs.writeFileSync(filePath, content, "utf8");
     console.log(`  ✅ File updated successfully`);
   } else {
     console.log(`  ℹ️  No changes needed`);
@@ -168,13 +169,13 @@ function migrateFile(filePath) {
 }
 
 // Main execution
-console.log('🚀 Starting sonner to useToast migration...\n');
+console.log("🚀 Starting sonner to useToast migration...\n");
 console.log(`Processing ${filesToProcess.length} files:\n`);
 
 let processedCount = 0;
 let errorCount = 0;
 
-filesToProcess.forEach(file => {
+filesToProcess.forEach((file) => {
   try {
     migrateFile(file);
     processedCount++;
@@ -184,18 +185,18 @@ filesToProcess.forEach(file => {
   }
 });
 
-console.log(`\n${'='.repeat(50)}`);
+console.log(`\n${"=".repeat(50)}`);
 console.log(`✨ Migration complete!`);
 console.log(`   Processed: ${processedCount} files`);
 console.log(`   Errors: ${errorCount} files`);
-console.log(`${'='.repeat(50)}\n`);
+console.log(`${"=".repeat(50)}\n`);
 
 if (errorCount === 0) {
-  console.log('✅ All files migrated successfully!');
-  console.log('\n💡 Next steps:');
-  console.log('   1. Run: pnpm run build');
-  console.log('   2. Review changes and test manually');
-  console.log('   3. Check for any toast calls with complex options that need manual migration\n');
+  console.log("✅ All files migrated successfully!");
+  console.log("\n💡 Next steps:");
+  console.log("   1. Run: pnpm run build");
+  console.log("   2. Review changes and test manually");
+  console.log("   3. Check for any toast calls with complex options that need manual migration\n");
 } else {
-  console.log('⚠️  Some files had errors. Please review and fix manually.\n');
+  console.log("⚠️  Some files had errors. Please review and fix manually.\n");
 }

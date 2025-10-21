@@ -18,8 +18,8 @@ let supportsPerformanceObserver = false;
 
 // Feature detection
 try {
-  supportsPerfNow = typeof performance !== 'undefined' && typeof performance.now === 'function';
-  supportsPerformanceObserver = typeof PerformanceObserver !== 'undefined';
+  supportsPerfNow = typeof performance !== "undefined" && typeof performance.now === "function";
+  supportsPerformanceObserver = typeof PerformanceObserver !== "undefined";
 } catch (e) {
   // Ignore errors in environments where these APIs don't exist
 }
@@ -83,7 +83,7 @@ export function getCLS(onReport: ReportCallback, reportAllChanges = false): void
 
           const id = generateUniqueID();
           const metric: Metric = {
-            name: 'CLS',
+            name: "CLS",
             value: clsValue,
             delta: clsValue,
             id,
@@ -100,7 +100,7 @@ export function getCLS(onReport: ReportCallback, reportAllChanges = false): void
   });
 
   try {
-    observer.observe({ type: 'layout-shift', buffered: true });
+    observer.observe({ type: "layout-shift", buffered: true });
   } catch (e) {
     // Silently fail if layout-shift is not supported
   }
@@ -109,7 +109,7 @@ export function getCLS(onReport: ReportCallback, reportAllChanges = false): void
   const reportFinal = () => {
     if (clsValue > 0) {
       const metric: Metric = {
-        name: 'CLS',
+        name: "CLS",
         value: clsValue,
         delta: clsValue,
         id: generateUniqueID(),
@@ -119,9 +119,9 @@ export function getCLS(onReport: ReportCallback, reportAllChanges = false): void
     }
   };
 
-  if (typeof window !== 'undefined') {
-    window.addEventListener('pagehide', reportFinal, { once: true });
-    window.addEventListener('beforeunload', reportFinal, { once: true });
+  if (typeof window !== "undefined") {
+    window.addEventListener("pagehide", reportFinal, { once: true });
+    window.addEventListener("beforeunload", reportFinal, { once: true });
   }
 }
 
@@ -134,9 +134,9 @@ export function getFCP(onReport: ReportCallback): void {
 
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
-      if (entry.name === 'first-contentful-paint') {
+      if (entry.name === "first-contentful-paint") {
         const metric: Metric = {
-          name: 'FCP',
+          name: "FCP",
           value: entry.startTime,
           delta: entry.startTime,
           id: generateUniqueID(),
@@ -150,7 +150,7 @@ export function getFCP(onReport: ReportCallback): void {
   });
 
   try {
-    observer.observe({ type: 'paint', buffered: true });
+    observer.observe({ type: "paint", buffered: true });
   } catch (e) {
     // Paint timing not supported
   }
@@ -171,7 +171,7 @@ export function getFID(onReport: ReportCallback): void {
 
       if (processingStart && processingStart > startTime) {
         const metric: Metric = {
-          name: 'FID',
+          name: "FID",
           value: processingStart - startTime,
           delta: processingStart - startTime,
           id: generateUniqueID(),
@@ -185,7 +185,7 @@ export function getFID(onReport: ReportCallback): void {
   });
 
   try {
-    observer.observe({ type: 'first-input', buffered: true });
+    observer.observe({ type: "first-input", buffered: true });
   } catch (e) {
     // First input timing not supported
   }
@@ -207,7 +207,7 @@ export function getLCP(onReport: ReportCallback, reportAllChanges = false): void
       lcpValue = lastEntry.startTime;
       const id = generateUniqueID();
       const metric: Metric = {
-        name: 'LCP',
+        name: "LCP",
         value: lcpValue,
         delta: lcpValue,
         id,
@@ -222,7 +222,7 @@ export function getLCP(onReport: ReportCallback, reportAllChanges = false): void
   });
 
   try {
-    observer.observe({ type: 'largest-contentful-paint', buffered: true });
+    observer.observe({ type: "largest-contentful-paint", buffered: true });
   } catch (e) {
     // LCP not supported
   }
@@ -231,7 +231,7 @@ export function getLCP(onReport: ReportCallback, reportAllChanges = false): void
   const reportFinal = () => {
     if (lcpValue > 0) {
       const metric: Metric = {
-        name: 'LCP',
+        name: "LCP",
         value: lcpValue,
         delta: lcpValue,
         id: generateUniqueID(),
@@ -241,22 +241,25 @@ export function getLCP(onReport: ReportCallback, reportAllChanges = false): void
     }
   };
 
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     // LCP becomes final after first user interaction
     const handleInteraction = () => {
       reportFinal();
       observer.disconnect();
-      ['keydown', 'click', 'touchstart'].forEach((event) => {
+      ["keydown", "click", "touchstart"].forEach((event) => {
         window.removeEventListener(event, handleInteraction, { capture: true });
       });
     };
 
-    ['keydown', 'click', 'touchstart'].forEach((event) => {
-      window.addEventListener(event, handleInteraction, { capture: true, once: true });
+    ["keydown", "click", "touchstart"].forEach((event) => {
+      window.addEventListener(event, handleInteraction, {
+        capture: true,
+        once: true,
+      });
     });
 
-    window.addEventListener('pagehide', reportFinal, { once: true });
-    window.addEventListener('beforeunload', reportFinal, { once: true });
+    window.addEventListener("pagehide", reportFinal, { once: true });
+    window.addEventListener("beforeunload", reportFinal, { once: true });
   }
 }
 
@@ -265,12 +268,12 @@ export function getLCP(onReport: ReportCallback, reportAllChanges = false): void
  * Measures server response time
  */
 export function getTTFB(onReport: ReportCallback): void {
-  const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+  const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
 
   if (navigation && navigation.responseStart && navigation.requestStart) {
     const ttfb = navigation.responseStart - navigation.requestStart;
     const metric: Metric = {
-      name: 'TTFB',
+      name: "TTFB",
       value: ttfb,
       delta: ttfb,
       id: generateUniqueID(),
@@ -317,7 +320,7 @@ export function collectAllVitals(callback: ReportCallback): void {
 /**
  * Web Vitals scoring utility
  */
-export function scoreMetric(name: string, value: number): 'good' | 'needs-improvement' | 'poor' {
+export function scoreMetric(name: string, value: number): "good" | "needs-improvement" | "poor" {
   const thresholds = {
     CLS: { good: 0.1, poor: 0.25 },
     FCP: { good: 1800, poor: 3000 },
@@ -327,11 +330,11 @@ export function scoreMetric(name: string, value: number): 'good' | 'needs-improv
   };
 
   const threshold = thresholds[name as keyof typeof thresholds];
-  if (!threshold) return 'good';
+  if (!threshold) return "good";
 
-  if (value <= threshold.good) return 'good';
-  if (value <= threshold.poor) return 'needs-improvement';
-  return 'poor';
+  if (value <= threshold.good) return "good";
+  if (value <= threshold.poor) return "needs-improvement";
+  return "poor";
 }
 
 /**
@@ -339,7 +342,7 @@ export function scoreMetric(name: string, value: number): 'good' | 'needs-improv
  */
 export function createPerformanceObserver(
   callback: (entries: PerformanceEntry[]) => void,
-  options: PerformanceObserverInit
+  options: PerformanceObserverInit,
 ): PerformanceObserver | null {
   if (!supportsPerformanceObserver) return null;
 
@@ -351,7 +354,7 @@ export function createPerformanceObserver(
     observer.observe(options);
     return observer;
   } catch (e) {
-    console.warn('Failed to create performance observer:', e);
+    console.warn("Failed to create performance observer:", e);
     return null;
   }
 }
