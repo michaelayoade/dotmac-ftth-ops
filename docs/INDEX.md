@@ -1,6 +1,6 @@
 # Documentation Index
 
-**Last Updated:** October 19, 2025
+**Last Updated:** January 15, 2026
 
 This repository now ships a lean documentation set. Everything you are likely to reference lives in one of the sections below.
 
@@ -49,6 +49,7 @@ This repository now ships a lean documentation set. Everything you are likely to
 - SQL migration files:  
   - [DEPLOYMENT_MIGRATION.sql](DEPLOYMENT_MIGRATION.sql)  
   - [SALES_MIGRATION.sql](SALES_MIGRATION.sql)
+- [../E2E-TESTS-QUICK-START.md](../E2E-TESTS-QUICK-START.md) — Playwright end-to-end testing workflow.
 
 ---
 

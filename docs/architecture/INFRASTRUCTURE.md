@@ -52,24 +52,31 @@ graph TD
 ### 1. Local Development
 
 ```bash
-# Start core services
-make infra-up
+# Start core services (postgres, redis, vault, minio)
+make start-platform
 
-# Or manually with Docker
-docker-compose up -d postgres redis openbao
+# Optional observability stack
+make start-platform-obs
+
+# Start ISP overlay when needed
+make start-isp
 
 # Start the application
-make run-dev
+make dev
 ```
 
 ### 2. Docker Compose (Full Stack)
 
 ```bash
-# Start everything
-docker-compose up -d
+# Start everything (platform + ISP)
+make start-all
 
-# Start with specific profiles
-docker-compose --profile celery --profile observability up -d
+# Start all without observability
+make start-all-no-obs
+
+# Using docker compose directly
+docker compose -f docker-compose.base.yml up -d app frontend celery-worker celery-beat
+docker compose -f docker-compose.isp.yml up -d
 ```
 
 ### 3. Kubernetes (Production)
@@ -149,20 +156,20 @@ VAULT__TOKEN=<auth-token>
 ## Infrastructure Commands
 
 ```bash
-# Check what's needed
-make infra-status
+# Check platform status
+make status-platform
 
 # Start infrastructure
-make infra-up
+make start-platform
 
 # Stop infrastructure
-make infra-down
+make stop-platform
 
-# Run application
-make run
+# Start ISP overlay
+make start-isp
 
-# Development with hot reload
-make run-dev
+# Run application (hot reload)
+make dev
 ```
 
 ## Production Deployment
@@ -195,11 +202,11 @@ The application **never** manages its own infrastructure - it only connects to w
 ### Service Won't Start
 ```bash
 # Check service health
-make infra-status
+make status-platform
 
 # View detailed logs
-docker-compose logs postgres
-docker-compose logs redis
+docker compose -f docker-compose.base.yml logs postgres
+docker compose -f docker-compose.base.yml logs redis
 
 # Test connectivity
 nc -zv localhost 5432  # PostgreSQL

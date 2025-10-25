@@ -25,7 +25,7 @@ Transform the DotMac Platform Services into a comprehensive **ISP Operations Pla
 
 ### Core Documents
 
-#### 1. [ISP Platform Architecture](ISP_PLATFORM_ARCHITECTURE.md)
+#### 1. ISP Platform Architecture (archived)
 **Purpose:** Complete system architecture and design
 **Audience:** All teams, stakeholders, architects
 
@@ -47,9 +47,11 @@ Transform the DotMac Platform Services into a comprehensive **ISP Operations Pla
 - 🏗️ **Infrastructure**: Docker-based deployment
 - 🔐 **Security**: Multi-tenant isolation, encryption, RBAC
 
+> _This content now lives across_ [`docs/architecture/PORTAL_ARCHITECTURE.md`](architecture/PORTAL_ARCHITECTURE.md), [`docs/architecture/INFRASTRUCTURE.md`](architecture/INFRASTRUCTURE.md), _and the root infrastructure guides._
+
 ---
 
-#### 2. [Team Assignments & Responsibilities](TEAM_ASSIGNMENTS.md)
+#### 2. Team Assignments & Responsibilities (archived)
 **Purpose:** Team structure, module ownership, dependencies
 **Audience:** Engineering managers, team leads, developers
 
@@ -73,10 +75,12 @@ Transform the DotMac Platform Services into a comprehensive **ISP Operations Pla
 - **Team O5 (Wireless)**: WISP, monitoring, fault management
 - **Team F2 (Maps)**: Leaflet, ReactFlow visualization
 
+> _Planning worksheets referenced here have been superseded by iterative tracking tools and are intentionally omitted from the codebase._
+
 ---
 
-#### 3. [Infrastructure Setup Guide](INFRASTRUCTURE_SETUP.md)
-**Purpose:** Complete infrastructure deployment instructions
+#### 3. Infrastructure Setup Guide
+**Purpose:** Complete infrastructure deployment instructions (consolidated)
 **Audience:** DevOps team, infrastructure engineers
 
 **Contents:**
@@ -99,22 +103,19 @@ Transform the DotMac Platform Services into a comprehensive **ISP Operations Pla
 
 **Quick Start:**
 ```bash
-# Create network
-docker network create isp-network
+# Start core services (postgres, redis, vault, minio)
+make start-platform
 
-# Start core services (API, frontend, database, redis)
-docker compose up -d
+# Start optional observability stack (otel collector, prometheus, grafana, jaeger)
+make start-platform-obs
 
-# Start optional ISP services (FreeRADIUS, etc.)
-docker compose -f docker-compose.isp.yml up -d
-
-# Start optional observability stack (Prometheus, Grafana, Jaeger)
-docker compose -f docker-compose.observability.yml up -d
+# Start ISP services (FreeRADIUS, NetBox, GenieACS, AWX, LibreNMS, WireGuard, TimescaleDB)
+make start-isp
 ```
 
 ---
 
-#### 4. [Implementation Plan & Timeline](IMPLEMENTATION_PLAN.md)
+#### 4. Implementation Plan & Timeline (archived)
 **Purpose:** Complete project timeline with milestones
 **Audience:** Project managers, team leads, stakeholders
 
@@ -144,6 +145,8 @@ docker compose -f docker-compose.observability.yml up -d
 - Maps & topology visualization
 - Subscriber portal & mobile apps
 - Advanced monitoring & analytics
+
+> _Milestone tracking has moved to external project management tooling. The historical outline is retained here for context only._
 
 ---
 

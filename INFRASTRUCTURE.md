@@ -68,7 +68,7 @@ make status-all
 | **OTEL Collector** | 4317, 4318 | Telemetry ingestion |
 | **Jaeger** | 16686 | Distributed tracing UI |
 | **Prometheus** | 9090 | Metrics storage |
-| **Grafana** | 3000 | Dashboards |
+| **Grafana** | 3400 | Dashboards |
 
 ### ISP Services (docker-compose.isp.yml)
 
@@ -120,9 +120,11 @@ make dev                     # http://localhost:8000
 # Start backend with auto-reload
 make dev-backend             # http://localhost:8000/docs
 
-# Start frontend
+# Start legacy base-app frontend
 make dev-frontend            # http://localhost:3000
 ```
+
+> **Tip:** ISP and platform admin experiences now live in separate Next.js apps. Use `pnpm dev:isp` or `pnpm dev:admin` from the `frontend` directory (see `frontend/QUICK-START-MULTI-APP.md`).
 
 ### Database
 
@@ -150,7 +152,7 @@ make test
 make test-fast
 
 # Run integration tests
-make test-integration
+./scripts/run_integration_tests.sh
 
 # Lint code
 make lint
@@ -314,7 +316,7 @@ If ports are already in use, you can modify them in the compose files or stop co
 
 Common conflicts:
 - Port 8000: LibreNMS vs. local app (change one via env vars)
-- Port 3000: Grafana vs. frontend (change Grafana: `GRAFANA_PORT=3400`)
+- Port 3400: Grafana vs. other dashboards (override with `GRAFANA_PORT=<custom>`)
 
 ### Clean Start
 

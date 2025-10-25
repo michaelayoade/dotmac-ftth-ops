@@ -5,14 +5,14 @@
 ## Quick Start
 
 ```bash
-# 1. Initialize database schema
-make db-init
+# 1. Apply latest migrations
+make db-migrate
 
 # 2. Seed with test data
-make seed-db
+make db-seed
 
-# 3. Verify data
-make db-verify
+# 3. Verify current revision
+poetry run alembic current
 ```
 
 ## Database Files
@@ -27,7 +27,7 @@ make db-verify
 
 ```bash
 # Seed all modules
-make seed-db
+make db-seed
 
 # Seed specific modules
 python scripts/seed_data.py --module auth
@@ -73,10 +73,10 @@ async def seed_auth_users(db):
 
 ```bash
 # Development (full dataset)
-ENVIRONMENT=development make seed-db
+ENVIRONMENT=development make db-seed
 
 # Testing (minimal dataset)
-ENVIRONMENT=testing make seed-db
+ENVIRONMENT=testing make db-seed
 
 # Production (never seed!)
 # Production data comes from actual usage

@@ -67,9 +67,10 @@ Examples
 ## Running Tests
 
 - Fast unit tests: `make test-fast`
-- Unit tests: `make test-unit`
-- Coverage (HTML/XML): `make test-cov`
-- Integration (Docker required): `make test-integration`
+- Full suite with coverage: `make test`
+- Integration (Docker required): `./scripts/run_integration_tests.sh`
+- Customer workflow smoke tests: `./scripts/run_customer_tests.sh`
+- Frontend Playwright E2E: `pnpm --filter @dotmac/base-app test:e2e`
 
 ## Mutation Testing
 
@@ -99,4 +100,3 @@ Configuration lives in `pyproject.toml` under `[tool.mutmut]`.
 ## Reporting Vulnerabilities
 
 Please disclose security issues responsibly by contacting the maintainers.
-

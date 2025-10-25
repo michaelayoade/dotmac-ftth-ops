@@ -40,9 +40,9 @@ make dev
 
 | Command | Description |
 |---------|-------------|
-| `make infra-up` | Start ALL infrastructure services |
-| `make infra-down` | Stop all infrastructure services |
-| `make infra-status` | Check infrastructure health |
+| `make start-all` | Start ALL infrastructure services |
+| `make stop-all` | Stop all infrastructure services |
+| `make status-all` | Check infrastructure health |
 
 ---
 
@@ -179,7 +179,7 @@ make dev
 ### Scenario 3: Backend Only
 ```bash
 # Just need backend for API testing
-make infra-up
+make start-all
 make dev-backend
 ```
 
@@ -202,9 +202,9 @@ pnpm dev:mock
 - `dev-frontend` - Frontend only
 
 **Updated targets:**
-- `infra-up` - Now uses smart check script
-- `infra-down` - Now uses check script
-- `infra-status` - Now uses check script
+- `start-all` - Now uses smart check script
+- `stop-all` - Now uses check script
+- `status-all` - Now uses check script
 
 ### 2. `scripts/check_infra.sh` (NEW)
 **Features:**
@@ -224,7 +224,7 @@ pnpm dev:mock
 
 ## Docker Compose Profiles Used
 
-The `make infra-up` and `make dev` commands start services with these profiles:
+The `make start-all` and `make dev` commands start services with these profiles:
 
 ```bash
 docker-compose up -d postgres redis openbao minio \
@@ -291,15 +291,15 @@ make dev  # That's it! ✨
 ### Infrastructure won't start
 ```bash
 # Check what's running
-make infra-status
+make status-all
 
 # View logs
 docker logs dotmac-postgres
 docker logs dotmac-redis
 
 # Restart everything
-make infra-down
-make infra-up
+make stop-all
+make start-all
 ```
 
 ### Port already in use
@@ -314,7 +314,7 @@ lsof -i :8000
 ### Service unhealthy
 ```bash
 # Check health
-make infra-status
+make status-all
 
 # Restart specific service
 docker restart dotmac-postgres
@@ -329,10 +329,10 @@ docker restart dotmac-postgres
 make dev
 
 # Check what's running
-make infra-status
+make status-all
 
 # Stop everything
-make infra-down
+make stop-all
 
 # Backend only
 make dev-backend

@@ -53,11 +53,13 @@ make start-isp
 
 ### Platform Services
 - **API**: http://localhost:8000/docs
+- **ISP Operations App**: http://localhost:3001
+- **Platform Admin App**: http://localhost:3002
 - **PostgreSQL**: localhost:5432
 - **Redis**: localhost:6379
 - **Jaeger**: http://localhost:16686
 - **Prometheus**: http://localhost:9090
-- **Grafana**: http://localhost:3000
+- **Grafana**: http://localhost:3400
 
 ### ISP Services  
 - **AWX**: http://localhost:8052
