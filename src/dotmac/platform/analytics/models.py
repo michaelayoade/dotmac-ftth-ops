@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import ConfigDict, Field, field_serializer, field_validator
+from pydantic import ConfigDict, Field, field_serializer, field_validator, model_validator
 
 from ..core.models import BaseModel
 
@@ -164,9 +164,14 @@ class MetricRecordRequest(BaseModel):  # BaseModel resolves to Any in isolation
         """Validate metric value."""
         if not isinstance(v, (int, float)):
             raise ValueError("Metric value must be numeric")
-        if v < 0 and cls.model_fields.get("unit", MetricUnit.COUNT) != MetricUnit.COUNT:
-            raise ValueError("Negative values only allowed for count metrics")
         return float(v)
+
+    @model_validator(mode="after")
+    def validate_negative_values(self) -> "MetricRecordRequest":
+        """Validate that negative values are only allowed for count metrics."""
+        if self.value < 0 and self.unit != MetricUnit.COUNT:
+            raise ValueError("Negative values only allowed for count metrics")
+        return self
 
     @field_validator("tags")
     @classmethod

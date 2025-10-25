@@ -170,7 +170,12 @@ export default function WirelessInfrastructurePage() {
   const { toast } = useToast();
 
   // Data hooks
-  const { accessPoints, isLoading: loadingAPs, refetch: refetchAPs } = useAccessPoints({});
+  const {
+    accessPoints,
+    isLoading: loadingAPs,
+    refetch: refetchAPs,
+    createAccessPoint,
+  } = useAccessPoints({});
   const { clients, isLoading: loadingClients, refetch: refetchClients } = useWirelessClients({});
   const { coverageZones, isLoading: loadingZones, refetch: refetchZones } = useCoverageZones({});
   const {
@@ -234,39 +239,46 @@ export default function WirelessInfrastructurePage() {
 
     setIsSubmitting(true);
     try {
-      // TODO: Replace with actual API call when endpoint is available
-      // await apiClient.post("/wireless/access-points", newAP);
-
-      logger.info("Access point created", { apName: newAP.name, type: newAP.type });
-      toast({
-        title: "Success",
-        description: `Access point "${newAP.name}" created successfully`,
+      // Use the createAccessPoint method from the hook
+      const result = await createAccessPoint({
+        name: newAP.name,
+        device_type: newAP.type,
+        site_name: newAP.site_name || undefined,
+        ip_address: newAP.ip_address,
+        mac_address: newAP.mac_address,
+        frequency: newAP.frequency_band,
+        channel: newAP.channel,
+        tx_power_dbm: newAP.tx_power_dbm,
+        max_clients: newAP.max_clients,
+        ssid_name: newAP.ssid_name || undefined,
+        location: newAP.latitude && newAP.longitude ? {
+          latitude: newAP.latitude,
+          longitude: newAP.longitude,
+        } : undefined,
       });
 
-      setShowCreateAP(false);
-      setNewAP({
-        name: "",
-        type: "indoor",
-        site_name: "",
-        ip_address: "",
-        mac_address: "",
-        frequency_band: "2.4",
-        channel: 1,
-        tx_power_dbm: 20,
-        max_clients: 50,
-        ssid_name: "",
-        latitude: 0,
-        longitude: 0,
-      });
+      if (result) {
+        logger.info("Access point created", { apName: newAP.name, type: newAP.type });
 
-      await refetchAPs();
+        setShowCreateAP(false);
+        setNewAP({
+          name: "",
+          type: "indoor",
+          site_name: "",
+          ip_address: "",
+          mac_address: "",
+          frequency_band: "2.4",
+          channel: 1,
+          tx_power_dbm: 20,
+          max_clients: 50,
+          ssid_name: "",
+          latitude: 0,
+          longitude: 0,
+        });
+      }
     } catch (error) {
       logger.error("Failed to create access point", error);
-      toast({
-        title: "Error",
-        description: "Failed to create access point. Please try again.",
-        variant: "destructive",
-      });
+      // Error handling is done in the hook's toast
     } finally {
       setIsSubmitting(false);
     }

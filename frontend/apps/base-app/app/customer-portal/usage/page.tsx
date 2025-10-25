@@ -38,10 +38,14 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { useCustomerUsage } from "@/hooks/useCustomerPortal";
+import { useToast } from "@/components/ui/use-toast";
+import { platformConfig } from "@/lib/config";
 
 export default function CustomerUsagePage() {
   const [timeRange, setTimeRange] = useState("7d");
   const { usage, loading } = useCustomerUsage();
+  const { toast } = useToast();
+  const API_BASE = platformConfig.api.baseUrl;
 
   if (loading) {
     return (
@@ -83,7 +87,6 @@ export default function CustomerUsagePage() {
 
   const handleDownloadReport = async () => {
     try {
-      // Prepare report data
       const reportData = {
         period: {
           start: usage?.period_start,
@@ -102,11 +105,12 @@ export default function CustomerUsagePage() {
         time_range: timeRange,
       };
 
-      // Call API to generate PDF report
-      const response = await fetch("/api/customer/usage/report", {
+      const token = localStorage.getItem("customer_access_token");
+      const response = await fetch(`${API_BASE}/api/v1/customer/usage/report`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(reportData),
       });
@@ -115,31 +119,30 @@ export default function CustomerUsagePage() {
         throw new Error(`Failed to generate report: ${response.statusText}`);
       }
 
-      // Get the PDF blob
       const blob = await response.blob();
-
-      // Generate filename with current date
       const dateStr = format(new Date(), "yyyy-MM-dd");
       const filename = `usage-report-${dateStr}.pdf`;
 
-      // Create a download link and trigger download
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = filename;
       document.body.appendChild(link);
       link.click();
-
-      // Cleanup
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
-      console.log(`Usage report downloaded: ${filename}`);
+      toast({
+        title: "Report Downloaded",
+        description: "Your usage report has been downloaded successfully.",
+      });
     } catch (error) {
       console.error("Error downloading usage report:", error);
-      alert(
-        `Failed to download report: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
+      toast({
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "Failed to download usage report",
+        variant: "destructive",
+      });
     }
   };
 

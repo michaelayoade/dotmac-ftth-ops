@@ -233,6 +233,12 @@ class PaymentService:
         if existing_payment:
             return self._payment_from_entity(existing_payment)
 
+        # FIXED: Store invoice_ids in extra_data so they're available for retries
+        # Without this, failed payments that succeed on retry never link to invoices
+        extra_data = metadata or {}
+        if invoice_ids:
+            extra_data["invoice_ids"] = invoice_ids
+
         # Create payment record
         payment_entity = PaymentEntity(
             tenant_id=tenant_id,
@@ -249,7 +255,7 @@ class PaymentService:
                 "brand": payment_method.brand,
             },
             provider_payment_data={},
-            extra_data=metadata or {},
+            extra_data=extra_data,
         )
 
         # Save to database first
@@ -636,15 +642,17 @@ class PaymentService:
 
         await self.db.commit()
 
+        # FIXED: Extract payment_method_id from payment_method_details for use in callbacks
+        # PaymentEntity doesn't have a payment_method_id attribute directly
+        payment_method_id = payment.payment_method_details.get("payment_method_id") if payment.payment_method_details else None
+
         # Attempt payment again
         try:
             if payment.provider in self.providers:
-                # Get payment method details
-                payment_method_reference = payment.payment_method_details.get("payment_method_id")
-                if not isinstance(payment_method_reference, str) or not payment_method_reference:
+                if not isinstance(payment_method_id, str) or not payment_method_id:
                     raise PaymentError("Payment method identifier missing for retry")
 
-                payment_method = await self._get_payment_method(tenant_id, payment_method_reference)
+                payment_method = await self._get_payment_method(tenant_id, payment_method_id)
 
                 if payment_method:
                     provider_instance = self.providers[payment.provider]
@@ -667,16 +675,55 @@ class PaymentService:
                     if result.success:
                         payment.provider_payment_id = result.provider_payment_id
                         payment.provider_fee = result.provider_fee
-                        # Call success handler to link invoices and publish events
+                        # FIXED: Use payment_method_id (from payment_method_details)
                         await self._handle_payment_success(
-                            payment=payment,
-                            payment_id=payment.payment_id,
-                            tenant_id=tenant_id,
-                            invoice_ids=payment.extra_data.get("invoice_ids") if payment.extra_data else None,
+                            payment,  # payment_entity positional
+                            tenant_id,
+                            payment.customer_id,
+                            payment.amount,
+                            payment.currency,
+                            payment_method_id,  # From payment_method_details
+                            payment.provider,
+                            payment.extra_data.get("invoice_ids") if payment.extra_data else None,
                         )
                     else:
-                        # Call failure handler to publish failure events
-                        await self._handle_payment_failure(payment=payment, tenant_id=tenant_id)
+                        # FIXED: Use payment_method_id (from payment_method_details)
+                        await self._handle_payment_failure(
+                            payment,  # payment_entity positional
+                            tenant_id,
+                            payment.customer_id,
+                            payment.amount,
+                            payment.currency,
+                            payment_method_id,  # From payment_method_details
+                            payment.provider,
+                        )
+                else:
+                    # CRITICAL FIX: Payment method was deleted during retry
+                    # Set payment to FAILED to prevent stuck PROCESSING state
+                    payment.status = PaymentStatus.FAILED
+                    payment.failure_reason = (
+                        f"Payment method {payment_method_id} no longer exists. "
+                        "Cannot retry payment."
+                    )
+                    payment.processed_at = datetime.now(UTC)
+
+                    logger.error(
+                        "Payment retry failed: payment method deleted",
+                        payment_id=payment.payment_id,
+                        payment_method_id=payment_method_id,
+                        tenant_id=tenant_id,
+                    )
+
+                    # Publish failure event so merchant can intervene
+                    await self._handle_payment_failure(
+                        payment,
+                        tenant_id,
+                        payment.customer_id,
+                        payment.amount,
+                        payment.currency,
+                        payment_method_id,
+                        payment.provider,
+                    )
             else:
                 # Check if payment plugin is required (production mode)
                 if settings.billing.require_payment_plugin:
@@ -688,8 +735,16 @@ class PaymentService:
                         f"Set billing.require_payment_plugin=False in development/testing only.",
                         payment_id=payment.payment_id,
                     )
-                    # Call failure handler
-                    await self._handle_payment_failure(payment=payment, tenant_id=tenant_id)
+                    # FIXED: Use payment_method_id (from payment_method_details)
+                    await self._handle_payment_failure(
+                        payment,  # payment_entity positional
+                        tenant_id,
+                        payment.customer_id,
+                        payment.amount,
+                        payment.currency,
+                        payment_method_id or "unknown",  # Guard against None
+                        payment.provider,
+                    )
                 else:
                     # Mock success for testing/development ONLY
                     payment.status = PaymentStatus.SUCCEEDED
@@ -699,20 +754,32 @@ class PaymentService:
                         "THIS SHOULD NEVER HAPPEN IN PRODUCTION!",
                         payment_id=payment.payment_id,
                     )
-                    # Call success handler even for mocked success
+                    # FIXED: Use payment_method_id (from payment_method_details)
                     await self._handle_payment_success(
-                        payment=payment,
-                        payment_id=payment.payment_id,
-                        tenant_id=tenant_id,
-                        invoice_ids=payment.extra_data.get("invoice_ids") if payment.extra_data else None,
+                        payment,  # payment_entity positional
+                        tenant_id,
+                        payment.customer_id,
+                        payment.amount,
+                        payment.currency,
+                        payment_method_id or "unknown",  # Guard against None
+                        payment.provider,
+                        payment.extra_data.get("invoice_ids") if payment.extra_data else None,
                     )
 
         except Exception as e:
             payment.status = PaymentStatus.FAILED
             payment.failure_reason = str(e)
             logger.error(f"Payment retry error: {e}")
-            # Call failure handler for exceptions
-            await self._handle_payment_failure(payment=payment, tenant_id=tenant_id)
+            # FIXED: Use payment_method_id (from payment_method_details)
+            await self._handle_payment_failure(
+                payment,  # payment_entity positional
+                tenant_id,
+                payment.customer_id,
+                payment.amount,
+                payment.currency,
+                payment_method_id or "unknown",  # Guard against None
+                payment.provider,
+            )
 
         await self.db.commit()
         await self.db.refresh(payment)
@@ -1192,6 +1259,23 @@ class PaymentService:
 
         if payment.refund_amount is not None and not isinstance(payment.refund_amount, Decimal):
             payment.refund_amount = Decimal(str(payment.refund_amount))
+
+        # Normalize payment_method_details - ensure it's a dict
+        details = payment.payment_method_details
+        if not details:
+            payment.payment_method_details = {}
+        elif not isinstance(details, dict):
+            if isinstance(details, Mapping):
+                payment.payment_method_details = dict(details)
+            else:
+                payment.payment_method_details = {}
+
+        # Normalize payment_method_type - provide default if None
+        # This handles cases where old data or test mocks don't have this field
+        if payment.payment_method_type is None:
+            # Default to 'card' for backward compatibility
+            # In production, this should always be set by the caller
+            payment.payment_method_type = PaymentMethodType.CARD
 
         return payment
 

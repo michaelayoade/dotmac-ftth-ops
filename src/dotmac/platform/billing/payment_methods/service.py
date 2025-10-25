@@ -37,6 +37,17 @@ class PaymentMethodService:
     # Payment Method Operations
     # ============================================================================
 
+    async def list_payment_methods_for_customer(
+        self, tenant_id: str, customer_id: str
+    ) -> list[PaymentMethodResponse]:
+        """
+        List all payment methods for a customer.
+
+        Currently payment methods are tenant-scoped, so this filters by tenant_id.
+        The customer_id parameter is accepted for future extensibility.
+        """
+        return await self.list_payment_methods(tenant_id)
+
     async def list_payment_methods(self, tenant_id: str) -> list[PaymentMethodResponse]:
         """
         List all payment methods for a tenant.
@@ -514,6 +525,69 @@ class PaymentMethodService:
         # Return updated payment method
         return await self.get_payment_method(payment_method_id, tenant_id)  # type: ignore
 
+    async def toggle_autopay(
+        self,
+        payment_method_id: str,
+        tenant_id: str,
+        updated_by_user_id: str,
+    ) -> PaymentMethodResponse:
+        """
+        Toggle AutoPay for a payment method.
+
+        When enabled, this payment method will be used for automatic payments.
+        Only one payment method should have AutoPay enabled at a time (per tenant).
+        """
+        logger.info(
+            "Toggling AutoPay",
+            payment_method_id=payment_method_id,
+            tenant_id=tenant_id,
+            user_id=updated_by_user_id,
+        )
+
+        # Get current payment method
+        payment_method = await self.get_payment_method(payment_method_id, tenant_id)
+        if not payment_method:
+            raise PaymentMethodError(
+                f"Payment method {payment_method_id} not found for tenant"
+            )
+
+        pm_uuid = UUID(payment_method_id)
+
+        # Toggle the autopay flag
+        new_autopay_state = not payment_method.auto_pay_enabled
+
+        # If enabling autopay, disable it on all other payment methods first
+        if new_autopay_state:
+            await self.db.execute(
+                update(BillingPaymentMethodTable)
+                .where(
+                    BillingPaymentMethodTable.tenant_id == tenant_id,
+                    BillingPaymentMethodTable.auto_pay_enabled == True,  # noqa: E712
+                )
+                .values(auto_pay_enabled=False, updated_at=datetime.now(UTC))
+            )
+
+        # Update the target payment method
+        await self.db.execute(
+            update(BillingPaymentMethodTable)
+            .where(BillingPaymentMethodTable.id == pm_uuid)
+            .values(
+                auto_pay_enabled=new_autopay_state,
+                updated_at=datetime.now(UTC),
+            )
+        )
+
+        await self.db.commit()
+
+        logger.info(
+            "AutoPay toggled successfully",
+            payment_method_id=payment_method_id,
+            autopay_enabled=new_autopay_state,
+        )
+
+        # Return updated payment method
+        return await self.get_payment_method(payment_method_id, tenant_id)  # type: ignore
+
     # ============================================================================
     # Helper Methods
     # ============================================================================
@@ -537,6 +611,7 @@ class PaymentMethodService:
             method_type=pm.payment_method_type,
             status=status,
             is_default=pm.is_default,
+            auto_pay_enabled=pm.auto_pay_enabled,
             # Card details
             card_brand=card_brand,
             card_last4=details.get("last4"),

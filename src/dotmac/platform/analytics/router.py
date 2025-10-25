@@ -9,7 +9,7 @@ from typing import Any
 from uuid import uuid4
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
 from dotmac.platform.auth.dependencies import CurrentUser, get_current_user
 
@@ -63,20 +63,37 @@ def _isoformat(value: Any | None) -> str:
 # Create router
 analytics_router = APIRouter(prefix="/analytics", )
 
-# Analytics service instance (lazy initialization)
-_analytics_service = None
+
+def _resolve_tenant_id(request: Request, current_user: CurrentUser) -> str:
+    """Resolve tenant ID, supporting platform admin impersonation."""
+    tenant_id: str | None = current_user.tenant_id
+
+    if getattr(current_user, "is_platform_admin", False):
+        try:
+            from dotmac.platform.auth.platform_admin import get_target_tenant_id
+
+            impersonated = get_target_tenant_id(request, current_user)
+        except Exception:  # pragma: no cover - defensive
+            impersonated = None
+
+        if impersonated:
+            tenant_id = impersonated
+
+    if tenant_id is None:
+        tenant_id = "default"
+
+    return str(tenant_id)
 
 
-def get_analytics_service() -> Any:
-    """Get or create analytics service instance."""
-    global _analytics_service
-    if _analytics_service is None:
-        # Initialize with proper service
-        from dotmac.platform.analytics.service import AnalyticsService
+def get_analytics_service(request: Request, current_user: CurrentUser) -> Any:
+    """Get tenant-scoped analytics service instance."""
+    from dotmac.platform.analytics.service import get_analytics_service as get_service
 
-        _analytics_service = AnalyticsService()
-
-    return _analytics_service
+    resolved_tenant = _resolve_tenant_id(request, current_user)
+    return get_service(
+        tenant_id=resolved_tenant,
+        service_name="platform",
+    )
 
 
 # ========================================
@@ -86,7 +103,9 @@ def get_analytics_service() -> Any:
 
 @analytics_router.post("/events", response_model=EventTrackResponse)
 async def track_event(
-    request: EventTrackRequest, current_user: CurrentUser = Depends(get_current_user)
+    event_request: EventTrackRequest,
+    request: Request,
+    current_user: CurrentUser = Depends(get_current_user),
 ) -> EventTrackResponse:
     """
     Track an analytics event.
@@ -95,31 +114,31 @@ async def track_event(
     """
     try:
         # Add user context
-        if not request.user_id:
-            request.user_id = current_user.user_id
+        if not event_request.user_id:
+            event_request.user_id = current_user.user_id
 
         # Track event
-        service = get_analytics_service()
-        event_timestamp = _ensure_utc(request.timestamp)
+        service = get_analytics_service(request, current_user)
+        event_timestamp = _ensure_utc(event_request.timestamp)
 
         event_id = await service.track_event(
-            event_name=request.event_name,
-            event_type=request.event_type.value,
-            properties=request.properties,
-            user_id=request.user_id,
-            session_id=request.session_id,
+            event_name=event_request.event_name,
+            event_type=event_request.event_type.value,
+            properties=event_request.properties,
+            user_id=event_request.user_id,
+            session_id=event_request.session_id,
             timestamp=event_timestamp,
         )
 
         return EventTrackResponse(
             event_id=event_id,
-            event_name=request.event_name,
+            event_name=event_request.event_name,
             timestamp=event_timestamp,
             status="tracked",
             message="Event tracked successfully",
         )
     except Exception as e:
-        logger.error(f"Error tracking event {request.event_name}: {e}")
+        logger.error(f"Error tracking event {event_request.event_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to track event"
         )
@@ -127,7 +146,9 @@ async def track_event(
 
 @analytics_router.post("/metrics", response_model=MetricRecordResponse)
 async def record_metric(
-    request: MetricRecordRequest, current_user: CurrentUser = Depends(get_current_user)
+    metric_request: MetricRecordRequest,
+    request: Request,
+    current_user: CurrentUser = Depends(get_current_user),
 ) -> MetricRecordResponse:
     """
     Record a metric value.
@@ -136,29 +157,29 @@ async def record_metric(
     """
     try:
         # Add user context to tags
-        request.tags["user_id"] = current_user.user_id
+        metric_request.tags["user_id"] = current_user.user_id
 
         # Record metric
-        service = get_analytics_service()
+        service = get_analytics_service(request, current_user)
         metric_id = await service.record_metric(
-            metric_name=request.metric_name,
-            value=request.value,
-            unit=request.unit.value,
-            tags=request.tags,
+            metric_name=metric_request.metric_name,
+            value=metric_request.value,
+            unit=metric_request.unit.value,
+            tags=metric_request.tags,
         )
 
-        metric_timestamp = _ensure_utc(request.timestamp)
+        metric_timestamp = _ensure_utc(metric_request.timestamp)
 
         return MetricRecordResponse(
             metric_id=str(metric_id) if metric_id else str(uuid4()),
-            metric_name=request.metric_name,
-            value=request.value,
-            unit=request.unit.value,
+            metric_name=metric_request.metric_name,
+            value=metric_request.value,
+            unit=metric_request.unit.value,
             timestamp=metric_timestamp,
             status="recorded",
         )
     except Exception as e:
-        logger.error(f"Error recording metric {request.metric_name}: {e}")
+        logger.error(f"Error recording metric {metric_request.metric_name}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to record metric"
         )
@@ -166,6 +187,7 @@ async def record_metric(
 
 @analytics_router.get("/events", response_model=dict)
 async def get_events(
+    request: Request,
     current_user: CurrentUser = Depends(get_current_user),
     start_date: datetime | None = Query(None, description="Start date"),
     end_date: datetime | None = Query(None, description="End date"),
@@ -189,7 +211,7 @@ async def get_events(
         start_date = _ensure_utc(start_date)
 
         # Query events
-        service = get_analytics_service()
+        service = get_analytics_service(request, current_user)
         events = await service.query_events(
             start_date=start_date,
             end_date=end_date,
@@ -215,10 +237,14 @@ def _extract_metrics_from_dict(
 ) -> list[dict[str, Any]]:
     """Extract metrics from summary dictionary."""
     metrics_list = []
+    # Lowercase metric_name for case-insensitive comparison
+    metric_name_lower = metric_name.lower() if metric_name else None
+
     for metric_type in ["counters", "gauges", "histograms"]:
         if metric_type in metrics_summary:
             for name, value in metrics_summary[metric_type].items():
-                if metric_name is None or metric_name in name:
+                # Case-insensitive comparison to match service filtering
+                if metric_name_lower is None or metric_name_lower in name.lower():
                     metrics_list.append(
                         {
                             "name": name,
@@ -257,6 +283,26 @@ def _group_metrics_by_name(metrics_list: list[dict[str, Any]]) -> dict[str, Any]
 
 def _create_metric_series(grouped_metrics: dict[str, Any], aggregation: str) -> list[MetricSeries]:
     """Create MetricSeries objects from grouped metrics."""
+
+    def _extract_numeric_value(value: Any) -> float:
+        """Extract numeric value from various metric formats."""
+        if isinstance(value, (int, float)):
+            return float(value)
+        elif isinstance(value, dict):
+            # Handle gauge format: {"value": float, "labels": dict}
+            if "value" in value:
+                return float(value["value"])
+            # Handle histogram format: {"count": int, "sum": float, "avg": float, ...}
+            # Use avg if available, otherwise sum, otherwise count
+            elif "avg" in value:
+                return float(value["avg"])
+            elif "sum" in value:
+                return float(value["sum"])
+            elif "count" in value:
+                return float(value["count"])
+        # Fallback to 0.0 if we can't extract a value
+        return 0.0
+
     metrics = []
     for name, data_points in grouped_metrics.items():
         metrics.append(
@@ -266,7 +312,7 @@ def _create_metric_series(grouped_metrics: dict[str, Any], aggregation: str) -> 
                 data_points=[
                     MetricDataPoint(
                         timestamp=dp.get("timestamp", datetime.now(UTC)),
-                        value=dp["value"],
+                        value=_extract_numeric_value(dp["value"]),
                         tags=None,  # Optional field
                     )
                     for dp in data_points
@@ -279,6 +325,7 @@ def _create_metric_series(grouped_metrics: dict[str, Any], aggregation: str) -> 
 
 @analytics_router.get("/metrics", response_model=MetricsQueryResponse)
 async def get_metrics(
+    request: Request,
     current_user: CurrentUser = Depends(get_current_user),
     metric_name: str | None = Query(None, description="Metric name filter"),
     start_date: datetime | None = Query(None, description="Start date"),
@@ -302,7 +349,7 @@ async def get_metrics(
         start_date = _ensure_utc(start_date)
 
         # Query metrics
-        service = get_analytics_service()
+        service = get_analytics_service(request, current_user)
         metrics_summary = await service.query_metrics(
             metric_name=metric_name,
             start_date=start_date,
@@ -338,7 +385,9 @@ async def get_metrics(
 
 @analytics_router.post("/query", response_model=dict)
 async def custom_query(
-    request: AnalyticsQueryRequest, current_user: CurrentUser = Depends(get_current_user)
+    query_request: AnalyticsQueryRequest,
+    request: Request,
+    current_user: CurrentUser = Depends(get_current_user),
 ) -> dict[str, Any]:
     """
     Execute a custom analytics query.
@@ -346,25 +395,25 @@ async def custom_query(
     Requires authentication.
     """
     try:
-        service = get_analytics_service()
+        service = get_analytics_service(request, current_user)
 
         # Execute query based on type
-        if request.query_type == "events":
-            result = await service.query_events(**request.filters)
-        elif request.query_type == "metrics":
-            result = await service.query_metrics(**request.filters)
-        elif request.query_type == "aggregations":
+        if query_request.query_type == "events":
+            result = await service.query_events(**query_request.filters)
+        elif query_request.query_type == "metrics":
+            result = await service.query_metrics(**query_request.filters)
+        elif query_request.query_type == "aggregations":
             result = await service.aggregate_data(
-                filters=request.filters,
-                group_by=request.group_by,
-                order_by=request.order_by,
-                limit=request.limit,
+                filters=query_request.filters,
+                group_by=query_request.group_by,
+                order_by=query_request.order_by,
+                limit=query_request.limit,
             )
         else:
-            raise ValueError(f"Unknown query type: {request.query_type}")
+            raise ValueError(f"Unknown query type: {query_request.query_type}")
 
         return {
-            "query_type": request.query_type,
+            "query_type": query_request.query_type,
             "result": result,
             "total": len(result) if isinstance(result, list) else 1,
         }
@@ -380,6 +429,7 @@ async def custom_query(
 @analytics_router.get("/reports/{report_type}", response_model=ReportResponse)
 async def generate_report(
     report_type: str,
+    request: Request,
     current_user: CurrentUser = Depends(get_current_user),
     start_date: datetime | None = Query(None, description="Report start date"),
     end_date: datetime | None = Query(None, description="Report end date"),
@@ -404,7 +454,7 @@ async def generate_report(
             start_date = end_date - timedelta(days=30)
 
         # Generate report
-        service = get_analytics_service()
+        service = get_analytics_service(request, current_user)
         report_data = await service.generate_report(
             report_type=report_type,
             start_date=start_date,
@@ -448,6 +498,7 @@ async def generate_report(
 
 @analytics_router.get("/dashboard", response_model=dict)
 async def get_dashboard_data(
+    request: Request,
     current_user: CurrentUser = Depends(get_current_user),
     period: str = Query("day", description="Dashboard period (hour, day, week, month)"),
 ) -> dict[str, Any]:
@@ -474,7 +525,7 @@ async def get_dashboard_data(
         end_date = _ensure_utc(end_date)
 
         # Get dashboard data
-        service = get_analytics_service()
+        service = get_analytics_service(request, current_user)
         dashboard = await service.get_dashboard_data(
             start_date=start_date, end_date=end_date, user_id=current_user.user_id
         )

@@ -72,7 +72,11 @@ async def get_failed_payments(
         row_mapping = row._mapping
 
         count_value = int(row_mapping.get("count") or 0)
-        total_amount_value = float(row_mapping.get("total_amount") or 0)
+        # FIXED: Convert from minor units (cents) to major units (dollars/naira)
+        # PaymentEntity.amount is stored in cents, so ₦42.50 is stored as 4250
+        # Without conversion, would display as "4250.0" instead of "42.50"
+        total_amount_minor = float(row_mapping.get("total_amount") or 0)
+        total_amount_value = total_amount_minor / 100.0
         oldest = row_mapping.get("oldest")
         newest = row_mapping.get("newest")
 

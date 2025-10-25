@@ -130,33 +130,51 @@ async def _get_oncall_users(session: AsyncSession, tenant_id: str, alarm: Alarm)
     - Alarm severity and escalation rules
     - Team assignments and on-call groups
 
-    Note: This is a placeholder implementation that can be extended
-    when a dedicated on-call schedule system is implemented (e.g., PagerDuty integration,
-    custom rotation schedules, etc.).
-
     Args:
         session: Database session
         tenant_id: Tenant ID
         alarm: The alarm to check on-call schedules for
 
     Returns:
-        List of on-call users (empty list if no on-call system configured)
+        List of on-call users
     """
-    # TODO: Implement on-call schedule integration
-    # Possible integrations:
-    # 1. Internal rotation schedule (user_oncall_schedules table)
-    # 2. External systems (PagerDuty, Opsgenie, VictorOps)
-    # 3. Team-based rotations with handoff times
-    # 4. Escalation policies based on alarm severity
-    #
-    # For now, return empty list - standard permission-based notifications will be used
-    logger.debug(
-        "oncall.check_skipped",
-        alarm_id=alarm.alarm_id,
-        tenant_id=tenant_id,
-        reason="on_call_system_not_configured",
-    )
-    return []
+    from dotmac.platform.fault_management.oncall_service import OnCallScheduleService
+
+    try:
+        # Initialize on-call service
+        oncall_service = OnCallScheduleService(session, tenant_id)
+
+        # Get current on-call users for this alarm
+        oncall_users = await oncall_service.get_current_oncall_users(alarm=alarm)
+
+        if oncall_users:
+            logger.info(
+                "oncall.users_found",
+                alarm_id=alarm.alarm_id,
+                tenant_id=tenant_id,
+                alarm_severity=alarm.severity.value,
+                oncall_user_count=len(oncall_users),
+                oncall_user_ids=[str(u.id) for u in oncall_users],
+            )
+        else:
+            logger.debug(
+                "oncall.no_users_found",
+                alarm_id=alarm.alarm_id,
+                tenant_id=tenant_id,
+                alarm_severity=alarm.severity.value,
+            )
+
+        return oncall_users
+
+    except Exception as e:
+        logger.error(
+            "oncall.query_failed",
+            alarm_id=alarm.alarm_id,
+            tenant_id=tenant_id,
+            error=str(e),
+        )
+        # Return empty list on error - fall back to permission-based notifications
+        return []
 
 
 async def _get_users_to_notify(session: AsyncSession, tenant_id: str, alarm: Alarm) -> list[User]:

@@ -53,6 +53,7 @@ import {
   useUsageStatistics,
   useUsageOperations,
   useUsageChartData,
+  useCreateUsageRecord,
   type UsageRecord,
 } from "@/hooks/useUsageBilling";
 
@@ -231,10 +232,36 @@ export default function UsageBillingPage() {
     days: 7,
   });
   const { markAsBilled, excludeFromBilling, isLoading: operationsLoading } = useUsageOperations();
+  const createUsageRecord = useCreateUsageRecord({
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: `Usage record for ${newUsageRecord.customer_name || newUsageRecord.customer_id} created successfully`,
+      });
+      setShowRecordUsage(false);
+      setNewUsageRecord({
+        customer_id: "",
+        customer_name: "",
+        usage_type: "data_transfer",
+        quantity: 0,
+        unit: "GB",
+        unit_price: 10,
+        description: "",
+      });
+      refetch();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to record usage. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Use API data with fallback to mock data for development
   const usageRecords = apiRecords.length > 0 ? apiRecords : mockUsageRecords;
-  const isLoading = recordsLoading || operationsLoading;
+  const isLoading = recordsLoading || operationsLoading || createUsageRecord.isPending;
 
   // Calculate statistics from API or local data
   const statistics = useMemo(() => {
@@ -278,39 +305,31 @@ export default function UsageBillingPage() {
 
     setIsSubmitting(true);
     try {
-      // TODO: Replace with actual API call when endpoint is available
-      // await apiClient.post("/billing/usage", newUsageRecord);
+      // Create usage record with proper date periods
+      const now = new Date();
+      const periodStart = new Date(now.getTime() - 86400000); // 24 hours ago
+
+      await createUsageRecord.mutateAsync({
+        subscription_id: `sub-${newUsageRecord.customer_id}`, // Generate subscription ID from customer
+        customer_id: newUsageRecord.customer_id,
+        usage_type: newUsageRecord.usage_type,
+        quantity: newUsageRecord.quantity,
+        unit: newUsageRecord.unit,
+        unit_price: newUsageRecord.unit_price,
+        period_start: periodStart.toISOString(),
+        period_end: now.toISOString(),
+        source_system: "manual",
+        description: newUsageRecord.description || `${newUsageRecord.usage_type} usage`,
+      });
 
       logger.info("Usage record created", {
         customerId: newUsageRecord.customer_id,
         usageType: newUsageRecord.usage_type,
         quantity: newUsageRecord.quantity,
       });
-
-      toast({
-        title: "Success",
-        description: `Usage record for ${newUsageRecord.customer_name || newUsageRecord.customer_id} created successfully`,
-      });
-
-      setShowRecordUsage(false);
-      setNewUsageRecord({
-        customer_id: "",
-        customer_name: "",
-        usage_type: "data_transfer",
-        quantity: 0,
-        unit: "GB",
-        unit_price: 10,
-        description: "",
-      });
-
-      await refetch();
     } catch (error) {
       logger.error("Failed to record usage", error);
-      toast({
-        title: "Error",
-        description: "Failed to record usage. Please try again.",
-        variant: "destructive",
-      });
+      // Error handling is done in the hook's onError callback
     } finally {
       setIsSubmitting(false);
     }

@@ -148,6 +148,7 @@ class PaymentMethodResponse(AppBaseModel):
     method_type: PaymentMethodType
     status: PaymentMethodStatus
     is_default: bool
+    auto_pay_enabled: bool
 
     # Card details (masked)
     card_brand: CardBrand | None

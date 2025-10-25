@@ -84,6 +84,14 @@ class BillingPaymentMethodTable(Base):
         index=True,
     )
 
+    # AutoPay flag
+    auto_pay_enabled: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        comment="Enable automatic payments for invoices using this payment method",
+    )
+
     # Verification status for bank accounts
     is_verified: Mapped[bool] = mapped_column(
         Boolean,

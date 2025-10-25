@@ -3,6 +3,7 @@
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
+import { useState } from "react";
 import { usePartnerDashboard } from "@/hooks/usePartnerPortal";
 import {
   Users,
@@ -12,11 +13,38 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
+  Copy,
+  Share2,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
 
 export default function PartnerDashboardPage() {
   const { data: stats, isLoading, error } = usePartnerDashboard();
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
+
+  // Generate referral link and code if not provided by backend
+  const referralCode =
+    stats?.referral_code || `PARTNER${stats?.total_customers || 0}`.toUpperCase();
+  const referralLink =
+    stats?.referral_link ||
+    `${typeof window !== "undefined" ? window.location.origin : "https://dotmac.com"}/signup?ref=${referralCode}`;
+
+  const copyToClipboard = async (text: string, type: "link" | "code") => {
+    try {
+      await navigator.clipboard.writeText(text);
+      if (type === "link") {
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+      } else {
+        setCodeCopied(true);
+        setTimeout(() => setCodeCopied(false), 2000);
+      }
+    } catch (err) {
+      console.error("Failed to copy:", err);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -195,6 +223,126 @@ export default function PartnerDashboardPage() {
           >
             Manage Referrals
           </Link>
+        </div>
+      </div>
+
+      {/* Referral Link Sharing */}
+      <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 p-6 rounded-lg mb-6">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Share2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Share Your Referral Link</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Share this link with potential customers to track your referrals and earn commissions
+            </p>
+
+            <div className="space-y-3">
+              {/* Referral Link */}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                  Your Referral Link
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={referralLink}
+                    className="flex-1 px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground font-mono"
+                  />
+                  <button
+                    onClick={() => copyToClipboard(referralLink, "link")}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                  >
+                    {linkCopied ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copy Link
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Referral Code */}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                  Your Referral Code
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={referralCode}
+                    className="w-48 px-3 py-2 bg-card border border-border rounded-lg text-sm text-foreground font-mono font-bold"
+                  />
+                  <button
+                    onClick={() => copyToClipboard(referralCode, "code")}
+                    className="px-4 py-2 bg-card border border-border hover:bg-muted text-foreground rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                  >
+                    {codeCopied ? (
+                      <>
+                        <Check className="w-4 h-4" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4" />
+                        Copy Code
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 flex gap-2 flex-wrap">
+              <button
+                onClick={() => {
+                  const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                    "Check out this amazing service! " + referralLink
+                  )}`;
+                  window.open(url, "_blank");
+                }}
+                className="px-3 py-1.5 bg-[#1DA1F2] hover:bg-[#1a8cd8] text-white rounded-lg text-xs font-medium transition-colors"
+              >
+                Share on Twitter
+              </button>
+              <button
+                onClick={() => {
+                  const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(referralLink)}`;
+                  window.open(url, "_blank");
+                }}
+                className="px-3 py-1.5 bg-[#1877F2] hover:bg-[#166fe5] text-white rounded-lg text-xs font-medium transition-colors"
+              >
+                Share on Facebook
+              </button>
+              <button
+                onClick={() => {
+                  const url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(referralLink)}`;
+                  window.open(url, "_blank");
+                }}
+                className="px-3 py-1.5 bg-[#0A66C2] hover:bg-[#095196] text-white rounded-lg text-xs font-medium transition-colors"
+              >
+                Share on LinkedIn
+              </button>
+              <button
+                onClick={() => {
+                  const url = `mailto:?subject=${encodeURIComponent("Check out this service")}&body=${encodeURIComponent("I think you'd be interested in this: " + referralLink)}`;
+                  window.location.href = url;
+                }}
+                className="px-3 py-1.5 bg-card border border-border hover:bg-muted text-foreground rounded-lg text-xs font-medium transition-colors"
+              >
+                Share via Email
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
