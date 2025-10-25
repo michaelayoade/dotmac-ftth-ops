@@ -9,7 +9,7 @@ Provides clear separation between:
 """
 
 from collections.abc import Awaitable, Callable
-from typing import Optional
+from typing import Any
 
 import structlog
 from fastapi import HTTPException, Request, Response
@@ -90,8 +90,8 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
     def _enforce_platform_boundary(
         self,
         path: str,
-        user: Optional[any],
-        tenant_id: Optional[str],
+        user: Any | None,
+        tenant_id: str | None,
     ) -> None:
         """
         Enforce platform route boundary rules.
@@ -161,8 +161,8 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
     def _enforce_tenant_boundary(
         self,
         path: str,
-        user: Optional[any],
-        tenant_id: Optional[str],
+        user: Any | None,
+        tenant_id: str | None,
     ) -> None:
         """
         Enforce tenant route boundary rules.
@@ -247,7 +247,7 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
         """Check if route is tenant-only."""
         return any(path.startswith(prefix) for prefix in self.TENANT_PREFIXES)
 
-    def _has_platform_scope(self, user: any) -> bool:
+    def _has_platform_scope(self, user: Any) -> bool:
         """
         Check if user has any platform-level scopes.
 
@@ -291,7 +291,7 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
 
         return False
 
-    def _has_tenant_scope(self, user: any) -> bool:
+    def _has_tenant_scope(self, user: Any) -> bool:
         """
         Check if user has any tenant-level scopes.
 
